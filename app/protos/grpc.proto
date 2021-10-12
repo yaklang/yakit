@@ -1,0 +1,492 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+
+message Empty {
+}
+
+message VersionResponse {
+  string Version = 1;
+}
+
+message GeneralResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message DeleteYakScriptRequest {
+  int64  Id = 3;
+}
+
+message ExecBatchYakScriptRequest {
+  string Target = 1;
+  string Keyword = 2;
+  int64 Limit = 3;
+  int64 TotalTimeoutSeconds = 4;
+  // 模块类型，默认为 nuclei
+  string Type = 5;
+  // 并发
+  int64 Concurrent = 6;
+}
+
+message ExecBatchYakScriptResult {
+  string Id = 1;
+  string Status = 2;
+  bool Ok = 4;
+  string Reason = 5;
+  bool Exploitable = 6;
+
+  // 脚本的详细信息
+  YakScript PoC = 7;
+  ExecResult Result = 8;
+}
+
+service Yak {
+  // version
+  rpc Version(Empty) returns (VersionResponse);
+
+  // echo 通常用于测试服务是否通畅
+  rpc Echo(EchoRequest) returns(EchoResposne);
+
+  // 中间人劫持
+  rpc MITM(stream MITMRequest) returns (stream MITMResponse);
+
+  // 开启端口
+  rpc OpenPort(stream Input) returns (stream Output);
+
+  // Exec
+  rpc Exec(ExecRequest) returns (stream ExecResult);
+  rpc QueryExecHistory(ExecHistoryRequest) returns (ExecHistoryRecordResponse);
+  rpc RemoveExecHistory(Empty) returns (Empty);
+  rpc QueryYakScript(QueryYakScriptRequest) returns (QueryYakScriptResponse);
+  rpc SaveYakScript(YakScript) returns (YakScript);
+  rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc LoadNucleiTemplates(Empty) returns (Empty);
+  rpc AutoUpdateYakModule(Empty) returns (stream ExecResult);
+  rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
+  rpc ExecBatchYakScript(ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
+
+  // HTTPFlow
+  rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
+  rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
+  rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
+
+  // 从一个 FuzzerRequest 中提取 Url
+  rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
+
+  // Fuzzer
+  rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
+
+  // FuzzerResponse 对象转 HTTPFlow：以便分析和模糊测试
+  rpc ConvertFuzzerResponseToHTTPFlow(FuzzerResponse) returns (HTTPFlow);
+
+  // 渲染 Fuzzer 模版
+  rpc StringFuzzer(StringFuzzerRequest) returns (StringFuzzerResponse);
+
+  // 分析一个 HTTP 请求详情
+  rpc HTTPRequestAnalyzer(HTTPRequestAnalysisMaterial) returns (HTTPRequestAnalysis);
+
+  // 编码解码
+  rpc Codec(CodecRequest) returns (CodecResponse);
+
+  // Payload 相关接口
+  rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse);
+  rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
+  rpc DeletePayload(DeletePayloadRequest) returns (Empty);
+  rpc SavePayload(SavePayloadRequest) returns (Empty);
+  rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
+
+  // 自动生成补全
+  rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
+}
+
+message YakitCompletionRawResponse {
+  bytes RawJson = 1;
+}
+
+message GetAllPayloadGroupResponse {
+  repeated string Groups = 1;
+}
+
+message SavePayloadRequest {
+  bool IsFile = 1;
+  string Group = 2;
+  string Content = 3;
+}
+
+message DeletePayloadByGroupRequest {
+  string Group = 1;
+}
+
+message DeletePayloadRequest {
+  int64 Id = 1;
+}
+
+message QueryPayloadRequest {
+  Paging Pagination = 1;
+  string Group = 2;
+  string Keyword = 3;
+}
+
+message QueryPayloadResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Payload Data = 3;
+}
+
+message Payload {
+  int64 Id = 1;
+  string Group = 2;
+  bytes ContentBytes = 3;
+  string Content = 4;
+}
+
+message QueryYakScriptRequest {
+  Paging Pagination = 1;
+  string Type = 2;
+  string Keyword = 3;
+  bool IsHistory = 4;
+}
+
+message QueryYakScriptResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated YakScript Data = 3;
+}
+
+message YakScriptParam {
+  string Field = 1;
+  string DefaultValue = 2;
+
+  // int/number/integer/float/str/bool
+  string TypeVerbose = 3;
+
+  string FieldVerbose = 4;
+
+  string Help = 5;
+}
+
+message YakScript {
+  int64 Id = 1;
+  string Content = 2;
+  string Type = 3;
+  repeated YakScriptParam Params = 4;
+  int64 CreatedAt = 5;
+  string ScriptName = 6;
+  string Help = 7;
+  string Level = 8;
+  string Author = 9;
+  string Tags = 10;
+  bool IsHistory = 11;
+}
+
+message CodecRequest {
+  string Text = 1;
+  string Type = 2;
+  bool Auto = 3;
+}
+
+message CodecResponse {
+  string Result = 1;
+}
+
+// Yak Invoker
+message ExecHistoryRequest {
+  Paging Pagination = 1;
+}
+
+message ExecHistoryRecordResponse {
+  repeated ExecHistoryRecord Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+// 执行的历史记录
+message ExecHistoryRecord {
+  // 脚本内容
+  string Script = 1;
+  // 脚本 ID（如果有的话）
+  string ScriptId = 2;
+  // 执行时间点
+  int64 Timestamp = 3;
+  // 执行间隔
+  int64 DurationMs = 4;
+  // 执行参数（命令行参数部分）
+  string Params = 5;
+
+  // 执行成功还是失败
+  bool Ok = 7;
+  // 失败原因是啥？
+  string Reason = 8;
+  // Uid
+  string Id = 9;
+
+  // 展示界面内容
+  bytes Stdout = 10;
+  bytes Stderr = 11;
+
+}
+
+// Fuzz 相关模型
+message StringFuzzerRequest {
+  string Template = 1;
+}
+
+
+message StringFuzzerResponse {
+  repeated bytes Results = 1;
+}
+
+message HTTPRequestAnalysisMaterial {
+  string Request = 1;
+  bool IsHTTPS = 2;
+  string Response = 3;
+}
+
+message HTTPRequestParamItem {
+  string TypePosition = 1;
+  string ParamOriginValue = 2;
+  string ParamName = 3;
+  string TypePositionVerbose = 4;
+}
+
+message HTTPRequestAnalysis {
+  repeated HTTPRequestParamItem Params = 1;
+  repeated string Requests = 2;
+  bool IsHTTPS = 3;
+}
+
+message FuzzerParamItem {
+  string Key = 1;
+  string Value = 2;
+}
+
+message FuzzerRequest {
+  string Request = 1;
+  repeated FuzzerParamItem Params = 2;
+  int64 Concurrent = 3;
+  bool IsHTTPS = 4;
+  bool ForceFuzz = 5;
+  string Proxy = 6;
+  double PerRequestTimeoutSeconds = 7;
+}
+
+message ExtractedUrl {
+  string Url = 1;
+}
+
+message FuzzerResponse {
+
+  string Method = 1;
+  int32  StatusCode = 2;
+  string Host = 3;
+  string ContentType = 4;
+  repeated HTTPHeader Headers = 5;
+  bytes ResponseRaw = 6;
+
+  // response body 的长度
+  int64 BodyLength = 7;
+  // 这个请求大约花费了多长时间
+  int64 DurationMs = 8;
+  // 给一个随机 ID
+  string UUID = 9;
+  // timestamp 请求
+  int64 Timestamp = 10;
+
+  // RequestRaw 原始数据包
+  bytes RequestRaw = 11;
+
+  // 猜测可能的编码
+  string GuessResponseEncoding = 12;
+
+  // 基础状态
+  bool Ok = 31;
+  string Reason = 32;
+
+  // IsHTTPS
+  bool IsHTTPS = 33;
+}
+
+message Paging {
+  int64 Page = 51;
+  int64 Limit = 52;
+  string OrderBy = 53;
+  string Order = 54;
+}
+
+message GetHTTPFlowByHashRequest {
+  string Hash = 1;
+}
+
+message QueryHTTPFlowRequest {
+  Paging Pagination = 1;
+  string SourceType = 2;
+  string Methods = 3;
+  string SearchURL = 4;
+  string StatusCode = 5;
+  bool HaveCommonParams = 6;
+  bool HaveBody = 7;
+  string SearchContentType = 9;
+}
+
+message DeleteHTTPFlowRequest {
+  bool DeleteAll = 1;
+  repeated string ItemHash = 2;
+}
+
+message HTTPHeader {
+  string Header = 1;
+  string Value = 2;
+}
+
+message HTTPFlow {
+  bool IsHTTPS = 2;
+  string Url = 3;
+  repeated HTTPHeader RequestHeader = 4;
+  bytes Request = 5;
+  repeated HTTPHeader ResponseHeader = 6;
+  bytes Response = 7;
+  string SourceType = 8;
+  string Path = 9;
+  string Method = 10;
+  int64 BodyLength = 11;
+  string BodySizeVerbose = 19;
+  string ContentType = 12;
+  int64 StatusCode = 13;
+  int64 GetParamsTotal = 14;
+  int64 PostParamsTotal = 15;
+  int64 CookieParamsTotal = 22;
+  int64 UpdatedAt = 16;
+  int64 CreatedAt = 17;
+  string Hash = 18;
+
+  repeated FuzzableParam GetParams = 20;
+  repeated FuzzableParam PostParams = 21;
+  repeated FuzzableParam CookieParams = 23;
+}
+
+message FuzzableParam {
+  string Position = 1;
+  string ParamName = 2;
+  bytes OriginValue = 3;
+  bytes AutoTemplate = 4;
+  bool IsHTTPS = 5;
+}
+
+message QueryHTTPFlowResponse {
+  Paging Pagination = 1;
+  repeated HTTPFlow Data = 2;
+  int64 Total = 3;
+}
+
+// 中间人劫持的问题
+message MITMRequest {
+  bytes request = 1;
+  bytes response = 111;
+
+  string host = 2;
+  uint32 port = 3;
+  string downstreamProxy = 4;
+
+  // 用来保证不要串台
+  int64 id = 5;
+  // 这个是响应劫持需要注意的字段。保证不串台
+  int64 responseId = 16;
+  bool recover = 6;
+
+  // 过滤器
+  repeated string includeHostname = 7;
+  repeated string excludeHostname = 8;
+  repeated string excludeSuffix = 9;
+  repeated string includeSuffix = 10;
+  repeated string excludeMethod = 11;
+  bool updateFilter = 12;
+
+  // 劫持当前请求的响应信息
+  bool hijackResponse = 13;
+
+  // 手动丢包
+  bool drop = 14;
+
+  // 原封不动放行
+  bool forward = 15;
+}
+
+message MITMResponse {
+  bytes request = 1;
+
+  // 劫持的是 HTTPS 吗？
+  bool isHttps = 3;
+  string url = 4;
+
+  // 和 Request 中的一一对应
+  int64 id = 5;
+
+  // 过滤器
+  bool justFilter = 16;
+  repeated string includeHostname = 17;
+  repeated string excludeHostname = 18;
+  repeated string excludeSuffix = 19;
+  repeated string includeSuffix = 110;
+  repeated string excludeMethod = 111;
+
+  // 刷新表格: 如果这个是 True 的话，那么不应该发送回劫持器，应该只发送刷新表格的信息
+  bool refresh = 2;
+  HTTPFlow historyHTTPFlow = 22;
+
+  bool forResponse = 23;
+  bytes response = 24;
+  int64 responseId = 26;
+}
+
+
+// 最基础的 ECHO
+message EchoRequest {
+  string text = 1;
+}
+
+message EchoResposne {
+  string result = 1;
+}
+
+// 开启一个端口，对接 GRPC 服务器
+message Input {
+  bytes raw = 1;
+
+  string host = 2;
+  uint32 port = 3;
+}
+
+message Output {
+  bytes raw = 1;
+  string remoteAddr = 11;
+  string localAddr = 12;
+
+  // 如果 control 为 true 说明这是一个控制信息
+  bool control = 2;
+  // 服务端需要关闭
+  bool closed = 3;
+  // 服务端正在等待连接接入
+  bool waiting = 4;
+}
+
+// 执行脚本
+message ExecParamItem {
+  string Key = 1;
+  string Value = 2;
+}
+message ExecRequest {
+  repeated ExecParamItem Params = 1;
+  string Script = 2;
+  string ScriptId = 3;
+  int64 YakScriptId = 5;
+}
+
+message ExecResult {
+  string Hash = 1;
+  string OutputJson = 2;
+  bytes Raw = 3;
+  bool IsMessage = 4;
+  bytes Message = 5;
+}

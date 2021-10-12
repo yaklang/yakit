@@ -1,0 +1,37 @@
+{
+  "name": "yakit",
+  "version": "1.0.8-beta3",
+  "description": "Yakit is for yaklang.io Electron GUI Entry",
+  "main": "app/main/index.js",
+  "scripts": {
+    "start-electron": "electron .",
+    "install-render": "cd app/renderer/src/main && yarn install",
+    "start-render": "cd app/renderer/src/main && yarn electron-render",
+    "build-render": "cd app/renderer/src/main && yarn build",
+    "dev": "concurrently -k \"yarn start-render\" \"wait-on tcp:3000 && yarn start-electron \" ",
+    "postinstall": "electron-builder install-app-deps",
+    "pack-win": "electron-builder build --win",
+    "pack-mac": "electron-builder build --mac --x64",
+    "pack-mac-arm64": "electron-builder build --mac --arm64",
+    "pack-linux": "electron-builder build --linux --x64"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^6.2.0",
+    "electron": "^13.1.7",
+    "electron-builder": "^22.11.7",
+    "protoc-gen-ts": "^0.3.9",
+    "typescript": "^4.1.2",
+    "wait-on": "^6.0.0",
+    "yarn": "^1.22.11"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.3.6",
+    "@grpc/proto-loader": "^0.6.4",
+    "electron-is-dev": "^2.0.0",
+    "google-protobuf": "^3.17.3",
+    "process": "^0.11.10"
+  }
+}

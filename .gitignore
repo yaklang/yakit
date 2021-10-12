@@ -1,0 +1,41 @@
+.idea/
+.idea/*
+.DS_Store
+*.db
+*.sock
+*.exe
+*.exe~
+build/
+releases/*
+releases/
+release-node/
+*.sqlite3
+data.yml
+vendor/
+node_modules/
+server/cmd/server
+hidsnode/cmd/hids-agent
+# config for palm
+# palm.yaml
+# palm.yml
+hids.yaml
+logagent.yaml
+logagent.yml
+www
+cve-data/
+*.log
+*.log.*
+pgdata/
+materials/
+materials/*
+xray-temp/
+server_darwin_amd64
+ca.crt
+ca.key
+yak-mitm-ca.key
+yak-mitm-ca.crt
+./xray/
+deploy/palm-base/awdtools/
+wizard/palm-server/
+wizard/dist/
+*.mmdb

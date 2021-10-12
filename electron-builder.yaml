@@ -1,0 +1,25 @@
+appId: 'io.yaklang.yakit'
+productName: 'Yakit'
+copyright: Copyright © 2021 v1ll4n
+
+directories:
+  buildResources: resources
+  output: release/
+  app: .
+
+artifactName: ${productName}-${version}-${platform}-${arch}.${ext}
+asar: true
+
+mac:
+  icon: "app/assets/yaklogo.icns"
+
+win:
+  icon: "app/assets/yaklogo.ico"
+
+#publish:
+#  - provider: generic
+#    url: https://update.electron-builder.com
+#    channel: latest
+releaseInfo:
+  releaseName: ''
+  releaseNotes: 'Some new features now is available.'
