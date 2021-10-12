@@ -1,6 +1,6 @@
 # Yakit: 集成化单兵安全能力平台
 
-[yaklang && Yakit 项目官方网站](yaklang.io)
+[yaklang && Yakit 项目官方网站](http://www.yaklang.io/)
 
 Yakit 是 Yak 的衍生项目，Yak 语言核心提供了非常强大的安全能力，但是限于使用形式，用户必须学习 Yak 语言并同时具备对安全的一定理解。
 
