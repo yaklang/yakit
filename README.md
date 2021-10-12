@@ -29,3 +29,11 @@ Yakit 是一个高度集成化的 Yak 语言安全能力的输出平台，使用
 进入官方网站 Yakit 产品页
 
 [Yakit-集成化单兵工具平台 from yaklang.io](http://www.yaklang.io/products/intro/)
+
+## 联系我们
+
+如果对我们的产品有任何建设性意见或 BUG 反馈，欢迎大家提 issue
+
+或通过微信公众号联系我们，也欢迎联系商业授权与合作
+
+![](https://www.yaklang.io/assets/images/qrcode_for_yaklang-f67bc5fedba90c628080507245f66a34.jpg)
