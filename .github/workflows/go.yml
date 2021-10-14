@@ -37,14 +37,14 @@ jobs:
           NODE_OPTIONS: --max_old_space_size=4096
       - name: Build Yakit for macOS
         env:
-          GH_TOKEN: {{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         working-directory: ./
         run: |
           yarn add -D dmg-license && yarn pack-mac
         if: runner.os == 'macOS'
       - name: Build Yakit for macOS(arm64)
         env:
-          GH_TOKEN: {{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         working-directory: ./
         run: |
           yarn add -D dmg-license && yarn pack-mac-arm64
@@ -56,7 +56,7 @@ jobs:
       #        if: runner.os == 'Linux'
       - name: Build Yakit for Windows(x64)
         env:
-          GH_TOKEN: {{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         working-directory: ./
         run: |
           yarn pack-win
