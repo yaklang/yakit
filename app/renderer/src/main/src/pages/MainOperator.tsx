@@ -156,7 +156,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                             >
                                                 {(i.subMenuData || []).map(subMenu => {
                                                     return <MenuItem icon={subMenu.icon} key={subMenu.key}
-                                                                     disabled={i.disabled}>
+                                                                     disabled={subMenu.disabled}>
                                                         {subMenu.label}
                                                     </MenuItem>
                                                 })}

@@ -59,7 +59,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 // alert(Buffer.from(data.Message).toString("utf8"))
             }
             if (data?.Raw && currentOutputEditor) {
-                monacoEditorWrite(currentOutputEditor, Buffer.from(data.Raw).toString(outputEncoding))
+                monacoEditorWrite(currentOutputEditor, Buffer.from(data.Raw).toString(outputEncoding).replaceAll("\n", "\r\n"))
             }
         })
         return () => {

@@ -58,10 +58,6 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             })
         }
 
-        let m = editor.getModel();
-        if (m) m.setEOL(0);
-
-
         let id = setInterval(() => {
             editor.layout()
         }, 200)

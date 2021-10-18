@@ -99,6 +99,24 @@ service Yak {
 
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
+
+  // 端口扫描的封装
+  rpc PortScan(PortScanRequest) returns (stream ExecResult);
+  rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
+}
+
+message PortScanRequest {
+  string Targets = 1;
+  string Ports = 2;
+  string Mode = 3;
+}
+
+message QueryPortsRequest {
+
+}
+
+message QueryPortsResponse {
+
 }
 
 message YakitCompletionRawResponse {

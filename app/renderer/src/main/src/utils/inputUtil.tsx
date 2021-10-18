@@ -339,7 +339,8 @@ export const InputFloat: React.FC<InputNumberProps> = (p) => {
 
 export const InputInteger: React.FC<InputNumberProps> = (p) => {
     return <Item label={p.label}>
-        <InputNumber width={p.width && "100%"} disabled={p.disable} style={{width: p.width}} defaultValue={p.defaultValue}
+        <InputNumber width={p.width && "100%"} disabled={p.disable} style={{width: p.width}}
+                     defaultValue={p.defaultValue}
                      min={p.min} max={p.max} step={1} value={p.value} onChange={e => p.setValue(e as number)}/>
     </Item>
 }
@@ -555,10 +556,11 @@ export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
 
 export interface CopyableFieldProp {
     text?: string
+    style?: React.CSSProperties;
 }
 
 export const CopyableField: React.FC<CopyableFieldProp> = (props) => {
-    return <Typography.Paragraph copyable={true} style={{marginBottom: 0}}>
+    return <Typography.Paragraph copyable={true} style={{marginBottom: 0, ...props.style}}>
         {props.text}
     </Typography.Paragraph>
 };

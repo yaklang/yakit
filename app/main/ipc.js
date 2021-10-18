@@ -105,5 +105,6 @@ module.exports = {
         require("./handlers/manageYakScript")(win, getClient);
         require("./handlers/payloads")(win, getClient);
         require("./handlers/completion")(win, getClient);
+        require("./handlers/portScan")(win, getClient);
     }
 }
