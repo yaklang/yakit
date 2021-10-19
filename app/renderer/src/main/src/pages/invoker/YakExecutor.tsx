@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Button, Card, Col, Form, Modal, notification, Popconfirm, Row, Space, Spin, Tag, Typography} from "antd";
 import {ExecHistoryTable} from "./YakExecutorHistoryTable";
 import "./xtermjs-yak-executor.css"
@@ -12,8 +12,9 @@ import {ExecResult, YakScript, YakScriptParam} from "./schema";
 import {YakScriptParamsSetter} from "./YakScriptParamsSetter";
 import {YakExecutorParam} from "./YakExecutorParams";
 import {SelectOne} from "../../utils/inputUtil";
-import {editor} from "monaco-editor";
 import {monacoEditorClear, monacoEditorWrite} from "../fuzzer/fuzzerTemplates";
+import {XTerm} from "xterm-for-react";
+import {writeExecResultXTerm, writeXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils";
 
 const {Text} = Typography;
 
@@ -26,16 +27,25 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     const [code, setCode] = useState("# input your yak code\nprintln(`Hello Yak World!`)");
     const [errors, setErrors] = useState<string[]>([]);
     const [executing, setExecuting] = useState(false);
-    const [currentOutputEditor, setCurrentOutputEditor] = useState<IMonacoEditor>();
     const [params, setParams] = useState<{ Key: string, Value: any }[]>([]);
     const [yakScript, setYakScript] = useState<YakScript>();
     const [outputEncoding, setOutputEncoding] = useState<"utf8" | "latin1">("utf8");
+    const xtermRef = useRef(null);
 
     // trigger for updating
     const [triggerForUpdatingHistory, setTriggerForUpdatingHistory] = useState<any>(0);
     const render = ipcRenderer;
 
     useEffect(() => {
+        if (xtermRef) {
+            xtermFit(xtermRef, 100, 14)
+        }
+    })
+
+    useEffect(() => {
+        if (!xtermRef) {
+            return
+        }
         // let buffer = "";
         render.on("client-yak-error", async (e: any, data) => {
             notification["error"]({message: `FoundError: ${JSON.stringify(data)}`})
@@ -58,8 +68,10 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
             if (data.IsMessage) {
                 // alert(Buffer.from(data.Message).toString("utf8"))
             }
-            if (data?.Raw && currentOutputEditor) {
-                monacoEditorWrite(currentOutputEditor, Buffer.from(data.Raw).toString(outputEncoding).replaceAll("\n", "\r\n"))
+            if (data?.Raw) {
+                writeExecResultXTerm(xtermRef, data, outputEncoding)
+                // writeXTerm(xtermRef, Buffer.from(data.Raw).toString(outputEncoding).replaceAll("\n", "\r\n"))
+                // monacoEditorWrite(currentOutputEditor, )
             }
         })
         return () => {
@@ -67,7 +79,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
             render.removeAllListeners("client-yak-end")
             render.removeAllListeners("client-yak-error")
         }
-    }, [currentOutputEditor])
+    }, [xtermRef])
 
     return <div style={{margin: 0}}>
         <Spin spinning={false}>
@@ -125,7 +137,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                                 type={"yak"}
                                                                 onLoadYakScript={s => {
                                                                     info(`加载 Yak 模块：${s.ScriptName}`)
-                                                                    monacoEditorClear(currentOutputEditor)
+                                                                    xtermClear(xtermRef)
                                                                     setCode(s.Content);
                                                                     setYakScript(s)
                                                                     setParams([])
@@ -297,20 +309,26 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                             size={"small"} icon={<DeleteOutlined/>}
                                             danger={true} type={"link"}
                                             onClick={e => {
-                                                monacoEditorClear(currentOutputEditor)
+                                                xtermClear(xtermRef)
                                             }}
                                         />
                                     </Space>} size={"small"} bordered={true}
                                     bodyStyle={{padding: 0}}
                                 >
-                                    {/*@ts-ignore*/}
-                                    <div style={{height: 260}}>
-                                        <YakEditor
-                                            // value={currentOutput}
-                                            readOnly={false}
-                                            editorDidMount={setCurrentOutputEditor}
-                                        />
+                                    <div style={{width: "100%", overflow: "auto"}}>
+                                        <XTerm ref={xtermRef} options={{
+                                            convertEol: true,
+                                        }} onResize={r => xtermFit(xtermRef, r.cols, 14)}/>
                                     </div>
+
+                                    {/*/!*@ts-ignore*!/*/}
+                                    {/*<div style={{height: 260}}>*/}
+                                    {/*    <YakEditor*/}
+                                    {/*        // value={currentOutput}*/}
+                                    {/*        readOnly={false}*/}
+                                    {/*        editorDidMount={setCurrentOutputEditor}*/}
+                                    {/*    />*/}
+                                    {/*</div>*/}
                                 </Card>
                             </Col>
                         </Row>

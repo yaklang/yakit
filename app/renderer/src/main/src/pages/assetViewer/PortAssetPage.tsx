@@ -9,6 +9,7 @@ import {HTTPFlow, TableFilterDropdownForm} from "../../components/HTTPFlowTable"
 import {SearchOutlined, ReloadOutlined} from "@ant-design/icons";
 import {SorterResult} from "antd/lib/table/interface";
 import {YakEditor} from "../../utils/editors";
+import {openExternalWebsite} from "../../utils/openWebsite";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -179,6 +180,13 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 },
             },
             {title: "最近更新时间", render: (i: PortAsset) => <Tag color={"green"}>{formatTimestamp(i.UpdatedAt)}</Tag>},
+            {
+                title: "操作", render: (i: PortAsset) => <Button
+                    size={"small"} type={"link"}
+                    onClick={e => {
+                        openExternalWebsite(`http://${i.Host}:${i.Port}`)
+                    }}>浏览器打开</Button>, fixed: "right",
+            },
         ]}
         dataSource={response.Data}
         pagination={{

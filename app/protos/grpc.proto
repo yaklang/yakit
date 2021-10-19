@@ -102,16 +102,33 @@ service Yak {
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
+  rpc ViewPortScanCode(Empty) returns (SimpleScript);
 
   // 资产管理
   rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
   rpc DeletePorts(DeletePortsRequest) returns (Empty);
 }
 
+message SimpleScript {
+  string Content = 1;
+}
+
 message PortScanRequest {
   string Targets = 1;
   string Ports = 2;
   string Mode = 3;
+  repeated string Proto = 4;
+  int64 Concurrent = 5;
+  // 主动发包模式
+  bool Active = 6;
+  // service / web / all
+  string FingerprintMode = 7;
+
+  // 保存数据库
+  bool SaveToDB = 8;
+
+  // 保存已经关闭的端口
+  bool SaveClosedPorts = 9;
 }
 
 message DeletePortsRequest {

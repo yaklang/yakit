@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Button, Card, Col, Empty, Form, PageHeader, Row, Space, Spin, Tabs, Tag} from "antd";
-import {InputItem, SelectOne, SwitchItem} from "../../utils/inputUtil";
+import {Button, Card, Col, Divider, Empty, Form, PageHeader, Row, Slider, Space, Spin, Switch, Tabs, Tag} from "antd";
+import {InputItem, MultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {randomString} from "../../utils/randomUtil";
 import {ExecResult} from "../invoker/schema";
 import {failed, info} from "../../utils/notification";
@@ -22,13 +22,25 @@ export interface PortScanPageProp {
 export interface PortScanParams {
     Targets: string
     Ports: string
-    Mode: "syn" | "fingerprint" | "all"
+    Mode: "syn" | "fingerprint" | "all",
+    Proto: ("tcp" | "udp")[],
+    Concurrent: number,
+    Active: boolean
+    FingerprintMode: "service" | "web" | "all"
+    SaveToDB: boolean
+    SaveClosedPorts: boolean
 }
 
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [params, setParams] = useState<PortScanParams>({
         Ports: "22,443,445,80,8000-8004,3306,3389,5432,8080-8084,7000-7005", Mode: "fingerprint",
         Targets: "",
+        Active: true,
+        Concurrent: 50,
+        FingerprintMode: "all",
+        Proto: ["tcp"],
+        SaveClosedPorts: false,
+        SaveToDB: true
     });
     const [loading, setLoading] = useState(false);
     const [resettingData, setResettingData] = useState(false);
@@ -38,6 +50,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([]);
     const [closedPorts, setClosedPorts] = useState<YakitPort[]>([]);
     const [port, setPort] = useState<PortAsset>();
+    const [advanced, setAdvanced] = useState(false);
 
     useEffect(() => {
         if (xtermRef) xtermFit(xtermRef, 128, 10);
@@ -129,7 +142,58 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                 <InputItem label={"扫描目标"} setValue={Targets => setParams({...params, Targets})}
                                            value={params.Targets}/>
                                 <InputItem label={"扫描端口"} setValue={Ports => setParams({...params, Ports})}
-                                           value={params.Ports}/>
+                                           value={params.Ports}
+                                />
+                                <Form.Item label={"并发"}
+                                           help={`最多同时扫描${params.Concurrent}个端口`} style={{width: "100%"}}
+                                >
+                                    <Slider
+                                        style={{width: "90%"}}
+                                        onChange={value => setParams({...params, Concurrent: value})}
+                                        value={params.Concurrent}
+                                        min={1} max={200}
+                                    />
+                                </Form.Item>
+                                <Divider orientation={"left"}>高级选项 <Switch size={"small"} checked={advanced}
+                                                                           onChange={setAdvanced}/></Divider>
+                                {advanced && <>
+                                    {/*<MultiSelectForString*/}
+                                    {/*    label={"协议"}*/}
+                                    {/*    data={[*/}
+                                    {/*        {value: "tcp", label: "TCP"},*/}
+                                    {/*        {value: "udp", label: "UDP"},*/}
+                                    {/*    ]}*/}
+                                    {/*    setValue={Proto => setParams({...params, Proto: Proto.split(",") as any})}*/}
+                                    {/*    value={params.Proto.join(",")}*/}
+                                    {/*/>*/}
+                                    <SwitchItem
+                                        label={"主动模式"} help={"允许指纹探测主动发包"}
+                                        setValue={Active => setParams({...params, Active})} value={params.Active}
+                                    />
+                                    <SwitchItem
+                                        label={"扫描结果入库"}
+                                        setValue={SaveToDB => {
+                                            setParams({...params, SaveToDB, SaveClosedPorts: false})
+                                        }} value={params.SaveToDB}
+                                    />
+                                    {params.SaveToDB && <SwitchItem
+                                        label={"保存关闭的端口"}
+                                        setValue={SaveClosedPorts => setParams({...params, SaveClosedPorts})}
+                                        value={params.SaveClosedPorts}
+                                    />}
+                                    {
+                                        params.Mode !== "syn" && <SelectOne
+                                            label={"高级指纹选项"}
+                                            data={[
+                                                {value: "web", text: "仅web指纹"},
+                                                {value: "service", text: "仅nmap指纹"},
+                                                {value: "all", text: "全部指纹"},
+                                            ]}
+                                            setValue={FingerprintMode => setParams({...params, FingerprintMode})}
+                                            value={params.FingerprintMode}
+                                        />
+                                    }
+                                </>}
                             </Spin>
 
                             <Form.Item>
