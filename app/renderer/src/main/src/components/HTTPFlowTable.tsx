@@ -68,23 +68,27 @@ export interface FuzzableParams {
     IsHTTPS: boolean;
 }
 
-export interface FilterDropdownStringProp {
+export interface TableFilterDropdownStringProp<T> {
     label: string
     pureBool?: boolean
     autoCompletions?: string[]
     pureString?: boolean
     filterName: string
-    params?: YakQueryHTTPFlowRequest
-    setParams?: (y: YakQueryHTTPFlowRequest) => any
+    params?: T
+    setParams?: (y: T) => any
 
     // from parentcotnext
     confirm?: any
     setSelectedKeys?: (keys: React.Key[]) => any
-
 }
 
-export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (props) => {
+export type FilterDropdownStringProp = TableFilterDropdownStringProp<YakQueryHTTPFlowRequest>;
 
+export const TableFilterDropdownForm: React.FC<TableFilterDropdownStringProp<any>> = (props: TableFilterDropdownStringProp<any>) => {
+    return <HTTLFlowFilterDropdownForm {...props} />
+};
+
+export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (props) => {
     const {params, setParams, setSelectedKeys} = props;
     return <div style={{padding: 8}}>
         <Form size={"small"} onSubmitCapture={e => {

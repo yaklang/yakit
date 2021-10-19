@@ -14,7 +14,7 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
     const [version, setVersion] = useState<string>("dev")
 
     useEffect(() => {
-        ipcRenderer.on("client-yak-version", async (e, data) => {
+        ipcRenderer.on("client-yak-version", async (e: any, data) => {
             setVersion(data)
         })
 

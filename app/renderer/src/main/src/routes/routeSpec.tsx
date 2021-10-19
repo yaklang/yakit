@@ -4,7 +4,7 @@ import {YakExecutor} from "../pages/invoker/YakExecutor";
 import {
     FireOutlined, CodeOutlined, OneToOneOutlined,
     EllipsisOutlined, AimOutlined, FunctionOutlined,
-    AppstoreOutlined, AuditOutlined
+    AppstoreOutlined, AuditOutlined, RocketOutlined,
 } from "@ant-design/icons";
 import {MITMPage} from "../pages/mitm/MITMPage";
 import {HistoryPage} from "../pages/history/HistoryPage";
@@ -15,6 +15,7 @@ import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage";
 import {YakBatchExecutor} from "../pages/invoker/batch/YakBatchExecutor";
 import {YakScriptManagerPage} from "../pages/invoker/YakScriptManager";
 import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager";
+import {PortScanPage} from "../pages/portscan/PortScanPage";
 
 export enum Route {
     MITM = "mitm",
@@ -51,7 +52,14 @@ export enum Route {
     PoC_ActiveMQ = "activemq",
 
     // Payload 管理
-    PayloadManager = "payload-manager"
+    PayloadManager = "payload-manager",
+
+    // 通用模块
+    GeneralModule = "general-module",
+    Mod_ScanPort = "scan-port",
+    Mod_Subdomain = "subdomain",
+    Mod_Brute = "brute",
+    Mod_Crawler = "crawler",
 }
 
 interface MenuDataProps {
@@ -67,6 +75,15 @@ export const RouteMenuData: MenuDataProps[] = [
     // {key: Route.MITM, label: "HTTP(S) 中间人劫持", icon: <FireOutlined/>},
     {
         key: Route.HTTPHacker, label: "手工渗透测试", icon: <AimOutlined/>,
+    },
+    {
+        key: Route.GeneralModule, label: "通用模块", icon: <RocketOutlined/>,
+        subMenuData: [
+            {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
+            {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
+            {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
+            {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: true},
+        ],
     },
     {
         key: Route.PoC, label: "专项漏洞检测",
@@ -170,6 +187,8 @@ export const ContentByRoute = (r: Route): JSX.Element => {
             return <YakScriptManagerPage/>
         case Route.PayloadManager:
             return <PayloadManagerPage/>
+        case Route.Mod_ScanPort:
+            return <PortScanPage/>
         default:
             return <div/>
     }
