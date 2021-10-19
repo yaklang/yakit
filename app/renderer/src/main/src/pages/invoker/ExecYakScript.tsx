@@ -65,7 +65,7 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
         const token = randomString(40);
         const progs = new Map<string, number>();
         const logs: yakitLog[] = [];
-        ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
+        ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
             if (data.IsMessage) {
                 try {
                     let message = Buffer.from(data.Message).toString("utf8");

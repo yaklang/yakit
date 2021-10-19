@@ -37,7 +37,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
 
     useEffect(() => {
         // let buffer = "";
-        render.on("client-yak-error", async (e, data) => {
+        render.on("client-yak-error", async (e: any, data) => {
             notification["error"]({message: `FoundError: ${JSON.stringify(data)}`})
             if (typeof data === 'object') {
                 setErrors([...errors, `${JSON.stringify(data)}`])
@@ -54,7 +54,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 setExecuting(false)
             }, 300)
         })
-        render.on("client-yak-data", async (e, data: ExecResult) => {
+        render.on("client-yak-data", async (e: any, data: ExecResult) => {
             if (data.IsMessage) {
                 // alert(Buffer.from(data.Message).toString("utf8"))
             }

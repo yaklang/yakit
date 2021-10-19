@@ -50,7 +50,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 
         const openPorts: YakitPort[] = [];
         const closedPorts: YakitPort[] = [];
-        ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
+        ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
             if (data.IsMessage) {
                 try {
                     let messageJsonRaw = Buffer.from(data.Message).toString("utf8");
@@ -59,9 +59,9 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                         return
                     }
                     if (logInfo.isOpen) {
-                        openPorts.push(logInfo)
+                        openPorts.unshift(logInfo)
                     } else {
-                        closedPorts.push(logInfo)
+                        closedPorts.unshift(logInfo)
                     }
                 } catch (e) {
                     failed("解析端口扫描结果失败...")

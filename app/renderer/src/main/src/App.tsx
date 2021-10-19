@@ -47,10 +47,10 @@ function App() {
             return
         }
 
-        ipcRenderer.on("client-yak-local-grpc-error", async (e, data) => {
+        ipcRenderer.on("client-yak-local-grpc-error", async (e: any, data) => {
             failed("Yak 本地 gRPC 服务器发生错误: " + data)
         })
-        ipcRenderer.on("client-yak-local-grpc-close", async (e, msg) => {
+        ipcRenderer.on("client-yak-local-grpc-close", async (e: any, msg) => {
             info("Yak 本地 gRPC 服务器已退出: " + msg)
         });
 
@@ -62,7 +62,7 @@ function App() {
     }, [mode])
 
     useEffect(() => {
-        ipcRenderer.on("client-echo-yak", async (e, ok, text) => {
+        ipcRenderer.on("client-echo-yak", async (e: any, ok, text) => {
             if (ok) {
                 success("Yakit Server 认证成功")
             } else {

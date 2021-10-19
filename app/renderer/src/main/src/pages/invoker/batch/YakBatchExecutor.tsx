@@ -112,7 +112,7 @@ export const YakBatchExecutor: React.FC<YakBatchExecutorProp> = (props) => {
         const endChannel = `${token}-exec-batch-yak-script-end`;
 
         let updateTableTick = setInterval(updateTasks, 1000);
-        ipcRenderer.on(dataChannel, async (e, data: ExecBatchYakScriptResult) => {
+        ipcRenderer.on(dataChannel, async (e: any, data: ExecBatchYakScriptResult) => {
             let element = tempTasks.get(data.Id);
             if (element === undefined) {
                 tempTasks.set(data.Id, {

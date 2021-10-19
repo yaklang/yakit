@@ -102,7 +102,10 @@ service Yak {
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
+
+  // 资产管理
   rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
+  rpc DeletePorts(DeletePortsRequest) returns (Empty);
 }
 
 message PortScanRequest {
@@ -111,12 +114,42 @@ message PortScanRequest {
   string Mode = 3;
 }
 
-message QueryPortsRequest {
+message DeletePortsRequest {
+  string Hosts = 1;
+  string Ports = 2;
+  repeated int64 Id = 3;
+}
 
+message QueryPortsRequest {
+  Paging Pagination = 1;
+
+  // 根据 Hosts Ports 查询
+  string Hosts = 2;
+  string Ports = 3;
+  string Service = 4;
 }
 
 message QueryPortsResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Port Data = 3;
+}
 
+message Port {
+  string Host = 1;
+  int64 IPInteger = 2;
+  int64 Port = 3;
+  string Proto = 4;
+  string ServiceType = 5;
+  string State = 6;
+  string Reason = 7;
+  string Fingerprint = 8;
+  repeated string CPE = 9;
+  string HtmlTitle = 10;
+
+  int64 Id = 11;
+  int64 CreatedAt = 12;
+  int64 UpdatedAt = 13;
 }
 
 message YakitCompletionRawResponse {
