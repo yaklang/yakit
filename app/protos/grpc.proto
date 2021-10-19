@@ -127,6 +127,8 @@ message QueryPortsRequest {
   string Hosts = 2;
   string Ports = 3;
   string Service = 4;
+  string State = 5;
+  string Title = 6;
 }
 
 message QueryPortsResponse {

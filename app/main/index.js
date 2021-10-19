@@ -1,7 +1,7 @@
 const {app, BrowserWindow, globalShortcut} = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
-const {registerIPC} = require("./ipc");
+const {registerIPC, clearing} = require("./ipc");
 
 let win;
 const createWindow = () => {
@@ -37,7 +37,8 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', function () {
-    app.quit()
+    clearing();
+    app.quit();
     // macos quit;
     // if (process.platform !== 'darwin') app.quit()
 })

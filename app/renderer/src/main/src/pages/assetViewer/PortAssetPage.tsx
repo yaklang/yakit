@@ -1,0 +1,237 @@
+import React, {useEffect, useState} from "react";
+import {Button, Descriptions, Space, Table, Tag, Typography} from "antd";
+import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema";
+import {failed} from "../../utils/notification";
+import {PortAsset} from "./models";
+import {CopyableField} from "../../utils/inputUtil";
+import {formatTimestamp} from "../../utils/timeUtil";
+import {HTTPFlow, TableFilterDropdownForm} from "../../components/HTTPFlowTable";
+import {SearchOutlined, ReloadOutlined} from "@ant-design/icons";
+import {SorterResult} from "antd/lib/table/interface";
+import {YakEditor} from "../../utils/editors";
+
+const {ipcRenderer} = window.require("electron");
+
+export interface PortAssetTableProp {
+    closed?: boolean
+    onClicked?: (i: PortAsset) => any,
+}
+
+export interface QueryPortsRequest extends QueryGeneralRequest {
+    Hosts: string
+    Ports: string
+    State: "open" | "closed" | "unknown"
+    Service: string
+}
+
+export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
+    const [response, setResponse] = useState<QueryGeneralResponse<PortAsset>>({
+        Data: [], Pagination: {
+            Limit: 15, Page: 1, OrderBy: "desc", Order: "updated_at",
+        } as PaginationSchema, Total: 0
+    });
+    const [params, setParams] = useState<QueryPortsRequest>({
+        Hosts: "", Ports: "", Service: "", State: props.closed ? "closed" : "open", Pagination: {
+            Limit: 15, Page: 1, OrderBy: "desc", Order: "updated_at",
+        },
+    });
+    const [loading, setLoading] = useState(false);
+
+    const update = (current?: number, pageSize?: number, order?: string, orderBy?: string) => {
+        setLoading(true)
+        ipcRenderer.invoke("QueryPorts", {
+            ...params,
+            Pagination: {
+                Limit: pageSize || response.Pagination.Limit,
+                Page: current || response.Pagination.Page,
+                Order: order || "desc",
+                OrderBy: orderBy || "updated_at"
+            }
+        }).then(data => {
+            setResponse(data)
+        }).catch(e => {
+            failed("QueryPorts failed: " + `${e}`)
+        }).finally(() => setTimeout(() => setLoading(false), 300))
+    }
+
+    useEffect(() => {
+        update()
+    }, [])
+
+    return <Table<PortAsset>
+        title={() => {
+            return <Space>
+                端口资产列表 <Button
+                icon={<ReloadOutlined/>} size={"small"} type={"link"}
+                onClick={() => {
+                    update(1)
+                }}
+            />
+            </Space>
+        }}
+        scroll={{x: "auto"}}
+        size={"small"}
+        bordered={true}
+        onRow={r => {
+            return {
+                onClick: e => {
+                    props.onClicked && props.onClicked(r)
+                },
+            }
+        }}
+
+        loading={loading}
+        columns={props.closed ? [
+            {
+                title: "网络地址",
+                render: (i: PortAsset) => <CopyableField text={`${i.Host}:${i.Port}`}/>,
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return params && setParams && <TableFilterDropdownForm
+                        label={"搜索IP/网段"} params={params} setParams={setParams}
+                        filterName={"Hosts"} pureString={true}
+                        confirm={confirm} setSelectedKeys={setSelectedKeys}
+                    />
+                }, width: 200,
+                filterIcon: filtered => {
+                    return params && !!setParams && <SearchOutlined style={{color: filtered ? '#1890ff' : undefined}}/>
+                },
+            },
+            {
+                title: "端口", width: 70,
+                render: (i: PortAsset) => <Tag color={"geekblue"}>{i.Port}</Tag>,
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return params && setParams && <TableFilterDropdownForm
+                        label={"搜索端口"} params={params} setParams={setParams}
+                        filterName={"Ports"} autoCompletions={[]} pureString={true}
+                        confirm={confirm} setSelectedKeys={setSelectedKeys}
+                    />
+                },
+                filterIcon: filtered => {
+                    return params && !!setParams && <SearchOutlined style={{color: filtered ? '#1890ff' : undefined}}/>
+                },
+            },
+            {
+                title: "关闭原因",
+                render: (i: PortAsset) => i.ServiceType ? <div style={{width: 230, overflow: "auto"}}><CopyableField
+                    text={i.Reason}/></div> : "", width: 250,
+            },
+        ] : [
+            {
+                title: "网络地址",
+                render: (i: PortAsset) => <CopyableField text={`${i.Host}:${i.Port}`}/>,
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return params && setParams && <TableFilterDropdownForm
+                        label={"搜索IP/网段"} params={params} setParams={setParams}
+                        filterName={"Hosts"} pureString={true}
+                        confirm={confirm} setSelectedKeys={setSelectedKeys}
+                    />
+                }, width: 200,
+                filterIcon: filtered => {
+                    return params && !!setParams && <SearchOutlined style={{color: filtered ? '#1890ff' : undefined}}/>
+                },
+            },
+            {
+                title: "端口", width: 70,
+                render: (i: PortAsset) => <Tag color={"geekblue"}>{i.Port}</Tag>,
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return params && setParams && <TableFilterDropdownForm
+                        label={"搜索端口"} params={params} setParams={setParams}
+                        filterName={"Ports"} autoCompletions={[]} pureString={true}
+                        confirm={confirm} setSelectedKeys={setSelectedKeys}
+                    />
+                },
+                filterIcon: filtered => {
+                    return params && !!setParams && <SearchOutlined style={{color: filtered ? '#1890ff' : undefined}}/>
+                },
+            },
+            {
+                title: "协议", width: 57,
+                render: (i: PortAsset) => <Tag color={"green"}>{i.Proto}</Tag>,
+            },
+            {
+                title: "服务指纹",
+                render: (i: PortAsset) => i.ServiceType ? <div style={{width: 230, overflow: "auto"}}><CopyableField
+                    text={i.ServiceType}/></div> : "", width: 250,
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return params && setParams && <TableFilterDropdownForm
+                        label={"服务关键字"} params={params} setParams={setParams}
+                        filterName={"Service"} autoCompletions={[]} pureString={true}
+                        confirm={confirm} setSelectedKeys={setSelectedKeys}
+                    />
+                },
+                filterIcon: filtered => {
+                    return params && !!setParams && <SearchOutlined style={{color: filtered ? '#1890ff' : undefined}}/>
+                },
+            },
+            {
+                title: "Title",
+                render: (i: PortAsset) => i.ServiceType ? <div style={{width: 150, overflow: "auto"}}><CopyableField
+                    text={i.HtmlTitle}/></div> : "", width: 170,
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return params && setParams && <TableFilterDropdownForm
+                        label={"Html Title"} params={params} setParams={setParams}
+                        filterName={"Title"} autoCompletions={[]} pureString={true}
+                        confirm={confirm} setSelectedKeys={setSelectedKeys}
+                    />
+                },
+                filterIcon: filtered => {
+                    return params && !!setParams && <SearchOutlined style={{color: filtered ? '#1890ff' : undefined}}/>
+                },
+            },
+            {title: "最近更新时间", render: (i: PortAsset) => <Tag color={"green"}>{formatTimestamp(i.UpdatedAt)}</Tag>},
+        ]}
+        dataSource={response.Data}
+        pagination={{
+            size: "small",
+            pageSize: response.Pagination?.Limit || 10,
+            total: response.Total, showTotal: (i) => <Tag>共{i}条记录</Tag>,
+            showSizeChanger: true, showLessItems: true,
+        }}
+        // @ts-ignore*/
+        onChange={(paging: any, _: any, sorter: SorterResult<HTTPFlow>) => {
+            if (sorter.order && sorter.columnKey) {
+                update(paging.current, paging.pageSize, sorter.order, `${sorter.columnKey}`)
+            } else {
+                update(paging.current, paging.pageSize)
+            }
+        }}
+    >
+
+    </Table>
+};
+
+export interface PortAssetDescriptionProp {
+    port: PortAsset
+}
+
+export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) => {
+    const {port} = props;
+    return <Descriptions size={"small"} bordered={true} column={2} title={`${port.Host}:${port.Port} 详情`}>
+        <Descriptions.Item label={<Tag>网络地址</Tag>} span={2}><CopyableField
+            text={`${port.Host}:${port.Port}`}/></Descriptions.Item>
+        <Descriptions.Item label={<Tag>协议</Tag>}><CopyableField
+            text={`${port.Proto}`}/></Descriptions.Item>
+        <Descriptions.Item label={<Tag>状态</Tag>}><CopyableField
+            text={`${port.State}`}/></Descriptions.Item>
+        {port.ServiceType && <Descriptions.Item span={2} label={<Tag>应用</Tag>}><CopyableField
+            text={`${port.ServiceType}`}/></Descriptions.Item>}
+        {port.Reason && <Descriptions.Item span={2} label={<Tag>失败原因</Tag>}><CopyableField
+            text={`${port.Reason}`}/></Descriptions.Item>}
+        {port.HtmlTitle && <Descriptions.Item span={2} label={<Tag>Title</Tag>}><CopyableField
+            text={`${port.HtmlTitle}`}/></Descriptions.Item>}
+        {port.CPE.join("|") !== "" ? <Descriptions.Item span={2} label={<Tag>CPE</Tag>}>
+            <Space direction={"vertical"}>
+                {port.CPE.map(e => {
+                    return <CopyableField
+                        text={`${e}`}
+                    />
+                })}
+            </Space>
+        </Descriptions.Item> : undefined}
+        {port.Fingerprint && <Descriptions.Item span={2} label={<Tag>指纹信息</Tag>}>
+            <div style={{height: 200}}>
+                <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true}/>
+            </div>
+        </Descriptions.Item>}
+    </Descriptions>
+};

@@ -66,6 +66,9 @@ function getClient() {
 }
 
 module.exports = {
+    clearing: () => {
+        require("./handlers/yakLocal").clearing();
+    },
     registerIPC: (win) => {
         ipcMain.handle("yakit-connect-status", () => {
             return {
@@ -100,11 +103,14 @@ module.exports = {
         require("./handlers/httpAnalyzer")(win, getClient);
         require("./handlers/engineStatus")(win, getClient);
         require("./handlers/codec")(win, getClient);
-        require("./handlers/yakLocal")(win, getClient);
+        require("./handlers/yakLocal").register(win, getClient);
         require("./handlers/openWebsiteByChrome")(win, getClient);
         require("./handlers/manageYakScript")(win, getClient);
         require("./handlers/payloads")(win, getClient);
         require("./handlers/completion")(win, getClient);
         require("./handlers/portScan")(win, getClient);
+
+        //assets
+        require("./handlers/assets")(win, getClient);
     }
 }

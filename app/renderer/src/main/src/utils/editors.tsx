@@ -23,6 +23,9 @@ export interface EditorProps {
     type?: "fuzz-http" | "yak" | string
     theme?: string
 
+    noMiniMap?: boolean,
+    noLineNumber?: boolean
+
     actions?: IMonacoActionDescriptor[]
     triggerId?: any
 }
@@ -92,6 +95,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                     readOnly: props.readOnly, scrollBeyondLastLine: false,
                     fontWeight: "500", fontSize: 14, showFoldingControls: "always",
                     showUnused: true, wordWrap: "on", renderLineHighlight: "line",
+                    lineNumbers: props.noLineNumber ? "off" : undefined,
+                    minimap: props.noMiniMap ? {enabled: false} : undefined,
                 }}
             />
         </>}

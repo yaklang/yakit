@@ -556,11 +556,14 @@ export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
 
 export interface CopyableFieldProp {
     text?: string
+    width?: any
     style?: React.CSSProperties;
 }
 
 export const CopyableField: React.FC<CopyableFieldProp> = (props) => {
-    return <Typography.Paragraph copyable={true} style={{marginBottom: 0, ...props.style}}>
-        {props.text}
-    </Typography.Paragraph>
+    return <div style={{width: props.width, overflow: "auto"}}>
+        <Typography.Paragraph copyable={true} style={{marginBottom: 0, ...props.style}} ellipsis={{tooltip: true}}>
+            {props.text}
+        </Typography.Paragraph>
+    </div>
 };
