@@ -1,14 +1,16 @@
-import react from "react";
-import {PortListening} from "../pages/PortListening";
+import React from "react";
 import {YakExecutor} from "../pages/invoker/YakExecutor";
 import {
-    FireOutlined, CodeOutlined, OneToOneOutlined,
-    EllipsisOutlined, AimOutlined, FunctionOutlined,
-    AppstoreOutlined, AuditOutlined, RocketOutlined,
+    AimOutlined,
+    AppstoreOutlined,
+    AuditOutlined,
+    CodeOutlined,
+    EllipsisOutlined,
+    FireOutlined,
+    FunctionOutlined,
+    OneToOneOutlined,
+    RocketOutlined,
 } from "@ant-design/icons";
-import {MITMPage} from "../pages/mitm/MITMPage";
-import {HistoryPage} from "../pages/history/HistoryPage";
-import {HTTPFuzzerPage} from "../pages/fuzzer/HTTPFuzzerPage";
 import {HTTPHacker} from "../pages/hacker/httpHacker";
 import {CodecPage} from "../pages/codec/CodecPage";
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage";
@@ -60,6 +62,7 @@ export enum Route {
     Mod_Subdomain = "subdomain",
     Mod_Brute = "brute",
     Mod_Crawler = "crawler",
+    Mod_SpaceEngine = "spaceengine"
 }
 
 interface MenuDataProps {
@@ -81,6 +84,7 @@ export const RouteMenuData: MenuDataProps[] = [
         subMenuData: [
             {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
             {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
+            {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
             {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
             {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: true},
         ],
