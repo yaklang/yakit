@@ -172,9 +172,9 @@ export const Main: React.FC<MainProp> = (props) => {
                         <Content style={{
                             overflow: "auto",
                             backgroundColor: "#fff",
-                            marginLeft: 12,
+                            marginLeft: 12, height: "100%",
                         }}>
-                            <div style={{margin: 12}}>
+                            <div style={{padding: 12, height: "100%"}}>
                                 {ContentByRoute(route)}
                             </div>
                         </Content>

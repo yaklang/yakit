@@ -1,6 +1,22 @@
 const {ipcMain} = require("electron");
 
 module.exports = (win, getClient) => {
+    // asyncQueryYakScript wrapper
+    const asyncQueryYakScript = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScript(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryYakScript", async (e, params) => {
+        return await asyncQueryYakScript(params)
+    })
+
     ipcMain.handle("query-yak-script", (e, params) => {
         getClient().QueryYakScript(params, (err, data) => {
             if (data) {

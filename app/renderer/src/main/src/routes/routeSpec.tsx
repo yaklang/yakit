@@ -18,6 +18,7 @@ import {YakBatchExecutor} from "../pages/invoker/batch/YakBatchExecutor";
 import {YakScriptManagerPage} from "../pages/invoker/YakScriptManager";
 import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager";
 import {PortScanPage} from "../pages/portscan/PortScanPage";
+import {YakitStorePage} from "../pages/yakitStore/YakitStorePage";
 
 export enum Route {
     MITM = "mitm",
@@ -31,6 +32,7 @@ export enum Route {
     IGNORE = "ignore",
 
     ModManager = "mod-manager",
+    ModManagerLegacy = "mod-manager-legacy",
 
     // 具体漏洞内容
     PoC = "poc",
@@ -188,6 +190,8 @@ export const ContentByRoute = (r: Route): JSX.Element => {
         case Route.Codec:
             return <CodecPage/>
         case Route.ModManager:
+            return <YakitStorePage/>
+        case Route.ModManagerLegacy:
             return <YakScriptManagerPage/>
         case Route.PayloadManager:
             return <PayloadManagerPage/>

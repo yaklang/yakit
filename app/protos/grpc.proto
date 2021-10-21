@@ -107,6 +107,20 @@ service Yak {
   // 资产管理
   rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
   rpc DeletePorts(DeletePortsRequest) returns (Empty);
+
+  // Yakit Store
+  rpc UpdateFromYakitResource(UpdateFromYakitResourceRequest) returns (Empty);
+  rpc UpdateFromGithub(UpdateFromGithubRequest) returns (Empty);
+}
+
+message UpdateFromYakitResourceRequest {
+  string Proxy = 1;
+  string BaseSourceUrl = 2;
+}
+
+message UpdateFromGithubRequest {
+  string Proxy = 1;
+  string GithubUrl = 2;
 }
 
 message SimpleScript {
