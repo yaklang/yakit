@@ -36,10 +36,10 @@
     ajv "^6.12.0"
     ajv-keywords "^3.4.1"
 
-"@electron/get@^1.0.1":
-  version "1.12.4"
-  resolved "https://registry.npm.taobao.org/@electron/get/download/@electron/get-1.12.4.tgz"
-  integrity sha1-pZcRE/wb+PoSqHidwgFSpzWfBqs=
+"@electron/get@^1.13.0":
+  version "1.13.0"
+  resolved "https://registry.nlark.com/@electron/get/download/@electron/get-1.13.0.tgz#95c6bcaff4f9a505ea46792424f451efea89228c"
+  integrity sha1-lca8r/T5pQXqRnkkJPRR7+qJIow=
   dependencies:
     debug "^4.1.1"
     env-paths "^2.2.0"
@@ -864,12 +864,12 @@ electron-publish@22.11.7:
     lazy-val "^1.0.5"
     mime "^2.5.2"
 
-electron@^13.1.7:
-  version "13.1.7"
-  resolved "https://registry.nlark.com/electron/download/electron-13.1.7.tgz"
-  integrity sha1-fhf1yTqNGCoqSGiE/tPcNKsQG+k=
+electron@^15.3.0:
+  version "15.3.0"
+  resolved "https://registry.npmmirror.com/electron/download/electron-15.3.0.tgz?cache=0&sync_timestamp=1634791314915&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Felectron%2Fdownload%2Felectron-15.3.0.tgz#f9803c5a05b2dac12efc6d4203492c7e204b4819"
+  integrity sha1-+YA8WgWy2sEu/G1CA0ksfiBLSBk=
   dependencies:
-    "@electron/get" "^1.0.1"
+    "@electron/get" "^1.13.0"
     "@types/node" "^14.6.2"
     extract-zip "^1.0.3"
 

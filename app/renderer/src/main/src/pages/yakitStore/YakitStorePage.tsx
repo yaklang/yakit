@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, List, Popconfirm, Row, Space, Tabs, Tag} from "antd";
+import {Button, Card, Col, Divider, Empty, List, PageHeader, Popconfirm, Row, Space, Tabs, Tag} from "antd";
 import {ReloadOutlined} from "@ant-design/icons";
 import {showModal} from "../../utils/showModal";
 import {AutoUpdateYakModuleViewer} from "../../utils/basic";
@@ -8,6 +8,7 @@ import {failed} from "../../utils/notification";
 import {SettingOutlined} from "@ant-design/icons";
 import {CopyableField} from "../../utils/inputUtil";
 import {formatDate, formatTimestamp} from "../../utils/timeUtil";
+import {YakEditor} from "../../utils/editors";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -16,8 +17,10 @@ export interface YakitStorePageProp {
 }
 
 export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
+    const [script, setScript] = useState<YakScript>();
+
     return <div style={{height: "100%"}}>
-        <Row style={{height: "100%"}}>
+        <Row style={{height: "100%"}} gutter={16}>
             <Col span={8} style={{height: "100%"}}>
                 <Card
                     bodyStyle={{padding: 0, paddingRight: 16, overflow: "auto"}}
@@ -54,23 +57,59 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             {tab: "MITM", key: "yak-mitm"},
                         ].map(e => {
                             return <Tabs.TabPane tab={e.tab} key={e.key}>
-                                <YakModuleList Keyword={""} Type={e.key as any}/>
+                                <YakModuleList currentId={script?.Id} Keyword={""} Type={e.key as any} onClicked={setScript}/>
                             </Tabs.TabPane>
                         })}
                     </Tabs>
                 </Card>
             </Col>
             <Col span={16}>
-                <Card
+                {script ? <Card
                     title={<Space>
                         <div>
-                            Yak 模块
+                            Yak[{script?.Type}] 模块详情
                         </div>
-                        <Tag>{}</Tag>
                     </Space>} bordered={false} size={"small"}
                 >
+                    <PageHeader
+                        style={{paddingLeft: 2, paddingBottom: 12}}
+                        title={script?.ScriptName} subTitle={<Space size={2}>
+                        {script?.Author}
+                    </Space>}>
+                        <Space direction={"vertical"}>
+                            <Space>
+                                <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>
+                                <Divider type={"vertical"}/>
+                                {script?.Tags ? (script?.Tags || "").split(",").filter(i => !!i).map(i => {
+                                    return <Tag>{i}</Tag>
+                                }) : "No Tags"}
+                            </Space>
+                            <Space>
+                                <CopyableField noCopy={false} text={script?.Help}/>
+                            </Space>
+                            <Space>
+                                <Button size={"small"} type={"primary"}>添加到菜单栏</Button>
+                                <Button size={"small"} danger={true}>不再关注 / 隐藏</Button>
+                            </Space>
+                        </Space>
+                    </PageHeader>
+                    {/*<Divider/>*/}
+                    <Tabs type={"card"}>
+                        <Tabs.TabPane tab={"插件源码 / Source Code"} key={"code"}>
+                            <div style={{height: 500}}>
+                                <YakEditor value={script?.Content}/>
+                            </div>
+                        </Tabs.TabPane>
+                        <Tabs.TabPane tab={"执行器 / Runner"} key={"runner"}>
 
-                </Card>
+                        </Tabs.TabPane>
+                        <Tabs.TabPane tab={"文档 / Docs"} key={"docs"}>
+
+                        </Tabs.TabPane>
+                    </Tabs>
+                </Card> : <Empty style={{marginTop: 100}}>
+                    在左侧所选模块查看详情
+                </Empty>}
             </Col>
         </Row>
     </div>
@@ -79,6 +118,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
 export interface YakModuleListProp {
     Type: "yak" | "yak-mitm" | "nuclei",
     Keyword: string
+    onClicked: (y: YakScript) => any
+    currentId?: number
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -137,7 +178,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             return <List.Item style={{marginLeft: 0}} key={i.Id}>
                 <Card
                     size={"small"} bordered={true} hoverable={true}
-                    title={i.ScriptName} style={{width: "100%"}}
+                    title={i.ScriptName} style={{width: "100%", backgroundColor: props.currentId === i.Id ? "rgba(79,188,255,0.26)" : "#fff"}}
+                    onClick={() => props.onClicked(i)}
                 >
                     <Row>
                         <Col span={24}>
