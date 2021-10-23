@@ -143,4 +143,20 @@ module.exports = (win, getClient) => {
             win.webContents.send(`${token}-exec-batch-yak-script-end`)
         })
     })
+
+    // asyncGetYakScriptById wrapper
+    const asyncGetYakScriptById = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetYakScriptById(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetYakScriptById", async (e, params) => {
+        return await asyncGetYakScriptById(params)
+    })
 };

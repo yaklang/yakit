@@ -19,6 +19,8 @@ import {YakScriptManagerPage} from "../pages/invoker/YakScriptManager";
 import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager";
 import {PortScanPage} from "../pages/portscan/PortScanPage";
 import {YakitStorePage} from "../pages/yakitStore/YakitStorePage";
+import {PluginOperator} from "../pages/yakitStore/PluginOperator";
+import {failed} from "../utils/notification";
 
 export enum Route {
     MITM = "mitm",
@@ -116,7 +118,7 @@ export const RouteMenuData: MenuDataProps[] = [
         ],
     },
 
-    {key: Route.ModManager, label: "模块管理器", icon: <AppstoreOutlined/>},
+    {key: Route.ModManager, label: "插件商店", icon: <AppstoreOutlined/>},
     {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined/>},
     {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
     {key: Route.Codec, label: "编码与解码", icon: <FireOutlined/>},
@@ -131,7 +133,23 @@ export const RouteMenuData: MenuDataProps[] = [
     // },
 ]
 
-export const ContentByRoute = (r: Route): JSX.Element => {
+export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Element => {
+    const routeStr = `${r}`;
+    if (routeStr.startsWith("plugin:")) {
+        let id = -1;
+        try {
+            let splitList = routeStr.split(":");
+            let idRaw = splitList.reverse().shift();
+            id = parseInt(idRaw || "");
+        } catch (e) {
+            failed(`Loading PluginKey: ${r} failed`)
+        }
+        return <PluginOperator
+            yakScriptId={yakScriptId || id} size={"big"}
+            fromMenu={true}
+        />
+    }
+
     switch (r) {
         // case Route.HistoryRequests:
         //     return <HistoryPage/>

@@ -42,6 +42,10 @@ message ExecBatchYakScriptResult {
   ExecResult Result = 8;
 }
 
+message GetYakScriptByIdRequest {
+  int64 Id = 1;
+}
+
 service Yak {
   // version
   rpc Version(Empty) returns (VersionResponse);
@@ -59,13 +63,17 @@ service Yak {
   rpc Exec(ExecRequest) returns (stream ExecResult);
   rpc QueryExecHistory(ExecHistoryRequest) returns (ExecHistoryRecordResponse);
   rpc RemoveExecHistory(Empty) returns (Empty);
-  rpc QueryYakScript(QueryYakScriptRequest) returns (QueryYakScriptResponse);
-  rpc SaveYakScript(YakScript) returns (YakScript);
-  rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc LoadNucleiTemplates(Empty) returns (Empty);
   rpc AutoUpdateYakModule(Empty) returns (stream ExecResult);
   rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
   rpc ExecBatchYakScript(ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
+
+  // yakScript
+  rpc QueryYakScript(QueryYakScriptRequest) returns (QueryYakScriptResponse);
+  rpc SaveYakScript(YakScript) returns (YakScript);
+  rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc GetYakScriptById(GetYakScriptByIdRequest) returns (YakScript);
+
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -111,6 +119,52 @@ service Yak {
   // Yakit Store
   rpc UpdateFromYakitResource(UpdateFromYakitResourceRequest) returns (Empty);
   rpc UpdateFromGithub(UpdateFromGithubRequest) returns (Empty);
+
+  // Menu
+  rpc AddToMenu(AddToMenuRequest) returns (Empty);
+  rpc RemoveFromMenu(RemoveFromMenuRequest) returns (Empty);
+  rpc YakScriptIsInMenu(YakScriptIsInMenuRequest) returns (Empty);
+  rpc GetAllMenuItem(Empty) returns (MenuByGroup);
+  rpc QueryGroupsByYakScriptId(QueryGroupsByYakScriptIdRequest) returns (GroupNames);
+}
+
+message GroupNames {
+  repeated string Groups = 1;
+}
+
+message QueryGroupsByYakScriptIdRequest {
+  int64 YakScriptId = 1;
+}
+
+message MenuItem {
+  string Group = 1;
+  string Verbose = 2;
+  int64 YakScriptId = 3;
+}
+
+message MenuItemGroup {
+  string Group = 1;
+  repeated MenuItem Items = 2;
+}
+
+message MenuByGroup {
+  repeated MenuItemGroup Groups = 1;
+}
+
+message YakScriptIsInMenuRequest {
+  string Group = 1 ;
+  int64 YakScriptId = 2;
+}
+
+message RemoveFromMenuRequest {
+  int64 YakScriptId = 1;
+  string Group = 2;
+}
+
+message AddToMenuRequest {
+  int64 YakScriptId = 1;
+  string Group = 2;
+  string Verbose = 3;
 }
 
 message UpdateFromYakitResourceRequest {

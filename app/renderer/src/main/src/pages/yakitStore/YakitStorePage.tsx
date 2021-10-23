@@ -1,14 +1,34 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Divider, Empty, List, PageHeader, Popconfirm, Row, Space, Tabs, Tag} from "antd";
-import {ReloadOutlined} from "@ant-design/icons";
+import {
+    Button,
+    Card,
+    Col,
+    Divider,
+    Empty,
+    Form,
+    Input,
+    List,
+    PageHeader,
+    Popconfirm,
+    Row,
+    Space,
+    Tabs,
+    Tag
+} from "antd";
+import {ReloadOutlined, SearchOutlined} from "@ant-design/icons";
 import {showModal} from "../../utils/showModal";
 import {AutoUpdateYakModuleViewer} from "../../utils/basic";
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema";
-import {failed} from "../../utils/notification";
-import {SettingOutlined} from "@ant-design/icons";
-import {CopyableField} from "../../utils/inputUtil";
+import {failed, success} from "../../utils/notification";
+import {SettingOutlined, FileSyncOutlined, DownloadOutlined} from "@ant-design/icons";
+import {CopyableField, InputItem} from "../../utils/inputUtil";
 import {formatDate, formatTimestamp} from "../../utils/timeUtil";
 import {YakEditor} from "../../utils/editors";
+import ReactJson from "react-json-view";
+import ReactMarkdown from "react-markdown";
+import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
+import {YakExecutorParam} from "../invoker/YakExecutorParams";
+import {PluginOperator} from "./PluginOperator";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -18,6 +38,8 @@ export interface YakitStorePageProp {
 
 export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [script, setScript] = useState<YakScript>();
+    const [trigger, setTrigger] = useState(false);
+    const [keyword, setKeyword] = useState("");
 
     return <div style={{height: "100%"}}>
         <Row style={{height: "100%"}} gutter={16}>
@@ -28,6 +50,34 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     style={{height: "100%", overflow: "auto"}}
                     title={<Space>
                         插件商店
+                        <Button
+                            size={"small"}
+                            type={"link"}
+                            onClick={e => setTrigger(!trigger)}
+                        >
+                            <ReloadOutlined/>
+                        </Button>
+                        <Button
+                            size={"small"} type={"link"}
+                            onClick={e => {
+                                let m = showModal({
+                                    title: "设置 Keyword",
+                                    content: <>
+                                        <KeywordSetter
+                                            onFinished={e => {
+                                                setKeyword(e)
+                                                m.destroy()
+                                            }} defaultValue={keyword}
+                                        />
+                                    </>
+                                })
+                            }}
+                        >
+                            <SearchOutlined/>
+                        </Button>
+                    </Space>}
+                    size={"small"}
+                    extra={[
                         <Popconfirm
                             title={"更新模块数据库？"}
                             onConfirm={e => {
@@ -38,10 +88,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 })
                             }}
                         >
-                            <Button size={"small"} type={"link"}><ReloadOutlined/></Button>
+                            <Button size={"small"} type={"primary"} icon={<DownloadOutlined/>}>
+                                更新商店
+                            </Button>
                         </Popconfirm>
-                    </Space>}
-                    size={"small"} extra={[]}
+                    ]}
                 >
                     <Tabs
                         tabPosition={"left"} size={"small"}
@@ -57,7 +108,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             {tab: "MITM", key: "yak-mitm"},
                         ].map(e => {
                             return <Tabs.TabPane tab={e.tab} key={e.key}>
-                                <YakModuleList currentId={script?.Id} Keyword={""} Type={e.key as any} onClicked={setScript}/>
+                                <YakModuleList currentId={script?.Id} Keyword={keyword} Type={e.key as any}
+                                               onClicked={setScript} trigger={trigger}/>
                             </Tabs.TabPane>
                         })}
                     </Tabs>
@@ -71,42 +123,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         </div>
                     </Space>} bordered={false} size={"small"}
                 >
-                    <PageHeader
-                        style={{paddingLeft: 2, paddingBottom: 12}}
-                        title={script?.ScriptName} subTitle={<Space size={2}>
-                        {script?.Author}
-                    </Space>}>
-                        <Space direction={"vertical"}>
-                            <Space>
-                                <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>
-                                <Divider type={"vertical"}/>
-                                {script?.Tags ? (script?.Tags || "").split(",").filter(i => !!i).map(i => {
-                                    return <Tag>{i}</Tag>
-                                }) : "No Tags"}
-                            </Space>
-                            <Space>
-                                <CopyableField noCopy={false} text={script?.Help}/>
-                            </Space>
-                            <Space>
-                                <Button size={"small"} type={"primary"}>添加到菜单栏</Button>
-                                <Button size={"small"} danger={true}>不再关注 / 隐藏</Button>
-                            </Space>
-                        </Space>
-                    </PageHeader>
-                    {/*<Divider/>*/}
-                    <Tabs type={"card"}>
-                        <Tabs.TabPane tab={"插件源码 / Source Code"} key={"code"}>
-                            <div style={{height: 500}}>
-                                <YakEditor value={script?.Content}/>
-                            </div>
-                        </Tabs.TabPane>
-                        <Tabs.TabPane tab={"执行器 / Runner"} key={"runner"}>
-
-                        </Tabs.TabPane>
-                        <Tabs.TabPane tab={"文档 / Docs"} key={"docs"}>
-
-                        </Tabs.TabPane>
-                    </Tabs>
+                    <PluginOperator yakScriptId={script.Id}/>
                 </Card> : <Empty style={{marginTop: 100}}>
                     在左侧所选模块查看详情
                 </Empty>}
@@ -120,6 +137,7 @@ export interface YakModuleListProp {
     Keyword: string
     onClicked: (y: YakScript) => any
     currentId?: number
+    trigger?: boolean
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -138,13 +156,15 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     });
 
 
-    const update = (page?: number, limit?: number) => {
+    const update = (page?: number, limit?: number, keyword?: string, Type?: string) => {
         const newParams = {
             ...params
         }
         if (page) newParams.Pagination.Page = page;
         if (limit) newParams.Pagination.Limit = limit;
 
+        newParams.Keyword = keyword;
+        newParams.Type = Type;
         setLoading(true)
         ipcRenderer.invoke("QueryYakScript", newParams).then(data => {
             setResponse(data)
@@ -156,8 +176,12 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     }
 
     useEffect(() => {
-        update(1)
-    }, [props.Type, props.Keyword])
+        setParams({...params, Keyword: props.Keyword, Type: props.Type})
+        update(1, undefined, props.Keyword || "", props.Type)
+    }, [
+        props.trigger, props.Keyword, props.Type
+    ])
+
 
     return <List<YakScript>
         loading={loading} style={{width: "100%"}}
@@ -178,7 +202,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             return <List.Item style={{marginLeft: 0}} key={i.Id}>
                 <Card
                     size={"small"} bordered={true} hoverable={true}
-                    title={i.ScriptName} style={{width: "100%", backgroundColor: props.currentId === i.Id ? "rgba(79,188,255,0.26)" : "#fff"}}
+                    title={i.ScriptName} style={{
+                    width: "100%",
+                    backgroundColor: props.currentId === i.Id ? "rgba(79,188,255,0.26)" : "#fff"
+                }}
                     onClick={() => props.onClicked(i)}
                 >
                     <Row>
@@ -223,4 +250,33 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     >
 
     </List>
+};
+
+
+interface KeywordSetterProp {
+    onFinished: (s: string) => any
+    defaultValue: string
+}
+
+const KeywordSetter: React.FC<KeywordSetterProp> = (props) => {
+    const [keyword, setKeyword] = useState(props.defaultValue);
+
+    return <div>
+        <Form onSubmitCapture={e => {
+            e.preventDefault()
+
+            props.onFinished(keyword)
+        }} layout={"vertical"} style={{
+            marginLeft: 10, marginTop: 6
+        }}>
+            <Form.Item label={"插件关键字"}>
+                <Input value={keyword} onChange={e => {
+                    setKeyword(e.target.value)
+                }}/>
+            </Form.Item>
+            <Form.Item>
+                <Button type="primary" htmlType="submit"> Search </Button>
+            </Form.Item>
+        </Form>
+    </div>
 };

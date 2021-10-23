@@ -23,6 +23,7 @@
     "react-copy-to-clipboard": "^5.0.4",
     "react-dom": "^17.0.2",
     "react-json-view": "^1.21.3",
+    "react-markdown": "^7.0.1",
     "react-monaco-editor": "^0.44.0",
     "react-resize-detector": "^6.7.6",
     "react-scripts": "4.0.3",
