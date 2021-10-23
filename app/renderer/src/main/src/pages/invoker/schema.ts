@@ -75,6 +75,7 @@ export interface YakScript {
     Author: string
     Tags: string
     IsHistory: boolean
+    IsIgnore?: boolean
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
@@ -83,6 +84,7 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     Type?: string
     Keyword?: string
     IsHistory?: boolean
+    IsIgnore?: boolean
 }
 
 /*

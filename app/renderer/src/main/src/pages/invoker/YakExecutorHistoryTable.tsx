@@ -17,9 +17,9 @@ const {ipcRenderer} = window.require("electron");
 const ExecHistoryViewer = (r: ExecHistoryRecord) => {
     return <Row style={{width: "100%"}}>
         <Space direction={"vertical"} style={{width: "100%"}}>
-            <div style={{height: 300, width: "100%"}}>
-                <YakEditor value={r.Script} readOnly={true}/>
-            </div>
+            {/*<div style={{height: 300, width: "100%"}}>*/}
+            {/*    <YakEditor value={r.Script} readOnly={true}/>*/}
+            {/*</div>*/}
             <Tabs>
                 {r.Stderr && <Tabs.TabPane tab={"标准错误流内容"} key={"stderr"}>
                     <div style={{height: 300}}>

@@ -21,7 +21,7 @@ import {AutoUpdateYakModuleViewer} from "../../utils/basic";
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema";
 import {failed, success} from "../../utils/notification";
 import {SettingOutlined, FileSyncOutlined, DownloadOutlined} from "@ant-design/icons";
-import {CopyableField, InputItem} from "../../utils/inputUtil";
+import {CopyableField, InputItem, SwitchItem} from "../../utils/inputUtil";
 import {formatDate, formatTimestamp} from "../../utils/timeUtil";
 import {YakEditor} from "../../utils/editors";
 import ReactJson from "react-json-view";
@@ -40,6 +40,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [script, setScript] = useState<YakScript>();
     const [trigger, setTrigger] = useState(false);
     const [keyword, setKeyword] = useState("");
+    const [ignored, setIgnored] = useState(false);
+    const [history, setHistory] = useState(false);
 
     return <div style={{height: "100%"}}>
         <Row style={{height: "100%"}} gutter={16}>
@@ -64,8 +66,12 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     title: "设置 Keyword",
                                     content: <>
                                         <KeywordSetter
-                                            onFinished={e => {
+                                            defaultIgnore={ignored}
+                                            defaultHistory={history}
+                                            onFinished={(e, ignored, history) => {
                                                 setKeyword(e)
+                                                setIgnored(ignored)
+                                                setHistory(history)
                                                 m.destroy()
                                             }} defaultValue={keyword}
                                         />
@@ -108,8 +114,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             {tab: "MITM", key: "yak-mitm"},
                         ].map(e => {
                             return <Tabs.TabPane tab={e.tab} key={e.key}>
-                                <YakModuleList currentId={script?.Id} Keyword={keyword} Type={e.key as any}
-                                               onClicked={setScript} trigger={trigger}/>
+                                <YakModuleList
+                                    currentId={script?.Id} Keyword={keyword} Type={e.key as any}
+                                    onClicked={setScript} trigger={trigger} isHistory={history}
+                                    isIgnored={ignored}
+                                />
                             </Tabs.TabPane>
                         })}
                     </Tabs>
@@ -138,14 +147,16 @@ export interface YakModuleListProp {
     onClicked: (y: YakScript) => any
     currentId?: number
     trigger?: boolean
+    isIgnored?: boolean
+    isHistory?: boolean
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [params, setParams] = useState<QueryYakScriptRequest>({
-        IsHistory: false,
+        IsHistory: props.isHistory,
         Keyword: props.Keyword,
         Pagination: {Limit: 10, Order: "desc", Page: 1, OrderBy: "updated_at"},
-        Type: props.Type
+        Type: props.Type, IsIgnore: props.isIgnored
     });
     const [loading, setLoading] = useState(false);
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
@@ -156,7 +167,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     });
 
 
-    const update = (page?: number, limit?: number, keyword?: string, Type?: string) => {
+    const update = (page?: number, limit?: number,
+                    keyword?: string, Type?: string,
+                    isIgnore?: boolean, isHistory?: boolean
+    ) => {
         const newParams = {
             ...params
         }
@@ -165,6 +179,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
 
         newParams.Keyword = keyword;
         newParams.Type = Type;
+        newParams.IsIgnore = isIgnore
+        newParams.IsHistory = isHistory
         setLoading(true)
         ipcRenderer.invoke("QueryYakScript", newParams).then(data => {
             setResponse(data)
@@ -176,10 +192,16 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     }
 
     useEffect(() => {
-        setParams({...params, Keyword: props.Keyword, Type: props.Type})
-        update(1, undefined, props.Keyword || "", props.Type)
+        setParams({
+            ...params,
+            Keyword: props.Keyword,
+            Type: props.Type,
+            IsHistory: props.isHistory,
+            IsIgnore: props.isIgnored
+        })
+        update(1, undefined, props.Keyword || "", props.Type, props.isIgnored, props.isHistory)
     }, [
-        props.trigger, props.Keyword, props.Type
+        props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored
     ])
 
 
@@ -254,18 +276,22 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
 
 
 interface KeywordSetterProp {
-    onFinished: (s: string) => any
+    onFinished: (s: string, ignored: boolean, history: boolean) => any
     defaultValue: string
+    defaultIgnore: boolean
+    defaultHistory: boolean
 }
 
 const KeywordSetter: React.FC<KeywordSetterProp> = (props) => {
     const [keyword, setKeyword] = useState(props.defaultValue);
+    const [ignored, setIgnored] = useState(props.defaultIgnore)
+    const [history, setHistory] = useState(props.defaultHistory)
 
     return <div>
         <Form onSubmitCapture={e => {
             e.preventDefault()
 
-            props.onFinished(keyword)
+            props.onFinished(keyword, ignored, history)
         }} layout={"vertical"} style={{
             marginLeft: 10, marginTop: 6
         }}>
@@ -274,6 +300,8 @@ const KeywordSetter: React.FC<KeywordSetterProp> = (props) => {
                     setKeyword(e.target.value)
                 }}/>
             </Form.Item>
+            <SwitchItem label={"查看历史记录"} value={history} setValue={setHistory}/>
+            <SwitchItem label={"查看已忽略/隐藏的插件"} value={ignored} setValue={setIgnored}/>
             <Form.Item>
                 <Button type="primary" htmlType="submit"> Search </Button>
             </Form.Item>

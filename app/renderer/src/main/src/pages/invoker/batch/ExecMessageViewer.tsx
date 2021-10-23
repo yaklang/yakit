@@ -15,7 +15,7 @@ export interface ExecResultsViewerProp {
 }
 
 export interface ExecResultMessage {
-    type: "log" | "progress"
+    type: "log" | "progress" | string
     content: ExecResultLog | ExecResultProgress
 }
 

@@ -18,7 +18,8 @@ const {ipcRenderer} = window.require("electron");
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
     const [params, setParams] = useState<YakScript>(props.modified || {
-        Content: "", Tags: "", Author: "", Level: "", IsHistory: false,
+        Content: "", Tags: "", Author: "", Level: "",
+        IsHistory: false,
         CreatedAt: 0,
         Help: "",
         Id: 0,

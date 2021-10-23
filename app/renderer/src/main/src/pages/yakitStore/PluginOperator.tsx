@@ -9,6 +9,8 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import ReactMarkdown from "react-markdown";
 import {YakEditor} from "../../utils/editors";
 import {showModal} from "../../utils/showModal";
+import {ExecHistoryTable} from "../invoker/YakExecutorHistoryTable";
+import {PluginExecutor} from "./PluginExecutor";
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -105,28 +107,45 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     >
                         移除菜单栏
                     </Button>}
-                    <Button size={"small"} danger={true}
-                            onClick={e => {
-                                alert("1")
+                    {script?.IsIgnore ? <>
+                        <Popconfirm
+                            title={"取消隐藏该模块？"}
+                            onConfirm={() => {
+                                ipcRenderer.invoke("UnIgnoreYakScript", {Id: script?.Id}).then(e => {
+                                    success("显示该模块")
+                                }).catch(e => {
+                                }).finally(() => {
+
+                                })
                             }}
-                    >不再关注 / 隐藏</Button>
+                        >
+                            <Button
+                                size={"small"}
+                            >取消隐藏 / 取消忽略</Button>
+                        </Popconfirm>
+                    </> : <Popconfirm
+                        title={"忽略该模块将会导致模块在插件商店不可见，需要在插件商店中查看"}
+                        onConfirm={() => {
+                            ipcRenderer.invoke("IgnoreYakScript", {Id: script?.Id}).then(e => {
+                                success("忽略该模块")
+                            }).catch(e => {
+                            }).finally(() => {
+
+                            })
+                        }}
+                    >
+                        <Button
+                            size={"small"} danger={true}
+                        >不再关注 / 隐藏</Button>
+                    </Popconfirm>}
                 </Space>
             </Space>
         </PageHeader>
         {/*<Divider/>*/}
         <Tabs type={"card"} defaultValue={"runner"}>
             <Tabs.TabPane tab={"执行器 / Runner"} key={"runner"}>
-                <div style={{width: "100%", textAlign: "center", marginBottom: 24}}>
-                    <h2>输入参数以执行插件 {script?.ScriptName}</h2>
-                </div>
-                {script && <YakScriptParamsSetter
-                    {...script}
-                    params={[]}
-                    onParamsConfirm={(p: YakExecutorParam[]) => {
-                        alert(1)
-                    }}
-                    styleSize={props.size}
-                />}
+
+                {script && <PluginExecutor script={script} size={props.size}/>}
             </Tabs.TabPane>
             <Tabs.TabPane tab={"文档 / Docs"} key={"docs"}>
                 <ReactMarkdown children={`# this is markdown`}/>
@@ -137,7 +156,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 </div>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"执行历史 / History"} key={"history"}>
-                <Empty/>
+                <ExecHistoryTable mini={false} trigger={null as any}/>
             </Tabs.TabPane>
         </Tabs>
     </div>
