@@ -12,6 +12,7 @@
     "@types/react": "^17.0.0",
     "@types/react-copy-to-clipboard": "^5.0.1",
     "@types/react-dom": "^17.0.0",
+    "@uiw/react-md-editor": "^3.6.5",
     "antd": "^4.16.9",
     "bizcharts": "^4.1.12",
     "moment": "^2.29.1",

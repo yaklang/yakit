@@ -1,16 +1,17 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Divider, Empty, Form, PageHeader, Popconfirm, Popover, Row, Space, Tabs, Tag} from "antd";
+import {Button, Divider, Form, PageHeader, Popconfirm, Popover, Space, Tabs, Tag} from "antd";
 import {YakScript} from "../invoker/schema";
 import {failed, success} from "../../utils/notification";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {CopyableField, InputItem} from "../../utils/inputUtil";
-import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
-import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import ReactMarkdown from "react-markdown";
 import {YakEditor} from "../../utils/editors";
-import {showModal} from "../../utils/showModal";
+import {showDrawer, showModal} from "../../utils/showModal";
 import {ExecHistoryTable} from "../invoker/YakExecutorHistoryTable";
 import {PluginExecutor} from "./PluginExecutor";
+import {DocumentEditor} from "./DocumentEditor";
+import MDEditor from "@uiw/react-md-editor"
+import {PluginHistoryTable} from "./PluginHistory";
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -25,6 +26,8 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [groups, setGroups] = useState<string[]>([]);
+    const [markdown, setMarkdown] = useState("");
+    const [trigger, setTrigger] = useState(false);
 
     const updateGroups = () => {
         ipcRenderer.invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId}).then(
@@ -45,9 +48,19 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         setLoading(true)
         ipcRenderer.invoke("GetYakScriptById", {Id: props.yakScriptId}).then((e: YakScript) => {
             setScript(e)
+            ipcRenderer.invoke("GetMarkdownDocument", {
+                YakScriptId: e?.Id, YakScriptName: e?.ScriptName
+            }).then((data: { Markdown: string }) => {
+                setMarkdown(data.Markdown)
+            }).catch(e => {
+                setMarkdown("")
+            })
         }).catch(e => {
             failed("Query YakScript By ID failed")
-        }).finally(() => setTimeout(() => setLoading(false), 300))
+        }).finally(() => setTimeout(() => {
+            setTrigger(!trigger)
+            setLoading(false)
+        }, 300))
     }
 
     useEffect(() => {
@@ -72,6 +85,20 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     <CopyableField noCopy={false} text={script?.Help}/>
                 </Space>
                 <Space>
+                    {script && <Button size={"small"} onClick={e => {
+                        let m = showDrawer({
+                            title: "编辑文档", keyboard: false,
+                            width: "94%", onClose: () => {
+                                update()
+                                m.destroy()
+                            },
+                            content: <>
+                                <DocumentEditor onFinished={() => {
+                                    m.destroy()
+                                }} markdown={markdown} yakScript={script}/>
+                            </>
+                        })
+                    }}>添加 / 修改文档</Button>}
                     <Popover
                         title={`添加到左侧菜单栏中[${script?.Id}]`}
                         content={<>
@@ -144,11 +171,10 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         {/*<Divider/>*/}
         <Tabs type={"card"} defaultValue={"runner"}>
             <Tabs.TabPane tab={"执行器 / Runner"} key={"runner"}>
-
                 {script && <PluginExecutor script={script} size={props.size}/>}
             </Tabs.TabPane>
-            <Tabs.TabPane tab={"文档 / Docs"} key={"docs"}>
-                <ReactMarkdown children={`# this is markdown`}/>
+            <Tabs.TabPane tab={"文档 / Docs"} key={"docs"} disabled={!markdown}>
+                <MDEditor.Markdown source={markdown}/>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"插件源码 / Source Code"} key={"code"}>
                 <div style={{height: 500}}>
@@ -156,7 +182,8 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 </div>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"执行历史 / History"} key={"history"}>
-                <ExecHistoryTable mini={false} trigger={null as any}/>
+                {script && <PluginHistoryTable script={script} trigger={trigger}/>}
+                {/*<ExecHistoryTable mini={false} trigger={null as any}/>*/}
             </Tabs.TabPane>
         </Tabs>
     </div>

@@ -73,7 +73,8 @@ service Yak {
   rpc SaveYakScript(YakScript) returns (YakScript);
   rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc GetYakScriptById(GetYakScriptByIdRequest) returns (YakScript);
-
+  rpc IgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc UnIgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -126,6 +127,27 @@ service Yak {
   rpc YakScriptIsInMenu(YakScriptIsInMenuRequest) returns (Empty);
   rpc GetAllMenuItem(Empty) returns (MenuByGroup);
   rpc QueryGroupsByYakScriptId(QueryGroupsByYakScriptIdRequest) returns (GroupNames);
+
+  // document
+  rpc SaveMarkdownDocument(SaveMarkdownDocumentRequest) returns (Empty);
+  rpc GetMarkdownDocument(GetMarkdownDocumentRequest) returns (GetMarkdownDocumentResponse);
+  rpc DeleteMarkdownDocument(GetMarkdownDocumentRequest) returns (Empty);
+}
+
+message GetMarkdownDocumentResponse {
+  YakScript Script = 1;
+  string Markdown = 2;
+}
+
+message GetMarkdownDocumentRequest {
+  string YakScriptName = 1;
+  int64 YakScriptId = 2;
+}
+
+message SaveMarkdownDocumentRequest {
+  string YakScriptName = 1;
+  int64 YakScriptId = 2;
+  string Markdown = 3;
 }
 
 message GroupNames {
@@ -285,6 +307,7 @@ message QueryYakScriptRequest {
   string Type = 2;
   string Keyword = 3;
   bool IsHistory = 4;
+  bool IsIgnore = 5;
 }
 
 message QueryYakScriptResponse {
@@ -317,6 +340,7 @@ message YakScript {
   string Author = 9;
   string Tags = 10;
   bool IsHistory = 11;
+  bool IsIgnore = 12;
 }
 
 message CodecRequest {
@@ -332,6 +356,8 @@ message CodecResponse {
 // Yak Invoker
 message ExecHistoryRequest {
   Paging Pagination = 1;
+  int64 YakScriptId = 3;
+  string YakScriptName = 4;
 }
 
 message ExecHistoryRecordResponse {
@@ -363,6 +389,15 @@ message ExecHistoryRecord {
   // 展示界面内容
   bytes Stdout = 10;
   bytes Stderr = 11;
+
+  //
+  string RuntimeId = 12;
+  string FromYakModule = 13;
+
+  int64 StdoutLen = 14;
+  int64 StderrLen = 15;
+
+  bytes Messages = 16;
 
 }
 

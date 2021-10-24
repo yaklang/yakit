@@ -159,4 +159,84 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetYakScriptById", async (e, params) => {
         return await asyncGetYakScriptById(params)
     })
+
+    // asyncIgnoreYakScript wrapper
+    const asyncIgnoreYakScript = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().IgnoreYakScript(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("IgnoreYakScript", async (e, params) => {
+        return await asyncIgnoreYakScript(params)
+    })
+
+    // asyncUnIgnoreYakScript wrapper
+    const asyncUnIgnoreYakScript = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UnIgnoreYakScript(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UnIgnoreYakScript", async (e, params) => {
+        return await asyncUnIgnoreYakScript(params)
+    })
+
+    // asyncSaveMarkdownDocument wrapper
+    const asyncSaveMarkdownDocument = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SaveMarkdownDocument(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SaveMarkdownDocument", async (e, params) => {
+        return await asyncSaveMarkdownDocument(params)
+    })
+
+    // asyncGetMarkdownDocument wrapper
+    const asyncGetMarkdownDocument = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetMarkdownDocument(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetMarkdownDocument", async (e, params) => {
+        return await asyncGetMarkdownDocument(params)
+    })
+
+    // asyncDeleteMarkdownDocument wrapper
+    const asyncDeleteMarkdownDocument = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteMarkdownDocument(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteMarkdownDocument", async (e, params) => {
+        return await asyncDeleteMarkdownDocument(params)
+    })
 };
