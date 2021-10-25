@@ -6,6 +6,10 @@ export const openExternalWebsite = (u: string) => {
     ipcRenderer.invoke("shell-open-external", u)
 }
 
+export const openABSFile = (u: string) => {
+    ipcRenderer.invoke("shell-open-abs-file", u)
+}
+
 export interface ExternalUrlProp {
     url: string
     title?: React.ReactNode

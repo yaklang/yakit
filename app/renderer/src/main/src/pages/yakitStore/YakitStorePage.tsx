@@ -16,11 +16,11 @@ import {
     Tag
 } from "antd";
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons";
-import {showModal} from "../../utils/showModal";
+import {showDrawer, showModal} from "../../utils/showModal";
 import {AutoUpdateYakModuleViewer} from "../../utils/basic";
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema";
 import {failed, success} from "../../utils/notification";
-import {SettingOutlined, FileSyncOutlined, DownloadOutlined} from "@ant-design/icons";
+import {SettingOutlined, PlusOutlined, DownloadOutlined} from "@ant-design/icons";
 import {CopyableField, InputItem, SwitchItem} from "../../utils/inputUtil";
 import {formatDate, formatTimestamp} from "../../utils/timeUtil";
 import {YakEditor} from "../../utils/editors";
@@ -29,6 +29,7 @@ import ReactMarkdown from "react-markdown";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {PluginOperator} from "./PluginOperator";
+import {YakScriptCreatorForm} from "../invoker/YakScriptCreator";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -83,7 +84,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         </Button>
                     </Space>}
                     size={"small"}
-                    extra={[
+                    extra={<Space>
                         <Popconfirm
                             title={"更新模块数据库？"}
                             onConfirm={e => {
@@ -98,7 +99,20 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 更新商店
                             </Button>
                         </Popconfirm>
-                    ]}
+                        <Button
+                            size={"small"} type={"link"} icon={<PlusOutlined/>}
+                            onClick={() => {
+                                let m = showDrawer({
+                                    title: "创建新插件", width: "100%",
+                                    content: <>
+                                        <YakScriptCreatorForm
+                                            onCreated={() => m.destroy()}
+                                        />
+                                    </>, keyboard: false,
+                                })
+                            }}
+                        >新插件</Button>
+                    </Space>}
                 >
                     <Tabs
                         tabPosition={"left"} size={"small"}

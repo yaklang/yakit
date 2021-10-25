@@ -239,4 +239,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteMarkdownDocument", async (e, params) => {
         return await asyncDeleteMarkdownDocument(params)
     })
+
+    // asyncExportYakScript wrapper
+    const asyncExportYakScript = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExportYakScript(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExportYakScript", async (e, params) => {
+        return await asyncExportYakScript(params)
+    })
 };

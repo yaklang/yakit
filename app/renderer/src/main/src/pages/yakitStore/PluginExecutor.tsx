@@ -62,9 +62,20 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         setToken(token)
 
         let messages: ExecResultMessage[] = [];
+        let lastResultLen = 0;
+        let lastProgressLen = 0;
         const syncResults = () => {
-            setResults(messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog))
-            setProgress(messages.filter(i => i.type === "progress").map(i => i.content as ExecResultProgress))
+            let results = messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog);
+            if (results.length > lastResultLen) {
+                lastResultLen = results.length
+                setResults(results)
+            }
+
+            let progress = messages.filter(i => i.type === "progress").map(i => i.content as ExecResultProgress);
+            if (progress.length > lastProgressLen) {
+                lastProgressLen = progress.length
+                setProgress(progress)
+            }
         }
 
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {

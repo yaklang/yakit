@@ -12,6 +12,9 @@ import {PluginExecutor} from "./PluginExecutor";
 import {DocumentEditor} from "./DocumentEditor";
 import MDEditor from "@uiw/react-md-editor"
 import {PluginHistoryTable} from "./PluginHistory";
+import {openABSFile} from "../../utils/openWebsite";
+import {EditOutlined} from "@ant-design/icons";
+import {YakScriptCreatorForm} from "../invoker/YakScriptCreator";
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -71,11 +74,26 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         <PageHeader
             style={{paddingLeft: 2, paddingBottom: 12}}
             title={script?.ScriptName} subTitle={<Space size={2}>
-            {script?.Author}
+            <Button type={"link"} onClick={e => {
+                let m = showDrawer({
+                    title: `修改插件: ${script?.ScriptName}`, width: "100%",
+                    content: <>
+                        <YakScriptCreatorForm
+                            modified={script}
+                            onCreated={() => {
+                                m.destroy()
+                                update()
+                            }}
+                        />
+                    </>, keyboard: false,
+                })
+            }} icon={<EditOutlined/>}/>
         </Space>}>
             <Space direction={"vertical"}>
-                <Space>
+                <Space size={0}>
                     {script?.ScriptName && <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>}
+                    <Divider type={"vertical"}/>
+                    <p style={{color: "#999999", marginBottom: 0}}>Author: {script?.Author}</p>
                     <Divider type={"vertical"}/>
                     {script?.Tags ? (script?.Tags || "").split(",").filter(i => !!i).map(i => {
                         return <Tag>{i}</Tag>
@@ -165,6 +183,30 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             size={"small"} danger={true}
                         >不再关注 / 隐藏</Button>
                     </Popconfirm>}
+                    <Popconfirm
+                        title={"导出成功后，将会自动打开导出的路径"}
+                        onConfirm={e => {
+                            ipcRenderer.invoke("ExportYakScript", {
+                                YakScriptId: script?.Id,
+                            }).then((data: { OutputDir: string }) => {
+                                showModal({
+                                    title: "导出成功!",
+                                    content: <>
+                                        <Space direction={"vertical"}>
+                                            <CopyableField text={data.OutputDir}/>
+                                            <Button type={"link"} onClick={() => {
+                                                openABSFile(data.OutputDir)
+                                            }}>在文件夹中打开</Button>
+                                        </Space>
+                                    </>
+                                })
+                            }).catch(e => {
+                                console.info(e)
+                            })
+                        }}
+                    >
+                        <Button size={"small"}>导出插件</Button>
+                    </Popconfirm>
                 </Space>
             </Space>
         </PageHeader>
