@@ -1,6 +1,8 @@
 const {ipcMain, Notification} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
+const psList = require("ps-list");
+const treeKill = require("tree-kill");
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
@@ -23,6 +25,36 @@ module.exports = {
         }
     },
     register: (win, getClient) => {
+        // asyncPsList wrapper
+        ipcMain.handle("ps-yak-grpc", async (e, params) => {
+            let ls = (await psList()).filter(i => {
+                try {
+                    return i.name === "yak" && i.cmd.includes("yak grpc");
+                } catch (e) {
+                    return false
+                }
+            }).map(i => {
+                try {
+                    return {
+                        port: new RegExp(/--port\s+(\d+)/).exec(i.cmd)[1],
+                        ...i,
+                    }
+                } catch (e) {
+                    return {
+                        port: 0,
+                        ...i
+                    }
+                }
+            }).map(i => {
+                return {port: parseInt(i.port), ...i}
+            });
+            return ls;
+        });
+        // asyncPsList wrapper
+        ipcMain.handle("kill-yak-grpc", async (e, pid) => {
+            return treeKill(pid, "SIGKILL")
+        });
+
         ipcMain.handle("kill-local-yak-grpc-server", async (e) => {
             console.info("start to kill / clean yak local grpc process")
             if (yakProcess) {
@@ -33,9 +65,10 @@ module.exports = {
                 }
             }
             yakProcess = null;
-        })
+        });
+
         let randPort;
-        ipcMain.handle("start-local-yak-grpc-server", async (e) => {
+        ipcMain.handle("start-local-yak-grpc-server", async (e, sudo) => {
             if (yakProcess) {
                 console.info("u have started local yak grpc...")
                 return randPort;

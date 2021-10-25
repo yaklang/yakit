@@ -32,6 +32,8 @@
     "@grpc/proto-loader": "^0.6.4",
     "electron-is-dev": "^2.0.0",
     "google-protobuf": "^3.17.3",
-    "process": "^0.11.10"
+    "process": "^0.11.10",
+    "ps-list": "^7.2.0",
+    "tree-kill": "^1.2.2"
   }
 }

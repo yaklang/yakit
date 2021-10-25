@@ -22,6 +22,7 @@ import {QuestionCircleOutlined} from "@ant-design/icons";
 import {YakEditor} from "../utils/editors";
 import {ExternalUrl} from "../utils/openWebsite";
 import {YakLogoData} from "../utils/logo";
+import {YakLocalProcess} from "./YakLocalProcess";
 
 const {Text, Title, Paragraph} = Typography;
 
@@ -116,30 +117,29 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
         if (mode !== "local") {
             return
         }
+
         setHost("127.0.0.1")
-
         // 直接直接启动本地服务器
-        setLocalLoading(true)
-        ipcRenderer.invoke("start-local-yak-grpc-server").then(port => {
-            if (!port) {
-                startError()
-                return
-            }
-            success("获取本地 yak gRPC 端口为: " + `${port}`)
-            setPort(port)
-            setLocalYakStarted(true)
-        }).catch(r => {
-            failed(`启动本地 yak gRPC 服务器失败: ` + `${r}`)
-            setLocalYakStarted(false)
-        }).finally(() => setTimeout(() => setLocalLoading(false), 300))
-
-        ipcRenderer.on("client-start-local-grpc-failed", async (e) => {
-            startError()
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("client-start-local-grpc-failed")
-        }
-
+        // setLocalLoading(true)
+        // ipcRenderer.invoke("start-local-yak-grpc-server").then(port => {
+        //     if (!port) {
+        //         startError()
+        //         return
+        //     }
+        //     success("获取本地 yak gRPC 端口为: " + `${port}`)
+        //     setPort(port)
+        //     setLocalYakStarted(true)
+        // }).catch(r => {
+        //     failed(`启动本地 yak gRPC 服务器失败: ` + `${r}`)
+        //     setLocalYakStarted(false)
+        // }).finally(() => setTimeout(() => setLocalLoading(false), 300))
+        //
+        // ipcRenderer.on("client-start-local-grpc-failed", async (e) => {
+        //     startError()
+        // })
+        // return () => {
+        //     ipcRenderer.removeAllListeners("client-start-local-grpc-failed")
+        // }
     }, [mode])
 
     const login = () => {
@@ -168,31 +168,22 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                     {value: "local", text: "本地模式（本地启动 Yak gRPC）"},
                     {value: "remote", text: "远程模式（TeamServer 模式）"}
                 ]} value={mode} setValue={setMode}/>
+
+                {mode === "local" && <>
+                    <YakLocalProcess/>
+                </>}
+
                 <Form
-                    style={{textAlign: "left"}}
+                    style={{textAlign: "center"}}
                     onSubmitCapture={e => {
                         e.preventDefault()
                         setLocalYakStarted(false)
                         setLocalLoading(false)
 
                         login()
-                    }} labelCol={{span: 7}} wrapperCol={{span: 14}}>
+                    }} labelCol={{span: 7}} wrapperCol={{span: 12}}>
 
-                    {mode === "local" && <>
-                        <div style={{textAlign: "left"}}>
-                            <FormItem label={"服务器启动"}>
-                                {!localYakStarted ? <>
-                                    {localError === "" ? <Spin tip={"正在启动..."}/> :
-                                        <Alert type={"error"} message={localError}/>}
-                                </> : <Card bordered={true}>
-                                    <h3>
-                                        本地 yak gRPC 已启动: {`${host}:${port}`}
-                                    </h3>
-                                </Card>}
 
-                            </FormItem>
-                        </div>
-                    </>}
                     {mode === "remote" && <>
                         <FormItem label={"Yak gRPC 主机地址"}>
                             <Input value={host} onChange={e => {

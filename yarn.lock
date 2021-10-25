@@ -1628,6 +1628,11 @@ protoc-gen-ts@^0.3.9:
   resolved "https://registry.nlark.com/protoc-gen-ts/download/protoc-gen-ts-0.3.9.tgz"
   integrity sha1-XsfSdU1DxHhyJ2CJc+myOvpxnqc=
 
+ps-list@^7.2.0:
+  version "7.2.0"
+  resolved "https://registry.nlark.com/ps-list/download/ps-list-7.2.0.tgz#3d110e1de8249a4b178c9b1cf2a215d1e4e42fc0"
+  integrity sha1-PREOHegkmksXjJsc8qIV0eTkL8A=
+
 pump@^3.0.0:
   version "3.0.0"
   resolved "https://registry.npm.taobao.org/pump/download/pump-3.0.0.tgz"
@@ -2016,7 +2021,7 @@ to-readable-stream@^1.0.0:
 
 tree-kill@^1.2.2:
   version "1.2.2"
-  resolved "https://registry.npm.taobao.org/tree-kill/download/tree-kill-1.2.2.tgz"
+  resolved "https://registry.nlark.com/tree-kill/download/tree-kill-1.2.2.tgz#4ca09a9092c88b73a7cdc5e8a01b507b0790a0cc"
   integrity sha1-TKCakJLIi3OnzcXooBtQeweQoMw=
 
 truncate-utf8-bytes@^1.0.0:

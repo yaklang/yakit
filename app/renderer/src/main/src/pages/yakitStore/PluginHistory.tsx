@@ -67,7 +67,7 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
             title={() => {
                 return <Space>
                     <div>{props.script.ScriptName} 的执行历史记录</div>
-                    <Button type={"link"} ghost={true} onClick={()=>{
+                    <Button type={"link"} ghost={true} onClick={() => {
                         update()
                     }}><ReloadOutlined/> </Button>
                 </Space>
@@ -105,8 +105,8 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
                 },
                 {
                     title: "执行结果/失败原因", render: (r: ExecHistoryRecord) => r.Ok ? <Space>
-                        {r.Stdout && <Tag color={"geekblue"}>标准输出内容长度[{(r.Stdout || "").length}]</Tag>}
-                        {r.Stderr && <Tag color={"orange"}>标准错误内容长度[{(r.Stderr || "").length}]</Tag>}
+                        {r.Stdout && <Tag color={"geekblue"}>标准输出内容长度[{(r.StdoutLen)}]</Tag>}
+                        {r.Stderr && <Tag color={"orange"}>标准错误内容长度[{(r.StderrLen)}]</Tag>}
                         {!r.Stdout && !r.Stderr ? <Tag>无输出</Tag> : undefined}
                     </Space> : <Space>
                         <Tag color={"red"}>{r.Reason}</Tag>
