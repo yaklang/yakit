@@ -24,6 +24,9 @@ import {ExternalUrl, openABSFile} from "../utils/openWebsite";
 import {YakLogoData} from "../utils/logo";
 import {YakLocalProcess} from "./YakLocalProcess";
 import {saveAuthInfo, YakRemoteAuth} from "./YakRemoteAuth";
+import {showModal} from "../utils/showModal";
+import {divider} from "@uiw/react-md-editor";
+import {YakUpgrade} from "../components/YakUpgrade";
 
 const {Text, Title, Paragraph} = Typography;
 
@@ -257,7 +260,6 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                         <Button
                             style={{
                                 width: 480, height: 50,
-                                marginBottom: 200,
                             }}
                             htmlType={"submit"}
                             type={"primary"}
@@ -265,6 +267,29 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                             <p style={{fontSize: 18, marginBottom: 0}}>Yakit 连接 Yak 核心引擎[{host}:{port}]</p>
                         </Button>
                     </div>}
+                    <div style={{textAlign: "center"}}>
+                        <Button
+                            style={{
+                                color: '#888',
+                                marginBottom: 200,
+                            }}
+                            type={"link"}
+                            onClick={() => {
+                                showModal({
+                                    keyboard: false,
+                                    title: "引擎升级管理页面",
+                                    width: "60%",
+                                    content: <>
+                                        <YakUpgrade/>
+                                    </>
+                                })
+                            }}
+                        >
+                            <p
+                                style={{marginBottom: 0}}
+                            >安装/升级 Yak 引擎</p>
+                        </Button>
+                    </div>
                 </Form>
             </div>
         </Spin>

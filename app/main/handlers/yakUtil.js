@@ -4,12 +4,16 @@ const process = require("process");
 const path = require("path");
 const os = require("os");
 const fs = require("fs");
-const psList = require("ps-list");
-const treeKill = require("tree-kill");
+const https = require("https");
+const requestProgress = require("request-progress");
+const request = require("request");
 
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
 fs.mkdirSync(secretDir, {recursive: true})
+const yakEngineDir = path.join(homeDir, "yak-engine")
+fs.mkdirSync(yakEngineDir, {recursive: true})
+
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
 
@@ -66,6 +70,17 @@ const saveAllSecret = (authInfos) => {
 
 loadSecrets()
 
+const getYakDownloadUrl = () => {
+    switch (process.platform) {
+        case "darwin":
+            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_darwin_amd64"
+        case "win32":
+            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_windows_amd64.exe"
+        case "linux":
+            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_linux_amd64"
+    }
+}
+
 module.exports = {
     register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
@@ -89,6 +104,72 @@ module.exports = {
         })
         ipcMain.handle("get-yakit-remote-auth-dir", async (e, name) => {
             return secretDir;
+        })
+
+        // asyncQueryLatestYakEngineVersion wrapper
+        const asyncQueryLatestYakEngineVersion = (params) => {
+            return new Promise((resolve, reject) => {
+                let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/version.txt")
+                rsp.on("response", rsp => {
+                    rsp.on("data", data => {
+                        resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
+                    }).on("error", err => reject(err))
+                })
+                rsp.on("error", reject)
+            })
+        }
+        ipcMain.handle("query-latest-yak-version", async (e, params) => {
+            return await asyncQueryLatestYakEngineVersion(params)
+        })
+
+        // asyncQueryLatestYakEngineVersion wrapper
+        const asyncGetCurrentLatestYakVersion = (params) => {
+            return new Promise((resolve, reject) => {
+                childProcess.exec("yak -v", (err, stdout) => {
+                    const version = stdout.replaceAll("yak version ", "").trim();
+                    if (!version) {
+                        if (err) {
+                            reject(err)
+                        } else {
+                            reject("[unknown reason] cannot fetch yak version (yak -v)")
+                        }
+                    } else {
+                        resolve(version)
+                    }
+                })
+            })
+        }
+        ipcMain.handle("get-current-yak", async (e, params) => {
+            return await asyncGetCurrentLatestYakVersion(params)
+        })
+
+        // asyncDownloadLatestYak wrapper
+        const asyncDownloadLatestYak = (version) => {
+            return new Promise((resolve, reject) => {
+                const dest = path.join(yakEngineDir, `yak-${version}`);
+                fs.unlinkSync(dest)
+
+                const downloadUrl = getYakDownloadUrl();
+                // https://github.com/IndigoUnited/node-request-progress
+                // The options argument is optional so you can omit it
+                requestProgress(request(downloadUrl), {
+                    // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
+                    // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
+                    // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
+                })
+                    .on('progress', function (state) {
+                        console.log('progress', state);
+                    })
+                    .on('error', function (err) {
+                        reject(err)
+                    })
+                    .on('end', function () {
+                        // Do something after request finishes
+                    }).pipe(fs.createWriteStream(dest));
+            })
+        }
+        ipcMain.handle("download-latest-yak", async (e, version) => {
+            return await asyncDownloadLatestYak(version)
         })
     },
 }
