@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from "react";
-import {Button, Descriptions, Space, Table, Tag, Typography} from "antd";
+import {Button, Col, Descriptions, Form, Modal, Popover, Row, Space, Table, Tag, Typography} from "antd";
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema";
 import {failed} from "../../utils/notification";
 import {PortAsset} from "./models";
-import {CopyableField} from "../../utils/inputUtil";
+import {CopyableField, InputItem} from "../../utils/inputUtil";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {HTTPFlow, TableFilterDropdownForm} from "../../components/HTTPFlowTable";
 import {SearchOutlined, ReloadOutlined} from "@ant-design/icons";
@@ -61,14 +61,26 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
 
     return <Table<PortAsset>
         title={() => {
-            return <Space>
-                端口资产列表 <Button
-                icon={<ReloadOutlined/>} size={"small"} type={"link"}
-                onClick={() => {
-                    update(1)
-                }}
-            />
-            </Space>
+            return <Row>
+                <Col span={12}>
+                    <Space>
+                        端口资产列表 <Button
+                        icon={<ReloadOutlined/>} size={"small"} type={"link"}
+                        onClick={() => {
+                            update(1)
+                        }}
+                    />
+                    </Space>
+                </Col>
+                <Col span={12} style={{textAlign: "right"}}>
+                    <Popover
+                        title={"选择性删除端口"}
+                        content={<PortDeleteForm onFinished={() => update(1)}/>}
+                    >
+                        <Button size={"small"} danger={true}>删除端口</Button>
+                    </Popover>
+                </Col>
+            </Row>
         }}
         scroll={{x: "auto"}}
         size={"small"}
@@ -242,4 +254,50 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
             </div>
         </Descriptions.Item>}
     </Descriptions>
+};
+
+
+export interface PortDeleteFormProp {
+    onFinished: () => any
+}
+
+interface DeletePortRequest {
+    Hosts: string
+    Ports: string
+}
+
+export const PortDeleteForm: React.FC<PortDeleteFormProp> = (props) => {
+    const [params, setParams] = useState<DeletePortRequest>({
+        Hosts: "", Ports: "",
+    });
+
+    return <Form onClickCapture={e => {
+        e.preventDefault()
+        ipcRenderer.invoke("DeletePorts", {All: false, ...params}).then(() => {
+
+        }).catch(e => {
+            failed("删除失败")
+        }).finally(() => {
+            props.onFinished()
+        })
+    }} layout={"vertical"} size={"small"}>
+        <InputItem label={"想要删除的网段/IP"} setValue={Hosts => setParams({...params, Hosts})} value={params.Hosts}/>
+        <InputItem label={"想要删除的端口段"} setValue={Ports => setParams({...params, Ports})} value={params.Ports}/>
+        <Form.Item>
+            <Button type="primary" htmlType="submit" danger={true}> 删除指定内容 </Button>
+            <Button type="dashed" danger={true} onClick={() => {
+                Modal.confirm({
+                    title: "确定要删除全部吗？不可恢复", onOk: () => {
+                        ipcRenderer.invoke("DeletePorts", {All: true}).then(() => {
+
+                        }).catch(e => {
+                            failed("删除失败")
+                        }).finally(() => {
+                            props.onFinished()
+                        })
+                    }
+                })
+            }}> 删除全部 </Button>
+        </Form.Item>
+    </Form>
 };

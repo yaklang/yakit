@@ -1964,6 +1964,11 @@ strip-json-comments@~2.0.1:
   resolved "https://registry.nlark.com/strip-json-comments/download/strip-json-comments-2.0.1.tgz?cache=0&sync_timestamp=1629396958572&other_urls=https%3A%2F%2Fregistry.nlark.com%2Fstrip-json-comments%2Fdownload%2Fstrip-json-comments-2.0.1.tgz"
   integrity sha1-PFMZQukIwml8DsNEhYwobHygpgo=
 
+sudo-prompt@^9.2.1:
+  version "9.2.1"
+  resolved "https://registry.npm.taobao.org/sudo-prompt/download/sudo-prompt-9.2.1.tgz#77efb84309c9ca489527a4e749f287e6bdd52afd"
+  integrity sha1-d++4QwnJykiVJ6TnSfKH5r3VKv0=
+
 sumchecker@^3.0.1:
   version "3.0.1"
   resolved "https://registry.npm.taobao.org/sumchecker/download/sumchecker-3.0.1.tgz"

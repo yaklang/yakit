@@ -230,12 +230,16 @@ message PortScanRequest {
 
   // 保存已经关闭的端口
   bool SaveClosedPorts = 9;
+
+  // 上传扫描目标为文件
+  string TargetsFile = 10;
 }
 
 message DeletePortsRequest {
   string Hosts = 1;
   string Ports = 2;
   repeated int64 Id = 3;
+  bool All = 4;
 }
 
 message QueryPortsRequest {

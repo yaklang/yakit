@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from "react";
 import {CopyableField, SelectOne} from "../utils/inputUtil";
-import {Button, Card, Col, Form, List, Popconfirm, Row, Space, Tag} from "antd";
+import {Button, Card, Col, Form, List, Modal, Popconfirm, Row, Space, Tag} from "antd";
 import ReactJson from "react-json-view";
-import {success} from "../utils/notification";
+import {failed, success} from "../utils/notification";
 
 export interface YakLocalProcessProp {
-
+    onConnected?: (port: number, host: string) => any
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -36,17 +36,22 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
 
     useEffect(() => {
         update()
+
+        let id = setInterval(update, 1000);
+        return () => {
+            clearInterval(id);
+        }
     }, [])
 
-    useEffect(() => {
-        if (shouldAutoStart) {
-            ipcRenderer.invoke("start-local-yak-grpc-server").then(port => {
-                success(`在 localhost:${port} 启动了 yak 引擎`)
-            }).finally(() => {
-                update()
-            })
-        }
-    }, [shouldAutoStart])
+    const startYakGRPCServer = (sudo: boolean) => {
+        ipcRenderer.invoke("start-local-yak-grpc-server", {
+            sudo,
+        }).catch(e => {
+
+        }).finally(() => {
+            update()
+        })
+    }
 
     return <>
         <Form.Item label={" "} colon={false}>
@@ -58,13 +63,19 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                             title={"本地 Yak 进程管理"}
                             size={"small"}
                             extra={[
-                                <Space>
-                                    <Button size={"small"}>普通权限启动</Button>
-                                    <Button size={"small"} type={"primary"}>管理员(sudo)启动</Button>
+                                process.length > 0 && <Space>
+                                    <Button size={"small"} onClick={() => {
+                                        startYakGRPCServer(false)
+                                    }}>普通权限启动</Button>
+                                    <Popconfirm title={"以管理员权限启动"} onConfirm={() => {
+                                        startYakGRPCServer(true)
+                                    }}>
+                                        <Button size={"small"} type={"primary"}>管理员(sudo)启动</Button>
+                                    </Popconfirm>
                                 </Space>
                             ]}
                         >
-                            {process.length > 0 && <List
+                            {process.length > 0 ? <List
                                 dataSource={process}
                                 renderItem={(i: yakProcess) => {
                                     return <List.Item
@@ -76,7 +87,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                             <Row>
                                                 <Col span={12} style={{textAlign: "left"}}>
                                                     <Space>
-                                                        <Tag color={"green"}>{i.pid}</Tag>
+                                                        <Tag color={"green"}>PID: {i.pid}</Tag>
                                                         <CopyableField
                                                             text={`yak grpc --port ${i.port}`} width={300}
                                                         />
@@ -85,11 +96,24 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                 <Col span={12}>
                                                     <div style={{width: "100%", textAlign: "right"}}>
                                                         <Space>
-                                                            <Button size={"small"} type={"primary"}>连接引擎</Button>
+                                                            <Button size={"small"} type={"primary"}
+                                                                    disabled={!props.onConnected}
+                                                                    onClick={() => {
+                                                                        Modal.success({
+                                                                            title: "确定连接该 yak 引擎？",
+                                                                            onOk: () => {
+                                                                                props.onConnected && props.onConnected(
+                                                                                    i.port, "localhost")
+                                                                            }
+                                                                        })
+                                                                    }}
+                                                            >连接引擎</Button>
                                                             <Popconfirm
                                                                 title={"将会强制关闭该进程"}
                                                                 onConfirm={() => {
-                                                                    ipcRenderer.invoke("kill-yak-grpc", i.pid).finally(update)
+                                                                    ipcRenderer.invoke("kill-yak-grpc", i.pid).catch(e => {
+
+                                                                    }).finally(update)
                                                                 }}
                                                             >
                                                                 <Button
@@ -105,7 +129,16 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                 }}
                             >
 
-                            </List>}
+                            </List> : <Space>
+                                <Button onClick={() => {
+                                    startYakGRPCServer(false)
+                                }}>普通权限启动</Button>
+                                <Popconfirm title={"以管理员权限启动，解锁全部 yak 引擎功能"} onConfirm={() => {
+                                    startYakGRPCServer(true)
+                                }}>
+                                    <Button type={"primary"}>管理员(sudo)启动</Button>
+                                </Popconfirm>
+                            </Space>}
                         </Card>
                     </Col>
                     <Col span={5}/>

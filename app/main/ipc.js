@@ -117,6 +117,6 @@ module.exports = {
         require("./handlers/menu")(win, getClient);
 
         // 管理 yak 引擎版本 / 升级等
-        require("./handlers/yakUpdate")(win, getClient);
+        require("./handlers/yakUtil").register(win, getClient);
     }
 }

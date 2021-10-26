@@ -39,12 +39,12 @@ export const OneLine: React.FC<OneLineProp> = (props) => {
 const {Item} = Form;
 
 export interface InputItemProps {
-    label: string
+    label: string | any
     value?: string
     placeholder?: string
     disable?: boolean
     required?: boolean
-    help?: string
+    help?: string | any
 
     setValue?(s: string): any
 
