@@ -7,6 +7,7 @@ const fs = require("fs");
 const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
+const sudo = require("sudo-prompt");
 
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
@@ -52,6 +53,8 @@ function saveSecret(name, host, port, tls, password, caPem) {
     saveAllSecret([...authMeta])
 };
 
+const isWindows = process.platform === "win32";
+
 const saveAllSecret = (authInfos) => {
     try {
         fs.unlinkSync(secretFile)
@@ -67,6 +70,11 @@ const saveAllSecret = (authInfos) => {
     );
     fs.writeFileSync(secretFile, new Buffer(authFileStr, "utf8"))
 };
+
+const getWindowsInstallPath = () => {
+    const systemRoot = process.env["WINDIR"] || process.env["windir"] || process.env["SystemRoot"];
+    return path.join(systemRoot, "System32", "yak.exe")
+}
 
 loadSecrets()
 
@@ -147,7 +155,11 @@ module.exports = {
         const asyncDownloadLatestYak = (version) => {
             return new Promise((resolve, reject) => {
                 const dest = path.join(yakEngineDir, `yak-${version}`);
-                fs.unlinkSync(dest)
+                try {
+                    fs.unlinkSync(dest)
+                } catch (e) {
+
+                }
 
                 const downloadUrl = getYakDownloadUrl();
                 // https://github.com/IndigoUnited/node-request-progress
@@ -158,18 +170,78 @@ module.exports = {
                     // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
                 })
                     .on('progress', function (state) {
-                        console.log('progress', state);
+                        win.webContents.send("download-yak-engine-progress", state)
                     })
                     .on('error', function (err) {
                         reject(err)
                     })
                     .on('end', function () {
-                        // Do something after request finishes
+                        resolve()
                     }).pipe(fs.createWriteStream(dest));
             })
         }
         ipcMain.handle("download-latest-yak", async (e, version) => {
             return await asyncDownloadLatestYak(version)
+        })
+
+        ipcMain.handle("get-windows-install-dir", async (e) => {
+            //systemRoot := os.Getenv("WINDIR")
+            // 			if systemRoot == "" {
+            // 				systemRoot = os.Getenv("windir")
+            // 			}
+            // 			if systemRoot == "" {
+            // 				systemRoot = os.Getenv("SystemRoot")
+            // 			}
+            //
+            // 			if systemRoot == "" {
+            // 				return utils.Errorf("cannot fetch windows system root dir")
+            // 			}
+            //
+            // 			installed = filepath.Join(systemRoot, "System32", "yak.exe")
+            if (process.platform !== "win32") {
+                return "%WINDIR%\\System32\\yak.exe"
+            }
+            return getWindowsInstallPath();
+        });
+
+        const installYakEngine = (version) => {
+            return new Promise((resolve, reject) => {
+                const origin = path.join(yakEngineDir, `yak-${version}`);
+                const dest = isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+
+                const install = () => {
+                    sudo.exec(
+                        isWindows ?
+                            `copy ${origin} ${dest}` : `cp ${origin} ${dest} && chmod +x ${dest}`,
+                        {
+                            name: "Install Yak Binary"
+                        }, err => {
+                            if (err) {
+                                reject(err)
+                            } else {
+                                resolve()
+                            }
+                        })
+                }
+
+                fs.access(dest, fs.constants.R_OK, ok => {
+                    if (!ok) {
+                        install()
+                        return
+                    }
+
+                    let cmd = isWindows ? `del /f ${dest}` : `rm ${dest}`;
+                    sudo.exec(cmd, {
+                        name: "Delete Old Yak"
+                    }, err => {
+                        install()
+                    })
+                })
+            })
+        }
+
+        ipcMain.handle("install-yak-engine", async (e, version) => {
+            return await installYakEngine(version);
         })
     },
 }

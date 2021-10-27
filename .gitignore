@@ -39,3 +39,4 @@ deploy/palm-base/awdtools/
 wizard/palm-server/
 wizard/dist/
 *.mmdb
+release/
