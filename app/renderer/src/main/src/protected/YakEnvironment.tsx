@@ -275,12 +275,14 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                             }}
                             type={"link"}
                             onClick={() => {
-                                showModal({
+                                let m = showModal({
                                     keyboard: false,
                                     title: "引擎升级管理页面",
                                     width: "60%",
                                     content: <>
-                                        <YakUpgrade/>
+                                        <YakUpgrade onFinished={() => {
+                                            m.destroy()
+                                        }}/>
                                     </>
                                 })
                             }}

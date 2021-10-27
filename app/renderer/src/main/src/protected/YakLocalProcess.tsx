@@ -3,6 +3,7 @@ import {CopyableField, SelectOne} from "../utils/inputUtil";
 import {Button, Card, Col, Form, List, Modal, Popconfirm, Row, Space, Tag} from "antd";
 import ReactJson from "react-json-view";
 import {failed, success} from "../utils/notification";
+import {showModal} from "../utils/showModal";
 
 export interface YakLocalProcessProp {
     onConnected?: (port: number, host: string) => any
@@ -11,8 +12,10 @@ export interface YakLocalProcessProp {
 const {ipcRenderer} = window.require("electron");
 
 interface yakProcess {
-    port: number,
+    port: number
     pid: number
+    cmd: string
+    origin: any
 }
 
 export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
@@ -25,8 +28,8 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
         ipcRenderer.invoke("ps-yak-grpc").then((i: yakProcess[]) => {
             setProcess(i.map((element: yakProcess) => {
                 noProcess = false;
-                return {port: element.port, pid: element.pid}
-            }).filter(i => i.port >= 1))
+                return {port: element.port, pid: element.pid, cmd: element.cmd, origin: element.origin}
+            }).filter(i => true))
         }).finally(() => {
             if (noProcess) {
                 setShouldAutoStart(true)
@@ -120,6 +123,19 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                                     size={"small"} danger={true}
                                                                 >关闭引擎</Button>
                                                             </Popconfirm>
+                                                            <Button
+                                                                type={"link"} size={"small"}
+                                                                onClick={() => {
+                                                                    showModal({
+                                                                        title: "YakProcess 详情",
+                                                                        content: <>
+                                                                            <ReactJson src={i}/>
+                                                                        </>
+                                                                    })
+                                                                }}
+                                                            >
+                                                                details
+                                                            </Button>
                                                         </Space>
                                                     </div>
                                                 </Col>
