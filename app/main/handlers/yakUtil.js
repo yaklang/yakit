@@ -98,7 +98,7 @@ module.exports = {
                 return i.name !== name
             })]);
             loadSecrets()
-            saveSecret(name, host, port, tls, caPem, password)
+            saveSecret(name, host, port, tls, password, caPem)
         })
         ipcMain.handle("remove-yakit-remote-auth", async (e, name) => {
             saveAllSecret([...authMeta.filter(i => {
