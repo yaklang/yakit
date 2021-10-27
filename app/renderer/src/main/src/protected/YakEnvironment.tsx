@@ -16,12 +16,17 @@ import {
     Tag,
     Tooltip, Modal
 } from "antd";
-import {InputItem, SelectOne, SwitchItem} from "../utils/inputUtil";
+import {CopyableField, InputItem, SelectOne, SwitchItem} from "../utils/inputUtil";
 import {failed, info, success} from "../utils/notification";
 import {QuestionCircleOutlined} from "@ant-design/icons";
 import {YakEditor} from "../utils/editors";
-import {ExternalUrl} from "../utils/openWebsite";
+import {ExternalUrl, openABSFile} from "../utils/openWebsite";
 import {YakLogoData} from "../utils/logo";
+import {YakLocalProcess} from "./YakLocalProcess";
+import {saveAuthInfo, YakRemoteAuth} from "./YakRemoteAuth";
+import {showModal} from "../utils/showModal";
+import {divider} from "@uiw/react-md-editor";
+import {YakUpgrade} from "../components/YakUpgrade";
 
 const {Text, Title, Paragraph} = Typography;
 
@@ -56,20 +61,11 @@ FRmP2Nx+zifhMNe300xfHzqNeN3D+Uix6+GOkBoYI65KNPGqwi8uy9HlJVx3Jkht
 WOG+9PGLcr4IRJx5LUEZ5FB1
 -----END CERTIFICATE-----`
 
-export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
-    const [connected, setConnected] = useState(false);
-    const [host, setHost] = useState("127.0.0.1");
-    const [port, setPort] = useState(8087);
-    const [tls, setTls] = useState(false);
-    const [password, setPassword] = useState("");
-    const [caPem, setCaPem] = useState("");
-    const [mode, setMode] = useState<"local" | "remote">("local");
-    const [loading, setLoading] = useState(false);
-    const [localLoading, setLocalLoading] = useState(false);
-    const [localYakStarted, setLocalYakStarted] = useState(false);
-    const [localError, setLocalError] = useState<React.ReactNode>();
+/**
+ *     const [localYakStarted, setLocalYakStarted] = useState(false);
+ const [localError, setLocalError] = useState<React.ReactNode>();
 
-    const startError = () => {
+ const startError = () => {
         setLocalError(<>
             <Card title={"启动 Yak 异常"}
                   style={{backgroundColor: "rgba(255,244,223,0)"}}
@@ -105,50 +101,52 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
         </>)
         setLocalYakStarted(false)
     }
+ */
+
+
+export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
+    const [connected, setConnected] = useState(false);
+    const [host, setHost] = useState("127.0.0.1");
+    const [port, setPort] = useState(8087);
+    const [tls, setTls] = useState(false);
+    const [password, setPassword] = useState("");
+    const [caPem, setCaPem] = useState("");
+    const [mode, setMode] = useState<"local" | "remote">("local");
+    const [loading, setLoading] = useState(false);
+    const [localLoading, setLocalLoading] = useState(false);
+    const [historySelected, setHistorySelected] = useState(false);
+    const [name, setName] = useState("");
+    const [allowSave, setAllowSave] = useState(false);
 
     useEffect(() => {
-        setLocalError("");
+        // setLocalError("");
         if (mode) {
             props.setMode(mode);
         }
-        setLocalYakStarted(false);
+        // setLocalYakStarted(false);
 
         if (mode !== "local") {
             return
         }
+
         setHost("127.0.0.1")
-
-        // 直接直接启动本地服务器
-        setLocalLoading(true)
-        ipcRenderer.invoke("start-local-yak-grpc-server").then(port => {
-            if (!port) {
-                startError()
-                return
-            }
-            success("获取本地 yak gRPC 端口为: " + `${port}`)
-            setPort(port)
-            setLocalYakStarted(true)
-        }).catch(r => {
-            failed(`启动本地 yak gRPC 服务器失败: ` + `${r}`)
-            setLocalYakStarted(false)
-        }).finally(() => setTimeout(() => setLocalLoading(false), 300))
-
-        ipcRenderer.on("client-start-local-grpc-failed", async (e) => {
-            startError()
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("client-start-local-grpc-failed")
-        }
-
     }, [mode])
 
-    const login = () => {
+    const login = (newHost?: string, newPort?: number) => {
         setLoading(true)
         info("正在连接 ... Yak 核心引擎")
-        render.invoke("connect-yak", {
-            host, port, password, caPem,
-        }).then(() => {
+        let params = {
+            host: newHost || host,
+            port: newPort || port,
+            password, caPem,
+        };
+        render.invoke("connect-yak", {...params}).then(() => {
             props.onConnected()
+            if (mode === "remote" && allowSave) {
+                saveAuthInfo({
+                    ...params, tls, name,
+                })
+            }
         }).catch(e => {
             notification["error"]({message: "设置 Yak gRPC 引擎地址失败"})
         }).finally(() => {
@@ -160,7 +158,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
         return <Spin
             spinning={localLoading}
         >
-            <div style={{textAlign: "center", marginTop: 50, marginLeft: 150, marginRight: 150}}>
+            <div style={{textAlign: "center", marginTop: 50, marginLeft: 150, marginRight: 150, marginBottom: 100}}>
                 <Image src={YakLogoData} preview={false} width={200}/>
                 <br/>
                 <Text style={{color: "#999"}}>技术预览版 - 技术预览并不代表最终版本</Text>
@@ -168,32 +166,38 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                     {value: "local", text: "本地模式（本地启动 Yak gRPC）"},
                     {value: "remote", text: "远程模式（TeamServer 模式）"}
                 ]} value={mode} setValue={setMode}/>
+
+                {mode === "local" && <>
+                    <YakLocalProcess onConnected={((newPort, newHost) => {
+                        login(newHost, newPort)
+                    })}/>
+                </>}
+
                 <Form
                     style={{textAlign: "left"}}
                     onSubmitCapture={e => {
                         e.preventDefault()
-                        setLocalYakStarted(false)
+
+                        // setLocalYakStarted(false)
                         setLocalLoading(false)
 
                         login()
-                    }} labelCol={{span: 7}} wrapperCol={{span: 14}}>
-
-                    {mode === "local" && <>
-                        <div style={{textAlign: "left"}}>
-                            <FormItem label={"服务器启动"}>
-                                {!localYakStarted ? <>
-                                    {localError === "" ? <Spin tip={"正在启动..."}/> :
-                                        <Alert type={"error"} message={localError}/>}
-                                </> : <Card bordered={true}>
-                                    <h3>
-                                        本地 yak gRPC 已启动: {`${host}:${port}`}
-                                    </h3>
-                                </Card>}
-
-                            </FormItem>
-                        </div>
-                    </>}
+                    }} labelCol={{span: 7}} wrapperCol={{span: 12}}>
                     {mode === "remote" && <>
+                        <YakRemoteAuth onSelected={(info) => {
+                            setHistorySelected(true);
+                            setHost(info.host);
+                            setPort(info.port);
+                            setTls(info.tls);
+                            setCaPem(info.caPem);
+                            setPassword(info.password);
+                        }}/>
+                        <SwitchItem value={allowSave} setValue={setAllowSave} label={"保存历史连接"}/>
+                        {allowSave && <InputItem
+                            label={"连接名"}
+                            value={name} setValue={setName}
+                            help={"可选，如果填写了，将会保存历史记录，之后可以选择该记录"}
+                        />}
                         <FormItem label={"Yak gRPC 主机地址"}>
                             <Input value={host} onChange={e => {
                                 setHost(e.target.value)
@@ -215,7 +219,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                             setTls(e)
                             props.onTlsGRPC(e)
                         }}/>
-                        {tls && <>
+                        {tls ? <>
                             <Form.Item
                                 required={true} label={<div>
                                 gRPC Root-CA 证书(PEM)
@@ -250,17 +254,40 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                 value={password}
                                 type={"password"}
                             />
-                        </>}
+                        </> : ""}
                     </>}
-                    <div style={{textAlign: "center"}}>
+                    {mode !== "local" && <div style={{textAlign: "center"}}>
                         <Button
                             style={{
-                                width: 480, height: 50
+                                width: 480, height: 50,
                             }}
                             htmlType={"submit"}
                             type={"primary"}
                         >
                             <p style={{fontSize: 18, marginBottom: 0}}>Yakit 连接 Yak 核心引擎[{host}:{port}]</p>
+                        </Button>
+                    </div>}
+                    <div style={{textAlign: "center"}}>
+                        <Button
+                            style={{
+                                color: '#888',
+                                marginBottom: 200,
+                            }}
+                            type={"link"}
+                            onClick={() => {
+                                showModal({
+                                    keyboard: false,
+                                    title: "引擎升级管理页面",
+                                    width: "60%",
+                                    content: <>
+                                        <YakUpgrade/>
+                                    </>
+                                })
+                            }}
+                        >
+                            <p
+                                style={{marginBottom: 0}}
+                            >安装/升级 Yak 引擎</p>
                         </Button>
                     </div>
                 </Form>

@@ -1,12 +1,16 @@
-import React from "react";
-import {Table, Tag} from "antd";
+import React, {useState} from "react";
+import {Button, Form, Modal, Table, Tag} from "antd";
 import {YakitPort} from "../../components/yakitLogSchema";
-import {CopyableField} from "../../utils/inputUtil";
+import {CopyableField, InputItem} from "../../utils/inputUtil";
 import {formatTimestamp} from "../../utils/timeUtil";
+import {failed} from "../../utils/notification";
 
 export interface PortTableProp {
     data: YakitPort[]
 }
+
+
+const {ipcRenderer} = window.require("electron");
 
 export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
     return <Table<YakitPort>

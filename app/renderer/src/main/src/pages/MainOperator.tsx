@@ -1,13 +1,14 @@
 import React, {useEffect, useState} from "react";
-import {Layout, Menu, Space, Tabs, Image, Button, Tag, Modal, Row, Col, Popconfirm} from "antd";
+import {Layout, Menu, Space, Tabs, Image, Button, Tag, Modal, Row, Col, Popconfirm, Spin} from "antd";
 import {ContentByRoute, Route, RouteMenuData} from "../routes/routeSpec";
-import {MenuFoldOutlined, MenuUnfoldOutlined} from "@ant-design/icons"
-import {info, success} from "../utils/notification";
+import {EllipsisOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReloadOutlined} from "@ant-design/icons"
+import {failed, info, success} from "../utils/notification";
 import {showDrawer} from "../utils/showModal";
 import {CodecPage} from "./codec/CodecPage";
 import {YakLogoData} from "../utils/logo";
 import {AutoUpdateYakModuleButton, YakVersion} from "../utils/basic";
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema";
+import ReactJson from "react-json-view";
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -21,18 +22,43 @@ const MenuItem = Menu.Item;
 
 const {Header, Footer, Content, Sider} = Layout;
 
+
+interface MenuItemGroup {
+    Group: string
+    Items: { Group: string, YakScriptId: number, Verbose: string }[]
+}
+
 export const Main: React.FC<MainProp> = (props) => {
-    const [route, setRoute] = useState(Route.HTTPHacker);
+    const [route, setRoute] = useState<any>(Route.HTTPHacker);
     const [collapsed, setCollapsed] = useState(false);
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok");
     const [status, setStatus] = useState<{ addr: string, isTLS: boolean }>();
     const [hideMenu, setHideMenu] = useState(false);
+    const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const updateMenuItems = () => {
+        setLoading(true)
+        ipcRenderer.invoke("GetAllMenuItem", {}).then((data: { Groups: MenuItemGroup[] }) => {
+            setMenuItems(data.Groups)
+        }).catch(e => {
+            failed("Update Menu Item Failed")
+        }).finally(() => {
+            setTimeout(() => {
+                setLoading(false)
+            }, 300)
+        })
+    }
 
     useEffect(() => {
         if (engineStatus === "error") {
             props.onErrorConfirmed && props.onErrorConfirmed()
         }
     }, [engineStatus])
+
+    useEffect(() => {
+        updateMenuItems()
+    }, [])
 
     // 加载补全
     useEffect(() => {
@@ -86,7 +112,6 @@ export const Main: React.FC<MainProp> = (props) => {
                                         src={YakLogoData} preview={false}
                                         width={64}
                                     />
-
                                 </div>
                                 <YakVersion/>
                                 {!hideMenu && <Button
@@ -99,7 +124,18 @@ export const Main: React.FC<MainProp> = (props) => {
                                         collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>
                                     }
                                 />}
+                                <Button
+                                    style={{marginLeft: 4, color: "#207ee8"}}
+                                    type={"ghost"} ghost={true}
+                                    onClick={e => {
+                                        updateMenuItems()
+                                    }}
+                                    icon={
+                                        <ReloadOutlined/>
+                                    }
+                                >
 
+                                </Button>
                             </Space>
                         </Col>
                         <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
@@ -135,46 +171,67 @@ export const Main: React.FC<MainProp> = (props) => {
                             //     setCollapsed(r)
                             // }}
                         >
-                            <Space direction={"vertical"} style={{
-                                width: "100%",
-                            }}>
-                                <Menu
-                                    theme={"light"} style={{}}
-                                    onSelect={(e) => {
-                                        if (e.key === "ignore") {
-                                            return
-                                        }
-                                        setRoute(e.key as Route)
-                                    }}
-                                    mode={"inline"}
-                                    // inlineCollapsed={false}
-                                >
-                                    {(RouteMenuData || []).map(i => {
-                                        if (i.subMenuData) {
+                            <Spin spinning={loading}>
+
+                                <Space direction={"vertical"} style={{
+                                    width: "100%",
+                                }}>
+                                    <Menu
+                                        theme={"light"} style={{}}
+                                        onSelect={(e) => {
+                                            if (e.key === "ignore") {
+                                                return
+                                            }
+                                            setRoute(e.key)
+                                        }}
+                                        mode={"inline"}
+                                        // inlineCollapsed={false}
+                                    >
+                                        {menuItems.map(i => {
+                                            if (i.Group === "UserDefined") {
+                                                i.Group = "社区插件"
+                                            }
                                             return <Menu.SubMenu
-                                                icon={i.icon} key={i.key} title={i.label}
+                                                icon={<EllipsisOutlined/>}
+                                                key={i.Group} title={i.Group}
                                             >
-                                                {(i.subMenuData || []).map(subMenu => {
-                                                    return <MenuItem icon={subMenu.icon} key={subMenu.key}
-                                                                     disabled={subMenu.disabled}>
-                                                        {subMenu.label}
+                                                {i.Items.map(item => {
+                                                    return <MenuItem
+                                                        icon={<EllipsisOutlined/>}
+                                                        key={`plugin:${item.Group}:${item.YakScriptId}`}
+                                                    >
+                                                        {item.Verbose}
                                                     </MenuItem>
                                                 })}
                                             </Menu.SubMenu>
-                                        }
-                                        return <MenuItem icon={i.icon} key={i.key} disabled={i.disabled}>
-                                            {i.label}
-                                        </MenuItem>
-                                    })}
-                                </Menu>
-                            </Space>
+                                        })}
+                                        {(RouteMenuData || []).map(i => {
+                                            if (i.subMenuData) {
+                                                return <Menu.SubMenu
+                                                    icon={i.icon} key={i.key} title={i.label}
+                                                >
+                                                    {(i.subMenuData || []).map(subMenu => {
+                                                        return <MenuItem icon={subMenu.icon} key={subMenu.key}
+                                                                         disabled={subMenu.disabled}>
+                                                            {subMenu.label}
+                                                        </MenuItem>
+                                                    })}
+                                                </Menu.SubMenu>
+                                            }
+                                            return <MenuItem icon={i.icon} key={i.key} disabled={i.disabled}>
+                                                {i.label}
+                                            </MenuItem>
+                                        })}
+                                    </Menu>
+                                </Space>
+                            </Spin>
                         </Sider>}
                         <Content style={{
                             overflow: "auto",
                             backgroundColor: "#fff",
-                            marginLeft: 12,
+                            marginLeft: 12, height: "100%",
                         }}>
-                            <div style={{margin: 12}}>
+                            <div style={{padding: 12, height: "100%"}}>
                                 {ContentByRoute(route)}
                             </div>
                         </Content>

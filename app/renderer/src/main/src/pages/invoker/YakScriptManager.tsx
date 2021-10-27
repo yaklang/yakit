@@ -40,7 +40,7 @@ const {ipcRenderer} = window.require("electron");
 export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) => {
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
         Data: [], Pagination: {
-            Limit: props.limit || 10, Page: 1,
+            Limit: props.limit || 15, Page: 1,
             Order: "desc", OrderBy: "updated_at"
         },
         Total: 0
@@ -49,7 +49,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
     const {Data, Pagination, Total} = response;
     const [params, setParams] = useState<QueryYakScriptRequest>({
         Pagination: {
-            Limit: props.limit || 10, Page: 1,
+            Limit: props.limit || 15, Page: 1,
             Order: "desc", OrderBy: "updated_at"
         }, Type: props.type || undefined,
         Keyword: props.keyword || "", IsHistory: false
@@ -127,6 +127,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                 </Form.Item>
             </Form>}
             <Table<YakScript>
+                size={"small"}
                 dataSource={Data}
                 rowKey={"Id"}
                 loading={loading} bordered={true}

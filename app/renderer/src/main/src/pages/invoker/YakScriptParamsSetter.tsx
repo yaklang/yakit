@@ -9,6 +9,8 @@ export interface YakScriptParamsSetterProps extends YakScript {
     params: YakExecutorParam[]
     onParamsConfirm: (params: YakExecutorParam[]) => any
     submitVerbose?: string
+
+    styleSize?: "big" | "small"
 }
 
 export const getValueFromParams = (params: YakExecutorParam[], key: string): any => {
@@ -64,20 +66,30 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         }
     }, [props.params])
 
-    return <div>
+    return <div style={{
+        marginLeft: props.styleSize === "big" ? 80 : undefined,
+        marginRight: props.styleSize === "big" ? 100 : undefined,
+    }}>
         <Card title={""} bodyStyle={{padding: 0}} bordered={false}>
-            <Form onSubmitCapture={e => {
-                e.preventDefault()
-                let params = originParams.filter(i => {
-                    if (!i.Value) {
-                        return !isBoolean(i.TypeVerbose)
-                    }
-                    return true
-                })
-                props.onParamsConfirm(params.map(i => {
-                    return {Key: i.Field, Value: i.Value || i.DefaultValue}
-                }))
-            }} labelCol={{span: 7}} wrapperCol={{span: 14}}>
+            <Form
+                onSubmitCapture={e => {
+                    e.preventDefault()
+                    let params = originParams.filter(i => {
+                        if (!i.Value) {
+                            return !isBoolean(i.TypeVerbose)
+                        }
+                        return true
+                    })
+                    props.onParamsConfirm(params.map(i => {
+                        return {Key: i.Field, Value: i.Value || i.DefaultValue}
+                    }))
+                }}
+                {...(props.styleSize !== "big" ? {
+                    labelCol: {span: 7}, wrapperCol: {span: 14}
+                } : {
+                    layout: "vertical",
+                })}
+            >
                 {
                     originParams.map(i => {
                         return <Form.Item

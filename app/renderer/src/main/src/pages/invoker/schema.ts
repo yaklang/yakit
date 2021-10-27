@@ -9,6 +9,11 @@ export interface ExecHistoryRecord {
     Id: string;
     Stdout: Uint8Array;
     Stderr: Uint8Array;
+    StderrLen: number
+    StdoutLen: number
+    Messages: Uint8Array
+    FromYakModule: string
+    RuntimeId: string
 }
 
 export interface PaginationSchema {
@@ -30,6 +35,12 @@ export interface QueryGeneralRequest {
     Pagination: PaginationSchema
 }
 
+export const genDefaultPagination = (limit?: number) => {
+    return {
+        Limit: limit || 10, Page: 1,
+        OrderBy: "updated_at", Order: "desc",
+    } as PaginationSchema
+}
 
 /*
 * message YakScript {
@@ -75,6 +86,7 @@ export interface YakScript {
     Author: string
     Tags: string
     IsHistory: boolean
+    IsIgnore?: boolean
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
@@ -83,6 +95,7 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     Type?: string
     Keyword?: string
     IsHistory?: boolean
+    IsIgnore?: boolean
 }
 
 /*

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Button, Card, Form, List, Popconfirm, Space, Tag} from "antd";
-import {InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil";
+import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne} from "../../utils/inputUtil";
 import {YakScript, YakScriptParam} from "./schema";
 import {YakEditor} from "../../utils/editors";
 import {PlusOutlined} from "@ant-design/icons";
@@ -18,7 +18,8 @@ const {ipcRenderer} = window.require("electron");
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
     const [params, setParams] = useState<YakScript>(props.modified || {
-        Content: "", Tags: "", Author: "", Level: "", IsHistory: false,
+        Content: "", Tags: "", Author: "", Level: "",
+        IsHistory: false,
         CreatedAt: 0,
         Help: "",
         Id: 0,
@@ -68,6 +69,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             />
             <InputItem
                 label={"模块作者"} setValue={Author => setParams({...params, Author})} value={params.Author}
+            />
+            <ManyMultiSelectForString
+                label={"Tags"}
+                data={[
+                    {value: "教程", label: "教程"}
+                ]} mode={"tags"}
+                setValue={Tags => setParams({...params, Tags})} value={params.Tags}
             />
             {params.Type === "yak" && <Form.Item label={"增加参数"}>
                 <Button type={"link"}

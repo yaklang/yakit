@@ -1,16 +1,17 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Button, Card, Col, Divider, Empty, Form, PageHeader, Row, Slider, Space, Spin, Switch, Tabs, Tag} from "antd";
-import {InputItem, MultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil";
+import {Button, Col, Divider, Empty, Form, Row, Select, Slider, Space, Spin, Switch, Tabs, Tag, Upload} from "antd";
+import {CopyableField, InputItem, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {randomString} from "../../utils/randomUtil";
 import {ExecResult} from "../invoker/schema";
 import {failed, info} from "../../utils/notification";
 import {XTerm} from "xterm-for-react";
 import {writeExecResultXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils";
 import {ClosedPortTableViewer, OpenPortTableViewer} from "./PortTable";
-import {YakitLogFormatterProp} from "../invoker/YakitLogFormatter";
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema";
 import {PortAssetDescription, PortAssetTable} from "../assetViewer/PortAssetPage";
 import {PortAsset} from "../assetViewer/models";
+import {InboxOutlined} from "@ant-design/icons";
+import {PresetPorts} from "./schema";
 
 
 const {ipcRenderer} = window.require("electron");
@@ -29,6 +30,7 @@ export interface PortScanParams {
     FingerprintMode: "service" | "web" | "all"
     SaveToDB: boolean
     SaveClosedPorts: boolean
+    TargetsFile?: string
 }
 
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
@@ -121,7 +123,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     return
                                 }
 
-                                if (params.Targets === "") {
+                                if (params.Targets === "" && params.TargetsFile === "") {
                                     failed("需要设置扫描主机")
                                     return;
                                 }
@@ -140,9 +142,50 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                            setValue={Mode => setParams({...params, Mode})} value={params.Mode}
                                 />
                                 <InputItem label={"扫描目标"} setValue={Targets => setParams({...params, Targets})}
-                                           value={params.Targets}/>
-                                <InputItem label={"扫描端口"} setValue={Ports => setParams({...params, Ports})}
-                                           value={params.Ports}
+                                           value={params.Targets} textarea={true} textareaRow={6}
+                                           help={"域名/主机/IP/IP段均可，逗号分隔，按行分割均可"}
+                                />
+                                <Form.Item label={"使用文件进行扫描"} help={params.TargetsFile ? <CopyableField
+                                    text={params.TargetsFile} width={260}
+                                /> : ""}>
+                                    <Upload.Dragger
+                                        multiple={false} maxCount={1}
+                                        onRemove={r => {
+                                            setParams({...params, TargetsFile: ""})
+                                            return
+                                        }}
+                                        beforeUpload={(f) => {
+                                            setParams({...params, TargetsFile: f.path})
+                                            return false
+                                        }}>
+                                        <div style={{width: "100%"}}>
+                                            <InboxOutlined style={{
+                                                fontSize: 30, color: "#49a9ff"
+                                            }}/>
+                                        </div>
+                                        按行分割与按逗号分割的扫描目标文件
+                                        <br/>
+                                        均可使用
+                                    </Upload.Dragger>
+                                </Form.Item>
+                                <InputItem label={"扫描端口 （服务端去重）"} setValue={Ports => setParams({...params, Ports})}
+                                           value={params.Ports} help={<Space style={{marginTop: 4, marginBottom: 6}}>
+                                    预设端口
+                                    <Select
+                                        style={{width: 200}}
+                                        size={"small"} mode={"multiple"} bordered={true}
+                                        onChange={(value: string[]) => {
+                                            let res: string = (value || []).map(i => {
+                                                // @ts-ignore
+                                                return PresetPorts[i] || ""
+                                            }).join(",");
+                                            setParams({...params, Ports: res})
+                                        }}
+                                    >
+                                        <Select.Option value={"top100"}>常见100端口</Select.Option>
+                                        <Select.Option value={"top1000+"}>常见一两千</Select.Option>
+                                    </Select>
+                                </Space>}
                                 />
                                 <Form.Item label={"并发"}
                                            help={`最多同时扫描${params.Concurrent}个端口`} style={{width: "100%"}}

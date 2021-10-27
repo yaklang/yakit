@@ -57,7 +57,6 @@ function App() {
         return () => {
             ipcRenderer.removeAllListeners("client-yak-local-grpc-error");
             ipcRenderer.removeAllListeners("client-yak-local-grpc-close");
-            ipcRenderer.invoke("kill-local-yak-grpc-server")
         }
     }, [mode])
 
@@ -136,7 +135,9 @@ function App() {
         onErrorConfirmed={() => {
             setConnected(false)
         }}
-    /> : <Spin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."}>
+    /> : <Spin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."} style={{
+        marginBottom: 100,
+    }}>
         <YakEnvironment
             setMode={setMode}
             onConnected={() => {

@@ -40,4 +40,20 @@ module.exports = (win, getClient) => {
             }
         })
     })
+
+    // asyncQueryExecHistory wrapper
+    const asyncQueryExecHistory = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryExecHistory(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryExecHistory", async (e, params) => {
+        return await asyncQueryExecHistory(params)
+    })
 }
