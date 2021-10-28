@@ -133,6 +133,49 @@ service Yak {
   rpc SaveMarkdownDocument(SaveMarkdownDocumentRequest) returns (Empty);
   rpc GetMarkdownDocument(GetMarkdownDocumentRequest) returns (GetMarkdownDocumentResponse);
   rpc DeleteMarkdownDocument(GetMarkdownDocumentRequest) returns (Empty);
+
+  // Crawler
+  rpc StartBasicCrawler(StartBasicCrawlerRequest)returns (ExecResult);
+  rpc ViewBasicCrawlerCode(Empty) returns (SimpleScript);
+}
+
+message StartBasicCrawlerRequest {
+  string Targets = 1;
+  string TargetsFile = 2;
+
+  string MaxDepth = 3;
+  string MaxCountOfLinks = 4;
+  string MaxCountOfRequest = 5;
+  string DisallowSuffix = 6;
+  string StartFromParentPath = 7;
+  string MaxRetryTimes = 8;
+  string AllowMethods = 9;
+  string AllowDomains = 10;
+  string ForbiddenDomain = 11;
+  string AllowUrlRegexp = 12;
+  string ForbiddenUrlRegexp = 13;
+  string UserAgent = 14;
+
+  // 基础认证
+  string BasicAuth = 15;
+  string BasicAuthUsername = 16;
+  string BasicAuthPassword = 17;
+
+  // Transport
+  repeated string Proxies = 18;
+  int64 Concurrent = 19;
+  int64 MaxRedirectTimes = 20;
+  int64 ConnectTimeoutSeconds = 21;
+  int64 ResponseTimeoutSeconds = 22;
+
+  repeated HTTPHeader Headers = 23;
+  repeated HTTPCookie Cookies = 24;
+}
+
+message HTTPCookie {
+  string Key = 1;
+  string Value = 2;
+  bool AllowOverride = 3;
 }
 
 message ExportYakScriptRequest {
@@ -341,6 +384,9 @@ message YakScriptParam {
   string FieldVerbose = 4;
 
   string Help = 5;
+
+  bool Required = 6;
+  string Group = 7;
 }
 
 message YakScript {

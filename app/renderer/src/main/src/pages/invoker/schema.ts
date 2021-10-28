@@ -72,6 +72,8 @@ export interface YakScriptParam {
     FieldVerbose: string
     Help: string
     Value?: string | any
+    Required?: boolean
+    Group?: string
 }
 
 export interface YakScript {

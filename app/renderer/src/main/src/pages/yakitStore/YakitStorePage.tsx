@@ -227,7 +227,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             pageSize: response.Pagination.Limit || 10,
             total: response.Total,
             showTotal: (i) => <Tag>Total:{i}</Tag>,
-            onChange: update
+            onChange: (page, size) => {
+                update(page, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
+            }
         }}
         renderItem={(i: YakScript) => {
             let isAnonymous = false;

@@ -220,7 +220,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             </Tabs.TabPane>
             <Tabs.TabPane tab={"插件源码 / Source Code"} key={"code"}>
                 <div style={{height: 500}}>
-                    <YakEditor value={script?.Content} readOnly={true}/>
+                    <YakEditor type={script?.Type || "yak"} value={script?.Content} readOnly={true}/>
                 </div>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"执行历史 / History"} key={"history"}>

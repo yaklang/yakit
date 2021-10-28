@@ -144,6 +144,28 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
+
+      # 上传 release asset
+      - name: Upload Release Asset (Windows)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-win32-x64.exe
+          asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
+          asset_content_type: application/octet-stream
+      
+      - name: Upload Release Asset (MacOS)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
+          asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-amd64.dmg
+          asset_content_type: application/octet-stream
+
       - name: Run
         run: ls
       #      - name: Upload yak to oss Latest
