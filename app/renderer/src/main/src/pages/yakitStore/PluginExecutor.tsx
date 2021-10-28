@@ -137,23 +137,27 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     progressBars = progressBars.sort((a, b) => a.id.localeCompare(b.id));
 
     return <div>
-        <Card title={`设置模块参数：${script.ScriptName}`} extra={<Space>
+        <Card title={`模块执行操作台：${script.ScriptName}`} size={"small"} extra={<Space>
             <Popconfirm
                 title={"确定想要停止该任务？"}
+                disabled={!loading}
                 onConfirm={e => {
                     ipcRenderer.invoke("cancel-exec-yak-script", token)
                 }}
             >
                 <Button
+                    size={"small"}
                     disabled={!loading}
                     type={"primary"} danger={true}>
                     立即停止该任务 / KILL TASK
                 </Button>
             </Popconfirm>
-            <Button onClick={e => {
-                xtermClear(xtermRef)
-                reset()
-            }} disabled={loading}>清空缓存</Button>
+            <Button
+                size={"small"}
+                onClick={e => {
+                    xtermClear(xtermRef)
+                    reset()
+                }} disabled={loading}>清空缓存</Button>
         </Space>} bordered={false}>
             <Tabs tabPosition={"left"} onChange={setTab} activeKey={tabKey}>
                 <Tabs.TabPane key={"params"} tab={"设置参数 / Params"}>

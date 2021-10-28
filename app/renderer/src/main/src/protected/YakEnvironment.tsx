@@ -168,7 +168,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                 ]} value={mode} setValue={setMode}/>
 
                 {mode === "local" && <>
-                    <YakLocalProcess onConnected={((newPort, newHost) => {
+                    <YakLocalProcess onConnected={((newPort: any, newHost: any) => {
                         login(newHost, newPort)
                     })}/>
                 </>}

@@ -9,6 +9,7 @@ import {YakLogoData} from "../utils/logo";
 import {AutoUpdateYakModuleButton, YakVersion} from "../utils/basic";
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema";
 import ReactJson from "react-json-view";
+import {randomString} from "../utils/randomUtil";
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -28,6 +29,18 @@ interface MenuItemGroup {
     Items: { Group: string, YakScriptId: number, Verbose: string }[]
 }
 
+interface PluginMenuItem {
+    Group: string,
+    YakScriptId: number,
+    Verbose: string
+};
+
+interface PageCache {
+    id: string
+    verbose: string
+    node: React.ReactNode | any
+}
+
 export const Main: React.FC<MainProp> = (props) => {
     const [route, setRoute] = useState<any>(Route.HTTPHacker);
     const [collapsed, setCollapsed] = useState(false);
@@ -36,6 +49,15 @@ export const Main: React.FC<MainProp> = (props) => {
     const [hideMenu, setHideMenu] = useState(false);
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([]);
     const [loading, setLoading] = useState(false);
+    const [pageCache, setPageCache] = useState<PageCache[]>([]);
+
+    const removeCache = (id: string) => {
+        setPageCache(pageCache.filter(i => i.id !== id))
+    };
+    const appendCache = (id: string, verbose: string, node: any) => {
+        setPageCache([...pageCache, {id, verbose, node}])
+    }
+
 
     const updateMenuItems = () => {
         setLoading(true)
@@ -93,6 +115,17 @@ export const Main: React.FC<MainProp> = (props) => {
             clearInterval(id)
         }
     }, [])
+
+    const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;
+    const routeKeyToLabel = new Map<string, string>();
+    RouteMenuData.forEach(k => {
+        routeKeyToLabel.set(`${k.key}`, k.label)
+    })
+    menuItems.forEach(k => {
+        k.Items.forEach(value => {
+            routeKeyToLabel.set(pluginKey(value), value.Verbose)
+        })
+    })
 
     return (
         <Layout style={{width: "100%", height: "100vh"}}>
@@ -182,6 +215,14 @@ export const Main: React.FC<MainProp> = (props) => {
                                             if (e.key === "ignore") {
                                                 return
                                             }
+                                            appendCache(
+                                                `${e.key}-[${randomString(49)}]`,
+                                                `${routeKeyToLabel.get(e.key)}[${pageCache.length + 1}]` ||
+                                                `${e.key}[${pageCache.length + 1}]`,
+                                                <div style={{overflow: "auto"}}>
+                                                    {ContentByRoute(e.key)}
+                                                </div>
+                                            )
                                             setRoute(e.key)
                                         }}
                                         mode={"inline"}
@@ -231,8 +272,29 @@ export const Main: React.FC<MainProp> = (props) => {
                             backgroundColor: "#fff",
                             marginLeft: 12, height: "100%",
                         }}>
-                            <div style={{padding: 12, height: "100%"}}>
-                                {ContentByRoute(route)}
+                            <div style={{padding: 12, paddingTop: 8, height: "100%"}}>
+                                <Space style={{width: "100%", height: "100%"}} direction={"vertical"}>
+                                    {pageCache.length > 0 && <Tabs
+                                        size={"small"} type={"editable-card"}
+                                        onEdit={(key: any, event: string) => {
+                                            switch (event) {
+                                                case "remove":
+                                                    removeCache(key)
+                                                    return
+                                            }
+
+                                        }}
+                                    >
+                                        {pageCache.map(i => {
+                                            return <Tabs.TabPane key={i.id} tab={i.verbose}>
+                                                {i.node}
+                                            </Tabs.TabPane>
+                                        })}
+                                    </Tabs>}
+                                    {/*<div style={{overflow: "auto"}}>*/}
+                                    {/*    {ContentByRoute(route)}*/}
+                                    {/*</div>*/}
+                                </Space>
                             </div>
                         </Content>
                     </Layout>
