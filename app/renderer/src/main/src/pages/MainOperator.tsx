@@ -1,5 +1,21 @@
 import React, {useEffect, useState} from "react";
-import {Layout, Menu, Space, Tabs, Image, Button, Tag, Modal, Row, Col, Popconfirm, Spin} from "antd";
+import {
+    Layout,
+    Menu,
+    Space,
+    Tabs,
+    Image,
+    Button,
+    Tag,
+    Modal,
+    Row,
+    Col,
+    Popconfirm,
+    Spin,
+    Popover,
+    Form,
+    Input
+} from "antd";
 import {ContentByRoute, Route, RouteMenuData} from "../routes/routeSpec";
 import {EllipsisOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReloadOutlined} from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification";
@@ -10,6 +26,8 @@ import {AutoUpdateYakModuleButton, YakVersion} from "../utils/basic";
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema";
 import ReactJson from "react-json-view";
 import {randomString} from "../utils/randomUtil";
+import {SettingOutlined, EditOutlined, CloseOutlined} from "@ant-design/icons";
+import {InputItem} from "../utils/inputUtil";
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -39,7 +57,12 @@ interface PageCache {
     id: string
     verbose: string
     node: React.ReactNode | any
+    route: Route;
 }
+
+const singletonRoute = [
+    Route.HTTPHacker, Route.ShellReceiver,
+]
 
 export const Main: React.FC<MainProp> = (props) => {
     const [route, setRoute] = useState<any>(Route.HTTPHacker);
@@ -51,13 +74,45 @@ export const Main: React.FC<MainProp> = (props) => {
     const [loading, setLoading] = useState(false);
     const [pageCache, setPageCache] = useState<PageCache[]>([]);
 
+    // 多开 tab 页面
+    const [currentTabKey, setCurrentTabKey] = useState("");
+    const [tabLoading, setTabLoading] = useState(false);
+
     const removeCache = (id: string) => {
         setPageCache(pageCache.filter(i => i.id !== id))
     };
-    const appendCache = (id: string, verbose: string, node: any) => {
-        setPageCache([...pageCache, {id, verbose, node}])
+    const appendCache = (id: string, verbose: string, node: any, route: Route) => {
+        setPageCache([...pageCache, {id, verbose, node, route}])
+    };
+
+    const getCacheIndex = (id: string) => {
+        const targets = pageCache.filter(i => i.id === id);
+        return targets.length > 0 ?
+            pageCache.indexOf(targets[0]) : -1
+    };
+
+    const updateCacheVerbose = (id: string, verbose: string) => {
+        const index = getCacheIndex(id);
+        if (index < 0) {
+            return;
+        }
+        pageCache[index].verbose = verbose
+        setPageCache([...pageCache])
+    };
+
+    const setCurrentTabByRoute = (r: Route) => {
+        const targets = pageCache.filter(i => i.route === r)
+        if (targets.length > 0) {
+            setCurrentTabKey(targets[0].id)
+        }
     }
 
+    const routeExistedCount = (r: Route) => {
+        const targets = pageCache.filter(i => {
+            return i.route === r
+        })
+        return targets.length
+    };
 
     const updateMenuItems = () => {
         setLoading(true)
@@ -215,14 +270,29 @@ export const Main: React.FC<MainProp> = (props) => {
                                             if (e.key === "ignore") {
                                                 return
                                             }
-                                            appendCache(
-                                                `${e.key}-[${randomString(49)}]`,
-                                                `${routeKeyToLabel.get(e.key)}[${pageCache.length + 1}]` ||
-                                                `${e.key}[${pageCache.length + 1}]`,
-                                                <div style={{overflow: "auto"}}>
-                                                    {ContentByRoute(e.key)}
-                                                </div>
-                                            )
+
+                                            if (singletonRoute.includes(e.key as Route) && routeExistedCount(e.key as Route) > 0) {
+                                                setCurrentTabByRoute(e.key as Route)
+                                            } else {
+                                                const newTabId = `${e.key}-[${randomString(49)}]`;
+                                                appendCache(
+                                                    newTabId,
+                                                    `${routeKeyToLabel.get(e.key)}[${pageCache.length + 1}]` ||
+                                                    `${e.key}[${pageCache.length + 1}]`,
+                                                    <div style={{overflow: "auto"}}>
+                                                        {ContentByRoute(e.key)}
+                                                    </div>, e.key as Route,
+                                                );
+                                                setCurrentTabKey(newTabId)
+                                            }
+
+                                            // 增加加载状态
+                                            setCollapsed(true)
+                                            setTabLoading(true)
+                                            setTimeout(() => {
+                                                setTabLoading(false)
+                                            }, 300)
+
                                             setRoute(e.key)
                                         }}
                                         mode={"inline"}
@@ -274,26 +344,69 @@ export const Main: React.FC<MainProp> = (props) => {
                         }}>
                             <div style={{padding: 12, paddingTop: 8, height: "100%"}}>
                                 <Space style={{width: "100%", height: "100%"}} direction={"vertical"}>
-                                    {pageCache.length > 0 && <Tabs
+                                    {pageCache.length > 0 ? <Tabs
+                                        activeKey={currentTabKey}
+                                        onChange={setCurrentTabKey}
                                         size={"small"} type={"editable-card"}
+                                        renderTabBar={(props, TabBarDefault) => {
+                                            return <>
+                                                <TabBarDefault {...props}/>
+                                            </>
+                                        }}
                                         onEdit={(key: any, event: string) => {
                                             switch (event) {
                                                 case "remove":
-                                                    removeCache(key)
+                                                    // hooked by tabs closeIcon
+                                                    return
+                                                case "add":
+                                                    if (collapsed) {
+                                                        setCollapsed(false)
+                                                    } else {
+                                                        info("请从左边菜单连选择需要新建的 Tab 窗口")
+                                                    }
                                                     return
                                             }
 
                                         }}
                                     >
+
                                         {pageCache.map(i => {
-                                            return <Tabs.TabPane key={i.id} tab={i.verbose}>
-                                                {i.node}
+                                            return <Tabs.TabPane key={i.id} tab={i.verbose} closeIcon={<Space>
+                                                <Popover
+                                                    trigger={"click"}
+                                                    title={"修改名称"}
+                                                    content={<>
+                                                        <Input size={"small"} defaultValue={i.verbose} onBlur={(e) => {
+                                                            updateCacheVerbose(i.id, e.target.value)
+                                                        }}/>
+                                                    </>}
+                                                >
+                                                    <EditOutlined/>
+                                                </Popover>
+                                                <Popconfirm title={"确定需要关闭该 Tab 页吗？"} onConfirm={() => {
+                                                    setTabLoading(true)
+                                                    const key = i.id;
+                                                    const targetIndex = getCacheIndex(key)
+                                                    if (targetIndex > 0 && pageCache[targetIndex - 1]) {
+                                                        const targetCache = pageCache[targetIndex - 1];
+                                                        setCurrentTabKey(targetCache.id)
+                                                    }
+                                                    removeCache(key);
+                                                    setTimeout(() => setTabLoading(false), 300)
+                                                }}>
+                                                    <CloseOutlined/>
+                                                </Popconfirm>
+                                            </Space>}>
+                                                <Spin spinning={tabLoading}>
+                                                    {i.node}
+                                                </Spin>
                                             </Tabs.TabPane>
                                         })}
-                                    </Tabs>}
-                                    {/*<div style={{overflow: "auto"}}>*/}
-                                    {/*    {ContentByRoute(route)}*/}
-                                    {/*</div>*/}
+                                    </Tabs> : <>
+                                        <div style={{overflow: "auto"}}>
+                                            {ContentByRoute(route)}
+                                        </div>
+                                    </>}
                                 </Space>
                             </div>
                         </Content>
