@@ -10,6 +10,8 @@ import {Alert, Card, Progress, Space, Spin, Timeline} from "antd";
 import {XTerm} from "xterm-for-react";
 import {LogLevelToCode} from "../../components/HTTPFlowTable";
 import {YakitLogFormatter} from "./YakitLogFormatter";
+import {writeExecResultXTerm, xtermFit} from "../../utils/xtermUtils";
+import {ExecResultLog, ExecResultMessage, ExecResultProgress} from "./batch/ExecMessageViewer";
 
 
 const {ipcRenderer} = window.require("electron");
@@ -19,43 +21,12 @@ export interface YakScriptRunnerProp {
     params: YakExecutorParam[]
 }
 
-interface progress {
-    id: string,
-    progress: number
-}
-
-interface yakitLog {
-    level: string,
-    data: string
-    timestamp: number
-}
-
 export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     const [error, setError] = useState("");
-    const [progress, setProgress] = useState<progress[]>([]);
-    const [logs, setLogs] = useState<yakitLog[]>([]);
-    const xtermRef = React.useRef<any>(null)
-
-    const write = (s: any) => {
-        if (!xtermRef || !xtermRef.current) {
-            return
-        }
-
-        if ((Buffer.from(s, "utf8") || []).length === 1) {
-            let buf = Buffer.from(s, "utf8");
-            switch (buf[0]) {
-                case 127:
-                    xtermRef.current.terminal.write("\b \b");
-                    return
-                default:
-                    xtermRef.current.terminal.write(s);
-                    return;
-            }
-        } else {
-            xtermRef.current.terminal.write(s);
-            return
-        }
-    };
+    const [progress, setProgress] = useState<ExecResultProgress[]>([]);
+    const xtermRef = React.useRef<any>(null);
+    const [results, setResults] = useState<ExecResultLog[]>([]);
+    const [finished, setFinished] = useState(false);
 
     useEffect(() => {
         if (!xtermRef) {
@@ -63,53 +34,54 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
         }
 
         const token = randomString(40);
-        const progs = new Map<string, number>();
-        const logs: yakitLog[] = [];
+
+        let messages: ExecResultMessage[] = [];
+        let lastResultLen = 0;
+        let lastProgressLen = 0;
+        const syncResults = () => {
+            let results = messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog);
+            if (results.length > lastResultLen) {
+                lastResultLen = results.length
+                setResults(results)
+            }
+
+            let progress = messages.filter(i => i.type === "progress").map(i => i.content as ExecResultProgress);
+            if (progress.length > lastProgressLen) {
+                lastProgressLen = progress.length
+                setProgress(progress)
+            }
+        }
+
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
             if (data.IsMessage) {
                 try {
-                    let message = Buffer.from(data.Message).toString("utf8");
-                    let obj = JSON.parse(message);
-                    switch (obj.type) {
-                        case "progress":
-                            let p = obj.content as progress;
-                            progs.set(p.id, p.progress)
-                            return
-                        case "log":
-                            let i = obj.content as yakitLog;
-                            logs.push(i)
-                            if (logs.length > 0) {
-                                setLogs([...logs])
-                            }
-                    }
+                    let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString("utf8"));
+                    messages.unshift(obj)
                 } catch (e) {
-                    console.info(e)
-                } finally {
-                    var p: progress[] = [];
-                    progs.forEach((v, k) => {
-                        p.push({id: k, progress: v})
-                    })
-                    if (p.length > 0) {
-                        setProgress(p)
-                    }
-                }
 
-            } else {
-                let buffer = (Buffer.from(data.Raw as Uint8Array)).toString("utf8");
-                write(buffer)
+                }
             }
-        })
+            writeExecResultXTerm(xtermRef, data)
+        });
+
         ipcRenderer.on(`${token}-error`, (e, error) => {
             setError(error)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
             info("execute finished")
+            syncResults()
+            setFinished(true)
         })
+
         ipcRenderer.invoke("exec-yak-script", {
             Params: props.params,
             YakScriptId: props.script.Id,
         }, token)
+
+        syncResults()
+        let id = setInterval(() => syncResults(), 500)
         return () => {
+            clearInterval(id);
             ipcRenderer.invoke("cancel-exec-yak-script", token)
             ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
@@ -117,17 +89,21 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
         }
     }, [xtermRef])
 
+    useEffect(() => {
+        xtermFit(xtermRef, 200, 8)
+    })
+
     return <Space direction={"vertical"} style={{width: "100%"}}>
         {progress.length > 0 ? <>
-            {(progress || []).sort().map(e => {
+            {(progress || []).map(e => {
                 return <Card size={"small"} hoverable={true} bordered={true} title={`任务进度ID：${e.id}`}>
                     <Progress percent={parseInt((e.progress * 100).toFixed(0))} status="active"/>
                 </Card>
             })}
         </> : undefined}
-        {logs.length > 0 ? <Card size={"small"} hoverable={true} bordered={true} title={`任务额外日志与结果`}>
-            <Timeline pending={true}>
-                {(logs || []).sort().map(e => {
+        {results.length > 0 ? <Card size={"small"} hoverable={true} bordered={true} title={`任务额外日志与结果`}>
+            <Timeline pending={!finished}>
+                {(results || []).map(e => {
                     return <Timeline.Item color={LogLevelToCode(e.level)}>
                         <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
                     </Timeline.Item>
@@ -135,7 +111,9 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
             </Timeline>
         </Card> : undefined}
         {error && <Alert type={"error"} message={error}/>}
-        <XTerm ref={xtermRef} options={{convertEol: true}}/>
+        <div style={{overflowX: "auto"}}>
+            <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}/>
+        </div>
     </Space>
 };
 

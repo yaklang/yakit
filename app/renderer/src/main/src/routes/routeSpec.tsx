@@ -1,14 +1,16 @@
-import react from "react";
-import {PortListening} from "../pages/PortListening";
+import React from "react";
 import {YakExecutor} from "../pages/invoker/YakExecutor";
 import {
-    FireOutlined, CodeOutlined, OneToOneOutlined,
-    EllipsisOutlined, AimOutlined, FunctionOutlined,
-    AppstoreOutlined, AuditOutlined, RocketOutlined,
+    AimOutlined,
+    AppstoreOutlined,
+    AuditOutlined,
+    CodeOutlined,
+    EllipsisOutlined,
+    FireOutlined,
+    FunctionOutlined,
+    OneToOneOutlined,
+    RocketOutlined,
 } from "@ant-design/icons";
-import {MITMPage} from "../pages/mitm/MITMPage";
-import {HistoryPage} from "../pages/history/HistoryPage";
-import {HTTPFuzzerPage} from "../pages/fuzzer/HTTPFuzzerPage";
 import {HTTPHacker} from "../pages/hacker/httpHacker";
 import {CodecPage} from "../pages/codec/CodecPage";
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage";
@@ -16,6 +18,9 @@ import {YakBatchExecutor} from "../pages/invoker/batch/YakBatchExecutor";
 import {YakScriptManagerPage} from "../pages/invoker/YakScriptManager";
 import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager";
 import {PortScanPage} from "../pages/portscan/PortScanPage";
+import {YakitStorePage} from "../pages/yakitStore/YakitStorePage";
+import {PluginOperator} from "../pages/yakitStore/PluginOperator";
+import {failed} from "../utils/notification";
 
 export enum Route {
     MITM = "mitm",
@@ -29,6 +34,7 @@ export enum Route {
     IGNORE = "ignore",
 
     ModManager = "mod-manager",
+    ModManagerLegacy = "mod-manager-legacy",
 
     // 具体漏洞内容
     PoC = "poc",
@@ -60,6 +66,7 @@ export enum Route {
     Mod_Subdomain = "subdomain",
     Mod_Brute = "brute",
     Mod_Crawler = "crawler",
+    Mod_SpaceEngine = "spaceengine"
 }
 
 interface MenuDataProps {
@@ -81,6 +88,7 @@ export const RouteMenuData: MenuDataProps[] = [
         subMenuData: [
             {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
             {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
+            {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
             {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
             {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: true},
         ],
@@ -110,7 +118,7 @@ export const RouteMenuData: MenuDataProps[] = [
         ],
     },
 
-    {key: Route.ModManager, label: "模块管理器", icon: <AppstoreOutlined/>},
+    {key: Route.ModManager, label: "插件商店", icon: <AppstoreOutlined/>},
     {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined/>},
     {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
     {key: Route.Codec, label: "编码与解码", icon: <FireOutlined/>},
@@ -125,7 +133,23 @@ export const RouteMenuData: MenuDataProps[] = [
     // },
 ]
 
-export const ContentByRoute = (r: Route): JSX.Element => {
+export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Element => {
+    const routeStr = `${r}`;
+    if (routeStr.startsWith("plugin:")) {
+        let id = -1;
+        try {
+            let splitList = routeStr.split(":");
+            let idRaw = splitList.reverse().shift();
+            id = parseInt(idRaw || "");
+        } catch (e) {
+            failed(`Loading PluginKey: ${r} failed`)
+        }
+        return <PluginOperator
+            yakScriptId={yakScriptId || id} size={"big"}
+            fromMenu={true}
+        />
+    }
+
     switch (r) {
         // case Route.HistoryRequests:
         //     return <HistoryPage/>
@@ -184,6 +208,8 @@ export const ContentByRoute = (r: Route): JSX.Element => {
         case Route.Codec:
             return <CodecPage/>
         case Route.ModManager:
+            return <YakitStorePage/>
+        case Route.ModManagerLegacy:
             return <YakScriptManagerPage/>
         case Route.PayloadManager:
             return <PayloadManagerPage/>

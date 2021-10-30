@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Button, Card, Form, List, Popconfirm, Space, Tag} from "antd";
-import {InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil";
+import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {YakScript, YakScriptParam} from "./schema";
 import {YakEditor} from "../../utils/editors";
 import {PlusOutlined} from "@ant-design/icons";
@@ -18,7 +18,8 @@ const {ipcRenderer} = window.require("electron");
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
     const [params, setParams] = useState<YakScript>(props.modified || {
-        Content: "", Tags: "", Author: "", Level: "", IsHistory: false,
+        Content: "", Tags: "", Author: "", Level: "",
+        IsHistory: false,
         CreatedAt: 0,
         Help: "",
         Id: 0,
@@ -69,6 +70,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             <InputItem
                 label={"模块作者"} setValue={Author => setParams({...params, Author})} value={params.Author}
             />
+            <ManyMultiSelectForString
+                label={"Tags"}
+                data={[
+                    {value: "教程", label: "教程"}
+                ]} mode={"tags"}
+                setValue={Tags => setParams({...params, Tags})} value={params.Tags}
+            />
             {params.Type === "yak" && <Form.Item label={"增加参数"}>
                 <Button type={"link"}
                         onClick={() => {
@@ -92,7 +100,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                         m.destroy()
                                     }}/>
                                 </>
-
                             })
                         }}
                 >添加 / 设置一个参数 <PlusOutlined/></Button>
@@ -102,21 +109,48 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     size={"small"} bordered={true} pagination={false}
                     renderItem={p => {
                         return <List.Item key={p.Field}>
-                            参数名：
+                            <Space size={1}>
+                                {p.Required && <div
+                                    style={{
+                                        marginBottom: 0, color: "red"
+                                    }}>*</div>}
+                                参数名：
+                            </Space>
                             <Tag
                                 color={"geekblue"}>{p.FieldVerbose && `${p.FieldVerbose} / `}{p.Field}
                             </Tag>
                             类型：<Tag color={"blue"}>{p.TypeVerbose} {p.DefaultValue && `默认值：${p.DefaultValue}`}</Tag>
                             {p.DefaultValue && `默认值为: ${p.DefaultValue}`}
-                            {!isNucleiPoC && <Popconfirm
-                                title={"确认要删除该参数吗？"}
-                                onConfirm={e => {
-                                    setParamsLoading(true)
-                                    setParams({...params, Params: params.Params.filter(i => i.Field !== p.Field)})
-                                }}
-                            >
-                                <Button type={"link"} danger={true}>删除参数</Button>
-                            </Popconfirm>}
+                            {!isNucleiPoC && <Space style={{marginLeft: 20}}>
+                                <Button size={"small"} onClick={() => {
+                                    let m = showModal({
+                                        title: `修改已知参数: ${p.FieldVerbose}(${p.Field})`,
+                                        width: "60%",
+                                        content: <>
+                                            <CreateYakScriptParamForm
+                                                modifiedParam={p}
+                                                onCreated={param => {
+                                                    setParams({
+                                                        ...params, Params: [
+                                                            ...params.Params.filter(i => i.Field !== param.Field),
+                                                            param,
+                                                        ]
+                                                    })
+                                                    m.destroy()
+                                                }}/>
+                                        </>
+                                    })
+                                }}>修改参数</Button>
+                                <Popconfirm
+                                    title={"确认要删除该参数吗？"}
+                                    onConfirm={e => {
+                                        setParamsLoading(true)
+                                        setParams({...params, Params: params.Params.filter(i => i.Field !== p.Field)})
+                                    }}
+                                >
+                                    <Button size={"small"} type={"link"} danger={true}>删除参数</Button>
+                                </Popconfirm>
+                            </Space>}
                         </List.Item>
                     }}
                     dataSource={params.Params}
@@ -152,6 +186,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             } else {
                                 let m = showModal({
                                     title: "确认想要执行的参数",
+                                    width: "70%",
                                     content: <>
                                         <YakScriptParamsSetter params={[]} {...data} onParamsConfirm={params => {
                                             m.destroy()
@@ -177,11 +212,12 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 };
 
 export interface CreateYakScriptParamFormProp {
+    modifiedParam?: YakScriptParam;
     onCreated: (params: YakScriptParam) => any
 }
 
 export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = (props) => {
-    const [params, setParams] = useState<YakScriptParam>({
+    const [params, setParams] = useState<YakScriptParam>(props.modifiedParam || {
         DefaultValue: "",
         Field: "",
         FieldVerbose: "",
@@ -199,6 +235,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
             labelCol={{span: 5}} wrapperCol={{span: 14}}
         >
             <InputItem
+                disable={!!props.modifiedParam}
                 label={"参数名（英文）"} required={true} placeholder={"填入想要增加的参数名"}
                 setValue={Field => setParams({...params, Field})} value={params.Field}
                 help={"参数名应该避免特殊符号，只允许英文 / '-' 等"}
@@ -207,6 +244,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 label={"参数显示名称(可中文)"} placeholder={"输入想要显示的参数名"}
                 setValue={FieldVerbose => setParams({...params, FieldVerbose})} value={params.FieldVerbose}
             />
+            <SwitchItem label={"必要参数"} setValue={Required => setParams({...params, Required})} value={params.Required}/>
             <ManySelectOne
                 label={"选择参数类型"}
                 data={[
@@ -228,6 +266,11 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 setValue={Help => setParams({...params, Help})} value={params.Help}
                 textarea={true} textareaRow={4} placeholder={"填写该参数的帮助信息，帮助用户更容易理解该内容"}
             />
+            {!params.Required && <InputItem
+                label={"参数组"}
+                setValue={Group => setParams({...params, Group})} value={params.Group}
+                placeholder={"参数组，在用户输入界面将会把参数分成组，一般用于设置可选参数`"}
+            />}
             <Form.Item colon={false} label={" "}>
                 <Button type="primary" htmlType="submit"> 添加参数 </Button>
             </Form.Item>

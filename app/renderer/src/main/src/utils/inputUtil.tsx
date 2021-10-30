@@ -39,12 +39,12 @@ export const OneLine: React.FC<OneLineProp> = (props) => {
 const {Item} = Form;
 
 export interface InputItemProps {
-    label: string
+    label: string | any
     value?: string
     placeholder?: string
     disable?: boolean
     required?: boolean
-    help?: string
+    help?: string | any
 
     setValue?(s: string): any
 
@@ -558,11 +558,17 @@ export interface CopyableFieldProp {
     text?: string
     width?: any
     style?: React.CSSProperties;
+    noCopy?: boolean
+    mark?: boolean
 }
 
 export const CopyableField: React.FC<CopyableFieldProp> = (props) => {
     return <div style={{width: props.width, overflow: "auto"}}>
-        <Typography.Paragraph copyable={true} style={{marginBottom: 0, ...props.style}} ellipsis={{tooltip: true}}>
+        <Typography.Paragraph
+            copyable={!props.noCopy}
+            style={{marginBottom: 0, ...props.style}} ellipsis={{tooltip: true}}
+            mark={props.mark}
+        >
             {props.text}
         </Typography.Paragraph>
     </div>

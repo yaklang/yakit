@@ -112,5 +112,11 @@ module.exports = {
 
         //assets
         require("./handlers/assets")(win, getClient);
+
+        // 加载更多的 menu
+        require("./handlers/menu")(win, getClient);
+
+        // 管理 yak 引擎版本 / 升级等
+        require("./handlers/yakUtil").register(win, getClient);
     }
 }
