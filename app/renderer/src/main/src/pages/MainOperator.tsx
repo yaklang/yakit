@@ -22,7 +22,7 @@ import {failed, info, success} from "../utils/notification";
 import {showDrawer} from "../utils/showModal";
 import {CodecPage} from "./codec/CodecPage";
 import {YakLogoData} from "../utils/logo";
-import {AutoUpdateYakModuleButton, YakVersion} from "../utils/basic";
+import {AutoUpdateYakModuleButton, YakitVersion, YakVersion} from "../utils/basic";
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema";
 import ReactJson from "react-json-view";
 import {randomString} from "../utils/randomUtil";
@@ -72,7 +72,15 @@ export const Main: React.FC<MainProp> = (props) => {
     const [hideMenu, setHideMenu] = useState(false);
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([]);
     const [loading, setLoading] = useState(false);
-    const [pageCache, setPageCache] = useState<PageCache[]>([]);
+    const [pageCache, setPageCache] = useState<PageCache[]>([
+        {
+            node: <div style={{overflow: "auto"}}>
+                {ContentByRoute(Route.HTTPHacker)}
+            </div>,
+            id: "", route: Route.HTTPHacker,
+            verbose: "MITM"
+        }
+    ]);
 
     // 多开 tab 页面
     const [currentTabKey, setCurrentTabKey] = useState("");
@@ -174,6 +182,10 @@ export const Main: React.FC<MainProp> = (props) => {
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;
     const routeKeyToLabel = new Map<string, string>();
     RouteMenuData.forEach(k => {
+        (k.subMenuData || []).forEach(subKey => {
+            routeKeyToLabel.set(`${subKey.key}`, subKey.label)
+        })
+
         routeKeyToLabel.set(`${k.key}`, k.label)
     })
     menuItems.forEach(k => {
@@ -202,6 +214,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                     />
                                 </div>
                                 <YakVersion/>
+                                <YakitVersion/>
                                 {!hideMenu && <Button
                                     style={{marginLeft: 4, color: "#207ee8"}}
                                     type={"ghost"} ghost={true}
@@ -275,10 +288,10 @@ export const Main: React.FC<MainProp> = (props) => {
                                                 setCurrentTabByRoute(e.key as Route)
                                             } else {
                                                 const newTabId = `${e.key}-[${randomString(49)}]`;
+                                                const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`;
                                                 appendCache(
                                                     newTabId,
-                                                    `${routeKeyToLabel.get(e.key)}[${pageCache.length + 1}]` ||
-                                                    `${e.key}[${pageCache.length + 1}]`,
+                                                    `${verboseNameRaw}[${pageCache.length + 1}]`,
                                                     <div style={{overflow: "auto"}}>
                                                         {ContentByRoute(e.key)}
                                                     </div>, e.key as Route,
@@ -371,41 +384,43 @@ export const Main: React.FC<MainProp> = (props) => {
                                     >
 
                                         {pageCache.map(i => {
-                                            return <Tabs.TabPane key={i.id} tab={i.verbose} closeIcon={<Space>
-                                                <Popover
-                                                    trigger={"click"}
-                                                    title={"修改名称"}
-                                                    content={<>
-                                                        <Input size={"small"} defaultValue={i.verbose} onBlur={(e) => {
-                                                            updateCacheVerbose(i.id, e.target.value)
-                                                        }}/>
-                                                    </>}
-                                                >
-                                                    <EditOutlined/>
-                                                </Popover>
-                                                <Popconfirm title={"确定需要关闭该 Tab 页吗？"} onConfirm={() => {
-                                                    setTabLoading(true)
-                                                    const key = i.id;
-                                                    const targetIndex = getCacheIndex(key)
-                                                    if (targetIndex > 0 && pageCache[targetIndex - 1]) {
-                                                        const targetCache = pageCache[targetIndex - 1];
-                                                        setCurrentTabKey(targetCache.id)
-                                                    }
-                                                    removeCache(key);
-                                                    setTimeout(() => setTabLoading(false), 300)
-                                                }}>
-                                                    <CloseOutlined/>
-                                                </Popconfirm>
-                                            </Space>}>
+                                            return <Tabs.TabPane key={i.id} tab={i.verbose}
+                                                                 closeIcon={<Space>
+                                                                     <Popover
+                                                                         trigger={"click"}
+                                                                         title={"修改名称"}
+                                                                         content={<>
+                                                                             <Input size={"small"}
+                                                                                    defaultValue={i.verbose}
+                                                                                    onBlur={(e) => {
+                                                                                        updateCacheVerbose(i.id, e.target.value)
+                                                                                    }}/>
+                                                                         </>}
+                                                                     >
+                                                                         <EditOutlined/>
+                                                                     </Popover>
+                                                                     <Popconfirm title={"确定需要关闭该 Tab 页吗？"}
+                                                                                 onConfirm={() => {
+                                                                                     setTabLoading(true)
+                                                                                     const key = i.id;
+                                                                                     const targetIndex = getCacheIndex(key)
+                                                                                     if (targetIndex > 0 && pageCache[targetIndex - 1]) {
+                                                                                         const targetCache = pageCache[targetIndex - 1];
+                                                                                         setCurrentTabKey(targetCache.id)
+                                                                                     }
+                                                                                     removeCache(key);
+                                                                                     setTimeout(() => setTabLoading(false), 300)
+                                                                                 }}>
+                                                                         <CloseOutlined/>
+                                                                     </Popconfirm>
+                                                                 </Space>}>
                                                 <Spin spinning={tabLoading}>
                                                     {i.node}
                                                 </Spin>
                                             </Tabs.TabPane>
                                         })}
                                     </Tabs> : <>
-                                        <div style={{overflow: "auto"}}>
-                                            {ContentByRoute(route)}
-                                        </div>
+
                                     </>}
                                 </Space>
                             </div>

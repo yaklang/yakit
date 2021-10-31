@@ -366,6 +366,16 @@ export const StatusCodeToColor = (code: number) => {
     }
 };
 
+export const DurationMsToColor = (code: number) => {
+    if (code >= 600) {
+        return "red"
+    } else if (code < 600 && code >= 300) {
+        return "orange"
+    } else {
+        return "green"
+    }
+};
+
 export const LogLevelToCode = (level: string) => {
     switch (level.toLowerCase()) {
         case "info":

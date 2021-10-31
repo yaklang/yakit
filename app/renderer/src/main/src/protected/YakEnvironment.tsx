@@ -117,6 +117,11 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
     const [historySelected, setHistorySelected] = useState(false);
     const [name, setName] = useState("");
     const [allowSave, setAllowSave] = useState(false);
+    const [version, setVersion] = useState("-");
+
+    useEffect(()=>{
+        ipcRenderer.invoke("yakit-version").then(setVersion)
+    }, [])
 
     useEffect(() => {
         // setLocalError("");
@@ -161,7 +166,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
             <div style={{textAlign: "center", marginTop: 50, marginLeft: 150, marginRight: 150, marginBottom: 100}}>
                 <Image src={YakLogoData} preview={false} width={200}/>
                 <br/>
-                <Text style={{color: "#999"}}>技术预览版 - 技术预览并不代表最终版本</Text>
+                <Text style={{color: "#999"}}>社区专业版：{version}</Text>
                 <SelectOne label={" "} colon={false} data={[
                     {value: "local", text: "本地模式（本地启动 Yak gRPC）"},
                     {value: "remote", text: "远程模式（TeamServer 模式）"}

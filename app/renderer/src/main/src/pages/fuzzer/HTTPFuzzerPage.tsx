@@ -28,10 +28,11 @@ import {StringFuzzer} from "./StringFuzzer";
 import {InputInteger, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil";
 import {fixEncoding} from "../../utils/convertor";
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail";
+import {FuzzerResponseTable, FuzzerResponseTableEx} from "./FuzzerResponseTable";
 
 const {ipcRenderer} = window.require("electron");
 
-const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (r: string) => any) => {
+export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (r: string) => any) => {
     let m = showDrawer({
         width: "70%",
         content: <>
@@ -343,7 +344,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <Text style={{marginBottom: 0}}>模糊测试 / HTTP 请求结果</Text>
                         <Spin size={"small"} spinning={loading}/>
                     </Space>} size={"small"} bordered={true}
-                    bodyStyle={{minHeight: 500, height: 580}}
+                    bodyStyle={{minHeight: 500, height: 580, overflowY: "auto"}}
                     extra={onlyOneResponse ? [
                         <Space>
                             <Form.Item
@@ -390,79 +391,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
                         </Alert>}
                         <YakEditor readOnly={true} bytes={true} valueBytes={content[0].ResponseRaw}/>
-                    </> : <>{(content.reverse() || []).length > 0 ? <Table<FuzzerResponse>
-                        size={"small"}
-                        scroll={{y: 500, x: 600}}
-                        rowKey={"uuid"}
-                        bordered={true}
-                        columns={[
-                            {
-                                title: "Method",
-                                width: 78,
-                                fixed: "left",
-                                sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.Method.localeCompare(b.Method),
-                                render: (i: FuzzerResponse) => <div>{i.Method}</div>
-                            },
-                            {
-                                title: "访问状态", width: 80,
-                                fixed: "left",
-                                sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.StatusCode - b.StatusCode,
-                                render: (i: FuzzerResponse) => {
-                                    return <div>{i.Ok ?
-                                        <Tag color={"geekblue"}>{i.StatusCode}</Tag> : <Tooltip title={i.Reason}>
-                                            <Tag color={"red"}>
-                                                失败
-                                            </Tag>
-                                        </Tooltip>}</div>
-                                }
-                            },
-                            {
-                                title: "Body 长度", width: 85,
-                                sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.BodyLength - b.BodyLength,
-                                render: (i: FuzzerResponse) => {
-                                    return <div>{i.Ok ? i.BodyLength : ""}</div>
-                                }
-                            },
-                            {
-                                title: "延迟(ms)", width: 80,
-                                sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.DurationMs - b.DurationMs,
-                                render: (i: FuzzerResponse) => {
-                                    if (!i.Ok) {
-                                        return ""
-                                    }
-                                    return <div>{i.DurationMs &&
-                                    <Tag>{i.DurationMs}ms</Tag>}</div>
-                                }
-                            },
-                            {
-                                title: "Content-Type / 失败原因", width: 200,
-                                render: (i: FuzzerResponse) => <Text
-                                    ellipsis={{tooltip: true}}
-                                    style={{width: 200, color: i.Ok ? undefined : "red"}}
-                                >{i.Ok ? i.ContentType : i.Reason}</Text>
-                            },
-                            {
-                                title: "请求时间", fixed: "right", width: 165,
-                                sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.Timestamp - b.Timestamp,
-                                render: (i: FuzzerResponse) => <Tag>{formatTimestamp(i.Timestamp)}</Tag>
-                            },
-                            {
-                                title: "操作", fixed: "right", width: 80,
-                                render: (i: FuzzerResponse) => <Button
-                                    size={"small"} type={"primary"}
-                                    onClick={() => {
-                                        analyzeFuzzerResponse(i, setRequest)
-                                    }}
-                                >分析详情</Button>
-                            },
-                        ]}
-                        dataSource={content.reverse() || []}
-                        pagination={false}
-                    /> : <Result
-                        status={"info"}
-                        title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                        subTitle={"本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"}
-                    />}
+                    </> : <>{(content.reverse() || []).length > 0 ?
+                        <FuzzerResponseTableEx
+                            content={content} setRequest={setRequest}
+                        /> : <Result
+                            status={"info"}
+                            title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                            subTitle={"本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"}
+                        />}
                     </>}
                 </Card>
             </Col>

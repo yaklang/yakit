@@ -29,7 +29,26 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
     }
     const isDev = version.toLowerCase().includes("dev");
     return <Tag color={isDev ? "red" : "geekblue"}>
-        yak 引擎版本：{version}
+        Yak-{version}
+    </Tag>
+};
+
+export const YakitVersion: React.FC<YakVersionProp> = (props) => {
+    const [version, setVersion] = useState<string>("dev")
+
+    useEffect(() => {
+        ipcRenderer.invoke("yakit-version").then(setVersion)
+        return () => {
+            ipcRenderer.removeAllListeners("yakit-version")
+        }
+    }, [])
+
+    if (!version) {
+        return <Spin tip={"正在加载 yakit 版本"}/>
+    }
+    const isDev = version.toLowerCase().includes("dev");
+    return <Tag color={isDev ? "red" : "purple"}>
+        Yakit-{version}
     </Tag>
 };
 

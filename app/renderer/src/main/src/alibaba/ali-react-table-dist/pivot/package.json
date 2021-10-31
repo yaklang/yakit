@@ -1,0 +1,10 @@
+{
+  "name": "ali-react-table/pivot",
+  "private": true,
+  "sideEffects": false,
+  "module": "../dist/ali-react-table-pivot.esm.js",
+  "main": "../dist/ali-react-table-pivot.js",
+  "types": "../dist/ali-react-table-pivot.d.ts",
+  "license": "MIT"
+}
+
