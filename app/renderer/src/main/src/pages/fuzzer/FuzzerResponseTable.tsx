@@ -107,9 +107,11 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                 render: v => <Tag color={StatusCodeToColor(v)}>{`${v}`}</Tag>
             },
             {
-                name: "响应数据长度", code: "BodyLength", render: v => <div style={{
-                    overflow: "auto",
-                }}><Tag>{`${v}`}</Tag>
+                name: "响应包大小", code: "BodyLength", render: v => <div
+                    style={{
+                        overflow: "auto",
+                    }}>
+                    <Tag>{`${v}`}</Tag>
                 </div>, features: {sortable: true}
             },
             {
@@ -126,7 +128,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                     tips: <>
                         如果请求失败才会有内容~
                         {/*<Tag>123</Tag>*/}
-                    </>,
+                    </>
                 }
             }
         ],

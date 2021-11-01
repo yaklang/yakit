@@ -4,6 +4,7 @@ import {XTerm} from "xterm-for-react";
 import {ExecResult} from "../pages/invoker/schema";
 import {showModal} from "./showModal";
 import {failed} from "./notification";
+import {openExternalWebsite} from "./openWebsite";
 
 export interface YakVersionProp {
 
@@ -48,22 +49,23 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
 
     return <div>
         <Badge dot={newVersion}>
-            <Button size={"small"} type={"primary"} onClick={() => {
-                if (!newVersion) {
-                    return
-                }
+            <Button size={"small"} type={"primary"}
+                    onClick={() => {
+                        if (!newVersion) {
+                            return
+                        }
 
-                showModal({
-                    title: "有新的 Yak 核心引擎可升级！",
-                    content: <>
-                        如果你现在不是很忙
-                        <br/>
-                        我们推荐您退出当前引擎，点击欢迎界面的
-                        <br/>
-                        "安装/升级 Yak 引擎" 来免费升级
-                    </>
-                })
-            }}>
+                        showModal({
+                            title: "有新的 Yak 核心引擎可升级！",
+                            content: <>
+                                如果你现在不是很忙
+                                <br/>
+                                我们推荐您退出当前引擎，点击欢迎界面的
+                                <br/>
+                                "安装/升级 Yak 引擎" 来免费升级
+                            </>
+                        })
+                    }}>
                 Yak-{version}
             </Button>
         </Badge>
@@ -72,21 +74,52 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
 
 export const YakitVersion: React.FC<YakVersionProp> = (props) => {
     const [version, setVersion] = useState<string>("dev")
+    const [latestVersion, setLatestVersion] = useState("");
 
     useEffect(() => {
-        ipcRenderer.invoke("yakit-version").then(setVersion)
-        return () => {
-            ipcRenderer.removeAllListeners("yakit-version")
-        }
+        ipcRenderer.invoke("query-latest-yakit-version").then(nv => {
+            setLatestVersion(nv)
+        })
+        ipcRenderer.invoke("yakit-version").then(v => setVersion(`v${v}`))
     }, [])
 
     if (!version) {
         return <Spin tip={"正在加载 yakit 版本"}/>
     }
     const isDev = version.toLowerCase().includes("dev");
-    return <Tag color={isDev ? "red" : "purple"}>
-        Yakit-{version}
-    </Tag>
+    const newVersion = latestVersion !== "" && latestVersion !== version
+
+    if (!newVersion) {
+        return <Tag color={isDev ? "red" : "geekblue"}>
+            Yakit-{version}
+        </Tag>
+    }
+
+    return <div>
+        <Badge dot={newVersion}>
+            <Button size={"small"} type={"primary"} onClick={() => {
+                if (!newVersion) {
+                    return
+                }
+
+                showModal({
+                    title: "有新的 Yakit 版本可升级！",
+                    content: <>
+                        如果你现在不是很忙
+                        <br/>
+                        我们推荐您进入 <Button
+                        type={"primary"}
+                        onClick={() => {
+                            openExternalWebsite("https://github.com/yaklang/yakit/releases")
+                        }}
+                    >Yakit Github 发布界面</Button> 下载最新版并升级！
+                    </>
+                })
+            }}>
+                Yakit-{version}
+            </Button>
+        </Badge>
+    </div>
 };
 
 export interface AutoUpdateYakModuleViewerProp {
