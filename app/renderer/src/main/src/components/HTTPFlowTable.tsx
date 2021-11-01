@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {
-    Button,
+    Button, Empty,
     Form,
     Menu,
     PageHeader,
@@ -35,6 +35,7 @@ export interface HTTPHeaderItem {
 }
 
 export interface HTTPFlow {
+    Id?: number
     Method: string
     Path: string
     Hash: string
@@ -178,7 +179,11 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
     </div>
 };
 
-export const onExpandHTTPFlow = (flow: HTTPFlow, onSendToFuzzer?: SendToFuzzerFunc) => {
+export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onSendToFuzzer?: SendToFuzzerFunc) => {
+    if (!flow) {
+        return <Empty>找不到该请求详情</Empty>
+    }
+
     return <div style={{width: "100%"}}>
         <HTTPFlowDetail hash={flow.Hash} onSendToFuzzer={onSendToFuzzer}/>
     </div>

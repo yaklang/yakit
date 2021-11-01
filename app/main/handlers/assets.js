@@ -32,4 +32,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeletePorts", async (e, params) => {
         return await asyncDeletePorts(params)
     })
+
+    // asyncGenerateWebsiteTree wrapper
+    const asyncGenerateWebsiteTree = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateWebsiteTree(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateWebsiteTree", async (e, params) => {
+        return await asyncGenerateWebsiteTree(params)
+    })
 };

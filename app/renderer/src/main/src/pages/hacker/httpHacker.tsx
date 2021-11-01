@@ -11,6 +11,7 @@ import {randomBytes} from "crypto";
 import {randomString} from "../../utils/randomUtil";
 import {CloseOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons";
 import {info} from "../../utils/notification";
+import {WebsiteTreeViewer} from "../yakitStore/viewers/WebsiteTree";
 
 export interface HTTPHackerProp {
 
@@ -114,6 +115,11 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false}>
                     <HTTPFlowTable
                         onSendToWebFuzzer={sendToFuzzer}/>
+                </Tabs.TabPane>
+                <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
+                    <WebsiteTreeViewer
+                        onSendToWebFuzzer={sendToFuzzer}
+                    />
                 </Tabs.TabPane>
                 {fuzzers.map(i => <Tabs.TabPane tab={i.verbose} key={i.key} closeIcon={<Space>
                     <Popover

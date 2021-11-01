@@ -528,6 +528,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                 actions={(() => {
                                                                     return [
                                                                         {
+                                                                            id: "send-to-fuzzer",
+                                                                            label: "发送到 Web Fuzzer",
+                                                                            run: function () {
+                                                                                props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, currentPacket || "")
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        },
+                                                                        {
                                                                             id: "forward-response",
                                                                             label: "放行该 HTTP Request",
                                                                             run: function () {
@@ -571,18 +579,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                     </div>
                                                 </Spin>
                                             </Col>
-                                            {/*<Col span={8}>*/}
-                                            {/*    /!*<Card title={"劫持过的 HTTP Request/Response 缓存"}*!/*/}
-                                            {/*    /!*      bodyStyle={{padding: 0, margin: 0}}*!/*/}
-                                            {/*    /!*      bordered={false}*!/*/}
-                                            {/*    /!*>*!/*/}
-                                            {/*    /!*    <HTTPFlowTable mini={true}/>*!/*/}
-                                            {/*    /!*    /!*<HTTPFlowLiveTable*!/*!/*/}
-                                            {/*    /!*    /!*    data={flows}*!/*!/*/}
-                                            {/*    /!*    /!*    onSendToWebFuzzer={props.onSendToWebFuzzer}*!/*!/*/}
-                                            {/*    /!*    /!*//*!/*/}
-                                            {/*    /!*</Card>*!/*/}
-                                            {/*</Col>*/}
                                         </Row>
                                     </Space>
                                 </Col>

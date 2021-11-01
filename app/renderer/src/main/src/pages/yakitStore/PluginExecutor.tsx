@@ -31,6 +31,7 @@ import {
     ExecResultsViewer
 } from "../invoker/batch/ExecMessageViewer";
 import {LogLevelToCode} from "../../components/HTTPFlowTable";
+import {PluginResultUI} from "./viewers/base";
 
 export interface PluginExecutorProp {
     script: YakScript
@@ -115,27 +116,6 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         xtermFit(xtermRef, 256, 6)
     })
 
-
-    // 处理 Progress
-    const progressTable = new Map<string, number>();
-    progress.forEach(i => {
-        let percent = progressTable.get(i.id)
-        if (!percent) {
-            progressTable.set(i.id, i.progress)
-        } else {
-            progressTable.set(i.id, Math.max(percent, i.progress))
-        }
-    })
-    let progressBars: { id: string, node: React.ReactNode }[] = [];
-    progressTable.forEach((v, k) => {
-        progressBars.push({
-            id: k, node: <Card size={"small"} hoverable={false} bordered={true} title={`任务进度ID：${k}`}>
-                <Progress percent={parseInt((v * 100).toFixed(0))} status="active"/>
-            </Card>,
-        })
-    })
-    progressBars = progressBars.sort((a, b) => a.id.localeCompare(b.id));
-
     return <div>
         <Card title={`模块执行操作台：${script.ScriptName}`} size={"small"} extra={<Space>
             <Popconfirm
@@ -180,20 +160,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 </Tabs.TabPane>
                 <Tabs.TabPane key={"console"} tab={"执行结果 / Results"}>
                     <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
-                    <Divider orientation={"left"}>Yakit Module Output</Divider>
-                    <Card
-                        size={"small"} hoverable={true} bordered={true} title={`任务额外日志与结果`}
-                        style={{marginBottom: 20, marginRight: 2}}
-                    >
-                        {progressTable.size > 0 && progressBars.map(i => i.node)}
-                        <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                            {(results || []).sort().map(e => {
-                                return <Timeline.Item color={LogLevelToCode(e.level)}>
-                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
-                                </Timeline.Item>
-                            })}
-                        </Timeline>
-                    </Card>
+                    {PluginResultUI(loading, results, progress, script)}
                 </Tabs.TabPane>
             </Tabs>
         </Card>

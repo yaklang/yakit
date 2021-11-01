@@ -63,6 +63,8 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                     </>}
                 </Card>
             </Space>
+        case "json-feature":
+            return <div/>
         case "json-graph":
             let graphData: GraphData = JSON.parse(props.data);
             return <Space direction={"vertical"}>

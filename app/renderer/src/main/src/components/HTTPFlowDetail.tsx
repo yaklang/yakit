@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Col, Collapse, Descriptions, PageHeader, Row, Space, Spin, Tabs, Tag, Typography} from "antd";
+import {Card, Col, Collapse, Descriptions, PageHeader, Row, Space, Spin, Tabs, Tag, Typography} from "antd";
 import {HTTPFlow} from "./HTTPFlowTable";
 import {YakEditor} from "../utils/editors";
 import {failed} from "../utils/notification";
@@ -117,21 +117,34 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     </Tabs> : ""}
                 </div>
 
-                <Collapse>
-                    <Collapse.Panel key={"request-raw"} header={"原始 HTTP 请求数据包内容"}>
-                        <div style={{height: 280}}>
-                            <YakEditor readOnly={true}
-                                       value={new Buffer(flow.Request).toString("utf-8")}/>
-                        </div>
-                    </Collapse.Panel>
-                    <Collapse.Panel key={"response-raw"} header={"原始 HTTP 响应数据包内容"}>
-                        <div style={{height: 350}}>
-                            <YakEditor readOnly={true}
-                                       value={new Buffer(flow.Response).toString("utf-8")}
-                            />
-                        </div>
-                    </Collapse.Panel>
-                </Collapse>
+                <Row gutter={8}>
+                    <Col span={12}>
+                        <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
+                            <div style={{height: 350}}>
+                                <YakEditor readOnly={true}
+                                           value={new Buffer(flow.Request).toString("utf-8")}/>
+                            </div>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
+                            <div style={{height: 350}}>
+                                <YakEditor readOnly={true}
+                                           value={new Buffer(flow.Response).toString("utf-8")}
+                                />
+                            </div>
+                        </Card>
+                    </Col>
+                </Row>
+
+                {/*<Collapse>*/}
+                {/*    <Collapse.Panel key={"request-raw"} header={"原始 HTTP 请求数据包内容"}>*/}
+
+                {/*    </Collapse.Panel>*/}
+                {/*    <Collapse.Panel key={"response-raw"} header={"原始 HTTP 响应数据包内容"}>*/}
+
+                {/*    </Collapse.Panel>*/}
+                {/*</Collapse>*/}
                 <Row gutter={8}>
                     <Col span={12}>
                         <Collapse defaultActiveKey={"request"}>

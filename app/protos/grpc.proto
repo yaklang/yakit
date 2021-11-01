@@ -137,6 +137,15 @@ service Yak {
   // Crawler
   rpc StartBasicCrawler(StartBasicCrawlerRequest)returns (ExecResult);
   rpc ViewBasicCrawlerCode(Empty) returns (SimpleScript);
+  rpc GenerateWebsiteTree(GenerateWebsiteTreeRequest) returns (GenerateWebsiteTreeResponse);
+}
+
+message GenerateWebsiteTreeResponse {
+  bytes TreeDataJson = 1;
+}
+
+message GenerateWebsiteTreeRequest {
+  string Targets = 1;
 }
 
 message StartBasicCrawlerRequest {

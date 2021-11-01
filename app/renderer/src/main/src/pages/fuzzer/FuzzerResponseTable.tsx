@@ -122,9 +122,12 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
             {
                 name: "失败原因", code: "reason", render: (v) => {
                     return v ? <Tag color={"red"}>{v}</Tag> : "-"
-                }, features: {tips: <>
-                        <Tag>123</Tag>
-                    </>,}
+                }, features: {
+                    tips: <>
+                        如果请求失败才会有内容~
+                        {/*<Tag>123</Tag>*/}
+                    </>,
+                }
             }
         ],
     }).primaryKey("uuid").use(features.columnResize({
@@ -138,5 +141,28 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
 
     return <div style={{width: "100%"}}>
         <BaseTable {...pipeline.getProps()} style={{width: "100%", height: 500, overflow: "auto"}}/>
+    </div>
+};
+
+export const GeneralVirtualTable: React.FC<{ content: any[], columns: any[], key: string }> = (props) => {
+    const {content, columns} = props;
+    const pipeline = useTablePipeline({
+        components: antd,
+    }).input({
+        dataSource: content,
+        columns,
+    }).primaryKey("uuid").use(features.columnResize({
+        minSize: 60,
+    })).use(
+        features.sort({
+            mode: 'single',
+            highlightColumnWhenActive: true,
+        }),
+    ).use(features.columnHover()).use(features.tips())
+
+    return <div style={{width: "100%"}}>
+        <BaseTable
+            {...pipeline.getProps()} style={{width: "100%", height: 500, overflow: "auto"}}
+        />
     </div>
 };

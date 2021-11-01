@@ -18,6 +18,23 @@ module.exports = (win, getClient) => {
             }
         })
     })
+
+    // asyncQueryHTTPFlows wrapper
+    const asyncQueryHTTPFlows = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHTTPFlows(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHTTPFlows", async (e, params) => {
+        return await asyncQueryHTTPFlows(params)
+    })
+
     ipcMain.handle("get-http-flow", async (r, hash) => {
         getClient().GetHTTPFlowByHash({
             Hash: hash,
