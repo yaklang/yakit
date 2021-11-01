@@ -1,8 +1,9 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Spin, Tag, Button, Card, ButtonProps, Popconfirm, Space, Alert} from "antd";
+import {Spin, Tag, Button, Card, ButtonProps, Popconfirm, Space, Alert, Badge} from "antd";
 import {XTerm} from "xterm-for-react";
 import {ExecResult} from "../pages/invoker/schema";
 import {showModal} from "./showModal";
+import {failed} from "./notification";
 
 export interface YakVersionProp {
 
@@ -12,8 +13,16 @@ const {ipcRenderer} = window.require("electron");
 
 export const YakVersion: React.FC<YakVersionProp> = (props) => {
     const [version, setVersion] = useState<string>("dev")
+    const [latestVersion, setLatestVersion] = useState("");
+
 
     useEffect(() => {
+        ipcRenderer.invoke("query-latest-yak-version").then((data: string) => {
+            setLatestVersion(data)
+        }).catch(() => {
+        }).finally(
+        )
+
         ipcRenderer.on("client-yak-version", async (e: any, data) => {
             setVersion(data)
         })
@@ -28,9 +37,37 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
         return <Spin tip={"正在加载 yak 版本"}/>
     }
     const isDev = version.toLowerCase().includes("dev");
-    return <Tag color={isDev ? "red" : "geekblue"}>
-        Yak-{version}
-    </Tag>
+
+    const newVersion = latestVersion !== "" && latestVersion !== version
+
+    if (!newVersion) {
+        return <Tag color={isDev ? "red" : "geekblue"}>
+            Yak-{version}
+        </Tag>
+    }
+
+    return <div>
+        <Badge dot={newVersion}>
+            <Button size={"small"} type={"primary"} onClick={() => {
+                if (!newVersion) {
+                    return
+                }
+
+                showModal({
+                    title: "有新的 Yak 核心引擎可升级！",
+                    content: <>
+                        如果你现在不是很忙
+                        <br/>
+                        我们推荐您退出当前引擎，点击欢迎界面的
+                        <br/>
+                        "安装/升级 Yak 引擎" 来免费升级
+                    </>
+                })
+            }}>
+                Yak-{version}
+            </Button>
+        </Badge>
+    </div>
 };
 
 export const YakitVersion: React.FC<YakVersionProp> = (props) => {

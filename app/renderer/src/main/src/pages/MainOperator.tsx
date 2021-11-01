@@ -14,7 +14,7 @@ import {
     Spin,
     Popover,
     Form,
-    Input
+    Input, Divider
 } from "antd";
 import {ContentByRoute, MenuDataProps, Route, RouteMenuData} from "../routes/routeSpec";
 import {EllipsisOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReloadOutlined} from "@ant-design/icons"
@@ -222,6 +222,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                     />
                                 </div>
                                 <YakVersion/>
+                                <Divider type={"vertical"}/>
                                 <YakitVersion/>
                                 {!hideMenu && <Button
                                     style={{marginLeft: 4, color: "#207ee8"}}
@@ -344,7 +345,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                                         return {
                                                             icon: <EllipsisOutlined/>,
                                                             key: `plugin:${i.Id}`,
-                                                            label: i.GeneralModuleVerbose
+                                                            label: i.GeneralModuleVerbose,
                                                         } as MenuDataProps
                                                     })
                                                     i.subMenuData.push(...extraMenus)

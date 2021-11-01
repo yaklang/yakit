@@ -12,11 +12,51 @@ const sudo = require("sudo-prompt");
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
 fs.mkdirSync(secretDir, {recursive: true})
+const basicDir = path.join(homeDir, "base");
+fs.mkdirSync(basicDir, {recursive: true})
 const yakEngineDir = path.join(homeDir, "yak-engine")
 fs.mkdirSync(yakEngineDir, {recursive: true})
 
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
+const basicKvPath = path.join(basicDir, "yakit-local.json")
+
+const kvpairs = new Map();
+
+const getKVPair = () => {
+    const keys = [];
+    kvpairs.forEach((_, e) => {
+        keys.push(e)
+    })
+    keys.map(i => kvpairs.delete(i));
+
+    try {
+        const data = fs.readFileSync(basicKvPath);
+        JSON.parse(data).forEach(i => {
+            if (i["key"]) {
+                kvpairs.set(i["key"], i["value"])
+            }
+        })
+    } catch (e) {
+    }
+}
+getKVPair()
+
+const setKVPair = (k, v) => {
+    kvpairs.set(`${k}`, v)
+
+    try {
+        fs.unlinkSync(basicKvPath)
+    } catch (e) {
+    }
+
+    const pairs = []
+    kvpairs.forEach((v, k) => {
+        pairs.push({key: k, value: v})
+    })
+    pairs.sort((a, b) => a.key.localeCompare(b.key))
+    fs.writeFileSync(basicKvPath, new Buffer(JSON.stringify(pairs), "utf8"))
+}
 
 const loadSecrets = () => {
     authMeta.splice(0, authMeta.length)
@@ -131,6 +171,22 @@ module.exports = {
         })
 
         // asyncQueryLatestYakEngineVersion wrapper
+        const asyncQueryLatestYakitEngineVersion = (params) => {
+            return new Promise((resolve, reject) => {
+                let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yakit-version.txt")
+                rsp.on("response", rsp => {
+                    rsp.on("data", data => {
+                        resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
+                    }).on("error", err => reject(err))
+                })
+                rsp.on("error", reject)
+            })
+        }
+        ipcMain.handle("query-latest-yakit-version", async (e, params) => {
+            return await asyncQueryLatestYakitEngineVersion(params)
+        })
+
+        // asyncQueryLatestYakEngineVersion wrapper
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {
                 childProcess.exec("yak -v", (err, stdout) => {
@@ -242,6 +298,16 @@ module.exports = {
 
         ipcMain.handle("install-yak-engine", async (e, version) => {
             return await installYakEngine(version);
+        })
+
+
+        ipcMain.handle("set-value", (e, key, value) => {
+            setKVPair(key, value)
+        })
+
+        ipcMain.handle("get-value", (e, key) => {
+            getKVPair()
+            return kvpairs.get(key)
         })
     },
 }

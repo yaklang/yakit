@@ -27,6 +27,7 @@ import {saveAuthInfo, YakRemoteAuth} from "./YakRemoteAuth";
 import {showModal} from "../utils/showModal";
 import {divider} from "@uiw/react-md-editor";
 import {YakUpgrade} from "../components/YakUpgrade";
+import {UserProtocol} from "../App";
 
 const {Text, Title, Paragraph} = Typography;
 
@@ -119,7 +120,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
     const [allowSave, setAllowSave] = useState(false);
     const [version, setVersion] = useState("-");
 
-    useEffect(()=>{
+    useEffect(() => {
         ipcRenderer.invoke("yakit-version").then(setVersion)
     }, [])
 
@@ -273,29 +274,38 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                         </Button>
                     </div>}
                     <div style={{textAlign: "center"}}>
-                        <Button
-                            style={{
-                                color: '#888',
-                                marginBottom: 200,
-                            }}
-                            type={"link"}
-                            onClick={() => {
-                                let m = showModal({
-                                    keyboard: false,
-                                    title: "引擎升级管理页面",
-                                    width: "60%",
+                        <Space style={{
+                            color: '#888',
+                            marginBottom: 200,
+                        }}>
+                            <Button
+                                type={"link"}
+                                onClick={() => {
+                                    let m = showModal({
+                                        keyboard: false,
+                                        title: "引擎升级管理页面",
+                                        width: "60%",
+                                        content: <>
+                                            <YakUpgrade onFinished={() => {
+                                                m.destroy()
+                                            }}/>
+                                        </>
+                                    })
+                                }}
+                            >
+                                <p
+                                    style={{marginBottom: 0}}
+                                >安装/升级 Yak 引擎</p>
+                            </Button>
+                            <Button type={"link"} onClick={() => {
+                                showModal({
+                                    title: "用户协议",
                                     content: <>
-                                        <YakUpgrade onFinished={() => {
-                                            m.destroy()
-                                        }}/>
+                                        {UserProtocol()}
                                     </>
                                 })
-                            }}
-                        >
-                            <p
-                                style={{marginBottom: 0}}
-                            >安装/升级 Yak 引擎</p>
-                        </Button>
+                            }}>用户协议</Button>
+                        </Space>
                     </div>
                 </Form>
             </div>
