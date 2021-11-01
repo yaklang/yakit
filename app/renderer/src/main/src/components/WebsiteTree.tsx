@@ -46,7 +46,7 @@ export const ConvertWebsiteForestToTreeData = (forest: WebsiteForest) => {
         return antDTreeData
     };
 
-    const nodes = forest.trees.map(viewTree)
+    const nodes = (forest.trees || []).map(viewTree)
     nodes.sort((a, b) => a.title.localeCompare(b.title))
     const shrinkNode = (node: AntDTreeData) => {
         node.children.map(shrinkNode);

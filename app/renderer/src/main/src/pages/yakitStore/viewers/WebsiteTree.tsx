@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from "react";
-import {Card, Col, Input, Pagination, Row, Space, Switch, Tabs, Tree} from "antd";
+import {Button, Card, Col, Input, Pagination, Row, Space, Switch, Tabs, Tree} from "antd";
 import {AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest} from "../../../components/WebsiteTree";
 import {HTTPFlowTable} from "../../../components/HTTPFlowTable";
 import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable";
 import {genDefaultPagination} from "../../invoker/schema";
+import {ReloadOutlined} from "@ant-design/icons";
 import {InputItem} from "../../../utils/inputUtil";
 
 export interface WebsiteTreeViewerProp {
@@ -67,7 +68,15 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
         <Row gutter={8}>
             <Col span={7}>
                 <Card
-                    title={"业务结构"}
+                    title={<Space>
+                        业务结构
+                        <Button
+                            type={"link"} size={"small"} icon={<ReloadOutlined/>}
+                            onClick={()=>{
+                                refresh()
+                            }}
+                        />
+                    </Space>}
                     size={"small"}
                     extra={[
                         !props.targets && <Space>

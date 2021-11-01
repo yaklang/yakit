@@ -89,6 +89,9 @@ export interface YakScript {
     Tags: string
     IsHistory: boolean
     IsIgnore?: boolean
+    IsGeneralModule?: boolean
+    GeneralModuleVerbose?: string
+    GeneralModuleKey?: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

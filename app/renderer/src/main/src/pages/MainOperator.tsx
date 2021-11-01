@@ -16,7 +16,7 @@ import {
     Form,
     Input
 } from "antd";
-import {ContentByRoute, Route, RouteMenuData} from "../routes/routeSpec";
+import {ContentByRoute, MenuDataProps, Route, RouteMenuData} from "../routes/routeSpec";
 import {EllipsisOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReloadOutlined} from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification";
 import {showDrawer} from "../utils/showModal";
@@ -28,6 +28,7 @@ import ReactJson from "react-json-view";
 import {randomString} from "../utils/randomUtil";
 import {SettingOutlined, EditOutlined, CloseOutlined} from "@ant-design/icons";
 import {InputItem} from "../utils/inputUtil";
+import {genDefaultPagination, QueryYakScriptsResponse, YakScript} from "./invoker/schema";
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -81,6 +82,7 @@ export const Main: React.FC<MainProp> = (props) => {
             verbose: "MITM"
         }
     ]);
+    const [extraGeneralModule, setExtraGeneralModule] = useState<YakScript[]>([]);
 
     // 多开 tab 页面
     const [currentTabKey, setCurrentTabKey] = useState("");
@@ -132,6 +134,12 @@ export const Main: React.FC<MainProp> = (props) => {
             setTimeout(() => {
                 setLoading(false)
             }, 300)
+        })
+
+        ipcRenderer.invoke("QueryYakScript", {
+            Pagination: genDefaultPagination(1000), IsGeneralModule: true,
+        }).then((data: QueryYakScriptsResponse) => {
+            setExtraGeneralModule(data.Data)
         })
     }
 
@@ -331,6 +339,24 @@ export const Main: React.FC<MainProp> = (props) => {
                                         })}
                                         {(RouteMenuData || []).map(i => {
                                             if (i.subMenuData) {
+                                                if (i.key === `${Route.GeneralModule}`) {
+                                                    const extraMenus = extraGeneralModule.map(i => {
+                                                        return {
+                                                            icon: <EllipsisOutlined/>,
+                                                            key: `plugin:${i.Id}`,
+                                                            label: i.GeneralModuleVerbose
+                                                        } as MenuDataProps
+                                                    })
+                                                    i.subMenuData.push(...extraMenus)
+                                                    let subMenuMap = new Map<string, MenuDataProps>();
+                                                    i.subMenuData.forEach(e => {
+                                                        subMenuMap.set(e.key as string, e)
+                                                    })
+                                                    i.subMenuData = []
+                                                    subMenuMap.forEach(v => i.subMenuData?.push(v));
+                                                    i.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
+                                                }
+                                                i.subMenuData.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0))
                                                 return <Menu.SubMenu
                                                     icon={i.icon} key={i.key} title={i.label}
                                                 >

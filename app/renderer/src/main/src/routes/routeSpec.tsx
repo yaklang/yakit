@@ -21,6 +21,7 @@ import {PortScanPage} from "../pages/portscan/PortScanPage";
 import {YakitStorePage} from "../pages/yakitStore/YakitStorePage";
 import {PluginOperator} from "../pages/yakitStore/PluginOperator";
 import {failed} from "../utils/notification";
+import {GeneralVirtualTable} from "../pages/fuzzer/FuzzerResponseTable";
 
 export enum Route {
     MITM = "mitm",
@@ -65,11 +66,11 @@ export enum Route {
     Mod_ScanPort = "scan-port",
     Mod_Subdomain = "subdomain",
     Mod_Brute = "brute",
-    Mod_Crawler = "crawler",
+    Mod_Crawler = "basic-crawler",
     Mod_SpaceEngine = "spaceengine"
 }
 
-interface MenuDataProps {
+export interface MenuDataProps {
     key?: Route
     subMenuData?: MenuDataProps[],
     label: string
@@ -89,7 +90,7 @@ export const RouteMenuData: MenuDataProps[] = [
             {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
             {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
             {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
-            {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
+            // {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
             {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: true},
         ],
     },

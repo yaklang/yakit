@@ -375,6 +375,7 @@ message QueryYakScriptRequest {
   string Keyword = 3;
   bool IsHistory = 4;
   bool IsIgnore = 5;
+  bool IsGeneralModule = 6;
 }
 
 message QueryYakScriptResponse {
@@ -411,6 +412,9 @@ message YakScript {
   string Tags = 10;
   bool IsHistory = 11;
   bool IsIgnore = 12;
+  bool IsGeneralModule = 13;
+  string GeneralModuleVerbose = 14;
+  string GeneralModuleKey = 15;
 }
 
 message CodecRequest {
