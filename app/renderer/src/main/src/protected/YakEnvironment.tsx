@@ -140,7 +140,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
 
     const login = (newHost?: string, newPort?: number) => {
         setLoading(true)
-        info("正在连接 ... Yak 核心引擎")
+        // info("正在连接 ... Yak 核心引擎")
         let params = {
             host: newHost || host,
             port: newPort || port,

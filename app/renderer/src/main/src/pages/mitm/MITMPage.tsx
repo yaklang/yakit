@@ -115,7 +115,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     const recover = () => {
         ipcRenderer.invoke("mitm-recover").then(() => {
-            success("恢复 MITM 会话成功")
+            // success("恢复 MITM 会话成功")
         })
     }
 

@@ -115,7 +115,7 @@ function App() {
     useEffect(() => {
         ipcRenderer.on("client-echo-yak", async (e: any, ok, text) => {
             if (ok) {
-                success("Yakit Server 认证成功")
+                // success("Yakit Server 认证成功")
             } else {
                 failed(`Yakit Server 认证失败：${text}`)
             }

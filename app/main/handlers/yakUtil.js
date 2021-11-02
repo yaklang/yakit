@@ -168,6 +168,28 @@ module.exports = {
         }
         ipcMain.handle("query-latest-yak-version", async (e, params) => {
             return await asyncQueryLatestYakEngineVersion(params)
+        });
+
+        // asyncQueryLatestYakEngineVersion wrapper
+        const asyncQueryLatestNotification = (params) => {
+            return new Promise((resolve, reject) => {
+                let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/notification.md")
+                rsp.on("response", rsp => {
+                    rsp.on("data", data => {
+                        const passage = Buffer.from(data).toString();
+                        if (passage.startsWith("# Yakit Notification")) {
+                            resolve(passage)
+                        } else {
+                            resolve("")
+                        }
+
+                    }).on("error", err => reject(err))
+                })
+                rsp.on("error", reject)
+            })
+        }
+        ipcMain.handle("query-latest-notification", async (e, params) => {
+            return await asyncQueryLatestNotification(params)
         })
 
         // asyncQueryLatestYakEngineVersion wrapper

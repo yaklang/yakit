@@ -1,33 +1,21 @@
 import React, {useEffect, useState} from "react";
-import {
-    Layout,
-    Menu,
-    Space,
-    Tabs,
-    Image,
-    Button,
-    Tag,
-    Modal,
-    Row,
-    Col,
-    Popconfirm,
-    Spin,
-    Popover,
-    Form,
-    Input, Divider
-} from "antd";
+import {Button, Col, Divider, Image, Input, Layout, Menu, Popconfirm, Popover, Row, Space, Spin, Tabs, Tag} from "antd";
 import {ContentByRoute, MenuDataProps, Route, RouteMenuData} from "../routes/routeSpec";
-import {EllipsisOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReloadOutlined} from "@ant-design/icons"
+import {
+    CloseOutlined,
+    EditOutlined,
+    EllipsisOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    ReloadOutlined
+} from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification";
-import {showDrawer} from "../utils/showModal";
-import {CodecPage} from "./codec/CodecPage";
+import {showModal} from "../utils/showModal";
 import {YakLogoData} from "../utils/logo";
 import {AutoUpdateYakModuleButton, YakitVersion, YakVersion} from "../utils/basic";
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema";
-import ReactJson from "react-json-view";
 import {randomString} from "../utils/randomUtil";
-import {SettingOutlined, EditOutlined, CloseOutlined} from "@ant-design/icons";
-import {InputItem} from "../utils/inputUtil";
+import MDEditor from '@uiw/react-md-editor';
 import {genDefaultPagination, QueryYakScriptsResponse, YakScript} from "./invoker/schema";
 
 export interface MainProp {
@@ -83,6 +71,7 @@ export const Main: React.FC<MainProp> = (props) => {
         }
     ]);
     const [extraGeneralModule, setExtraGeneralModule] = useState<YakScript[]>([]);
+    const [notification, setNotification] = useState("");
 
     // 多开 tab 页面
     const [currentTabKey, setCurrentTabKey] = useState("");
@@ -158,7 +147,7 @@ export const Main: React.FC<MainProp> = (props) => {
         ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
             const completionJson = Buffer.from(data.RawJson).toString("utf8")
             setCompletions(JSON.parse(completionJson) as CompletionTotal)
-            success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
+            // success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
         })
     }, [])
 
@@ -185,6 +174,28 @@ export const Main: React.FC<MainProp> = (props) => {
             ipcRenderer.removeAllListeners("client-engine-status-ok")
             clearInterval(id)
         }
+    }, [])
+
+    useEffect(() => {
+        ipcRenderer.invoke("query-latest-notification").then((e: string) => {
+            setNotification(e)
+
+            if (e) {
+                success(<>
+                    <Space direction={"vertical"}>
+                        <span>来自于 yaklang.io 的通知</span>
+                        <Button type={"link"} onClick={() => {
+                            showModal({
+                                title: "Notification",
+                                content: <>
+                                    <MDEditor.Markdown source={e}/>
+                                </>
+                            })
+                        }}>点击查看</Button>
+                    </Space>
+                </>)
+            }
+        })
     }, [])
 
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;

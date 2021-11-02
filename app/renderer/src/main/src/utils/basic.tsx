@@ -184,7 +184,7 @@ export interface AutoUpdateYakModuleButtonProp extends ButtonProps {
 
 export const AutoUpdateYakModuleButton: React.FC<AutoUpdateYakModuleButtonProp> = (props) => {
     return <Popconfirm
-        title={"一键更新将会：1. 更新 Nuclei 可用模块(yak update-nuclei-poc)；2. 把模块加载到本地(db)"}
+        title={"一键更新将更新 yakit-store 中的内容与更新 nuclei templates 到本地"}
         onConfirm={e => {
             showModal({
                 title: "自动更新 Yak 模块", content: <>
@@ -194,7 +194,7 @@ export const AutoUpdateYakModuleButton: React.FC<AutoUpdateYakModuleButtonProp> 
         }}
     >
         <Button {...props}>
-            一键更新 Yak 模块
+            更新 Yakit 插件商店
         </Button>
     </Popconfirm>
 };
