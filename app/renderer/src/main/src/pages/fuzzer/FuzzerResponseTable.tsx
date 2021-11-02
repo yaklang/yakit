@@ -1,15 +1,17 @@
 import React from "react";
 import {BaseTable, features, useTablePipeline} from "../../alibaba/ali-react-table-dist";
 import {analyzeFuzzerResponse, FuzzerResponse} from "./HTTPFuzzerPage";
-import {Button, Table, Tag, Tooltip, Typography} from "antd";
+import {Button, Space, Table, Tag, Tooltip, Typography} from "antd";
 import {formatTimestamp} from "../../utils/timeUtil";
 import * as  antd from "antd";
 import {DurationMsToColor, StatusCodeToColor} from "../../components/HTTPFlowTable";
 import {divider} from "@uiw/react-md-editor";
+import {CopyableField} from "../../utils/inputUtil";
 
 export interface FuzzerResponseTableProp {
     content: FuzzerResponse[]
     setRequest: (s: string | any) => any
+    success?: boolean
 }
 
 const {Text} = Typography;
@@ -90,49 +92,86 @@ export const FuzzerResponseTable: React.FC<FuzzerResponseTableProp> = (props) =>
     </>
 };
 
+const sortAsNumber = (a: any, b: any) => parseInt(a) > parseInt(b)
+
 export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) => {
     const {content, setRequest} = props;
     const pipeline = useTablePipeline({
         components: antd,
     }).input({
         dataSource: content,
-        columns: [
+        columns: props.success ? [
             {
-                name: "Method", code: "Method", width: 36, features: {
+                name: "Method", code: "Method", width: 100, features: {
                     sortable: true,
                 }
             },
             {
-                name: "StatusCode", code: "StatusCode", features: {sortable: true},
-                render: v => <Tag color={StatusCodeToColor(v)}>{`${v}`}</Tag>
+                name: "StatusCode", code: "StatusCode", features: {
+                    sortable: sortAsNumber,
+                },
+                render: v => <Tag color={StatusCodeToColor(v)}>{`${v}`}</Tag>, width: 100,
             },
             {
-                name: "响应包大小", code: "BodyLength", render: v => <div
+                name: "响应包大小",
+                code: "BodyLength",
+                render: v => <div
                     style={{
                         overflow: "auto",
                     }}>
                     <Tag>{`${v}`}</Tag>
-                </div>, features: {sortable: true}
+                </div>,
+                features: {
+                    sortable: sortAsNumber,
+                },
+                width: 100,
             },
             {
                 name: "延迟(ms)",
                 code: "DurationMs",
                 render: (value: any, row: any, rowIndex: number) => {
-                    return <Tag color={DurationMsToColor(value)}>{value}ms</Tag>
-                }, features: {sortable: true}
+                    return value
+                }, width: 100,
+                features: {
+                    sortable: sortAsNumber
+                },
             },
             {
-                name: "失败原因", code: "reason", render: (v) => {
-                    return v ? <Tag color={"red"}>{v}</Tag> : "-"
+                name: "Content-Type",
+                code: "ContentType",
+                render: (value: any, row: any, rowIndex: number) => {
+                    return value
+                }, width: 300,
+            },
+            {
+                name: "操作", code: "UUID", render: (v) => {
+                    return <Space direction={"vertical"}>
+                        <Button size={"small"} type={"primary"} onClick={() => {
+                            const res = content.filter(i => i.UUID === v);
+                            if ((res || []).length > 0) {
+                                analyzeFuzzerResponse(res[0], setRequest)
+                            }
+                        }}>请求详情</Button>
+                    </Space>
+                }, width: 100, lock: true, features: {sortable: sortAsNumber}
+            }
+        ] : [
+            {
+                name: "Method", code: "Method", width: 60, features: {
+                    sortable: true,
+                }
+            },
+            {
+                name: "失败原因", code: "Reason", render: (v) => {
+                    return v ? <CopyableField style={{color: "red"}} noCopy={true} text={v}/> : "-"
                 }, features: {
                     tips: <>
                         如果请求失败才会有内容~
-                        {/*<Tag>123</Tag>*/}
                     </>
                 }
             }
         ],
-    }).primaryKey("uuid").use(features.columnResize({
+    }).primaryKey("UUID").use(features.columnResize({
         minSize: 60,
     })).use(
         features.sort({
@@ -143,28 +182,5 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
 
     return <div style={{width: "100%"}}>
         <BaseTable {...pipeline.getProps()} style={{width: "100%", height: 500, overflow: "auto"}}/>
-    </div>
-};
-
-export const GeneralVirtualTable: React.FC<{ content: any[], columns: any[], key: string }> = (props) => {
-    const {content, columns} = props;
-    const pipeline = useTablePipeline({
-        components: antd,
-    }).input({
-        dataSource: content,
-        columns,
-    }).primaryKey("uuid").use(features.columnResize({
-        minSize: 60,
-    })).use(
-        features.sort({
-            mode: 'single',
-            highlightColumnWhenActive: true,
-        }),
-    ).use(features.columnHover()).use(features.tips())
-
-    return <div style={{width: "100%"}}>
-        <BaseTable
-            {...pipeline.getProps()} style={{width: "100%", height: 500, overflow: "auto"}}
-        />
     </div>
 };

@@ -517,6 +517,9 @@ message FuzzerRequest {
   bool ForceFuzz = 5;
   string Proxy = 6;
   double PerRequestTimeoutSeconds = 7;
+
+  // 用于处理 Host 和 Header 中 Host 不一致的情况
+  string ActualAddr = 8;
 }
 
 message ExtractedUrl {

@@ -2,10 +2,9 @@ import React, {useEffect, useState} from "react";
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow";
 import {genDefaultPagination, QueryGeneralResponse} from "../pages/invoker/schema";
 import {HTTPFlow, onExpandHTTPFlow, StatusCodeToColor} from "./HTTPFlowTable";
-import {GeneralVirtualTable} from "../pages/fuzzer/FuzzerResponseTable";
+import * as antd from "antd";
 import {Button, Space, Tag} from "antd";
 import {BaseTable, features, useTablePipeline} from "../alibaba/ali-react-table-dist";
-import * as antd from "antd";
 import {CopyableField} from "../utils/inputUtil";
 import {showDrawer} from "../utils/showModal";
 

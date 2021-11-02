@@ -1,10 +1,13 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Spin, Tag, Button, Card, ButtonProps, Popconfirm, Space, Alert, Badge} from "antd";
+import {Spin, Tag, Button, Card, ButtonProps, Popconfirm, Space, Alert, Badge, Timeline} from "antd";
 import {XTerm} from "xterm-for-react";
 import {ExecResult} from "../pages/invoker/schema";
 import {showModal} from "./showModal";
 import {failed} from "./notification";
 import {openExternalWebsite} from "./openWebsite";
+import {ExecResultLog, ExecResultMessage} from "../pages/invoker/batch/ExecMessageViewer";
+import {LogLevelToCode} from "../components/HTTPFlowTable";
+import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter";
 
 export interface YakVersionProp {
 
@@ -127,47 +130,33 @@ export interface AutoUpdateYakModuleViewerProp {
 }
 
 export const AutoUpdateYakModuleViewer: React.FC<AutoUpdateYakModuleViewerProp> = (props) => {
-    const xtermRef = useRef(null);
     const [end, setEnd] = useState(false);
     const [error, setError] = useState("");
-
-    const write = (s: any) => {
-        if (!xtermRef || !xtermRef.current) {
-            return
-        }
-
-        if ((Buffer.from(s, "utf8") || []).length === 1) {
-            let buf = Buffer.from(s, "utf8");
-            switch (buf[0]) {
-                case 127:
-                    // @ts-ignore
-                    xtermRef.current.terminal.write("\b \b");
-                    return
-                default:
-                    // @ts-ignore
-                    xtermRef.current.terminal.write(s);
-                    return;
-            }
-        } else {
-            // @ts-ignore
-            xtermRef.current.terminal.write(s);
-            return
-        }
-    };
+    const [msg, setMsgs] = useState<ExecResultMessage[]>([]);
 
     useEffect(() => {
+        const messages: ExecResultMessage[] = []
         ipcRenderer.on("client-auto-update-yak-module-data", (e, data: ExecResult) => {
-            let buffer = (Buffer.from(data.Raw as Uint8Array)).toString("utf8");
-            write(buffer)
+            if (data.IsMessage) {
+                try {
+                    let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString("utf8"));
+                    messages.unshift(obj)
+                } catch (e) {
+
+                }
+            }
         });
         ipcRenderer.on("client-auto-update-yak-module-end", (e) => {
             setEnd(true)
+
         });
         ipcRenderer.on("client-auto-update-yak-module-error", (e, msg: any) => {
             setError(`${msg}`)
         });
         ipcRenderer.invoke("auto-update-yak-module")
+        let id = setInterval(() => setMsgs([...messages]), 1000)
         return () => {
+            clearInterval(id);
             ipcRenderer.removeAllListeners("client-auto-update-yak-module-data")
             ipcRenderer.removeAllListeners("client-auto-update-yak-module-error")
             ipcRenderer.removeAllListeners("client-auto-update-yak-module-end")
@@ -175,10 +164,16 @@ export const AutoUpdateYakModuleViewer: React.FC<AutoUpdateYakModuleViewerProp> 
     }, [])
 
     return <Card title={"自动更新进度"}>
-        <Space direction={"vertical"}>
+        <Space direction={"vertical"} style={{width: "100%"}} size={12}>
             {error && <Alert type={"error"} message={error}/>}
             {end && <Alert type={"info"} message={"更新进程已结束"}/>}
-            <XTerm ref={xtermRef} options={{convertEol: true}}/>
+            <Timeline pending={!end} style={{marginTop: 20}}>
+                {(msg || []).filter(i => i.type === "log").map(i => i.content as ExecResultLog).map(e => {
+                    return <Timeline.Item color={LogLevelToCode(e.level)}>
+                        <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
+                    </Timeline.Item>
+                })}
+            </Timeline>
         </Space>
     </Card>;
 };

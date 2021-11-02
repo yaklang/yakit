@@ -48,7 +48,7 @@ export const PluginResultUI = (loading: boolean, results: ExecResultLog[], progr
         >
             {progressTable.size > 0 && progressBars.map(i => i.node)}
             <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                {(results || []).sort().filter(i => i.level === "json-feature").map(e => {
+                {(results || []).map(e => {
                     return <Timeline.Item color={LogLevelToCode(e.level)}>
                         <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
                     </Timeline.Item>

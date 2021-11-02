@@ -21,7 +21,6 @@ import {PortScanPage} from "../pages/portscan/PortScanPage";
 import {YakitStorePage} from "../pages/yakitStore/YakitStorePage";
 import {PluginOperator} from "../pages/yakitStore/PluginOperator";
 import {failed} from "../utils/notification";
-import {GeneralVirtualTable} from "../pages/fuzzer/FuzzerResponseTable";
 
 export enum Route {
     MITM = "mitm",

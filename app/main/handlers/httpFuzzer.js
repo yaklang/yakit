@@ -16,26 +16,45 @@ module.exports = (win, getClient) => {
             }
         })
     })
-    ipcMain.handle("http-fuzzer", (e, params) => {
-        let client = getClient();
-        let stream = client.HTTPFuzzer({
-            Request: params.request,
-            IsHTTPS: params.isHttps,
-            ForceFuzz: params.forceFuzz,
-            Concurrent: params.concurrent,
-            PerRequestTimeoutSeconds: params.timeout,
-            Proxy: params.proxy,
+
+    const handlerHelper = require("./handleStreamWithContext");
+    const streamHTTPFuzzerMap = new Map();
+    ipcMain.handle("cancel-HTTPFuzzer", handlerHelper.cancelHandler(streamHTTPFuzzerMap));
+    ipcMain.handle("HTTPFuzzer", (e, params, token) => {
+        let stream = getClient().HTTPFuzzer(params);
+        stream.on("data", data => {
+            if (win && data) win.webContents.send(`fuzzer-data-${token}`, data)
         });
-        stream.on("data", (data) => {
-            if (win && data) win.webContents.send("client-http-fuzzer-data", data)
+        stream.on("error", err => {
+            if (win && err) win.webContents.send(`fuzzer-error-${token}`, err.details)
         })
-        stream.on("error", (err) => {
-            if (win && err) win.webContents.send("client-http-fuzzer-error", err.details)
+        stream.on("end", data => {
+            if (win && data) win.webContents.send(`fuzzer-end-${token}`)
         })
-        stream.on("end", () => {
-            if (win) win.webContents.send("client-http-fuzzer-end")
-        })
+        handlerHelper.registerHandler(win, stream, streamHTTPFuzzerMap, token)
     })
+
+    // ipcMain.handle("http-fuzzer", (e, token, params) => {
+    //     let client = getClient();
+    //     let stream = client.HTTPFuzzer({
+    //         Request: params.request,
+    //         IsHTTPS: params.isHttps,
+    //         ForceFuzz: params.forceFuzz,
+    //         Concurrent: params.concurrent,
+    //         PerRequestTimeoutSeconds: params.timeout,
+    //         Proxy: params.proxy,
+    //     });
+    //     stream.on("data", (data) => {
+    //         if (win && data) win.webContents.send("client-http-fuzzer-data", data)
+    //     })
+    //     stream.on("error", (err) => {
+    //         if (win && err) win.webContents.send("client-http-fuzzer-error", err.details)
+    //     })
+    //     stream.on("end", () => {
+    //         if (win) win.webContents.send("client-http-fuzzer-end")
+    //     })
+    // })
+
     ipcMain.handle("analyze-fuzzer-response", (e, rsp, flag) => {
         getClient().ConvertFuzzerResponseToHTTPFlow(rsp, (err, req) => {
             if (err && win) {

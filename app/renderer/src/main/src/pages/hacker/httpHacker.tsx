@@ -18,7 +18,7 @@ export interface HTTPHackerProp {
 }
 
 const defaultHTTPPacket = `GET / HTTP/1.1
-Host: 127.0.0.1
+Host: www.example.com
 `
 
 export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
