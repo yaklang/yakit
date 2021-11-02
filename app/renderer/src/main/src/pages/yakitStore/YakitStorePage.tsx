@@ -9,7 +9,7 @@ import {
     Input,
     List,
     PageHeader,
-    Popconfirm,
+    Popconfirm, Popover,
     Row,
     Space,
     Tabs,
@@ -179,6 +179,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             Order: "desc", OrderBy: "updated_at"
         }, Total: 0
     });
+    const [trigger, setTrigger] = useState(false);
 
 
     const update = (page?: number, limit?: number,
@@ -215,7 +216,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         })
         update(1, undefined, props.Keyword || "", props.Type, props.isIgnored, props.isHistory)
     }, [
-        props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored
+        props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, trigger,
     ])
 
 
@@ -274,11 +275,27 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                         <Col span={12} style={{textAlign: "right"}}>
                             <Space>
                                 <CopyableField noCopy={true} text={formatDate(i.CreatedAt)}/>
-                                <Button
-                                    size={"small"} type={"link"} style={{marginRight: 0}}
+                                <Popover
+                                    title={"确定要删除该插件吗？"}
+                                    content={<>
+                                        <Popconfirm
+                                            title={"确定要删除该插件？删除之后不可恢复"}
+                                            onConfirm={() => {
+                                                ipcRenderer.invoke("delete-yak-script", i.Id)
+                                                setLoading(true)
+                                                setTimeout(() => setTrigger(!trigger), 300)
+                                            }}
+                                        >
+                                            <Button size={"small"} type={"link"}>删除插件</Button>
+                                        </Popconfirm>
+                                    </>}
                                 >
-                                    <SettingOutlined/>
-                                </Button>
+                                    <Button
+                                        size={"small"} type={"link"} style={{marginRight: 0}}
+                                    >
+                                        <SettingOutlined/>
+                                    </Button>
+                                </Popover>
                             </Space>
                         </Col>
                     </Row>

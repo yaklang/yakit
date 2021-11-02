@@ -168,6 +168,10 @@ module.exports = {
             return new Promise((resolve, reject) => {
                 const {sudo} = params;
 
+                if (process.platform === "darwin" || process.platform === "linux") {
+                    process.env.PATH = process.env.PATH + ":/usr/local/bin/"
+                }
+
                 let randPort = 50000 + getRandomInt(10000);
                 const cmd = `yak grpc --port ${randPort}`;
                 try {
