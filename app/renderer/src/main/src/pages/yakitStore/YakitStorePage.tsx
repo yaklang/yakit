@@ -286,7 +286,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                                 setTimeout(() => setTrigger(!trigger), 300)
                                             }}
                                         >
-                                            <Button size={"small"} type={"link"}>删除插件</Button>
+                                            <Button size={"small"} danger={true} type={"link"}>删除插件</Button>
                                         </Popconfirm>
                                     </>}
                                 >
