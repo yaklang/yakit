@@ -6,7 +6,11 @@ const treeKill = require("tree-kill");
 const sudoPrompt = require("sudo-prompt");
 const net = require("net");
 
-const isWindows = process.platform === "win32"
+const isWindows = process.platform === "win32";
+
+if (process.platform === "darwin" || process.platform === "linux") {
+    process.env.PATH = process.env.PATH + ":/usr/local/bin/"
+}
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
