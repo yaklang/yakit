@@ -661,6 +661,12 @@ message MITMRequest {
 
   // 原封不动放行
   bool forward = 15;
+
+  // mitm plugin 中间人插件，本质上是一段 Yak 代码
+  bool setYakScript = 21;
+  repeated ExecParamItem yakScriptParams = 22;
+  int64 yakScriptID = 23;
+  int64 yakScriptName = 24;
 }
 
 message MITMResponse {
