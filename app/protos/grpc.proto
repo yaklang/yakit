@@ -667,6 +667,20 @@ message MITMRequest {
   repeated ExecParamItem yakScriptParams = 22;
   int64 yakScriptID = 23;
   string yakScriptContent = 25;
+
+  // 查看当前启用插件
+  bool getCurrentHook = 30;
+
+  // 移除插件
+  bool removeHook = 31;  // 当这个为 true 的时候，将会
+  RemoveHookParams removeHookParams = 32;
+}
+
+message RemoveHookParams {
+  bool ClearAll = 1;
+
+  repeated string HookName = 2;
+  repeated string RemoveHookID = 3;
 }
 
 message MITMResponse {
@@ -698,8 +712,21 @@ message MITMResponse {
   // exec result
   bool haveMessage = 27;
   ExecResult message = 28;
+
+  bool getCurrentHook = 30;
+  repeated YakScriptHooks hooks = 31;
 }
 
+message YakScriptHooks {
+  string HookName = 1;
+  repeated YakScriptHookItem Hooks = 2;
+}
+
+message YakScriptHookItem {
+  int64 YakScriptId = 1;
+  string YakScriptName = 2;
+  string Verbose = 3;
+}
 
 // 最基础的 ECHO
 message EchoRequest {

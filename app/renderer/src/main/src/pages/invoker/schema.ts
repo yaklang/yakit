@@ -76,6 +76,17 @@ export interface YakScriptParam {
     Group?: string
 }
 
+export interface YakScriptHooks {
+    HookName: string
+    Hooks: YakScriptHookItem[]
+}
+
+export interface YakScriptHookItem {
+    Verbose: string
+    YakScriptId: number
+    YakScriptName: string
+}
+
 export interface YakScript {
     Id: number
     Content: string

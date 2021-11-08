@@ -15,7 +15,7 @@ export interface YakitLogViewersProp {
 }
 
 export const YakitLogViewers: React.FC<YakitLogViewersProp> = (props) => {
-    return <Timeline pending={!props.finished}>
+    return <Timeline pending={!props.finished} reverse={true}>
         {(props.data || []).map(e => {
             return <Timeline.Item color={LogLevelToCode(e.level)}>
                 <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
