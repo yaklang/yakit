@@ -101,6 +101,27 @@ module.exports = (win, getClient) => {
         }
     })
 
+    // MITM 启用插件
+    ipcMain.handle("mitm-exec-script-content", (e, content) => {
+        if (stream) {
+            stream.write({
+                setYakScript: true,
+                yakScriptContent: content,
+            })
+        }
+    })
+
+    // MITM 启用插件，通过插件 ID
+    ipcMain.handle("mitm-exec-script-by-id", (e, id, params) => {
+        if (stream) {
+            stream.write({
+                setYakScript: true,
+                yakScriptID: `${id}`,
+                yakScriptParams: params,
+            })
+        }
+    })
+
     // 设置过滤器
     ipcMain.handle("mitm-filter", (e, filter) => {
         if (stream) {
@@ -123,6 +144,11 @@ module.exports = (win, getClient) => {
 
         // 设置服务器发回的消息的回调函数
         stream.on("data", data => {
+            // 检查如果是 exec result 的话，对应字段应该是
+            if (win && data["haveMessage"]) {
+                win.webContents.send("client-mitm-message", data["message"]);
+            }
+
             // 第一个消息应该更新状态，第一个消息应该是同步 Filter 的信息。。。
             if (win && isFirstData) {
                 isFirstData = false;

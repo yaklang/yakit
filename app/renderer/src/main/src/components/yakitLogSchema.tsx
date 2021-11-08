@@ -1,4 +1,6 @@
 import React from "react";
+import {ExecResult} from "../pages/invoker/schema";
+import {ExecResultLog, ExecResultProgress} from "../pages/invoker/batch/ExecMessageViewer";
 
 export interface ExecResultMessage {
     "type": "log" | "progress" | string,
@@ -37,5 +39,20 @@ export const ExtractExecResultMessageToYakitPort = (msg: ExecResultMessage): Yak
         return res;
     } catch (e) {
         return undefined;
+    }
+};
+
+export const ExtractExecResultMessage = (data: ExecResult): ExecResultLog | ExecResultProgress | undefined => {
+    if (data.IsMessage) {
+        try {
+            let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString("utf8"));
+            console.info("message body: ", obj)
+            if (obj.type === "log") {
+                return obj.content as ExecResultLog
+            } else if (obj.type === "progress") {
+                return obj.content as ExecResultProgress
+            }
+        } catch (e) {
+        }
     }
 };

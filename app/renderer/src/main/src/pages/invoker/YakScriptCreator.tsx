@@ -16,6 +16,17 @@ export interface YakScriptCreatorFormProp {
 
 const {ipcRenderer} = window.require("electron");
 
+const mitmTemplate = `# mitm plugin template
+
+mirrorRequest = func(isHttps, url /*string*/, req /*type: []byte*/) {
+
+}
+
+mirrorResponse = func(isHttps, url /*string*/, req /*type: []byte*/, rsp /*type: []byte*/) {
+
+}
+`
+
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
     const [params, setParams] = useState<YakScript>(props.modified || {
         Content: "", Tags: "", Author: "", Level: "",
@@ -40,6 +51,15 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         }
     }, [paramsLoading])
 
+    useEffect(() => {
+        if (params.Type === "mitm" && params.Content === "") {
+            setParams({...params, Content: mitmTemplate})
+            return
+        } else {
+            setParams({...params, Content: ""})
+        }
+    }, [params.Type])
+
     return <div>
         <Form
             onSubmitCapture={e => {
@@ -57,6 +77,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             <SelectOne disabled={!!modified} label={"模块类型"} data={[
                 {value: "yak", text: "Yak 原生模块"},
                 {value: "nuclei", text: "nuclei Yaml模块"},
+                {value: "mitm", text: "MITM 模块"},
             ]} setValue={Type => setParams({...params, Type})} value={params.Type}
             />
             <InputItem

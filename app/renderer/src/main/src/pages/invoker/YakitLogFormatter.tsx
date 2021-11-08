@@ -1,11 +1,28 @@
 import React from "react";
-import {Button, Card, Col, Divider, Row, Space, Table, Tag, Typography} from "antd";
+import {Button, Card, Col, Divider, Row, Space, Table, Tag, Timeline, Typography} from "antd";
 import ReactJson from "react-json-view";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {showModal} from "../../utils/showModal";
 import {GraphData} from "../graph/base";
 import {BarGraph} from "../graph/BarGraph";
 import {PieGraph} from "../graph/PieGraph";
+import {ExecResultLog} from "./batch/ExecMessageViewer";
+import {LogLevelToCode} from "../../components/HTTPFlowTable";
+
+export interface YakitLogViewersProp {
+    data: ExecResultLog[]
+    finished?: boolean
+}
+
+export const YakitLogViewers: React.FC<YakitLogViewersProp> = (props) => {
+    return <Timeline pending={!props.finished}>
+        {(props.data || []).map(e => {
+            return <Timeline.Item color={LogLevelToCode(e.level)}>
+                <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
+            </Timeline.Item>
+        })}
+    </Timeline>
+};
 
 export interface YakitLogFormatterProp {
     level: string

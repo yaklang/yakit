@@ -666,7 +666,7 @@ message MITMRequest {
   bool setYakScript = 21;
   repeated ExecParamItem yakScriptParams = 22;
   int64 yakScriptID = 23;
-  int64 yakScriptName = 24;
+  string yakScriptContent = 25;
 }
 
 message MITMResponse {
@@ -694,6 +694,10 @@ message MITMResponse {
   bool forResponse = 23;
   bytes response = 24;
   int64 responseId = 26;
+
+  // exec result
+  bool haveMessage = 27;
+  ExecResult message = 28;
 }
 
 
