@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Input, Pagination, Row, Space, Switch, Tabs, Tree} from "antd";
+import {Button, Card, Col, Form, Input, Pagination, Row, Space, Switch, Tabs, Tree} from "antd";
 import {AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest} from "../../../components/WebsiteTree";
 import {HTTPFlowTable} from "../../../components/HTTPFlowTable";
 import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable";
 import {genDefaultPagination} from "../../invoker/schema";
-import {ReloadOutlined} from "@ant-design/icons";
+import {ReloadOutlined, SearchOutlined} from "@ant-design/icons";
 import {InputItem} from "../../../utils/inputUtil";
 
 export interface WebsiteTreeViewerProp {
@@ -48,10 +48,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     }, [props.targets])
 
     useEffect(() => {
-        refresh()
-    }, [searchTarget])
-
-    useEffect(() => {
         const id = setInterval(() => {
             if (!autoRefresh) {
                 return
@@ -72,7 +68,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         业务结构
                         <Button
                             type={"link"} size={"small"} icon={<ReloadOutlined/>}
-                            onClick={()=>{
+                            onClick={() => {
                                 refresh()
                             }}
                         />
@@ -80,8 +76,24 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                     size={"small"}
                     extra={[
                         !props.targets && <Space>
-                            <div>URL关键字:</div>
-                            <Input onBlur={r => setSearchTarget(r.target.value)} size={"small"}/>
+                            <Form size={"small"} onSubmitCapture={(e) => {
+                                e.preventDefault()
+
+                                refresh()
+                            }} layout={"inline"}>
+                                <InputItem
+                                    label={"URL关键字"} value={searchTarget} setValue={setSearchTarget}
+                                    width={100}
+                                />
+                                <Form.Item style={{marginLeft: 0, marginRight: 0}}>
+                                    <Button
+                                        size={"small"} type="link" htmlType="submit"
+                                        icon={<SearchOutlined/>}
+                                        style={{marginLeft: 0, marginRight: 0}}
+                                    />
+                                </Form.Item>
+                            </Form>
+                            {/*<Input onBlur={r => setSearchTarget(r.target.value)} size={"small"}/>*/}
                         </Space>
                     ]}
                 >
@@ -104,7 +116,8 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                 path.unshift(!parent.parent ? parent.title + "/" : parent.title)
                                 parent = parent.parent
                             }
-                            setSelected((path || []).join(""))
+                            const pathStr = (path || []).join("")
+                            setSelected(pathStr)
                         }}
                         autoExpandParent={true} defaultExpandAll={true}
                     />

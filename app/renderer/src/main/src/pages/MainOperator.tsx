@@ -320,7 +320,6 @@ export const Main: React.FC<MainProp> = (props) => {
                                             }
 
                                             // 增加加载状态
-                                            setCollapsed(true)
                                             setTabLoading(true)
                                             setTimeout(() => {
                                                 setTabLoading(false)
@@ -329,7 +328,6 @@ export const Main: React.FC<MainProp> = (props) => {
                                             setRoute(e.key)
                                         }}
                                         mode={"inline"}
-                                        // inlineCollapsed={false}
                                     >
                                         {menuItems.map(i => {
                                             if (i.Group === "UserDefined") {
@@ -394,73 +392,69 @@ export const Main: React.FC<MainProp> = (props) => {
                             marginLeft: 12, height: "100%",
                         }}>
                             <div style={{padding: 12, paddingTop: 8, height: "100%"}}>
-                                <Space style={{width: "100%", height: "100%"}} direction={"vertical"}>
-                                    {pageCache.length > 0 ? <Tabs
-                                        activeKey={currentTabKey}
-                                        onChange={setCurrentTabKey}
-                                        size={"small"} type={"editable-card"}
-                                        renderTabBar={(props, TabBarDefault) => {
-                                            return <>
-                                                <TabBarDefault {...props}/>
-                                            </>
-                                        }}
-                                        onEdit={(key: any, event: string) => {
-                                            switch (event) {
-                                                case "remove":
-                                                    // hooked by tabs closeIcon
-                                                    return
-                                                case "add":
-                                                    if (collapsed) {
-                                                        setCollapsed(false)
-                                                    } else {
-                                                        info("请从左边菜单连选择需要新建的 Tab 窗口")
+                                {pageCache.length > 0 ? <Tabs
+                                    activeKey={currentTabKey}
+                                    onChange={setCurrentTabKey}
+                                    size={"small"} type={"editable-card"}
+                                    renderTabBar={(props, TabBarDefault) => {
+                                        return <>
+                                            <TabBarDefault {...props}/>
+                                        </>
+                                    }}
+                                    onEdit={(key: any, event: string) => {
+                                        switch (event) {
+                                            case "remove":
+                                                // hooked by tabs closeIcon
+                                                return
+                                            case "add":
+                                                if (collapsed) {
+                                                    setCollapsed(false)
+                                                } else {
+                                                    info("请从左边菜单连选择需要新建的 Tab 窗口")
+                                                }
+                                                return
+                                        }
+
+                                    }}
+                                >
+
+                                    {pageCache.map(i => {
+                                        return <Tabs.TabPane
+                                            key={i.id} tab={i.verbose}
+                                            closeIcon={<Space>
+                                                <Popover
+                                                    trigger={"click"}
+                                                    title={"修改名称"}
+                                                    content={<>
+                                                        <Input size={"small"}
+                                                               defaultValue={i.verbose}
+                                                               onBlur={(e) => {
+                                                                   updateCacheVerbose(i.id, e.target.value)
+                                                               }}/>
+                                                    </>}
+                                                >
+                                                    <EditOutlined/>
+                                                </Popover>
+                                                <CloseOutlined onClick={() => {
+                                                    setTabLoading(true)
+                                                    const key = i.id;
+                                                    const targetIndex = getCacheIndex(key)
+                                                    if (targetIndex > 0 && pageCache[targetIndex - 1]) {
+                                                        const targetCache = pageCache[targetIndex - 1];
+                                                        setCurrentTabKey(targetCache.id)
                                                     }
-                                                    return
-                                            }
+                                                    removeCache(key);
+                                                    setTimeout(() => setTabLoading(false), 300)
+                                                }}/>
+                                            </Space>}>
+                                            <Spin spinning={tabLoading}>
+                                                {i.node}
+                                            </Spin>
+                                        </Tabs.TabPane>
+                                    })}
+                                </Tabs> : <>
 
-                                        }}
-                                    >
-
-                                        {pageCache.map(i => {
-                                            return <Tabs.TabPane key={i.id} tab={i.verbose}
-                                                                 closeIcon={<Space>
-                                                                     <Popover
-                                                                         trigger={"click"}
-                                                                         title={"修改名称"}
-                                                                         content={<>
-                                                                             <Input size={"small"}
-                                                                                    defaultValue={i.verbose}
-                                                                                    onBlur={(e) => {
-                                                                                        updateCacheVerbose(i.id, e.target.value)
-                                                                                    }}/>
-                                                                         </>}
-                                                                     >
-                                                                         <EditOutlined/>
-                                                                     </Popover>
-                                                                     <Popconfirm title={"确定需要关闭该 Tab 页吗？"}
-                                                                                 onConfirm={() => {
-                                                                                     setTabLoading(true)
-                                                                                     const key = i.id;
-                                                                                     const targetIndex = getCacheIndex(key)
-                                                                                     if (targetIndex > 0 && pageCache[targetIndex - 1]) {
-                                                                                         const targetCache = pageCache[targetIndex - 1];
-                                                                                         setCurrentTabKey(targetCache.id)
-                                                                                     }
-                                                                                     removeCache(key);
-                                                                                     setTimeout(() => setTabLoading(false), 300)
-                                                                                 }}>
-                                                                         <CloseOutlined/>
-                                                                     </Popconfirm>
-                                                                 </Space>}>
-                                                <Spin spinning={tabLoading}>
-                                                    {i.node}
-                                                </Spin>
-                                            </Tabs.TabPane>
-                                        })}
-                                    </Tabs> : <>
-
-                                    </>}
-                                </Space>
+                                </>}
                             </div>
                         </Content>
                     </Layout>
