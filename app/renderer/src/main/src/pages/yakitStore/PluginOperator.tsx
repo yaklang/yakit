@@ -15,6 +15,7 @@ import {PluginHistoryTable} from "./PluginHistory";
 import {openABSFile} from "../../utils/openWebsite";
 import {EditOutlined} from "@ant-design/icons";
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator";
+import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable";
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -226,6 +227,9 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             <Tabs.TabPane tab={"执行历史 / History"} key={"history"}>
                 {script && <PluginHistoryTable script={script} trigger={trigger}/>}
                 {/*<ExecHistoryTable mini={false} trigger={null as any}/>*/}
+            </Tabs.TabPane>
+            <Tabs.TabPane tab={"结果存储 / Results"} key={"results"}>
+                {script && <YakScriptExecResultTable YakScriptName={script.ScriptName} trigger={trigger}/>}
             </Tabs.TabPane>
         </Tabs>
     </div>

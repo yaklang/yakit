@@ -158,7 +158,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                         </Space>
                     </>
                 },
-                width: props.onSendToWebFuzzer ? 150 : 80, lock: true,
+                width: props.onSendToWebFuzzer ? 180 : 80, lock: true,
             },
         ],
     }).primaryKey("uuid").use(features.columnResize({
@@ -177,12 +177,12 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
 
     const update = () => {
         ipcRenderer.invoke("QueryHTTPFlows", props.filter).then((data: QueryGeneralResponse<HTTPFlow>) => {
-            if ((data.Data || []).length > 0 && (response.Data || []).length > 0) {
-                if (data.Data[0].Id === response.Data[0].Id) {
-                    props.onTotal(data.Total)
-                    return
-                }
-            }
+            // if ((data.Data || []).length > 0 && (response.Data || []).length > 0) {
+            //     if (data.Data[0].Id === response.Data[0].Id) {
+            //         props.onTotal(data.Total)
+            //         return
+            //     }
+            // }
             setResponse(data)
             props.onTotal(data.Total)
         })

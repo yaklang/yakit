@@ -8,6 +8,7 @@ import {BarGraph} from "../graph/BarGraph";
 import {PieGraph} from "../graph/PieGraph";
 import {ExecResultLog} from "./batch/ExecMessageViewer";
 import {LogLevelToCode} from "../../components/HTTPFlowTable";
+import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRiskViewer";
 
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
@@ -80,6 +81,13 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                     </>}
                 </Card>
             </Space>
+        case "json-httpflow-risk":
+            try {
+                return <HTTPFlowRiskViewer risk={JSON.parse(props.data) as YakitHTTPFlowRisk}/>
+            } catch (e) {
+                console.info(e)
+                return <div/>
+            }
         case "json-feature":
             return <div/>
         case "json-graph":
@@ -115,7 +123,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
     }
     return <Space>
         {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
-        <Typography.Text copyable={true}>
+        <Typography.Text copyable={false}>
             {props.data}
         </Typography.Text>
     </Space>

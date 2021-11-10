@@ -130,4 +130,5 @@ export interface ExecResult {
     Raw: Uint8Array
     IsMessage: boolean
     Message: Uint8Array
+    Id?: number
 }

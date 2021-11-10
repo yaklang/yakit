@@ -320,7 +320,6 @@ export const Main: React.FC<MainProp> = (props) => {
                                             }
 
                                             // 增加加载状态
-                                            setCollapsed(true)
                                             setTabLoading(true)
                                             setTimeout(() => {
                                                 setTabLoading(false)

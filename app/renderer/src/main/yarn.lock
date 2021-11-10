@@ -2287,6 +2287,13 @@
   dependencies:
     classnames "*"
 
+"@types/codemirror@^5.60.5":
+  version "5.60.5"
+  resolved "https://registry.npmmirror.com/@types/codemirror/download/@types/codemirror-5.60.5.tgz?cache=0&sync_timestamp=1634002339419&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2F%40types%2Fcodemirror%2Fdownload%2F%40types%2Fcodemirror-5.60.5.tgz#5b989a3b4bbe657458cf372c92b6bfda6061a2b7"
+  integrity sha1-W5iaO0u+ZXRYzzcskra/2mBhorc=
+  dependencies:
+    "@types/tern" "*"
+
 "@types/d3-timer@^2.0.0":
   version "2.0.1"
   resolved "https://registry.nlark.com/@types/d3-timer/download/@types/d3-timer-2.0.1.tgz?cache=0&sync_timestamp=1629707367080&other_urls=https%3A%2F%2Fregistry.nlark.com%2F%40types%2Fd3-timer%2Fdownload%2F%40types%2Fd3-timer-2.0.1.tgz#ffb6620d290624f3726aa362c0c8a4b44c8d7200"
@@ -2497,6 +2504,13 @@
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@types/tapable/-/tapable-1.0.6.tgz#a9ca4b70a18b270ccb2bc0aaafefd1d486b7ea74"
   integrity sha512-W+bw9ds02rAQaMvaLYxAbJ6cvguW/iJXNT6lTssS1ps6QdrMKttqEAMEG/b5CR8TZl3/L7/lH0ZV5nNR1LXikA==
+
+"@types/tern@*":
+  version "0.23.4"
+  resolved "https://registry.nlark.com/@types/tern/download/@types/tern-0.23.4.tgz?cache=0&sync_timestamp=1629709757525&other_urls=https%3A%2F%2Fregistry.nlark.com%2F%40types%2Ftern%2Fdownload%2F%40types%2Ftern-0.23.4.tgz#03926eb13dbeaf3ae0d390caf706b2643a0127fb"
+  integrity sha1-A5JusT2+rzrg05DK9wayZDoBJ/s=
+  dependencies:
+    "@types/estree" "*"
 
 "@types/testing-library__jest-dom@^5.9.1":
   version "5.14.1"
@@ -4387,6 +4401,11 @@ coa@^2.0.2:
     "@types/q" "^1.5.1"
     chalk "^2.4.1"
     q "^1.1.2"
+
+codemirror@^5.63.3:
+  version "5.63.3"
+  resolved "https://registry.npmmirror.com/codemirror/download/codemirror-5.63.3.tgz#97042a242027fe0c87c09b36bc01931d37b76527"
+  integrity sha1-lwQqJCAn/gyHwJs2vAGTHTe3ZSc=
 
 collect-v8-coverage@^1.0.0:
   version "1.0.1"
@@ -12275,6 +12294,11 @@ react-base16-styling@^0.6.0:
     lodash.curry "^4.0.1"
     lodash.flow "^3.3.0"
     pure-color "^1.2.0"
+
+react-codemirror2@^7.2.1:
+  version "7.2.1"
+  resolved "https://registry.npm.taobao.org/react-codemirror2/download/react-codemirror2-7.2.1.tgz#38dab492fcbe5fb8ebf5630e5bb7922db8d3a10c"
+  integrity sha1-ONq0kvy+X7jr9WMOW7eSLbjToQw=
 
 react-copy-to-clipboard@^5.0.4:
   version "5.0.4"

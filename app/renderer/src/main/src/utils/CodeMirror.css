@@ -1,0 +1,15 @@
+.CodeMirror {
+    height: 100%;
+}
+
+.fullText {
+    height: 100%;
+}
+
+.height450px {
+    height: 450px;
+}
+
+.codemirror-highlighted {
+    background-color: #f75145;
+}

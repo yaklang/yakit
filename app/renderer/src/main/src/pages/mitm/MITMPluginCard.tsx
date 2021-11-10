@@ -11,6 +11,7 @@ import {YakitLogViewers} from "../invoker/YakitLogFormatter";
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import ReactJson from "react-json-view";
 import {SelectOne} from "../../utils/inputUtil";
+import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 
 
 export interface MITMPluginCardProp {
@@ -20,11 +21,14 @@ export interface MITMPluginCardProp {
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
 }
 
-const defaultScript = `mirrorRequest = func(isHttps, url, req) {
+const defaultScript = `mirrorHTTPFlow = func(isHttps, url /*string*/, req /*type: []byte*/, rsp /* type: []byte*/) {
+
 }
 
-mirrorResponse = func(isHttps, url, req, rsp) {
+mirrorFilteredHTTPFlow = func(isHttps, url /*string*/, req /*type: []byte*/, rsp /*type: []byte*/) {
+
 }
+
 `
 
 const {ipcRenderer} = window.require("electron");
@@ -88,7 +92,7 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                                         props.onSubmitScriptContent && props.onSubmitScriptContent(script)
                                         setTab("mitm-output")
                                     }}
-                                >执行插件</Button> : <Button
+                                >热加载</Button> : <Button
                                     type={"link"}
                                     size={"small"}
                                     onClick={() => {
@@ -97,9 +101,33 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                                             width: "60%",
                                             content: <>
                                                 <YakModuleList Type={"mitm"} Keyword={""} onClicked={(script) => {
-                                                    props.onSubmitYakScriptId && props.onSubmitYakScriptId(script.Id, [])
-                                                    m.destroy()
-                                                    setTab("mitm-output")
+                                                    if (!props.onSubmitYakScriptId) {
+                                                        return
+                                                    }
+
+                                                    if ((script.Params || []).length > 0) {
+                                                        let m2 = showModal({
+                                                            title: `设置 [${script.ScriptName}] 的参数`,
+                                                            content: <>
+                                                                <YakScriptParamsSetter
+                                                                    {...script}
+                                                                    params={[]}
+                                                                    onParamsConfirm={(p: YakExecutorParam[]) => {
+                                                                        props.onSubmitYakScriptId && props.onSubmitYakScriptId(script.Id, p)
+                                                                        m.destroy()
+                                                                        m2.destroy()
+                                                                        setTab("mitm-output")
+                                                                    }}
+                                                                    submitVerbose={"设置 MITM 参数"}
+                                                                />
+                                                            </>, width: "50%",
+                                                        })
+                                                    } else {
+                                                        props.onSubmitYakScriptId && props.onSubmitYakScriptId(script.Id, [])
+                                                        m.destroy()
+                                                        setTab("mitm-output")
+                                                    }
+
                                                 }} isIgnored={false} isHistory={false}/>
                                             </>
                                         })

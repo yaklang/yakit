@@ -255,4 +255,52 @@ module.exports = (win, getClient) => {
     ipcMain.handle("ExportYakScript", async (e, params) => {
         return await asyncExportYakScript(params)
     })
+
+    // asyncQueryYakScriptExecResult wrapper
+    const asyncQueryYakScriptExecResult = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptExecResult(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryYakScriptExecResult", async (e, params) => {
+        return await asyncQueryYakScriptExecResult(params)
+    })
+
+    // asyncQueryYakScriptNameInExecResult wrapper
+    const asyncQueryYakScriptNameInExecResult = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptNameInExecResult(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryYakScriptNameInExecResult", async (e, params) => {
+        return await asyncQueryYakScriptNameInExecResult(params)
+    })
+
+    // asyncDeleteYakScriptExecResult wrapper
+    const asyncDeleteYakScriptExecResult = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteYakScriptExecResult(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteYakScriptExecResult", async (e, params) => {
+        return await asyncDeleteYakScriptExecResult(params)
+    })
 };

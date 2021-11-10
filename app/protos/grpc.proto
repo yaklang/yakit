@@ -138,6 +138,31 @@ service Yak {
   rpc StartBasicCrawler(StartBasicCrawlerRequest)returns (ExecResult);
   rpc ViewBasicCrawlerCode(Empty) returns (SimpleScript);
   rpc GenerateWebsiteTree(GenerateWebsiteTreeRequest) returns (GenerateWebsiteTreeResponse);
+
+  // 对插件结果的操作
+  rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
+  rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
+  rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+}
+
+message DeleteYakScriptExecResultRequest {
+  repeated int64 Id = 1;
+  string YakScriptName = 2;
+}
+
+message YakScriptNames {
+  repeated string YakScriptNames = 1;
+}
+
+message QueryYakScriptExecResultRequest {
+  Paging Pagination = 1;
+  string YakScriptName = 2;
+}
+
+message QueryYakScriptExecResultResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated ExecResult Data = 3;
 }
 
 message GenerateWebsiteTreeResponse {
@@ -776,4 +801,7 @@ message ExecResult {
   bytes Raw = 3;
   bool IsMessage = 4;
   bytes Message = 5;
+
+  // 如果是一个保存过的 ExecResult 他应该有数据库记录 ID
+  int64 Id = 6;
 }
