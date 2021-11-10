@@ -1,6 +1,6 @@
 {
   "name": "yakit",
-  "version": "1.0.9-beta8",
+  "version": "1.0.9",
   "description": "Yakit is for yaklang.io Electron GUI Entry",
   "main": "app/main/index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "build-render": "cd app/renderer/src/main && yarn build",
     "dev": "concurrently -k \"yarn start-render\" \"wait-on tcp:3000 && yarn start-electron \" ",
     "postinstall": "electron-builder install-app-deps",
-    "pack-win": "electron-builder build --win",
+    "pack-win": "electron-builder build --win --x64",
     "pack-mac": "electron-builder build --mac --x64",
     "pack-mac-arm64": "electron-builder build --mac --arm64",
     "pack-linux": "electron-builder build --linux --x64"
