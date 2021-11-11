@@ -39,7 +39,7 @@
   "scripts": {
     "electron-render": "BROWSER=none react-app-rewired start",
     "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
+    "build": "GENERATE_SOURCEMAP=false react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject"
   },
