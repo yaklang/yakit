@@ -71,35 +71,35 @@ jobs:
           name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-arm64.dmg
           path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-arm64.dmg
       - name: Upload Yakit Artifacts Mac(intel)
-          uses: actions/upload-artifact@v2
-          with:
-            # Yakit-1.0.3-beta24-win32-x64.exe
-            name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-amd64.dmg
-            path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-amd64.dmg
+        uses: actions/upload-artifact@v2
+        with:
+          # Yakit-1.0.3-beta24-win32-x64.exe
+          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-amd64.dmg
+          path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-amd64.dmg
       - name: Upload Yakit Artifacts Linux
-          uses: actions/upload-artifact@v2
-          with:
-            # Yakit-1.0.3-beta24-win32-x64.exe
-            name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
-            path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
+        uses: actions/upload-artifact@v2
+        with:
+          # Yakit-1.0.3-beta24-win32-x64.exe
+          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
+          path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
       - name: Upload Yakit latest.yml
-          uses: actions/upload-artifact@v2
-          with:
-            # Yakit-1.0.3-beta24-win32-x64.exe
-            name: latest.yml
-            path: ./release/latest.yml
+        uses: actions/upload-artifact@v2
+        with:
+          # Yakit-1.0.3-beta24-win32-x64.exe
+          name: latest.yml
+          path: ./release/latest.yml
       - name: Upload Yakit latest-mac.yml
-          uses: actions/upload-artifact@v2
-          with:
-            # Yakit-1.0.3-beta24-win32-x64.exe
-            name: latest-mac.yml
-            path: ./release/latest-mac.yml
+        uses: actions/upload-artifact@v2
+        with:
+          # Yakit-1.0.3-beta24-win32-x64.exe
+          name: latest-mac.yml
+          path: ./release/latest-mac.yml
       - name: Upload Yakit latest-linux.yml
-          uses: actions/upload-artifact@v2
-          with:
-            # Yakit-1.0.3-beta24-win32-x64.exe
-            name: latest-linux.yml
-            path: ./release/latest-linux.yml
+        uses: actions/upload-artifact@v2
+        with:
+          # Yakit-1.0.3-beta24-win32-x64.exe
+          name: latest-linux.yml
+          path: ./release/latest-linux.yml
 
   #      - name: Build Yakit for macOS
   #        env:
