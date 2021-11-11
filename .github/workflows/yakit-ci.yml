@@ -191,7 +191,23 @@ jobs:
       - name: Download Yakit (Linux amd64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.snap
+          name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+      - name: Download latest.yml
+        uses: actions/download-artifact@v2
+        with:
+          name: latest.yml
+      - name: Download latest.yml (mac)
+        uses: actions/download-artifact@v2
+        with:
+          name: latest-mac.yml
+      - name: Download latest.yml (linux)
+        uses: actions/download-artifact@v2
+        with:
+          name: latest-linux.yml
+
+      - run: ls
+        name: Ls Published Artifacts...
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -211,7 +227,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-win32-x64.exe
+          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
           asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
           asset_content_type: application/octet-stream
 
@@ -225,14 +241,24 @@ jobs:
           asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-amd64.dmg
           asset_content_type: application/octet-stream
 
+      - name: Upload Release Asset (MacOS-M1)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
+          asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
+          asset_content_type: application/octet-stream
+
       - name: Upload Release Asset (Linux)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.snap
-          asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.snap
+          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+          asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
           asset_content_type: application/octet-stream
 
       - name: Run
@@ -272,7 +298,8 @@ jobs:
           bucket: yaklang
           assets: |
             ./yakit-version.txt:/yak/latest/yakit-version.txt
-            Yakit-${{ steps.fetchtag_release.outputs.value }}-win32-x64.exe:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
+
       - name: Upload Yakit to oss(MacOS intel && Linux64)
         uses: tvrcgo/upload-to-oss@master
         with:
@@ -282,4 +309,5 @@ jobs:
           bucket: yaklang
           assets: |
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-amd64.dmg
-            Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.snap:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.snap
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
