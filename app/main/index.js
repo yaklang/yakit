@@ -2,6 +2,7 @@ const {app, BrowserWindow, globalShortcut} = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const {registerIPC, clearing} = require("./ipc");
+const { autoUpdater } = require("electron-updater");
 
 let win;
 const createWindow = () => {
@@ -30,6 +31,14 @@ app.whenReady().then(() => {
     createWindow()
 
     registerIPC(win);
+
+    // autoUpdater.setFeedURL({
+    //     PublishProvider: "custom",
+    //     OutgoingHttpHeaders: {
+    //         host: ""
+    //     },
+    // })
+    // autoUpdater.checkForUpdates();
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()

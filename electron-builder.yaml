@@ -7,13 +7,35 @@ directories:
   output: release/
   app: .
 
-artifactName: ${productName}-${version}-${platform}-${arch}.${ext}
+#artifactName: ${productName}-${version}-${platform}-${arch}.${ext}
 asar: true
 
+publish:
+  - provider: "generic"
+    url: http://yaklang.oss-beijing.aliyunoss.com/yak
+
 mac:
+  artifactName: ${productName}-${version}-darwin-${arch}.${ext}
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
   icon: "app/assets/yaklogo.icns"
 
+linux:
+  artifactName: ${productName}-${version}-linux-amd64.${ext}
+  target:
+    - target: AppImage
+      arch:
+        - x64
+
 win:
+  artifactName: ${productName}-${version}-windows-amd64.${ext}
+  target:
+    - target: nsis
+      arch:
+        - x64
   icon: "app/assets/yaklogo.ico"
 
 #publish:
@@ -21,5 +43,5 @@ win:
 #    url: https://update.electron-builder.com
 #    channel: latest
 releaseInfo:
-  releaseName: ''
-  releaseNotes: 'Some new features now is available.'
+  releaseName: ${version}
+  releaseNotes: "view github release: https://github.com/yaklang/yakit/releases"

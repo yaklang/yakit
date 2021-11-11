@@ -8,6 +8,8 @@ import {BaseTable, features, useTablePipeline} from "../alibaba/ali-react-table-
 import {CopyableField} from "../utils/inputUtil";
 import {showDrawer} from "../utils/showModal";
 
+const {ipcRenderer} = window.require("electron");
+
 export interface HTTPFlowMiniTableProp {
     simple?: boolean
     source: "crawler" | "mitm" | any
@@ -15,8 +17,6 @@ export interface HTTPFlowMiniTableProp {
     onTotal: (total: number) => any
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
 }
-
-const {ipcRenderer} = window.require("electron");
 
 export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
     const [response, setResponse] = useState<QueryGeneralResponse<HTTPFlow>>({
