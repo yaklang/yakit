@@ -240,16 +240,11 @@ jobs:
             ./latest.yml:/yak/latest/latest.yml
             ./latest-mac.yml:/yak/latest/latest-mac.yml
             ./latest-linux.yml:/yak/latest/latest-linux.yml
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
             Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
-
-      - name: Upload Yakit to oss(MacOS intel && Linux64)
-        uses: tvrcgo/upload-to-oss@master
-        with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
-          region: oss-accelerate
-          bucket: yaklang
-          assets: |
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
-            Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage

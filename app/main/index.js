@@ -32,11 +32,10 @@ app.whenReady().then(() => {
 
     registerIPC(win);
 
+    // // https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yakit-version.txt
     // autoUpdater.setFeedURL({
-    //     PublishProvider: "custom",
-    //     OutgoingHttpHeaders: {
-    //         host: ""
-    //     },
+    //     provider: "generic",
+    //     url: "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/",
     // })
     // autoUpdater.checkForUpdates();
 
