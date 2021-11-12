@@ -131,18 +131,18 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
-      - name: Download latest.yml
-        uses: actions/download-artifact@v2
-        with:
-          name: latest.yml
-      - name: Download latest.yml (mac)
-        uses: actions/download-artifact@v2
-        with:
-          name: latest-mac.yml
-      - name: Download latest.yml (linux)
-        uses: actions/download-artifact@v2
-        with:
-          name: latest-linux.yml
+#      - name: Download latest.yml
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: latest.yml
+#      - name: Download latest.yml (mac)
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: latest-mac.yml
+#      - name: Download latest.yml (linux)
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: latest-linux.yml
 
       - run: ls
         name: Ls Published Artifacts...
@@ -237,9 +237,6 @@ jobs:
           bucket: yaklang
           assets: |
             ./yakit-version.txt:/yak/latest/yakit-version.txt
-            ./latest.yml:/yak/latest/latest.yml
-            ./latest-mac.yml:/yak/latest/latest-mac.yml
-            ./latest-linux.yml:/yak/latest/latest-linux.yml
             Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
