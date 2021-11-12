@@ -34,11 +34,13 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
     const [latestVersion, setLatestVersion] = useState("");
     const [downloading, setDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState<DownloadingState>();
-    const [winPath, setWinPath] = useState("");
 
     const queryLatestVersion = () => {
         setLatestLoading(true)
         ipcRenderer.invoke("query-latest-yakit-version").then((data: string) => {
+            if (data.startsWith("v")) {
+                data = data.substr(1)
+            }
             setLatestVersion(data)
         }).catch(e => {
             failed(`${e}`)
