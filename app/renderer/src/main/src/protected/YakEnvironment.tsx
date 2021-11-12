@@ -28,6 +28,7 @@ import {showModal} from "../utils/showModal";
 import {divider} from "@uiw/react-md-editor";
 import {YakUpgrade} from "../components/YakUpgrade";
 import {UserProtocol} from "../App";
+import {YakitUpgrade} from "../components/YakitUpgrade";
 
 const {Text, Title, Paragraph} = Typography;
 
@@ -278,25 +279,6 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                             color: '#888',
                             marginBottom: 200,
                         }}>
-                            <Button
-                                type={"link"}
-                                onClick={() => {
-                                    let m = showModal({
-                                        keyboard: false,
-                                        title: "引擎升级管理页面",
-                                        width: "60%",
-                                        content: <>
-                                            <YakUpgrade onFinished={() => {
-                                                m.destroy()
-                                            }}/>
-                                        </>
-                                    })
-                                }}
-                            >
-                                <p
-                                    style={{marginBottom: 0}}
-                                >安装/升级 Yak 引擎</p>
-                            </Button>
                             <Button type={"link"} onClick={() => {
                                 showModal({
                                     title: "用户协议",
@@ -305,6 +287,45 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                     </>
                                 })
                             }}>用户协议</Button>
+                            <Button.Group>
+                                <Button
+                                    onClick={() => {
+                                        let m = showModal({
+                                            keyboard: false,
+                                            title: "引擎升级管理页面",
+                                            width: "50%",
+                                            content: <>
+                                                <YakUpgrade onFinished={() => {
+                                                    m.destroy()
+                                                }}/>
+                                            </>
+                                        })
+                                    }}
+                                >
+                                    <p
+                                        style={{marginBottom: 0}}
+                                    >核心引擎安装与升级</p>
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        let m = showModal({
+                                            keyboard: false,
+                                            title: "Yakit 升级",
+                                            width: "50%",
+                                            content: <>
+                                                <YakitUpgrade onFinished={() => {
+                                                    m.destroy()
+                                                }}/>
+                                            </>
+                                        })
+                                    }}
+                                >
+                                    <p
+                                        style={{marginBottom: 0}}
+                                    >Yakit 升级</p>
+                                </Button>
+                            </Button.Group>
+
                         </Space>
                     </div>
                 </Form>

@@ -4,7 +4,7 @@ import {failed, success} from "../utils/notification";
 
 const {ipcRenderer} = window.require("electron");
 
-export interface YakUpgradeProp {
+export interface YakitUpgradeProp {
     onFinished: () => any
 }
 
@@ -27,7 +27,7 @@ interface DownloadingState {
 }
 
 
-export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
+export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
     const [currentVersion, setCurrentVersion] = useState("")
     const [loading, setLoading] = useState(false);
     const [latestLoading, setLatestLoading] = useState(false);
@@ -38,7 +38,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
 
     const queryLatestVersion = () => {
         setLatestLoading(true)
-        ipcRenderer.invoke("query-latest-yak-version").then((data: string) => {
+        ipcRenderer.invoke("query-latest-yakit-version").then((data: string) => {
             setLatestVersion(data)
         }).catch(e => {
             failed(`${e}`)
@@ -49,7 +49,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
 
     const updateCurrent = () => {
         setLoading(true)
-        ipcRenderer.invoke("get-current-yak").then((data: string) => {
+        ipcRenderer.invoke("yakit-version").then((data: string) => {
             setCurrentVersion(data)
         }).catch(e => {
             failed(`${e}`)
@@ -59,11 +59,11 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
     }
 
     useEffect(() => {
-        ipcRenderer.on("download-yak-engine-progress", async (e: any, state: DownloadingState) => {
+        ipcRenderer.on("download-yakit-engine-progress", async (e: any, state: DownloadingState) => {
             setDownloadProgress(state);
         })
         return () => {
-            ipcRenderer.removeAllListeners("download-yak-engine-progress")
+            ipcRenderer.removeAllListeners("download-yakit-engine-progress")
         }
     }, [])
 
@@ -72,28 +72,28 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
         updateCurrent()
         queryLatestVersion()
 
-        ipcRenderer.invoke("get-windows-install-dir").then(setWinPath).catch(() => {
-        }).finally()
+        // ipcRenderer.invoke("get-windows-install-dir").then(setWinPath).catch(() => {
+        // }).finally()
     }, [])
 
     const install = (version: string) => {
         Modal.confirm({
-            title: "Yak 核心引擎下载完毕，将会自动更新到系统目录",
-            width: "40%",
+            title: "Yakit 下载完毕",
+            width: "50%",
             content: <>
                 <Space direction={"vertical"}>
-                    <Tag color={"purple"}>*nix 系统下会安装在 /usr/local/bin/yak </Tag>
-                    <Tag color={""}>windows 系统下会安装在 {winPath} </Tag>
+                    <Tag color={"purple"}>Yakit 安装包下载完毕</Tag>
                     <p/>
-                    <Tag>选择 Ok 允许 Yakit 操作</Tag>
-                    <Tag>选择 Cancel 用户可以手动更新 %PATH%</Tag>
+                    <Tag>选择 Ok/确定 允许打开 Yakit 安装包下载目录，用户双击安装</Tag>
+                    <Tag>选择 Cancel 用户自行找到安装包</Tag>
+                    <br/>
+                    <Tag>linux/macOs 安装包存储在：~/yakit-projects/yak-engine</Tag>
+                    <Tag>windows 安装包存储在：%HOME%/yakit-projects/yak-engine</Tag>
                 </Space>
             </>,
             onOk: () => {
-                ipcRenderer.invoke("install-yak-engine", latestVersion).then(() => {
-                    success("安装成功，如未生效，重启 Yakit 即可")
+                ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
                 }).catch(err => {
-                    failed("安装失败")
                 })
             }
 
@@ -108,20 +108,20 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
         <Space direction={"vertical"} style={{width: "100%"}}>
             <Spin spinning={loading}>
                 <Alert message={<Space>
-                    当前本地安装的 Yak 核心引擎版本为:
+                    当前 Yakit 版本:
                     <Tag
                         color={color}
                     >{currentVersion}</Tag>
                     {isLatest ? <Tag color={"green"}>已是最新</Tag> : <Tag
                         color={"red"}
-                    >Yak 引擎需要更新</Tag>}
+                    >Yakit 需要更新</Tag>}
                 </Space>}/>
             </Spin>
             <Spin spinning={loading}>
                 <Alert
                     type={"success"}
                     message={<Space>
-                        当前最新的 Yak 引擎版本为
+                        Yakit 最新版本为：
                         <Tag color={"green"}>{latestVersion}</Tag>
                     </Space>}/>
             </Spin>
@@ -132,7 +132,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                         title={`确定要更新版本: ${latestVersion}`}
                         onConfirm={e => {
                             setDownloading(true)
-                            ipcRenderer.invoke("download-latest-yak", latestVersion).then(() => {
+                            ipcRenderer.invoke("download-latest-yakit", latestVersion).then(() => {
                                 success("下载完毕")
                                 install(latestVersion)
                             }).catch(e => {
@@ -145,7 +145,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                         <Button
                             type={"primary"} disabled={isLatest || loading || latestLoading}
                         >
-                            一键更新 Yak 引擎
+                            一键下载最新版 Yakit
                         </Button>
                     </Popconfirm>
                     <Button type={"link"} onClick={() => {

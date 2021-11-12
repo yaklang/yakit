@@ -12,7 +12,7 @@ asar: true
 
 publish:
   - provider: "generic"
-    url: http://yaklang.oss-beijing.aliyunoss.com/yak
+    url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
 
 mac:
   artifactName: ${productName}-${version}-darwin-${arch}.${ext}

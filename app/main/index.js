@@ -2,7 +2,6 @@ const {app, BrowserWindow, globalShortcut} = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const {registerIPC, clearing} = require("./ipc");
-const { autoUpdater } = require("electron-updater");
 
 let win;
 const createWindow = () => {
@@ -32,12 +31,12 @@ app.whenReady().then(() => {
 
     registerIPC(win);
 
-    // // https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yakit-version.txt
-    // autoUpdater.setFeedURL({
-    //     provider: "generic",
-    //     url: "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/",
-    // })
+    //
+    // // autoUpdater.autoDownload = false
     // autoUpdater.checkForUpdates();
+    // autoUpdater.signals.updateDownloaded(info => {
+    //     console.info(info.downloadedFile)
+    // })
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
