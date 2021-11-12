@@ -1,17 +1,17 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Collapse, Divider, Empty, List, Popconfirm, Row, Space, Switch, Tabs, Tag} from "antd";
+import {Button, Card, Col, Collapse, Divider, Empty, List, Popconfirm, Row, Space, Tabs, Tag} from "antd";
 import {YakEditor} from "../../utils/editors";
 import {genDefaultPagination, YakScript, YakScriptHookItem, YakScriptHooks} from "../invoker/schema";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
-import {showDrawer, showModal} from "../../utils/showModal";
+import {showModal} from "../../utils/showModal";
 import {YakModuleList} from "../yakitStore/YakitStorePage";
 import {HTTPFlowMiniTable} from "../../components/HTTPFlowMiniTable";
-import {HTTPFlowTable} from "../../components/HTTPFlowTable";
 import {YakitLogViewers} from "../invoker/YakitLogFormatter";
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import ReactJson from "react-json-view";
 import {SelectOne} from "../../utils/inputUtil";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
+import {mitmPluginTemplateShort} from "../invoker/YakScriptCreator";
 
 
 export interface MITMPluginCardProp {
@@ -21,15 +21,7 @@ export interface MITMPluginCardProp {
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
 }
 
-const defaultScript = `mirrorHTTPFlow = func(isHttps, url /*string*/, req /*type: []byte*/, rsp /* type: []byte*/) {
-
-}
-
-mirrorFilteredHTTPFlow = func(isHttps, url /*string*/, req /*type: []byte*/, rsp /*type: []byte*/) {
-
-}
-
-`
+const defaultScript = mitmPluginTemplateShort;
 
 const {ipcRenderer} = window.require("electron");
 
@@ -51,6 +43,44 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
             clearInterval(id)
         }
     }, [])
+
+    const enablePlugin = () => {
+        let m = showModal({
+            title: "选择启用的 MITM 插件",
+            width: "60%",
+            content: <>
+                <YakModuleList Type={"mitm"} Keyword={""} onClicked={(script) => {
+                    if (!props.onSubmitYakScriptId) {
+                        return
+                    }
+
+                    if ((script.Params || []).length > 0) {
+                        let m2 = showModal({
+                            title: `设置 [${script.ScriptName}] 的参数`,
+                            content: <>
+                                <YakScriptParamsSetter
+                                    {...script}
+                                    params={[]}
+                                    onParamsConfirm={(p: YakExecutorParam[]) => {
+                                        props.onSubmitYakScriptId && props.onSubmitYakScriptId(script.Id, p)
+                                        m.destroy()
+                                        m2.destroy()
+                                        setTab("mitm-output")
+                                    }}
+                                    submitVerbose={"设置 MITM 参数"}
+                                />
+                            </>, width: "50%",
+                        })
+                    } else {
+                        props.onSubmitYakScriptId && props.onSubmitYakScriptId(script.Id, [])
+                        m.destroy()
+                        setTab("mitm-output")
+                    }
+
+                }} isIgnored={false} isHistory={false}/>
+            </>
+        })
+    }
 
     return <div>
         <Tabs size={"small"} type={"card"} activeKey={tab} onChange={setTab}>
@@ -95,43 +125,7 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                                 >热加载</Button> : <Button
                                     type={"link"}
                                     size={"small"}
-                                    onClick={() => {
-                                        let m = showModal({
-                                            title: "选择启用的 MITM 插件",
-                                            width: "60%",
-                                            content: <>
-                                                <YakModuleList Type={"mitm"} Keyword={""} onClicked={(script) => {
-                                                    if (!props.onSubmitYakScriptId) {
-                                                        return
-                                                    }
-
-                                                    if ((script.Params || []).length > 0) {
-                                                        let m2 = showModal({
-                                                            title: `设置 [${script.ScriptName}] 的参数`,
-                                                            content: <>
-                                                                <YakScriptParamsSetter
-                                                                    {...script}
-                                                                    params={[]}
-                                                                    onParamsConfirm={(p: YakExecutorParam[]) => {
-                                                                        props.onSubmitYakScriptId && props.onSubmitYakScriptId(script.Id, p)
-                                                                        m.destroy()
-                                                                        m2.destroy()
-                                                                        setTab("mitm-output")
-                                                                    }}
-                                                                    submitVerbose={"设置 MITM 参数"}
-                                                                />
-                                                            </>, width: "50%",
-                                                        })
-                                                    } else {
-                                                        props.onSubmitYakScriptId && props.onSubmitYakScriptId(script.Id, [])
-                                                        m.destroy()
-                                                        setTab("mitm-output")
-                                                    }
-
-                                                }} isIgnored={false} isHistory={false}/>
-                                            </>
-                                        })
-                                    }}>
+                                    onClick={enablePlugin}>
                                     插件商店
                                 </Button>
                             }
@@ -168,6 +162,7 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                             暂无 MITM 插件被启用 <br/>
                             <Button
                                 type={"primary"}
+                                onClick={enablePlugin}
                             >点击这里启用插件</Button>
                         </Empty>}
                     </>}
