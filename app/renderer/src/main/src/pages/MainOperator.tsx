@@ -1,5 +1,21 @@
 import React, {useEffect, useState} from "react";
-import {Button, Col, Divider, Image, Input, Layout, Menu, Popconfirm, Popover, Row, Space, Spin, Tabs, Tag} from "antd";
+import {
+    Button,
+    Col,
+    Divider,
+    Image,
+    Input,
+    Layout,
+    Menu,
+    Modal,
+    Popconfirm,
+    Popover,
+    Row,
+    Space,
+    Spin,
+    Tabs,
+    Tag
+} from "antd";
 import {ContentByRoute, MenuDataProps, Route, RouteMenuData} from "../routes/routeSpec";
 import {
     CloseOutlined,
@@ -16,7 +32,8 @@ import {AutoUpdateYakModuleButton, YakitVersion, YakVersion} from "../utils/basi
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema";
 import {randomString} from "../utils/randomUtil";
 import MDEditor from '@uiw/react-md-editor';
-import {genDefaultPagination, QueryYakScriptsResponse, YakScript} from "./invoker/schema";
+import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "./invoker/schema";
+import {showByCursorContainer} from "../utils/showByCursor";
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -77,6 +94,30 @@ export const Main: React.FC<MainProp> = (props) => {
     const [currentTabKey, setCurrentTabKey] = useState("");
     const [tabLoading, setTabLoading] = useState(false);
 
+    const closeCacheByRoute = (r: Route) => {
+        setPageCache(pageCache.filter(i => `${i.route}` !== `${r}`))
+    }
+
+    const closeAllCache = () => {
+        Modal.confirm({
+            title: "确定要关闭所有 Tabs？",
+            content: "这样将会关闭所有进行中的进程",
+            onOk: () => {
+                setPageCache([])
+            }
+        })
+    }
+
+    const closeOtherCache = (id: string) => {
+        Modal.confirm({
+            title: "确定要除此之外所有 Tabs？",
+            content: "这样将会关闭所有进行中的进程",
+            onOk: () => {
+                setPageCache(pageCache.filter(i => i.id === id))
+            }
+        })
+    }
+
     const removeCache = (id: string) => {
         setPageCache(pageCache.filter(i => i.id !== id))
     };
@@ -127,7 +168,8 @@ export const Main: React.FC<MainProp> = (props) => {
 
         ipcRenderer.invoke("QueryYakScript", {
             Pagination: genDefaultPagination(1000), IsGeneralModule: true,
-        }).then((data: QueryYakScriptsResponse) => {
+            Type: "yak",
+        } as QueryYakScriptRequest).then((data: QueryYakScriptsResponse) => {
             setExtraGeneralModule(data.Data)
         })
     }
@@ -435,17 +477,38 @@ export const Main: React.FC<MainProp> = (props) => {
                                                 >
                                                     <EditOutlined/>
                                                 </Popover>
-                                                <CloseOutlined onClick={() => {
-                                                    setTabLoading(true)
-                                                    const key = i.id;
-                                                    const targetIndex = getCacheIndex(key)
-                                                    if (targetIndex > 0 && pageCache[targetIndex - 1]) {
-                                                        const targetCache = pageCache[targetIndex - 1];
-                                                        setCurrentTabKey(targetCache.id)
-                                                    }
-                                                    removeCache(key);
-                                                    setTimeout(() => setTabLoading(false), 300)
-                                                }}/>
+                                                <CloseOutlined
+                                                    onContextMenu={(e) => {
+                                                        showByCursorContainer({
+                                                            content: <>
+                                                                <Space direction={"vertical"}>
+                                                                    <Button
+                                                                        type={"link"}
+                                                                        onClick={() => {
+                                                                            closeAllCache()
+                                                                        }}
+                                                                        size={"small"}>关闭所有Tabs</Button>
+                                                                    <Button type={"link"}
+                                                                            onClick={() => closeCacheByRoute(i.route)}
+                                                                            size={"small"}>关闭同类Tabs</Button>
+                                                                    <Button type={"link"}
+                                                                            onClick={() => closeOtherCache(i.id)}
+                                                                            size={"small"}>关闭其他Tabs</Button>
+                                                                </Space>
+                                                            </>
+                                                        }, e.clientX, e.clientY)
+                                                    }}
+                                                    onClick={() => {
+                                                        setTabLoading(true)
+                                                        const key = i.id;
+                                                        const targetIndex = getCacheIndex(key)
+                                                        if (targetIndex > 0 && pageCache[targetIndex - 1]) {
+                                                            const targetCache = pageCache[targetIndex - 1];
+                                                            setCurrentTabKey(targetCache.id)
+                                                        }
+                                                        removeCache(key);
+                                                        setTimeout(() => setTabLoading(false), 300)
+                                                    }}/>
                                             </Space>}>
                                             <Spin spinning={tabLoading}>
                                                 {i.node}

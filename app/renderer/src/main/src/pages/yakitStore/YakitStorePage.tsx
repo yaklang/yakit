@@ -85,7 +85,10 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     title: "创建新插件", width: "100%",
                                     content: <>
                                         <YakScriptCreatorForm
-                                            onCreated={() => m.destroy()}
+                                            onChanged={e => setTrigger(!trigger)}
+                                            onCreated={() => {
+                                                m.destroy()
+                                            }}
                                         />
                                     </>, keyboard: false,
                                 })

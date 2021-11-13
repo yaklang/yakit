@@ -182,7 +182,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                                     title: "修改当前 Yak 模块", width: "90%", keyboard: false,
                                     content: <>
                                         <YakScriptCreatorForm
-                                            modified={i}
+                                            modified={i} onChanged={i => update()}
                                             onCreated={(created) => {
                                                 m.destroy()
                                             }}
@@ -274,9 +274,8 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                         width: "95%",
                         content: <>
                             <YakScriptCreatorForm onCreated={() => {
-                                update(1)
                                 m.destroy()
-                            }}/>
+                            }} onChanged={e => update(1)}/>
                         </>
                     })
                 }}>创建新脚本</Button>

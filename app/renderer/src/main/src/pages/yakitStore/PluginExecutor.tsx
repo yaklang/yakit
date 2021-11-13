@@ -116,15 +116,15 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         xtermFit(xtermRef, 256, 6)
     })
 
-    if (props.script.Type === "mitm") {
-        return <Empty
-            style={{
-                marginTop: 50,
-            }}
-            description={"这是一个 MITM 插件，请在 MITM 劫持中使用它！"}>
-
-        </Empty>
-    }
+    // if (props.script.Type === "mitm") {
+    //     return <Empty
+    //         style={{
+    //             marginTop: 50,
+    //         }}
+    //         description={"这是一个 MITM 插件，请在 MITM 劫持中使用它！"}>
+    //
+    //     </Empty>
+    // }
 
     return <div>
         <Card title={`模块执行操作台：${script.ScriptName}`} size={"small"} extra={<Space>
