@@ -1,33 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {
-    Button,
-    Card,
-    Col,
-    Divider,
-    Empty,
-    Form,
-    Input,
-    List,
-    PageHeader,
-    Popconfirm, Popover,
-    Row,
-    Space,
-    Tabs,
-    Tag
-} from "antd";
-import {ReloadOutlined, SearchOutlined} from "@ant-design/icons";
+import {Button, Card, Col, Empty, Form, Input, List, Popconfirm, Popover, Row, Space, Tabs, Tag} from "antd";
+import {DownloadOutlined, PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {AutoUpdateYakModuleViewer} from "../../utils/basic";
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema";
-import {failed, success} from "../../utils/notification";
-import {SettingOutlined, PlusOutlined, DownloadOutlined} from "@ant-design/icons";
-import {CopyableField, InputItem, SwitchItem} from "../../utils/inputUtil";
-import {formatDate, formatTimestamp} from "../../utils/timeUtil";
-import {YakEditor} from "../../utils/editors";
-import ReactJson from "react-json-view";
-import ReactMarkdown from "react-markdown";
-import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
-import {YakExecutorParam} from "../invoker/YakExecutorParams";
+import {failed} from "../../utils/notification";
+import {CopyableField, SwitchItem} from "../../utils/inputUtil";
+import {formatDate} from "../../utils/timeUtil";
 import {PluginOperator} from "./PluginOperator";
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator";
 
@@ -106,7 +85,10 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     title: "创建新插件", width: "100%",
                                     content: <>
                                         <YakScriptCreatorForm
-                                            onCreated={() => m.destroy()}
+                                            onChanged={e => setTrigger(!trigger)}
+                                            onCreated={() => {
+                                                m.destroy()
+                                            }}
                                         />
                                     </>, keyboard: false,
                                 })
@@ -125,7 +107,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         {[
                             {tab: "YAK", key: "yak"},
                             {tab: "YAML", key: "nuclei"},
-                            {tab: "MITM", key: "yak-mitm"},
+                            {tab: "MITM", key: "mitm"},
                         ].map(e => {
                             return <Tabs.TabPane tab={e.tab} key={e.key}>
                                 <YakModuleList
@@ -156,7 +138,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
 };
 
 export interface YakModuleListProp {
-    Type: "yak" | "yak-mitm" | "nuclei",
+    Type: "yak" | "mitm" | "nuclei",
     Keyword: string
     onClicked: (y: YakScript) => any
     currentId?: number

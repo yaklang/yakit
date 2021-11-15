@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Divider, Form, PageHeader, Popconfirm, Popover, Space, Tabs, Tag} from "antd";
+import {Button, Divider, Form, PageHeader, Popconfirm, Popover, Space, Switch, Tabs, Tag} from "antd";
 import {YakScript} from "../invoker/schema";
 import {failed, success} from "../../utils/notification";
 import {formatTimestamp} from "../../utils/timeUtil";
@@ -15,6 +15,7 @@ import {PluginHistoryTable} from "./PluginHistory";
 import {openABSFile} from "../../utils/openWebsite";
 import {EditOutlined} from "@ant-design/icons";
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator";
+import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable";
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -31,6 +32,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [groups, setGroups] = useState<string[]>([]);
     const [markdown, setMarkdown] = useState("");
     const [trigger, setTrigger] = useState(false);
+    const [details, setDetails] = useState(true);
 
     const updateGroups = () => {
         ipcRenderer.invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId}).then(
@@ -51,6 +53,11 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         setLoading(true)
         ipcRenderer.invoke("GetYakScriptById", {Id: props.yakScriptId}).then((e: YakScript) => {
             setScript(e)
+            if (e.IsGeneralModule) {
+                setDetails(false)
+            } else {
+                setDetails(true)
+            }
             ipcRenderer.invoke("GetMarkdownDocument", {
                 YakScriptId: e?.Id, YakScriptName: e?.ScriptName
             }).then((data: { Markdown: string }) => {
@@ -79,17 +86,20 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     title: `修改插件: ${script?.ScriptName}`, width: "100%",
                     content: <>
                         <YakScriptCreatorForm
-                            modified={script}
+                            modified={script} onChanged={i => update()}
                             onCreated={() => {
                                 m.destroy()
-                                update()
                             }}
                         />
                     </>, keyboard: false,
                 })
             }} icon={<EditOutlined/>}/>
+            <span style={{color: "#999"}}>
+                <span>详情：</span>
+                <Switch checked={details} size={"small"} onChange={setDetails}/>
+            </span>
         </Space>}>
-            <Space direction={"vertical"}>
+            {details && <Space direction={"vertical"}>
                 <Space size={0}>
                     {script?.ScriptName && <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>}
                     <Divider type={"vertical"}/>
@@ -208,7 +218,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         <Button size={"small"}>导出插件</Button>
                     </Popconfirm>
                 </Space>
-            </Space>
+            </Space>}
         </PageHeader>
         {/*<Divider/>*/}
         <Tabs type={"card"} defaultValue={"runner"}>
@@ -226,6 +236,9 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             <Tabs.TabPane tab={"执行历史 / History"} key={"history"}>
                 {script && <PluginHistoryTable script={script} trigger={trigger}/>}
                 {/*<ExecHistoryTable mini={false} trigger={null as any}/>*/}
+            </Tabs.TabPane>
+            <Tabs.TabPane tab={"结果存储 / Results"} key={"results"}>
+                {script && <YakScriptExecResultTable YakScriptName={script.ScriptName} trigger={trigger}/>}
             </Tabs.TabPane>
         </Tabs>
     </div>

@@ -138,6 +138,31 @@ service Yak {
   rpc StartBasicCrawler(StartBasicCrawlerRequest)returns (ExecResult);
   rpc ViewBasicCrawlerCode(Empty) returns (SimpleScript);
   rpc GenerateWebsiteTree(GenerateWebsiteTreeRequest) returns (GenerateWebsiteTreeResponse);
+
+  // 对插件结果的操作
+  rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
+  rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
+  rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+}
+
+message DeleteYakScriptExecResultRequest {
+  repeated int64 Id = 1;
+  string YakScriptName = 2;
+}
+
+message YakScriptNames {
+  repeated string YakScriptNames = 1;
+}
+
+message QueryYakScriptExecResultRequest {
+  Paging Pagination = 1;
+  string YakScriptName = 2;
+}
+
+message QueryYakScriptExecResultResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated ExecResult Data = 3;
 }
 
 message GenerateWebsiteTreeResponse {
@@ -661,6 +686,26 @@ message MITMRequest {
 
   // 原封不动放行
   bool forward = 15;
+
+  // mitm plugin 中间人插件，本质上是一段 Yak 代码
+  bool setYakScript = 21;
+  repeated ExecParamItem yakScriptParams = 22;
+  int64 yakScriptID = 23;
+  string yakScriptContent = 25;
+
+  // 查看当前启用插件
+  bool getCurrentHook = 30;
+
+  // 移除插件
+  bool removeHook = 31;  // 当这个为 true 的时候，将会
+  RemoveHookParams removeHookParams = 32;
+}
+
+message RemoveHookParams {
+  bool ClearAll = 1;
+
+  repeated string HookName = 2;
+  repeated string RemoveHookID = 3;
 }
 
 message MITMResponse {
@@ -688,8 +733,25 @@ message MITMResponse {
   bool forResponse = 23;
   bytes response = 24;
   int64 responseId = 26;
+
+  // exec result
+  bool haveMessage = 27;
+  ExecResult message = 28;
+
+  bool getCurrentHook = 30;
+  repeated YakScriptHooks hooks = 31;
 }
 
+message YakScriptHooks {
+  string HookName = 1;
+  repeated YakScriptHookItem Hooks = 2;
+}
+
+message YakScriptHookItem {
+  int64 YakScriptId = 1;
+  string YakScriptName = 2;
+  string Verbose = 3;
+}
 
 // 最基础的 ECHO
 message EchoRequest {
@@ -739,4 +801,7 @@ message ExecResult {
   bytes Raw = 3;
   bool IsMessage = 4;
   bytes Message = 5;
+
+  // 如果是一个保存过的 ExecResult 他应该有数据库记录 ID
+  int64 Id = 6;
 }

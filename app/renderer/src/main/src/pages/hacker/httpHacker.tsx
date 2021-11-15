@@ -12,6 +12,7 @@ import {randomString} from "../../utils/randomUtil";
 import {CloseOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons";
 import {info} from "../../utils/notification";
 import {WebsiteTreeViewer} from "../yakitStore/viewers/WebsiteTree";
+import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable";
 
 export interface HTTPHackerProp {
 
@@ -116,6 +117,9 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                     <HTTPFlowTable
                         onSendToWebFuzzer={sendToFuzzer}/>
                 </Tabs.TabPane>
+                <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
+                    <YakScriptExecResultTable />
+                </Tabs.TabPane>
                 <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
                     <WebsiteTreeViewer
                         onSendToWebFuzzer={sendToFuzzer}
@@ -133,7 +137,7 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                     >
                         <EditOutlined/>
                     </Popover>
-                    <Popconfirm title={"确定需要关闭该 Web Fuzzer 页吗？"} onConfirm={() => {
+                    <CloseOutlined onClick={() => {
                         setLoading(true)
                         const key = i.key;
                         const targetIndex = findFuzzerIndexByKey(key)
@@ -143,9 +147,7 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                         }
                         removeFuzzer(key);
                         setTimeout(() => setLoading(false), 300)
-                    }}>
-                        <CloseOutlined/>
-                    </Popconfirm>
+                    }}/>
                 </Space>}>
                     {i.node}
                 </Tabs.TabPane>)}

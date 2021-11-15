@@ -67,7 +67,6 @@ function App() {
     useEffect(() => {
         setLoading(true)
         ipcRenderer.invoke("get-value", UserProtocolAgreed).then(value => {
-            console.info(value, "123")
             setAgreed(!!value)
         }).catch(() => {
         }).finally(() => setTimeout(() => setLoading(false), 300))

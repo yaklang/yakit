@@ -1,4 +1,4 @@
-const {ipcMain, Notification} = require("electron");
+const {ipcMain, Notification, shell} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
 const path = require("path");
@@ -126,6 +126,22 @@ const getYakDownloadUrl = () => {
             return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_windows_amd64.exe"
         case "linux":
             return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_linux_amd64"
+    }
+}
+
+
+const getYakitDownloadUrl = (version) => {
+    switch (process.platform) {
+        case "darwin":
+            if (process.arch === "arm64") {
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-arm64.dmg`
+            } else {
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-x64.dmg`
+            }
+        case "win32":
+            return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-windows-amd64.exe`
+        case "linux":
+            return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
     }
 }
 
@@ -262,6 +278,42 @@ module.exports = {
             return await asyncDownloadLatestYak(version)
         })
 
+        // asyncDownloadLatestYakit wrapper
+        const asyncDownloadLatestYakit = (version) => {
+            return new Promise((resolve, reject) => {
+                if (version.startsWith("v")) {
+                    version = version.substr(1)
+                }
+                const downloadUrl = getYakitDownloadUrl(version);
+
+                const dest = path.join(yakEngineDir, path.basename(downloadUrl));
+                try {
+                    fs.unlinkSync(dest)
+                } catch (e) {
+
+                }
+                // https://github.com/IndigoUnited/node-request-progress
+                // The options argument is optional so you can omit it
+                requestProgress(request(downloadUrl), {
+                    // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
+                    // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
+                    // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
+                })
+                    .on('progress', function (state) {
+                        win.webContents.send("download-yakit-engine-progress", state)
+                    })
+                    .on('error', function (err) {
+                        reject(err)
+                    })
+                    .on('end', function () {
+                        resolve()
+                    }).pipe(fs.createWriteStream(dest));
+            })
+        }
+        ipcMain.handle("download-latest-yakit", async (e, version) => {
+            return await asyncDownloadLatestYakit(version)
+        })
+
         ipcMain.handle("get-windows-install-dir", async (e) => {
             //systemRoot := os.Getenv("WINDIR")
             // 			if systemRoot == "" {
@@ -320,6 +372,16 @@ module.exports = {
 
         ipcMain.handle("install-yak-engine", async (e, version) => {
             return await installYakEngine(version);
+        })
+
+        // asyncinstallYakit wrapper
+        const asyncinstallYakit = (params) => {
+            return new Promise((resolve, reject) => {
+                shell.openPath(yakEngineDir)
+            })
+        }
+        ipcMain.handle("install-yakit", async (e, params) => {
+            return await asyncinstallYakit(params)
         })
 
 

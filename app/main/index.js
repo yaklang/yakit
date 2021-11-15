@@ -31,6 +31,13 @@ app.whenReady().then(() => {
 
     registerIPC(win);
 
+    //
+    // // autoUpdater.autoDownload = false
+    // autoUpdater.checkForUpdates();
+    // autoUpdater.signals.updateDownloaded(info => {
+    //     console.info(info.downloadedFile)
+    // })
+
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })

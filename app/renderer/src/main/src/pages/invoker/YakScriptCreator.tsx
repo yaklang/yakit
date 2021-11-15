@@ -4,17 +4,114 @@ import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchIte
 import {YakScript, YakScriptParam} from "./schema";
 import {YakEditor} from "../../utils/editors";
 import {PlusOutlined} from "@ant-design/icons";
-import {showModal} from "../../utils/showModal";
+import {showDrawer, showModal} from "../../utils/showModal";
 import {failed, info} from "../../utils/notification";
 import {putValueToParams, YakScriptParamsSetter} from "./YakScriptParamsSetter";
 import {YakScriptRunner} from "./ExecYakScript";
+import {FullscreenOutlined, FullscreenExitOutlined} from "@ant-design/icons"
 
 export interface YakScriptCreatorFormProp {
     onCreated?: (i: YakScript) => any
     modified?: YakScript
+    onChanged?: (i: YakScript) => any
 }
 
 const {ipcRenderer} = window.require("electron");
+
+export const mitmPluginTemplate = `# mitm plugin template
+
+yakit_output(MITM_PARAMS)
+
+#-----------------------MITM Hooks I/O-------------------------
+/*
+#如何使用插件参数？
+
+## 例如，如果你设置了一个参数为 url_keyword 的参数，可以通过 MITM_PARAMS 来使用它！
+urlKeyword = MITM_PARAMS["url_keyword"]
+
+# 如何输出给 Yakit 给用户查看？
+
+yakit_output(i: any) // 可以只输出到 "Console 界面"
+yakit_save(i: any)   // 可以输出并保存到数据库中，在 "插件输出" 中查看
+*/
+#----------------MITM Hooks Test And Quick Debug-----------------
+/*
+# __test__ 是 yakit mitm 插件用于调试的函数 【注意：这个函数在 MITM hooks劫持环境下不会被导入】
+
+在这个函数中，你可以使用 yakit.GenerateYakitMITMHooksParams(method: string, url: string, opts ...http.Option) 来方便的生成可供 hooks 调用的参数，参考代码模版中的用法～
+
+*/
+
+
+#--------------------------WORKSPACE-----------------------------
+__test__ = func() {
+    results, err := yakit.GenerateYakitMITMHooksParams("GET", "https://example.com")
+    if err != nil {
+        return
+    }
+    isHttps, url, reqRaw, rspRaw, body = results
+
+    mirrorHTTPFlow(results...)
+    mirrorFilteredHTTPFlow(results...)
+    mirrorNewWebsite(results...)
+    mirrorNewWebsitePath(results...)
+    mirrorNewWebsitePathParams(results...)
+}
+
+
+# mirrorHTTPFlow 会镜像所有的流量到这里，包括 .js / .css / .jpg 这类一般会被劫持程序过滤的请求
+mirrorHTTPFlow = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+# mirrorFilteredHTTPFlow 劫持到的流量为 MITM 自动过滤出的可能和 "业务" 有关的流量，会自动过滤掉 js / css 等流量
+mirrorFilteredHTTPFlow = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+# mirrorNewWebsite 每新出现一个网站，这个网站的第一个请求，将会在这里被调用！
+mirrorNewWebsite = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+# mirrorNewWebsitePath 每新出现一个网站路径，关于这个网站路径的第一个请求，将会在这里被传入回调
+mirrorNewWebsitePath = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+# mirrorNewWebsitePathParams 每新出现一个网站路径且带有一些参数，参数通过常见位置和参数名去重，去重的第一个 HTTPFlow 在这里被调用
+mirrorNewWebsitePathParams = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+`
+
+export const mitmPluginTemplateShort = `# mirrorHTTPFlow 会镜像所有的流量到这里，包括 .js / .css / .jpg 这类一般会被劫持程序过滤的请求
+mirrorHTTPFlow = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+# mirrorFilteredHTTPFlow 劫持到的流量为 MITM 自动过滤出的可能和 "业务" 有关的流量，会自动过滤掉 js / css 等流量
+mirrorFilteredHTTPFlow = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+# mirrorNewWebsite 每新出现一个网站，这个网站的第一个请求，将会在这里被调用！
+mirrorNewWebsite = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+# mirrorNewWebsitePath 每新出现一个网站路径，关于这个网站路径的第一个请求，将会在这里被传入回调
+mirrorNewWebsitePath = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+# mirrorNewWebsitePathParams 每新出现一个网站路径且带有一些参数，参数通过常见位置和参数名去重，去重的第一个 HTTPFlow 在这里被调用
+mirrorNewWebsitePathParams = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
+    
+}
+
+`
+
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
     const [params, setParams] = useState<YakScript>(props.modified || {
@@ -29,8 +126,17 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     });
     const [paramsLoading, setParamsLoading] = useState(false);
     const [modified, setModified] = useState<YakScript | undefined>(props.modified);
+    const [fullscreen, setFullscreen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const isNucleiPoC = params.Type === "nuclei";
+
+    const debugButton = (primary?: boolean) => {
+        if (loading) {
+            return <Button disabled={true}>执行中...无法调试</Button>
+        }
+        return
+    }
 
     useEffect(() => {
         if (paramsLoading) {
@@ -40,6 +146,19 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         }
     }, [paramsLoading])
 
+    useEffect(() => {
+        if (params.Type === "mitm" && params.Content === "") {
+            setParams({...params, Content: mitmPluginTemplate})
+            return
+        } else {
+            setParams({...params, Content: ""})
+        }
+    }, [params.Type])
+
+    useEffect(() => {
+        if (props.modified) setParams({...props.modified});
+    }, [props.modified])
+
     return <div>
         <Form
             onSubmitCapture={e => {
@@ -48,6 +167,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 ipcRenderer.invoke("SaveYakScript", params).then((data) => {
                     info("创建 / 保存 Yak 脚本成功")
                     props.onCreated && props.onCreated(params)
+                    props.onChanged && props.onChanged(data)
                 }).catch(e => {
                     failed(`保存 Yak 模块失败: ${e}`)
                 })
@@ -57,6 +177,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             <SelectOne disabled={!!modified} label={"模块类型"} data={[
                 {value: "yak", text: "Yak 原生模块"},
                 {value: "nuclei", text: "nuclei Yaml模块"},
+                {value: "mitm", text: "MITM 模块"},
             ]} setValue={Type => setParams({...params, Type})} value={params.Type}
             />
             <InputItem
@@ -77,7 +198,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 ]} mode={"tags"}
                 setValue={Tags => setParams({...params, Tags})} value={params.Tags}
             />
-            {params.Type === "yak" && <Form.Item label={"增加参数"}>
+            {["yak", "mitm"].includes(params.Type) && <Form.Item label={"增加参数"}>
                 <Button type={"link"}
                         onClick={() => {
                             let m = showModal({
@@ -158,53 +279,91 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 
                 </List>
             </Form.Item> : ""}
-            <Form.Item label={"源码"}>
-                <div style={{height: 400}}>
+            <Form.Item label={"源码"} help={<>
+                <Button icon={<FullscreenOutlined/>}
+                        onClick={() => {
+                            setFullscreen(true)
+                            let m = showDrawer({
+                                title: "Edit Code",
+                                width: "100%",
+                                closable: false,
+                                keyboard: false,
+                                content: <>
+                                    <YakScriptLargeEditor
+                                        script={params}
+                                        onExit={(data) => {
+                                            m.destroy()
+                                            setFullscreen(false)
+                                            ipcRenderer.invoke("QueryYakScript", {})
+                                        }}
+                                        onUpdate={(data: YakScript) => {
+                                            props.onChanged && props.onChanged(data)
+                                            setParams({...data})
+                                        }}
+                                    />
+                                </>
+                            })
+                        }}
+                        type={"link"} style={{
+                    marginBottom: 12, marginTop: 6
+                }}>大屏模式</Button>
+            </>}>
+                {!fullscreen && <div style={{height: 400}}>
                     <YakEditor
                         type={"yak"}
                         setValue={Content => setParams({...params, Content})}
                         value={params.Content}
                     />
-                </div>
+                </div>}
             </Form.Item>
             <Form.Item colon={false} label={" "}>
                 <Space>
                     <Button type="primary" htmlType="submit"> {modified ? "修改当前" : "创建新的"} Yak 模块 </Button>
-                    <Button onClick={() => {
-                        ipcRenderer.invoke("SaveYakScript", params).then((data: YakScript) => {
-                            info("创建 / 保存 Yak 脚本成功")
-                            setModified(data)
-                            setParams(data)
-                            // YakScriptParamsSetter
-                            if (data.Params.length <= 0) {
-                                showModal({
-                                    title: "立即执行", width: 1000,
-                                    content: <>
-                                        <YakScriptRunner script={data} params={[]}/>
-                                    </>
-                                })
-                            } else {
-                                let m = showModal({
-                                    title: "确认想要执行的参数",
-                                    width: "70%",
-                                    content: <>
-                                        <YakScriptParamsSetter params={[]} {...data} onParamsConfirm={params => {
-                                            m.destroy()
-                                            showModal({
-                                                title: "立即执行", width: 1000,
-                                                content: <>
-                                                    <YakScriptRunner script={data} params={params}/>
-                                                </>
-                                            })
-                                        }}/>
-                                    </>
-                                })
-                            }
+                    <Button
+                        // type={primary ? "primary" : undefined}
+                        disabled={[
+                            // "mitm",
+                            "",
+                        ].includes(params.Type)}
+                        onClick={() => {
+                            setLoading(true)
+                            ipcRenderer.invoke("SaveYakScript", params).then((data: YakScript) => {
+                                info("创建 / 保存 Yak 脚本成功")
+                                setModified(data)
+                                setParams(data)
+                                props.onChanged && props.onChanged(data)
+                                // YakScriptParamsSetter
+                                if (data.Params.length <= 0) {
+                                    showModal({
+                                        title: "立即执行", width: 1000,
+                                        content: <>
+                                            <YakScriptRunner script={data} params={[]}/>
+                                        </>
+                                    })
+                                } else {
+                                    let m = showModal({
+                                        title: "确认想要执行的参数",
+                                        width: "70%",
+                                        content: <>
+                                            <YakScriptParamsSetter params={[]} {...data} onParamsConfirm={params => {
+                                                m.destroy()
+                                                showModal({
+                                                    title: "立即执行", width: 1000,
+                                                    content: <>
+                                                        <YakScriptRunner script={data} params={params}/>
+                                                    </>
+                                                })
+                                            }}/>
+                                        </>
+                                    })
+                                }
 
-                        }).catch(e => {
-                            failed(`保存 Yak 模块失败: ${e}`)
-                        })
-                    }}> 调试：创建(修改)并立即执行 </Button>
+                            }).catch(e => {
+                                failed(`保存 Yak 模块失败: ${e}`)
+                            }).finally(() => {
+                                setTimeout(() => setLoading(false), 400)
+                            })
+                        }}> 调试：创建(修改)并立即执行 </Button>
                 </Space>
             </Form.Item>
         </Form>
@@ -275,5 +434,95 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 <Button type="primary" htmlType="submit"> 添加参数 </Button>
             </Form.Item>
         </Form>
+    </>
+};
+
+export interface YakScriptLargeEditorProp {
+    script: YakScript
+    onUpdate: (data: YakScript) => any
+    onExit: (data: YakScript) => any
+}
+
+export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) => {
+    const {script} = props;
+    const [params, setParams] = useState<YakScript>({...script})
+
+    useEffect(() => {
+        setParams({...script})
+    }, [props.script])
+
+    return <>
+        <Card title={`ScriptName: ${params.ScriptName}`} extra={[
+            <Space>
+                <Button danger={true} onClick={() => {
+                    // m.destroy()
+                    // setFullscreen(false)
+                    ipcRenderer.invoke("SaveYakScript", params).then((data) => {
+                        info("创建 / 保存 Yak 脚本成功")
+                        props.onUpdate(data)
+                        // setModified(data)
+                    }).catch(e => {
+                        failed(`保存 Yak 模块失败: ${e}`)
+                    }).finally(() => {
+                        props.onExit(params)
+                    })
+                }}>退出编辑界面</Button>
+                <Button
+                    disabled={[
+                        // "mitm",
+                        "",
+                    ].includes(params.Type)}
+                    onClick={() => {
+                        ipcRenderer.invoke("SaveYakScript", params).then((data: YakScript) => {
+                            info("创建 / 保存 Yak 脚本成功")
+                            props.onUpdate(data)
+                            // setModified(data)
+                            // setParams(data)
+                            // props.onChanged && props.onChanged(data)
+                            // YakScriptParamsSetter
+                            if (data.Params.length <= 0) {
+                                showModal({
+                                    title: "立即执行", width: 1000,
+                                    content: <>
+                                        <YakScriptRunner script={data} params={[]}/>
+                                    </>
+                                })
+                            } else {
+                                let m = showModal({
+                                    title: "确认想要执行的参数",
+                                    width: "70%",
+                                    content: <>
+                                        <YakScriptParamsSetter params={[]} {...data} onParamsConfirm={params => {
+                                            m.destroy()
+                                            showModal({
+                                                title: "立即执行", width: 1000,
+                                                content: <>
+                                                    <YakScriptRunner script={data} params={params}/>
+                                                </>
+                                            })
+                                        }}/>
+                                    </>
+                                })
+                            }
+
+                        }).catch(e => {
+                            failed(`保存 Yak 模块失败: ${e}`)
+                        }).finally(() => {
+                            // setTimeout(() => setLoading(false), 400)
+                        })
+                    }}> 调试：创建(修改)并立即执行 </Button>
+            </Space>
+        ]} bodyStyle={{padding: 0}}>
+            <div style={{
+                width: "100%",
+                height: 1000,
+            }}>
+                <YakEditor
+                    type={"yak"}
+                    setValue={Content => setParams({...params, Content})}
+                    value={params.Content}
+                />
+            </div>
+        </Card>
     </>
 };

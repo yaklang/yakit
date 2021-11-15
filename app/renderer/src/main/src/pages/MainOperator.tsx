@@ -1,5 +1,21 @@
 import React, {useEffect, useState} from "react";
-import {Button, Col, Divider, Image, Input, Layout, Menu, Popconfirm, Popover, Row, Space, Spin, Tabs, Tag} from "antd";
+import {
+    Button,
+    Col,
+    Divider,
+    Image,
+    Input,
+    Layout,
+    Menu,
+    Modal,
+    Popconfirm,
+    Popover,
+    Row,
+    Space,
+    Spin,
+    Tabs,
+    Tag
+} from "antd";
 import {ContentByRoute, MenuDataProps, Route, RouteMenuData} from "../routes/routeSpec";
 import {
     CloseOutlined,
@@ -16,7 +32,8 @@ import {AutoUpdateYakModuleButton, YakitVersion, YakVersion} from "../utils/basi
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema";
 import {randomString} from "../utils/randomUtil";
 import MDEditor from '@uiw/react-md-editor';
-import {genDefaultPagination, QueryYakScriptsResponse, YakScript} from "./invoker/schema";
+import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "./invoker/schema";
+import {showByCursorContainer} from "../utils/showByCursor";
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -77,6 +94,30 @@ export const Main: React.FC<MainProp> = (props) => {
     const [currentTabKey, setCurrentTabKey] = useState("");
     const [tabLoading, setTabLoading] = useState(false);
 
+    const closeCacheByRoute = (r: Route) => {
+        setPageCache(pageCache.filter(i => `${i.route}` !== `${r}`))
+    }
+
+    const closeAllCache = () => {
+        Modal.confirm({
+            title: "确定要关闭所有 Tabs？",
+            content: "这样将会关闭所有进行中的进程",
+            onOk: () => {
+                setPageCache([])
+            }
+        })
+    }
+
+    const closeOtherCache = (id: string) => {
+        Modal.confirm({
+            title: "确定要除此之外所有 Tabs？",
+            content: "这样将会关闭所有进行中的进程",
+            onOk: () => {
+                setPageCache(pageCache.filter(i => i.id === id))
+            }
+        })
+    }
+
     const removeCache = (id: string) => {
         setPageCache(pageCache.filter(i => i.id !== id))
     };
@@ -127,7 +168,8 @@ export const Main: React.FC<MainProp> = (props) => {
 
         ipcRenderer.invoke("QueryYakScript", {
             Pagination: genDefaultPagination(1000), IsGeneralModule: true,
-        }).then((data: QueryYakScriptsResponse) => {
+            Type: "yak",
+        } as QueryYakScriptRequest).then((data: QueryYakScriptsResponse) => {
             setExtraGeneralModule(data.Data)
         })
     }
@@ -320,7 +362,6 @@ export const Main: React.FC<MainProp> = (props) => {
                                             }
 
                                             // 增加加载状态
-                                            setCollapsed(true)
                                             setTabLoading(true)
                                             setTimeout(() => {
                                                 setTabLoading(false)
@@ -329,7 +370,6 @@ export const Main: React.FC<MainProp> = (props) => {
                                             setRoute(e.key)
                                         }}
                                         mode={"inline"}
-                                        // inlineCollapsed={false}
                                     >
                                         {menuItems.map(i => {
                                             if (i.Group === "UserDefined") {
@@ -394,73 +434,90 @@ export const Main: React.FC<MainProp> = (props) => {
                             marginLeft: 12, height: "100%",
                         }}>
                             <div style={{padding: 12, paddingTop: 8, height: "100%"}}>
-                                <Space style={{width: "100%", height: "100%"}} direction={"vertical"}>
-                                    {pageCache.length > 0 ? <Tabs
-                                        activeKey={currentTabKey}
-                                        onChange={setCurrentTabKey}
-                                        size={"small"} type={"editable-card"}
-                                        renderTabBar={(props, TabBarDefault) => {
-                                            return <>
-                                                <TabBarDefault {...props}/>
-                                            </>
-                                        }}
-                                        onEdit={(key: any, event: string) => {
-                                            switch (event) {
-                                                case "remove":
-                                                    // hooked by tabs closeIcon
-                                                    return
-                                                case "add":
-                                                    if (collapsed) {
-                                                        setCollapsed(false)
-                                                    } else {
-                                                        info("请从左边菜单连选择需要新建的 Tab 窗口")
-                                                    }
-                                                    return
-                                            }
+                                {pageCache.length > 0 ? <Tabs
+                                    activeKey={currentTabKey}
+                                    onChange={setCurrentTabKey}
+                                    size={"small"} type={"editable-card"}
+                                    renderTabBar={(props, TabBarDefault) => {
+                                        return <>
+                                            <TabBarDefault {...props}/>
+                                        </>
+                                    }}
+                                    onEdit={(key: any, event: string) => {
+                                        switch (event) {
+                                            case "remove":
+                                                // hooked by tabs closeIcon
+                                                return
+                                            case "add":
+                                                if (collapsed) {
+                                                    setCollapsed(false)
+                                                } else {
+                                                    info("请从左边菜单连选择需要新建的 Tab 窗口")
+                                                }
+                                                return
+                                        }
 
-                                        }}
-                                    >
+                                    }}
+                                >
 
-                                        {pageCache.map(i => {
-                                            return <Tabs.TabPane key={i.id} tab={i.verbose}
-                                                                 closeIcon={<Space>
-                                                                     <Popover
-                                                                         trigger={"click"}
-                                                                         title={"修改名称"}
-                                                                         content={<>
-                                                                             <Input size={"small"}
-                                                                                    defaultValue={i.verbose}
-                                                                                    onBlur={(e) => {
-                                                                                        updateCacheVerbose(i.id, e.target.value)
-                                                                                    }}/>
-                                                                         </>}
-                                                                     >
-                                                                         <EditOutlined/>
-                                                                     </Popover>
-                                                                     <Popconfirm title={"确定需要关闭该 Tab 页吗？"}
-                                                                                 onConfirm={() => {
-                                                                                     setTabLoading(true)
-                                                                                     const key = i.id;
-                                                                                     const targetIndex = getCacheIndex(key)
-                                                                                     if (targetIndex > 0 && pageCache[targetIndex - 1]) {
-                                                                                         const targetCache = pageCache[targetIndex - 1];
-                                                                                         setCurrentTabKey(targetCache.id)
-                                                                                     }
-                                                                                     removeCache(key);
-                                                                                     setTimeout(() => setTabLoading(false), 300)
-                                                                                 }}>
-                                                                         <CloseOutlined/>
-                                                                     </Popconfirm>
-                                                                 </Space>}>
-                                                <Spin spinning={tabLoading}>
-                                                    {i.node}
-                                                </Spin>
-                                            </Tabs.TabPane>
-                                        })}
-                                    </Tabs> : <>
+                                    {pageCache.map(i => {
+                                        return <Tabs.TabPane
+                                            key={i.id} tab={i.verbose}
+                                            closeIcon={<Space>
+                                                <Popover
+                                                    trigger={"click"}
+                                                    title={"修改名称"}
+                                                    content={<>
+                                                        <Input size={"small"}
+                                                               defaultValue={i.verbose}
+                                                               onBlur={(e) => {
+                                                                   updateCacheVerbose(i.id, e.target.value)
+                                                               }}/>
+                                                    </>}
+                                                >
+                                                    <EditOutlined/>
+                                                </Popover>
+                                                <CloseOutlined
+                                                    onContextMenu={(e) => {
+                                                        showByCursorContainer({
+                                                            content: <>
+                                                                <Space direction={"vertical"}>
+                                                                    <Button
+                                                                        type={"link"}
+                                                                        onClick={() => {
+                                                                            closeAllCache()
+                                                                        }}
+                                                                        size={"small"}>关闭所有Tabs</Button>
+                                                                    <Button type={"link"}
+                                                                            onClick={() => closeCacheByRoute(i.route)}
+                                                                            size={"small"}>关闭同类Tabs</Button>
+                                                                    <Button type={"link"}
+                                                                            onClick={() => closeOtherCache(i.id)}
+                                                                            size={"small"}>关闭其他Tabs</Button>
+                                                                </Space>
+                                                            </>
+                                                        }, e.clientX, e.clientY)
+                                                    }}
+                                                    onClick={() => {
+                                                        setTabLoading(true)
+                                                        const key = i.id;
+                                                        const targetIndex = getCacheIndex(key)
+                                                        if (targetIndex > 0 && pageCache[targetIndex - 1]) {
+                                                            const targetCache = pageCache[targetIndex - 1];
+                                                            setCurrentTabKey(targetCache.id)
+                                                        }
+                                                        removeCache(key);
+                                                        setTimeout(() => setTabLoading(false), 300)
+                                                    }}/>
+                                            </Space>}>
+                                            <Spin spinning={tabLoading}>
+                                                {i.node}
+                                            </Spin>
+                                        </Tabs.TabPane>
+                                    })}
+                                </Tabs> : <>
 
-                                    </>}
-                                </Space>
+                                </>}
                             </div>
                         </Content>
                     </Layout>

@@ -385,6 +385,7 @@ export const LogLevelToCode = (level: string) => {
     switch (level.toLowerCase()) {
         case "info":
         case "information":
+        case "low":
             return "blue";
         case "debug":
             return "gray"
@@ -395,9 +396,12 @@ export const LogLevelToCode = (level: string) => {
         case "error":
         case "panic":
         case "err":
+        case "high":
+        case "critical":
             return "red";
         case "warning":
         case "warn":
+        case "middle":
             return "orange"
         default:
             return "blue"
