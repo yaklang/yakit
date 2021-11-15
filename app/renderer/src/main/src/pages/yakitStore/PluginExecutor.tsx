@@ -52,6 +52,8 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
 
     const reset = () => {
         setResetFlag(!resetFlag)
+        setResults([])
+        setProgress([])
     }
 
     useEffect(() => {
@@ -170,7 +172,8 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 </Tabs.TabPane>
                 <Tabs.TabPane key={"console"} tab={"执行结果 / Results"}>
                     <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
-                    {PluginResultUI(loading, results, progress, script)}
+                    <PluginResultUI script={script} loading={loading} progress={progress} results={results}/>
+                    {/*{(loading, results, progress, script)}*/}
                 </Tabs.TabPane>
             </Tabs>
         </Card>

@@ -136,7 +136,7 @@ monaco.languages.setMonarchTokensProvider(YaklangMonacoSpec, {
 
             // delimiters and operators
             [/[{}()\[\]]/, '@brackets'],
-            [/[<>](?!@symbols)/, '@brackets'],
+            // [/[<>](?!@symbols)/, '@brackets'],
             [
                 /@symbols/,
                 {

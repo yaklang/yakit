@@ -9,6 +9,7 @@ import {PieGraph} from "../graph/PieGraph";
 import {ExecResultLog} from "./batch/ExecMessageViewer";
 import {LogLevelToCode} from "../../components/HTTPFlowTable";
 import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRiskViewer";
+import {CodeViewer} from "../../utils/codeViewer";
 
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
@@ -36,8 +37,8 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
         case "json":
             return <Space direction={"vertical"} style={{width: "100%"}}>
                 {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
-                <Card title={"JSON 结果输出"} size={"small"}>
-                    <ReactJson src={JSON.parse(props.data)}/>
+                <Card title={"JSON 结果输出"} size={"small"} >
+                    <ReactJson src={props.data} enableClipboard={false}/>
                 </Card>
             </Space>
         case "success":
