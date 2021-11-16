@@ -117,6 +117,10 @@ service Yak {
   // 资产管理
   rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
   rpc DeletePorts(DeletePortsRequest) returns (Empty);
+  rpc QueryHosts(QueryHostsRequest) returns (QueryHostsResponse);
+  rpc DeleteHosts(DeleteHostsRequest) returns (Empty);
+  rpc QueryDomains(QueryDomainsRequest) returns(QueryDomainsResponse);
+  rpc DeleteDomains(DeleteDomainsRequest)returns(Empty);
 
   // Yakit Store
   rpc UpdateFromYakitResource(UpdateFromYakitResourceRequest) returns (Empty);
@@ -143,6 +147,61 @@ service Yak {
   rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
   rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
   rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+}
+
+message QueryHostsRequest {
+  Paging Pagination = 1;
+
+  string DomainKeyword = 2;
+  string Network = 3;
+}
+
+message DeleteHostsRequest {
+  bool DeleteAll = 1;
+  string DomainKeyword = 2;
+  string Network = 3;
+  int64 ID = 4;
+}
+
+message QueryHostsResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Host Data = 3;
+}
+
+message QueryDomainsRequest {
+  Paging Pagination = 1;
+  string Network = 2;
+  string DomainKeyword = 3;
+  string Title = 4;
+}
+
+message DeleteDomainsRequest {
+  bool DeleteAll = 1;
+  string DomainKeyword = 2;
+  string Network = 3;
+  int64 ID = 4;
+}
+
+message QueryDomainsResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Domain Data = 3;
+}
+
+message Domain {
+  int64 ID = 1;
+  string DomainName = 2;
+  string IPAddr = 3;
+  string HTTPTitle = 4;
+}
+
+message Host {
+  int64 Id = 1;
+  string IP = 2;
+  int64 IPInteger = 3;
+  bool IsInPublicNet = 4;
+  repeated string Domains = 5;
 }
 
 message DeleteYakScriptExecResultRequest {
