@@ -1,8 +1,5 @@
 import {monaco} from "react-monaco-editor";
-import {YakMonacoFuzzHTTPSpec} from "./fuzzHTTP";
 import {yaklangCompletionHandlerProvider} from "./yakCompletionSchema";
-import {editor, languages, Position} from "monaco-editor";
-import {CancellationToken} from "typescript";
 
 export const YaklangMonacoSpec = "yak";
 

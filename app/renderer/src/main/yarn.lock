@@ -1669,6 +1669,13 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
+"@babel/runtime@^7.0.0", "@babel/runtime@^7.2.0":
+  version "7.16.3"
+  resolved "https://registry.npmmirror.com/@babel/runtime/download/@babel/runtime-7.16.3.tgz?cache=0&sync_timestamp=1636495247319&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2F%40babel%2Fruntime%2Fdownload%2F%40babel%2Fruntime-7.16.3.tgz#b86f0db02a04187a3c17caa77de69840165d42d5"
+  integrity sha512-WBwekcqacdY2e9AF/Q7WLFUWmdJGJTkbjqTjoMDgXkVZ3ZRUvOPsLb5KdwISoQVsbP+DQzVZW4Zhci0DvpbNTQ==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/runtime@^7.10.1", "@babel/runtime@^7.10.4", "@babel/runtime@^7.11.1", "@babel/runtime@^7.12.5", "@babel/runtime@^7.9.2":
   version "7.14.8"
   resolved "https://registry.nlark.com/@babel/runtime/download/@babel/runtime-7.14.8.tgz?cache=0&sync_timestamp=1626804296663&other_urls=https%3A%2F%2Fregistry.nlark.com%2F%40babel%2Fruntime%2Fdownload%2F%40babel%2Fruntime-7.14.8.tgz#7119a56f421018852694290b9f9148097391b446"
@@ -1680,13 +1687,6 @@
   version "7.12.18"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.12.18.tgz#af137bd7e7d9705a412b3caaf991fe6aaa97831b"
   integrity sha512-BogPQ7ciE6SYAUPtlm9tWbgI9+2AgqSam6QivMgXgAT+fKbgppaj4ZX15MHeLC1PVF5sNk70huBu20XxWOs8Cg==
-  dependencies:
-    regenerator-runtime "^0.13.4"
-
-"@babel/runtime@^7.2.0":
-  version "7.16.3"
-  resolved "https://registry.npmmirror.com/@babel/runtime/download/@babel/runtime-7.16.3.tgz?cache=0&sync_timestamp=1636495247319&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2F%40babel%2Fruntime%2Fdownload%2F%40babel%2Fruntime-7.16.3.tgz#b86f0db02a04187a3c17caa77de69840165d42d5"
-  integrity sha512-WBwekcqacdY2e9AF/Q7WLFUWmdJGJTkbjqTjoMDgXkVZ3ZRUvOPsLb5KdwISoQVsbP+DQzVZW4Zhci0DvpbNTQ==
   dependencies:
     regenerator-runtime "^0.13.4"
 
@@ -9012,6 +9012,16 @@ jsprim@^1.2.2:
     array-includes "^3.1.2"
     object.assign "^4.1.2"
 
+keycode-js@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.npmmirror.com/keycode-js/download/keycode-js-2.0.3.tgz#0ef559be057847aae6c520ce03577f4a12f7e257"
+  integrity sha1-DvVZvgV4R6rmxSDOA1d/ShL34lc=
+
+keycoder@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.npmmirror.com/keycoder/download/keycoder-1.1.1.tgz#09d7abee7e52b0171722f5bb238e8af885d2b16a"
+  integrity sha1-Cder7n5SsBcXIvW7I46K+IXSsWo=
+
 keyv@^3.0.0:
   version "3.1.0"
   resolved "https://registry.npm.taobao.org/keyv/download/keyv-3.1.0.tgz#ecc228486f69991e49e9476485a5be1e8fc5c4d9"
@@ -9562,6 +9572,11 @@ media-typer@0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
   integrity sha1-hxDXrwqmJvj/+hzgAWhUUmMlV0g=
+
+"memoize-one@>=3.1.1 <6":
+  version "5.2.1"
+  resolved "https://registry.npmmirror.com/memoize-one/download/memoize-one-5.2.1.tgz?cache=0&sync_timestamp=1634700101877&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fmemoize-one%2Fdownload%2Fmemoize-one-5.2.1.tgz#8337aa3c4335581839ec01c3d594090cebe8f00e"
+  integrity sha1-gzeqPEM1WBg57AHD1ZQJDOvo8A4=
 
 memoize-one@^4.0.0:
   version "4.1.0"
@@ -12584,6 +12599,17 @@ react-error-overlay@^6.0.9:
   resolved "https://registry.yarnpkg.com/react-error-overlay/-/react-error-overlay-6.0.9.tgz#3c743010c9359608c375ecd6bc76f35d93995b0a"
   integrity sha512-nQTTcUu+ATDbrSD1BZHr5kgSD4oF8OFjxun8uAaL8RwPBacGBNPf/yAuVVdx17N8XNzRDMrZ9XcKZHCjPW+9ew==
 
+react-hex-editor@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npmmirror.com/react-hex-editor/download/react-hex-editor-0.3.0.tgz#4133715faa9eb46ea3f373ec0c81a2e379fe6575"
+  integrity sha1-QTNxX6qetG6j83PsDIGi43n+ZXU=
+  dependencies:
+    classnames "^2.2.6"
+    keycode-js "^2.0.3"
+    keycoder "^1.1.1"
+    react-virtualized-auto-sizer "^1.0.2"
+    react-window "^1.8.5"
+
 react-highlight-words@^0.17.0:
   version "0.17.0"
   resolved "https://registry.nlark.com/react-highlight-words/download/react-highlight-words-0.17.0.tgz#e79a559a2de301548339d7216264d6cd0f1eed6f"
@@ -12766,6 +12792,19 @@ react-textarea-autosize@^8.3.2:
     "@babel/runtime" "^7.10.2"
     use-composed-ref "^1.0.0"
     use-latest "^1.0.0"
+
+react-virtualized-auto-sizer@^1.0.2:
+  version "1.0.6"
+  resolved "https://registry.nlark.com/react-virtualized-auto-sizer/download/react-virtualized-auto-sizer-1.0.6.tgz#66c5b1c9278064c5ef1699ed40a29c11518f97ca"
+  integrity sha1-ZsWxySeAZMXvFpntQKKcEVGPl8o=
+
+react-window@^1.8.5:
+  version "1.8.6"
+  resolved "https://registry.npm.taobao.org/react-window/download/react-window-1.8.6.tgz#d011950ac643a994118632665aad0c6382e2a112"
+  integrity sha1-0BGVCsZDqZQRhjJmWq0MY4LioRI=
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    memoize-one ">=3.1.1 <6"
 
 react@^17.0.2:
   version "17.0.2"

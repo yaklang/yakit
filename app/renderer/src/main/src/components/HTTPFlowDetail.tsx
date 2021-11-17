@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Card, Col, Collapse, Descriptions, PageHeader, Row, Space, Spin, Tabs, Tag, Typography} from "antd";
 import {HTTPFlow} from "./HTTPFlowTable";
-import {YakEditor} from "../utils/editors";
+import {YakEditor, YakHTTPPacketViewer} from "../utils/editors";
 import {failed} from "../utils/notification";
 import {FuzzableParamList} from "./FuzzableParamList";
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
@@ -232,21 +232,23 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 {/*    mode={"http"} height={350} width={"100%"}*/}
                 {/*/>*/}
                 <div style={{height: 350}}>
-                    <YakEditor readOnly={true} type={"fuzz-http"}
-                               value={new Buffer(flow.Request).toString("utf-8")}/>
+                    <YakHTTPPacketViewer value={flow?.Request || []}/>
+                    {/*<YakEditor readOnly={true} type={"http"}*/}
+                    {/*           value={new Buffer(flow.Request).toString("utf-8")}/>*/}
                 </div>
             </Card>
         </Col>
         <Col span={12}>
             <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                 <div style={{height: 350}}>
+                    <YakHTTPPacketViewer isResponse value={flow?.Response || []}/>
                     {/*<CodeViewer*/}
                     {/*    value={new Buffer(flow?.Response).toString("utf-8")}*/}
                     {/*    mode={"http"} height={350} width={"100%"}*/}
                     {/*/>*/}
-                    <YakEditor readOnly={true} type={"fuzz-http"}
-                               value={new Buffer(flow.Response).toString("utf-8")}
-                    />
+                    {/*<YakEditor readOnly={true} type={"html"}*/}
+                    {/*           value={new Buffer(flow.Response).toString("utf-8")}*/}
+                    {/*/>*/}
                 </div>
             </Card>
         </Col>

@@ -1,14 +1,13 @@
 import React, {useEffect, useState} from "react";
 import MonacoEditor, {monaco} from 'react-monaco-editor';
-import {Dropdown, Menu} from "antd";
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
-import {YakMonacoFuzzHTTPSpec, YakMonacoFuzzHTTPTheme} from "./monacoSpec/fuzzHTTP";
-
+import HexEditor from "react-hex-editor";
 // yak register
 import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
-import {randomString} from "./randomUtil";
+import "./monacoSpec/html"
+import {Col, Row} from "antd";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
@@ -21,7 +20,7 @@ export interface EditorProps {
     setValue?: (e: string) => any
     readOnly?: boolean
     editorDidMount?: (editor: IMonacoEditor) => any
-    type?: "fuzz-http" | "yak" | string
+    type?: "html" | "http" | "yak" | string
     theme?: string
 
     noMiniMap?: boolean,
@@ -29,6 +28,37 @@ export interface EditorProps {
 
     actions?: IMonacoActionDescriptor[]
     triggerId?: any
+}
+
+export interface YakHTTPPacketViewer {
+    value: Uint8Array
+    isRequest?: boolean
+    isResponse?: boolean
+    raw?: EditorProps
+}
+
+export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
+    return <Row>
+        <Col span={12}>
+            <div style={{height: 350}}>
+                <YakEditor
+                    {...props.raw}
+                    type={props.isRequest ? "http" : (props.isResponse ? "html" : "http")}
+                    readOnly={true} value={new Buffer(props.value).toString("utf-8")}
+                />
+            </div>
+        </Col>
+        <Col span={12}>
+            <HexEditor
+                showAscii={true}
+                columns={0x10}
+                data={props.value}
+                // nonce={nonce}
+                // onSetValue={handleSetValue}
+                // theme={{hexEditor: oneDarkPro}}
+            />
+        </Col>
+    </Row>
 }
 
 export const YakEditor: React.FC<EditorProps> = (props) => {
@@ -87,19 +117,21 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                 value={props.bytes ? new Buffer((props.valueBytes || []) as Uint8Array).toString() : props.value}
                 onChange={props.setValue}
                 width={"100%"}
-                language={props.type || YakMonacoFuzzHTTPSpec}
+                language={props.type}
                 editorDidMount={(editor: IMonacoEditor) => {
                     setEditor(editor)
                     if (props.editorDidMount) props.editorDidMount(editor);
                 }}
                 options={{
                     readOnly: props.readOnly, scrollBeyondLastLine: false,
-                    fontWeight: "500", fontSize: 14, showFoldingControls: "always",
+                    fontWeight: "500", fontSize: 12, showFoldingControls: "always",
                     showUnused: true, wordWrap: "on", renderLineHighlight: "line",
-                    lineNumbers: props.noLineNumber ? "off" : undefined,
+                    lineNumbers: props.noLineNumber ? "off" : "on",
                     minimap: props.noMiniMap ? {enabled: false} : undefined,
+                    lineNumbersMinChars: 4,
                 }}
             />
         </>}
     </>
 };
+

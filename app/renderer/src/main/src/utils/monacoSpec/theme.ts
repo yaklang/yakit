@@ -1,5 +1,4 @@
 import {monaco} from "react-monaco-editor";
-import {YakMonacoFuzzHTTPTheme} from "./fuzzHTTP";
 
 // https://github.com/brijeshb42/monaco-themes/tree/master/themes
 monaco.editor.defineTheme("github", {
@@ -1338,6 +1337,38 @@ monaco.editor.defineTheme("kurior", {
             "foreground": "949494e8",
             "background": "dcdcdc8f",
             "token": "comment"
+        },
+        {
+            "foreground": "#d22800",
+            "background": "#ff2728",
+            "token": "http.header.danger", fontStyle: "bold",
+        },
+        {"token": "http.method", fontStyle: "bold", foreground: "#00099a"},
+        {"token": "http.path", fontStyle: "bold", foreground: "#01949a"},
+        {"token": "http.get.query.params", fontStyle: "bold", foreground: "#930d97"},
+        {
+            "foreground": "#078500",
+            "token": "http.cookie.name", fontStyle: "bold",
+        },
+        {
+            "foreground": "#b5890a",
+            "token": "http.header.mime", fontStyle: "bold",
+        },
+        {
+            "foreground": "#808184",
+            "token": "http.cookie.value",
+        },
+        {
+            "foreground": "#808184",
+            "token": "string.value", fontStyle: "bold",
+        },
+        {
+            "foreground": "#0045e8",
+            "token": "http.url", fontStyle: "underline",
+        },
+        {
+            "foreground": "#0045e8",
+            "token": "http.urlencoded", fontStyle: "",
         },
         {
             "foreground": "a54776",
