@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Card, Col, Collapse, Descriptions, PageHeader, Row, Space, Spin, Tabs, Tag, Typography} from "antd";
 import {HTTPFlow} from "./HTTPFlowTable";
-import {YakEditor, YakHTTPPacketViewer} from "../utils/editors";
+import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors";
 import {failed} from "../utils/notification";
 import {FuzzableParamList} from "./FuzzableParamList";
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
@@ -226,31 +226,27 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
     return <Row gutter={8}>
         <Col span={12}>
-            <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
-                {/*<CodeViewer*/}
-                {/*    value={new Buffer(flow.Request).toString("utf-8")}*/}
-                {/*    mode={"http"} height={350} width={"100%"}*/}
-                {/*/>*/}
-                <div style={{height: 350}}>
-                    <YakHTTPPacketViewer value={flow?.Request || []}/>
-                    {/*<YakEditor readOnly={true} type={"http"}*/}
-                    {/*           value={new Buffer(flow.Request).toString("utf-8")}/>*/}
-                </div>
-            </Card>
+            {/*<CodeViewer*/}
+            {/*    value={new Buffer(flow.Request).toString("utf-8")}*/}
+            {/*    mode={"http"} height={350} width={"100%"}*/}
+            {/*/>*/}
+            <HTTPPacketEditor originValue={flow.Request} readOnly={true}/>
+            {/*<div style={{height: 350}}>*/}
+            {/*    <YakHTTPPacketViewer value={flow?.Request || []}/>*/}
+            {/*    /!*<YakEditor readOnly={true} type={"http"}*!/*/}
+            {/*    /!*           value={new Buffer(flow.Request).toString("utf-8")}/>*!/*/}
+            {/*</div>*/}
         </Col>
         <Col span={12}>
-            <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
-                <div style={{height: 350}}>
-                    <YakHTTPPacketViewer isResponse value={flow?.Response || []}/>
-                    {/*<CodeViewer*/}
-                    {/*    value={new Buffer(flow?.Response).toString("utf-8")}*/}
-                    {/*    mode={"http"} height={350} width={"100%"}*/}
-                    {/*/>*/}
-                    {/*<YakEditor readOnly={true} type={"html"}*/}
-                    {/*           value={new Buffer(flow.Response).toString("utf-8")}*/}
-                    {/*/>*/}
-                </div>
-            </Card>
+            <HTTPPacketEditor originValue={flow.Response} readOnly={true}/>
+            {/*<YakHTTPPacketViewer isResponse value={flow?.Response || []}/>*/}
+            {/*<CodeViewer*/}
+            {/*    value={new Buffer(flow?.Response).toString("utf-8")}*/}
+            {/*    mode={"http"} height={350} width={"100%"}*/}
+            {/*/>*/}
+            {/*<YakEditor readOnly={true} type={"html"}*/}
+            {/*           value={new Buffer(flow.Response).toString("utf-8")}*/}
+            {/*/>*/}
         </Col>
     </Row>
 

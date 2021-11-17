@@ -7,7 +7,9 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
 import "./monacoSpec/html"
-import {Col, Row} from "antd";
+import {Card, Col, Row, Space} from "antd";
+import {SelectOne} from "./inputUtil";
+import oneDarkPro from 'react-hex-editor/themes/oneDarkPro';
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
@@ -38,27 +40,28 @@ export interface YakHTTPPacketViewer {
 }
 
 export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
-    return <Row>
-        <Col span={12}>
-            <div style={{height: 350}}>
-                <YakEditor
-                    {...props.raw}
-                    type={props.isRequest ? "http" : (props.isResponse ? "html" : "http")}
-                    readOnly={true} value={new Buffer(props.value).toString("utf-8")}
-                />
-            </div>
-        </Col>
-        <Col span={12}>
-            <HexEditor
-                showAscii={true}
-                columns={0x10}
-                data={props.value}
-                // nonce={nonce}
-                // onSetValue={handleSetValue}
-                // theme={{hexEditor: oneDarkPro}}
-            />
-        </Col>
-    </Row>
+    return <YakEditor
+        {...props.raw}
+        type={props.isRequest ? "http" : (props.isResponse ? "html" : "http")}
+        readOnly={true} value={new Buffer(props.value).toString("utf-8")}
+    />
+    // return <Row>
+    //     <Col span={12}>
+    //         <div style={{height: 350}}>
+    //
+    //         </div>
+    //     </Col>
+    //     <Col span={12}>
+    //         <HexEditor
+    //             showAscii={true}
+    //             columns={0x10}
+    //             data={props.value}
+    //             // nonce={nonce}
+    //             // onSetValue={handleSetValue}
+    //             // theme={{hexEditor: oneDarkPro}}
+    //         />
+    //     </Col>
+    // </Row>
 }
 
 export const YakEditor: React.FC<EditorProps> = (props) => {
@@ -135,3 +138,70 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     </>
 };
 
+export interface HTTPPacketEditorProp {
+    readOnly?: boolean
+    originValue: Uint8Array
+    onChange?: (i: Uint8Array) => any
+}
+
+export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
+    const isResponse = (new Buffer(props.originValue.subarray(0, 5)).toString("utf8")).startsWith("HTTP/")
+    const [mode, setMode] = useState("text");
+    const [strValue, setStrValue] = useState("");
+    const [hexValue, setHexValue] = useState<Uint8Array>(new Buffer([]))
+
+    /*如何实现 monaco editor 高亮？*/
+    // https://microsoft.github.io/monaco-editor/playground.html#interacting-with-the-editor-line-and-inline-decorations
+
+    // hex editor
+    const [nonce, setNonce] = useState(0);
+    // The callback facilitates updates to the source data.
+    const handleSetValue = React.useCallback((offset, value) => {
+        hexValue[offset] = value;
+        setNonce(v => (v + 1));
+    }, [hexValue]);
+
+    useEffect(() => {
+        setStrValue(new Buffer(props.originValue).toString('utf8'))
+        setHexValue(new Buffer(props.originValue))
+    }, [props.originValue])
+
+    useEffect(() => {
+        props.onChange && props.onChange(Buffer.from(strValue))
+    }, [strValue])
+
+    useEffect(() => {
+        props.onChange && props.onChange(hexValue)
+    }, [hexValue])
+
+    return <Card
+        size={"small"}
+        title={<Space>
+            <span>{isResponse ? "HTTP Response" : "HTTP Request"}</span>
+            <SelectOne
+                label={" "} colon={false} value={mode} setValue={setMode}
+                data={[
+                    {text: "TEXT", value: "text"},
+                    {text: "HEX", value: "hex"},
+                ]} size={"small"} formItemStyle={{marginBottom: 0}}/>
+        </Space>}
+        bodyStyle={{padding: 0, height: 350}}
+    >
+        {mode === "text" && <YakEditor
+            type={isResponse ? "html" : "http"}
+            value={strValue} readOnly={props.readOnly}
+            setValue={setStrValue}
+        />}
+
+        {mode === "hex" && <HexEditor
+            showAscii={true}
+            columns={0x10}
+            data={hexValue}
+            showRowLabels={true}
+            showColumnLabels={true}
+            nonce={nonce}
+            onSetValue={props.readOnly ? undefined : handleSetValue}
+            // theme={{hexEditor: oneDarkPro}}
+        />}
+    </Card>
+};
