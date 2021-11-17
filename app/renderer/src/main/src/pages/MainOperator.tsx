@@ -328,14 +328,13 @@ export const Main: React.FC<MainProp> = (props) => {
                 }}>
                     <Layout style={{height: "100%"}}>
                         {!hideMenu && <Sider
-                            style={{backgroundColor: "#fff"}}
+                            style={{backgroundColor: "#fff", overflow: "auto"}}
                             collapsed={collapsed}
                             // onCollapse={r => {
                             //     setCollapsed(r)
                             // }}
                         >
                             <Spin spinning={loading}>
-
                                 <Space direction={"vertical"} style={{
                                     width: "100%",
                                 }}>

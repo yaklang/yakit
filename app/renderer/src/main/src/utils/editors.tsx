@@ -8,6 +8,7 @@ import {YakMonacoFuzzHTTPSpec, YakMonacoFuzzHTTPTheme} from "./monacoSpec/fuzzHT
 import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
+import {randomString} from "./randomUtil";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
@@ -82,7 +83,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         {!reload && <>
             {/*@ts-ignore*/}
             <MonacoEditor
-                theme={props.theme || "idleFingers"}
+                theme={props.theme || "kurior"}
                 value={props.bytes ? new Buffer((props.valueBytes || []) as Uint8Array).toString() : props.value}
                 onChange={props.setValue}
                 width={"100%"}

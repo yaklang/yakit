@@ -6,6 +6,7 @@ import {failed} from "../utils/notification";
 import {FuzzableParamList} from "./FuzzableParamList";
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
 import {randomString} from "../utils/randomUtil";
+import {CodeViewer} from "../utils/codeViewer";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -14,6 +15,7 @@ export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any;
 export interface HTTPFlowDetailProp {
     hash: string
     onSendToFuzzer?: SendToFuzzerFunc
+    noHeader?: boolean
 }
 
 const {Text} = Typography;
@@ -82,7 +84,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     return <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
         {flow ? <>
-            <PageHeader title={`请求详情`} subTitle={props.hash}/>
+            {props.noHeader ? undefined : <PageHeader title={`请求详情`} subTitle={props.hash}/>}
             <Space direction={"vertical"} style={{width: "100%"}}>
                 <Descriptions column={4} bordered={true} size={"small"}>
                     <Descriptions.Item span={1} label={"HTTP 方法"}><Tag color={"geekblue"}><Text
@@ -121,7 +123,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     <Col span={12}>
                         <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                             <div style={{height: 350}}>
-                                <YakEditor readOnly={true}
+                                <YakEditor readOnly={true} type={"fuzz-http"}//theme={"fuzz-http-theme"}
                                            value={new Buffer(flow.Request).toString("utf-8")}/>
                             </div>
                         </Card>
@@ -129,7 +131,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     <Col span={12}>
                         <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                             <div style={{height: 350}}>
-                                <YakEditor readOnly={true}
+                                <YakEditor readOnly={true} type={"fuzz-http"}// theme={"fuzz-http-theme"}
                                            value={new Buffer(flow.Response).toString("utf-8")}
                                 />
                             </div>
@@ -191,3 +193,63 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         </> : ""}
     </Spin>
 };
+
+export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
+    const [flow, setFlow] = useState<HTTPFlow>();
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!props.hash) {
+            return
+        }
+
+        ipcRenderer.on(props.hash, (e, data: HTTPFlow) => {
+            setFlow(data)
+            setTimeout(() => setLoading(false), 300)
+        })
+        ipcRenderer.on(`ERROR:${props.hash}`, (e, details) => {
+            failed(`查询该请求失败[${props.hash}]: ` + details)
+        })
+
+        setLoading(true)
+        ipcRenderer.invoke("get-http-flow", props.hash)
+
+        return () => {
+            ipcRenderer.removeAllListeners(props.hash)
+            ipcRenderer.removeAllListeners(`ERROR:${props.hash}`)
+        }
+    }, [props.hash])
+
+    if (!flow) {
+        return <></>
+    }
+
+    return <Row gutter={8}>
+        <Col span={12}>
+            <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
+                {/*<CodeViewer*/}
+                {/*    value={new Buffer(flow.Request).toString("utf-8")}*/}
+                {/*    mode={"http"} height={350} width={"100%"}*/}
+                {/*/>*/}
+                <div style={{height: 350}}>
+                    <YakEditor readOnly={true} type={"fuzz-http"}
+                               value={new Buffer(flow.Request).toString("utf-8")}/>
+                </div>
+            </Card>
+        </Col>
+        <Col span={12}>
+            <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
+                <div style={{height: 350}}>
+                    {/*<CodeViewer*/}
+                    {/*    value={new Buffer(flow?.Response).toString("utf-8")}*/}
+                    {/*    mode={"http"} height={350} width={"100%"}*/}
+                    {/*/>*/}
+                    <YakEditor readOnly={true} type={"fuzz-http"}
+                               value={new Buffer(flow.Response).toString("utf-8")}
+                    />
+                </div>
+            </Card>
+        </Col>
+    </Row>
+
+}

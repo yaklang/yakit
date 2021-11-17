@@ -5,7 +5,6 @@ import {editor, languages, Position} from "monaco-editor";
 import {CancellationToken} from "typescript";
 
 export const YaklangMonacoSpec = "yak";
-export const YaklangMonacoTheme = "go";
 
 monaco.languages.register({
     id: YaklangMonacoSpec,

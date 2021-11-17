@@ -13,6 +13,7 @@ import {CloseOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons";
 import {info} from "../../utils/notification";
 import {WebsiteTreeViewer} from "../yakitStore/viewers/WebsiteTree";
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable";
+import {HTTPHistory} from "../../components/HTTPHistory";
 
 export interface HTTPHackerProp {
 
@@ -87,8 +88,8 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         return -1
     }
 
-    return <div style={{margin: 0}}>
-        <Spin spinning={loading}>
+    return <div style={{margin: 0, height: "100%"}}>
+        <Spin spinning={loading} style={{height: "100%"}}>
             <Tabs
                 activeKey={activeTab}
                 onChange={setActiveTag}
@@ -114,8 +115,9 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                     <MITMPage onSendToWebFuzzer={sendToFuzzer}/>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false}>
-                    <HTTPFlowTable
-                        onSendToWebFuzzer={sendToFuzzer}/>
+                    <HTTPHistory/>
+                    {/*<HTTPFlowTable*/}
+                    {/*    onSendToWebFuzzer={sendToFuzzer}/>*/}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
                     <YakScriptExecResultTable />
