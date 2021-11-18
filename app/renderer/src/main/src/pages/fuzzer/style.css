@@ -1,0 +1,8 @@
+.monacoInlineHighlight {
+    color: #001587 !important;
+    background-color: rgba(255, 57, 0, 0.47);
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: bold;
+    font-style: oblique;
+}

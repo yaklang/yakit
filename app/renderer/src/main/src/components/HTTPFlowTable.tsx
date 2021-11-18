@@ -265,7 +265,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     });
     const [autoReload, setAutoReload] = useState(true);
     const [total, setTotal] = useState<number>(0);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState<HTTPFlow>();
 
     const update = (page?: number, limit?: number, order?: string, orderBy?: string, sourceType?: string, noLoading?: boolean) => {
@@ -277,6 +277,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         };
         if (!noLoading) {
             setLoading(true)
+            setAutoReload(false)
         }
         yakQueryHTTPFlow({
             SourceType: sourceType, ...params,
@@ -393,7 +394,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             simple={true} size={"small"}
                             pageSize={pagination?.Limit || 10}
                             total={total} showTotal={e => <Tag>{e} Records</Tag>}
-                            onChange={update}
+                            onChange={update} defaultCurrent={pagination?.Page || 1}
                         />
                     </Col>
                 </Row>

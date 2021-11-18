@@ -20,7 +20,7 @@ import {
     Tooltip,
     Typography
 } from "antd";
-import {IMonacoEditor, YakEditor} from "../../utils/editors";
+import {HTTPPacketEditor, IMonacoEditor, YakEditor} from "../../utils/editors";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {fuzzerTemplates} from "./fuzzerTemplates";
@@ -381,10 +381,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     >
                         <Spin spinning={loading} style={{minHeight: 500}}>
                             <div style={{height: 580}}>
-                                <YakEditor
-                                    value={request} setValue={setRequest}
-                                    editorDidMount={setReqEditor}
-                                />
+                                <HTTPPacketEditor originValue={new Buffer(request)}>
+
+                                </HTTPPacketEditor>
+                                {/*<YakEditor*/}
+                                {/*    value={request} setValue={setRequest}*/}
+                                {/*    editorDidMount={setReqEditor}*/}
+                                {/*/>*/}
                             </div>
                         </Spin>
                     </Card>

@@ -7,9 +7,15 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
 import "./monacoSpec/html"
-import {Card, Col, Row, Space} from "antd";
+import {Card, Col, Input, Row, Space} from "antd";
 import {SelectOne} from "./inputUtil";
 import oneDarkPro from 'react-hex-editor/themes/oneDarkPro';
+import {editor} from "monaco-editor/esm/vs/editor/editor.api";
+import {
+    monacoEditorClear,
+    monacoEditorHighlight,
+    monacoEditorRemoveAllHighlight
+} from "../pages/fuzzer/fuzzerTemplates";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
@@ -149,6 +155,10 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     const [mode, setMode] = useState("text");
     const [strValue, setStrValue] = useState("");
     const [hexValue, setHexValue] = useState<Uint8Array>(new Buffer([]))
+    const [searchValue, setSearchValue] = useState("");
+    const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
+
+    const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
 
     /*如何实现 monaco editor 高亮？*/
     // https://microsoft.github.io/monaco-editor/playground.html#interacting-with-the-editor-line-and-inline-decorations
@@ -162,9 +172,12 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     }, [hexValue]);
 
     useEffect(() => {
+        if (monacoEditor) {
+            setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
+        }
         setStrValue(new Buffer(props.originValue).toString('utf8'))
         setHexValue(new Buffer(props.originValue))
-    }, [props.originValue])
+    }, [props.originValue, monacoEditor])
 
     useEffect(() => {
         props.onChange && props.onChange(Buffer.from(strValue))
@@ -183,7 +196,34 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                 data={[
                     {text: "TEXT", value: "text"},
                     {text: "HEX", value: "hex"},
-                ]} size={"small"} formItemStyle={{marginBottom: 0}}/>
+                ]} size={"small"} formItemStyle={{marginBottom: 0}}
+            />
+            {mode === "text" && <Input.Search
+                size={"small"} value={searchValue}
+                onChange={e => {
+                    setSearchValue(e.target.value)
+                }} enterButton={true}
+                onSearch={e => {
+                    if (!monacoEditor) {
+                        return
+                    }
+                    // @ts-ignore
+                    let range = monacoEditor?.getModel().findMatches(searchValue, false, false, false, null, false)
+                    if (range && range.length > 0) {
+                        const decs = monacoEditor.deltaDecorations(highlightDecorations, range.map(i => {
+                            return {
+                                id: `highlight[${searchValue}]`,
+                                range: i.range,
+                                options: {
+                                    isWholeLine: false,
+                                    inlineClassName: 'monacoInlineHighlight'
+                                }
+                            } as any
+                        }))
+                        setHighlightDecorations(decs)
+                    }
+                }}
+            />}
         </Space>}
         bodyStyle={{padding: 0, height: 350}}
     >
@@ -191,6 +231,9 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
             type={isResponse ? "html" : "http"}
             value={strValue} readOnly={props.readOnly}
             setValue={setStrValue}
+            editorDidMount={editor => {
+                setMonacoEditor(editor)
+            }}
         />}
 
         {mode === "hex" && <HexEditor

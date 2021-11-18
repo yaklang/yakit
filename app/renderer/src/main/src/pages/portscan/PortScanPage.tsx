@@ -286,12 +286,12 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                             </Row>
                             <Spin spinning={resettingData}>
                                 <Row style={{marginTop: 6}} gutter={6}>
-                                    <Col span={16}>
+                                    <Col span={24}>
                                         <OpenPortTableViewer data={openPorts}/>
                                     </Col>
-                                    <Col span={8}>
-                                        <ClosedPortTableViewer data={closedPorts}/>
-                                    </Col>
+                                    {/*<Col span={8}>*/}
+                                    {/*    <ClosedPortTableViewer data={closedPorts}/>*/}
+                                    {/*</Col>*/}
                                 </Row>
                             </Spin>
                         </div>

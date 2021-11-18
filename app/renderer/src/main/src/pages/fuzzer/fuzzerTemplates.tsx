@@ -4,6 +4,8 @@ import {InputInteger, InputItem} from "../../utils/inputUtil";
 import {RandInt, RandStrWithLen, RandStrWithMax, RandStrWIthRepeat} from "./templates/Rand";
 import {FuzzWithRange, RangeChar} from "./templates/Range";
 import {EncodeTag, SingleTag} from "./templates/SingleTag";
+import {editor} from "monaco-editor";
+import "./style.css"
 
 export const fuzzerTemplates = [
     {
@@ -52,7 +54,43 @@ export const monacoEditorClear = (editor?: IMonacoEditor) => {
             editor.trigger("keyboard", "type", {text: "\b"})
         }
     }
+};
+
+const highlightRanges: any[] = [];
+
+export const monacoEditorRemoveAllHighlight = (editor?: IMonacoEditor) => {
+    if (editor && highlightRanges.length > 0) {
+        editor.deltaDecorations([], highlightRanges.map(i => {
+            console.info(i)
+            return {range: i, options: {inlineClassName: undefined}} as any
+        }))
+    }
 }
+
+export const monacoEditorHighlight = (keywords: string, editor?: IMonacoEditor) => {
+    if (editor && keywords.length > 0) {
+        let range = editor.getModel()?.findMatches(keywords, false, false, false, null, false)
+        if (range && range.length > 0) {
+            monacoEditorRemoveAllHighlight(editor)
+            editor.deltaDecorations([], range.map(i => {
+                highlightRanges.push(i.range)
+                return {
+                    id: `highlight[${keywords}]`,
+                    range: i.range,
+                    options: {
+                        isWholeLine: false,
+                        inlineClassName: 'monacoInlineHighlight'
+                    }
+                } as any
+            }))
+        } else {
+            monacoEditorRemoveAllHighlight(editor)
+        }
+    } else {
+        monacoEditorRemoveAllHighlight(editor)
+    }
+};
+
 
 export const fuzzOperators: FuzzOperatorItem[] = [
     {
