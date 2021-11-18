@@ -3,11 +3,42 @@ import {Button, Divider, notification, PageHeader, Popover, Space, Spin} from "a
 import {YakEditor} from "../../utils/editors";
 import {failed, success} from "../../utils/notification";
 import {CopyToClipboard} from 'react-copy-to-clipboard';
+import {showModal} from "../../utils/showModal";
+import {divider} from "@uiw/react-md-editor";
+
+const {ipcRenderer} = window.require("electron");
+
 
 export interface CodecType {
     key?: string
     verbose: string
     subTypes?: CodecType[]
+}
+
+export const execCodec = (typeStr: string, text?: string) => {
+    if (text === "") {
+        failed("空文本无法执行编码解码")
+        return
+    }
+
+    ipcRenderer.invoke("Codec", {Text: text, Type: typeStr}).then((result: { Result: string }) => {
+        showModal({
+            title: "编码结果",
+            width: "50%",
+            content: <div style={{width: "100%"}}>
+                <Space style={{width: "100%"}} direction={"vertical"}>
+                    <div style={{height: 300}}>
+                        <YakEditor
+                            fontSize={20}
+                            readOnly={true} value={result.Result}
+                        />
+                    </div>
+                </Space>
+            </div>
+        })
+    }).catch(e => {
+
+    })
 }
 
 const CodecItems: CodecType[] = [
@@ -72,7 +103,6 @@ export interface CodecPageProp {
 
 }
 
-const {ipcRenderer} = window.require("electron");
 
 export const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [codeType, setCodeType] = useState<string>();

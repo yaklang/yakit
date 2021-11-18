@@ -7,8 +7,11 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
 import "./monacoSpec/html"
-import {Card, Input, Space} from "antd";
-import {SelectOne} from "./inputUtil";
+import {Button, Card, Form, Input, Popover, Space} from "antd";
+import {InputItem, SelectOne, SwitchItem} from "./inputUtil";
+import {execCodec} from "../pages/codec/CodecPage";
+import {FullscreenOutlined, SettingOutlined} from "@ant-design/icons";
+import {showDrawer} from "./showModal";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
@@ -23,6 +26,7 @@ export interface EditorProps {
     editorDidMount?: (editor: IMonacoEditor) => any
     type?: "html" | "http" | "yak" | string
     theme?: string
+    fontSize?: number
 
     noMiniMap?: boolean,
     noLineNumber?: boolean
@@ -126,7 +130,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                 }}
                 options={{
                     readOnly: props.readOnly, scrollBeyondLastLine: false,
-                    fontWeight: "500", fontSize: 12, showFoldingControls: "always",
+                    fontWeight: "500", fontSize: props.fontSize || 12, showFoldingControls: "always",
                     showUnused: true, wordWrap: "on", renderLineHighlight: "line",
                     lineNumbers: props.noLineNumber ? "off" : "on",
                     minimap: props.noMiniMap ? {enabled: false} : undefined,
@@ -141,6 +145,7 @@ export interface HTTPPacketEditorProp {
     readOnly?: boolean
     originValue: Uint8Array
     onChange?: (i: Uint8Array) => any
+    disableFullscreen?: boolean
 }
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
@@ -150,6 +155,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     const [hexValue, setHexValue] = useState<Uint8Array>(new Buffer([]))
     const [searchValue, setSearchValue] = useState("");
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
+    const [fontSize, setFontSize] = useState(12);
 
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
 
@@ -182,6 +188,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
 
     return <Card
         size={"small"}
+        style={{height: "100%"}}
         title={<Space>
             <span>{isResponse ? "HTTP Response" : "HTTP Request"}</span>
             <SelectOne
@@ -218,26 +225,133 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                 }}
             />}
         </Space>}
-        bodyStyle={{padding: 0, height: 350}}
+        bodyStyle={{padding: 0}}
+        extra={[
+            !props.disableFullscreen && <Button
+                size={"small"}
+                type={"link"}
+                icon={<FullscreenOutlined/>}
+                onClick={() => {
+                    showDrawer({
+                        title: "全屏", width: "100%",
+                        content: <div style={{height: "100%", backgroundColor: "#999"}}>
+                            <HTTPPacketEditor {...props} disableFullscreen={true}/>
+                        </div>
+                    })
+                }}
+            />,
+            <Popover
+                title={"配置编辑器"}
+                content={<>
+                    <Form
+                        onSubmitCapture={e => {
+                            e.preventDefault()
+                        }} size={"small"}
+                        layout={"horizontal"}
+                        wrapperCol={{span: 16}}
+                        labelCol={{span: 8}}
+                    >
+                        <SelectOne
+                            formItemStyle={{marginBottom: 4}}
+                            label={"字号"}
+                            data={[
+                                {text: "小", value: 12},
+                                {text: "中", value: 16},
+                                {text: "大", value: 20},
+                            ]} value={fontSize} setValue={setFontSize}
+                        />
+                    </Form>
+                </>}
+            >
+                <Button
+                    icon={<SettingOutlined/>}
+                    type={"link"} size={"small"}
+                />
+            </Popover>
+        ]}
     >
-        {mode === "text" && <YakEditor
-            type={isResponse ? "html" : "http"}
-            value={strValue} readOnly={props.readOnly}
-            setValue={setStrValue}
-            editorDidMount={editor => {
-                setMonacoEditor(editor)
-            }}
-        />}
+        <div style={{height: "100%", backgroundColor: "#999"}}>
+            <div style={{height: 400}}>
+                {mode === "text" && <YakEditor
+                    type={isResponse ? "html" : "http"}
+                    value={strValue} readOnly={props.readOnly}
+                    setValue={setStrValue}
+                    fontSize={fontSize}
+                    actions={[
+                        {
+                            id: "http-chunk-encode",
+                            label: "HTTP Chunk 编码",
+                            run: function (editor, args) {
+                                const selection = editor.getSelection();
+                                if (!selection) {
+                                    alert("CHUNKED")
+                                }
+                            },
+                            contextMenuGroupId: "encodeNdecode",
+                        },
+                        {
+                            id: "base64-encode",
+                            label: "Base64 编码",
+                            run: function (editor, args) {
+                                if (!editor) {
+                                    return
+                                }
+                                const selection = editor.getSelection();
+                                if (!selection) {
+                                    return
+                                }
 
-        {mode === "hex" && <HexEditor
-            showAscii={true}
-            columns={0x10}
-            data={hexValue}
-            showRowLabels={true}
-            showColumnLabels={true}
-            nonce={nonce}
-            onSetValue={props.readOnly ? undefined : handleSetValue}
-            // theme={{hexEditor: oneDarkPro}}
-        />}
+                                try {
+                                    const text = editor.getModel()?.getValueInRange(selection);
+                                    execCodec("base64", text)
+                                } catch (e) {
+                                    console.info(e)
+                                }
+
+                            },
+                            contextMenuGroupId: "encodeNdecode",
+                        },
+                        {
+                            id: "base64-decode",
+                            label: "Base64 解码",
+                            run: function (editor, args) {
+                                const selection = editor.getSelection();
+                                if (selection) {
+                                    const text = editor.getModel()?.getValueInRange(selection);
+                                    execCodec("base64-decode", text || "")
+                                }
+                            },
+                            contextMenuGroupId: "encodeNdecode",
+                        },
+                        {
+                            id: "url-decode",
+                            label: "URL 解码",
+                            run: function (editor, args) {
+                                const selection = editor.getSelection();
+                                if (!selection) {
+
+                                }
+                                alert("CHUNKED")
+                            },
+                            contextMenuGroupId: "encodeNdecode",
+                        },
+                    ]}
+                    editorDidMount={editor => {
+                        setMonacoEditor(editor)
+                    }}
+                />}
+
+                {mode === "hex" && <HexEditor
+                    showAscii={true}
+                    columns={0x10}
+                    data={hexValue}
+                    showRowLabels={true}
+                    showColumnLabels={true}
+                    nonce={nonce}
+                    onSetValue={props.readOnly ? undefined : handleSetValue}
+                    // theme={{hexEditor: oneDarkPro}}
+                />}
+            </div>
+        </div>
     </Card>
 };

@@ -123,7 +123,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     <Col span={12}>
                         <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                             <div style={{height: 350}}>
-                                <YakEditor readOnly={true} type={"fuzz-http"}//theme={"fuzz-http-theme"}
+                                <YakEditor readOnly={true} type={"http"}//theme={"fuzz-http-theme"}
                                            value={new Buffer(flow.Request).toString("utf-8")}/>
                             </div>
                         </Card>
@@ -131,7 +131,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     <Col span={12}>
                         <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                             <div style={{height: 350}}>
-                                <YakEditor readOnly={true} type={"fuzz-http"}// theme={"fuzz-http-theme"}
+                                <YakEditor readOnly={true} type={"http"}// theme={"fuzz-http-theme"}
                                            value={new Buffer(flow.Response).toString("utf-8")}
                                 />
                             </div>

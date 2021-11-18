@@ -234,7 +234,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
                     <Card
                         title={"编辑需要 Fuzz 的 HTTP Request"} size={"small"}
-                        bordered={true}
+                        bordered={false}
                         extra={<Space>
                             <Popover trigger={"click"} content={<>
                                 <Spin style={{width: "100%"}} spinning={!reqEditor}>
@@ -398,7 +398,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     title={<Space>
                         <Text style={{marginBottom: 0}}>模糊测试 / HTTP 请求结果</Text>
                         <Spin size={"small"} spinning={loading}/>
-                    </Space>} size={"small"} bordered={true}
+                    </Space>} size={"small"} bordered={false}
                     bodyStyle={{minHeight: 500, height: 580, overflowY: "auto", padding: 0}}
                     extra={onlyOneResponse ? [
                         <Space>
@@ -439,7 +439,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             </>}>
 
                         </Alert>}
-                        <YakEditor readOnly={true} bytes={true} valueBytes={content[0].ResponseRaw}/>
+                        <HTTPPacketEditor
+                            originValue={content[0].ResponseRaw} readOnly={true}
+                        />
+                        {/*<YakEditor*/}
+                        {/*    readOnly={true} bytes={true} valueBytes={content[0].ResponseRaw}*/}
+                        {/*/>*/}
                     </> : <>{(content || []).length > 0 ?
                         <>
                             <Tabs>
@@ -471,4 +476,4 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             </Col>
         </Row>
     </>
-};
+}
