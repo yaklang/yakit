@@ -7,15 +7,8 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
 import "./monacoSpec/html"
-import {Card, Col, Input, Row, Space} from "antd";
+import {Card, Input, Space} from "antd";
 import {SelectOne} from "./inputUtil";
-import oneDarkPro from 'react-hex-editor/themes/oneDarkPro';
-import {editor} from "monaco-editor/esm/vs/editor/editor.api";
-import {
-    monacoEditorClear,
-    monacoEditorHighlight,
-    monacoEditorRemoveAllHighlight
-} from "../pages/fuzzer/fuzzerTemplates";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 

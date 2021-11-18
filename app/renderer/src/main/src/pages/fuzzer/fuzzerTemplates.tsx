@@ -67,31 +67,6 @@ export const monacoEditorRemoveAllHighlight = (editor?: IMonacoEditor) => {
     }
 }
 
-export const monacoEditorHighlight = (keywords: string, editor?: IMonacoEditor) => {
-    if (editor && keywords.length > 0) {
-        let range = editor.getModel()?.findMatches(keywords, false, false, false, null, false)
-        if (range && range.length > 0) {
-            monacoEditorRemoveAllHighlight(editor)
-            editor.deltaDecorations([], range.map(i => {
-                highlightRanges.push(i.range)
-                return {
-                    id: `highlight[${keywords}]`,
-                    range: i.range,
-                    options: {
-                        isWholeLine: false,
-                        inlineClassName: 'monacoInlineHighlight'
-                    }
-                } as any
-            }))
-        } else {
-            monacoEditorRemoveAllHighlight(editor)
-        }
-    } else {
-        monacoEditorRemoveAllHighlight(editor)
-    }
-};
-
-
 export const fuzzOperators: FuzzOperatorItem[] = [
     {
         name: "随机字符串(固定长度)", callback: editor => {

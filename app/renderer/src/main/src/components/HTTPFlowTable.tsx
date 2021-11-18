@@ -359,6 +359,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             ]}
         />}
         <Table
+            className={"httpFlowTable"}
             bordered={true}
             title={(e) => {
                 return <Row>
