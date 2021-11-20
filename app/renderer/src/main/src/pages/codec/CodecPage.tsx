@@ -15,32 +15,6 @@ export interface CodecType {
     subTypes?: CodecType[]
 }
 
-export const execCodec = (typeStr: string, text?: string) => {
-    if (text === "") {
-        failed("空文本无法执行编码解码")
-        return
-    }
-
-    ipcRenderer.invoke("Codec", {Text: text, Type: typeStr}).then((result: { Result: string }) => {
-        showModal({
-            title: "编码结果",
-            width: "50%",
-            content: <div style={{width: "100%"}}>
-                <Space style={{width: "100%"}} direction={"vertical"}>
-                    <div style={{height: 300}}>
-                        <YakEditor
-                            fontSize={20}
-                            readOnly={true} value={result.Result}
-                        />
-                    </div>
-                </Space>
-            </div>
-        })
-    }).catch(e => {
-
-    })
-}
-
 const CodecItems: CodecType[] = [
     {key: "fuzz", verbose: "模糊测试(标签同 Web Fuzzer)"},
     {key: "http-get-query", verbose: "解析 HTTP 参数"},

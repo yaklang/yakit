@@ -10,13 +10,14 @@ import "./monacoSpec/html"
 import {Button, Card, Form, Input, Popover, Space, Spin} from "antd";
 import {InputItem, SelectOne, SwitchItem} from "./inputUtil";
 import {ResizableBox} from "react-resizable";
-import {execCodec} from "../pages/codec/CodecPage";
 import {FullscreenOutlined, SettingOutlined} from "@ant-design/icons";
 import {showDrawer} from "./showModal";
+import {execCodec, MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
 export type IMonacoEditor = monacoEditor.editor.IStandaloneCodeEditor;
+export type IMonacoCodeEditor = monacoEditor.editor.ICodeEditor;
 
 export interface EditorProps {
     value?: string
@@ -335,63 +336,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                         setValue={setStrValue}
                         fontSize={fontSize}
                         actions={[
-                            {
-                                id: "http-chunk-encode",
-                                label: "HTTP Chunk 编码",
-                                run: function (editor, args) {
-                                    const selection = editor.getSelection();
-                                    if (!selection) {
-                                        alert("CHUNKED")
-                                    }
-                                },
-                                contextMenuGroupId: "encodeNdecode",
-                            },
-                            {
-                                id: "base64-encode",
-                                label: "Base64 编码",
-                                run: function (editor, args) {
-                                    if (!editor) {
-                                        return
-                                    }
-                                    const selection = editor.getSelection();
-                                    if (!selection) {
-                                        return
-                                    }
-
-                                    try {
-                                        const text = editor.getModel()?.getValueInRange(selection);
-                                        execCodec("base64", text)
-                                    } catch (e) {
-                                        console.info(e)
-                                    }
-
-                                },
-                                contextMenuGroupId: "encodeNdecode",
-                            },
-                            {
-                                id: "base64-decode",
-                                label: "Base64 解码",
-                                run: function (editor, args) {
-                                    const selection = editor.getSelection();
-                                    if (selection) {
-                                        const text = editor.getModel()?.getValueInRange(selection);
-                                        execCodec("base64-decode", text || "")
-                                    }
-                                },
-                                contextMenuGroupId: "encodeNdecode",
-                            },
-                            {
-                                id: "url-decode",
-                                label: "URL 解码",
-                                run: function (editor, args) {
-                                    const selection = editor.getSelection();
-                                    if (!selection) {
-
-                                    }
-                                    alert("CHUNKED")
-                                },
-                                contextMenuGroupId: "encodeNdecode",
-                            },
+                            ...MonacoEditorCodecActions,
+                            ...MonacoEditorMutateHTTPRequestActions,
                         ]}
                         editorDidMount={editor => {
                             setMonacoEditor(editor)

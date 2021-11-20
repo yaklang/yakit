@@ -155,7 +155,11 @@ message HTTPRequestMutateParams {
   bytes Request = 1;
 
   repeated string FuzzMethods = 2;
+
+  // use chunk encode
   bool ChunkEncode = 3;
+
+  // multipart boundary
   bool UploadEncode = 4;
 }
 

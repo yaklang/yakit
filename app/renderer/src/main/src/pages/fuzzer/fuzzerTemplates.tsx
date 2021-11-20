@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {IMonacoEditor} from "../../utils/editors";
+import {IMonacoCodeEditor, IMonacoEditor} from "../../utils/editors";
 import {InputInteger, InputItem} from "../../utils/inputUtil";
 import {RandInt, RandStrWithLen, RandStrWithMax, RandStrWIthRepeat} from "./templates/Rand";
 import {FuzzWithRange, RangeChar} from "./templates/Range";
@@ -42,11 +42,11 @@ export interface FuzzOperatorParam {
     optional?: string
 }
 
-export const monacoEditorWrite = (editor: IMonacoEditor, text: string) => {
+export const monacoEditorWrite = (editor: IMonacoEditor | IMonacoCodeEditor, text: string) => {
     if (editor) editor.trigger("keyboard", "type", {text})
 }
 
-export const monacoEditorClear = (editor?: IMonacoEditor) => {
+export const monacoEditorClear = (editor?: IMonacoEditor | IMonacoCodeEditor) => {
     if (editor) {
         let range = editor.getModel()?.getFullModelRange();
         if (range) {

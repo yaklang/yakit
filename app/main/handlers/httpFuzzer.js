@@ -66,4 +66,20 @@ module.exports = (win, getClient) => {
             }
         })
     })
+
+    // asyncHTTPRequestMutate wrapper
+    const asyncHTTPRequestMutate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().HTTPRequestMutate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("HTTPRequestMutate", async (e, params) => {
+        return await asyncHTTPRequestMutate(params)
+    })
 }
