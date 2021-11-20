@@ -310,6 +310,7 @@ export const InputTimePoint: React.FC<InputTimePointProps> = (p) => {
 
 export interface InputNumberProps extends InputBase {
     min?: number
+    size?: any
     max?: number
 
     value?: number
@@ -322,8 +323,8 @@ export interface InputNumberProps extends InputBase {
 }
 
 export const InputFloat: React.FC<InputNumberProps> = (p) => {
-    return <Item label={p.label} style={p.formItemStyle}>
-        <InputNumber size={"middle"} min={p.min} max={p.max} step={0.01} defaultValue={p.defaultValue} value={p.value}
+    return <Item label={p.label} style={{...p.formItemStyle}}>
+        <InputNumber size={p.size} min={p.min} max={p.max} step={0.01} defaultValue={p.defaultValue} value={p.value}
                      onChange={value => {
                          switch (typeof value) {
                              case "number":
@@ -332,15 +333,16 @@ export const InputFloat: React.FC<InputNumberProps> = (p) => {
                              default:
                                  p.setValue(0);
                          }
-                     }} width={"100%"}/>
+                     }} width={"100%"}
+        />
     </Item>
 };
 
 
 export const InputInteger: React.FC<InputNumberProps> = (p) => {
-    return <Item label={p.label}>
+    return <Item label={p.label} style={{...p.formItemStyle}}>
         <InputNumber width={p.width && "100%"} disabled={p.disable} style={{width: p.width}}
-                     defaultValue={p.defaultValue}
+                     defaultValue={p.defaultValue} size={p.size}
                      min={p.min} max={p.max} step={1} value={p.value} onChange={e => p.setValue(e as number)}/>
     </Item>
 }
