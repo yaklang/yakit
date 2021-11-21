@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import MonacoEditor, {monaco} from 'react-monaco-editor';
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
-import HexEditor from "react-hex-editor";
+import HexEditor, {UnstyledHexEditor} from "react-hex-editor";
 // yak register
 import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
@@ -164,7 +164,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     const containerDiv = useRef(null);
     const [maxHeight, setMaxHeight] = useState(props.defaultHeight || 500);
     const [maxWidth, setMaxWidth] = useState(600);
-    const [bodyHeight, setBodyHeight] = useState<number>(props.defaultHeight || 500);
+    const [bodyHeight, setBodyHeight] = useState<number | undefined>(props.defaultHeight);
 
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
 
@@ -176,8 +176,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     // The callback facilitates updates to the source data.
     const handleSetValue = React.useCallback((offset, value) => {
         hexValue[offset] = value;
-        setHexValue(new Buffer(hexValue))
         setNonce(v => (v + 1));
+        setHexValue(new Buffer(hexValue))
     }, [hexValue]);
 
     useEffect(() => {
@@ -226,10 +226,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
         }
     }, [containerDiv])
 
+    const actualBodyHeight = bodyHeight || (
+        maxHeight - 44 > 0 ? maxHeight - 44 : 300
+    )
+
     return <div style={{width: "100%"}} ref={containerDiv}>
         <ResizableBox
             width={maxWidth}
-            height={maxHeight}
+            height={maxHeight} resizeHandles={["s", "se"]}
             onResize={(d, data) => {
                 if (data.size.height - 44 >= 0) {
                     setBodyHeight(data.size.height - 44)
@@ -325,11 +329,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     </Popover>
                 ]}
             >
-                <div style={{
-                    height: bodyHeight || (
-                        maxHeight - 44 > 0 ? maxHeight - 44 : 300
-                    ), width: "100%"
-                }}>
+                <div style={{height: actualBodyHeight, width: "100%"}}>
                     {mode === "text" && <YakEditor
                         type={isResponse ? "html" : "http"}
                         value={strValue} readOnly={props.readOnly}
@@ -346,13 +346,13 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
 
                     {mode === "hex" && <HexEditor
                         showAscii={true}
+                        height={actualBodyHeight - 8}
                         columns={0x10}
                         data={hexValue}
                         showRowLabels={true}
-                        showColumnLabels={true}
+                        showColumnLabels={false}
                         nonce={nonce}
                         onSetValue={props.readOnly ? undefined : handleSetValue}
-                        // theme={{hexEditor: oneDarkPro}}
                     />}
                 </div>
             </Card>

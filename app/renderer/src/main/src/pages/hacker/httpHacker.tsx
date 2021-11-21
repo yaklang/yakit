@@ -39,11 +39,10 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         setFuzzers([...fuzzers, {
             verbose,
             key: newFuzzerId,
-            node: loading ? <Spin/>
-                : <HTTPFuzzerPage
-                    isHttps={isHttps}
-                    request={request}
-                />
+            node: <HTTPFuzzerPage
+                isHttps={isHttps}
+                request={request}
+            />
         }])
 
         setLoading(true)
@@ -115,12 +114,12 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                     <MITMPage onSendToWebFuzzer={sendToFuzzer}/>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false}>
-                    <HTTPHistory/>
+                    <HTTPHistory sendToWebFuzzer={sendToFuzzer}/>
                     {/*<HTTPFlowTable*/}
                     {/*    onSendToWebFuzzer={sendToFuzzer}/>*/}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
-                    <YakScriptExecResultTable />
+                    <YakScriptExecResultTable/>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
                     <WebsiteTreeViewer

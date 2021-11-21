@@ -15,7 +15,7 @@ import {
     Space,
     Spin,
     Steps,
-    Tabs,
+    Tabs, Tag,
     Timeline
 } from "antd";
 import {XTerm} from "xterm-for-react";
@@ -151,7 +151,12 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                     reset()
                 }} disabled={loading}>清空缓存</Button>
         </Space>} bordered={false}>
-            <Tabs tabPosition={"left"} onChange={setTab} activeKey={tabKey}>
+            <Tabs
+                // tabPosition={"left"}
+                onChange={setTab} activeKey={tabKey} tabBarExtraContent={() => {
+                return <Tag>123</Tag>
+            }}
+            >
                 <Tabs.TabPane key={"params"} tab={"设置参数 / Params"}>
                     <Spin spinning={loading}>
                         <YakScriptParamsSetter

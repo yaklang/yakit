@@ -4,7 +4,7 @@ import {
     Col,
     Empty,
     Form,
-    Input,
+    Input, List,
     PageHeader,
     Pagination,
     Popconfirm,
@@ -415,18 +415,28 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             rowClassName={(e: HTTPFlow) => {
                 return e.Hash === selected?.Hash ? "selected" : ""
             }}
-            onRow={(e: HTTPFlow) => {
+            onRow={(record: HTTPFlow) => {
                 return {
                     onClick: (ev) => {
-                        if (e.Hash === selected?.Hash) {
+                        if (record.Hash === selected?.Hash) {
                             setSelected(undefined)
                         } else {
-                            setSelected(e)
+                            setSelected(record)
                         }
                     },
                     onContextMenu: (ev) => {
                         showByCursorContainer({
-                            content: <>123</>
+                            content: <>
+                                <List bordered={true}>
+                                    <List.Item key={"123"}>
+                                        <Button onClick={() => {
+                                            if (props.onSendToWebFuzzer) {
+                                                props.onSendToWebFuzzer(record.IsHTTPS, new Buffer(record.Request).toString("utf8"))
+                                            }
+                                        }}>发送到 Web Fuzzer</Button>
+                                    </List.Item>
+                                </List>
+                            </>
                         }, ev.clientX, ev.clientY)
                     }
                 }
@@ -556,9 +566,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 },
                 {
                     title: "操作", render: (record: HTTPFlow) => <Space>
-                        <Button size={"small"} type={"primary"} onClick={e => {
-                            if (props.onSendToWebFuzzer) props.onSendToWebFuzzer(record.IsHTTPS, new Buffer(record.Request).toString("utf8"))
-                        }}>发送到 Fuzzer</Button>
+                        {/*<Button size={"small"} type={"primary"} onClick={e => {*/}
+                        {/*    if (props.onSendToWebFuzzer) props.onSendToWebFuzzer(record.IsHTTPS, new Buffer(record.Request).toString("utf8"))*/}
+                        {/*}}>发送到 Fuzzer</Button>*/}
                         <Button size={"small"} type={"primary"} onClick={e => {
                             showDrawer({
                                 width: "80%",
@@ -566,7 +576,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     if (props.onSendToWebFuzzer) props.onSendToWebFuzzer(isHttps, new Buffer(req).toString());
                                 })
                             })
-                        }}>分析参数</Button>
+                        }}>详情</Button>
                     </Space>
                 }]}
             dataSource={data}

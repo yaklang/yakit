@@ -5,7 +5,11 @@ import {Card, Space} from "antd";
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable";
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail";
 
-export interface HTTPHistoryProp {
+export interface HTTPPacketFuzzable {
+    sendToWebFuzzer?: (isHttps: boolean, request: string) => any
+}
+
+export interface HTTPHistoryProp extends HTTPPacketFuzzable {
 
 }
 
@@ -59,6 +63,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 <HTTPFlowTable
                     tableHeight={tableHeight}
                     noHeader={true}
+                    onSendToWebFuzzer={props.sendToWebFuzzer}
                     onSelected={i => {
                         if (i) {
                             setOutterTableHeight(300)
