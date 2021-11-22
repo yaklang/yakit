@@ -8,8 +8,6 @@ const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
 const sudo = require("sudo-prompt");
-const {platform} = require("process");
-const {ca} = require("wait-on/exampleConfig");
 
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
@@ -400,14 +398,8 @@ module.exports = {
             return `${process.platform}-${process.arch}`;
         })
 
-        // asyncinstallYakit wrapper
-        const asyncinstallYakit = (params) => {
-            return new Promise((resolve, reject) => {
-                shell.openPath(yakEngineDir)
-            })
-        }
         ipcMain.handle("install-yakit", async (e, params) => {
-            return await asyncinstallYakit(params)
+            return shell.openPath(yakEngineDir)
         })
 
 
