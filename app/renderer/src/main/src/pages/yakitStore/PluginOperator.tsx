@@ -4,10 +4,8 @@ import {YakScript} from "../invoker/schema";
 import {failed, success} from "../../utils/notification";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {CopyableField, InputItem} from "../../utils/inputUtil";
-import ReactMarkdown from "react-markdown";
 import {YakEditor} from "../../utils/editors";
 import {showDrawer, showModal} from "../../utils/showModal";
-import {ExecHistoryTable} from "../invoker/YakExecutorHistoryTable";
 import {PluginExecutor} from "./PluginExecutor";
 import {DocumentEditor} from "./DocumentEditor";
 import MDEditor from "@uiw/react-md-editor"

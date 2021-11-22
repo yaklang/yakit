@@ -1,30 +1,64 @@
 import {monaco} from "react-monaco-editor";
 
-export const YakMonacoFuzzHTTPSpec = "fuzz-http";
-export const YakMonacoFuzzHTTPTheme = "fuzz-http-theme";
-
 // https://microsoft.github.io/monaco-editor/playground.html#extending-language-services-custom-languages
-monaco.languages.register({id: YakMonacoFuzzHTTPSpec})
-monaco.languages.setMonarchTokensProvider(YakMonacoFuzzHTTPSpec, {
+monaco.languages.register({id: "http"})
+monaco.languages.setMonarchTokensProvider("http", {
+    brackets: [],
+    defaultToken: "",
+    ignoreCase: false,
+    includeLF: false,
+    start: "",
+    tokenPostfix: "",
+    unicode: false,
+
     tokenizer: {
         root: [
-            [/{{.*?\}\}/g, "fuzzTemplate"],
-            [/(GET|POST|OPTIONS|DELETE|PUT)/g, "httpMethod"],
-            [/([A-Za-z][A-Za-z0-9\-]*?): ([^\n]+)/g, "header"],
-            [/(html|div|src|\<\/?title\>|<alert>)/i, "keywords"],
-            [/(\<script\>|<alert>|<prompt>|<svg )/i, "high-risk"],
+            // http method
+            [/(GET|POST|OPTIONS|DELETE|PUT)/g, "http.method"],
+
+            // http path
+            [/((application)|(text)|(\*)|(\w+))\/[\w*+.]+/g, "http.header.mime"],
+            ["/(((http)|(https):)?\/\/[^\s]+)/", "http.url"],
+            [/\/[^\s^?^\/]+/, "http.path"],
+            [/\?/, "http.get.query", "@get_query"],
+
+            [/((Content-Length)|(Host)|(Content-Type)|(Origin)|(Referer)): /g, "http.header.danger"],
+            [/Cookie: /g, "http.header.danger"],
+            [/[*]\/[*]/g, "http.header.mime"],
+            [/{{.*?\}\}/g, "markup.error"],
+            [/([A-Za-z][A-Za-z0-9\-]*?):\s*([^\r^\n]+)\n/g, "keyword"],
+            [/"/, "string", "@string_double"],
+            [/'/, "string", "@string_single"],
+            [/(html|div|src|\<\/?title\>|<alert>)/i, "keyword"],
+            [/(\<script\>|<alert>|<prompt>|<svg )/i, "keyword"],
+            [/^\s+\=[^\s]+/i, "keyword"],
+            // [/`/, "string", "@string_backtick"]
+        ],
+        get_query: [
+            [/\s/, "delimiter", "@pop"],
+            [/&/g, 'delimiter'],
+            // [/([^=^&^?^\s]+)=([^=^&^?^\s]+)?/g, 'http.get.query.params'],
+            [/([^=^&^?^\s]+)=/g, 'http.get.query.params'],
+            [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
+        ],
+        cookie: [
+            [/\n/, "delimiter", "@pop"],
+            [/[;=]/, 'delimiter'],
+            [/[^\s^=^;]+?=/, "http.cookie.name"],
+            // [/=[^\s^=^;]+/, "http.cookie.value"],
+        ],
+        string_double: [
+            [/[^\\"]+/, "string.value"],
+            // [/@escapes/, "string.escape"],
+            [/\\./, "string.escape.invalid"],
+            [/"/, "string", "@pop"]
+        ],
+        string_single: [
+            [/[^\\']+/, "string.value"],
+            // [/@escapes/, "string.escape"],
+            [/\\./, "string.escape.invalid"],
+            [/'/, "string", "@pop"]
         ],
     }
 })
 
-// @ts-ignore
-monaco.editor.defineTheme(YakMonacoFuzzHTTPTheme, {
-    base: "vs-dark", inherit: true,
-    rules: [
-        {token: "header", foreground: "#38ecf1"},
-        {token: "fuzzTemplate", background: "#24c15e", foreground: "#cd8d3c", fontStyle: "bold"},
-        {token: "httpMethod", foreground: "#95cd3c", fontStyle: "bold"},
-        {token: "keywords", foreground: "#fcb312"},
-        {token: "high-risk", foreground: "#ff1212"},
-    ],
-})

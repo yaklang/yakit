@@ -3,7 +3,7 @@ import {
     Alert,
     Button,
     Card,
-    Col,
+    Col, Divider,
     Form, Input,
     Modal,
     notification,
@@ -20,7 +20,7 @@ import {
     Tooltip,
     Typography
 } from "antd";
-import {IMonacoEditor, YakEditor} from "../../utils/editors";
+import {HTTPPacketEditor, IMonacoEditor, YakEditor} from "../../utils/editors";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {fuzzerTemplates} from "./fuzzerTemplates";
@@ -189,59 +189,62 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const failedResults = filtredResponses.filter(i => !i.Ok);
 
     return <>
-        <PageHeader
-            title={"Web Fuzzer 操作台"}
-            subTitle={<Space>
-                <Form.Item style={{marginBottom: 0}} label={"选择 Fuzz 模版"}>
-                    <Select
-                        style={{width: 200}}
-                        options={(templates || []).map(i => {
-                            return {label: i.name, value: i.template}
-                        })}
-                        onChange={r => setRequest(`${r}`)}
-                        placeholder={"选择一个模版开始 Fuzz"}
-                    />
-                </Form.Item>
-                <Button
-                    disabled={debuggingTag}
-                    type={"primary"}
-                    onClick={() => {
-                        showDrawer({
-                            mask: false,
-                            afterVisible: () => {
-                                setDebuggingTag(true)
-                            },
-                            afterInvisible: () => setDebuggingTag(false),
-                            content: <>
-                                <StringFuzzer/>
-                            </>
-                        })
-                    }}>
-                    Payload Fuzzer / 调试 Payload
-                </Button>
-            </Space>}
-            // extra={[
-            //     <Space>
-            //
-            //     </Space>
-            // ]}
-        >
+        {/*<PageHeader*/}
+        {/*    title={"Web Fuzzer 操作台"}*/}
+        {/*    subTitle={<Space>*/}
+        {/*        <Form.Item style={{marginBottom: 0}} label={"选择 Fuzz 模版"}>*/}
+        {/*            <Select*/}
+        {/*                style={{width: 200}}*/}
+        {/*                options={(templates || []).map(i => {*/}
+        {/*                    return {label: i.name, value: i.template}*/}
+        {/*                })}*/}
+        {/*                onChange={r => setRequest(`${r}`)}*/}
+        {/*                placeholder={"选择一个模版开始 Fuzz"}*/}
+        {/*            />*/}
+        {/*        </Form.Item>*/}
+        {/*        <Button*/}
+        {/*            disabled={debuggingTag}*/}
+        {/*            type={"primary"}*/}
+        {/*            onClick={() => {*/}
+        {/*                showDrawer({*/}
+        {/*                    mask: false,*/}
+        {/*                    afterVisible: () => {*/}
+        {/*                        setDebuggingTag(true)*/}
+        {/*                    },*/}
+        {/*                    afterInvisible: () => setDebuggingTag(false),*/}
+        {/*                    content: <>*/}
+        {/*                        <StringFuzzer/>*/}
+        {/*                    </>*/}
+        {/*                })*/}
+        {/*            }}>*/}
+        {/*            Payload Fuzzer / 调试 Payload*/}
+        {/*        </Button>*/}
+        {/*    </Space>}*/}
+        {/*    // extra={[*/}
+        {/*    //     <Space>*/}
+        {/*    //*/}
+        {/*    //     </Space>*/}
+        {/*    // ]}*/}
+        {/*>*/}
 
-        </PageHeader>
-        <Row style={{marginLeft: 16, marginRight: 16}} gutter={8}>
-            <Col span={12} style={{height: "100%"}}>
-                <div style={{height: "100%"}}>
+        {/*</PageHeader>*/}
+        <Row gutter={8}>
+            <Col span={12} style={{textAlign: "left"}}>
+                <Space>
+                    <Popover trigger={"click"} content={<>
+                        <Spin style={{width: "100%"}} spinning={!reqEditor}>
+                            <Space
+                                style={{width: "100%"}}
+                                direction={"vertical"}
+                            >
 
-                    <Card
-                        title={"编辑需要 Fuzz 的 HTTP Request"} size={"small"}
-                        bordered={true}
-                        extra={<Space>
-                            <Popover trigger={"click"} content={<>
-                                <Spin style={{width: "100%"}} spinning={!reqEditor}>
-                                    <Space
-                                        style={{width: "100%"}}
-                                        direction={"vertical"}
-                                    >
+                                <Form
+                                    onSubmitCapture={e => e.preventDefault()}
+                                    layout={"horizontal"}
+                                    size={"small"}
+                                    labelCol={{span: 8}} wrapperCol={{span: 16}}
+                                >
+                                    <Form.Item label={" "} colon={false} style={{marginBottom: 4}}>
                                         <Button
                                             style={{backgroundColor: "#08a701"}}
                                             size={"small"}
@@ -269,135 +272,111 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     </>
                                                 })
                                             }}>插入Fuzz标签</Button>
-                                        <Form onSubmitCapture={e => e.preventDefault()} layout={"inline"}
-                                              size={"small"}>
-                                            <Space direction={"vertical"}>
-                                                <SwitchItem label={"Fuzz"} setValue={e => {
-                                                    if (!e) {
-                                                        Modal.confirm({
-                                                            title: "确认关闭 Fuzz 功能吗？关闭之后，所有的 Fuzz 标签将会失效",
-                                                            onOk: () => {
-                                                                setForceFuzz(e)
-                                                            }
-                                                        })
-                                                        return
+                                    </Form.Item>
+                                    <SwitchItem
+                                        label={"Fuzz"}
+                                        setValue={e => {
+                                            if (!e) {
+                                                Modal.confirm({
+                                                    title: "确认关闭 Fuzz 功能吗？关闭之后，所有的 Fuzz 标签将会失效",
+                                                    onOk: () => {
+                                                        setForceFuzz(e)
                                                     }
-                                                    setForceFuzz(e)
-                                                }} size={"small"} value={forceFuzz}/>
-                                                <InputInteger
-                                                    label={"并发"}
-                                                    setValue={e => {
-                                                        setConcurrent(e)
-                                                    }} formItemStyle={{width: 40}} width={40}
-                                                    value={concurrent}
-                                                />
-                                                <SwitchItem label={"HTTPS"} setValue={e => {
-                                                    setIsHttps(e)
-                                                }} size={"small"} value={isHttps}/>
-                                                <Popover
-                                                    title={
-                                                        <>
-                                                            设置代理: 通常可以用于访问一些因为网络问题无法访问的网页
-                                                            <br/>
-                                                            或把请求发送到基于代理模式的扫描器
-                                                        </>
-                                                    }
-                                                    trigger={"click"}
-                                                    content={<>
-                                                        <ManyMultiSelectForString
-                                                            label={"输入代理（逗号分割）"}
-                                                            data={[
-                                                                "http://127.0.0.1:7890",
-                                                                "http://127.0.0.1:8080",
-                                                                "http://127.0.0.1:8082",
-                                                            ].map(i => {
-                                                                return {label: i, value: i}
-                                                            })}
-                                                            mode={"tags"} defaultSep={","}
-                                                            value={proxy}
-                                                            setValue={(r) => {
-                                                                setProxy(r.split(",").join(","))
-                                                            }}
-                                                        />
-                                                    </>}>
-                                                    <Button
-                                                        size={"small"}
-                                                    >
-                                                        {proxy ? "修改代理" : "设置代理"}
-                                                    </Button>
-                                                </Popover>
-                                                <InputFloat
-                                                    label={"请求超时时间"} setValue={setTimeout}
-                                                    value={timeout}
-                                                />
-                                                <InputItem
-                                                    label={"请求 Host"}
-                                                    setValue={setActualHost} value={actualHost}
-                                                />
-                                            </Space>
-                                        </Form>
-                                    </Space>
-                                </Spin>
-                            </>}>
-                                <Button type={"link"} size={"small"}>配置请求包</Button>
-                            </Popover>
-                            {actualHost !== "" && <Tag color={"red"}>请求 Host:{actualHost}</Tag>}
-                            {loading ? <Button
-                                onClick={() => {
-                                    cancelCurrentHTTPFuzzer()
-                                }}
-                                size={"small"} danger={true}
-                                type={"primary"}
-                            >强制停止</Button> : <Button
-                                onClick={() => {
-                                    setContent([])
-                                    submitToHTTPFuzzer()
-                                }}
-                                size={"small"}
-                                type={"primary"}
-                            >Go / Fuzz</Button>}
-
-                            {/*{proxy && <Form.Item label={"当前代理"} style={{marginBottom: 0, padding: 0, margin: 0}}>*/}
-                            {/*    {(proxy || "").split(",").filter(i => !!i).length > 1 ? <Tooltip*/}
-                            {/*        title={proxy}*/}
-                            {/*    >*/}
-                            {/*        <Tag>{proxy.substr(0, proxy.indexOf(","))}...</Tag>*/}
-                            {/*    </Tooltip> : <Tag>*/}
-                            {/*        {proxy}*/}
-                            {/*    </Tag>}*/}
-                            {/*</Form.Item>}*/}
-                            {/*<Form.Item*/}
-                            {/*    style={{marginBottom: 0, padding: 0, margin: 0}}*/}
-                            {/*    label={"HTTPS"}*/}
-                            {/*>*/}
-                            {/*    <Switch*/}
-                            {/*        checked={isHttps}*/}
-                            {/*        onChange={setIsHttps}*/}
-                            {/*        size={"small"}*/}
-                            {/*    />*/}
-                            {/*</Form.Item>*/}
-                        </Space>}
-                        bodyStyle={{minHeight: 500, height: 580, padding: 0}}
-                    >
-                        <Spin spinning={loading} style={{minHeight: 500}}>
-                            <div style={{height: 580}}>
-                                <YakEditor
-                                    value={request} setValue={setRequest}
-                                    editorDidMount={setReqEditor}
-                                />
-                            </div>
+                                                })
+                                                return
+                                            }
+                                            setForceFuzz(e)
+                                        }} size={"small"} value={forceFuzz}
+                                        formItemStyle={{marginBottom: 4}}
+                                    />
+                                    <InputInteger
+                                        label={"并发"} size={"small"}
+                                        setValue={e => {
+                                            setConcurrent(e)
+                                        }} formItemStyle={{marginBottom: 4}} // width={40}
+                                        value={concurrent}
+                                    />
+                                    <SwitchItem label={"HTTPS"} setValue={e => {
+                                        setIsHttps(e)
+                                    }} size={"small"} value={isHttps}
+                                                formItemStyle={{marginBottom: 4}}
+                                    />
+                                    <Popover
+                                        title={
+                                            <>
+                                                设置代理: 通常可以用于访问一些因为网络问题无法访问的网页
+                                                <br/>
+                                                或把请求发送到基于代理模式的扫描器
+                                            </>
+                                        }
+                                        trigger={"click"}
+                                        content={<>
+                                            <ManyMultiSelectForString
+                                                label={"输入代理（逗号分割）"}
+                                                data={[
+                                                    "http://127.0.0.1:7890",
+                                                    "http://127.0.0.1:8080",
+                                                    "http://127.0.0.1:8082",
+                                                ].map(i => {
+                                                    return {label: i, value: i}
+                                                })}
+                                                mode={"tags"} defaultSep={","}
+                                                value={proxy}
+                                                setValue={(r) => {
+                                                    setProxy(r.split(",").join(","))
+                                                }}
+                                            />
+                                        </>}>
+                                        <Form.Item label={" "} colon={false} style={{marginBottom: 0}}>
+                                            <Button
+                                                size={"small"}
+                                            >
+                                                {proxy ? "修改代理" : "设置代理"}
+                                            </Button>
+                                        </Form.Item>
+                                    </Popover>
+                                    <InputFloat
+                                        formItemStyle={{marginBottom: 4}} size={"small"}
+                                        label={"请求超时时间"} setValue={setTimeout}
+                                        value={timeout}
+                                    />
+                                    <InputItem
+                                        extraFormItemProps={{
+                                            style: {marginBottom: 4}
+                                        }}
+                                        label={"请求 Host"}
+                                        setValue={setActualHost} value={actualHost}
+                                    />
+                                </Form>
+                            </Space>
                         </Spin>
-                    </Card>
-                </div>
+                    </>}>
+                        <Button type={"link"} size={"small"}>配置请求包</Button>
+                    </Popover>
+                    {actualHost !== "" && <Tag color={"red"}>请求 Host:{actualHost}</Tag>}
+                    {loading ? <Button
+                        onClick={() => {
+                            cancelCurrentHTTPFuzzer()
+                        }}
+                        size={"small"} danger={true}
+                        type={"primary"}
+                    >强制停止</Button> : <Button
+                        onClick={() => {
+                            setContent([])
+                            submitToHTTPFuzzer()
+                        }}
+                        size={"small"}
+                        type={"primary"}
+                    >Go / Fuzz</Button>}
+                </Space>
             </Col>
-            <Col span={12}>
-                <Card
-                    title={<Space>
-                        <Text style={{marginBottom: 0}}>模糊测试 / HTTP 请求结果</Text>
-                        <Spin size={"small"} spinning={loading}/>
-                    </Space>} size={"small"} bordered={true}
-                    bodyStyle={{minHeight: 500, height: 580, overflowY: "auto", padding: 0}}
-                    extra={onlyOneResponse ? [
+            <Col span={12} style={{textAlign: "left"}}>
+                <Space>
+                    {/*<Space>*/}
+                    {/*<Text style={{marginBottom: 0}}>模糊测试 / HTTP 请求结果</Text>*/}
+                    {loading && <Spin size={"small"} spinning={loading}/>}
+                    {/*</Space>*/}
+                    {onlyOneResponse ? [
                         <Space>
                             <Space>
                                 <Button size={"small"}
@@ -427,45 +406,62 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             }}>清除数据</Button>
                         </Space>
                     ]}
-                >
-                    {onlyOneResponse ? <>
-                        {!content[0].Ok && <Alert
-                            style={{marginBottom: 8}} type={"error"}
-                            message={<>
-                                请求失败：{content[0].Reason}
-                            </>}>
+                </Space>
+            </Col>
+        </Row>
+        <Divider style={{marginTop: 12, marginBottom: 4}}/>
+        <Row style={{marginLeft: 16, marginRight: 16}} gutter={8}>
+            <Col span={12} style={{height: "100%"}}>
+                <div style={{height: "100%"}}>
+                    <HTTPPacketEditor
+                        bordered={false} originValue={new Buffer(request)}
+                        onEditor={setReqEditor} onChange={i => setRequest(new Buffer(i).toString("utf8"))}
+                    />
+                </div>
+            </Col>
+            <Col span={12}>
+                {onlyOneResponse ? <>
+                    {!content[0].Ok && <Alert
+                        style={{marginBottom: 8}} type={"error"}
+                        message={<>
+                            请求失败：{content[0].Reason}
+                        </>}>
 
-                        </Alert>}
-                        <YakEditor readOnly={true} bytes={true} valueBytes={content[0].ResponseRaw}/>
-                    </> : <>{(content || []).length > 0 ?
-                        <>
-                            <Tabs>
-                                <Tabs.TabPane key={"success"}
-                                              tab={<div style={{
-                                                  marginLeft: 12,
-                                                  marginRight: 12
-                                              }}>正常请求{`[${(successResults || []).length}]`}</div>}>
-                                    <FuzzerResponseTableEx
-                                        success={true}
-                                        content={successResults} setRequest={setRequest}
-                                    />
-                                </Tabs.TabPane>
-                                <Tabs.TabPane key={"failed"} tab={`网络错误 / 请求错误 [${(failedResults || []).length}]`}>
-                                    <FuzzerResponseTableEx
-                                        success={false}
-                                        content={failedResults} setRequest={setRequest}
-                                    />
-                                </Tabs.TabPane>
-                            </Tabs>
-                        </>
-                        : <Result
-                            status={"info"}
-                            title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                            subTitle={"本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"}
-                        />}
-                    </>}
-                </Card>
+                    </Alert>}
+                    <HTTPPacketEditor
+                        originValue={content[0].ResponseRaw} bordered={false} readOnly={true}
+                    />
+                    {/*<YakEditor*/}
+                    {/*    readOnly={true} bytes={true} valueBytes={content[0].ResponseRaw}*/}
+                    {/*/>*/}
+                </> : <>{(content || []).length > 0 ?
+                    <>
+                        <Tabs>
+                            <Tabs.TabPane key={"success"}
+                                          tab={<div style={{
+                                              marginLeft: 12,
+                                              marginRight: 12
+                                          }}>正常请求{`[${(successResults || []).length}]`}</div>}>
+                                <FuzzerResponseTableEx
+                                    success={true}
+                                    content={successResults} setRequest={setRequest}
+                                />
+                            </Tabs.TabPane>
+                            <Tabs.TabPane key={"failed"} tab={`网络错误 / 请求错误 [${(failedResults || []).length}]`}>
+                                <FuzzerResponseTableEx
+                                    success={false}
+                                    content={failedResults} setRequest={setRequest}
+                                />
+                            </Tabs.TabPane>
+                        </Tabs>
+                    </>
+                    : <Result
+                        status={"info"}
+                        title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                        subTitle={"本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"}
+                    />}
+                </>}
             </Col>
         </Row>
     </>
-};
+}

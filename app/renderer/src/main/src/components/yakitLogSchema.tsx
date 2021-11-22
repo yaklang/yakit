@@ -46,7 +46,6 @@ export const ExtractExecResultMessage = (data: ExecResult): ExecResultLog | Exec
     if (data.IsMessage) {
         try {
             let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString("utf8"));
-            console.info("message body: ", obj)
             if (obj.type === "log") {
                 return obj.content as ExecResultLog
             } else if (obj.type === "progress") {

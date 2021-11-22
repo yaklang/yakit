@@ -87,6 +87,8 @@ service Yak {
 
   // Fuzzer
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
+  rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
+  rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
 
   // FuzzerResponse 对象转 HTTPFlow：以便分析和模糊测试
   rpc ConvertFuzzerResponseToHTTPFlow(FuzzerResponse) returns (HTTPFlow);
@@ -147,6 +149,27 @@ service Yak {
   rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
   rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
   rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+}
+
+message HTTPRequestMutateParams {
+  bytes Request = 1;
+
+  repeated string FuzzMethods = 2;
+
+  // use chunk encode
+  bool ChunkEncode = 3;
+
+  // multipart boundary
+  bool UploadEncode = 4;
+}
+
+message HTTPResponseMutateParams {
+  bytes Response = 2;
+}
+
+message MutateResult {
+  bytes Result = 1;
+  repeated bytes ExtraResults = 2;
 }
 
 message QueryHostsRequest {

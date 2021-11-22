@@ -3,6 +3,11 @@ import {Button, Divider, notification, PageHeader, Popover, Space, Spin} from "a
 import {YakEditor} from "../../utils/editors";
 import {failed, success} from "../../utils/notification";
 import {CopyToClipboard} from 'react-copy-to-clipboard';
+import {showModal} from "../../utils/showModal";
+import {divider} from "@uiw/react-md-editor";
+
+const {ipcRenderer} = window.require("electron");
+
 
 export interface CodecType {
     key?: string
@@ -72,7 +77,6 @@ export interface CodecPageProp {
 
 }
 
-const {ipcRenderer} = window.require("electron");
 
 export const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [codeType, setCodeType] = useState<string>();

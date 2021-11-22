@@ -1,0 +1,7 @@
+.selected {
+    background-color: rgba(78, 164, 255, 0.4);
+}
+
+.httpFlowTable .ant-table .ant-table-tbody > tr:hover > td {
+    background: unset;
+}

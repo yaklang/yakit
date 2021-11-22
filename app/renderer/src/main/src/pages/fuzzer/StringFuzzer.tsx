@@ -184,7 +184,8 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                 <PageHeader title={"调试模式"} subTitle={"调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用"}/>
                 <Space direction={"vertical"} style={{width: "100%"}} size={24}>
                     <div style={{height: 120}}>
-                        <YakEditor value={template} readOnly={false} setValue={setTemplate}/>
+                        <YakEditor type={"http"}
+                                   value={template} readOnly={false} setValue={setTemplate}/>
                     </div>
                     <Form layout={"horizontal"} onSubmitCapture={e => {
                         e.preventDefault()
