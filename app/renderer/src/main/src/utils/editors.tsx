@@ -185,10 +185,13 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
             setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
             props.onEditor && props.onEditor(monacoEditor)
         }
-        setStrValue(new Buffer(props.originValue).toString('utf8'))
-        setHexValue(new Buffer(props.originValue))
+
+        if (props.readOnly) {
+            setStrValue(new Buffer(props.originValue).toString('utf8'))
+            setHexValue(new Buffer(props.originValue))
+        }
     }, [
-        // props.originValue,
+        props.originValue,
         monacoEditor,
     ])
 

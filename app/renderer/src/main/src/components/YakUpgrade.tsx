@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Alert, Button, Card, Modal, Popconfirm, Progress, Space, Spin, Tag} from "antd";
+import {Alert, Button, Card, Modal, Popconfirm, Popover, Progress, Space, Spin, Tag, Typography} from "antd";
 import {failed, success} from "../utils/notification";
 
 const {ipcRenderer} = window.require("electron");
@@ -26,6 +26,7 @@ interface DownloadingState {
     size: DownloadingSize;
 }
 
+const {Text} = Typography;
 
 export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
     const [currentVersion, setCurrentVersion] = useState("")
@@ -35,6 +36,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
     const [downloading, setDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState<DownloadingState>();
     const [winPath, setWinPath] = useState("");
+    const [platformArch, setPlatformArch] = useState("");
 
     const queryLatestVersion = () => {
         setLatestLoading(true)
@@ -52,13 +54,22 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
         ipcRenderer.invoke("get-current-yak").then((data: string) => {
             setCurrentVersion(data)
         }).catch(e => {
-            failed(`${e}`)
+            setCurrentVersion("")
+            failed(<>
+                获取 Yak 引擎当前版本失败，请按提示安装即可<Popover content={`${e}`}>
+                <Button size={"small"} type={"link"}>错误详情</Button>
+            </Popover>
+            </>)
         }).finally(
             () => setTimeout(() => setLoading(false), 300)
         )
     }
 
     useEffect(() => {
+        ipcRenderer.invoke("get-platform-and-arch").then((e: string) => {
+            setPlatformArch(e)
+        })
+
         ipcRenderer.on("download-yak-engine-progress", async (e: any, state: DownloadingState) => {
             setDownloadProgress(state);
         })
@@ -82,8 +93,15 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
             width: "40%",
             content: <>
                 <Space direction={"vertical"}>
-                    <Tag color={"purple"}>*nix 系统下会安装在 /usr/local/bin/yak </Tag>
-                    <Tag color={""}>windows 系统下会安装在 {winPath} </Tag>
+                    {(platformArch.startsWith("darwin-") || platformArch === "") &&
+                    <Tag color={"purple"}>*nix 系统下会安装在 /usr/local/bin/yak </Tag>}
+                    {platformArch.startsWith("darwin-arm64") &&
+                    <Space direction={"vertical"}>
+                        <Tag color={"purple"}>macOS m1(pro/max) 用户需要检查 Rosetta 2 环境，如需要手动安装，如下：</Tag>
+                        <Text mark={false} code={true} copyable={true}>softwareupdate --install-rosetta</Text>
+                    </Space>
+                    }
+                    {platformArch.startsWith("win") && <Tag color={""}>windows 系统下会安装在 {winPath} </Tag>}
                     <p/>
                     <Tag>选择 Ok 允许 Yakit 操作</Tag>
                     <Tag>选择 Cancel 用户可以手动更新 %PATH%</Tag>
@@ -94,7 +112,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                     success("安装成功，如未生效，重启 Yakit 即可")
                 }).catch(err => {
                     failed("安装失败")
-                })
+                }).finally(updateCurrent)
             }
 
         })
@@ -106,6 +124,16 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
         size={"small"} bodyStyle={{padding: 0}} bordered={false}
     >
         <Space direction={"vertical"} style={{width: "100%"}}>
+            {platformArch === "darwin-arm64" && <Alert
+                type={"error"}
+                message={<>
+                    当前系统为({platformArch})，如果未安装 Rosetta 2, 无法运行 Yak 核心引擎
+                    <br/>
+                    <br/>
+                    <div>运行以下命令可手动安装 Rosetta，如已安装可忽略</div>
+                    <Text mark={false} code={true} copyable={true}>softwareupdate --install-rosetta</Text>
+                </>}
+            />}
             <Spin spinning={loading}>
                 <Alert message={<Space>
                     当前本地安装的 Yak 核心引擎版本为:

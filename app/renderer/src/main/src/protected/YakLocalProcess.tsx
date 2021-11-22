@@ -4,6 +4,7 @@ import {Button, Card, Col, Form, List, Modal, Popconfirm, Row, Space, Tag} from 
 import ReactJson from "react-json-view";
 import {failed, success} from "../utils/notification";
 import {showModal} from "../utils/showModal";
+import {YakUpgrade} from "../components/YakUpgrade";
 
 export interface YakLocalProcessProp {
     onConnected?: (port: number, host: string) => any
@@ -22,9 +23,13 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
     const [process, setProcess] = useState<yakProcess[]>([]);
     const [loading, setLoading] = useState(false);
     const [shouldAutoStart, setShouldAutoStart] = useState(false);
+    const [installed, setInstalled] = useState(false);
 
     const update = () => {
         let noProcess = true;
+        ipcRenderer.invoke("is-yak-engine-installed").then(ok => {
+            setInstalled(ok)
+        })
         ipcRenderer.invoke("ps-yak-grpc").then((i: yakProcess[]) => {
             setProcess(i.map((element: yakProcess) => {
                 noProcess = false;
@@ -46,11 +51,35 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
         }
     }, [])
 
+    const promptInstallYakEngine = () => {
+        let m = showModal({
+            keyboard: false,
+            title: "引擎安装与升级",
+            width: "50%",
+            content: <>
+                <YakUpgrade onFinished={() => {
+                    m.destroy()
+                }}/>
+            </>
+        })
+    }
+
     const startYakGRPCServer = (sudo: boolean) => {
         ipcRenderer.invoke("start-local-yak-grpc-server", {
             sudo,
-        }).catch(e => {
-
+        }).catch((e: Error) => {
+            const flag = `${e.message}`;
+            if (flag.includes(`cannot find '/usr/local/bin'`)) {
+                failed("未安装 Yak 引擎（找不到 /usr/local/bin 目录）")
+                promptInstallYakEngine()
+                return
+            }
+            if (flag.includes(`uninstall yak engine`)) {
+                failed("未安装 Yak 引擎")
+                promptInstallYakEngine()
+                return
+            }
+            // failed(`${e.message}`)
         }).finally(() => {
             update()
         })
@@ -63,7 +92,10 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                     <Col span={5}/>
                     <Col span={14}>
                         <Card
-                            title={"本地 Yak 进程管理"}
+                            title={<Space>
+                                <div>本地 Yak 进程管理</div>
+                                {!installed && <Tag color={"red"}>引擎未安装</Tag>}
+                            </Space>}
                             size={"small"}
                             extra={[
                                 process.length > 0 && <Space>
@@ -102,13 +134,8 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                             <Button size={"small"} type={"primary"}
                                                                     disabled={!props.onConnected}
                                                                     onClick={() => {
-                                                                        Modal.success({
-                                                                            title: "确定连接该 yak 引擎？",
-                                                                            onOk: () => {
-                                                                                props.onConnected && props.onConnected(
-                                                                                    i.port, "localhost")
-                                                                            }
-                                                                        })
+                                                                        props.onConnected && props.onConnected(
+                                                                            i.port, "localhost")
                                                                     }}
                                                             >连接引擎</Button>
                                                             <Popconfirm
