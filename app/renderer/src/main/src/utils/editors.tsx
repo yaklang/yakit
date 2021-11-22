@@ -188,7 +188,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
         setStrValue(new Buffer(props.originValue).toString('utf8'))
         setHexValue(new Buffer(props.originValue))
     }, [
-        props.originValue,
+        // props.originValue,
         monacoEditor,
     ])
 
