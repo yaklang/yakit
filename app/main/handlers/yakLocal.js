@@ -4,7 +4,9 @@ const process = require("process");
 const psList = require("ps-list");
 const treeKill = require("tree-kill");
 const sudoPrompt = require("sudo-prompt");
+const fs = require("fs");
 const net = require("net");
+const path = require("path");
 
 const isWindows = process.platform === "win32";
 
@@ -18,6 +20,11 @@ function getRandomInt(max) {
 
 function notification(msg) {
     new Notification({title: msg}).show()
+}
+
+const getWindowsInstallPath = () => {
+    const systemRoot = process.env["WINDIR"] || process.env["windir"] || process.env["SystemRoot"];
+    return path.join(systemRoot, "System32", "yak.exe")
 }
 
 const windowsPidTableNetstatANO = (stdout) => {
@@ -176,6 +183,20 @@ module.exports = {
                     process.env.PATH = process.env.PATH + ":/usr/local/bin/"
                 }
 
+                if (!isWindows) {
+                    // 如果是 mac/ubuntu
+                    if (!fs.existsSync("/usr/local/bin")) {
+                        reject(new Error("cannot find '/usr/local/bin'"))
+                        return
+                    }
+
+                    if (!fs.existsSync("/usr/local/bin/yak")) {
+                        reject(new Error("uninstall yak engine"))
+                        return
+                    }
+                }
+
+
                 let randPort = 50000 + getRandomInt(10000);
                 const cmd = `yak grpc --port ${randPort}`;
                 try {
@@ -183,11 +204,21 @@ module.exports = {
                         sudoPrompt.exec(cmd, {
                                 name: `yak grpc port ${randPort}`,
                             },
-                            function (error, stdout, stderr) {
+                            function (error) {
+                                if (error) {
+                                    reject(error)
+                                } else {
+                                    resolve()
+                                }
                             }
                         )
                     } else {
                         childProcess.exec(cmd, err => {
+                            if (err) {
+                                reject(err)
+                            } else {
+                                resolve()
+                            }
                         })
                     }
                 } catch (e) {
@@ -198,10 +229,19 @@ module.exports = {
             })
         }
         ipcMain.handle("start-local-yak-grpc-server", async (e, params) => {
-            try {
-                return await asyncStartLocalYakGRPCServer(params)
-            } catch (e) {
-                return -1
+            return await asyncStartLocalYakGRPCServer(params)
+        })
+
+        ipcMain.handle("is-yak-engine-installed", e => {
+            if (!isWindows) {
+                // 如果是 mac/ubuntu
+                if (!fs.existsSync("/usr/local/bin")) {
+                    return false
+                }
+                return fs.existsSync("/usr/local/bin/yak");
+
+            } else {
+                return fs.existsSync(getWindowsInstallPath())
             }
         })
     },

@@ -337,12 +337,13 @@ module.exports = {
         const installYakEngine = (version) => {
             return new Promise((resolve, reject) => {
                 const origin = path.join(yakEngineDir, `yak-${version}`);
+
                 const dest = isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
 
                 const install = () => {
                     sudo.exec(
                         isWindows ?
-                            `copy ${origin} ${dest}` : `cp ${origin} ${dest} && chmod +x ${dest}`,
+                            `copy ${origin} ${dest}` : `mkdir -p /usr/local/bin && cp ${origin} ${dest} && chmod +x ${dest}`,
                         {
                             name: "Install Yak Binary"
                         }, err => {
@@ -354,19 +355,37 @@ module.exports = {
                         })
                 }
 
-                fs.access(dest, fs.constants.R_OK, ok => {
-                    if (!ok) {
+                // 如果检测不到这个文件，就返回不存在
+                if (!fs.existsSync(dest)) {
+                    install()
+                } else {
+                    try {
+                        const cmd = isWindows ? `del /f ${dest}` : `rm ${dest}`;
+                        sudo.exec(cmd, {
+                            name: "Delete Old Yak"
+                        }, err => {
+                            install()
+                        })
+                    } catch (e) {
+                        console.info(e)
                         install()
-                        return
                     }
 
-                    let cmd = isWindows ? `del /f ${dest}` : `rm ${dest}`;
-                    sudo.exec(cmd, {
-                        name: "Delete Old Yak"
-                    }, err => {
-                        install()
-                    })
-                })
+                }
+
+                // fs.access(dest, fs.constants.R_OK, ok => {
+                //     if (!ok) {
+                //         install()
+                //         return
+                //     }
+                //
+                //     let cmd = isWindows ? `del /f ${dest}` : `rm ${dest}`;
+                //     sudo.exec(cmd, {
+                //         name: "Delete Old Yak"
+                //     }, err => {
+                //         install()
+                //     })
+                // })
             })
         }
 
@@ -374,14 +393,13 @@ module.exports = {
             return await installYakEngine(version);
         })
 
-        // asyncinstallYakit wrapper
-        const asyncinstallYakit = (params) => {
-            return new Promise((resolve, reject) => {
-                shell.openPath(yakEngineDir)
-            })
-        }
+        // 获取当前是否是 arm64？
+        ipcMain.handle("get-platform-and-arch", (e) => {
+            return `${process.platform}-${process.arch}`;
+        })
+
         ipcMain.handle("install-yakit", async (e, params) => {
-            return await asyncinstallYakit(params)
+            return shell.openPath(yakEngineDir)
         })
 
 
