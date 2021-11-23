@@ -18,7 +18,7 @@ Yakit 是一个高度集成化的 Yak 语言安全能力的输出平台，使用
 
 ![功能预览](http://www.yaklang.io/assets/images/yakit-poc-loaded-136aa1bd8e078db19aa74b4d8b4f429a.jpg)
 
-## 第一无二的 Yakit 架构
+## 独一无二的 Yakit 架构
 
 正如我们在上面提到的，Yakit 的核心并不在工具本身上，而是依托于 Yak gRPC 接口； 也就是说，我们可以仅仅只把 Yakit 当作一个 "视窗" 来操纵 Yak 引擎来完成我们想要实现的安全能力。
 
