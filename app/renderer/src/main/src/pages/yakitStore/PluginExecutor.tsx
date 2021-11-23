@@ -40,12 +40,14 @@ export interface PluginExecutorProp {
 
 const {ipcRenderer} = window.require("electron");
 
+const {Panel} = Collapse;
+
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const {script} = props;
     const xtermRef = useRef(null);
     const [token, setToken] = useState("");
     const [loading, setLoading] = useState(false);
-    const [tabKey, setTab] = useState("params");
+    const [activePanels, setActivePanels] = useState<string[]>(["params"]);
     const [results, setResults] = useState<ExecResultLog[]>([]);
     const [progress, setProgress] = useState<ExecResultProgress[]>([]);
     const [resetFlag, setResetFlag] = useState(false);
@@ -128,59 +130,75 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     //     </Empty>
     // }
 
+    useEffect(() => {
+        if (!loading) {
+            setActivePanels([...activePanels, "params"])
+        }
+    }, [loading])
+
     return <div>
-        <Card title={`模块执行操作台：${script.ScriptName}`} size={"small"} extra={<Space>
-            <Popconfirm
-                title={"确定想要停止该任务？"}
-                disabled={!loading}
-                onConfirm={e => {
-                    ipcRenderer.invoke("cancel-exec-yak-script", token)
-                }}
-            >
-                <Button
-                    size={"small"}
-                    disabled={!loading}
-                    type={"primary"} danger={true}>
-                    立即停止该任务 / KILL TASK
-                </Button>
-            </Popconfirm>
-            <Button
-                size={"small"}
-                onClick={e => {
-                    xtermClear(xtermRef)
-                    reset()
-                }} disabled={loading}>清空缓存</Button>
-        </Space>} bordered={false}>
-            <Tabs
-                // tabPosition={"left"}
-                onChange={setTab} activeKey={tabKey} tabBarExtraContent={() => {
-                return <Tag>123</Tag>
+        <Collapse
+            activeKey={activePanels}
+            onChange={key => {
+                // console.info(key)
             }}
-            >
-                <Tabs.TabPane key={"params"} tab={"设置参数 / Params"}>
-                    <Spin spinning={loading}>
-                        <YakScriptParamsSetter
-                            {...script}
-                            params={[]}
-                            onParamsConfirm={(p: YakExecutorParam[]) => {
-                                setLoading(true)
-                                setTab("console")
-                                ipcRenderer.invoke("exec-yak-script", {
-                                    Params: p,
-                                    YakScriptId: props.script.Id,
-                                }, token)
+        >
+            <Panel
+                key={"params"}
+                showArrow={false}
+                header={<>
+                    设置参数
+                </>}
+                extra={<>
+                    <Space>
+                        <Popconfirm
+                            title={"确定想要停止该任务？"}
+                            disabled={!loading}
+                            onConfirm={e => {
+                                ipcRenderer.invoke("cancel-exec-yak-script", token)
                             }}
-                            styleSize={props.size}
-                            submitVerbose={"开始执行该模块 / Start"}
-                        />
-                    </Spin>
-                </Tabs.TabPane>
-                <Tabs.TabPane key={"console"} tab={"执行结果 / Results"}>
-                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
-                    <PluginResultUI script={script} loading={loading} progress={progress} results={results}/>
-                    {/*{(loading, results, progress, script)}*/}
-                </Tabs.TabPane>
-            </Tabs>
-        </Card>
+                        >
+                            <Button
+                                size={"small"}
+                                disabled={!loading}
+                                type={"primary"} danger={true}>
+                                立即停止该任务 / KILL TASK
+                            </Button>
+                        </Popconfirm>
+                        <Button
+                            size={"small"}
+                            onClick={e => {
+                                xtermClear(xtermRef)
+                                reset()
+                                setActivePanels(["params"])
+                            }} disabled={loading}
+                        >清空结果</Button>
+                    </Space>
+                </>}>
+                <Spin spinning={loading}>
+                    <YakScriptParamsSetter
+                        {...script}
+                        params={[]}
+                        onParamsConfirm={(p: YakExecutorParam[]) => {
+                            setLoading(true)
+                            // setTab("console")
+                            setActivePanels(["console"])
+                            ipcRenderer.invoke("exec-yak-script", {
+                                Params: p,
+                                YakScriptId: props.script.Id,
+                            }, token)
+                        }}
+                        styleSize={props.size}
+                        submitVerbose={"开始执行该模块 / Start"}
+                    />
+                </Spin>
+            </Panel>
+            <Panel key={"console"} showArrow={false} header={<>
+                插件执行结果
+            </>}>
+                <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
+                <PluginResultUI script={script} loading={loading} progress={progress} results={results}/>
+            </Panel>
+        </Collapse>
     </div>
 };
