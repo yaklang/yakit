@@ -104,7 +104,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     <p style={{color: "#999999", marginBottom: 0}}>Author: {script?.Author}</p>
                     <Divider type={"vertical"}/>
                     {script?.Tags ? (script?.Tags || "").split(",").filter(i => !!i).map(i => {
-                        return <Tag>{i}</Tag>
+                        return <Tag key={`${i}`}>{i}</Tag>
                     }) : "No Tags"}
                 </Space>
                 <Space>

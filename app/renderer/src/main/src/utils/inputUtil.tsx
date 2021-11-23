@@ -282,6 +282,7 @@ export const SelectOne: React.FC<SelectOneProps> = (p) => {
             p.setValue && p.setValue(e.target.value)
         }} value={p.value} buttonStyle="solid" size={p.size}>
             {p.data.map(e => <Radio.Button
+                key={`${e.value}`}
                 // type={current == e.value ? "primary" : undefined}
                 disabled={(p.value === e.value ? false : !!p.disabled) || e.disabled}
                 value={e.value}>{e.text}</Radio.Button>)}

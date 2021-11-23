@@ -114,7 +114,6 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
     const [password, setPassword] = useState("");
     const [caPem, setCaPem] = useState("");
     const [mode, setMode] = useState<"local" | "remote">("local");
-    const [loading, setLoading] = useState(false);
     const [localLoading, setLocalLoading] = useState(false);
     const [historySelected, setHistorySelected] = useState(false);
     const [name, setName] = useState("");
@@ -140,7 +139,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
     }, [mode])
 
     const login = (newHost?: string, newPort?: number) => {
-        setLoading(true)
+        setLocalLoading(true)
         // info("正在连接 ... Yak 核心引擎")
         let params = {
             host: newHost || host,
@@ -157,7 +156,6 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
         }).catch(e => {
             notification["error"]({message: "设置 Yak gRPC 引擎地址失败"})
         }).finally(() => {
-            (() => setTimeout(() => setLoading(false), 300))()
         })
     }
 

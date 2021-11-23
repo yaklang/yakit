@@ -130,14 +130,16 @@ export const CodecPage: React.FC<CodecPageProp> = (props) => {
                         let items: React.ReactNode[] = [];
                         let singleItems: React.ReactNode[] = [];
 
-                        CodecItems.forEach(i => {
+                        CodecItems.forEach((i,index) => {
                             if ((i.subTypes || []).length > 0) {
                                 items.push(<Popover
+                                    key={`${i.key}-${index}`}
                                     trigger={"click"}
                                     title={i.verbose}
                                     content={<Space>
                                         {(i.subTypes || []).map(subType => {
                                             return <Button
+                                                key={subType.key}
                                                 style={{marginRight: 8}}
                                                 onClick={() => {
                                                     codec(subType.key || "")
@@ -150,7 +152,7 @@ export const CodecPage: React.FC<CodecPageProp> = (props) => {
                                 </Popover>)
                                 return
                             }
-                            singleItems.push(<Button onClick={() => {
+                            singleItems.push(<Button key={i.key} onClick={() => {
                                 codec(i.key || "")
                             }} style={{marginRight: 8}}>{i.verbose}</Button>)
                         })

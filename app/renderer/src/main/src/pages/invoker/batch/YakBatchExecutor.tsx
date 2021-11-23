@@ -278,6 +278,7 @@ export const YakBatchExecutor: React.FC<YakBatchExecutorProp> = (props) => {
                     pagination={false}
                     dataSource={tasks}
                     bordered={true} size={"small"}
+                    rowKey={(row)=>{return row.Id}}
                     columns={[
                         {
                             title: "模块名称",
