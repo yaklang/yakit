@@ -73,7 +73,7 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
                 </Space>
             }}
             loading={loading}
-            rowKey={"Id"}
+            rowKey={(row)=>{return row.Timestamp}}
             dataSource={response.Data}
             pagination={{
                 pageSize: response.Pagination.Limit,

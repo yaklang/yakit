@@ -74,7 +74,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
             <Col span={8}>
                 <Card title={"选择 / 查看已有字典"} size={"small"}
                       bordered={false}
-                      extra={[
+                      extra={
                           <Form size={"small"} onSubmitCapture={e => e.preventDefault()}>
                               <Form.Item style={{marginBottom: 0}} label={" "} colon={false}>
                                   <Button.Group>
@@ -93,7 +93,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                   </Button.Group>
                               </Form.Item>
                           </Form>
-                      ]}
+                      }
                 >
                     <List<string>
                         // bordered={true}
@@ -133,7 +133,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                             <Col span={16}>
                             <Card
                             title={"字典内容"} size={"small"} bordered={false}
-                            extra={[
+                            extra={
                             <Form size={"small"} onSubmitCapture={e => {
                             e.preventDefault()
 
@@ -157,7 +157,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                             </Button.Group>
                             </Form.Item>
                             </Form>
-                            ]}
+                            }
                             >
                             <Table<Payload>
                             bordered={true} size={"small"}

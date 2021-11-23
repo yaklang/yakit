@@ -74,7 +74,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         />
                     </Space>}
                     size={"small"}
-                    extra={[
+                    extra={
                         !props.targets && <Space>
                             <Form size={"small"} onSubmitCapture={(e) => {
                                 e.preventDefault()
@@ -95,7 +95,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             </Form>
                             {/*<Input onBlur={r => setSearchTarget(r.target.value)} size={"small"}/>*/}
                         </Space>
-                    ]}
+                    }
                 >
                     <Tree
                         showLine={true} treeData={treeData}
@@ -128,7 +128,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                 <Card
                     size={"small"} title={"HTTP Flow Record"}
                     bodyStyle={{padding: 0}}
-                    extra={[
+                    extra={
                         <Pagination
                             simple={true}
                             defaultCurrent={1}
@@ -141,7 +141,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             }}
                             total={total}
                         />
-                    ]}
+                    }
                 >
                     <HTTPFlowMiniTable onTotal={setTotal} onSendToWebFuzzer={props.onSendToWebFuzzer} filter={{
                         SearchURL: selected,

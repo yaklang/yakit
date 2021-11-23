@@ -97,7 +97,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                 {!installed && <Tag color={"red"}>引擎未安装</Tag>}
                             </Space>}
                             size={"small"}
-                            extra={[
+                            extra={
                                 process.length > 0 && <Space>
                                     <Button size={"small"} onClick={() => {
                                         startYakGRPCServer(false)
@@ -108,7 +108,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                         <Button size={"small"} type={"primary"}>管理员(sudo)启动</Button>
                                     </Popconfirm>
                                 </Space>
-                            ]}
+                            }
                         >
                             {process.length > 0 ? <List
                                 dataSource={process}

@@ -93,7 +93,7 @@ export const ExecHistoryTable: React.FC<ExecHistoryTableProp> = (props) => {
             loading={loading}
             dataSource={data || []}
             scroll={{x: 300, y: 420}}
-            rowKey={"Id"}
+            rowKey={(row)=>{return `${row.Timestamp}`}}
             expandable={props.mini ? undefined : {
                 expandedRowRender: (r) => {
                     return <ExecHistoryViewer {...r}/>

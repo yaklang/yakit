@@ -83,8 +83,9 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     })
     const requiredParams: YakScriptParam[] = groupToParams.get("required") || [];
 
-    const yakScriptParamToNode = (i: YakScriptParam, required: boolean) => {
+    const yakScriptParamToNode = (i: YakScriptParam, required: boolean,key:string) => {
         return <Form.Item
+            key={key}
             style={{marginBottom: i.Help ? undefined : 8}}
             label={<Space size={2}>
                 <>{i.FieldVerbose && `${i.FieldVerbose}/`}{i.Field}</>
@@ -177,7 +178,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                             </Tooltip>
                         </Space>
                     </Divider>
-                    {requiredParams.map(i => yakScriptParamToNode(i, true))}
+                    {requiredParams.map((i,index) => yakScriptParamToNode(i, true,`params-${index}`))}
                 </>}
                 {extraGroup.length <= 1 ? <>
                     <Divider orientation={"left"} style={{fontSize: 14}}>
@@ -194,14 +195,14 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         </Space>
                     </Divider>
                     {!isGroupHidden("default", false) && <>
-                        {(groupToParams.get("default") || []).map((i: YakScriptParam) => yakScriptParamToNode(i, false))}
+                        {(groupToParams.get("default") || []).map((i: YakScriptParam,index) => yakScriptParamToNode(i, false,`defaultParamsGroup-${index}`))}
                     </>}
                 </> : <>
-                    {extraGroup.map(i => {
+                    {extraGroup.map((i,index) => {
                         if ((groupToParams.get(i) || []).length <= 0) {
                             return <></>
                         }
-                        return <>
+                        return <div key={`${index}`}>
                             <Divider orientation={"left"} style={{fontSize: 14}}>
                                 <Space>
                                     <span>
@@ -217,9 +218,9 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                 </Space>
                             </Divider>
                             {!isGroupHidden(i, true) && <>
-                                {(groupToParams.get(i) || []).map((i: YakScriptParam) => yakScriptParamToNode(i, false))}
+                                {(groupToParams.get(i) || []).map((i: YakScriptParam,index) => yakScriptParamToNode(i, false,`paramsGroup-${index}`))}
                             </>}
-                        </>
+                        </div>
                     })}
                 </>}
                 {originParams.length <= 0 && <Form.Item label={" "} colon={false}>

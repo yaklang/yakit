@@ -103,11 +103,8 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                             return
                     }
                 }}
-                addIcon={<div>
-                    <Button
-                        type={"link"} size={"small"}
-                        icon={<PlusOutlined/>}
-                    >创建 Web Fuzzer</Button>
+                addIcon={<div style={{cursor:'pointer',padding:'0 5px',color:'rgb(25,143,255'}}>
+                   <PlusOutlined/>创建 Web Fuzzer
                 </div>}
             >
                 <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
