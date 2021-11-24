@@ -23,6 +23,7 @@
     "antd": "^4.16.9",
     "bizcharts": "^4.1.12",
     "codemirror": "^5.63.3",
+    "customize-cra": "^1.0.0",
     "moment": "^2.29.1",
     "monaco-editor": "^0.26.1",
     "monaco-editor-webpack-plugin": "^4.1.1",
@@ -68,5 +69,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "prettier": "^2.4.1"
   }
 }

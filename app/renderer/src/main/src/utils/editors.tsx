@@ -285,8 +285,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     />}
                 </Space>}
                 bodyStyle={{padding: 0}}
-                extra={[
-                    !props.disableFullscreen && <Button
+                extra={<>
+                    {!props.disableFullscreen && <Button
                         size={"small"}
                         type={"link"}
                         icon={<FullscreenOutlined/>}
@@ -301,7 +301,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                                 </div>
                             })
                         }}
-                    />,
+                    />}
                     <Popover
                         title={"配置编辑器"}
                         content={<>
@@ -330,7 +330,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                             type={"link"} size={"small"}
                         />
                     </Popover>
-                ]}
+                </>}
             >
                 <div style={{height: actualBodyHeight, width: "100%"}}>
                     {mode === "text" && <YakEditor
