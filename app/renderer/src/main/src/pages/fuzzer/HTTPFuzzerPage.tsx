@@ -378,7 +378,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     {/*</Space>*/}
                     {onlyOneResponse ? [
                         <Space>
-                            <Space>
+                            <Space key='single'>
                                 <Button size={"small"}
                                         onClick={() => {
                                             analyzeFuzzerResponse(content[0], setRequest)
@@ -395,7 +395,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <Tag>{formatTimestamp(content[0].Timestamp)}</Tag>
                         </Space>
                     ] : [
-                        <Space>
+                        <Space key='list'>
                             <Tag color={"green"}>成功:{successResults.length}</Tag>
                             <Input size={"small"} value={search} onChange={e => {
                                 setSearch(e.target.value)
