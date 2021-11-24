@@ -57,7 +57,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
     }).filter(i => i.feature !== "");
 
     const finalFeatures = features.length > 0 ?
-        features.slice(features.length - 1)
+        features.filter((data, i) => features.indexOf(data) === i)
         : [];
 
     return <Tabs
@@ -67,7 +67,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
     >
         {(finalFeatures || []).map(i => {
             return <Tabs.TabPane
-                tab={`插件结果视图[${i.feature}]`}
+                tab={YakitFeatureTabName(i.feature, i.params)}
                 key={"feature"}>
                 <YakitFeatureRender
                     params={i.params} feature={i.feature}
@@ -104,6 +104,16 @@ export interface YakitFeatureRenderProp {
     execResultsLog: ExecResultLog[]
 }
 
+export const YakitFeatureTabName = (feature: string, params: any) => {
+    switch (feature) {
+        case "website-trees":
+            return "网站树结构 / Website Map";
+        case "fixed-table":
+            return params["table_name"] || "输出表";
+    }
+    return feature.toUpperCase
+}
+
 export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
     switch (props.feature) {
         case "website-trees":
@@ -112,22 +122,17 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
             </div>
         case "fixed-table":
             return <div>
-                <Card
-                    bodyStyle={{padding: 0}} title={`输出表：${props.params.table_name}`}
-                    size={"small"}
-                >
-                    <BasicTable
-                        columns={(props.params["columns"] || []) as string[]}
-                        data={(props.execResultsLog || []).filter(i => i.level === "feature-table-data").map(i => {
-                            try {
-                                return JSON.parse(i.data).data;
-                            } catch (e) {
-                                return {} as any
-                            }
+                <BasicTable
+                    columns={(props.params["columns"] || []) as string[]}
+                    data={(props.execResultsLog || []).filter(i => i.level === "feature-table-data").map(i => {
+                        try {
+                            return JSON.parse(i.data).data;
+                        } catch (e) {
+                            return {} as any
+                        }
 
-                        })}
-                    />
-                </Card>
+                    })}
+                />
             </div>
     }
     return <div>
