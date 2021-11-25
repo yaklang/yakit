@@ -69,7 +69,7 @@ export const VariabelLengthView: React.FC<VariabelLengthViewProp> = (props) => {
                 {props.leftNode}
             </div>
             <div className='resize' ref={resizeNodeRef}>
-                <Divider style={{ height: "100%" }} type='horizontal' />
+                <Divider style={{ height: "100%", margin: 0 }} type='horizontal' />
             </div>
             <div className='right' ref={rightNodeRef}>
                 {props.rightNode}
@@ -81,7 +81,7 @@ export const VariabelLengthView: React.FC<VariabelLengthViewProp> = (props) => {
                 {props.leftNode}
             </div>
             <div className='resize' ref={resizeNodeRef}>
-                <Divider style={{ height: "100%" }} type='vertical' />
+                <Divider style={{ height: "100%", margin: 0 }} type='vertical' />
             </div>
             <div className='right' ref={rightNodeRef}>
                 {props.rightNode}

@@ -10,7 +10,7 @@
 }
 .vertical-content .resize {
     width: 100%;
-    height: 5px;
+    height: 8px;
     cursor: move;
 }
 .vertical-content .right {
@@ -30,10 +30,11 @@
     float: left;
 }
 .horizontal-content .resize {
-    width: 5px;
+    width: 8px;
     height: 100%;
     cursor: move;
     float: left;
+    text-align: center;
 }
 .horizontal-content .right {
     float: left;
