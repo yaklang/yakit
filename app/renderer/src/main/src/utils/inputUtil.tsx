@@ -550,7 +550,7 @@ export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
             value={p.value} onChange={e => p.setValue && p.setValue(e)}
             disabled={p.disabled}
         >
-            {p.data.map(e => <Select.Option value={e.value}>
+            {p.data.map(e => <Select.Option key={e.value} value={e.value}>
                 {e.text}
             </Select.Option>)}
         </Select>
