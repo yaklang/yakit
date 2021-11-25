@@ -222,9 +222,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
             if (origin) origin(e);
         };
 
-        const id = setInterval(() => setHeightAndWidth(), 500)
         return () => {
-            clearInterval(id)
             window.onresize = origin;
         }
     }, [containerDiv])
@@ -234,16 +232,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     )
 
     return <div style={{width: "100%"}} ref={containerDiv}>
-        <ResizableBox
-            width={maxWidth}
-            height={maxHeight} resizeHandles={["s", "se"]}
-            onResize={(d, data) => {
-                if (data.size.height - 44 >= 0) {
-                    setBodyHeight(data.size.height - 44)
-                }
-            }} axis={"y"}
-            minConstraints={[maxWidth, 300]}
-        >
+        
             <Card
                 size={"small"} loading={maxWidth < 100}
                 bordered={props.bordered}
@@ -359,6 +348,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     />}
                 </div>
             </Card>
-        </ResizableBox>
+        
     </div>
 };
