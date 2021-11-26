@@ -40,7 +40,7 @@ import { FuzzerResponseToHTTPFlowDetail } from "../../components/HTTPFlowDetail"
 import { FuzzerResponseTable, FuzzerResponseTableEx } from "./FuzzerResponseTable"
 import { randomString } from "../../utils/randomUtil"
 import { contentDemo } from "./demoContent"
-import { VariabelLengthView } from "@components/VariabelLengthView"
+import { VariabelLengthView } from "../../components/VariabelLengthView"
 
 const { ipcRenderer } = window.require("electron")
 
