@@ -27,14 +27,14 @@ export const VariabelLengthView: React.FC<VariabelLengthViewProp> = (props) => {
         const left = leftNodeRef.current as unknown as HTMLDivElement
         const right = rightNodeRef.current as unknown as HTMLDivElement
         const resize = resizeNodeRef.current as unknown as HTMLDivElement
-        // 组件初始高度
-        const contentHeight = content.offsetHeight
+
         // 点击鼠标时的监听事件
         resize.onmousedown = (e) => {
             const firstX = e.clientX
             const firstY = e.clientY
             const width = right.offsetWidth
             const height = right.offsetHeight
+            const contentHeight = content.offsetHeight
 
             document.onmousemove = (event) => {
                 if (!!props.isVertical) {
@@ -61,7 +61,7 @@ export const VariabelLengthView: React.FC<VariabelLengthViewProp> = (props) => {
         setTimeout(() => {
             drag()
         }, 300)
-    }, [])
+    }, [props.isVertical])
 
     return !!props.isVertical ? (
         <div className='vertical-content' ref={contentRef}>
