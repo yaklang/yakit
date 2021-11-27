@@ -1,6 +1,6 @@
 .vertical-content {
     width: 100%;
-    height: calc(100%-32px);
+    height: calc(100% - 32px);
     margin: 16px 1%;
     overflow: hidden;
 }
@@ -19,7 +19,7 @@
 }
 
 .horizontal-content {
-    width: calc(100%-16px);
+    width: calc(100% - 16px);
     height: 100%;
     margin: 1% 16px;
     overflow: hidden;

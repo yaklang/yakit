@@ -149,6 +149,26 @@ service Yak {
   rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
   rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
   rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+
+  // Bruter
+  rpc StartBrute(StartBruteParams) returns (stream ExecResult);
+  rpc GetAvailableBruteTypes(Empty) returns (GetAvailableBruteTypesResponse);
+}
+
+message GetAvailableBruteTypesResponse {
+  repeated string Types = 1;
+}
+
+message StartBruteParams {
+  string Type = 1;
+  string Targets = 2;
+  string TargetFile = 3;
+  repeated string Usernames = 4;
+  repeated string Passwords = 5;
+  repeated string Prefix = 6;
+  float Timeout = 7;
+  int64 Concurrent = 8;
+  int64 Retry = 9;
 }
 
 message HTTPRequestMutateParams {
@@ -627,6 +647,11 @@ message FuzzerRequest {
 
   // 用于处理 Host 和 Header 中 Host 不一致的情况
   string ActualAddr = 8;
+
+  // redirect setting
+  bool NoFollowRedirect = 9;
+  bool NoFollowMetaRedirect = 10;
+  bool FollowJSRedirect = 11;
 }
 
 message ExtractedUrl {

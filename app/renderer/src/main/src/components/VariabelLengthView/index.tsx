@@ -64,19 +64,19 @@ export const VariabelLengthView: React.FC<VariabelLengthViewProp> = (props) => {
     }, [props.isVertical])
 
     return !!props.isVertical ? (
-        <div className='vertical-content' ref={contentRef}>
+        <div className='vertical-content' ref={contentRef} style={{marginLeft: 0, marginRight: 0}}>
             <div className='left' ref={leftNodeRef}>
                 {props.leftNode}
             </div>
             <div className='resize' ref={resizeNodeRef}>
-                <Divider style={{ height: "100%", margin: 0 }} type='horizontal' />
+                <Divider style={{height: "100%", margin: 0}} type='horizontal'/>
             </div>
             <div className='right' ref={rightNodeRef}>
                 {props.rightNode}
             </div>
         </div>
     ) : (
-        <div className='horizontal-content' ref={contentRef}>
+        <div className='horizontal-content' ref={contentRef} style={{marginLeft: 0, marginRight: 0}}>
             <div className='left' ref={leftNodeRef}>
                 {props.leftNode}
             </div>
