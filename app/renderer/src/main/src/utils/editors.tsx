@@ -151,6 +151,9 @@ export interface HTTPPacketEditorProp {
     defaultHeight?: number
     bordered?: boolean
     onEditor?: (editor: IMonacoEditor) => any
+    hideSearch?: boolean
+    extra?: React.ReactNode
+    emptyOr?: React.ReactNode
 }
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
@@ -161,10 +164,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     const [searchValue, setSearchValue] = useState("");
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
     const [fontSize, setFontSize] = useState(12);
-    const containerDiv = useRef(null);
-    const [maxHeight, setMaxHeight] = useState(props.defaultHeight || 500);
     const [maxWidth, setMaxWidth] = useState(600);
-    const [bodyHeight, setBodyHeight] = useState<number | undefined>(props.defaultHeight);
 
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
 
@@ -203,162 +203,125 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
         props.onChange && props.onChange(hexValue)
     }, [hexValue])
 
-    useEffect(() => {
-        const div = containerDiv.current;
-        if (!div) {
-            return
-        }
-        const divTag = div as HTMLDivElement;
-        const setHeightAndWidth = () => {
-            if (divTag.clientHeight > 0) setMaxHeight(divTag.clientHeight);
-            if (divTag.clientWidth > 0) setMaxWidth(divTag.clientWidth);
-        }
+    const empty = !!props.emptyOr && props.originValue.length == 0
 
-        setHeightAndWidth()
-        let origin = window.onresize;
-        window.onresize = (e) => {
-            setHeightAndWidth();
-            // @ts-ignore
-            if (origin) origin(e);
-        };
-
-        const id = setInterval(() => setHeightAndWidth(), 500)
-        return () => {
-            clearInterval(id)
-            window.onresize = origin;
-        }
-    }, [containerDiv])
-
-    const actualBodyHeight = bodyHeight || (
-        maxHeight - 44 > 0 ? maxHeight - 44 : 300
-    )
-
-    return <div style={{width: "100%"}} ref={containerDiv}>
-        <ResizableBox
-            width={maxWidth}
-            height={maxHeight} resizeHandles={["s", "se"]}
-            onResize={(d, data) => {
-                if (data.size.height - 44 >= 0) {
-                    setBodyHeight(data.size.height - 44)
-                }
-            }} axis={"y"}
-            minConstraints={[maxWidth, 300]}
-        >
-            <Card
-                size={"small"} loading={maxWidth < 100}
-                bordered={props.bordered}
-                style={{height: "100%", width: "100%"}}
-                title={<Space>
-                    <span>{isResponse ? "HTTP Response" : "HTTP Request"}</span>
-                    <SelectOne
-                        label={" "} colon={false} value={mode} setValue={setMode}
-                        data={[
-                            {text: "TEXT", value: "text"},
-                            {text: "HEX", value: "hex"},
-                        ]} size={"small"} formItemStyle={{marginBottom: 0}}
-                    />
-                    {mode === "text" && <Input.Search
-                        size={"small"} value={searchValue}
-                        onChange={e => {
-                            setSearchValue(e.target.value)
-                        }} enterButton={true}
-                        onSearch={e => {
-                            if (!monacoEditor) {
-                                return
-                            }
-                            // @ts-ignore
-                            let range = monacoEditor?.getModel().findMatches(searchValue, false, false, false, null, false)
-                            if (range && range.length > 0) {
-                                const decs = monacoEditor.deltaDecorations(highlightDecorations, range.map(i => {
-                                    return {
-                                        id: `highlight[${searchValue}]`,
-                                        range: i.range,
-                                        options: {
-                                            isWholeLine: false,
-                                            inlineClassName: 'monacoInlineHighlight'
-                                        }
-                                    } as any
-                                }))
-                                setHighlightDecorations(decs)
-                            }
-                        }}
-                    />}
-                </Space>}
-                bodyStyle={{padding: 0}}
-                extra={<>
-                    {!props.disableFullscreen && <Button
-                        size={"small"}
-                        type={"link"}
-                        icon={<FullscreenOutlined/>}
-                        onClick={() => {
-                            showDrawer({
-                                title: "全屏", width: "100%",
-                                content: <div style={{height: "100%", width: "100%"}}>
-                                    <HTTPPacketEditor
-                                        {...props} disableFullscreen={true}
-                                        defaultHeight={670}
-                                    />
-                                </div>
-                            })
-                        }}
-                    />}
-                    <Popover
-                        title={"配置编辑器"}
-                        content={<>
-                            <Form
-                                onSubmitCapture={e => {
-                                    e.preventDefault()
-                                }} size={"small"}
-                                layout={"horizontal"}
-                                wrapperCol={{span: 16}}
-                                labelCol={{span: 8}}
-                            >
-                                <SelectOne
-                                    formItemStyle={{marginBottom: 4}}
-                                    label={"字号"}
-                                    data={[
-                                        {text: "小", value: 12},
-                                        {text: "中", value: 16},
-                                        {text: "大", value: 20},
-                                    ]} value={fontSize} setValue={setFontSize}
+    return <div style={{width: "100%"}}>
+        <Card
+            size={"small"}
+            bordered={props.bordered}
+            style={{height: "100%", width: "100%"}}
+            title={<Space>
+                <span>{isResponse ? "Response" : "Request"}</span>
+                <SelectOne
+                    label={" "} colon={false} value={mode} setValue={setMode}
+                    data={[
+                        {text: "TEXT", value: "text"},
+                        {text: "HEX", value: "hex"},
+                    ]} size={"small"} formItemStyle={{marginBottom: 0}}
+                />
+                {mode === "text" && !props.hideSearch && <Input.Search
+                    size={"small"} value={searchValue}
+                    onChange={e => {
+                        setSearchValue(e.target.value)
+                    }} enterButton={true}
+                    onSearch={e => {
+                        if (!monacoEditor) {
+                            return
+                        }
+                        // @ts-ignore
+                        let range = monacoEditor?.getModel().findMatches(searchValue, false, false, false, null, false)
+                        if (range && range.length > 0) {
+                            const decs = monacoEditor.deltaDecorations(highlightDecorations, range.map(i => {
+                                return {
+                                    id: `highlight[${searchValue}]`,
+                                    range: i.range,
+                                    options: {
+                                        isWholeLine: false,
+                                        inlineClassName: 'monacoInlineHighlight'
+                                    }
+                                } as any
+                            }))
+                            setHighlightDecorations(decs)
+                        }
+                    }}
+                />}
+            </Space>}
+            bodyStyle={{padding: 0}}
+            extra={<>
+                {props.extra}
+                {!props.disableFullscreen && <Button
+                    size={"small"}
+                    type={"link"}
+                    icon={<FullscreenOutlined/>}
+                    onClick={() => {
+                        showDrawer({
+                            title: "全屏", width: "100%",
+                            content: <div style={{height: "100%", width: "100%"}}>
+                                <HTTPPacketEditor
+                                    {...props} disableFullscreen={true}
+                                    defaultHeight={670}
                                 />
-                            </Form>
-                        </>}
-                    >
-                        <Button
-                            icon={<SettingOutlined/>}
-                            type={"link"} size={"small"}
-                        />
-                    </Popover>
-                </>}
-            >
-                <div style={{height: actualBodyHeight, width: "100%"}}>
-                    {mode === "text" && <YakEditor
-                        type={isResponse ? "html" : "http"}
-                        value={strValue} readOnly={props.readOnly}
-                        setValue={setStrValue}
-                        fontSize={fontSize}
-                        actions={[
-                            ...MonacoEditorCodecActions,
-                            ...MonacoEditorMutateHTTPRequestActions,
-                        ]}
-                        editorDidMount={editor => {
-                            setMonacoEditor(editor)
-                        }}
-                    />}
+                            </div>
+                        })
+                    }}
+                />}
+                <Popover
+                    title={"配置编辑器"}
+                    content={<>
+                        <Form
+                            onSubmitCapture={e => {
+                                e.preventDefault()
+                            }} size={"small"}
+                            layout={"horizontal"}
+                            wrapperCol={{span: 16}}
+                            labelCol={{span: 8}}
+                        >
+                            <SelectOne
+                                formItemStyle={{marginBottom: 4}}
+                                label={"字号"}
+                                data={[
+                                    {text: "小", value: 12},
+                                    {text: "中", value: 16},
+                                    {text: "大", value: 20},
+                                ]} value={fontSize} setValue={setFontSize}
+                            />
+                        </Form>
+                    </>}
+                >
+                    <Button
+                        icon={<SettingOutlined/>}
+                        type={"link"} size={"small"}
+                    />
+                </Popover>
+            </>}
+        >
+            <div style={{height: props.defaultHeight || 450, width: "100%"}}>
+                {empty && props.emptyOr}
 
-                    {mode === "hex" && <HexEditor
-                        showAscii={true}
-                        height={actualBodyHeight - 8}
-                        columns={0x10}
-                        data={hexValue}
-                        showRowLabels={true}
-                        showColumnLabels={false}
-                        nonce={nonce}
-                        onSetValue={props.readOnly ? undefined : handleSetValue}
-                    />}
-                </div>
-            </Card>
-        </ResizableBox>
+                {mode === "text" && !empty && <YakEditor
+                    type={isResponse ? "html" : "http"}
+                    value={strValue} readOnly={props.readOnly}
+                    setValue={setStrValue}
+                    fontSize={fontSize}
+                    actions={[
+                        ...MonacoEditorCodecActions,
+                        ...MonacoEditorMutateHTTPRequestActions,
+                    ]}
+                    editorDidMount={editor => {
+                        setMonacoEditor(editor)
+                    }}
+                />}
+
+                {mode === "hex" && !empty && <HexEditor
+                    showAscii={true}
+                    columns={0x10}
+                    data={hexValue}
+                    showRowLabels={true}
+                    showColumnLabels={false}
+                    nonce={nonce}
+                    onSetValue={props.readOnly ? undefined : handleSetValue}
+                />}
+            </div>
+        </Card>
     </div>
 };
