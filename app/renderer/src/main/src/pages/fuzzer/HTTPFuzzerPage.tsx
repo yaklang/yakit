@@ -1,16 +1,20 @@
-import React, {useEffect, useState} from "react"
+import React, { useEffect, useState } from "react"
 import {
     Alert,
     Button,
     Card,
-    Col, Divider,
-    Form, Input,
+    Col,
+    Divider,
+    Form,
+    Input,
     Modal,
     notification,
     Result,
     Row,
     Space,
     Spin,
+    Switch,
+    Table,
     Tabs,
     Tag,
     Typography
@@ -33,14 +37,17 @@ const {ipcRenderer} = window.require("electron")
 export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (r: string) => any) => {
     let m = showDrawer({
         width: "90%",
-        content: <>
-            <FuzzerResponseToHTTPFlowDetail
-                response={i}
-                onSendToFuzzer={(r) => {
-                    setRequest(new Buffer(r).toString())
-                    m.destroy()
-                }}
-            /></>
+        content: (
+            <>
+                <FuzzerResponseToHTTPFlowDetail
+                    response={i}
+                    onSendToFuzzer={(r) => {
+                        setRequest(new Buffer(r).toString())
+                        m.destroy()
+                    }}
+                />
+            </>
+        )
     })
 }
 
@@ -49,7 +56,6 @@ export interface HTTPFuzzerPageProp {
     request?: string
 }
 
-
 const {Text} = Typography
 
 export interface FuzzerResponse {
@@ -57,7 +63,7 @@ export interface FuzzerResponse {
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: { Header: string, Value: string }[]
+    Headers: { Header: string; Value: string }[]
     ResponseRaw: Uint8Array
     RequestRaw: Uint8Array
     BodyLength: number
@@ -87,17 +93,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [advancedConfig, setAdvancedConfig] = useState(false);
 
     // state
-    const [loading, setLoading] = useState(false);
-    const [content, setContent] = useState<FuzzerResponse[]>([]);
-    const [templates, setTemplates] = useState<{ name: string, template: string }[]>(fuzzerTemplates)
-    const [reqEditor, setReqEditor] = useState<IMonacoEditor>();
-    const [debuggingTag, setDebuggingTag] = useState(false);
-    const [fuzzToken, setFuzzToken] = useState("");
+    const [loading, setLoading] = useState(false)
+    const [content, setContent] = useState<FuzzerResponse[]>([])
+    const [templates, setTemplates] =
+        useState<{ name: string; template: string }[]>(fuzzerTemplates)
+    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    const [debuggingTag, setDebuggingTag] = useState(false)
+    const [fuzzToken, setFuzzToken] = useState("")
 
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState("")
 
     useEffect(() => {
-        setIsHttps(!!props.isHttps);
+        setIsHttps(!!props.isHttps)
         if (props.request) {
             setRequest(props.request)
             setContent([])
@@ -106,32 +113,39 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const submitToHTTPFuzzer = () => {
         setLoading(true)
-        ipcRenderer.invoke("HTTPFuzzer", {
-            Request: request,
-            ForceFuzz: forceFuzz,
-            IsHTTPS: isHttps,
-            Concurrent: concurrent,
-            PerRequestTimeoutSeconds: timeout,
-            Proxy: proxy,
-        }, fuzzToken)
-    };
+        ipcRenderer.invoke(
+            "HTTPFuzzer",
+            {
+                Request: request,
+                ForceFuzz: forceFuzz,
+                IsHTTPS: isHttps,
+                Concurrent: concurrent,
+                PerRequestTimeoutSeconds: timeout,
+                Proxy: proxy
+            },
+            fuzzToken
+        )
+    }
 
     const cancelCurrentHTTPFuzzer = () => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", fuzzToken)
     }
 
     useEffect(() => {
-        const token = randomString(60);
-        setFuzzToken(token);
+        const token = randomString(60)
+        setFuzzToken(token)
 
-        const dataToken = `${token}-data`;
-        const errToken = `${token}-error`;
-        const endToken = `${token}-end`;
+        const dataToken = `${token}-data`
+        const errToken = `${token}-error`
+        const endToken = `${token}-end`
 
         ipcRenderer.on(errToken, (e, details) => {
-            notification['error']({message: `提交模糊测试请求失败 ${details}`, placement: "bottomRight"})
+            notification["error"]({
+                message: `提交模糊测试请求失败 ${details}`,
+                placement: "bottomRight"
+            })
         })
-        let buffer: FuzzerResponse[] = [];
+        let buffer: FuzzerResponse[] = []
         const updateData = () => {
             if (buffer.length <= 0) {
                 return
@@ -139,22 +153,25 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setContent([...buffer])
         }
         ipcRenderer.on(dataToken, (e, data) => {
-            const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
+            const response = new Buffer(data.ResponseRaw).toString(
+                fixEncoding(data.GuessResponseEncoding)
+            )
             buffer.push({
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
                 Reason: data.Reason,
-                Method: data.Method, Host: data.Host,
+                Method: data.Method,
+                Host: data.Host,
                 ContentType: data.ContentType,
                 Headers: (data.Headers || []).map((i: any) => {
-                    return {Header: i.Header, Value: i.Value}
+                    return { Header: i.Header, Value: i.Value }
                 }),
                 DurationMs: data.DurationMs,
                 BodyLength: data.BodyLength,
                 UUID: data.UUID,
                 Timestamp: data.Timestamp,
                 ResponseRaw: data.ResponseRaw,
-                RequestRaw: data.RequestRaw,
+                RequestRaw: data.RequestRaw
             } as FuzzerResponse)
             // setContent([...buffer])
         })
@@ -172,9 +189,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.invoke("cancel-HTTPFuzzer", token)
 
             clearInterval(updateDataId)
-            ipcRenderer.removeAllListeners(errToken);
-            ipcRenderer.removeAllListeners(dataToken);
-            ipcRenderer.removeAllListeners(endToken);
+            ipcRenderer.removeAllListeners(errToken)
+            ipcRenderer.removeAllListeners(dataToken)
+            ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
 
@@ -540,4 +557,5 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             />
         </>)
 }
+
 

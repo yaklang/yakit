@@ -1,5 +1,5 @@
-import React, {useRef, useEffect} from "react"
-import {Divider} from "antd"
+import React, { useRef, useEffect } from "react"
+import { Divider } from "antd"
 import "./style.css"
 
 export interface VariabelLengthViewProp {
@@ -81,7 +81,7 @@ export const VariabelLengthView: React.FC<VariabelLengthViewProp> = (props) => {
                 {props.leftNode}
             </div>
             <div className='resize' ref={resizeNodeRef}>
-                <Divider style={{height: "100%", margin: 0}} type='vertical'/>
+                <Divider style={{ height: "100%", margin: 0 }} type='vertical' />
             </div>
             <div className='right' ref={rightNodeRef}>
                 {props.rightNode}

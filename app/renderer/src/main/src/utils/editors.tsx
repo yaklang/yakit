@@ -260,6 +260,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                                 <HTTPPacketEditor
                                     {...props} disableFullscreen={true}
                                     defaultHeight={670}
+
                                 />
                             </div>
                         })
@@ -311,7 +312,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                         setMonacoEditor(editor)
                     }}
                 />}
-
                 {mode === "hex" && !empty && <HexEditor
                     showAscii={true}
                     columns={0x10}

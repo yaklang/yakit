@@ -153,9 +153,13 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                     ...params, tls, name,
                 })
             }
-        }).catch(e => {
+        }
+        ).catch(e => {
             notification["error"]({message: "设置 Yak gRPC 引擎地址失败"})
         }).finally(() => {
+            setTimeout(() => {
+                setLocalLoading(false)
+            }, 200);
         })
     }
 
