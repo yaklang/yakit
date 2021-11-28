@@ -1,14 +1,16 @@
-import React, { useRef, useEffect } from "react"
-import { Divider } from "antd"
+import React, {useRef, useEffect} from "react"
+import {Divider} from "antd"
 import "./style.css"
 
-export interface VariabelLengthViewProp {
+export interface LinerResizeColsProp {
     isVertical?: Boolean
     leftNode: React.ReactNode
     rightNode: React.ReactNode
+    leftExtraStyle?: React.CSSProperties
+    rightExtraStyle?: React.CSSProperties
 }
 
-export const VariabelLengthView: React.FC<VariabelLengthViewProp> = (props) => {
+export const LinerResizeCols: React.FC<LinerResizeColsProp> = (props) => {
     const contentRef = useRef(null)
     const leftNodeRef = useRef(null)
     const rightNodeRef = useRef(null)
@@ -64,26 +66,26 @@ export const VariabelLengthView: React.FC<VariabelLengthViewProp> = (props) => {
     }, [props.isVertical])
 
     return !!props.isVertical ? (
-        <div className='vertical-content' ref={contentRef} style={{marginLeft: 0, marginRight: 0}}>
-            <div className='left' ref={leftNodeRef}>
+        <div className='vertical-content' ref={contentRef} style={{margin: 0}}>
+            <div className='left' ref={leftNodeRef} style={props.leftExtraStyle}>
                 {props.leftNode}
             </div>
             <div className='resize' ref={resizeNodeRef}>
                 <Divider style={{height: "100%", margin: 0}} type='horizontal'/>
             </div>
-            <div className='right' ref={rightNodeRef}>
+            <div className='right' ref={rightNodeRef} style={props.rightExtraStyle}>
                 {props.rightNode}
             </div>
         </div>
     ) : (
         <div className='horizontal-content' ref={contentRef} style={{marginLeft: 0, marginRight: 0}}>
-            <div className='left' ref={leftNodeRef}>
+            <div className='left' ref={leftNodeRef} style={props.leftExtraStyle}>
                 {props.leftNode}
             </div>
             <div className='resize' ref={resizeNodeRef}>
-                <Divider style={{ height: "100%", margin: 0 }} type='vertical' />
+                <Divider style={{height: "100%", margin: 0}} type='vertical'/>
             </div>
-            <div className='right' ref={rightNodeRef}>
+            <div className='right' ref={rightNodeRef} style={props.rightExtraStyle}>
                 {props.rightNode}
             </div>
         </div>

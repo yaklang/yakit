@@ -28,7 +28,7 @@ import {fixEncoding} from "../../utils/convertor"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {FuzzerResponseTableEx} from "./FuzzerResponseTable"
 import {randomString} from "../../utils/randomUtil"
-import {VariabelLengthView} from "../../components/VariabelLengthView"
+import {LinerResizeCols} from "../../components/LinerResizeCols"
 import {DeleteOutlined, ProfileOutlined} from "@ant-design/icons";
 
 
@@ -426,7 +426,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 </Col>
             </Row>}
             <Divider style={{marginTop: 12, marginBottom: 4}}/>
-            <VariabelLengthView
+            <LinerResizeCols
                 leftNode={
                     <div style={{height: '100%'}}>
                         <HTTPPacketEditor
