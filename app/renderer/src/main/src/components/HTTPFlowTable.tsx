@@ -25,7 +25,7 @@ import {CheckOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons";
 import {InputItem, ManyMultiSelectForString, OneLine, SwitchItem} from "../utils/inputUtil";
 import {SorterResult} from "antd/lib/table/interface";
 import {HTTPFlowDetail, SendToFuzzerFunc} from "./HTTPFlowDetail";
-import {info} from "../utils/notification";
+import {failed, info} from "../utils/notification";
 import "./style.css"
 import Highlighter from "react-highlight-words";
 
@@ -280,10 +280,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             setLoading(true)
             setAutoReload(false)
         }
-        yakQueryHTTPFlow({
-            SourceType: sourceType, ...params,
-            Pagination: {...paginationProps},
-        })
+        // yakQueryHTTPFlow({
+        //     SourceType: sourceType, ...params,
+        //     Pagination: {...paginationProps},
+        // })
         ipcRenderer.invoke("QueryHTTPFlows", {
             SourceType: sourceType, ...params,
             Pagination: {...paginationProps},
@@ -293,6 +293,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             }
             setPagination(rsp.Pagination)
             setTotal(rsp.Total)
+        }).catch(e => {
+            failed(`query HTTP Flow failed: ${e}`)
         }).finally(() => {
             setLoading(false)
         })
@@ -400,7 +402,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             onChange={(page, limit) => {
                                 setAutoReload(false)
                                 update(page, limit)
-                            }} defaultCurrent={1}
+                            }}
+                            onShowSizeChange={(_, limit) => {
+                                setAutoReload(false)
+                                update(1, limit)
+                            }}
+                            defaultCurrent={1}
                         />
                     </Col>
                 </Row>

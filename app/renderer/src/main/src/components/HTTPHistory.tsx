@@ -3,7 +3,6 @@ import "react-resizable/css/styles.css"
 import {Card} from "antd";
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable";
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail";
-import {LinerResizeCols} from "../components/LinerResizeCols/index";
 import {VerticalResize} from "../components/VerticalResize";
 
 export interface HTTPPacketFuzzable {
@@ -45,9 +44,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     return <div style={{width: "100%", height}}>
         <VerticalResize
-            firstResizable={(_, h) => {
+            firstResizable={(_, h: number) => {
                 if (selected) {
-                    setTableHeight(h - 92)
+                    setTableHeight(h - 98)
                 }
             }}
             firstHideResize={!selected}
