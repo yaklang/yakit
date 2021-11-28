@@ -199,6 +199,7 @@ export interface HTTPFlowTableProp {
     noHeader?: boolean
     tableHeight?: number
     paginationPosition?: "topRight" | "bottomRight"
+    params?: YakQueryHTTPFlowRequest
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -256,7 +257,7 @@ export interface YakQueryHTTPFlowResponse {
 
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData] = useState<HTTPFlow[]>([]);
-    const [params, setParams] = useState<YakQueryHTTPFlowRequest>({SourceType: "mitm"});
+    const [params, setParams] = useState<YakQueryHTTPFlowRequest>(props.params || {SourceType: "mitm"});
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: 20,
         Order: "desc",
@@ -392,10 +393,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     </Col>
                     <Col span={8} style={{textAlign: "right"}}>
                         <Pagination
-                            simple={true} size={"small"}
-                            pageSize={pagination?.Limit || 10}
+                            // simple={true}
+                            size={"small"}
+                            pageSize={pagination.Limit || 10}
                             total={total} showTotal={e => <Tag>{e} Records</Tag>}
-                            onChange={update} defaultCurrent={pagination?.Page || 1}
+                            onChange={(page, limit) => {
+                                setAutoReload(false)
+                                update(page, limit)
+                            }} defaultCurrent={1}
                         />
                     </Col>
                 </Row>
