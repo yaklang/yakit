@@ -22,7 +22,7 @@ import {QuestionCircleOutlined} from "@ant-design/icons";
 import {YakEditor} from "../utils/editors";
 import {ExternalUrl, openABSFile} from "../utils/openWebsite";
 import {YakLogoData} from "../utils/logo";
-import {YakLocalProcess} from "./YakLocalProcess";
+import {YakLocalProcess, yakProcess} from "./YakLocalProcess";
 import {saveAuthInfo, YakRemoteAuth} from "./YakRemoteAuth";
 import {showModal} from "../utils/showModal";
 import {divider} from "@uiw/react-md-editor";
@@ -119,6 +119,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
     const [name, setName] = useState("");
     const [allowSave, setAllowSave] = useState(false);
     const [version, setVersion] = useState("-");
+    const [existedProcess, setExistedProcesses] = useState<yakProcess[]>([]);
 
     useEffect(() => {
         ipcRenderer.invoke("yakit-version").then(setVersion)
@@ -179,7 +180,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                 {mode === "local" && <>
                     <YakLocalProcess onConnected={((newPort: any, newHost: any) => {
                         login(newHost, newPort)
-                    })}/>
+                    })} onProcess={setExistedProcesses}/>
                 </>}
 
                 <Form
@@ -299,7 +300,7 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                             content: <>
                                                 <YakUpgrade onFinished={() => {
                                                     m.destroy()
-                                                }}/>
+                                                }} existed={existedProcess}/>
                                             </>
                                         })
                                     }}

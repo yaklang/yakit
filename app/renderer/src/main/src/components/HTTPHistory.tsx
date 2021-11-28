@@ -18,16 +18,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [tableHeight, setTableHeight] = useState(400);
     const [detailHeight, setDetailHeight] = useState(400);
 
-    // 总高度
+    // 外部 DIV 配置
     const [height, setHeight] = useState(window.outerHeight - 230);
-    useEffect(() => {
-        const id = setInterval(() => {
-            setHeight(window.outerHeight - 230)
-        }, 500)
-        return () => {
-            clearInterval(id)
-        }
-    }, [])
+    const [refreshTrigger, setRefresh] = useState(false);
+    const refresh = () => {
+        setRefresh(!refreshTrigger)
+    }
 
     useEffect(() => {
         if (selected) {
@@ -63,59 +59,17 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     paginationPosition={"topRight"}
                 />
             </div>}
-
             secondHideResize={true} secondMinHeight={detailHeight} secondMaxHeight={detailHeight}
             secondNode={selected && <div style={{overflow: "auto", height: detailHeight}}>
                 <Card bodyStyle={{padding: 0}} bordered={false}>
                     <HTTPFlowDetailMini
                         noHeader={true}
                         hash={selected.Hash}
-                        // onSendToFuzzer={onSendToFuzzer}
+                        sendToWebFuzzer={props.sendToWebFuzzer}
                     />
                 </Card>
             </div>}
         />
-        {/*{selected && <Card bodyStyle={{padding: 0}} bordered={false}>*/}
-        {/*    <HTTPFlowDetailMini*/}
-        {/*        noHeader={true}*/}
-        {/*        hash={selected.Hash}*/}
-        {/*        // onSendToFuzzer={onSendToFuzzer}*/}
-        {/*    />*/}
-        {/*</Card>}*/}
-        {/*<Space style={{width: "100%"}} direction={"vertical"}>*/}
-        {/*    <ResizableBox*/}
-        {/*        width={maxWidth} height={outterTableHeight} axis={"y"}*/}
-        {/*        minConstraints={[maxWidth, 300]}*/}
-        {/*        maxConstraints={[maxWidth, selected ? 300 : 1200]}*/}
-        {/*        resizeHandles={["s"]}*/}
-        {/*        onResizeStop={(e, data) => {*/}
-        {/*            setTableHeight(data.size.height - tableOffset)*/}
-        {/*        }}*/}
-        {/*    >*/}
-        {/*        <HTTPFlowTable*/}
-        {/*            tableHeight={tableHeight}*/}
-        {/*            noHeader={true}*/}
-        {/*            onSendToWebFuzzer={props.sendToWebFuzzer}*/}
-        {/*            onSelected={i => {*/}
-        {/*                if (i) {*/}
-        {/*                    setOutterTableHeight(300)*/}
-        {/*                    setTableHeight(300 - tableOffset)*/}
-        {/*                } else {*/}
-        {/*                    setOutterTableHeight(600)*/}
-        {/*                    setTableHeight(600 - tableOffset)*/}
-        {/*                }*/}
-        {/*                setSelectedHTTPFlow(i)*/}
-        {/*            }}*/}
-        {/*            paginationPosition={"topRight"}*/}
-        {/*        />*/}
-        {/*    </ResizableBox>*/}
-        {/*    {selected && <Card bodyStyle={{padding: 0}} bordered={false}>*/}
-        {/*        <HTTPFlowDetailMini*/}
-        {/*            noHeader={true}*/}
-        {/*            hash={selected.Hash}*/}
-        {/*            // onSendToFuzzer={onSendToFuzzer}*/}
-        {/*        />*/}
-        {/*    </Card>}*/}
-        {/*</Space>*/}
+
     </div>
 };

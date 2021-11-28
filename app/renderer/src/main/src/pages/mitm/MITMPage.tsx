@@ -537,6 +537,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         <div style={{height: 478}} id={"monaco-container"}>
                                             {forResponse ? <>
                                                 <YakEditor
+                                                    type={"http"}
                                                     value={currentPacket}
                                                     setValue={setCurrentPacket}
                                                     editorDidMount={(editor: any) => {

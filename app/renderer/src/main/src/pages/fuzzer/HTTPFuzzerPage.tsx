@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, {useEffect, useState} from "react"
 import {
     Alert,
     Button,
@@ -13,8 +13,6 @@ import {
     Row,
     Space,
     Spin,
-    Switch,
-    Table,
     Tabs,
     Tag,
     Typography
@@ -23,13 +21,14 @@ import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {fuzzerTemplates} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {InputFloat, InputInteger, InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
+import {InputFloat, InputInteger, InputItem, ManyMultiSelectForString, OneLine, SwitchItem} from "../../utils/inputUtil"
 import {fixEncoding} from "../../utils/convertor"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {FuzzerResponseTableEx} from "./FuzzerResponseTable"
 import {randomString} from "../../utils/randomUtil"
 import {LinerResizeCols} from "../../components/LinerResizeCols"
 import {DeleteOutlined, ProfileOutlined} from "@ant-design/icons";
+import {HTTPPacketFuzzable} from "@components/HTTPHistory";
 
 
 const {ipcRenderer} = window.require("electron")
@@ -41,8 +40,11 @@ export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (r: string)
             <>
                 <FuzzerResponseToHTTPFlowDetail
                     response={i}
-                    onSendToFuzzer={(r) => {
-                        setRequest(new Buffer(r).toString())
+                    sendToWebFuzzer={(isHttps, request) => {
+                        setRequest(request)
+                        m.destroy()
+                    }}
+                    onClosed={() => {
                         m.destroy()
                     }}
                 />
@@ -102,6 +104,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [fuzzToken, setFuzzToken] = useState("")
 
     const [search, setSearch] = useState("")
+
+
+    const [refreshTrigger, setRefreshTrigger] = useState(false);
+    const refreshRequest = () => {
+        setRefreshTrigger(!refreshTrigger);
+    }
 
     useEffect(() => {
         setIsHttps(!!props.isHttps)
@@ -164,7 +172,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Host: data.Host,
                 ContentType: data.ContentType,
                 Headers: (data.Headers || []).map((i: any) => {
-                    return { Header: i.Header, Value: i.Value }
+                    return {Header: i.Header, Value: i.Value}
                 }),
                 DurationMs: data.DurationMs,
                 BodyLength: data.BodyLength,
@@ -265,10 +273,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 </Col>
             </Row>
 
-            {advancedConfig && <Row style={{marginTop: 8}}>
-                <Col span={12}>
+            {advancedConfig && <Row style={{marginTop: 8}} gutter={8}>
+                <Col span={16}>
                     {/*高级配置*/}
-                    <Card bordered={true} size={"small"}>
+                    <Card bordered={true} size={"small"} bodyStyle={{height: 106}}>
                         <Spin style={{width: "100%"}} spinning={!reqEditor}>
                             <Form
                                 onSubmitCapture={(e) => e.preventDefault()}
@@ -278,9 +286,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 // wrapperCol={{span: 16}}
                             >
                                 <Row gutter={8}>
-                                    <Col span={12} xl={6}>
+                                    <Col span={12} xl={8}>
                                         <Form.Item
-                                            colon={false}
+                                            label={<OneLine width={68}>
+                                                Intruder
+                                            </OneLine>}
                                             style={{marginBottom: 4}}
                                         >
                                             <Button
@@ -334,9 +344,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             </Button>
                                         </Form.Item>
                                     </Col>
-                                    <Col span={12} xl={6}>
+                                    <Col span={12} xl={8}>
                                         <SwitchItem
-                                            label={"启用 yak.fuzz"}
+                                            label={<OneLine width={68}>渲染 fuzz</OneLine>}
                                             setValue={(e) => {
                                                 if (!e) {
                                                     Modal.confirm({
@@ -354,9 +364,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             formItemStyle={{marginBottom: 4}}
                                         />
                                     </Col>
-                                    <Col span={12} xl={6}>
+                                    <Col span={12} xl={8}>
                                         <InputInteger
-                                            label={"并发"}
+                                            label={<OneLine width={68}>并发线程</OneLine>}
                                             size={"small"}
                                             setValue={(e) => {
                                                 setConcurrent(e)
@@ -366,9 +376,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             value={concurrent}
                                         />
                                     </Col>
-                                    <Col span={12} xl={6}>
+                                    <Col span={12} xl={8}>
                                         <SwitchItem
-                                            label={"HTTPS"}
+                                            label={<OneLine width={68}>HTTPS</OneLine>}
                                             setValue={(e) => {
                                                 setIsHttps(e)
                                             }}
@@ -377,12 +387,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             formItemStyle={{marginBottom: 4}}
                                         />
                                     </Col>
-                                </Row>
-                                <Row gutter={8}>
-                                    <Col span={12}>
+                                    <Col span={12} xl={8}>
                                         <ManyMultiSelectForString
                                             formItemStyle={{marginBottom: 4}}
-                                            label={"设置代理"}
+                                            label={<OneLine width={68}>设置代理</OneLine>}
                                             data={[
                                                 "http://127.0.0.1:7890",
                                                 "http://127.0.0.1:8080",
@@ -398,23 +406,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             }}
                                         />
                                     </Col>
-                                    <Col span={12}>
+                                    <Col span={12} xl={8}>
                                         <InputItem
                                             extraFormItemProps={{
                                                 style: {marginBottom: 0}
                                             }}
-                                            label={"请求 Host"}
+                                            label={<OneLine width={68}>请求 Host</OneLine>}
                                             setValue={setActualHost}
                                             value={actualHost}
                                         />
                                     </Col>
-                                </Row>
-                                <Row gutter={8}>
-                                    <Col span={12}>
+                                    <Col span={12} xl={8}>
                                         <InputFloat
                                             formItemStyle={{marginBottom: 4}}
                                             size={"small"}
-                                            label={"超时时间"}
+                                            label={<OneLine width={68}>超时时间</OneLine>}
                                             setValue={setTimeout}
                                             value={timeout}
                                         />
@@ -424,12 +430,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </Spin>
                     </Card>
                 </Col>
+                <Col span={8}>
+                    <Card bordered={true} size={"small"} bodyStyle={{height: 106}}>
+                        <div style={{marginTop: 30, textAlign: "center"}}>
+                            <p style={{color: "#888"}}>选择可用的漏洞插件（装修中）</p>
+                        </div>
+                    </Card>
+                </Col>
             </Row>}
             <Divider style={{marginTop: 12, marginBottom: 4}}/>
             <LinerResizeCols
                 leftNode={
                     <div style={{height: '100%'}}>
                         <HTTPPacketEditor
+                            refreshTrigger={refreshTrigger}
                             hideSearch={true} bordered={true}
                             originValue={new Buffer(request)}
                             onEditor={setReqEditor}
@@ -459,55 +473,58 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     {loading && <Spin size={"small"} spinning={loading}/>}
                                     {/*</Space>*/}
                                     {onlyOneResponse
-                                        ? [
-                                            <Space>
-                                                <Tag>{content[0].DurationMs}ms</Tag>
-                                                <Space key='single'>
-                                                    <Button
-                                                        size={"small"}
-                                                        onClick={() => {
-                                                            analyzeFuzzerResponse(content[0], setRequest)
-                                                        }}
-                                                        type={"primary"}
-                                                        icon={<ProfileOutlined/>}
-                                                    >
-                                                        详情
-                                                    </Button>
-                                                    <Button
-                                                        type={"primary"}
-                                                        size={"small"}
-                                                        onClick={() => {
-                                                            setContent([])
-                                                        }}
-                                                        danger={true}
-                                                        icon={<DeleteOutlined/>}
-                                                    >
-
-                                                    </Button>
-                                                </Space>
-                                            </Space>
-                                        ]
-                                        : [
-                                            <Space key='list'>
-                                                <Tag color={"green"}>成功:{successResults.length}</Tag>
-                                                <Input
-                                                    size={"small"}
-                                                    value={search}
-                                                    onChange={(e) => {
-                                                        setSearch(e.target.value)
-                                                    }}
-                                                />
-                                                {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
+                                        ?
+                                        <Space>
+                                            <Tag>{content[0].DurationMs}ms</Tag>
+                                            <Space key='single'>
                                                 <Button
+                                                    size={"small"}
+                                                    onClick={() => {
+                                                        analyzeFuzzerResponse(content[0], r => {
+                                                            setRequest(r)
+                                                            refreshRequest()
+                                                        })
+                                                    }}
+                                                    type={"primary"}
+                                                    icon={<ProfileOutlined/>}
+                                                >
+                                                    详情
+                                                </Button>
+                                                <Button
+                                                    type={"primary"}
                                                     size={"small"}
                                                     onClick={() => {
                                                         setContent([])
                                                     }}
+                                                    danger={true}
+                                                    icon={<DeleteOutlined/>}
                                                 >
-                                                    清除数据
+
                                                 </Button>
                                             </Space>
-                                        ]}
+                                        </Space>
+
+                                        :
+                                        <Space key='list'>
+                                            <Tag color={"green"}>成功:{successResults.length}</Tag>
+                                            <Input
+                                                size={"small"}
+                                                value={search}
+                                                onChange={(e) => {
+                                                    setSearch(e.target.value)
+                                                }}
+                                            />
+                                            {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
+                                            <Button
+                                                size={"small"}
+                                                onClick={() => {
+                                                    setContent([])
+                                                }}
+                                            >
+                                                清除数据
+                                            </Button>
+                                        </Space>
+                                    }
                                 </Space>
                             }
                             />
@@ -534,14 +551,22 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 </div>}>
                                             <FuzzerResponseTableEx
                                                 success={true}
-                                                content={successResults} setRequest={setRequest}
+                                                content={successResults}
+                                                setRequest={r => {
+                                                    setRequest(r)
+                                                    refreshRequest()
+                                                }}
                                             />
                                         </Tabs.TabPane>
                                         <Tabs.TabPane key={"failed"}
                                                       tab={`网络错误 / 请求错误 [${(failedResults || []).length}]`}>
                                             <FuzzerResponseTableEx
                                                 success={false}
-                                                content={failedResults} setRequest={setRequest}
+                                                content={failedResults}
+                                                setRequest={r => {
+                                                    setRequest(r)
+                                                    refreshRequest()
+                                                }}
                                             />
                                         </Tabs.TabPane>
                                     </Tabs>

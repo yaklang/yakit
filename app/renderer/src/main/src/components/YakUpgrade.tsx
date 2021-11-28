@@ -1,11 +1,14 @@
 import React, {useEffect, useState} from "react";
 import {Alert, Button, Card, Modal, Popconfirm, Popover, Progress, Space, Spin, Tag, Typography} from "antd";
-import {failed, success} from "../utils/notification";
+import {failed, info, success} from "../utils/notification";
+import {yakProcess} from "@/protected/YakLocalProcess";
+import {ipcMain} from "electron";
 
 const {ipcRenderer} = window.require("electron");
 
 export interface YakUpgradeProp {
     onFinished: () => any
+    existed?: yakProcess[]
 }
 
 
@@ -81,11 +84,19 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
 
     useEffect(() => {
         updateCurrent()
-        queryLatestVersion()
+        queryLatestVersion();
 
         ipcRenderer.invoke("get-windows-install-dir").then(setWinPath).catch(() => {
         }).finally()
     }, [])
+
+    useEffect(() => {
+        (props.existed || []).forEach(i => {
+            ipcRenderer.invoke("kill-yak-grpc", i.pid).then(() => {
+                info(`KILL yak PROCESS: ${i.pid}`)
+            })
+        })
+    }, [props.existed])
 
     const install = (version: string) => {
         Modal.confirm({
@@ -111,7 +122,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                 ipcRenderer.invoke("install-yak-engine", latestVersion).then(() => {
                     success("安装成功，如未生效，重启 Yakit 即可")
                 }).catch(err => {
-                    failed("安装失败")
+                    failed(`安装失败: ${err}`)
                 }).finally(updateCurrent)
             }
 

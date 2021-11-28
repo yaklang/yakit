@@ -183,13 +183,15 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
     </div>
 };
 
-export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onSendToFuzzer?: SendToFuzzerFunc) => {
+export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onSendToFuzzer?: SendToFuzzerFunc, onClosed?: () => any) => {
     if (!flow) {
         return <Empty>找不到该请求详情</Empty>
     }
 
     return <div style={{width: "100%"}}>
-        <HTTPFlowDetail hash={flow.Hash} onSendToFuzzer={onSendToFuzzer}/>
+        <HTTPFlowDetail hash={flow.Hash} sendToWebFuzzer={((isHttps, request) => {
+            if (onSendToFuzzer) onSendToFuzzer(new Buffer(request), isHttps);
+        })} onClose={onClosed}/>
     </div>
 }
 
@@ -381,7 +383,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 <Switch size={"small"} checked={autoReload} onChange={setAutoReload}/>
                             </Space>
                             <Input.Search
-                                placeholder={"请求/响应关键字"} enterButton={true}
+                                placeholder={"URL关键字"} enterButton={true}
                                 size={"small"} style={{width: 170}}
                                 value={params.SearchURL}
                                 onChange={e => {
@@ -391,6 +393,24 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     update(1)
                                 }}
                             />
+                            {props.noHeader && <Popconfirm
+                                title={"确定想要删除所有记录吗？不可恢复"}
+                                onConfirm={e => {
+                                    ipcRenderer.invoke("delete-http-flows-all")
+                                    setLoading(true)
+                                    info("正在删除...如自动刷新失败请手动刷新")
+                                    setTimeout(() => {
+                                        update(1)
+                                        setTimeout(() => {
+                                            setAutoReload(true)
+                                        }, 1000)
+                                    }, 400)
+                                }}
+                            >
+                                <Button danger={true} size={"small"}>
+                                    删除历史记录
+                                </Button>
+                            </Popconfirm>}
                         </Space>
                     </Col>
                     <Col span={8} style={{textAlign: "right"}}>
@@ -582,11 +602,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         {/*    if (props.onSendToWebFuzzer) props.onSendToWebFuzzer(record.IsHTTPS, new Buffer(record.Request).toString("utf8"))*/}
                         {/*}}>发送到 Fuzzer</Button>*/}
                         <Button size={"small"} type={"primary"} onClick={e => {
-                            showDrawer({
+                            let m = showDrawer({
                                 width: "80%",
                                 content: onExpandHTTPFlow(record, (req: Uint8Array, isHttps: boolean) => {
-                                    if (props.onSendToWebFuzzer) props.onSendToWebFuzzer(isHttps, new Buffer(req).toString());
+                                    if (props.onSendToWebFuzzer) {
+                                        props.onSendToWebFuzzer(isHttps, new Buffer(req).toString())
+                                        m.destroy();
+                                    }
                                 })
+
                             })
                         }}>详情</Button>
                     </Space>

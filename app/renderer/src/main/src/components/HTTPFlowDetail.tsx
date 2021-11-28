@@ -7,22 +7,23 @@ import {FuzzableParamList} from "./FuzzableParamList";
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
 import {randomString} from "../utils/randomUtil";
 import {CodeViewer} from "../utils/codeViewer";
+import {HTTPPacketFuzzable} from "@components/HTTPHistory";
 
 const {ipcRenderer} = window.require("electron");
 
 export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any;
 
-export interface HTTPFlowDetailProp {
+export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     hash: string
-    onSendToFuzzer?: SendToFuzzerFunc
     noHeader?: boolean
+    onClose?: () => any
 }
 
 const {Text} = Typography;
 
-export interface FuzzerResponseToHTTPFlowDetail {
+export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
     response: FuzzerResponse
-    onSendToFuzzer: SendToFuzzerFunc
+    onClosed?: () => any
 }
 
 export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDetail) => {
@@ -53,7 +54,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
         return <Spin tip={"正在分析详细参数"}/>
     }
 
-    return <HTTPFlowDetail hash={hash || ""}/>
+    return <HTTPFlowDetail hash={hash || ""} onClose={rsp.onClosed} sendToWebFuzzer={rsp.sendToWebFuzzer}/>
 }
 
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
@@ -108,13 +109,28 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 <div style={{width: "100%", overflow: "auto"}}>
                     {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? <Tabs>
                         {flow.GetParams.length > 0 && <Tabs.TabPane key={"get"} tab={"GET 参数"}>
-                            <FuzzableParamList data={flow.GetParams} onSendToFuzzer={props.onSendToFuzzer}/>
+                            <FuzzableParamList data={flow.GetParams} sendToWebFuzzer={(isHttps, request) => {
+                                if (props.sendToWebFuzzer) {
+                                    props.sendToWebFuzzer(isHttps, request)
+                                    if (props.onClose) props.onClose();
+                                }
+                            }}/>
                         </Tabs.TabPane>}
                         {flow.PostParams.length > 0 && <Tabs.TabPane key={"post"} tab={"POST 参数"}>
-                            <FuzzableParamList data={flow.PostParams} onSendToFuzzer={props.onSendToFuzzer}/>
+                            <FuzzableParamList data={flow.PostParams} sendToWebFuzzer={(isHttps, request) => {
+                                if (props.sendToWebFuzzer) {
+                                    props.sendToWebFuzzer(isHttps, request);
+                                    if (props.onClose) props.onClose();
+                                }
+                            }}/>
                         </Tabs.TabPane>}
                         {flow.CookieParams.length > 0 && <Tabs.TabPane key={"cookie"} tab={"Cookie 参数"}>
-                            <FuzzableParamList data={flow.CookieParams} onSendToFuzzer={props.onSendToFuzzer}/>
+                            <FuzzableParamList data={flow.CookieParams} sendToWebFuzzer={(isHttps, request) => {
+                                if (props.sendToWebFuzzer) {
+                                    props.sendToWebFuzzer(isHttps, request)
+                                    if (props.onClose) props.onClose();
+                                }
+                            }}/>
                         </Tabs.TabPane>}
                     </Tabs> : ""}
                 </div>
@@ -230,7 +246,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             {/*    value={new Buffer(flow.Request).toString("utf-8")}*/}
             {/*    mode={"http"} height={350} width={"100%"}*/}
             {/*/>*/}
-            <HTTPPacketEditor originValue={flow.Request} readOnly={true}/>
+            <HTTPPacketEditor originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}/>
             {/*<div style={{height: 350}}>*/}
             {/*    <YakHTTPPacketViewer value={flow?.Request || []}/>*/}
             {/*    /!*<YakEditor readOnly={true} type={"http"}*!/*/}

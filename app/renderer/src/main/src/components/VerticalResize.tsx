@@ -18,15 +18,22 @@ export interface VerticalResizeProps {
 
 export const VerticalResize: React.FC<VerticalResizeProps> = props => {
     const div = useRef(null);
-    const [maxWidth, setMaxWidth] = useState<number>(200);
+    const [maxWidth, setMaxWidth] = useState<number>(600);
 
     useEffect(() => {
         if (!div || !div.current) {
             return
         }
 
-        const divTag = div.current as unknown as HTMLDivElement;
-        setMaxWidth(divTag.clientWidth);
+        const setMaxWidthByDiv = () => {
+            const divTag = div.current as unknown as HTMLDivElement;
+            setMaxWidth(divTag.clientWidth);
+        }
+        setMaxWidthByDiv()
+        let id = setInterval(setMaxWidthByDiv, 500)
+        return () => {
+            clearInterval(id)
+        }
     }, [div])
 
     return <div style={{width: "100%"}} ref={div}>

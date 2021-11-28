@@ -82,13 +82,14 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                 onClick={() => {
                                     let m = showDrawer({
                                         width: "80%",
-                                        content: onExpandHTTPFlow(findHTTPFlowById(i), (req: Uint8Array, isHttps: boolean) => {
-                                            if (props.onSendToWebFuzzer) {
-                                                props.onSendToWebFuzzer(isHttps, new Buffer(req).toString())
-                                                m.destroy()
-                                            }
-
-                                        })
+                                        content: onExpandHTTPFlow(
+                                            findHTTPFlowById(i),
+                                            (req: Uint8Array, isHttps: boolean) => {
+                                                if (props.onSendToWebFuzzer) {
+                                                    props.onSendToWebFuzzer(isHttps, new Buffer(req).toString())
+                                                    m.destroy()
+                                                }
+                                            }),
                                     })
                                 }}
                             >详情</Button>

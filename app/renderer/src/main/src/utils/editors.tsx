@@ -1,18 +1,18 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import MonacoEditor, {monaco} from 'react-monaco-editor';
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
-import HexEditor, {UnstyledHexEditor} from "react-hex-editor";
+import HexEditor from "react-hex-editor";
 // yak register
 import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
 import "./monacoSpec/html"
-import {Button, Card, Form, Input, Popover, Space, Spin} from "antd";
-import {InputItem, SelectOne, SwitchItem} from "./inputUtil";
-import {ResizableBox} from "react-resizable";
-import {FullscreenOutlined, SettingOutlined} from "@ant-design/icons";
+import {Button, Card, Form, Input, Popover, Space} from "antd";
+import {SelectOne} from "./inputUtil";
+import {FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons";
 import {showDrawer} from "./showModal";
-import {execCodec, MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
+import {MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
+import {HTTPPacketFuzzable} from "@components/HTTPHistory";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
@@ -143,7 +143,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     </>
 };
 
-export interface HTTPPacketEditorProp {
+export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     readOnly?: boolean
     originValue: Uint8Array
     onChange?: (i: Uint8Array) => any
@@ -154,6 +154,8 @@ export interface HTTPPacketEditorProp {
     hideSearch?: boolean
     extra?: React.ReactNode
     emptyOr?: React.ReactNode
+
+    refreshTrigger?: boolean
 }
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
@@ -194,6 +196,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
         props.originValue,
         monacoEditor,
     ])
+
+    useEffect(() => {
+        if (props.readOnly) {
+            return
+        }
+        setStrValue(new Buffer(props.originValue).toString('utf8'))
+        setHexValue(new Buffer(props.originValue))
+    }, [props.refreshTrigger])
 
     useEffect(() => {
         props.onChange && props.onChange(Buffer.from(strValue))
@@ -249,6 +259,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
             bodyStyle={{padding: 0}}
             extra={<>
                 {props.extra}
+                {props.sendToWebFuzzer && <Button
+                    size={"small"}
+                    type={"primary"}
+                    icon={<ThunderboltFilled/>}
+                    onClick={() => {
+                        if (props.sendToWebFuzzer) props.sendToWebFuzzer(false, strValue);
+                    }}
+                >FUZZ</Button>}
                 {!props.disableFullscreen && <Button
                     size={"small"}
                     type={"link"}

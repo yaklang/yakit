@@ -1,16 +1,9 @@
 import React, {useState} from "react";
-import {Button, Input, Popconfirm, Popover, Space, Spin, Tabs} from "antd";
+import {Col, Input, Popover, Row, Space, Spin, Tabs} from "antd";
 import {MITMPage} from "../mitm/MITMPage";
 import {HTTPFuzzerPage} from "../fuzzer/HTTPFuzzerPage";
-import {HTTPFlowTable} from "../../components/HTTPFlowTable";
-import {CodecPage} from "../codec/CodecPage";
-import {YakExecutor} from "../invoker/YakExecutor";
-import {ShellReceiverPage} from "../shellReceiver/ShellReceiverPage";
-import {YakScriptManagerPage} from "../invoker/YakScriptManager";
-import {randomBytes} from "crypto";
 import {randomString} from "../../utils/randomUtil";
 import {CloseOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons";
-import {info} from "../../utils/notification";
 import {WebsiteTreeViewer} from "../yakitStore/viewers/WebsiteTree";
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable";
 import {HTTPHistory} from "../../components/HTTPHistory";
@@ -103,17 +96,19 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                             return
                     }
                 }}
-                addIcon={<div style={{cursor:'pointer',padding:'0 5px',color:'rgb(25,143,255'}}>
-                   <PlusOutlined/>创建 Web Fuzzer
+                addIcon={<div style={{cursor: 'pointer', padding: '0 5px', color: 'rgb(25,143,255'}}>
+                    <PlusOutlined/>创建 Web Fuzzer
                 </div>}
             >
                 <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
                     <MITMPage onSendToWebFuzzer={sendToFuzzer}/>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false}>
-                    <HTTPHistory sendToWebFuzzer={sendToFuzzer}/>
-                    {/*<HTTPFlowTable*/}
-                    {/*    onSendToWebFuzzer={sendToFuzzer}/>*/}
+                    <Row>
+                        <Col span={24}>
+                            <HTTPHistory sendToWebFuzzer={sendToFuzzer}/>
+                        </Col>
+                    </Row>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
                     <YakScriptExecResultTable/>

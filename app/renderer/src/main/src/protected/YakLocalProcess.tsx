@@ -8,11 +8,12 @@ import {YakUpgrade} from "../components/YakUpgrade";
 
 export interface YakLocalProcessProp {
     onConnected?: (port: number, host: string) => any
+    onProcess?: (procs: yakProcess[]) => any
 }
 
 const {ipcRenderer} = window.require("electron");
 
-interface yakProcess {
+export interface yakProcess {
     port: number
     pid: number
     cmd: string
@@ -21,7 +22,6 @@ interface yakProcess {
 
 export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
     const [process, setProcess] = useState<yakProcess[]>([]);
-    const [loading, setLoading] = useState(false);
     const [shouldAutoStart, setShouldAutoStart] = useState(false);
     const [installed, setInstalled] = useState(false);
 
@@ -50,6 +50,10 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
             clearInterval(id);
         }
     }, [])
+
+    useEffect(() => {
+        props.onProcess && props.onProcess([...process])
+    }, [process])
 
     const promptInstallYakEngine = () => {
         let m = showModal({
