@@ -29,6 +29,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setTableHeight([l][0].offsetHeight-100)
         setDetailHeight([r][0].offsetHeight-50)
     }
+    const showDetail=(i: HTTPFlow | undefined) =>{
+        if(!i) return
+        setDetailHeight(((height-230)*0.35))
+        setTableHeight(height-330-detailHeight)
+        setSelectedHTTPFlow(i)
+    }
 
     useEffect(() => {
         if (selected) {
@@ -58,8 +64,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     noHeader={true}
                     tableHeight={tableHeight}
                     onSendToWebFuzzer={props.sendToWebFuzzer}
-                    onSelected={i => {
-                        setSelectedHTTPFlow(i)
+                    onSelected={(i) => {
+                        showDetail(i)
                     }}
                     paginationPosition={"topRight"}
                 />
