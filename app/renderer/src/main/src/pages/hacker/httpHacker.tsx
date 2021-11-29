@@ -1,12 +1,12 @@
-import React, {useState} from "react";
-import {Col, Input, Popover, Row, Space, Spin, Tabs} from "antd";
-import {MITMPage} from "../mitm/MITMPage";
-import {HTTPFuzzerPage} from "../fuzzer/HTTPFuzzerPage";
-import {randomString} from "../../utils/randomUtil";
-import {CloseOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons";
-import {WebsiteTreeViewer} from "../yakitStore/viewers/WebsiteTree";
-import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable";
-import {HTTPHistory} from "../../components/HTTPHistory";
+import React, { useState } from "react";
+import { Col, Input, Popover, Row, Space, Spin, Tabs } from "antd";
+import { MITMPage } from "../mitm/MITMPage";
+import { HTTPFuzzerPage } from "../fuzzer/HTTPFuzzerPage";
+import { randomString } from "../../utils/randomUtil";
+import { CloseOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { WebsiteTreeViewer } from "../yakitStore/viewers/WebsiteTree";
+import { YakScriptExecResultTable } from "../../components/YakScriptExecResultTable";
+import { HTTPHistory } from "../../components/HTTPHistory";
 
 export interface HTTPHackerProp {
 
@@ -80,8 +80,8 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         return -1
     }
 
-    return <div style={{margin: 0, height: "100%"}}>
-        <Spin spinning={loading} style={{height: "100%"}}>
+    return <div style={{ margin: 0, height: "100%",flex:1 }}>
+        <Spin spinning={loading} style={{ height: "100%" }}>
             <Tabs
                 activeKey={activeTab}
                 onChange={setActiveTag}
@@ -96,22 +96,20 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                             return
                     }
                 }}
-                addIcon={<div style={{cursor: 'pointer', padding: '0 5px', color: 'rgb(25,143,255'}}>
-                    <PlusOutlined/>创建 Web Fuzzer
+                addIcon={<div style={{ cursor: 'pointer', padding: '0 5px', color: 'rgb(25,143,255' }}>
+                    <PlusOutlined />创建 Web Fuzzer
                 </div>}
             >
                 <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
-                    <MITMPage onSendToWebFuzzer={sendToFuzzer}/>
+                    <MITMPage onSendToWebFuzzer={sendToFuzzer} />
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false}>
-                    <Row>
-                        <Col span={24}>
-                            <HTTPHistory sendToWebFuzzer={sendToFuzzer}/>
-                        </Col>
-                    </Row>
+                    <div style={{display:'flex'}}>
+                        <HTTPHistory sendToWebFuzzer={sendToFuzzer} />
+                    </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
-                    <YakScriptExecResultTable/>
+                    <YakScriptExecResultTable />
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
                     <WebsiteTreeViewer
@@ -125,10 +123,10 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                         content={<>
                             <Input size={"small"} defaultValue={i.verbose} onBlur={(e) => {
                                 changeVerboseForFuzzer(i.key, e.target.value)
-                            }}/>
+                            }} />
                         </>}
                     >
-                        <EditOutlined/>
+                        <EditOutlined />
                     </Popover>
                     <CloseOutlined onClick={() => {
                         setLoading(true)
@@ -140,7 +138,7 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                         }
                         removeFuzzer(key);
                         setTimeout(() => setLoading(false), 300)
-                    }}/>
+                    }} />
                 </Space>}>
                     {i.node}
                 </Tabs.TabPane>)}

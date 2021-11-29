@@ -17,6 +17,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     hash: string
     noHeader?: boolean
     onClose?: () => any
+    defaultHeight?: number
 }
 
 const {Text} = Typography;
@@ -246,7 +247,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             {/*    value={new Buffer(flow.Request).toString("utf-8")}*/}
             {/*    mode={"http"} height={350} width={"100%"}*/}
             {/*/>*/}
-            <HTTPPacketEditor originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}/>
+            <HTTPPacketEditor originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer} defaultHeight={props.defaultHeight}/>
             {/*<div style={{height: 350}}>*/}
             {/*    <YakHTTPPacketViewer value={flow?.Request || []}/>*/}
             {/*    /!*<YakEditor readOnly={true} type={"http"}*!/*/}
@@ -254,7 +255,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             {/*</div>*/}
         </Col>
         <Col span={12}>
-            <HTTPPacketEditor originValue={flow.Response} readOnly={true}/>
+            <HTTPPacketEditor originValue={flow.Response} readOnly={true} defaultHeight={props.defaultHeight}/>
             {/*<YakHTTPPacketViewer isResponse value={flow?.Response || []}/>*/}
             {/*<CodeViewer*/}
             {/*    value={new Buffer(flow?.Response).toString("utf-8")}*/}

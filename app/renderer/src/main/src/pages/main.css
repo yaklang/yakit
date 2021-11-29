@@ -1,0 +1,13 @@
+.main-content-tabs .ant-tabs-content.ant-tabs-content-top{
+    height: 100%;
+}
+.main-panel-spin{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.main-panel-spin .ant-spin-container{
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
