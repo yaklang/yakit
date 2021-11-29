@@ -30,10 +30,14 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setDetailHeight([r][0].offsetHeight-50)
     }
     const showDetail=(i: HTTPFlow | undefined) =>{
-        if(!i) return
-        setDetailHeight(((height-230)*0.35))
-        setTableHeight(height-330-detailHeight)
         setSelectedHTTPFlow(i)
+        if(!i) {
+            setTableHeight(height - 100)
+        }else{
+            setDetailHeight(((height-230)*0.35))
+        setTableHeight(height-330-detailHeight)
+        }
+        
     }
 
     useEffect(() => {
