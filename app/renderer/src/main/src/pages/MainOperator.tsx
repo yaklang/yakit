@@ -35,6 +35,8 @@ import MDEditor from '@uiw/react-md-editor';
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "./invoker/schema";
 import {showByCursorContainer} from "../utils/showByCursor";
 
+import './main.css'
+
 export interface MainProp {
     tlsGRPC?: boolean
     addr?: string
@@ -80,7 +82,7 @@ export const Main: React.FC<MainProp> = (props) => {
     const [loading, setLoading] = useState(false);
     const [pageCache, setPageCache] = useState<PageCache[]>([
         {
-            node: <div style={{overflow: "auto"}}>
+            node: <div style={{overflow: "hidden",flex:1,display:'flex',flexDirection:'column'}}>
                 {ContentByRoute(Route.HTTPHacker)}
             </div>,
             id: "", route: Route.HTTPHacker,
@@ -428,12 +430,15 @@ export const Main: React.FC<MainProp> = (props) => {
                             </Spin>
                         </Sider>}
                         <Content style={{
-                            overflow: "auto",
+                            overflow: "hidden",
                             backgroundColor: "#fff",
                             marginLeft: 12, height: "100%",
+                            display:'flex',
                         }}>
-                            <div style={{padding: 12, paddingTop: 8, height: "100%"}}>
+                            <div style={{padding: 12, paddingTop: 8,overflow:'hidden',display:'flex', flex:'1'}}>
                                 {pageCache.length > 0 ? <Tabs
+                                    style={{display:'flex', flex:'1'}}
+                                    className='main-content-tabs'
                                     activeKey={currentTabKey}
                                     onChange={setCurrentTabKey}
                                     size={"small"} type={"editable-card"}
@@ -509,7 +514,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                                         setTimeout(() => setTabLoading(false), 300)
                                                     }}/>
                                             </Space>}>
-                                            <Spin spinning={tabLoading}>
+                                            <Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >
                                                 {i.node}
                                             </Spin>
                                         </Tabs.TabPane>

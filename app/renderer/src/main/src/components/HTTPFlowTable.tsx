@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState,useRef,useMemo} from "react";
 import {
     Button,
     Col,
@@ -317,7 +317,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [autoReload])
 
-    return <div style={{width: "100%"}}>
+    return <div  style={{width: "100%",height:'100%'}}>
         {!props.noHeader && <PageHeader
             title={"HTTP History"}
             subTitle={<Space>
@@ -473,7 +473,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     }
                 }
             }}
-            scroll={{x: "auto", y: props.tableHeight}}
+            scroll={{x: "auto",y:props.tableHeight }}
             // @ts-ignore*/
             onChange={(paging: any, _: any, sorter: SorterResult<HTTPFlow>) => {
                 if (sorter.order && sorter.columnKey) {

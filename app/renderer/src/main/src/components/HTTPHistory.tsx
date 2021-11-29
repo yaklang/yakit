@@ -25,6 +25,21 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setRefresh(!refreshTrigger)
     }
 
+    const reseze=(l:HTMLDivElement,r:HTMLDivElement)=>{
+        setTableHeight([l][0].offsetHeight-100)
+        setDetailHeight([r][0].offsetHeight-50)
+    }
+    const showDetail=(i: HTTPFlow | undefined) =>{
+        setSelectedHTTPFlow(i)
+        if(!i) {
+            setTableHeight(height - 100)
+        }else{
+            setDetailHeight(((height-230)*0.35))
+        setTableHeight(height-330-detailHeight)
+        }
+        
+    }
+
     useEffect(() => {
         if (selected) {
             setTableHeight(340)
@@ -34,11 +49,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setTableHeight(height - 100)
     }, [selected])
 
-    useEffect(() => {
-        setDetailHeight(height - tableHeight)
-    }, [tableHeight])
+    // useEffect(() => {
+    //     setDetailHeight(height - tableHeight)
+    // }, [tableHeight])
 
-    return <div style={{width: "100%", height}}>
+    return <div style={{width: "100%",flex:'1'}}>
         <VerticalResize
             firstResizable={(_, h: number) => {
                 if (selected) {
@@ -48,27 +63,29 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             firstHideResize={!selected}
             firstInitHeight={340}
             firstMaxHeight={500}
-            firstNode={<div style={{height: 200}}>
+            firstNode={<div style={{height:'100%'}}>
                 <HTTPFlowTable
                     noHeader={true}
                     tableHeight={tableHeight}
                     onSendToWebFuzzer={props.sendToWebFuzzer}
-                    onSelected={i => {
-                        setSelectedHTTPFlow(i)
+                    onSelected={(i) => {
+                        showDetail(i)
                     }}
                     paginationPosition={"topRight"}
                 />
             </div>}
             secondHideResize={true} secondMinHeight={detailHeight} secondMaxHeight={detailHeight}
-            secondNode={selected && <div style={{overflow: "auto", height: detailHeight}}>
+            secondNode={selected && <div style={{overflow: "hidden", height: '100%'}}>
                 <Card bodyStyle={{padding: 0}} bordered={false}>
                     <HTTPFlowDetailMini
                         noHeader={true}
                         hash={selected.Hash}
                         sendToWebFuzzer={props.sendToWebFuzzer}
+                        defaultHeight={detailHeight}
                     />
                 </Card>
             </div>}
+            reseze={reseze}
         />
 
     </div>
