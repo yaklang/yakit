@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from "react"
-import { Divider } from "antd"
+import React, {useRef, useEffect} from "react"
+import {Divider} from "antd"
 import "./style.css"
 
 export interface LinerResizeColsProp {
@@ -41,12 +41,18 @@ export const LinerResizeCols: React.FC<LinerResizeColsProp> = (props) => {
 
             document.onmousemove = (event) => {
                 if (!!props.isVertical) {
-                    left.style.height = `${contentHeight - height + (event.clientY - firstY) - 10
-                        }px`
-                    right.style.height = `${height - (event.clientY - firstY)}px`
+                    const leftHeight = contentHeight - height + (event.clientY - firstY) - 10;
+                    const rightHeight = height - (event.clientY - firstY);
+
+                    if (leftHeight <= 200 || rightHeight <= 200) {
+                        return
+                    }
+
+                    left.style.height = `${leftHeight}px`
+                    right.style.height = `${rightHeight}px`
                 } else {
                     left.style.width = `${content.offsetWidth - width + (event.clientX - firstX) - 10
-                        }px`
+                    }px`
                     right.style.width = `${width - (event.clientX - firstX)}px`
                 }
 
@@ -67,24 +73,24 @@ export const LinerResizeCols: React.FC<LinerResizeColsProp> = (props) => {
     }, [props.isVertical])
 
     return !!props.isVertical ? (
-        <div className='vertical-content' ref={contentRef} style={{ margin: 0 }}>
+        <div className='vertical-content' ref={contentRef} style={{margin: 0}}>
             <div className='left' ref={leftNodeRef} style={props.leftExtraStyle}>
                 {props.leftNode}
             </div>
             <div className='resize' ref={resizeNodeRef}>
-                <Divider style={{ height: "100%", margin: 0 }} type='horizontal' />
+                <Divider style={{height: "100%", margin: 0}} type='horizontal'/>
             </div>
             <div className='right' ref={rightNodeRef} style={props.rightExtraStyle}>
                 {props.rightNode}
             </div>
         </div>
     ) : (
-        <div className='horizontal-content' ref={contentRef} style={{ marginLeft: 0, marginRight: 0 }}>
+        <div className='horizontal-content' ref={contentRef} style={{marginLeft: 0, marginRight: 0}}>
             <div className='left' ref={leftNodeRef} style={props.leftExtraStyle}>
                 {props.leftNode}
             </div>
             <div className='resize' ref={resizeNodeRef}>
-                <Divider style={{ height: "100%", margin: 0 }} type='vertical' />
+                <Divider style={{height: "100%", margin: 0}} type='vertical'/>
             </div>
             <div className='right' ref={rightNodeRef} style={props.rightExtraStyle}>
                 {props.rightNode}
