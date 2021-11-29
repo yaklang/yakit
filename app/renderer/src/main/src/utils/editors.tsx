@@ -13,6 +13,7 @@ import {FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-desig
 import {showDrawer} from "./showModal";
 import {MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
 import {HTTPPacketFuzzable} from "@components/HTTPHistory";
+import "./editors.css";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
@@ -215,8 +216,9 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
 
     const empty = !!props.emptyOr && props.originValue.length == 0
 
-    return <div style={{width: "100%"}}>
+    return <div style={{width: "100%", height: "100%"}}>
         <Card
+            className={"httppacket-card-editor"}
             size={"small"}
             bordered={props.bordered}
             style={{height: "100%", width: "100%"}}
@@ -256,7 +258,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     }}
                 />}
             </Space>}
-            bodyStyle={{padding: 0}}
+            bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column"}}
             extra={<>
                 {props.extra}
                 {props.sendToWebFuzzer && <Button
@@ -314,7 +316,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                 </Popover>
             </>}
         >
-            <div style={{height: props.defaultHeight || 450, width: "100%"}}>
+            <div style={{flex: 1}}>
                 {empty && props.emptyOr}
 
                 {mode === "text" && !empty && <YakEditor

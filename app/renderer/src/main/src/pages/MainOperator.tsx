@@ -82,9 +82,7 @@ export const Main: React.FC<MainProp> = (props) => {
     const [loading, setLoading] = useState(false);
     const [pageCache, setPageCache] = useState<PageCache[]>([
         {
-            node: <div style={{overflow: "hidden",flex:1,display:'flex',flexDirection:'column'}}>
-                {ContentByRoute(Route.HTTPHacker)}
-            </div>,
+            node: ContentByRoute(Route.HTTPHacker),
             id: "", route: Route.HTTPHacker,
             verbose: "MITM"
         }
@@ -433,11 +431,11 @@ export const Main: React.FC<MainProp> = (props) => {
                             overflow: "hidden",
                             backgroundColor: "#fff",
                             marginLeft: 12, height: "100%",
-                            display:'flex',
+                            display: 'flex',
                         }}>
-                            <div style={{padding: 12, paddingTop: 8,overflow:'hidden',display:'flex', flex:'1'}}>
+                            <div style={{padding: 12, paddingTop: 8, overflow: 'hidden', display: 'flex', flex: '1'}}>
                                 {pageCache.length > 0 ? <Tabs
-                                    style={{display:'flex', flex:'1'}}
+                                    style={{display: 'flex', flex: '1'}}
                                     className='main-content-tabs'
                                     activeKey={currentTabKey}
                                     onChange={setCurrentTabKey}
@@ -514,9 +512,14 @@ export const Main: React.FC<MainProp> = (props) => {
                                                         setTimeout(() => setTabLoading(false), 300)
                                                     }}/>
                                             </Space>}>
-                                            <Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >
+                                            {/*<Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >*/}
+                                            <div style={{
+                                                overflowY: i.route === Route.HTTPHacker ? "hidden" : "auto",
+                                                height: "100%"
+                                            }}>
                                                 {i.node}
-                                            </Spin>
+                                            </div>
+                                            {/*</Spin>*/}
                                         </Tabs.TabPane>
                                     })}
                                 </Tabs> : <>
