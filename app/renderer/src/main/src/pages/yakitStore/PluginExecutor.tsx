@@ -2,35 +2,12 @@ import React, {useEffect, useRef, useState} from "react";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {ExecResult, YakScript} from "../invoker/schema";
-import {
-    Button,
-    Card,
-    Col,
-    Collapse,
-    Divider,
-    Drawer, Empty,
-    Popconfirm,
-    Progress,
-    Row,
-    Space,
-    Spin,
-    Steps,
-    Tabs, Tag,
-    Timeline
-} from "antd";
+import {Button, Collapse, Popconfirm, Space, Spin} from "antd";
 import {XTerm} from "xterm-for-react";
 import {randomString} from "../../utils/randomUtil";
 import {failed, info} from "../../utils/notification";
-import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema";
 import {writeExecResultXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils";
-import {YakitLogFormatter} from "../invoker/YakitLogFormatter";
-import {
-    ExecResultLog,
-    ExecResultMessage,
-    ExecResultProgress,
-    ExecResultsViewer
-} from "../invoker/batch/ExecMessageViewer";
-import {LogLevelToCode} from "../../components/HTTPFlowTable";
+import {ExecResultLog, ExecResultMessage, ExecResultProgress} from "../invoker/batch/ExecMessageViewer";
 import {PluginResultUI} from "./viewers/base";
 
 export interface PluginExecutorProp {
@@ -147,7 +124,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 key={"params"}
                 showArrow={false}
                 header={<>
-                    设置参数
+                    设置参数 / Params
                 </>}
                 extra={<>
                     <Space>
@@ -195,7 +172,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             </Panel>
             <Panel key={"console"} showArrow={false} header={<>
                 插件执行结果
-            </>}>
+            </>} disabled={results.length <= 0}>
                 <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
                 <PluginResultUI script={script} loading={loading} progress={progress} results={results}/>
             </Panel>
