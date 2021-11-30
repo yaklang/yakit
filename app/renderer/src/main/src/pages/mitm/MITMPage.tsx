@@ -415,10 +415,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                 <div style={{ width: "100%", textAlign: "left" }}>
                                                     <Space>
                                                         <Button
+                                                            type={"primary"}
                                                             disabled={status === "hijacking"}
                                                             onClick={() => {
                                                                 forward()
-                                                            }}>发送请求</Button>
+                                                            }}>提交数据</Button>
                                                         <Button
                                                             disabled={status === "hijacking"}
                                                             danger={true}
