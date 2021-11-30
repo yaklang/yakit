@@ -17,6 +17,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     hash: string
     noHeader?: boolean
     onClose?: () => any
+    defaultHeight?: number
 }
 
 const {Text} = Typography;
@@ -219,42 +220,29 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             return
         }
 
-        ipcRenderer.on(props.hash, (e, data: HTTPFlow) => {
-            setFlow(data)
-            setTimeout(() => setLoading(false), 300)
-        })
-        ipcRenderer.on(`ERROR:${props.hash}`, (e, details) => {
-            failed(`查询该请求失败[${props.hash}]: ` + details)
-        })
-
         setLoading(true)
-        ipcRenderer.invoke("get-http-flow", props.hash)
-
-        return () => {
-            ipcRenderer.removeAllListeners(props.hash)
-            ipcRenderer.removeAllListeners(`ERROR:${props.hash}`)
-        }
+        ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
+            setFlow(i)
+        }).catch(e => {
+            failed(`Query HTTPFlow failed: ${e}`)
+        }).finally(() => {
+            setLoading(false)
+        })
     }, [props.hash])
 
     if (!flow) {
         return <></>
     }
 
-    return <Row gutter={8}>
+    return <Row gutter={8} style={{height: "100%"}}>
         <Col span={12}>
-            {/*<CodeViewer*/}
-            {/*    value={new Buffer(flow.Request).toString("utf-8")}*/}
-            {/*    mode={"http"} height={350} width={"100%"}*/}
-            {/*/>*/}
-            <HTTPPacketEditor originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}/>
-            {/*<div style={{height: 350}}>*/}
-            {/*    <YakHTTPPacketViewer value={flow?.Request || []}/>*/}
-            {/*    /!*<YakEditor readOnly={true} type={"http"}*!/*/}
-            {/*    /!*           value={new Buffer(flow.Request).toString("utf-8")}/>*!/*/}
-            {/*</div>*/}
+            <HTTPPacketEditor
+                originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}
+                defaultHeight={props.defaultHeight}
+            />
         </Col>
         <Col span={12}>
-            <HTTPPacketEditor originValue={flow.Response} readOnly={true}/>
+            <HTTPPacketEditor originValue={flow.Response} readOnly={true} defaultHeight={props.defaultHeight}/>
             {/*<YakHTTPPacketViewer isResponse value={flow?.Response || []}/>*/}
             {/*<CodeViewer*/}
             {/*    value={new Buffer(flow?.Response).toString("utf-8")}*/}

@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {ResizableBox} from "react-resizable";
+import {LinerResizeCols} from "./LinerResizeCols"
 
 export interface VerticalResizeProps {
     firstNode?: React.ReactNode
@@ -14,6 +15,8 @@ export interface VerticalResizeProps {
     secondHideResize?: boolean
     secondMaxHeight?: number
     secondMinHeight?: number
+
+    reseze?:Function
 }
 
 export const VerticalResize: React.FC<VerticalResizeProps> = props => {
@@ -36,8 +39,15 @@ export const VerticalResize: React.FC<VerticalResizeProps> = props => {
         }
     }, [div])
 
-    return <div style={{width: "100%"}} ref={div}>
-        <ResizableBox
+    return <div style={{width: "100%",display:'flex',flex:'1 1 auto',flexDirection:'column'}} ref={div}>
+        <LinerResizeCols
+                isVertical={true}
+                leftNode={props.firstNode}
+                rightNode={props.secondNode && props.secondNode}
+                reseze={props.reseze}
+            />
+        
+        {/* <ResizableBox
             width={maxWidth} height={props.firstInitHeight || 300}
             resizeHandles={props.firstHideResize ? [] : ["s", "se", "sw"]}
             maxConstraints={[maxWidth, props.firstMaxHeight || 400]}
@@ -47,8 +57,8 @@ export const VerticalResize: React.FC<VerticalResizeProps> = props => {
             }}
         >
             {props.firstNode}
-        </ResizableBox>
-        {props.secondNode && <ResizableBox
+        </ResizableBox> */}
+        {/* {props.secondNode && <ResizableBox
             width={maxWidth}
             maxConstraints={[maxWidth, props.secondMaxHeight || 400]}
             minConstraints={[maxWidth, props.secondMinHeight || 200]}
@@ -59,6 +69,6 @@ export const VerticalResize: React.FC<VerticalResizeProps> = props => {
             resizeHandles={props.secondHideResize ? [] : ["se", "sw", "s"]}
         >
             {props.secondNode}
-        </ResizableBox>}
+        </ResizableBox>} */}
     </div>
 }

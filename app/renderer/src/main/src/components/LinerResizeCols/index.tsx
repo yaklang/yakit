@@ -8,6 +8,7 @@ export interface LinerResizeColsProp {
     rightNode: React.ReactNode
     leftExtraStyle?: React.CSSProperties
     rightExtraStyle?: React.CSSProperties
+    reseze?: Function
 }
 
 export const LinerResizeCols: React.FC<LinerResizeColsProp> = (props) => {
@@ -40,19 +41,25 @@ export const LinerResizeCols: React.FC<LinerResizeColsProp> = (props) => {
 
             document.onmousemove = (event) => {
                 if (!!props.isVertical) {
-                    left.style.height = `${
-                        contentHeight - height + (event.clientY - firstY) - 10
-                    }px`
-                    right.style.height = `${height - (event.clientY - firstY)}px`
+                    const leftHeight = contentHeight - height + (event.clientY - firstY) - 10;
+                    const rightHeight = height - (event.clientY - firstY);
+
+                    if (leftHeight <= 200 || rightHeight <= 200) {
+                        return
+                    }
+
+                    left.style.height = `${leftHeight}px`
+                    right.style.height = `${rightHeight}px`
                 } else {
-                    left.style.width = `${
-                        content.offsetWidth - width + (event.clientX - firstX) - 10
+                    left.style.width = `${content.offsetWidth - width + (event.clientX - firstX) - 10
                     }px`
                     right.style.width = `${width - (event.clientX - firstX)}px`
                 }
+
             }
             // 松开鼠标时解除监听事件
             content.onmouseup = () => {
+                if (props.reseze) props.reseze(left, right)
                 document.onmousemove = null
             }
             return false

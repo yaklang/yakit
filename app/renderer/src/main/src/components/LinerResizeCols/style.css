@@ -35,9 +35,14 @@
     cursor: move;
     float: left;
     text-align: center;
+    z-index: 99;
 }
 .horizontal-content .right {
     float: left;
     width: 50%;
     height: 100%;
+}
+
+.resize:hover{
+    background-color: rgb(94, 180, 250);
 }
