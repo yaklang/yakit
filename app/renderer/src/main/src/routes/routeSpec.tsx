@@ -78,6 +78,11 @@ export interface MenuDataProps {
     disabled?: boolean
 }
 
+export const NoScrollRoutes: Route[] = [
+    Route.HTTPHacker,
+    Route.Mod_Brute,
+];
+
 export const RouteMenuData: MenuDataProps[] = [
     // {key: Route.HTTPFuzzer, label: "Web Fuzzer", icon: <AimOutlined/>},
     // {key: Route.MITM, label: "HTTP(S) 中间人劫持", icon: <FireOutlined/>},
@@ -219,7 +224,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
         case Route.Mod_Brute:
             return <BrutePage/>
         default:
-
             return <div/>
     }
 }
