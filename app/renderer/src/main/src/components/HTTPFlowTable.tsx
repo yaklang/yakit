@@ -59,6 +59,8 @@ export interface HTTPFlow {
     CookieParamsTotal: number
     CreatedAt: number
     UpdatedAt: number
+    HostPort?: string
+    IPAddress?: string
 
     GetParams: FuzzableParams[]
     PostParams: FuzzableParams[]
@@ -552,6 +554,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     },
                     filterIcon: filtered => {
                         return params && <SearchOutlined style={{color: filtered ? '#1890ff' : undefined}}/>
+                    },
+                },
+                {
+                    title: "IP", render: (i: HTTPFlow) => {
+                        return i.IPAddress
                     },
                 },
                 {
