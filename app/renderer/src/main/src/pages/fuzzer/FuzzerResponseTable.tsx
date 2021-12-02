@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import {BaseTable, features, useTablePipeline} from "../../alibaba/ali-react-table-dist";
 import {analyzeFuzzerResponse, FuzzerResponse} from "./HTTPFuzzerPage";
 import {Button, Space, Table, Tag, Tooltip, Typography} from "antd";
@@ -7,6 +7,7 @@ import * as  antd from "antd";
 import {DurationMsToColor, StatusCodeToColor} from "../../components/HTTPFlowTable";
 import {divider} from "@uiw/react-md-editor";
 import {CopyableField} from "../../utils/inputUtil";
+import ReactResizeDetector from "react-resize-detector";
 
 export interface FuzzerResponseTableProp {
     content: FuzzerResponse[]
@@ -96,6 +97,7 @@ const sortAsNumber = (a: any, b: any) => parseInt(a) > parseInt(b)
 
 export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) => {
     const {content, setRequest} = props;
+    const [tableHeight, setTableHeight] = useState(0);
     const pipeline = useTablePipeline({
         components: antd,
     }).input({
@@ -180,7 +182,16 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
         }),
     ).use(features.columnHover()).use(features.tips())
 
-    return <div style={{width: "100%"}}>
-        <BaseTable {...pipeline.getProps()} style={{width: "100%", height: 500, overflow: "auto"}}/>
+    return <div style={{width: "100%", height: "100%", overflow: "hidden"}}>
+        <ReactResizeDetector
+            onResize={(width, height) => {
+                if (!width || !height) {
+                    return
+                }
+                setTableHeight(height)
+            }}
+            handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
+        />
+        <BaseTable {...pipeline.getProps()} style={{width: "100%", height: tableHeight, overflow: "auto"}}/>
     </div>
 };

@@ -143,7 +143,9 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                     setTimeout(() => setLoading(false), 300)
                 }}/>
             </Space>}>
-                {i.node}
+                <div style={{height: "100%"}}>
+                    {i.node}
+                </div>
             </Tabs.TabPane>)}
             {/*<Tabs.TabPane tab={"Web Fuzzer"} key={"fuzzer"}>*/}
             {/*    <HTTPFuzzerPage*/}

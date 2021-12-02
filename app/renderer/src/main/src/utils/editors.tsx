@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import MonacoEditor, {monaco} from 'react-monaco-editor';
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
 import HexEditor from "react-hex-editor";
@@ -7,13 +7,14 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
 import "./monacoSpec/html"
-import {Button, Card, Form, Input, Popover, Space} from "antd";
+import {Button, Card, Form, Input, Popover, Space, Spin, Tag} from "antd";
 import {SelectOne} from "./inputUtil";
 import {FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons";
 import {showDrawer} from "./showModal";
 import {MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
 import {HTTPPacketFuzzable} from "@components/HTTPHistory";
 import "./editors.css";
+import ReactResizeDetector from "react-resize-detector";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
@@ -36,6 +37,8 @@ export interface EditorProps {
 
     actions?: IMonacoActionDescriptor[]
     triggerId?: any
+
+    full?: boolean
 }
 
 export interface YakHTTPPacketViewer {
@@ -74,6 +77,11 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     const [editor, setEditor] = useState<IMonacoEditor>();
     const [reload, setReload] = useState(false);
     const [triggerId, setTrigger] = useState<any>();
+    // 高度缓存
+    const [prevHeight, setPrevHeight] = useState(0);
+    // const [editorHeight, setEditorHeight] = useState(0);
+    const outterContainer = useRef(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (props.triggerId !== triggerId) {
@@ -94,53 +102,92 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             return
         }
 
+        setTimeout(() => {
+            setLoading(false)
+        }, 200)
+
         if (props.actions) {
             // 注册右键菜单
             props.actions.forEach(e => {
                 editor.addAction(e)
             })
         }
-
-        let id = setInterval(() => {
-            editor.layout()
-        }, 200)
-
-        // 修复 editor 的 resize 问题
-        let origin = window.onresize;
-        window.onresize = (e) => {
-            if (editor) editor.layout();
-            // @ts-ignore
-            if (origin) origin(e);
-        };
-        return () => {
-            clearInterval(id)
-            window.onresize = origin;
-        }
     }, [editor])
 
+    const handleEditorMount = (editor: IMonacoEditor, monaco: any) => {
+        editor.onDidChangeModelDecorations(() => {
+            updateEditorHeight(); // typing
+            requestAnimationFrame(updateEditorHeight); // folding
+        });
+
+        const updateEditorHeight = () => {
+            const editorElement = editor.getDomNode();
+
+            if (!editorElement) {
+                return;
+            }
+
+            const padding = 40;
+
+            const lineHeight = editor.getOption(
+                monaco.editor.EditorOption.lineHeight
+            );
+            const lineCount = editor.getModel()?.getLineCount() || 1;
+            const height =
+                editor.getTopForLineNumber(lineCount + 1) +
+                lineHeight +
+                padding;
+
+
+            if (prevHeight !== height) {
+                setPrevHeight(height);
+                editorElement.style.height = `${height}px`;
+                editor.layout();
+            }
+        };
+    };
+
     return <>
-        {!reload && <>
-            {/*@ts-ignore*/}
-            <MonacoEditor
-                theme={props.theme || "kurior"}
-                value={props.bytes ? new Buffer((props.valueBytes || []) as Uint8Array).toString() : props.value}
-                onChange={props.setValue}
-                width={"100%"}
-                language={props.type || "http"}
-                editorDidMount={(editor: IMonacoEditor) => {
-                    setEditor(editor)
-                    if (props.editorDidMount) props.editorDidMount(editor);
+        {!reload && <div style={{height: "100%", width: "100%", overflow: "hidden"}} ref={outterContainer}>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (props.full) {
+                        return
+                    }
+                    if (!width || !height) {
+                        return
+                    }
+                    if (editor) editor.layout({height, width})
                 }}
-                options={{
-                    readOnly: props.readOnly, scrollBeyondLastLine: false,
-                    fontWeight: "500", fontSize: props.fontSize || 12, showFoldingControls: "always",
-                    showUnused: true, wordWrap: "on", renderLineHighlight: "line",
-                    lineNumbers: props.noLineNumber ? "off" : "on",
-                    minimap: props.noMiniMap ? {enabled: false} : undefined,
-                    lineNumbersMinChars: 4,
-                }}
-            />
-        </>}
+                handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
+            >
+                <div style={{height: "100%", width: "100%", overflow: "hidden"}}>
+                    <MonacoEditor
+                        theme={props.theme || "kurior"}
+                        value={props.bytes ? new Buffer((props.valueBytes || []) as Uint8Array).toString() : props.value}
+                        onChange={props.setValue}
+                        language={props.type || "http"}
+                        height={0}
+                        editorDidMount={(editor: IMonacoEditor, monaco: any) => {
+                            setEditor(editor)
+                            if (props.editorDidMount) props.editorDidMount(editor);
+
+                            if (props.full) {
+                                handleEditorMount(editor, monaco)
+                            }
+                        }}
+                        options={{
+                            readOnly: props.readOnly, scrollBeyondLastLine: false,
+                            fontWeight: "500", fontSize: props.fontSize || 12, showFoldingControls: "always",
+                            showUnused: true, wordWrap: "on", renderLineHighlight: "line",
+                            lineNumbers: props.noLineNumber ? "off" : "on",
+                            minimap: props.noMiniMap ? {enabled: false} : undefined,
+                            lineNumbersMinChars: 4,
+                        }}
+                    />
+                </div>
+            </ReactResizeDetector>
+        </div>}
     </>
 };
 
@@ -157,6 +204,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     emptyOr?: React.ReactNode
 
     refreshTrigger?: boolean
+    simpleMode?: boolean
 }
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
@@ -224,14 +272,16 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
             style={{height: "100%", width: "100%"}}
             title={<Space>
                 <span>{isResponse ? "Response" : "Request"}</span>
-                <SelectOne
+                {!props.simpleMode ? <SelectOne
                     label={" "} colon={false} value={mode} setValue={setMode}
                     data={[
                         {text: "TEXT", value: "text"},
                         {text: "HEX", value: "hex"},
                     ]} size={"small"} formItemStyle={{marginBottom: 0}}
-                />
-                {mode === "text" && !props.hideSearch && <Input.Search
+                /> : <Form.Item style={{marginBottom: 0}}>
+                    <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
+                </Form.Item>}
+                {mode === "text" && !props.hideSearch && !props.simpleMode && <Input.Search
                     size={"small"} value={searchValue}
                     onChange={e => {
                         setSearchValue(e.target.value)
@@ -269,7 +319,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                         if (props.sendToWebFuzzer) props.sendToWebFuzzer(false, strValue);
                     }}
                 >FUZZ</Button>}
-                {!props.disableFullscreen && <Button
+                {!props.disableFullscreen && !props.simpleMode && <Button
                     size={"small"}
                     type={"link"}
                     icon={<FullscreenOutlined/>}
@@ -286,7 +336,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                         })
                     }}
                 />}
-                <Popover
+                {!props.simpleMode && <Popover
                     title={"配置编辑器"}
                     content={<>
                         <Form
@@ -313,7 +363,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                         icon={<SettingOutlined/>}
                         type={"link"} size={"small"}
                     />
-                </Popover>
+                </Popover>}
             </>}
         >
             <div style={{flex: 1}}>
