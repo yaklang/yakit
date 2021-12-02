@@ -571,6 +571,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                 />
                                             </> : <>
                                                 <YakEditor
+                                                    type={"http"}
                                                     actions={(() => {
                                                         return [
                                                             {

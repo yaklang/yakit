@@ -120,5 +120,8 @@ module.exports = {
         require("./handlers/upgradeUtil").register(win, getClient);
 
         require("./handlers/version")(win, getClient);
+
+        // misc
+        require("./handlers/misc")(win, getClient);
     }
 }

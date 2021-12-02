@@ -8,7 +8,7 @@ import {randomString} from "../../utils/randomUtil";
 import {failed, info} from "../../utils/notification";
 import {writeExecResultXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils";
 import {ExecResultLog, ExecResultMessage, ExecResultProgress} from "../invoker/batch/ExecMessageViewer";
-import {PluginResultUI} from "./viewers/base";
+import {PluginResultUI, StatusCardProps} from "./viewers/base";
 
 export interface PluginExecutorProp {
     script: YakScript
@@ -25,14 +25,20 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const [token, setToken] = useState("");
     const [loading, setLoading] = useState(false);
     const [activePanels, setActivePanels] = useState<string[]>(["params"]);
+
+    // 设置结果
     const [results, setResults] = useState<ExecResultLog[]>([]);
     const [progress, setProgress] = useState<ExecResultProgress[]>([]);
+    const [statusCards, setStatusCards] = useState<StatusCardProps[]>([]);
+
+    // flags
     const [resetFlag, setResetFlag] = useState(false);
 
     const reset = () => {
         setResetFlag(!resetFlag)
         setResults([])
         setProgress([])
+        setStatusCards([])
     }
 
     useEffect(() => {
@@ -44,8 +50,10 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         setToken(token)
 
         let messages: ExecResultMessage[] = [];
+        let processKVPair = new Map<string, number>();
+        let statusKVPair = new Map<string, StatusCardProps>();
+
         let lastResultLen = 0;
-        let lastProgressLen = 0;
         const syncResults = () => {
             let results = messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog);
             if (results.length > lastResultLen) {
@@ -53,17 +61,49 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 setResults(results)
             }
 
-            let progress = messages.filter(i => i.type === "progress").map(i => i.content as ExecResultProgress);
-            if (progress.length > lastProgressLen) {
-                lastProgressLen = progress.length
-                setProgress(progress)
-            }
+            const processes: ExecResultProgress[] = []
+            processKVPair.forEach((value, id) => {
+                processes.push({id: id, progress: value})
+            })
+            setProgress(processes.sort((a, b) => a.id.localeCompare(b.id)))
+
+            const statusCards: StatusCardProps[] = [];
+            statusKVPair.forEach((value) => {
+                statusCards.push(value);
+            })
+            setStatusCards(statusCards.sort((a, b) => a.Id.localeCompare((b.Id))))
         }
 
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
             if (data.IsMessage) {
                 try {
                     let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString("utf8"));
+
+                    // 处理 Process KVPair
+                    if (obj.type === "process") {
+                        const processData = obj.content as ExecResultProgress;
+                        if (processData && processData.id) {
+                            processKVPair.set(processData.id, Math.max(processKVPair.get(processData.id) || 0, processData.progress))
+                        }
+                        return
+                    }
+
+                    // 处理 log feature-status-card-data
+                    const logData = obj.content as ExecResultLog;
+                    if (obj.type === "log" && logData.level === "feature-status-card-data") {
+                        try {
+                            const obj = JSON.parse(logData.data);
+                            const {id, data} = obj;
+                            const {timestamp} = logData;
+                            const originData = statusKVPair.get(id);
+                            if (originData && originData.Timestamp > timestamp) {
+                                return
+                            }
+                            statusKVPair.set(id, {Id: id, Data: data, Timestamp: timestamp})
+                        } catch (e) {
+                        }
+                        return
+                    }
                     messages.unshift(obj)
                 } catch (e) {
 
@@ -96,16 +136,6 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     useEffect(() => {
         xtermFit(xtermRef, 256, 6)
     })
-
-    // if (props.script.Type === "mitm") {
-    //     return <Empty
-    //         style={{
-    //             marginTop: 50,
-    //         }}
-    //         description={"这是一个 MITM 插件，请在 MITM 劫持中使用它！"}>
-    //
-    //     </Empty>
-    // }
 
     useEffect(() => {
         if (!loading) {
@@ -174,7 +204,10 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 插件执行结果
             </>} disabled={results.length <= 0}>
                 <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
-                <PluginResultUI script={script} loading={loading} progress={progress} results={results}/>
+                <PluginResultUI
+                    script={script} loading={loading} progress={progress} results={results}
+                    statusCards={statusCards}
+                />
             </Panel>
         </Collapse>
     </div>

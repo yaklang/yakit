@@ -170,7 +170,7 @@ export const CodecPage: React.FC<CodecPageProp> = (props) => {
                 <div style={{height: 300}}>
                     <YakEditor
                         value={result} setValue={setResult}
-                        readOnly={true}
+                        readOnly={true} type={"http"}
                     />
                 </div>
                 <CopyToClipboard text={result} onCopy={(text, ok) => {

@@ -21,6 +21,7 @@ import {PortScanPage} from "../pages/portscan/PortScanPage";
 import {YakitStorePage} from "../pages/yakitStore/YakitStorePage";
 import {PluginOperator} from "../pages/yakitStore/PluginOperator";
 import {failed} from "../utils/notification";
+import {BrutePage} from "../pages/brute/BrutePage";
 
 export enum Route {
     MITM = "mitm",
@@ -77,6 +78,11 @@ export interface MenuDataProps {
     disabled?: boolean
 }
 
+export const NoScrollRoutes: Route[] = [
+    Route.HTTPHacker,
+    Route.Mod_Brute,
+];
+
 export const RouteMenuData: MenuDataProps[] = [
     // {key: Route.HTTPFuzzer, label: "Web Fuzzer", icon: <AimOutlined/>},
     // {key: Route.MITM, label: "HTTP(S) 中间人劫持", icon: <FireOutlined/>},
@@ -87,10 +93,10 @@ export const RouteMenuData: MenuDataProps[] = [
         key: Route.GeneralModule, label: "通用模块", icon: <RocketOutlined/>,
         subMenuData: [
             {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
+            {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: false},
             {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
-            {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
             // {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
-            {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: true},
+            {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
         ],
     },
     {
@@ -215,6 +221,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <PayloadManagerPage/>
         case Route.Mod_ScanPort:
             return <PortScanPage/>
+        case Route.Mod_Brute:
+            return <BrutePage/>
         default:
             return <div/>
     }

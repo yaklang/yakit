@@ -458,12 +458,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 originValue={content[0].ResponseRaw}
                                 bordered={true} hideSearch={true}
                                 emptyOr={!content[0].Ok && (
-                                    <Result status={"error"}>
-                                        <Alert
-                                            style={{marginBottom: 8}}
-                                            type={"error"}
-                                            message={<>请求失败：{content[0].Reason}</>}
-                                        />
+                                    <Result
+                                        status={"error"} title={"请求失败"}
+                                        // no such host
+                                        subTitle={(()=>{
+                                            const reason = content[0]!.Reason;
+                                            if (reason.includes("tcp: i/o timeout")) {
+                                                return "网络超时"
+                                            }
+                                            if (reason.includes("no such host")) {
+                                                return "DNS 错误或主机错误"
+                                            }
+                                            return  undefined
+                                        })()}
+                                    >
+                                        <>详细原因：{content[0].Reason}</>
                                     </Result>
                                 )}
                                 readOnly={true} extra={

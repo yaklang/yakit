@@ -126,7 +126,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                 value={props.bytes ? new Buffer((props.valueBytes || []) as Uint8Array).toString() : props.value}
                 onChange={props.setValue}
                 width={"100%"}
-                language={props.type}
+                language={props.type || "http"}
                 editorDidMount={(editor: IMonacoEditor) => {
                     setEditor(editor)
                     if (props.editorDidMount) props.editorDidMount(editor);
