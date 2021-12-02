@@ -57,6 +57,8 @@ export interface InputItemProps {
     textareaRow?: number
     textareaCol?: number
 
+    prefix?: React.ReactNode
+    suffix?: React.ReactNode
 }
 
 
@@ -96,6 +98,8 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
             placeholder={props.placeholder}
             allowClear={true}
             value={props.value} onChange={e => props.setValue && props.setValue(e.target.value)}
+            prefix={props.prefix}
+            suffix={props.suffix}
         />}
 
     </Item>

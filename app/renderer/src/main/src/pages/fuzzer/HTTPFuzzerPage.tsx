@@ -27,8 +27,9 @@ import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {FuzzerResponseTableEx} from "./FuzzerResponseTable"
 import {randomString} from "../../utils/randomUtil"
 import {LinerResizeCols} from "../../components/LinerResizeCols"
-import {DeleteOutlined, ProfileOutlined} from "@ant-design/icons";
+import {DeleteOutlined, ProfileOutlined, ColumnWidthOutlined} from "@ant-design/icons";
 import {HTTPPacketFuzzable} from "@components/HTTPHistory";
+import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard";
 
 
 const {ipcRenderer} = window.require("electron")
@@ -102,8 +103,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [debuggingTag, setDebuggingTag] = useState(false)
     const [fuzzToken, setFuzzToken] = useState("")
-
     const [search, setSearch] = useState("")
+
+    const [viewMode, setViewMode] = useState<"split" | "request" | "result">("split");
 
 
     const [refreshTrigger, setRefreshTrigger] = useState(false);
@@ -214,8 +216,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const successResults = filtredResponses.filter((i) => i.Ok)
     const failedResults = filtredResponses.filter((i) => !i.Ok)
 
+
+    const getLeftSpan = () => {
+        switch (viewMode) {
+            case "request":
+                return 18;
+            case "result":
+                return 6;
+            case "split":
+            default:
+                return 12
+        }
+    };
+
     return (
-        <>
+        <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8}>
                 <Col span={12} style={{textAlign: "left"}}>
                     <Space>
@@ -439,93 +454,132 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 </Col>
             </Row>}
             <Divider style={{marginTop: 12, marginBottom: 4}}/>
-            <LinerResizeCols
-                leftNode={
-                    <div style={{height: '100%'}}>
-                        <HTTPPacketEditor
-                            refreshTrigger={refreshTrigger}
-                            hideSearch={true} bordered={true}
-                            originValue={new Buffer(request)}
-                            onEditor={setReqEditor}
-                            onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
-                        />
-                    </div>
-                }
-                rightNode={
-                    onlyOneResponse ? (
+            <Row style={{flex: "1"}} gutter={5}>
+                <Col span={getLeftSpan()}>
+                    <HTTPPacketEditor
+                        simpleMode={viewMode === "result"}
+                        refreshTrigger={refreshTrigger}
+                        hideSearch={true} bordered={true}
+                        originValue={new Buffer(request)}
+                        onEditor={setReqEditor}
+                        onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
+                        extra={<Space>
+                            <Button
+                                size={"small"}
+                                type={viewMode === "request" ? "primary" : "link"}
+                                icon={<ColumnWidthOutlined/>}
+                                onClick={() => {
+                                    if (viewMode === "request") {
+                                        setViewMode("split")
+                                    } else {
+                                        setViewMode("request")
+                                    }
+                                }}
+                            />
+                        </Space>}
+                    />
+                </Col>
+                <Col span={24 - getLeftSpan()}>
+                    {onlyOneResponse ? (
                         <>
                             <HTTPPacketEditor
+                                simpleMode={viewMode === "request"}
                                 originValue={content[0].ResponseRaw}
                                 bordered={true} hideSearch={true}
                                 emptyOr={!content[0].Ok && (
-                                    <Result status={"error"}>
-                                        <Alert
-                                            style={{marginBottom: 8}}
-                                            type={"error"}
-                                            message={<>请求失败：{content[0].Reason}</>}
-                                        />
+                                    <Result
+                                        status={"error"} title={"请求失败"}
+                                        // no such host
+                                        subTitle={(() => {
+                                            const reason = content[0]!.Reason;
+                                            if (reason.includes("tcp: i/o timeout")) {
+                                                return "网络超时"
+                                            }
+                                            if (reason.includes("no such host")) {
+                                                return "DNS 错误或主机错误"
+                                            }
+                                            return undefined
+                                        })()}
+                                    >
+                                        <>详细原因：{content[0].Reason}</>
                                     </Result>
                                 )}
                                 readOnly={true} extra={
-                                <Space>
-                                    {/*<Space>*/}
-                                    {/*<Text style={{marginBottom: 0}}>模糊测试 / HTTP 请求结果</Text>*/}
-                                    {loading && <Spin size={"small"} spinning={loading}/>}
-                                    {/*</Space>*/}
-                                    {onlyOneResponse
-                                        ?
-                                        <Space>
-                                            <Tag>{content[0].DurationMs}ms</Tag>
-                                            <Space key='single'>
-                                                <Button
+                                viewMode === "request" ? <Button
+                                        size={"small"}
+                                        type={"link"}
+                                        icon={<ColumnWidthOutlined/>}
+                                        onClick={() => {
+                                            setViewMode("result")
+                                        }}
+                                    /> :
+                                    <Space>
+                                        {loading && <Spin size={"small"} spinning={loading}/>}
+                                        {onlyOneResponse
+                                            ?
+                                            <Space>
+                                                <Tag>{content[0].DurationMs}ms</Tag>
+                                                <Space key='single'>
+                                                    <Button
+                                                        size={"small"}
+                                                        onClick={() => {
+                                                            analyzeFuzzerResponse(content[0], r => {
+                                                                setRequest(r)
+                                                                refreshRequest()
+                                                            })
+                                                        }}
+                                                        type={"primary"}
+                                                        icon={<ProfileOutlined/>}
+                                                    >
+                                                        详情
+                                                    </Button>
+                                                    <Button
+                                                        type={"primary"}
+                                                        size={"small"}
+                                                        onClick={() => {
+                                                            setContent([])
+                                                        }}
+                                                        danger={true}
+                                                        icon={<DeleteOutlined/>}
+                                                    >
+
+                                                    </Button>
+                                                </Space>
+                                            </Space>
+                                            :
+                                            <Space key='list'>
+                                                <Tag color={"green"}>成功:{successResults.length}</Tag>
+                                                <Input
                                                     size={"small"}
-                                                    onClick={() => {
-                                                        analyzeFuzzerResponse(content[0], r => {
-                                                            setRequest(r)
-                                                            refreshRequest()
-                                                        })
+                                                    value={search}
+                                                    onChange={(e) => {
+                                                        setSearch(e.target.value)
                                                     }}
-                                                    type={"primary"}
-                                                    icon={<ProfileOutlined/>}
-                                                >
-                                                    详情
-                                                </Button>
+                                                />
+                                                {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
                                                 <Button
-                                                    type={"primary"}
                                                     size={"small"}
                                                     onClick={() => {
                                                         setContent([])
                                                     }}
-                                                    danger={true}
-                                                    icon={<DeleteOutlined/>}
                                                 >
-
+                                                    清除数据
                                                 </Button>
                                             </Space>
-                                        </Space>
-
-                                        :
-                                        <Space key='list'>
-                                            <Tag color={"green"}>成功:{successResults.length}</Tag>
-                                            <Input
-                                                size={"small"}
-                                                value={search}
-                                                onChange={(e) => {
-                                                    setSearch(e.target.value)
-                                                }}
-                                            />
-                                            {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
-                                            <Button
-                                                size={"small"}
-                                                onClick={() => {
-                                                    setContent([])
-                                                }}
-                                            >
-                                                清除数据
-                                            </Button>
-                                        </Space>
-                                    }
-                                </Space>
+                                        }
+                                        <Button
+                                            size={"small"}
+                                            type={viewMode === "result" ? "primary" : "link"}
+                                            icon={<ColumnWidthOutlined/>}
+                                            onClick={() => {
+                                                if (viewMode === "result") {
+                                                    setViewMode("split")
+                                                } else {
+                                                    setViewMode("result")
+                                                }
+                                            }}
+                                        />
+                                    </Space>
                             }
                             />
                             {/*<YakEditor*/}
@@ -535,52 +589,52 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     ) : (
                         <>
                             {(content || []).length > 0 ? (
-                                <div>
-                                    <Tabs>
-                                        <Tabs.TabPane
-                                            key={"success"}
-                                            tab={
-                                                <div
-                                                    style={{
-                                                        marginLeft: 12,
-                                                        marginRight: 12
-                                                    }}
-                                                >
-                                                    正常请求
-                                                    {`[${(successResults || []).length}]`}
-                                                </div>}>
-                                            <FuzzerResponseTableEx
-                                                success={true}
-                                                content={successResults}
-                                                setRequest={r => {
-                                                    setRequest(r)
-                                                    refreshRequest()
-                                                }}
-                                            />
-                                        </Tabs.TabPane>
-                                        <Tabs.TabPane key={"failed"}
-                                                      tab={`网络错误 / 请求错误 [${(failedResults || []).length}]`}>
-                                            <FuzzerResponseTableEx
-                                                success={false}
-                                                content={failedResults}
-                                                setRequest={r => {
-                                                    setRequest(r)
-                                                    refreshRequest()
-                                                }}
-                                            />
-                                        </Tabs.TabPane>
-                                    </Tabs>
-                                </div>) : (
+                                <HTTPFuzzerResultsCard
+                                    setRequest={r => {
+                                        setRequest(r)
+                                        refreshRequest()
+                                    }}
+                                    extra={<Button
+                                        size={"small"}
+                                        type={viewMode === "result" ? "primary" : "link"}
+                                        icon={<ColumnWidthOutlined/>}
+                                        onClick={() => {
+                                            if (viewMode === "result") {
+                                                setViewMode("split")
+                                            } else {
+                                                setViewMode("result")
+                                            }
+                                        }}
+                                    />}
+                                    failedResponses={failedResults}
+                                    successResponses={successResults}
+                                />
+                            ) : (
                                 <Result
                                     status={"info"}
                                     title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
                                     subTitle={"本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"}
                                 />
                             )}
-                        </>)
-                }
-            />
-        </>)
+                        </>)}
+                </Col>
+            </Row>
+            {/*<LinerResizeCols*/}
+            {/*    style={{flex: "1"}}*/}
+            {/*    leftNode={*/}
+            {/*        <HTTPPacketEditor*/}
+            {/*            refreshTrigger={refreshTrigger}*/}
+            {/*            hideSearch={true} bordered={true}*/}
+            {/*            originValue={new Buffer(request)}*/}
+            {/*            onEditor={setReqEditor}*/}
+            {/*            onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}*/}
+            {/*        />*/}
+            {/*    }*/}
+            {/*    rightNode={*/}
+            {/*        */}
+            {/*    }*/}
+            {/*/>*/}
+        </div>)
 }
 
 

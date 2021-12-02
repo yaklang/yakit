@@ -16,7 +16,7 @@ import {
     Tabs,
     Tag
 } from "antd";
-import {ContentByRoute, MenuDataProps, Route, RouteMenuData} from "../routes/routeSpec";
+import {ContentByRoute, MenuDataProps, NoScrollRoutes, Route, RouteMenuData} from "../routes/routeSpec";
 import {
     CloseOutlined,
     EditOutlined,
@@ -353,9 +353,8 @@ export const Main: React.FC<MainProp> = (props) => {
                                                 appendCache(
                                                     newTabId,
                                                     `${verboseNameRaw}[${pageCache.length + 1}]`,
-                                                    <div style={{overflow: "auto"}}>
-                                                        {ContentByRoute(e.key)}
-                                                    </div>, e.key as Route,
+                                                    ContentByRoute(e.key),
+                                                    e.key as Route,
                                                 );
                                                 setCurrentTabKey(newTabId)
                                             }
@@ -514,7 +513,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                             </Space>}>
                                             {/*<Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >*/}
                                             <div style={{
-                                                overflowY: i.route === Route.HTTPHacker ? "hidden" : "auto",
+                                                overflowY: NoScrollRoutes.includes(i.route) ? "hidden" : "auto",
                                                 height: "100%"
                                             }}>
                                                 {i.node}
