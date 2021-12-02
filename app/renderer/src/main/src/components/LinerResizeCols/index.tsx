@@ -9,6 +9,7 @@ export interface LinerResizeColsProp {
     leftExtraStyle?: React.CSSProperties
     rightExtraStyle?: React.CSSProperties
     reseze?: Function
+    style?: React.CSSProperties
 }
 
 export const LinerResizeCols: React.FC<LinerResizeColsProp> = (props) => {
@@ -73,7 +74,7 @@ export const LinerResizeCols: React.FC<LinerResizeColsProp> = (props) => {
     }, [props.isVertical])
 
     return !!props.isVertical ? (
-        <div className='vertical-content' ref={contentRef} style={{margin: 0}}>
+        <div className='vertical-content' ref={contentRef} style={{margin: 0, ...props.style}}>
             <div className='left' ref={leftNodeRef} style={props.leftExtraStyle}>
                 {props.leftNode}
             </div>
@@ -85,7 +86,7 @@ export const LinerResizeCols: React.FC<LinerResizeColsProp> = (props) => {
             </div>
         </div>
     ) : (
-        <div className='horizontal-content' ref={contentRef} style={{marginLeft: 0, marginRight: 0}}>
+        <div className='horizontal-content' ref={contentRef} style={{marginLeft: 0, marginRight: 0, ...props.style}}>
             <div className='left' ref={leftNodeRef} style={props.leftExtraStyle}>
                 {props.leftNode}
             </div>
