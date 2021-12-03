@@ -715,6 +715,8 @@ message QueryHTTPFlowRequest {
 message DeleteHTTPFlowRequest {
   bool DeleteAll = 1;
   repeated string ItemHash = 2;
+
+  string URLPrefix = 3;
 }
 
 message HTTPHeader {
