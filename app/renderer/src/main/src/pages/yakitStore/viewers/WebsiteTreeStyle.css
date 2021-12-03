@@ -1,12 +1,10 @@
 .ellipsis-tree {
-    width: 350px;
-    overflow: hidden;
+    width: 100%;
 }
 
 .ellipsis-tree .ant-tree-treenode {
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
 }
 
 .ellipsis-tree .ant-tree-node-content-wrapper {
@@ -22,7 +20,7 @@
 }
 
 .ellipsis-tree .titleContent {
-    width: 80%;
+    max-width: 300px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
