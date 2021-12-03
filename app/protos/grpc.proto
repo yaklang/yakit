@@ -746,6 +746,10 @@ message HTTPFlow {
   repeated FuzzableParam GetParams = 20;
   repeated FuzzableParam PostParams = 21;
   repeated FuzzableParam CookieParams = 23;
+
+  string HostPort = 24;
+  string IPAddress = 25;
+
 }
 
 message FuzzableParam {
@@ -847,6 +851,8 @@ message MITMResponse {
 
   bool getCurrentHook = 30;
   repeated YakScriptHooks hooks = 31;
+
+  string RemoteAddr = 32;
 }
 
 message YakScriptHooks {

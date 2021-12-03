@@ -12713,7 +12713,7 @@ react-resizable@^3.0.4:
 
 react-resize-detector@^6.7.6:
   version "6.7.6"
-  resolved "https://registry.nlark.com/react-resize-detector/download/react-resize-detector-6.7.6.tgz"
+  resolved "https://registry.nlark.com/react-resize-detector/download/react-resize-detector-6.7.6.tgz#4416994e5ead7eba76606e3a248a1dfca49b67a3"
   integrity sha1-RBaZTl6tfrp2YG46JIod/KSbZ6M=
   dependencies:
     "@types/resize-observer-browser" "^0.1.6"
