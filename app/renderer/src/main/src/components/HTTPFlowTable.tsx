@@ -1210,6 +1210,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             width: 600
                         },
                         {
+                            dataKey: "IPAddress",
+                            width: 145,
+                            headRender: () => {
+                                return "IP"
+                            },
+                            cellRender: ({ rowData, dataKey, ...props }: any) => {
+                                return rowData[dataKey] ? <Tag>{rowData[dataKey]}</Tag> : ""
+                            }
+                        },
+                        {
                             dataKey: "UrlLength",
                             width: 90,
                             headRender: () => {
