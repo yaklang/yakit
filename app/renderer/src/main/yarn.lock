@@ -1669,7 +1669,7 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@babel/runtime@^7.0.0", "@babel/runtime@^7.2.0":
+"@babel/runtime@^7.0.0", "@babel/runtime@^7.16.0", "@babel/runtime@^7.2.0":
   version "7.16.3"
   resolved "https://registry.npmmirror.com/@babel/runtime/download/@babel/runtime-7.16.3.tgz?cache=0&sync_timestamp=1636495247319&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2F%40babel%2Fruntime%2Fdownload%2F%40babel%2Fruntime-7.16.3.tgz"
   integrity sha512-WBwekcqacdY2e9AF/Q7WLFUWmdJGJTkbjqTjoMDgXkVZ3ZRUvOPsLb5KdwISoQVsbP+DQzVZW4Zhci0DvpbNTQ==
@@ -2188,6 +2188,21 @@
     "@types/estree" "0.0.39"
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
+
+"@rsuite/icon-font@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.npmmirror.com/@rsuite/icon-font/download/@rsuite/icon-font-4.0.0.tgz#c4a772af5020bb3bbf74761879f80da23e914123"
+  integrity sha1-xKdyr1Aguzu/dHYYefgNoj6RQSM=
+
+"@rsuite/icons@^1.0.0":
+  version "1.0.2"
+  resolved "https://registry.npmmirror.com/@rsuite/icons/download/@rsuite/icons-1.0.2.tgz#1b53f6e5dc1dabec7a40ac5773ecc2172f05d09e"
+  integrity sha1-G1P25dwdq+x6QKxXc+zCFy8F0J4=
+  dependencies:
+    "@rsuite/icon-font" "^4.0.0"
+    classnames "^2.2.5"
+    insert-css "^2.0.0"
+    lodash "^4.17.20"
 
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"
@@ -5660,6 +5675,13 @@ dom-converter@^0.2:
   dependencies:
     utila "~0.4"
 
+dom-lib@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.npmmirror.com/dom-lib/download/dom-lib-3.0.0.tgz#4748469a4d4a76461f245bb5a3fc8422cf698851"
+  integrity sha512-3US7OyceYve90NSU4MhuE0lK4a7aB1hbb14h45v3CPV/ZolLoEOeuPrdS/A0L8kLnwgVCDiKwlPy/Ajq0u9vfA==
+  dependencies:
+    "@babel/runtime" "^7.16.0"
+
 dom-scroll-into-view@1.x, dom-scroll-into-view@^1.2.0:
   version "1.2.1"
   resolved "https://registry.npm.taobao.org/dom-scroll-into-view/download/dom-scroll-into-view-1.2.1.tgz"
@@ -7841,6 +7863,11 @@ inquirer@^7.0.4:
     string-width "^4.1.0"
     strip-ansi "^6.0.0"
     through "^2.3.6"
+
+insert-css@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.nlark.com/insert-css/download/insert-css-2.0.0.tgz#eb5d1097b7542f4c79ea3060d3aee07d053880f4"
+  integrity sha1-610Ql7dUL0x56jBg067gfQU4gPQ=
 
 internal-ip@^4.3.0:
   version "4.3.0"
@@ -12636,7 +12663,7 @@ react-is@^16.12.0, react-is@^16.13.1, react-is@^16.7.0, react-is@^16.8.1:
   resolved "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-react-is@^17.0.0:
+react-is@^17.0.0, react-is@^17.0.2:
   version "17.0.2"
   resolved "https://registry.npmmirror.com/react-is/download/react-is-17.0.2.tgz"
   integrity sha1-5pHUqOnHiTZWVVOas3J2Kw77VPA=
@@ -13451,6 +13478,19 @@ rollup@^1.31.1:
     "@types/estree" "*"
     "@types/node" "*"
     acorn "^7.1.0"
+
+rsuite-table@^5.2.1:
+  version "5.2.1"
+  resolved "https://registry.npmmirror.com/rsuite-table/download/rsuite-table-5.2.1.tgz#f0efd93ff6414357dcf1e5c0627ff21e15d81226"
+  integrity sha512-enBpwlmy0ClD4D6O22Ix3ct+ulq6q5z6+XTuU16+WGVvfZRDJxG8d61uDib436M1yTWaoNLeUQVU0DBHf6FsjA==
+  dependencies:
+    "@babel/runtime" "^7.12.5"
+    "@juggle/resize-observer" "^3.3.1"
+    "@rsuite/icons" "^1.0.0"
+    classnames "^2.2.5"
+    dom-lib "^3.0.0"
+    lodash "^4.17.21"
+    react-is "^17.0.2"
 
 rsvp@^4.8.4:
   version "4.8.5"

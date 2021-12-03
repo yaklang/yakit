@@ -5,3 +5,10 @@
 .httpFlowTable .ant-table .ant-table-tbody > tr:hover > td {
     background: unset;
 }
+
+.resize-ellipsis {
+    width: 95%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
