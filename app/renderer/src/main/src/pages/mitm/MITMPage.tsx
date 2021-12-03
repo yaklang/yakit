@@ -90,6 +90,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [forResponse, setForResponse] = useState(false);
     const [haveSideCar, setHaveSideCar] = useState(true);
     const [hostInfo, setHostInfo] = useState({ host: 'http://www.baidu.com', address: 'http://www.baidu.com/s?key=123', ip: '111.111.111.111' })
+    const [urlInfo,setUrlInfo]=useState("监听中...")
+    const [ipInfo,setIpInfo]=useState("")
 
     // yakit log message
     const [logs, setLogs] = useState<ExecResultLog[]>([]);
@@ -161,7 +163,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         let messages: ExecResultLog[] = [];
         ipcRenderer.on("client-mitm-message", (e, data: ExecResult) => {
             let msg = ExtractExecResultMessage(data);
-            console.info(data, msg)
+            // console.info(data, msg)
             if (msg !== undefined) {
                 messages.push(msg as ExecResultLog)
                 if (messages.length > 50) {
@@ -240,7 +242,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
         if (msg.forResponse) {
             if (!msg.response || !msg.responseId) {
-                console.info(msg)
+                // console.info(msg)
                 failed("BUG: MITM 错误，未能获取到正确的 Response 或 Response ID")
                 return
             }
@@ -270,6 +272,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     setForResponse(false)
                     setCurrentPacket(new Buffer(msg.request).toString("utf8"))
                     setCurrentPacketId(msg.id)
+                    setUrlInfo(msg.url)
+                    ipcRenderer.invoke("fetch-url-ip",msg.url.split('://')[1].split('/')[0]).then((res)=>{
+                        setIpInfo(res)
+                    })
                 }
             }
         }
@@ -407,6 +413,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         }).catch(e => {
                                                             notification["error"]({ message: `停止中间人劫持失败：${e}` })
                                                         }).finally(() => setTimeout(() => setLoading(false), 300))
+                                                        setUrlInfo("监听中...")
+                                                        setIpInfo("")
                                                     }} icon={<PoweroffOutlined />}
                                                 >停止劫持</Button>
                                             </Space>}>
@@ -436,6 +444,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                         setTimeout(() => setLoading(false), 300)
                                                                     })
                                                                 }
+                                                                setUrlInfo("监听中...")
+                                                                setIpInfo("")
                                                             }}>丢弃请求</Button>
                                                         {(!forResponse && !!currentPacket) && <Button
                                                             disabled={allowHijackCurrentResponse}
@@ -501,10 +511,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                     width: "100%", textAlign: "left", height: '100%',
                                                     display: 'flex'
                                                 }}>{autoForward ?
-                                                    <Text style={{ alignSelf: 'center' }}>{`目标：自动放行中...`}</Text> :
-                                                    <Tooltip placement="bottom" title={hostInfo.address}>
-                                                        <Text style={{ alignSelf: 'center' }}>{`目标：${hostInfo.host}/... (${hostInfo.ip})`}</Text>
-                                                    </Tooltip>}
+                                                    <Text style={{ alignSelf: 'center' }}>
+                                                        {`目标：自动放行中...`}</Text> :
+                                                        <>
+                                                        <Text title={urlInfo} ellipsis={true} style={{ alignSelf: 'center',maxWidth:300 }}>{status==='hijacking'?'目标：监听中...':`目标：${urlInfo}`}</Text>
+                                                        {ipInfo&& status !== 'hijacking' &&<Tag color='green' title={ipInfo} style={{marginLeft:5, alignSelf: 'center',maxWidth:140 }}>{`${ipInfo}`}</Tag>}
+                                                        </>
+                                                        }
                                                 </div>
                                             </Col>
                                             <Col span={12}>
