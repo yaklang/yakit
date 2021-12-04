@@ -13,7 +13,6 @@ import {FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-desig
 import {showDrawer} from "./showModal";
 import {MonacoEditorActions, MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
 import {HTTPPacketFuzzable} from "@components/HTTPHistory";
-import "./editors.css";
 import ReactResizeDetector from "react-resize-detector";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;

@@ -115,7 +115,7 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 <YakScriptExecResultTable/>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
-                <div style={{overflow: "auto", height: "100%"}}>
+                <div style={{height: "100%"}}>
                     <WebsiteTreeViewer
                         onSendToWebFuzzer={sendToFuzzer}
                     />

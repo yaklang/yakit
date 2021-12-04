@@ -13,3 +13,15 @@
 .httphacker-tabs {
     height: 100%;
 }
+
+.flex-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-card .ant-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}

@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react"
-import { Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Popconfirm } from "antd"
+import React, {useEffect, useState} from "react"
+import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Popconfirm} from "antd"
 import {
     AntDTreeData,
     ConvertWebsiteForestToTreeData,
     WebsiteForest
 } from "../../../components/WebsiteTree"
-import { HTTPFlowMiniTable } from "../../../components/HTTPFlowMiniTable"
-import { genDefaultPagination } from "../../invoker/schema"
-import { ReloadOutlined, SearchOutlined, DeleteOutlined } from "@ant-design/icons"
-import { InputItem } from "../../../utils/inputUtil"
+import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable"
+import {genDefaultPagination} from "../../invoker/schema"
+import {ReloadOutlined, SearchOutlined, DeleteOutlined} from "@ant-design/icons"
+import {InputItem} from "../../../utils/inputUtil"
 
 import "./WebsiteTreeStyle.css"
 
@@ -19,7 +19,7 @@ export interface WebsiteTreeViewerProp {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
 }
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [treeData, setTreeData] = useState<AntDTreeData[]>([])
     const [autoRefresh, setAutoRefresh] = useState(false)
@@ -56,7 +56,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
         }
 
         ipcRenderer
-            .invoke("delete-http-flow-signle", { URLPrefix: fetchUrl(node, "") })
+            .invoke("delete-http-flow-signle", {URLPrefix: fetchUrl(node, "")})
             .then((res) => {
                 refresh()
             })
@@ -90,8 +90,8 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
 
     return (
         <>
-            <Row gutter={8}>
-                <Col span={7}>
+            <Row gutter={8} style={{height: "100%"}}>
+                <Col span={7} style={{height: "100%", overflow: "auto"}}>
                     <Spin spinning={loading}>
                         <Card
                             title={
@@ -100,7 +100,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     <Button
                                         type={"link"}
                                         size={"small"}
-                                        icon={<ReloadOutlined />}
+                                        icon={<ReloadOutlined/>}
                                         onClick={() => {
                                             refresh()
                                         }}
@@ -126,13 +126,13 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                 setValue={setSearchTarget}
                                                 width={100}
                                             />
-                                            <Form.Item style={{ marginLeft: 0, marginRight: 0 }}>
+                                            <Form.Item style={{marginLeft: 0, marginRight: 0}}>
                                                 <Button
                                                     size={"small"}
                                                     type='link'
                                                     htmlType='submit'
-                                                    icon={<SearchOutlined />}
-                                                    style={{ marginLeft: 0, marginRight: 0 }}
+                                                    icon={<SearchOutlined/>}
+                                                    style={{marginLeft: 0, marginRight: 0}}
                                                 />
                                             </Form.Item>
                                         </Form>
@@ -141,14 +141,14 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                 )
                             }
                         >
-                            <div style={{ width: "100%", overflowX: "auto" }}>
+                            <div style={{width: "100%", overflowX: "auto"}}>
                                 <Tree
                                     className='ellipsis-tree'
                                     showLine={true}
                                     treeData={treeData}
                                     titleRender={(nodeData: any) => {
                                         return (
-                                            <div style={{ display: "flex", width: "100%" }}>
+                                            <div style={{display: "flex", width: "100%"}}>
                                                 <span
                                                     title={`${nodeData.title}`}
                                                     className='titleContent'
@@ -211,11 +211,12 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         </Card>
                     </Spin>
                 </Col>
-                <Col span={17}>
+                <Col span={17} style={{height: "100%"}}>
                     <Card
                         size={"small"}
+                        className={"flex-card"}
                         title={"HTTP Flow Record"}
-                        bodyStyle={{ padding: 0 }}
+                        bodyStyle={{padding: 0}}
                         extra={
                             <Pagination
                                 simple={true}

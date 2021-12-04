@@ -3,7 +3,6 @@ import {Card, Space} from "antd";
 import {FuzzerResponse} from "./HTTPFuzzerPage";
 import {SelectOne} from "../../utils/inputUtil";
 import {FuzzerResponseTableEx} from "./FuzzerResponseTable";
-import "../../utils/editors.css";
 
 export interface HTTPFuzzerResultsCardProp {
     extra?: React.ReactNode
