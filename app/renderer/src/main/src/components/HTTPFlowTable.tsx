@@ -1213,13 +1213,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                 if (ok) success("已复制到粘贴板")
                                             }}
                                         >
-                                            <CopyOutlined
-                                                style={{
-                                                    paddingLeft: 5,
-                                                    paddingTop: 5,
-                                                    cursor: "pointer"
-                                                }}
-                                            />
+                                            <Button type={"link"} size={"small"}>
+                                                <CopyOutlined
+                                                    style={{
+                                                        paddingLeft: 5,
+                                                        paddingTop: 5,
+                                                        cursor: "pointer"
+                                                    }}
+                                                />
+                                            </Button>
                                         </CopyToClipboard>
                                     </div>
                                 )
