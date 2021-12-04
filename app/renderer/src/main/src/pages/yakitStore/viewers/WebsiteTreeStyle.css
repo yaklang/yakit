@@ -1,0 +1,32 @@
+.ellipsis-tree {
+    width: 100%;
+}
+
+.ellipsis-tree .ant-tree-treenode {
+    width: 100%;
+    max-width: 100%;
+}
+
+.ellipsis-tree .ant-tree-node-content-wrapper {
+    width: 100%;
+}
+
+.ellipsis-tree .ant-tree-title {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.ellipsis-tree .titleContent {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+    position: relative;
+    display: inline-block;
+    height: 24px;
+    line-height: 24px;
+}

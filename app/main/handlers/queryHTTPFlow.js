@@ -6,6 +6,23 @@ module.exports = (win, getClient) => {
         getClient().DeleteHTTPFlows({DeleteAll: true}, (err, data) => {
         })
     })
+
+    // asyncDeleteHTTPFlows wrapper
+    const asyncDeleteHTTPFlows = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteHTTPFlows(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("delete-http-flow-signle", async (e, params) => {
+        return await asyncDeleteHTTPFlows(params)
+    })
+
     ipcMain.handle("query-http-flows", async (e, params) => {
         getClient().QueryHTTPFlows(params, (err, data) => {
             if (err && win) {
