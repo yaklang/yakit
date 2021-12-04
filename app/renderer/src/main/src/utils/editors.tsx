@@ -159,15 +159,12 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                         return
                     }
 
-                    if (height != prevHeight || preWidth != preWidth) {
-                        if (editor) {
-                            editor.layout({height, width})
-                            setPrevHeight(height);
-                            setPreWidth(width)
-                        }
-                    } else {
+                    if (editor) {
+                        editor.layout({height, width})
 
                     }
+                    setPrevHeight(height);
+                    setPreWidth(width)
                 }}
                 handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={30}
             >
@@ -228,7 +225,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     language?: "html" | "http" | "yak" | any
 }
 
-export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) =>  {
+export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     return <HTTPPacketEditor {...props} noHeader={true} noPacketModifier={true} language={"yak"}/>
 }
 
