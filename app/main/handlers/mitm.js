@@ -1,4 +1,5 @@
 const {ipcMain} = require("electron");
+const DNS = require("dns");
 
 module.exports = (win, getClient) => {
     let stream;
@@ -223,5 +224,22 @@ module.exports = (win, getClient) => {
             stream.cancel()
             stream = null;
         }
+    })
+
+    const asyncFetchHostIp = (params) => {
+        return new Promise((resolve, reject) => {
+            DNS.lookup(params,function(err,address){ 
+                if (err){ 
+                    reject(err)
+                    return
+                }
+                resolve(address)
+            });
+        })
+    }
+
+    // 获取URL的IP地址
+    ipcMain.handle("fetch-url-ip", async (e, params) => {
+        return await asyncFetchHostIp(params)
     })
 }
