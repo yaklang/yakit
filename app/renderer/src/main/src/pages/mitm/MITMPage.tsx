@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
     Alert,
-    Button, Card,
-    Col, Divider,
+    Button, Checkbox,
+    Col,
+    Divider,
     Form,
     Input,
     InputNumber,
@@ -15,26 +16,25 @@ import {
     Steps,
     Switch,
     Tag,
-    Typography,
-    Tooltip
+    Typography
 } from "antd";
-import { failed, info, success, warn } from "../../utils/notification";
-import { CheckOutlined, PoweroffOutlined, ReloadOutlined } from "@ant-design/icons";
-import { IMonacoActionDescriptor, YakEditor } from "../../utils/editors";
-import { MITMFilters, MITMFilterSchema } from "./MITMFilters";
-import { showDrawer, showModal } from "../../utils/showModal";
-import { formatTimestamp } from "../../utils/timeUtil";
-import { MITMPluginCard } from "./MITMPluginCard";
-import { SwitchItem } from "../../utils/inputUtil";
-import { ExecResult, YakScriptHooks } from "../invoker/schema";
-import { ExecResultLog } from "../invoker/batch/ExecMessageViewer";
-import { ExtractExecResultMessage } from "../../components/yakitLogSchema";
-import { YakExecutorParam } from "../invoker/YakExecutorParams";
+import {failed, info, warn} from "../../utils/notification";
+import {CheckOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons";
+import {HTTPPacketEditor} from "../../utils/editors";
+import {MITMFilters, MITMFilterSchema} from "./MITMFilters";
+import {showDrawer, showModal} from "../../utils/showModal";
+import {MITMPluginCard} from "./MITMPluginCard";
+import {ExecResult, YakScriptHooks} from "../invoker/schema";
+import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
+import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
+import {YakExecutorParam} from "../invoker/YakExecutorParams";
+import "./MITMPage.css";
+import {SelectOne} from "../../utils/inputUtil";
 
-const { Text } = Typography;
-const { Step } = Steps;
-const { Item } = Form;
-const { ipcRenderer } = window.require("electron");
+const {Text} = Typography;
+const {Step} = Steps;
+const {Item} = Form;
+const {ipcRenderer} = window.require("electron");
 
 export interface MITMPageProp {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
@@ -81,17 +81,28 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [port, setPort] = useState(8083);
     const [downstreamProxy, setDownstreamProxy] = useState<string>();
     const [loading, setLoading] = useState(false);
-    const [currentPacket, setCurrentPacket] = useState<string>();
-    const [currentPacketId, setCurrentPacketId] = useState(0);
-    const [editor, setEditor] = useState<any>();
+
+    // 存储修改前和修改后的包！
+    const [currentPacketInfo, setCurrentPacketInfo] = useState<{
+        currentPacket: Uint8Array,
+        currentPacketId: number,
+    }>({currentPacketId: 0, currentPacket: new Buffer([])});
+    const {currentPacket, currentPacketId} = currentPacketInfo;
+    const clearCurrentPacket = () => {
+        setCurrentPacketInfo({currentPacketId: 0, currentPacket: new Buffer([])})
+    }
+    const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]));
+
+    // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward] = useState(true);
+    const [hijackAllResponse, setHijackAllResponse] = useState(false); // 劫持所有请求
+    const [allowHijackCurrentResponse, setAllowHijackCurrentResponse] = useState(false); // 仅劫持一个请求
     const [initialed, setInitialed] = useState(false);
-    const [allowHijackCurrentResponse, setAllowHijackCurrentResponse] = useState(false);
     const [forResponse, setForResponse] = useState(false);
     const [haveSideCar, setHaveSideCar] = useState(true);
-    const [hostInfo, setHostInfo] = useState({ host: 'http://www.baidu.com', address: 'http://www.baidu.com/s?key=123', ip: '111.111.111.111' })
-    const [urlInfo,setUrlInfo]=useState("监听中...")
-    const [ipInfo,setIpInfo]=useState("")
+
+    const [urlInfo, setUrlInfo] = useState("监听中...")
+    const [ipInfo, setIpInfo] = useState("")
 
     // yakit log message
     const [logs, setLogs] = useState<ExecResultLog[]>([]);
@@ -103,10 +114,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [mitmHooks, setMITMHooks] = useState<YakScriptHooks[]>([]);
 
     // 这个 Forward 主要用来转发修改后的内容，同时可以转发请求和响应
-    const forward = (pkg?: string, id?: number) => {
+    const forward = () => {
         // ID 不存在
-        if (!id && !currentPacketId) {
-            warn("无法转发 ID 为空的 HTTP Request / Response 劫持")
+        if (!currentPacketId) {
             return
         }
 
@@ -116,15 +126,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         setForResponse(false)
 
         if (forResponse) {
-            ipcRenderer.invoke("mitm-forward-modified-response", pkg || currentPacket, id || currentPacketId).finally(() => {
-                setCurrentPacket("");
-                setCurrentPacketId(0);
+            ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacket, currentPacketId).finally(() => {
+                clearCurrentPacket()
                 setTimeout(() => setLoading(false))
             })
         } else {
-            ipcRenderer.invoke("mitm-forward-modified-request", pkg || currentPacket, id || currentPacketId).finally(() => {
-                setCurrentPacket("");
-                setCurrentPacketId(0);
+            ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId).finally(() => {
+                clearCurrentPacket()
                 setTimeout(() => setLoading(false))
             })
         }
@@ -136,11 +144,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         })
     }
 
+    // 用于接受后端传回的信息
     useEffect(() => {
         setInitialed(false)
         // 用于前端恢复状态
         ipcRenderer.invoke("mitm-have-current-stream").then(data => {
-            const { haveStream, host, port } = data;
+            const {haveStream, host, port} = data;
             if (haveStream) {
                 setStatus("hijacking")
                 setHost(host);
@@ -230,6 +239,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         }
     }, [])
 
+
+    //
+    useEffect(() => {
+        if (hijackAllResponse && currentPacketId > 0) {
+            allowHijackedResponseByRequest(currentPacketId)
+        }
+    }, [hijackAllResponse, currentPacketId])
     // 自动转发劫持，进行的操作
     const forwardHandler = (e: any, msg: MITMResponse) => {
         setMITMFilter({
@@ -249,31 +265,31 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             if (autoForward) {
                 forwardResponse(msg.responseId || 0)
                 if (!!currentPacket) {
-                    setCurrentPacket("")
-                    setCurrentPacketId(0)
+                    clearCurrentPacket()
                 }
             } else {
                 setForResponse(true)
                 setStatus("hijacked")
-                setCurrentPacket(new Buffer(msg.response).toString("utf8"))
-                setCurrentPacketId(msg.responseId || 0);
+                setCurrentPacketInfo({currentPacket: msg.response, currentPacketId: msg.responseId})
+                // setCurrentPacket(new Buffer(msg.response).toString("utf8"))
+                // setCurrentPacketId(msg.responseId || 0);
             }
         } else {
             if (msg.request) {
                 if (autoForward) {
                     forwardRequest(msg.id)
                     if (!!currentPacket) {
-                        setCurrentPacket("")
-                        setCurrentPacketId(0)
+                        clearCurrentPacket()
                     }
                     // setCurrentPacket(String.fromCharCode.apply(null, msg.request))
                 } else {
                     setStatus("hijacked")
                     setForResponse(false)
-                    setCurrentPacket(new Buffer(msg.request).toString("utf8"))
-                    setCurrentPacketId(msg.id)
+                    // setCurrentPacket(msg.request)
+                    // setCurrentPacketId(msg.id)
+                    setCurrentPacketInfo({currentPacket: msg.request, currentPacketId: msg.id})
                     setUrlInfo(msg.url)
-                    ipcRenderer.invoke("fetch-url-ip",msg.url.split('://')[1].split('/')[0]).then((res)=>{
+                    ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
                         setIpInfo(res)
                     })
                 }
@@ -289,19 +305,22 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     }, [autoForward])
 
     useEffect(() => {
-        if (!editor) {
-            return
+        if (currentPacketId <= 0 && status === "hijacked") {
+            recover()
+            const id = setInterval(() => {
+                recover()
+            }, 500)
+            return () => {
+                clearInterval(id)
+            }
         }
+    }, [currentPacketId])
 
-        window.onresize = (e) => {
-            if (editor) editor.layout();
-        };
-    }, [editor])
     const addr = `http://${host}:${port}`;
 
     if (!initialed) {
-        return <div style={{ textAlign: "center", paddingTop: 120 }}>
-            <Spin spinning={true} tip={"正在初始化 MITM"} />
+        return <div style={{textAlign: "center", paddingTop: 120}}>
+            <Spin spinning={true} tip={"正在初始化 MITM"}/>
         </div>
     }
 
@@ -309,12 +328,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         setLoading(true)
         setError("")
         ipcRenderer.invoke("mitm-start-call", host, port, downstreamProxy).catch(e => {
-            notification["error"]({ message: `启动中间人劫持失败：${e}` })
+            notification["error"]({message: `启动中间人劫持失败：${e}`})
         })
     }
 
     const hijacking = () => {
-        setCurrentPacket("");
+        // setCurrentPacket(new Buffer([]));
+        clearCurrentPacket()
         setLoading(true);
         setStatus("hijacking");
     }
@@ -323,8 +343,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         return currentPacketId
     }
 
-    return <div style={{ height: "100%" }}>
-        {error && <Alert style={{ marginBottom: 8 }} message={error} type={"error"} />}
+    return <div style={{height: "100%", display: "flex", flexDirection: "column", width: "100%"}}>
+        {error && <Alert style={{marginBottom: 8}} message={error} type={"error"}/>}
         <Steps type={"navigation"} size={"small"} current={status === "idle" ? 0 : 1}>
             <Step
                 title={"填写 MITM 代理端口"} active={status === "idle"}
@@ -334,38 +354,38 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
             </Step>
             <Step title={"开始劫持"} key={"hijacked"}
-                subTitle={status === "idle" ? undefined : <>
-                    <Space>
-                        <Divider type={"vertical"} />
-                        <>工具栏</>
-                        <Switch size={"small"} checked={haveSideCar} onChange={setHaveSideCar} />
-                    </Space>
-                </>}
-                active={status === "hijacked" || status === "hijacking"}>
+                  subTitle={status === "idle" ? undefined : <>
+                      <Space>
+                          <Divider type={"vertical"}/>
+                          <>工具栏</>
+                          <Switch size={"small"} checked={haveSideCar} onChange={setHaveSideCar}/>
+                      </Space>
+                  </>}
+                  active={status === "hijacked" || status === "hijacking"}>
             </Step>
         </Steps>
-        <div style={{ marginTop: 0 }}>
+        <div style={{marginTop: 0, flex: 1}}>
             {(() => {
                 switch (status) {
                     case "idle":
                         return <Spin spinning={loading}>
                             <Form
-                                style={{ marginTop: 40 }}
+                                style={{marginTop: 40}}
                                 onSubmitCapture={e => {
                                     e.preventDefault()
                                     start()
                                 }}
-                                layout={"horizontal"} labelCol={{ span: 7 }}
-                                wrapperCol={{ span: 13 }}
+                                layout={"horizontal"} labelCol={{span: 7}}
+                                wrapperCol={{span: 13}}
                             >
                                 <Item label={"劫持代理监听主机"}>
-                                    <Input value={host} onChange={e => setHost(e.target.value)} />
+                                    <Input value={host} onChange={e => setHost(e.target.value)}/>
                                 </Item>
                                 <Item label={"劫持代理监听端口"}>
-                                    <InputNumber value={port} onChange={e => setPort(e)} />
+                                    <InputNumber value={port} onChange={e => setPort(e)}/>
                                 </Item>
                                 <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网"}>
-                                    <Input value={downstreamProxy} onChange={e => setDownstreamProxy(e.target.value)} />
+                                    <Input value={downstreamProxy} onChange={e => setDownstreamProxy(e.target.value)}/>
                                 </Item>
                                 <Item label={" "} colon={false}>
                                     <Button type={"primary"} htmlType={"submit"}>
@@ -376,12 +396,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         </Spin>
                     case "hijacking":
                     case "hijacked":
-                        return <div style={{ marginLeft: 12, marginRight: 12 }}>
-                            <Row gutter={14} style={{ height: "100%" }}>
-                                <Col span={haveSideCar ? 15 : 24}>
+                        return <div style={{marginLeft: 12, marginRight: 12, height: "100%"}}>
+                            <Row gutter={14} style={{height: "100%"}}>
+                                <Col span={haveSideCar ? 15 : 24}
+                                     style={{display: "flex", flexDirection: "column", height: "100%"}}>
                                     <PageHeader
                                         title={'劫持 HTTP Request'}
-                                        style={{ marginRight: 0, paddingRight: 0, paddingBottom: 8 }}
+                                        style={{marginRight: 0, paddingRight: 0, paddingBottom: 8}}
                                         extra={
                                             <Space>
                                                 <Button
@@ -392,12 +413,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                             title: "下载 SSL/TLS 证书以调试 HTTPS",
                                                             content: <div>
                                                                 点击复制以下命令在命令行中一键下载证书
-                                                                <br />
+                                                                <br/>
                                                                 <Text copyable={true}>{text}</Text>
-                                                                <br />
-                                                                <br />
-                                                                <p style={{ color: "red" }}>
-                                                                    如果遇到问题，可以在浏览器中设置代理:{addr} 后 <br />
+                                                                <br/>
+                                                                <br/>
+                                                                <p style={{color: "red"}}>
+                                                                    如果遇到问题，可以在浏览器中设置代理:{addr} 后 <br/>
                                                                     访问 http://download-mitm-cert.yaklang.io
                                                                     以自动下载证书
                                                                 </p>
@@ -406,21 +427,21 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                     }}
                                                 >请先下载 SSL/TLS 证书</Button>
                                                 <Button danger={true} type={"primary"}
-                                                    onClick={() => {
-                                                        setLoading(true)
-                                                        ipcRenderer.invoke("mitm-stop-call").then(() => {
-                                                            setStatus("idle")
-                                                        }).catch(e => {
-                                                            notification["error"]({ message: `停止中间人劫持失败：${e}` })
-                                                        }).finally(() => setTimeout(() => setLoading(false), 300))
-                                                        setUrlInfo("监听中...")
-                                                        setIpInfo("")
-                                                    }} icon={<PoweroffOutlined />}
+                                                        onClick={() => {
+                                                            setLoading(true)
+                                                            ipcRenderer.invoke("mitm-stop-call").then(() => {
+                                                                setStatus("idle")
+                                                            }).catch(e => {
+                                                                notification["error"]({message: `停止中间人劫持失败：${e}`})
+                                                            }).finally(() => setTimeout(() => setLoading(false), 300))
+                                                            setUrlInfo("监听中...")
+                                                            setIpInfo("")
+                                                        }} icon={<PoweroffOutlined/>}
                                                 >停止劫持</Button>
                                             </Space>}>
                                         <Row>
                                             <Col span={12}>
-                                                <div style={{ width: "100%", textAlign: "left" }}>
+                                                <div style={{width: "100%", textAlign: "left"}}>
                                                     <Space>
                                                         <Button
                                                             type={"primary"}
@@ -447,60 +468,86 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                 setUrlInfo("监听中...")
                                                                 setIpInfo("")
                                                             }}>丢弃请求</Button>
-                                                        {(!forResponse && !!currentPacket) && <Button
-                                                            disabled={allowHijackCurrentResponse}
-                                                            type={allowHijackCurrentResponse ? "primary" : "default"}
-                                                            onClick={() => {
-                                                                if (!allowHijackCurrentResponse) {
-                                                                    allowHijackedResponseByRequest(currentPacketId)
-                                                                    setAllowHijackCurrentResponse(true)
-                                                                } else {
-                                                                    setAllowHijackCurrentResponse(false)
-                                                                }
-                                                            }}>
-                                                            劫持响应 {
+                                                        {
+                                                            (!forResponse && !!currentPacket) &&  // 劫持到的请求有内容
+                                                            status === "hijacked" && // 劫持到的状态是 hijacked
+                                                            !hijackAllResponse && // 如果已经设置了劫持所有请求，就不展示了
+                                                            <Button
+                                                                disabled={allowHijackCurrentResponse}
+                                                                type={allowHijackCurrentResponse ? "primary" : "default"}
+                                                                onClick={() => {
+                                                                    if (!allowHijackCurrentResponse) {
+                                                                        allowHijackedResponseByRequest(currentPacketId)
+                                                                        setAllowHijackCurrentResponse(true)
+                                                                    } else {
+                                                                        setAllowHijackCurrentResponse(false)
+                                                                    }
+                                                                }}>
+                                                                劫持响应 {
                                                                 allowHijackCurrentResponse &&
-                                                                <CheckOutlined />
+                                                                <CheckOutlined/>
                                                             }
-                                                        </Button>}
+                                                            </Button>}
                                                     </Space>
                                                 </div>
                                             </Col>
                                             <Col span={12}>
-                                                <div style={{ width: "100%", textAlign: "right" }}>
+                                                <div style={{width: "100%", textAlign: "right"}}>
                                                     <Space>
+                                                        {!autoForward && <div>
+                                                            <span style={{marginRight: 4}}>劫持响应:</span>
+                                                            <Checkbox checked={hijackAllResponse} onClick={e => {
+                                                                if (!hijackAllResponse) {
+                                                                    info("劫持所有响应内容")
+                                                                } else {
+                                                                    info("仅劫持请求")
+                                                                }
+                                                                setHijackAllResponse(!hijackAllResponse)
+                                                            }}/>
+                                                        </div>}
                                                         <Button type={"link"}
-                                                            onClick={() => {
-                                                                let m = showDrawer({
-                                                                    placement: "top", height: "50%",
-                                                                    content: <>
-                                                                        <MITMFilters
-                                                                            filter={mitmFilter}
-                                                                            onFinished={(filter) => {
-                                                                                setMITMFilter({ ...filter })
-                                                                                m.destroy()
-                                                                            }} />
-                                                                    </>
-                                                                });
-                                                            }}
-                                                        >设置过滤器</Button>
-                                                        <div>
-                                                            <span>自动放行：</span>
-                                                            <Switch
-                                                                checked={autoForward}
-                                                                onChange={e => {
-                                                                    if (e) {
-                                                                        notification["info"]({ message: "切换为劫持自动放行模式（仅记录）" })
-                                                                    } else {
-                                                                        notification["info"]({ message: "切换为手动放行模式（可修改劫持）" })
-                                                                    }
-                                                                    setAutoForward(e)
-                                                                    if (currentPacket && currentPacketId) {
-                                                                        forward()
-                                                                    }
+                                                                onClick={() => {
+                                                                    let m = showDrawer({
+                                                                        placement: "top", height: "50%",
+                                                                        content: <>
+                                                                            <MITMFilters
+                                                                                filter={mitmFilter}
+                                                                                onFinished={(filter) => {
+                                                                                    setMITMFilter({...filter})
+                                                                                    m.destroy()
+                                                                                }}/>
+                                                                        </>
+                                                                    });
                                                                 }}
-                                                            />
-                                                        </div>
+                                                        >设置过滤器</Button>
+                                                        <SelectOne
+                                                            data={[
+                                                                {text: "手动劫持", value: false},
+                                                                {text: "自动放行", value: true},
+                                                            ]}
+                                                            value={autoForward}
+                                                            formItemStyle={{marginBottom: 0}}
+                                                            setValue={e => {
+                                                                if (e) {
+                                                                    info("切换为劫持自动放行模式（仅记录）")
+                                                                    setHijackAllResponse(false)
+                                                                } else {
+                                                                    info("切换为手动放行模式（可修改劫持）")
+                                                                }
+                                                                setAutoForward(e)
+                                                                if (currentPacket && currentPacketId) {
+                                                                    forward()
+                                                                }
+                                                            }}
+                                                        />
+                                                        {/*<div>*/}
+                                                        {/*    <span>自动放行：</span>*/}
+                                                        {/*    <Switch*/}
+                                                        {/*        checked={autoForward}*/}
+                                                        {/*        onChange={e => {*/}
+                                                        {/*        }}*/}
+                                                        {/*    />*/}
+                                                        {/*</div>*/}
                                                     </Space>
                                                 </div>
                                             </Col>
@@ -511,121 +558,113 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                     width: "100%", textAlign: "left", height: '100%',
                                                     display: 'flex'
                                                 }}>{autoForward ?
-                                                    <Text style={{ alignSelf: 'center' }}>
+                                                    <Text style={{alignSelf: 'center'}}>
                                                         {`目标：自动放行中...`}</Text> :
-                                                        <>
-                                                        <Text title={urlInfo} ellipsis={true} style={{ alignSelf: 'center',maxWidth:300 }}>{status==='hijacking'?'目标：监听中...':`目标：${urlInfo}`}</Text>
-                                                        {ipInfo&& status !== 'hijacking' &&<Tag color='green' title={ipInfo} style={{marginLeft:5, alignSelf: 'center',maxWidth:140 }}>{`${ipInfo}`}</Tag>}
-                                                        </>
-                                                        }
+                                                    <>
+                                                        <Text title={urlInfo} ellipsis={true} style={{
+                                                            alignSelf: 'center',
+                                                            maxWidth: 300
+                                                        }}>{status === 'hijacking' ? '目标：监听中...' : `目标：${urlInfo}`}</Text>
+                                                        {ipInfo && status !== 'hijacking' &&
+                                                        <Tag color='green' title={ipInfo} style={{
+                                                            marginLeft: 5,
+                                                            alignSelf: 'center',
+                                                            maxWidth: 140
+                                                        }}>{`${ipInfo}`}</Tag>}
+                                                    </>
+                                                }
                                                 </div>
                                             </Col>
                                             <Col span={12}>
-                                                <div style={{ width: "100%", textAlign: "right" }}>
+                                                <div style={{width: "100%", textAlign: "right"}}>
                                                     <Button
                                                         type={"link"} onClick={() => recover()}
-                                                        icon={<ReloadOutlined />}
+                                                        icon={<ReloadOutlined/>}
                                                     >恢复请求</Button>
                                                 </div>
                                             </Col>
                                         </Row>
                                     </PageHeader>
-                                    <Spin spinning={status === "hijacking"}
-                                        tip={`监听中`}>
-                                        <div style={{ height: 478 }} id={"monaco-container"}>
-                                            {forResponse ? <>
-                                                <YakEditor
-                                                    type={"http"}
-                                                    value={currentPacket}
-                                                    setValue={setCurrentPacket}
-                                                    editorDidMount={(editor: any) => {
-                                                        setEditor(editor)
-                                                    }}
-                                                    triggerId={currentPacketId}
-                                                    actions={[
-                                                        {
-                                                            id: "forward-response",
-                                                            label: "放行该 HTTP Response",
-                                                            run: function () {
-                                                                hijacking()
-                                                                forwardResponse(getCurrentId()).finally(() => {
-                                                                    setTimeout(() => setLoading(false), 300)
-                                                                })
-                                                            },
-                                                            contextMenuGroupId: "Actions"
+                                    <div style={{flex: 1}}>
+                                        {/*<Spin wrapperClassName={"mitm-loading-spin"} spinning={status === "hijacking"}>*/}
+                                        <div style={{height: "100%"}}>
+                                            <HTTPPacketEditor
+                                                originValue={currentPacket}
+                                                noHeader={true} bordered={false}
+                                                onChange={setModifiedPacket}
+                                                noPacketModifier={true}
+                                                readOnly={status === "hijacking"}
+                                                refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
+                                                actions={forResponse ? [
+                                                    {
+                                                        id: "forward-response",
+                                                        label: "放行该 HTTP Response",
+                                                        run: function () {
+                                                            hijacking()
+                                                            forwardResponse(getCurrentId()).finally(() => {
+                                                                setTimeout(() => setLoading(false), 300)
+                                                            })
                                                         },
-                                                        {
-                                                            id: "drop-response",
-                                                            label: "丢弃该 HTTP Response",
-                                                            run: function () {
-                                                                hijacking()
-                                                                dropResponse(getCurrentId()).finally(() => {
-                                                                    setTimeout(() => setLoading(false), 300)
-                                                                })
-                                                            },
-                                                            contextMenuGroupId: "Actions"
+                                                        contextMenuGroupId: "Actions"
+                                                    },
+                                                    {
+                                                        id: "drop-response",
+                                                        label: "丢弃该 HTTP Response",
+                                                        run: function () {
+                                                            hijacking()
+                                                            dropResponse(getCurrentId()).finally(() => {
+                                                                setTimeout(() => setLoading(false), 300)
+                                                            })
                                                         },
-                                                    ]}
-                                                />
-                                            </> : <>
-                                                <YakEditor
-                                                    type={"http"}
-                                                    actions={(() => {
-                                                        return [
-                                                            {
-                                                                id: "send-to-fuzzer",
-                                                                label: "发送到 Web Fuzzer",
-                                                                run: function () {
-                                                                    props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, currentPacket || "")
-                                                                },
-                                                                contextMenuGroupId: "Actions"
-                                                            },
-                                                            {
-                                                                id: "forward-response",
-                                                                label: "放行该 HTTP Request",
-                                                                run: function () {
-                                                                    hijacking()
-                                                                    forwardRequest(getCurrentId()).finally(() => {
-                                                                        setTimeout(() => setLoading(false), 300)
-                                                                    })
-                                                                },
-                                                                contextMenuGroupId: "Actions"
-                                                            },
-                                                            {
-                                                                id: "drop-response",
-                                                                label: "丢弃该 HTTP Request",
-                                                                run: function () {
-                                                                    hijacking()
-                                                                    dropRequest(getCurrentId()).finally(() => {
-                                                                        setTimeout(() => setLoading(false), 300)
-                                                                    })
-                                                                },
-                                                                contextMenuGroupId: "Actions"
-                                                            },
-                                                            {
-                                                                id: "hijack-current-response",
-                                                                label: "劫持该 Request 对应的响应",
-                                                                run: function () {
-                                                                    allowHijackedResponseByRequest(getCurrentId())
-                                                                },
-                                                                contextMenuGroupId: "Actions"
-                                                            },
-                                                        ]
-                                                    })()}
-                                                    value={currentPacket}
-                                                    setValue={setCurrentPacket}
-                                                    editorDidMount={(editor: any) => {
-                                                        setEditor(editor)
-                                                    }}
-                                                    triggerId={currentPacketId}
-                                                />
-                                            </>}
-
+                                                        contextMenuGroupId: "Actions"
+                                                    },
+                                                ] : [
+                                                    {
+                                                        id: "send-to-fuzzer",
+                                                        label: "发送到 Web Fuzzer",
+                                                        run: function () {
+                                                            props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, new Buffer(currentPacket).toString("utf8"))
+                                                        },
+                                                        contextMenuGroupId: "Actions"
+                                                    },
+                                                    {
+                                                        id: "forward-response",
+                                                        label: "放行该 HTTP Request",
+                                                        run: function () {
+                                                            hijacking()
+                                                            forwardRequest(getCurrentId()).finally(() => {
+                                                                setTimeout(() => setLoading(false), 300)
+                                                            })
+                                                        },
+                                                        contextMenuGroupId: "Actions"
+                                                    },
+                                                    {
+                                                        id: "drop-response",
+                                                        label: "丢弃该 HTTP Request",
+                                                        run: function () {
+                                                            hijacking()
+                                                            dropRequest(getCurrentId()).finally(() => {
+                                                                setTimeout(() => setLoading(false), 300)
+                                                            })
+                                                        },
+                                                        contextMenuGroupId: "Actions"
+                                                    },
+                                                    {
+                                                        id: "hijack-current-response",
+                                                        label: "劫持该 Request 对应的响应",
+                                                        run: function () {
+                                                            allowHijackedResponseByRequest(getCurrentId())
+                                                        },
+                                                        contextMenuGroupId: "Actions"
+                                                    },
+                                                ]}
+                                            />
                                         </div>
-                                    </Spin>
+                                        {/*</Spin>*/}
+                                    </div>
                                 </Col>
-                                {haveSideCar && <Col span={9} style={{ height: "100%" }}>
-                                    <div style={{ marginTop: 20, height: "100%" }}>
+                                {haveSideCar && <Col span={9} style={{height: "100%"}}>
+                                    <div style={{height: "100%"}}>
                                         <MITMPluginCard
                                             messages={logs} hooks={mitmHooks}
                                             onSubmitScriptContent={e => {
@@ -641,7 +680,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             </Row>
                         </div>
                     default:
-                        return <div />
+                        return <div/>
                 }
             })()}
         </div>

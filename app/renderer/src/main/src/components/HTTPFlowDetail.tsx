@@ -1,12 +1,11 @@
 import React, {useEffect, useState} from "react";
 import {Card, Col, Collapse, Descriptions, PageHeader, Row, Space, Spin, Tabs, Tag, Typography} from "antd";
 import {HTTPFlow} from "./HTTPFlowTable";
-import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors";
+import {HTTPPacketEditor, YakEditor} from "../utils/editors";
 import {failed} from "../utils/notification";
 import {FuzzableParamList} from "./FuzzableParamList";
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
 import {randomString} from "../utils/randomUtil";
-import {CodeViewer} from "../utils/codeViewer";
 import {HTTPPacketFuzzable} from "@components/HTTPHistory";
 
 const {ipcRenderer} = window.require("electron");

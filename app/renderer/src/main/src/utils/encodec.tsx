@@ -60,11 +60,13 @@ const editorMutateHTTPRequestHandlerFactory = (params: MutateHTTPRequestParams) 
     }
 }
 
-export const MonacoEditorCodecActions: {
+export interface MonacoEditorActions {
     id: CodecType | string, label: string,
     contextMenuGroupId: "codec" | string,
     run: (editor: IMonacoCodeEditor) => any
-}[] = [
+}
+
+export const MonacoEditorCodecActions: MonacoEditorActions[] = [
     {id: "md5", label: "MD5"},
     {id: "sha1", label: "SHA1"},
     {id: "base64", label: "Base64 编码"},
