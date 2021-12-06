@@ -1241,7 +1241,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         },
                         {
                             dataKey: "IPAddress",
-                            width: 120,
+                            width: 120, resizable: true,
                             headRender: () => {
                                 return "IP"
                             },
