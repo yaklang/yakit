@@ -102,7 +102,9 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
             </div>}
         >
             <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
-                <MITMPage onSendToWebFuzzer={sendToFuzzer}/>
+                <div style={{height: "100%"}}>
+                    <MITMPage onSendToWebFuzzer={sendToFuzzer}/>
+                </div>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false}>
                 <div style={{height: "100%"}}>
@@ -113,7 +115,7 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 <YakScriptExecResultTable/>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
-                <div style={{overflow: "auto", height: "100%"}}>
+                <div style={{height: "100%"}}>
                     <WebsiteTreeViewer
                         onSendToWebFuzzer={sendToFuzzer}
                     />

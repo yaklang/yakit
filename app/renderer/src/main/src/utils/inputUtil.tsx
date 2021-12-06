@@ -295,7 +295,7 @@ export const SelectOne: React.FC<SelectOneProps> = (p) => {
 };
 
 export interface InputBase {
-    label: string | any
+    label?: string | any
 
     formItemStyle?: CSSProperties
 }

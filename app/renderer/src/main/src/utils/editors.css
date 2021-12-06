@@ -1,8 +1,0 @@
-.httppacket-card-editor {
-    display: flex;
-    flex-direction: column;
-}
-
-.httppacket-card-editor .ant-card-body {
-    flex: 1;
-}

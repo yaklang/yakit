@@ -7,6 +7,7 @@ import {Button, Space, Tag} from "antd";
 import {BaseTable, features, useTablePipeline} from "../alibaba/ali-react-table-dist";
 import {CopyableField} from "../utils/inputUtil";
 import {showDrawer} from "../utils/showModal";
+import ReactResizeDetector from "react-resize-detector";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -19,6 +20,7 @@ export interface HTTPFlowMiniTableProp {
 }
 
 export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
+    const [tableHeight, setTableHeight] = useState(400);
     const [response, setResponse] = useState<QueryGeneralResponse<HTTPFlow>>({
         Data: [],
         Pagination: genDefaultPagination(),
@@ -203,9 +205,18 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
         }
     }, [props.simple])
 
-    return <div style={{width: "100%"}}>
+    return <div style={{width: "100%", height: "100%", overflow: "auto"}}>
+        <ReactResizeDetector
+            onResize={(width, height) => {
+                if (!width || !height) {
+                    return
+                }
+                setTableHeight(height)
+            }}
+            handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
+        />
         <BaseTable
-            {...pipeline.getProps()} style={{width: "100%", height: "100%", overflow: "auto"}}
+            {...pipeline.getProps()} style={{width: "100%", height: tableHeight, overflow: "auto"}}
         />
     </div>
 };

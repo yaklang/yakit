@@ -752,6 +752,7 @@ message HTTPFlow {
   string HostPort = 24;
   string IPAddress = 25;
 
+  string HtmlTitle = 26;
 }
 
 message FuzzableParam {

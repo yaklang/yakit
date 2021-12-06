@@ -11,9 +11,8 @@ import {Button, Card, Form, Input, Popover, Space, Spin, Tag} from "antd";
 import {SelectOne} from "./inputUtil";
 import {FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons";
 import {showDrawer} from "./showModal";
-import {MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
+import {MonacoEditorActions, MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
 import {HTTPPacketFuzzable} from "@components/HTTPHistory";
-import "./editors.css";
 import ReactResizeDetector from "react-resize-detector";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
@@ -79,6 +78,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     const [triggerId, setTrigger] = useState<any>();
     // 高度缓存
     const [prevHeight, setPrevHeight] = useState(0);
+    const [preWidth, setPreWidth] = useState(0);
     // const [editorHeight, setEditorHeight] = useState(0);
     const outterContainer = useRef(null);
     const [loading, setLoading] = useState(true);
@@ -157,9 +157,15 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                     if (!width || !height) {
                         return
                     }
-                    if (editor) editor.layout({height, width})
+
+                    if (editor) {
+                        editor.layout({height, width})
+
+                    }
+                    setPrevHeight(height);
+                    setPreWidth(width)
                 }}
-                handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
+                handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={30}
             >
                 <div style={{height: "100%", width: "100%", overflow: "hidden"}}>
                     <MonacoEditor
@@ -167,7 +173,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                         value={props.bytes ? new Buffer((props.valueBytes || []) as Uint8Array).toString() : props.value}
                         onChange={props.setValue}
                         language={props.type || "http"}
-                        height={0}
+                        height={100}
                         editorDidMount={(editor: IMonacoEditor, monaco: any) => {
                             setEditor(editor)
                             if (props.editorDidMount) props.editorDidMount(editor);
@@ -194,6 +200,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
 export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     readOnly?: boolean
     originValue: Uint8Array
+    defaultStringValue?: string
     onChange?: (i: Uint8Array) => any
     disableFullscreen?: boolean
     defaultHeight?: number
@@ -202,9 +209,23 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     hideSearch?: boolean
     extra?: React.ReactNode
     emptyOr?: React.ReactNode
+    actions?: MonacoEditorActions[]
 
-    refreshTrigger?: boolean
+    refreshTrigger?: boolean | any
     simpleMode?: boolean
+    noHeader?: boolean
+    loading?: boolean
+
+    noPacketModifier?: boolean
+
+    extraEditorProps?: EditorProps | any
+
+    // lang
+    language?: "html" | "http" | "yak" | any
+}
+
+export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
+    return <HTTPPacketEditor {...props} noHeader={true} noPacketModifier={true} language={"yak"}/>
 }
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
@@ -215,7 +236,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     const [searchValue, setSearchValue] = useState("");
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
     const [fontSize, setFontSize] = useState(12);
-    const [maxWidth, setMaxWidth] = useState(600);
 
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
 
@@ -230,6 +250,15 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
         setNonce(v => (v + 1));
         setHexValue(new Buffer(hexValue))
     }, [hexValue]);
+
+    useEffect(() => {
+        if (!props.defaultHeight) {
+            return
+        }
+
+        setStrValue(props.defaultStringValue || "")
+        setHexValue(Buffer.from(props.defaultStringValue || ""))
+    }, [props.defaultStringValue])
 
     useEffect(() => {
         if (monacoEditor) {
@@ -266,11 +295,11 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
 
     return <div style={{width: "100%", height: "100%"}}>
         <Card
-            className={"httppacket-card-editor"}
-            size={"small"}
+            className={"flex-card"}
+            size={"small"} loading={props.loading}
             bordered={props.bordered}
             style={{height: "100%", width: "100%"}}
-            title={<Space>
+            title={!props.noHeader && <Space>
                 <span>{isResponse ? "Response" : "Request"}</span>
                 {!props.simpleMode ? <SelectOne
                     label={" "} colon={false} value={mode} setValue={setMode}
@@ -309,7 +338,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                 />}
             </Space>}
             bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column"}}
-            extra={<>
+            extra={!props.noHeader && <>
                 {props.extra}
                 {props.sendToWebFuzzer && <Button
                     size={"small"}
@@ -370,17 +399,20 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                 {empty && props.emptyOr}
 
                 {mode === "text" && !empty && <YakEditor
-                    type={isResponse ? "html" : "http"}
+                    type={props.language || (isResponse ? "html" : "http")}
                     value={strValue} readOnly={props.readOnly}
                     setValue={setStrValue}
                     fontSize={fontSize}
                     actions={[
                         ...MonacoEditorCodecActions,
-                        ...MonacoEditorMutateHTTPRequestActions,
+                        ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
+                        ...(props.actions || []),
                     ]}
                     editorDidMount={editor => {
                         setMonacoEditor(editor)
                     }}
+
+                    {...props.extraEditorProps}
                 />}
                 {mode === "hex" && !empty && <HexEditor
                     showAscii={true}

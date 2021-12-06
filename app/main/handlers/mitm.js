@@ -97,7 +97,7 @@ module.exports = (win, getClient) => {
         if (stream) {
             stream.write({
                 responseId: id,
-                response: Buffer.from(response),
+                response: response,
             })
         }
     })

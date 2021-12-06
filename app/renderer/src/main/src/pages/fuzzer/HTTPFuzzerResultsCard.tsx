@@ -3,7 +3,6 @@ import {Card, Space} from "antd";
 import {FuzzerResponse} from "./HTTPFuzzerPage";
 import {SelectOne} from "../../utils/inputUtil";
 import {FuzzerResponseTableEx} from "./FuzzerResponseTable";
-import "../../utils/editors.css";
 
 export interface HTTPFuzzerResultsCardProp {
     extra?: React.ReactNode
@@ -16,7 +15,7 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
     const [showSuccess, setShowSuccess] = useState(true);
     return <Card
         size={"small"} style={{height: "100%"}}
-        className={"httppacket-card-editor"}
+        className={"flex-card"}
         title={<Space>
             Responses
             <SelectOne size={"small"} label={" "} colon={false} data={[
@@ -27,7 +26,7 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
             />
         </Space>}
         extra={props.extra}
-        bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column"}}
+        bodyStyle={{padding: 0, width: "100%"}}
     >
         <div style={{flex: 1}}>
             {showSuccess ? <FuzzerResponseTableEx
