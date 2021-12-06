@@ -1,14 +1,14 @@
-import React, {useEffect, useState} from "react"
-import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Popconfirm} from "antd"
+import React, { useEffect, useState } from "react"
+import { Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Popconfirm } from "antd"
 import {
     AntDTreeData,
     ConvertWebsiteForestToTreeData,
     WebsiteForest
 } from "../../../components/WebsiteTree"
-import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable"
-import {genDefaultPagination} from "../../invoker/schema"
-import {ReloadOutlined, SearchOutlined, DeleteOutlined} from "@ant-design/icons"
-import {InputItem} from "../../../utils/inputUtil"
+import { HTTPFlowMiniTable } from "../../../components/HTTPFlowMiniTable"
+import { genDefaultPagination } from "../../invoker/schema"
+import { ReloadOutlined, SearchOutlined, DeleteOutlined } from "@ant-design/icons"
+import { InputItem } from "../../../utils/inputUtil"
 
 import "./WebsiteTreeStyle.css"
 
@@ -19,7 +19,7 @@ export interface WebsiteTreeViewerProp {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
 }
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [treeData, setTreeData] = useState<AntDTreeData[]>([])
     const [autoRefresh, setAutoRefresh] = useState(false)
@@ -29,6 +29,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [total, setTotal] = useState(0)
     const [searchTarget, setSearchTarget] = useState(props.targets)
     const [loading, setLoading] = useState(false)
+    const [isDelKey, setisDelKey] = useState("")
 
     const refresh = () => {
         setLoading(true)
@@ -100,7 +101,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     <Button
                                         type={"link"}
                                         size={"small"}
-                                        icon={<ReloadOutlined/>}
+                                        icon={<ReloadOutlined />}
                                         onClick={() => {
                                             refresh()
                                         }}
@@ -131,7 +132,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                     size={"small"}
                                                     type='link'
                                                     htmlType='submit'
-                                                    icon={<SearchOutlined/>}
+                                                    icon={<SearchOutlined />}
                                                     style={{marginLeft: 0, marginRight: 0}}
                                                 />
                                             </Form.Item>
@@ -168,24 +169,27 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                         e?.stopPropagation()
                                                     }}
                                                 >
-                                                    <DeleteOutlined
-                                                        style={{
-                                                            paddingLeft: 5,
-                                                            paddingTop: 5,
-                                                            cursor: "pointer",
-                                                            color: "red"
-                                                        }}
-                                                        onClick={(e) => {
-                                                            // 阻止冒泡
-                                                            e.stopPropagation()
-                                                        }}
-                                                    />
+                                                    {isDelKey === nodeData.title && (
+                                                        <DeleteOutlined
+                                                            style={{
+                                                                paddingLeft: 5,
+                                                                paddingTop: 5,
+                                                                cursor: "pointer",
+                                                                color: "#707070"
+                                                            }}
+                                                            onClick={(e) => {
+                                                                // 阻止冒泡
+                                                                e.stopPropagation()
+                                                            }}
+                                                        />
+                                                    )}
                                                 </Popconfirm>
                                             </div>
                                         )
                                     }}
                                     onSelect={(key) => {
                                         if (key.length <= 0) {
+                                            setisDelKey("")
                                             return
                                         }
                                         const selectedKey = key[0]
@@ -194,6 +198,8 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                             return
                                         }
                                         let path = [node.title]
+                                        setisDelKey(path[0])
+
                                         let parent = node.parent
                                         while (!!parent) {
                                             path.unshift(
