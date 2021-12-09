@@ -7,7 +7,6 @@ module.exports = {
     webpack: function (config, env) {
         config.output.path = OUTPUT_PATH
         config.output.publicPath = "./"
-
         config.plugins.push(
             new MonacoWebpackPlugin({
                 languages: ["json", "javascript", "go", "markdown", "html"]

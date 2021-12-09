@@ -17,12 +17,14 @@ export interface StatusCardProps {
     Timestamp: number
 }
 
+export type ExecResultStatusCard = StatusCardProps
+
 export interface PluginResultUIProp {
     loading: boolean
     results: ExecResultLog[]
     progress: ExecResultProgress[]
-    statusCards: StatusCardProps[]
-    script: YakScript
+    statusCards: ExecResultStatusCard[]
+    script?: YakScript
 }
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
@@ -90,7 +92,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
             })}
             <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature"}>
                 {<>
-                    <Divider orientation={"left"}>Yakit Module Output</Divider>
+                    {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
                     <Card
                         size={"small"} hoverable={true} bordered={true} title={`任务额外日志与结果`}
                         style={{marginBottom: 20, marginRight: 2}}

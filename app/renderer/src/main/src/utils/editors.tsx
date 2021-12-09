@@ -12,7 +12,7 @@ import {SelectOne} from "./inputUtil";
 import {FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons";
 import {showDrawer} from "./showModal";
 import {MonacoEditorActions, MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
-import {HTTPPacketFuzzable} from "@components/HTTPHistory";
+import {HTTPPacketFuzzable} from "../components/HTTPHistory";
 import ReactResizeDetector from "react-resize-detector";
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;

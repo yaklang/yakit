@@ -1,8 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Alert, Button, Card, Modal, Popconfirm, Popover, Progress, Space, Spin, Tag, Typography} from "antd";
 import {failed, info, success} from "../utils/notification";
-import {yakProcess} from "@/protected/YakLocalProcess";
-import {ipcMain} from "electron";
+import {yakProcess} from "../protected/YakLocalProcess";
 
 const {ipcRenderer} = window.require("electron");
 

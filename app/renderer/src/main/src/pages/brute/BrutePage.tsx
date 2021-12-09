@@ -2,6 +2,10 @@ import React, {useEffect, useState} from "react";
 import {Button, Card, Col, Form, Layout, List, Checkbox, Row, Upload, Space, Input} from "antd";
 import {InboxOutlined, ReloadOutlined, UploadOutlined} from "@ant-design/icons";
 import {InputInteger, InputItem, SwitchItem} from "../../utils/inputUtil";
+import {HoldingIPCRenderExecStream} from "../../pages/yakitStore/PluginExecutor";
+import {randomString} from "../../utils/randomUtil";
+import {ExecResultLog, ExecResultProgress} from "../../pages/invoker/batch/ExecMessageViewer";
+import {PluginResultUI, StatusCardProps} from "../../pages/yakitStore/viewers/base";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -18,6 +22,14 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false);
     const [advanced, setAdvanced] = useState(false);
 
+    const [taskToken, setTaskToken] = useState("");
+
+    // execStream
+    const [logs, setLogs] = useState<ExecResultLog[]>([]);
+    const [progress, setProgress] = useState<ExecResultProgress[]>([]);
+    const [statusCards, setStatusCards] = useState<StatusCardProps[]>([]);
+    const [loading, setLoading] = useState(false);
+
     const loadTypes = () => {
         setTypeLoading(true);
         ipcRenderer.invoke("GetAvailableBruteTypes").then((d: { Types: string[] }) => {
@@ -32,6 +44,19 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
 
     useEffect(() => {
         loadTypes()
+
+        const token = randomString(40);
+        setTaskToken(token);
+        return HoldingIPCRenderExecStream(
+            "brute",
+            "BruteTask",
+            token,
+            undefined,
+            setLogs, setProgress, setStatusCards,
+            () => {
+                setTimeout(() => setLoading(false), 300)
+            }
+        )
     }, [])
 
     return <div style={{height: "100%", backgroundColor: "#fff", width: "100%", display: "flex"}}>
@@ -149,7 +174,12 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
             {/*    </Col>*/}
             {/*</Row>*/}
             <Card style={{flex: '1 1 0%'}}>
-
+                <PluginResultUI
+                    // script={script}
+                    loading={loading} progress={progress}
+                    results={logs}
+                    statusCards={statusCards}
+                />
             </Card>
         </div>
     </div>

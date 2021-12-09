@@ -6,7 +6,7 @@ import {failed} from "../utils/notification";
 import {FuzzableParamList} from "./FuzzableParamList";
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
 import {randomString} from "../utils/randomUtil";
-import {HTTPPacketFuzzable} from "@components/HTTPHistory";
+import {HTTPPacketFuzzable} from "./HTTPHistory";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -61,8 +61,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>();
     const [loading, setLoading] = useState(false);
 
-    const actionFuzzer=[
-        {id:'send-fuzzer-info',label:'发送到Fuzzer',contextMenuGroupId:'send-fuzzer-info',run:()=>(props as any).sendToWebFuzzer((flow as any).IsHTTPS, (flow as any).Request)}
+    const actionFuzzer = [
+        {
+            id: 'send-fuzzer-info',
+            label: '发送到Fuzzer',
+            contextMenuGroupId: 'send-fuzzer-info',
+            run: () => (props as any).sendToWebFuzzer((flow as any).IsHTTPS, (flow as any).Request)
+        }
     ]
 
     useEffect(() => {

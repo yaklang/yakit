@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from "react"
 import {
-    Alert,
     Button,
     Card,
     Col,
@@ -13,7 +12,6 @@ import {
     Row,
     Space,
     Spin,
-    Tabs,
     Tag,
     Typography
 } from "antd"
@@ -24,11 +22,8 @@ import {StringFuzzer} from "./StringFuzzer"
 import {InputFloat, InputInteger, InputItem, ManyMultiSelectForString, OneLine, SwitchItem} from "../../utils/inputUtil"
 import {fixEncoding} from "../../utils/convertor"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
-import {FuzzerResponseTableEx} from "./FuzzerResponseTable"
 import {randomString} from "../../utils/randomUtil"
-import {LinerResizeCols} from "../../components/LinerResizeCols"
-import {DeleteOutlined, ProfileOutlined, ColumnWidthOutlined} from "@ant-design/icons";
-import {HTTPPacketFuzzable} from "@components/HTTPHistory";
+import {ColumnWidthOutlined, DeleteOutlined, ProfileOutlined} from "@ant-design/icons";
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard";
 
 
