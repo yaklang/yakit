@@ -1,0 +1,8 @@
+.targets-upload-dragger.ant-upload.ant-upload-drag{
+    background-color: #fff;
+    border: 0;
+}
+
+.targets-upload-dragger.ant-upload.ant-upload-drag .ant-upload{
+    padding: 6px 0;
+}

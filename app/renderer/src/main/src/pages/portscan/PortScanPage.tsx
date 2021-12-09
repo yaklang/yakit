@@ -13,6 +13,8 @@ import {PortAsset} from "../assetViewer/models";
 import {InboxOutlined} from "@ant-design/icons";
 import {PresetPorts} from "./schema";
 
+import './PortScanPage.css'
+
 
 const {ipcRenderer} = window.require("electron");
 
@@ -53,6 +55,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [closedPorts, setClosedPorts] = useState<YakitPort[]>([]);
     const [port, setPort] = useState<PortAsset>();
     const [advanced, setAdvanced] = useState(false);
+
+    const [uploadLoading,setUploadLoading]=useState(false)
 
     useEffect(() => {
         if (xtermRef) xtermFit(xtermRef, 128, 10);
@@ -141,38 +145,44 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                 ]} help={"SYN 扫描需要 yak 启动时具有root"}
                                            setValue={Mode => setParams({...params, Mode})} value={params.Mode}
                                 />
-                                <InputItem label={"扫描目标"} setValue={Targets => setParams({...params, Targets})}
-                                           value={params.Targets} textarea={true} textareaRow={6}
-                                           help={"域名/主机/IP/IP段均可，逗号分隔，按行分割均可"}
-                                />
-                                <Form.Item label={"使用文件进行扫描"} help={params.TargetsFile ? <CopyableField
-                                    text={params.TargetsFile} width={260}
-                                /> : ""}>
-                                    <Upload.Dragger
-                                        multiple={false} maxCount={1}
-                                        onRemove={r => {
-                                            setParams({...params, TargetsFile: ""})
-                                            return
-                                        }}
-                                        beforeUpload={(f) => {
-                                            setParams({...params, TargetsFile: f.path})
+                                <Upload.Dragger
+                                    className='targets-upload-dragger'
+                                    accept={'text/plain'}
+                                    multiple={false} 
+                                    maxCount={1}
+                                    showUploadList={false}
+                                    beforeUpload={ (f) => {
+                                        if(f.type!=="text/plain"){
+                                            failed(`${f.name}非txt文件，请上传txt格式文件！`)
                                             return false
-                                        }}>
-                                        <div style={{width: "100%"}}>
-                                            <InboxOutlined style={{
-                                                fontSize: 30, color: "#49a9ff"
-                                            }}/>
-                                        </div>
-                                        按行分割与按逗号分割的扫描目标文件
-                                        <br/>
-                                        均可使用
-                                    </Upload.Dragger>
-                                </Form.Item>
-                                <InputItem label={"扫描端口 （服务端去重）"} setValue={Ports => setParams({...params, Ports})}
-                                           value={params.Ports} help={<Space style={{marginTop: 4, marginBottom: 6}}>
-                                    预设端口
-                                    <Select
-                                        style={{width: 200}}
+                                        } 
+
+                                        setUploadLoading(true)
+                                        ipcRenderer.invoke("fetch-file-content", f.path).then((res)=>{
+                                            setParams({...params, Targets:res})
+                                            setTimeout(() => {
+                                                setUploadLoading(false)
+                                            }, 100);
+                                        })
+                                        return false
+                                    }}>
+                                        <Spin spinning={uploadLoading}>
+                                        <InputItem label={"扫描目标"} setValue={Targets => setParams({...params, Targets})}
+                                        value={params.Targets} textarea={true} textareaRow={6} isBubbing={true}
+                                        help={<div>
+                                            域名/主机/IP/IP段均可，逗号分隔或按行分割
+                                            <br/>
+                                            可将TXT文件拖入框内或<span style={{color:'rgb(25,143,255)'}}>点击此处</span>上传
+                                        </div>}
+                                        />
+                                        </Spin>
+                                </Upload.Dragger>
+                                    
+                                    <InputItem prefixNode={
+                                    <div style={{margin: '5px 0'}}>
+                                        预设端口
+                                        <Select
+                                        style={{width: 200,marginLeft: 5}}
                                         size={"small"} mode={"multiple"} bordered={true}
                                         onChange={(value: string[]) => {
                                             let res: string = (value || []).map(i => {
@@ -185,6 +195,10 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         <Select.Option value={"top100"}>常见100端口</Select.Option>
                                         <Select.Option value={"top1000+"}>常见一两千</Select.Option>
                                     </Select>
+                                    </div>
+                                    } 
+                                    label={"扫描端口 （服务端去重）"} setValue={Ports => setParams({...params, Ports})}
+                                           value={params.Ports} textarea={true} autoSize={{minRows: 2, maxRows: 6}} help={<Space style={{marginTop: 4, marginBottom: 6}}>
                                 </Space>}
                                 />
                                 <Form.Item label={"并发"}

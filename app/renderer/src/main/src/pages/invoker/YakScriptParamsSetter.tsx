@@ -173,7 +173,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
             >
                 {/* 设置基础必须的参数，剩下其他参数不一定是必须的*/}
                 {requiredParams.length > 0 && <>
-                    <Title level={5}>
+                    <Title level={5} style={{fontSize:14}}>
                         <Space>
                             <span>
                             必要参数
@@ -186,7 +186,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     {requiredParams.map((i,index) => yakScriptParamToNode(i, true,`params-${index}`,!!props.loading))}
                 </>}
                 {extraGroup.length <= 1 ? <>
-                    <Title level={5}>
+                    <Title level={5} style={{fontSize:14}}>
                         <Space>
                         <span>
                             默认参数组
@@ -208,7 +208,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                             return <></>
                         }
                         return <div key={`${index}`}>
-                            <Title level={5}>
+                            <Title level={5} style={{fontSize:14}}>
                                 <Space>
                                     <span>
                                     参数组：{i}

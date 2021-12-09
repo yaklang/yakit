@@ -56,9 +56,15 @@ export interface InputItemProps {
     textarea?: boolean
     textareaRow?: number
     textareaCol?: number
+    autoSize?: boolean|object
 
     prefix?: React.ReactNode
     suffix?: React.ReactNode
+
+    // 放在form-item里面的前缀元素
+    prefixNode?: React.ReactNode
+    // 是否阻止事件冒泡
+    isBubbing?: boolean
 }
 
 
@@ -68,6 +74,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
         required={!!props.required} style={props.style} {...props.extraFormItemProps}
         help={props.help}
     >
+        {props.prefixNode}
         {props.autoComplete ? <AutoComplete
             style={{width: props.width || 200}}
             dropdownMatchSelectWidth={400}
@@ -83,12 +90,16 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
                 style={{width: props.width}}
                 // type={props.type}
                 rows={props.textareaRow}
+                autoSize={props.autoSize}
                 cols={props.textareaCol}
                 required={!!props.required}
                 disabled={!!props.disable}
                 placeholder={props.placeholder}
                 allowClear={true}
-                value={props.value} onChange={e => props.setValue && props.setValue(e.target.value)}
+                value={props.value} onChange={e => {props.setValue && props.setValue(e.target.value);if(props.isBubbing)e.stopPropagation()}}
+                onPressEnter={(e)=>{if(props.isBubbing)e.stopPropagation()}}
+                onFocus={(e)=>{if(props.isBubbing)e.stopPropagation()}}
+                onClick={(e)=>{if(props.isBubbing)e.stopPropagation()}}
             />
         </> : <Input
             style={{width: props.width}}
@@ -97,9 +108,12 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
             disabled={!!props.disable}
             placeholder={props.placeholder}
             allowClear={true}
-            value={props.value} onChange={e => props.setValue && props.setValue(e.target.value)}
+            value={props.value} onChange={e => {props.setValue && props.setValue(e.target.value);if(props.isBubbing)e.stopPropagation()}}
             prefix={props.prefix}
             suffix={props.suffix}
+            onPressEnter={(e)=>{if(props.isBubbing)e.stopPropagation()}}
+            onFocus={(e)=>{if(props.isBubbing)e.stopPropagation()}}
+            onClick={(e)=>{if(props.isBubbing)e.stopPropagation()}}
         />}
 
     </Item>
