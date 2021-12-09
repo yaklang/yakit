@@ -15,6 +15,7 @@ const CellRender = ({ rowData, dataKey, render, ...props }: any) => {
 }
 
 export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
+    const { sortFilter, ...restTable } = props
     const [cols, setCols] = useState(props.columns)
     const [sortColumn, setSortColumn] = useState("")
     const [sortType, setSortType] = useState()
@@ -29,12 +30,10 @@ export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
         props.sortFilter(sortColumn, sortType)
     }
 
-    useEffect(()=>{})
-
     return (
         <div>
             <Table
-                {...(props as TableProps)}
+                {...(restTable as TableProps)}
                 className='reszie-table'
                 sortColumn={sortColumn}
                 sortType={sortType}
@@ -44,8 +43,9 @@ export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
                 rowHeight={props.rowHeight || 40}
             >
                 {cols.map((item) => {
+                    const { headRender, cellRender, ...restCol } = item
                     return (
-                        <Column key={item.dataKey} {...(item as ColumnProps)}>
+                        <Column key={item.dataKey} {...(restCol as ColumnProps)}>
                             <HeaderCell>{item.headRender()}</HeaderCell>
                             <CellRender
                                 dataKey={item.dataKey}
