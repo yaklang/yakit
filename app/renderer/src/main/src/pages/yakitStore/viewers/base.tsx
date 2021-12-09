@@ -98,8 +98,8 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                         <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
                             {(results || []).filter(i => {
                                 return i.level.startsWith("json-feature") || i.level.startsWith("feature-")
-                            }).splice(0, 25).map(e => {
-                                return <Timeline.Item color={LogLevelToCode(e.level)}>
+                            }).splice(0, 25).map((e,index) => {
+                                return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
                                     <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
                                 </Timeline.Item>
                             })}
