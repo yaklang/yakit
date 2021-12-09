@@ -571,11 +571,11 @@ export interface CopyableFieldProp {
 }
 
 export const CopyableField: React.FC<CopyableFieldProp> = (props) => {
-    return <div style={{width: props.width, overflow: "auto"}}>
+    return <div style={{width: props.width,maxWidth: props.width}}>
         <Typography.Paragraph
             copyable={!props.noCopy}
             style={{marginBottom: 0, ...props.style}}
-            ellipsis={{tooltip: props.tooltip === undefined ? true : props.tooltip}}
+            ellipsis={{rows:1,tooltip: props.tooltip === undefined ? true : props.tooltip}}
             mark={props.mark}
         >
             {props.text}

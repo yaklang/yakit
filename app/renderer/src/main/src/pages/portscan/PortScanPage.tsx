@@ -300,16 +300,16 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
             </Tabs.TabPane>
             <Tabs.TabPane tab={"端口资产管理"} key={"port"}>
                 <Row gutter={12}>
-                    <Col span={16}>
+                    <Col span={24}>
                         <PortAssetTable onClicked={(i) => {
                             setPort(i)
                         }}/>
                     </Col>
-                    <Col span={8}>
+                    {/* <Col span={8}>
                         {port ? <PortAssetDescription port={port}/> : <Empty>
                             点击端口列表查看内容
                         </Empty>}
-                    </Col>
+                    </Col> */}
                 </Row>
             </Tabs.TabPane>
         </Tabs>
