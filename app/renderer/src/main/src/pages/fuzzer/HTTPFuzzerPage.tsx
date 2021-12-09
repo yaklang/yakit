@@ -131,7 +131,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 IsHTTPS: isHttps,
                 Concurrent: concurrent,
                 PerRequestTimeoutSeconds: timeout,
-                Proxy: proxy
+                Proxy: proxy, ActualAddr: actualHost,
             },
             fuzzToken
         )
