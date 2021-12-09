@@ -61,6 +61,10 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>();
     const [loading, setLoading] = useState(false);
 
+    const actionFuzzer=[
+        {id:'send-fuzzer-info',label:'发送到Fuzzer',contextMenuGroupId:'send-fuzzer-info',run:()=>(props as any).sendToWebFuzzer((flow as any).IsHTTPS, (flow as any).Request)}
+    ]
+
     useEffect(() => {
         if (!props.hash) {
             return
@@ -140,7 +144,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                             <div style={{height: 350}}>
                                 <YakEditor readOnly={true} type={"http"}//theme={"fuzz-http-theme"}
-                                           value={new Buffer(flow.Request).toString("utf-8")}/>
+                                           value={new Buffer(flow.Request).toString("utf-8")}
+                                           actions={[...actionFuzzer]}/>
                             </div>
                         </Card>
                     </Col>
