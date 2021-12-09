@@ -131,7 +131,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
     switch (props.feature) {
         case "website-trees":
             return <div>
-                <WebsiteTreeViewer {...props.params}/>
+                <WebsiteTreeViewer {...props.params} maxHeight={400}/>
             </div>
         case "fixed-table":
             return <div>
