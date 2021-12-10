@@ -198,7 +198,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     </div>
                                     } 
                                     label={"扫描端口 （服务端去重）"} setValue={Ports => setParams({...params, Ports})}
-                                           value={params.Ports} textarea={true} autoSize={{minRows: 2, maxRows: 6}} help={<Space style={{marginTop: 4, marginBottom: 6}}>
+                                           value={params.Ports} allowClear={true} textarea={true} autoSize={{minRows: 2, maxRows: 6}} help={<Space style={{marginTop: 4, marginBottom: 6}}>
                                 </Space>}
                                 />
                                 <Form.Item label={"并发"}

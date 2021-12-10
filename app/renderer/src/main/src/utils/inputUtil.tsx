@@ -57,6 +57,7 @@ export interface InputItemProps {
     textareaRow?: number
     textareaCol?: number
     autoSize?: boolean|object
+    allowClear?: boolean
 
     prefix?: React.ReactNode
     suffix?: React.ReactNode
@@ -95,7 +96,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
                 required={!!props.required}
                 disabled={!!props.disable}
                 placeholder={props.placeholder}
-                allowClear={true}
+                allowClear={props.allowClear}
                 value={props.value} onChange={e => {props.setValue && props.setValue(e.target.value);if(props.isBubbing)e.stopPropagation()}}
                 onPressEnter={(e)=>{if(props.isBubbing)e.stopPropagation()}}
                 onFocus={(e)=>{if(props.isBubbing)e.stopPropagation()}}
@@ -107,7 +108,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
             required={!!props.required}
             disabled={!!props.disable}
             placeholder={props.placeholder}
-            allowClear={true}
+            allowClear={props.allowClear}
             value={props.value} onChange={e => {props.setValue && props.setValue(e.target.value);if(props.isBubbing)e.stopPropagation()}}
             prefix={props.prefix}
             suffix={props.suffix}
