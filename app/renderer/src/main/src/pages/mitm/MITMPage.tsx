@@ -622,8 +622,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                     {
                                                         id: "send-to-fuzzer",
                                                         label: "发送到 Web Fuzzer",
-                                                        run: function () {
-                                                            props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, new Buffer(currentPacket).toString("utf8"))
+                                                        run: function (StandaloneEditor:any) {
+                                                            props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, StandaloneEditor.getModel().getValue())
                                                         },
                                                         contextMenuGroupId: "Actions"
                                                     },
