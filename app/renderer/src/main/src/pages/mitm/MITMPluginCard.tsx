@@ -20,6 +20,7 @@ export interface MITMPluginCardProp {
     messages: ExecResultLog[]
     onSubmitScriptContent?: (script: string) => any
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
+    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
 }
 
 const defaultScript = mitmPluginTemplateShort;
@@ -99,7 +100,10 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                         filter={{
                             SearchURL: "",
                             Pagination: {...genDefaultPagination(), Page: 1, Limit: 20}
-                        }} source={""}/>
+                        }} 
+                        source={""}
+                        onSendToWebFuzzer={props.onSendToWebFuzzer}
+                        />
                 </div>
             </Tabs.TabPane>
             <Tabs.TabPane key={"plugin"} tab={"劫持插件"}>

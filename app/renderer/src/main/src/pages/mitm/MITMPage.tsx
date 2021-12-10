@@ -674,6 +674,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                 info(`加载 MITM 插件[${id}]`)
                                                 ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
                                             }}
+                                            onSendToWebFuzzer={props.onSendToWebFuzzer}
                                         />
                                     </div>
                                 </Col>}

@@ -70,7 +70,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                 code: "Hash", name: "操作", render: (i: any) => {
                     return <>
                         <Space>
-                            {props.onSendToWebFuzzer && <Button
+                            {false&&props.onSendToWebFuzzer && <Button
                                 type={"link"} size={"small"}
                                 onClick={() => {
                                     const req = findHTTPFlowById(i);
