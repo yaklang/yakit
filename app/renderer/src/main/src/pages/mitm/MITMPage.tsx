@@ -622,8 +622,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                     {
                                                         id: "send-to-fuzzer",
                                                         label: "发送到 Web Fuzzer",
-                                                        run: function () {
-                                                            props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, new Buffer(currentPacket).toString("utf8"))
+                                                        run: function (StandaloneEditor:any) {
+                                                            props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, StandaloneEditor.getModel().getValue())
                                                         },
                                                         contextMenuGroupId: "Actions"
                                                     },
@@ -674,6 +674,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                 info(`加载 MITM 插件[${id}]`)
                                                 ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
                                             }}
+                                            onSendToWebFuzzer={props.onSendToWebFuzzer}
                                         />
                                     </div>
                                 </Col>}
