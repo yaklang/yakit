@@ -20,7 +20,7 @@
     "@types/react-resizable": "^1.7.4",
     "@uiw/react-md-editor": "^3.6.5",
     "ali-react-table": "2.6.1",
-    "antd": "^4.16.9",
+    "antd": "4.17.2",
     "bizcharts": "^4.1.12",
     "codemirror": "^5.63.3",
     "customize-cra": "^1.0.0",

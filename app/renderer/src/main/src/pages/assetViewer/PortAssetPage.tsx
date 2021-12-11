@@ -85,14 +85,17 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         scroll={{x: "auto"}}
         size={"small"}
         bordered={true}
+        rowKey={(row)=>row.Id}
         onRow={r => {
             return {
                 onClick: e => {
-                    props.onClicked && props.onClicked(r)
+                    // props.onClicked && props.onClicked(r)
                 },
             }
         }}
-
+        expandable={{
+            expandedRowRender: record => <PortAssetDescription port={record}/>,
+        }}
         loading={loading}
         columns={props.closed ? [
             {
@@ -163,7 +166,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             },
             {
                 title: "服务指纹",
-                render: (i: PortAsset) => i.ServiceType ? <div style={{width: 230, overflow: "auto"}}><CopyableField
+                render: (i: PortAsset) => i.ServiceType ? <div style={{width: 230,overflowX: 'hidden'}}><CopyableField
                     text={i.ServiceType}/></div> : "", width: 250,
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return params && setParams && <TableFilterDropdownForm
@@ -226,19 +229,15 @@ export interface PortAssetDescriptionProp {
 
 export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) => {
     const {port} = props;
-    return <Descriptions size={"small"} bordered={true} column={2} title={`${port.Host}:${port.Port} 详情`}>
-        <Descriptions.Item label={<Tag>网络地址</Tag>} span={2}><CopyableField
-            text={`${port.Host}:${port.Port}`}/></Descriptions.Item>
-        <Descriptions.Item label={<Tag>协议</Tag>}><CopyableField
-            text={`${port.Proto}`}/></Descriptions.Item>
+    return <Descriptions size={"small"} bordered={true} column={!port.ServiceType?1:2} title={''} style={{marginLeft:20}}>
         <Descriptions.Item label={<Tag>状态</Tag>}><CopyableField
             text={`${port.State}`}/></Descriptions.Item>
+        {port.HtmlTitle && <Descriptions.Item label={<Tag>Title</Tag>}><CopyableField
+            text={`${port.HtmlTitle}`}/></Descriptions.Item>}
         {port.ServiceType && <Descriptions.Item span={2} label={<Tag>应用</Tag>}><CopyableField
             text={`${port.ServiceType}`}/></Descriptions.Item>}
         {port.Reason && <Descriptions.Item span={2} label={<Tag>失败原因</Tag>}><CopyableField
             text={`${port.Reason}`}/></Descriptions.Item>}
-        {port.HtmlTitle && <Descriptions.Item span={2} label={<Tag>Title</Tag>}><CopyableField
-            text={`${port.HtmlTitle}`}/></Descriptions.Item>}
         {port.CPE.join("|") !== "" ? <Descriptions.Item span={2} label={<Tag>CPE</Tag>}>
             <Space direction={"vertical"}>
                 {port.CPE.map(e => {

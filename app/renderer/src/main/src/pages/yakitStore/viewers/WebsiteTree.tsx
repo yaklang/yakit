@@ -17,6 +17,9 @@ export interface WebsiteTreeViewerProp {
     targets?: string
     interval_seconds?: number
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+
+    // 树在垂直方向上节点过多时可外部设置最大高度值
+    maxHeight?: number
 }
 
 const { ipcRenderer } = window.require("electron")
@@ -142,7 +145,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                 )
                             }
                         >
-                            <div style={{width: "100%", overflowX: "auto"}}>
+                            <div style={{width: "100%", overflowX: "auto", maxHeight: props.maxHeight}}>
                                 <Tree
                                     className='ellipsis-tree'
                                     showLine={true}

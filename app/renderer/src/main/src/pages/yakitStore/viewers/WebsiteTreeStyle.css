@@ -2,11 +2,6 @@
     width: 100%;
 }
 
-.ellipsis-tree .ant-tree-treenode {
-    width: 100%;
-    max-width: 100%;
-}
-
 .ellipsis-tree .ant-tree-node-content-wrapper {
     width: 100%;
 }
@@ -17,6 +12,11 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.ellipsis-tree .ant-tree-list .ant-tree-treenode {
+    width: 100%;
+    max-width: 100%;
 }
 
 .ellipsis-tree .titleContent {
