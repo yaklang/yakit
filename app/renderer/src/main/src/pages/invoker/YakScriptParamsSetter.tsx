@@ -1,8 +1,10 @@
 import React, {useEffect, useState} from "react";
 import {YakScript, YakScriptParam} from "./schema";
-import {Button, Card, Divider, Form, Input, InputNumber, Space, Switch, Tooltip} from "antd";
+import {Button, Card, Form, Input, InputNumber, Space, Switch, Tooltip, Typography, Spin} from "antd";
 import {QuestionOutlined} from "@ant-design/icons";
 import {YakExecutorParam} from "./YakExecutorParams";
+
+const { Title } = Typography;
 
 export interface YakScriptParamsSetterProps extends YakScript {
     params: YakExecutorParam[]
@@ -10,6 +12,7 @@ export interface YakScriptParamsSetterProps extends YakScript {
     submitVerbose?: string
 
     styleSize?: "big" | "small"
+    loading?:boolean
 }
 
 export const getValueFromParams = (params: YakExecutorParam[], key: string): any => {
@@ -83,8 +86,9 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     })
     const requiredParams: YakScriptParam[] = groupToParams.get("required") || [];
 
-    const yakScriptParamToNode = (i: YakScriptParam, required: boolean,key:string) => {
+    const yakScriptParamToNode = (i: YakScriptParam, required: boolean,key:string,disabled:boolean) => {
         return <Form.Item
+            labelCol={{xl:6,xxl:4}}
             key={key}
             style={{marginBottom: i.Help ? undefined : 8}}
             label={<Space size={2}>
@@ -102,6 +106,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                 value={i.Value || i.DefaultValue}
                 placeholder={i.DefaultValue}
                 defaultValue={i.DefaultValue}
+                disabled={disabled}
                 setValue={value => {
                     originParams.forEach(e => {
                         if (e.Field === i.Field) {
@@ -168,7 +173,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
             >
                 {/* 设置基础必须的参数，剩下其他参数不一定是必须的*/}
                 {requiredParams.length > 0 && <>
-                    <Divider orientation={"left"} style={{fontSize: 14}}>
+                    <Title level={5} style={{fontSize:14}}>
                         <Space>
                             <span>
                             必要参数
@@ -177,13 +182,13 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                 <Button icon={<QuestionOutlined/>} type={"link"} size={"small"}/>
                             </Tooltip>
                         </Space>
-                    </Divider>
-                    {requiredParams.map((i,index) => yakScriptParamToNode(i, true,`params-${index}`))}
+                    </Title>
+                    {requiredParams.map((i,index) => yakScriptParamToNode(i, true,`params-${index}`,!!props.loading))}
                 </>}
                 {extraGroup.length <= 1 ? <>
-                    <Divider orientation={"left"} style={{fontSize: 14}}>
+                    <Title level={5} style={{fontSize:14}}>
                         <Space>
-                            <span>
+                        <span>
                             默认参数组
                             </span>
                             <Switch
@@ -193,9 +198,9 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                 }}
                             />
                         </Space>
-                    </Divider>
+                    </Title>
                     {!isGroupHidden("default", false) && <>
-                        {(groupToParams.get("default") || []).map((i: YakScriptParam,index) => yakScriptParamToNode(i, false,`defaultParamsGroup-${index}`))}
+                        {(groupToParams.get("default") || []).map((i: YakScriptParam,index) => yakScriptParamToNode(i, false,`defaultParamsGroup-${index}`,!!props.loading))}
                     </>}
                 </> : <>
                     {extraGroup.map((i,index) => {
@@ -203,7 +208,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                             return <></>
                         }
                         return <div key={`${index}`}>
-                            <Divider orientation={"left"} style={{fontSize: 14}}>
+                            <Title level={5} style={{fontSize:14}}>
                                 <Space>
                                     <span>
                                     参数组：{i}
@@ -216,9 +221,9 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                         }}
                                     />
                                 </Space>
-                            </Divider>
+                            </Title>
                             {!isGroupHidden(i, true) && <>
-                                {(groupToParams.get(i) || []).map((i: YakScriptParam,index) => yakScriptParamToNode(i, false,`paramsGroup-${index}`))}
+                                {(groupToParams.get(i) || []).map((i: YakScriptParam,index) => yakScriptParamToNode(i, false,`paramsGroup-${index}`,!!props.loading))}
                             </>}
                         </div>
                     })}
@@ -227,7 +232,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     <h2>本模块无需设置额外参数</h2>
                 </Form.Item>}
                 <Form.Item colon={false} label={" "}>
-                    <Button type="primary"
+                    <Button type="primary" loading={!!props.loading}
                             htmlType="submit"> {props.submitVerbose ? props.submitVerbose : "提交已设置的参数"} </Button>
                 </Form.Item>
             </Form>
@@ -243,6 +248,7 @@ export interface TypeVerboseToInputProp {
     setValue: (s: string | boolean | number) => any
     data?: { value: any, label: string }[]
     required?: boolean
+    disabled?:boolean
 }
 
 export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
@@ -257,12 +263,14 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
                 required={props.required}
                 value={props.value as number} onChange={e => props.setValue(e)}
                 step={1}
+                disabled={!!props.disabled}
             />
         case "uint":
             return <InputNumber
                 step={1} min={1}
                 required={props.required}
                 value={props.value as number} onChange={e => props.setValue(e)}
+                disabled={!!props.disabled}
             />
         case "float":
         case "float32":
@@ -272,10 +280,11 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
                 required={props.required}
                 value={props.value as number} onChange={e => props.setValue(e)}
                 step={0.1}
+                disabled={!!props.disabled}
             />
         case "bool":
         case "boolean":
-            return <Switch checked={props.value as boolean} onChange={props.setValue}/>
+            return <Switch checked={props.value as boolean} disabled={!!props.disabled} onChange={props.setValue}/>
         case "textarea":
             return <Input.TextArea
                 value={props.value as string} rows={5}
@@ -283,6 +292,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
                     props.setValue(e.target.value)
                 }} placeholder={props.placeholder}
                 required={props.required}
+                disabled={!!props.disabled}
             />
         case "str":
         case "string":
@@ -293,6 +303,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
                     props.setValue(e.target.value)
                 }} placeholder={props.placeholder}
                 required={props.required}
+                disabled={!!props.disabled}
             />
     }
 };

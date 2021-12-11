@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {ExecResult, YakScript} from "../invoker/schema";
-import {Button, Collapse, Popconfirm, Space, Spin} from "antd";
+import {Button, Collapse, Popconfirm, Space} from "antd";
 import {XTerm} from "xterm-for-react";
 import {randomString} from "../../utils/randomUtil";
 import {failed, info} from "../../utils/notification";
@@ -115,6 +115,9 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             failed(`[Mod] ${script.ScriptName} error: ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
+            messages=[]
+            processKVPair = new Map<string, number>();
+            statusKVPair = new Map<string, StatusCardProps>();
             info(`[Mod] ${script.ScriptName} finished`)
             syncResults()
             setTimeout(() => setLoading(false), 300)
@@ -147,6 +150,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         <Collapse
             activeKey={activePanels}
             onChange={key => {
+                if(Array.isArray(key))  setActivePanels(key)
                 // console.info(key)
             }}
         >
@@ -163,12 +167,15 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                             disabled={!loading}
                             onConfirm={e => {
                                 ipcRenderer.invoke("cancel-exec-yak-script", token)
+                                e?.stopPropagation()
                             }}
                         >
                             <Button
                                 size={"small"}
                                 disabled={!loading}
-                                type={"primary"} danger={true}>
+                                type={"primary"} danger={true}
+                                onClick={e=>e.stopPropagation()}
+                                >
                                 立即停止该任务 / KILL TASK
                             </Button>
                         </Popconfirm>
@@ -178,17 +185,17 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                                 xtermClear(xtermRef)
                                 reset()
                                 setActivePanels(["params"])
+                                e.stopPropagation()
                             }} disabled={loading}
                         >清空结果</Button>
                     </Space>
                 </>}>
-                <Spin spinning={loading}>
                     <YakScriptParamsSetter
                         {...script}
                         params={[]}
+                        loading={loading}
                         onParamsConfirm={(p: YakExecutorParam[]) => {
                             setLoading(true)
-                            // setTab("console")
                             setActivePanels(["console"])
                             ipcRenderer.invoke("exec-yak-script", {
                                 Params: p,
@@ -198,11 +205,10 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                         styleSize={props.size}
                         submitVerbose={"开始执行该模块 / Start"}
                     />
-                </Spin>
             </Panel>
             <Panel key={"console"} showArrow={false} header={<>
                 插件执行结果
-            </>} disabled={results.length <= 0}>
+            </>} collapsible={results.length <= 0?'disabled':undefined}>
                 <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
                 <PluginResultUI
                     script={script} loading={loading} progress={progress} results={results}

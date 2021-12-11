@@ -15,6 +15,7 @@ const {ipcRenderer} = window.require("electron");
 export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
     return <Table<YakitPort>
         size={"small"} bordered={true}
+        rowKey={(row)=>row.host}
         title={e => {
             return <>开放端口 / Open Ports</>
         }}
@@ -32,7 +33,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                 width: 150,
             },
             {
-                title: "指纹", render: (i: YakitPort) => i.fingerprint ? <div style={{width: 200, overflow: "auto"}}>
+                title: "指纹", render: (i: YakitPort) => i.fingerprint ? <div style={{width: 200, overflowX: 'hidden'}}>
                     <CopyableField
                         text={i.fingerprint}
                     />
