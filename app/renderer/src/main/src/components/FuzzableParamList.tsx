@@ -1,7 +1,7 @@
 import React from "react";
 import {Button, Typography, Space, Table, Tag, Popconfirm} from "antd";
 import {FuzzableParams} from "./HTTPFlowTable";
-import {HTTPPacketFuzzable} from "@components/HTTPHistory";
+import {HTTPPacketFuzzable} from "./HTTPHistory";
 
 const {Text} = Typography;
 

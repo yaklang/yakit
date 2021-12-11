@@ -164,11 +164,27 @@ message StartBruteParams {
   string Targets = 2;
   string TargetFile = 3;
   repeated string Usernames = 4;
+  string UsernameFile = 24;
+
   repeated string Passwords = 5;
+  string PasswordFile = 25;
+
   repeated string Prefix = 6;
   float Timeout = 7;
+
+  // 每个目标之间的并发
   int64 Concurrent = 8;
   int64 Retry = 9;
+
+  // 目标任务内并发
+  int64 TargetTaskConcurrent = 10;
+
+  //
+  bool OkToStop = 11;
+  int64 DelayMin = 12;
+  int64 DelayMax = 13;
+
+  string PluginScriptName = 14;
 }
 
 message HTTPRequestMutateParams {

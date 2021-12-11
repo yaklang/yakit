@@ -109,6 +109,7 @@ module.exports = {
         require("./handlers/payloads")(win, getClient);
         require("./handlers/completion")(win, getClient);
         require("./handlers/portScan")(win, getClient);
+        require("./handlers/startBrute")(win, getClient);
 
         //assets
         require("./handlers/assets")(win, getClient);

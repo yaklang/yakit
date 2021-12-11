@@ -19,6 +19,119 @@ const {ipcRenderer} = window.require("electron");
 
 const {Panel} = Collapse;
 
+
+export const HoldingIPCRenderExecStream = (
+    taskName: string,
+    apiKey: string,
+    token: string,
+    xtermRef?: any,
+    setResults?: (res: ExecResultLog[]) => any,
+    setProgress?: (res: ExecResultProgress[]) => any,
+    setStatusCards?: (res: StatusCardProps[]) => any,
+    onEnd?: () => any,
+    onListened?: () => any
+) => {
+
+    let messages: ExecResultMessage[] = [];
+    let processKVPair = new Map<string, number>();
+    let statusKVPair = new Map<string, StatusCardProps>();
+
+    let lastResultLen = 0;
+    const syncResults = () => {
+        if (setResults) {
+            let results = messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog);
+            if (results.length > lastResultLen) {
+                lastResultLen = results.length
+                setResults(results)
+            }
+        }
+
+        if (setProgress) {
+            const processes: ExecResultProgress[] = []
+            processKVPair.forEach((value, id) => {
+                processes.push({id: id, progress: value})
+            })
+            setProgress(processes.sort((a, b) => a.id.localeCompare(b.id)))
+        }
+
+        if (setStatusCards) {
+            const statusCards: StatusCardProps[] = [];
+            statusKVPair.forEach((value) => {
+                statusCards.push(value);
+            })
+            setStatusCards(statusCards.sort((a, b) => a.Id.localeCompare((b.Id))))
+        }
+    }
+
+    ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
+        if (data.IsMessage) {
+            try {
+                let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString("utf8"));
+
+                // 处理 Process KVPair
+                if (obj.type === "process") {
+                    const processData = obj.content as ExecResultProgress;
+                    if (processData && processData.id) {
+                        processKVPair.set(processData.id, Math.max(processKVPair.get(processData.id) || 0, processData.progress))
+                    }
+                    return
+                }
+
+                // 处理 log feature-status-card-data
+                const logData = obj.content as ExecResultLog;
+                if (obj.type === "log" && logData.level === "feature-status-card-data") {
+                    try {
+                        const obj = JSON.parse(logData.data);
+                        const {id, data} = obj;
+                        const {timestamp} = logData;
+                        const originData = statusKVPair.get(id);
+                        if (originData && originData.Timestamp > timestamp) {
+                            return
+                        }
+                        statusKVPair.set(id, {Id: id, Data: data, Timestamp: timestamp})
+                    } catch (e) {
+                    }
+                    return
+                }
+                messages.unshift(obj)
+
+                // 只缓存 100 条结果（日志类型 + 数据类型）
+                if (messages.length > 100) {
+                    messages.pop()
+                }
+            } catch (e) {
+
+            }
+        }
+        writeExecResultXTerm(xtermRef, data)
+    })
+    ipcRenderer.on(`${token}-error`, (e, error) => {
+        failed(`[Mod] ${taskName} error: ${error}`)
+    })
+    ipcRenderer.on(`${token}-end`, (e, data) => {
+        info(`[Mod] ${taskName} finished`)
+        syncResults()
+        if (onEnd) {
+            onEnd()
+        }
+    })
+
+    syncResults()
+    let id = setInterval(() => syncResults(), 500)
+
+    if (onListened) {
+        onListened()
+    }
+
+    return () => {
+        clearInterval(id);
+        ipcRenderer.invoke(`cancel-${apiKey}`, token)
+        ipcRenderer.removeAllListeners(`${token}-data`)
+        ipcRenderer.removeAllListeners(`${token}-error`)
+        ipcRenderer.removeAllListeners(`${token}-end`)
+    }
+}
+
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const {script} = props;
     const xtermRef = useRef(null);
@@ -49,91 +162,18 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         const token = randomString(40);
         setToken(token)
 
-        let messages: ExecResultMessage[] = [];
-        let processKVPair = new Map<string, number>();
-        let statusKVPair = new Map<string, StatusCardProps>();
-
-        let lastResultLen = 0;
-        const syncResults = () => {
-            let results = messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog);
-            if (results.length > lastResultLen) {
-                lastResultLen = results.length
-                setResults(results)
+        return HoldingIPCRenderExecStream(
+            script.ScriptName,
+            "exec-yak-script",
+            token,
+            xtermRef,
+            setResults,
+            setProgress,
+            setStatusCards,
+            () => {
+                setTimeout(() => setLoading(false), 300)
             }
-
-            const processes: ExecResultProgress[] = []
-            processKVPair.forEach((value, id) => {
-                processes.push({id: id, progress: value})
-            })
-            setProgress(processes.sort((a, b) => a.id.localeCompare(b.id)))
-
-            const statusCards: StatusCardProps[] = [];
-            statusKVPair.forEach((value) => {
-                statusCards.push(value);
-            })
-            setStatusCards(statusCards.sort((a, b) => a.Id.localeCompare((b.Id))))
-        }
-
-        ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
-            if (data.IsMessage) {
-                try {
-                    let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString("utf8"));
-
-                    // 处理 Process KVPair
-                    if (obj.type === "process") {
-                        const processData = obj.content as ExecResultProgress;
-                        if (processData && processData.id) {
-                            processKVPair.set(processData.id, Math.max(processKVPair.get(processData.id) || 0, processData.progress))
-                        }
-                        return
-                    }
-
-                    // 处理 log feature-status-card-data
-                    const logData = obj.content as ExecResultLog;
-                    if (obj.type === "log" && logData.level === "feature-status-card-data") {
-                        try {
-                            const obj = JSON.parse(logData.data);
-                            const {id, data} = obj;
-                            const {timestamp} = logData;
-                            const originData = statusKVPair.get(id);
-                            if (originData && originData.Timestamp > timestamp) {
-                                return
-                            }
-                            statusKVPair.set(id, {Id: id, Data: data, Timestamp: timestamp})
-                        } catch (e) {
-                        }
-                        return
-                    }
-                    messages.unshift(obj)
-                } catch (e) {
-
-                }
-            }
-            writeExecResultXTerm(xtermRef, data)
-        })
-        ipcRenderer.on(`${token}-error`, (e, error) => {
-            failed(`[Mod] ${script.ScriptName} error: ${error}`)
-        })
-        ipcRenderer.on(`${token}-end`, (e, data) => {
-            messages=[]
-            processKVPair = new Map<string, number>();
-            statusKVPair = new Map<string, StatusCardProps>();
-            info(`[Mod] ${script.ScriptName} finished`)
-            syncResults()
-            setTimeout(() => setLoading(false), 300)
-        })
-
-        syncResults()
-        let id = setInterval(() => syncResults(), 500)
-
-        return () => {
-            clearInterval(id);
-            ipcRenderer.invoke("cancel-exec-yak-script", token)
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-        }
-
+        )
     }, [xtermRef, resetFlag])
 
     useEffect(() => {
@@ -150,7 +190,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         <Collapse
             activeKey={activePanels}
             onChange={key => {
-                if(Array.isArray(key))  setActivePanels(key)
+                if (Array.isArray(key)) setActivePanels(key)
                 // console.info(key)
             }}
         >
@@ -174,8 +214,8 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                                 size={"small"}
                                 disabled={!loading}
                                 type={"primary"} danger={true}
-                                onClick={e=>e.stopPropagation()}
-                                >
+                                onClick={e => e.stopPropagation()}
+                            >
                                 立即停止该任务 / KILL TASK
                             </Button>
                         </Popconfirm>
@@ -190,25 +230,25 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                         >清空结果</Button>
                     </Space>
                 </>}>
-                    <YakScriptParamsSetter
-                        {...script}
-                        params={[]}
-                        loading={loading}
-                        onParamsConfirm={(p: YakExecutorParam[]) => {
-                            setLoading(true)
-                            setActivePanels(["console"])
-                            ipcRenderer.invoke("exec-yak-script", {
-                                Params: p,
-                                YakScriptId: props.script.Id,
-                            }, token)
-                        }}
-                        styleSize={props.size}
-                        submitVerbose={"开始执行该模块 / Start"}
-                    />
+                <YakScriptParamsSetter
+                    {...script}
+                    params={[]}
+                    loading={loading}
+                    onParamsConfirm={(p: YakExecutorParam[]) => {
+                        setLoading(true)
+                        setActivePanels(["console"])
+                        ipcRenderer.invoke("exec-yak-script", {
+                            Params: p,
+                            YakScriptId: props.script.Id,
+                        }, token)
+                    }}
+                    styleSize={props.size}
+                    submitVerbose={"开始执行该模块 / Start"}
+                />
             </Panel>
             <Panel key={"console"} showArrow={false} header={<>
                 插件执行结果
-            </>} collapsible={results.length <= 0?'disabled':undefined}>
+            </>} collapsible={results.length <= 0 ? 'disabled' : undefined}>
                 <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
                 <PluginResultUI
                     script={script} loading={loading} progress={progress} results={results}
