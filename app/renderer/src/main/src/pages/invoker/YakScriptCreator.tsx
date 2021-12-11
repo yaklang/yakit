@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {Button, Card, Form, List, Popconfirm, Space, Tag} from "antd";
 import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {YakScript, YakScriptParam} from "./schema";
-import {YakEditor} from "../../utils/editors";
+import {HTTPPacketEditor, YakCodeEditor, YakEditor} from "../../utils/editors";
 import {PlusOutlined} from "@ant-design/icons";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {failed, info} from "../../utils/notification";
@@ -438,6 +438,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
 };
 
 export interface YakScriptLargeEditorProp {
+    language?: string
     script: YakScript
     onUpdate: (data: YakScript) => any
     onExit: (data: YakScript) => any
@@ -452,8 +453,13 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
     }, [props.script])
 
     return <>
-        <Card title={`ScriptName: ${params.ScriptName}`} extra={[
-            <Space>
+        <YakCodeEditor
+            originValue={Buffer.from(script.Content)}
+            noTitle={true} noHex={true}
+            onChange={value => setParams({...params, Content: new Buffer(value).toString("utf8")})}
+            language={props.language || "yak"}
+            noHeader={false} disableFullscreen={true} noPacketModifier={true}
+            extra={<Space style={{marginRight: 10}}>
                 <Button danger={true} onClick={() => {
                     // m.destroy()
                     // setFullscreen(false)
@@ -468,6 +474,7 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
                     })
                 }}>退出编辑界面</Button>
                 <Button
+                    type={"primary"}
                     disabled={[
                         // "mitm",
                         "",
@@ -511,18 +518,23 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
                             // setTimeout(() => setLoading(false), 400)
                         })
                     }}> 调试：创建(修改)并立即执行 </Button>
-            </Space>
-        ]} bodyStyle={{padding: 0}}>
-            <div style={{
-                width: "100%",
-                height: 1000,
-            }}>
-                <YakEditor
-                    type={"yak"}
-                    setValue={Content => setParams({...params, Content})}
-                    value={params.Content}
-                />
-            </div>
-        </Card>
+            </Space>}
+        />
+        {/*<Card title={`ScriptName: ${params.ScriptName}`} extra={[*/}
+        {/*    <Space>*/}
+
+        {/*    </Space>*/}
+        {/*]} bodyStyle={{padding: 0}}>*/}
+        {/*    <div style={{*/}
+        {/*        width: "100%",*/}
+        {/*        height: 1000,*/}
+        {/*    }}>*/}
+        {/*        <YakEditor*/}
+        {/*            type={"yak"}*/}
+        {/*            setValue={Content => setParams({...params, Content})}*/}
+        {/*            value={params.Content}*/}
+        {/*        />*/}
+        {/*    </div>*/}
+        {/*</Card>*/}
     </>
 };

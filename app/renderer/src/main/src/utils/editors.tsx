@@ -217,6 +217,8 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     loading?: boolean
 
     noPacketModifier?: boolean
+    noTitle?: boolean
+    noHex?: boolean
 
     extraEditorProps?: EditorProps | any
 
@@ -225,7 +227,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
 }
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
-    return <HTTPPacketEditor {...props} noHeader={true} noPacketModifier={true} language={"yak"}/>
+    return <HTTPPacketEditor noHeader={true} {...props} noPacketModifier={true} language={"yak"}/>
 }
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
@@ -300,14 +302,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
             bordered={props.bordered}
             style={{height: "100%", width: "100%"}}
             title={!props.noHeader && <Space>
-                <span>{isResponse ? "Response" : "Request"}</span>
-                {!props.simpleMode ? <SelectOne
+                {!props.noTitle && <span>{isResponse ? "Response" : "Request"}</span>}
+                {!props.simpleMode ? (!props.noHex && <SelectOne
                     label={" "} colon={false} value={mode} setValue={setMode}
                     data={[
                         {text: "TEXT", value: "text"},
                         {text: "HEX", value: "hex"},
                     ]} size={"small"} formItemStyle={{marginBottom: 0}}
-                /> : <Form.Item style={{marginBottom: 0}}>
+                />) : <Form.Item style={{marginBottom: 0}}>
                     <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
                 </Form.Item>}
                 {mode === "text" && !props.hideSearch && !props.simpleMode && <Input.Search

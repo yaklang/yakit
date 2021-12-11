@@ -9,6 +9,27 @@ import {PluginResultUI, StatusCardProps} from "../../pages/yakitStore/viewers/ba
 
 const {ipcRenderer} = window.require("electron");
 
+export interface StartBruteParams {
+    Type: string
+    Targets: string
+    TargetFile?: string
+    Usernames?: string[]
+    UsernameFile?: string
+    Passwords?: string[]
+    PasswordFile?: string
+
+    Prefix?: string
+
+    Concurrent?: number
+    TargetTaskConcurrent?: number
+
+    OkToStop?: boolean
+    DelayMin?: number
+    DelayMax?: number
+
+    PluginScriptName?: string
+}
+
 export interface BrutePageProp {
 
 }
@@ -16,13 +37,15 @@ export interface BrutePageProp {
 export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [availableTypes, setAvailableTypes] = useState<string[]>([]);
     const [typeLoading, setTypeLoading] = useState(false);
-    const [selectedType, setSelectedType] = useState<string[]>([]);
-
+    const [selectedType, setSelectedType] = useState<string>("");
     const [targetTextRow, setTargetTextRow] = useState(false);
     const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false);
     const [advanced, setAdvanced] = useState(false);
-
     const [taskToken, setTaskToken] = useState("");
+    const [resetTrigger, setResetTrigger] = useState(false);
+    const reset = () => {
+        setResetTrigger(!resetTrigger)
+    }
 
     // execStream
     const [logs, setLogs] = useState<ExecResultLog[]>([]);
@@ -30,26 +53,51 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([]);
     const [loading, setLoading] = useState(false);
 
+    // params
+    const [params, setParams] = useState<StartBruteParams>({
+        Concurrent: 0,
+        DelayMax: 0,
+        DelayMin: 0,
+        OkToStop: false,
+        PasswordFile: "",
+        Passwords: [],
+        PluginScriptName: "",
+        Prefix: "",
+        TargetFile: "",
+        TargetTaskConcurrent: 0,
+        Targets: "",
+        Type: "",
+        UsernameFile: "",
+        Usernames: []
+    });
+
+    useEffect(() => {
+        setParams({...params, Type: selectedType})
+    }, [selectedType])
+
     const loadTypes = () => {
         setTypeLoading(true);
         ipcRenderer.invoke("GetAvailableBruteTypes").then((d: { Types: string[] }) => {
-            setAvailableTypes(d.Types)
+            const types = d.Types.sort((a, b) => a.localeCompare(b))
+            setAvailableTypes(types)
 
             if (selectedType.length <= 0 && d.Types.length > 0) {
-                setSelectedType([d.Types[0]])
+                setSelectedType([types[0]].join(","))
             }
         }).catch(e => {
         }).finally(() => setTimeout(() => setTypeLoading(false), 300))
     }
 
     useEffect(() => {
-        loadTypes()
+        if (availableTypes.length <= 0) {
+            loadTypes()
+        }
 
         const token = randomString(40);
         setTaskToken(token);
         return HoldingIPCRenderExecStream(
             "brute",
-            "BruteTask",
+            "StartBrute",
             token,
             undefined,
             setLogs, setProgress, setStatusCards,
@@ -57,7 +105,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                 setTimeout(() => setLoading(false), 300)
             }
         )
-    }, [])
+    }, [resetTrigger])
 
     return <div style={{height: "100%", backgroundColor: "#fff", width: "100%", display: "flex"}}>
         <div style={{height: "100%", width: 200,}}>
@@ -85,9 +133,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 e.preventDefault()
 
                                 if (included) {
-                                    setSelectedType([...selectedType.filter(target => i !== target)])
+                                    setSelectedType([...selectedType.split(",").filter(target => i !== target)].join(","))
                                 } else {
-                                    setSelectedType([...selectedType.filter(target => i !== target), i])
+                                    setSelectedType([...selectedType.split(",").filter(target => i !== target), i].join(","))
                                 }
                             }}>
                                 {i}
@@ -104,6 +152,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     <Form onSubmitCapture={e => {
                         e.preventDefault()
 
+                        alert(JSON.stringify(params))
+                        setLoading(true)
+                        ipcRenderer.invoke("StartBrute", params, taskToken)
                     }} style={{width: "100%", textAlign: "center", alignItems: "center"}}>
                         <Space direction={"vertical"} style={{width: "100%"}} size={4}>
                             <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
@@ -118,10 +169,17 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                         <Input
                                             style={{marginRight: 8, height: 42, flex: 1}} allowClear={true}
                                         />
-                                        <Button
+                                        {loading ? <Button
+                                            style={{height: 42, width: 180}}
+                                            type={"primary"}
+                                            onClick={() => {
+                                                ipcRenderer.invoke("cancel-StartBrute", taskToken)
+                                            }}
+                                            danger={true}
+                                        >立即停止任务</Button> : <Button
                                             style={{height: 42, width: 180}}
                                             type={"primary"} htmlType={"submit"}
-                                        >开始检测</Button>
+                                        >开始检测</Button>}
                                     </Row>}
                                 </Form.Item>
                             </div>
@@ -139,6 +197,14 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                             setAdvanced(!advanced)
                                         }}/>
                                     </span>
+                                    <Button
+                                        danger={true}
+                                        onClick={()=>{
+                                            reset()
+                                        }}
+                                        size={"small"}
+                                        type={"link"}
+                                    >重置数据</Button>
                                 </Space>
                             </div>
                             {advanced && <div style={{textAlign: "left"}}>

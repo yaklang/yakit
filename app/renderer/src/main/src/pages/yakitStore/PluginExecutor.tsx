@@ -28,7 +28,8 @@ export const HoldingIPCRenderExecStream = (
     setResults?: (res: ExecResultLog[]) => any,
     setProgress?: (res: ExecResultProgress[]) => any,
     setStatusCards?: (res: StatusCardProps[]) => any,
-    onEnd?: () => any
+    onEnd?: () => any,
+    onListened?: () => any
 ) => {
 
     let messages: ExecResultMessage[] = [];
@@ -93,6 +94,11 @@ export const HoldingIPCRenderExecStream = (
                     return
                 }
                 messages.unshift(obj)
+
+                // 只缓存 100 条结果（日志类型 + 数据类型）
+                if (messages.length > 100) {
+                    messages.pop()
+                }
             } catch (e) {
 
             }
@@ -112,6 +118,10 @@ export const HoldingIPCRenderExecStream = (
 
     syncResults()
     let id = setInterval(() => syncResults(), 500)
+
+    if (onListened) {
+        onListened()
+    }
 
     return () => {
         clearInterval(id);
