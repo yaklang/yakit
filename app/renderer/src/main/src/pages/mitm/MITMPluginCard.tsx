@@ -89,7 +89,7 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
             className={"httphacker-tabs"}
             size={"small"} type={"card"} activeKey={tab} onChange={setTab}
             style={{
-                paddingTop: 20
+                paddingTop: 4
             }}
         >
             <Tabs.TabPane key={"history"} tab={"历史请求"}>

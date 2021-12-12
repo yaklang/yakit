@@ -31,6 +31,9 @@ export interface EditorProps {
     theme?: string
     fontSize?: number
 
+    // 自动换行？ true 应该不换行，false 换行
+    noWordWrap?: boolean
+
     noMiniMap?: boolean,
     noLineNumber?: boolean
 
@@ -183,9 +186,14 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                             }
                         }}
                         options={{
-                            readOnly: props.readOnly, scrollBeyondLastLine: false,
-                            fontWeight: "500", fontSize: props.fontSize || 12, showFoldingControls: "always",
-                            showUnused: true, wordWrap: "on", renderLineHighlight: "line",
+                            readOnly: props.readOnly,
+                            scrollBeyondLastLine: false,
+                            fontWeight: "500",
+                            fontSize: props.fontSize || 12,
+                            showFoldingControls: "always",
+                            showUnused: true,
+                            wordWrap: props.noWordWrap ? "off" : "on",
+                            renderLineHighlight: "line",
                             lineNumbers: props.noLineNumber ? "off" : "on",
                             minimap: props.noMiniMap ? {enabled: false} : undefined,
                             lineNumbersMinChars: 4,
