@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {YakScript} from "../../invoker/schema";
 import {YakitLog} from "../../../components/yakitLogSchema";
 import {Card, Col, Divider, Progress, Row, Statistic, Tabs, Timeline, Tree} from "antd";
@@ -9,6 +9,7 @@ import {randomString} from "../../../utils/randomUtil";
 import {ConvertWebsiteForestToTreeData} from "../../../components/WebsiteTree";
 import {WebsiteTreeViewer} from "./WebsiteTree";
 import {BasicTable} from "./BasicTable";
+import {XTerm} from "xterm-for-react";
 
 
 export interface StatusCardProps {
@@ -25,11 +26,42 @@ export interface PluginResultUIProp {
     progress: ExecResultProgress[]
     statusCards: ExecResultStatusCard[]
     script?: YakScript
+
+    onXtermRef?: (ref: any) => any
+}
+
+const idToColor = (id: string) => {
+    switch (true) {
+        case id.includes("success"):
+        case id.includes("成功"):
+        case id.includes("succeeded"):
+        case id.includes("finished"):
+            return "#b7eb8f"
+        case id.includes("error"):
+        case id.includes("失败"):
+        case id.includes("错误"):
+        case id.includes("fatal"):
+        case id.includes("missed"):
+        case id.includes("miss"):
+        case id.includes("failed"):
+        case id.includes("panic"):
+            return "#ffccc7"
+        default:
+            return "#fff"
+    }
 }
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
     const {loading, results, progress, script, statusCards} = props;
-    const [active, setActive] = useState("feature");
+    const [active, setActive] = useState("feature-0");
+    const xtermRef = useRef(null)
+
+    useEffect(() => {
+        if (!xtermRef) {
+            return
+        }
+        if (props.onXtermRef) props.onXtermRef(xtermRef);
+    }, [xtermRef])
 
     let progressBars: { id: string, node: React.ReactNode }[] = [];
     progress.forEach((v) => {
@@ -64,8 +96,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
         {statusCards.length > 0 && <div style={{marginTop: 8, marginBottom: 8}}>
             <Row gutter={8}>
                 {statusCards.map((card, index) => {
-                    return <Col key={card.Id} span={8}>
-                        <Card hoverable={true} bodyStyle={{padding: 12}}>
+                    return <Col key={card.Id} span={8} style={{marginBottom: 8}}>
+                        <Card hoverable={true} bodyStyle={{padding: 12}} style={{
+                            backgroundColor: idToColor(card.Id)
+                        }}>
                             <Statistic title={card.Id} value={card.Data}/>
                         </Card>
                     </Col>
@@ -80,10 +114,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
             activeKey={active}
             onChange={setActive}
         >
-            {(finalFeatures || []).map(i => {
+            {(finalFeatures || []).map((i, index) => {
                 return <Tabs.TabPane
                     tab={YakitFeatureTabName(i.feature, i.params)}
-                    key={"feature"}>
+                    key={`feature-${index}`}>
                     <YakitFeatureRender
                         params={i.params} feature={i.feature}
                         execResultsLog={results}
@@ -100,7 +134,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                         <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
                             {(results || []).filter(i => {
                                 return !(i.level.startsWith("json-feature") || i.level.startsWith("feature-"))
-                            }).splice(0, 25).map((e,index) => {
+                            }).splice(0, 25).map((e, index) => {
                                 return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
                                     <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
                                 </Timeline.Item>
@@ -109,6 +143,9 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                     </Card>
                 </>}
             </Tabs.TabPane>
+            {props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
+                <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
+            </Tabs.TabPane>}
         </Tabs>
     </div>
 };

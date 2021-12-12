@@ -6,6 +6,7 @@ import {HoldingIPCRenderExecStream} from "../../pages/yakitStore/PluginExecutor"
 import {randomString} from "../../utils/randomUtil";
 import {ExecResultLog, ExecResultProgress} from "../../pages/invoker/batch/ExecMessageViewer";
 import {PluginResultUI, StatusCardProps} from "../../pages/yakitStore/viewers/base";
+import {failed} from "../../utils/notification";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -45,12 +46,16 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [resetTrigger, setResetTrigger] = useState(false);
     const reset = () => {
         setResetTrigger(!resetTrigger)
+        setLogs([])
+        setStatusCards([])
+        setProgress([])
     }
 
     // execStream
     const [logs, setLogs] = useState<ExecResultLog[]>([]);
     const [progress, setProgress] = useState<ExecResultProgress[]>([]);
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([]);
+    const [xtermRef, setXtermRef] = useState<any>();
     const [loading, setLoading] = useState(false);
 
     // params
@@ -99,13 +104,13 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
             "brute",
             "StartBrute",
             token,
-            undefined,
+            xtermRef,
             setLogs, setProgress, setStatusCards,
             () => {
                 setTimeout(() => setLoading(false), 300)
             }
         )
-    }, [resetTrigger])
+    }, [resetTrigger, xtermRef])
 
     return <div style={{height: "100%", backgroundColor: "#fff", width: "100%", display: "flex"}}>
         <div style={{height: "100%", width: 200,}}>
@@ -145,12 +150,21 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                 />
             </Card>
         </div>
-        <div style={{flex: "1 1", height: "100%", display: "flex", flexDirection: "column"}}>
+        <div style={{flex: 1, width: "100%", display: "flex", flexDirection: "column"}}>
             <Row style={{marginBottom: 30, marginTop: 35,}}>
                 <Col span={3}/>
                 <Col span={17}>
                     <Form onSubmitCapture={e => {
                         e.preventDefault()
+
+                        if ((!params.Targets) && (!params.TargetFile)) {
+                            failed("不允许空目标")
+                            return
+                        }
+                        if (!params.Type) {
+                            failed("不允许空类型")
+                            return
+                        }
 
                         alert(JSON.stringify(params))
                         setLoading(true)
@@ -168,6 +182,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                     }}>
                                         <Input
                                             style={{marginRight: 8, height: 42, flex: 1}} allowClear={true}
+                                            onChange={e => {
+                                                setParams({...params, Targets: e.target.value})
+                                            }}
                                         />
                                         {loading ? <Button
                                             style={{height: 42, width: 180}}
@@ -199,7 +216,8 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                     </span>
                                     <Button
                                         danger={true}
-                                        onClick={()=>{
+                                        onClick={() => {
+                                            setLoading(false)
                                             reset()
                                         }}
                                         size={"small"}
@@ -239,12 +257,13 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
             {/*        */}
             {/*    </Col>*/}
             {/*</Row>*/}
-            <Card style={{flex: '1 1 0%'}}>
+            <Card style={{flex: 1, overflow: "auto"}}>
                 <PluginResultUI
                     // script={script}
                     loading={loading} progress={progress}
                     results={logs}
                     statusCards={statusCards}
+                    onXtermRef={setXtermRef}
                 />
             </Card>
         </div>
