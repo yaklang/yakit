@@ -144,7 +144,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                 </>}
             </Tabs.TabPane>
             {props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
-                <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
+                <XTerm ref={xtermRef} options={{convertEol: true, rows: 18}}/>
             </Tabs.TabPane>}
         </Tabs>
     </div>

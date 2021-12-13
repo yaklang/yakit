@@ -33,7 +33,6 @@ import {SelectOne} from "../../utils/inputUtil";
 import {MITMPluginOperator} from "./MITMPluginOperator";
 
 const {Text} = Typography;
-const {Step} = Steps;
 const {Item} = Form;
 const {ipcRenderer} = window.require("electron");
 
@@ -366,6 +365,30 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         return currentPacketId
     }
 
+    const downloadCert = () => {
+        return <Button
+            type={"link"}
+            onClick={() => {
+                const text = `wget -e use_proxy=yes -e http_proxy=${addr} http://download-mitm-cert.yaklang.io -O yakit-mitm-cert.pem`
+                showModal({
+                    title: "下载 SSL/TLS 证书以调试 HTTPS",
+                    content: <div>
+                        点击复制以下命令在命令行中一键下载证书
+                        <br/>
+                        <Text copyable={true}>{text}</Text>
+                        <br/>
+                        <br/>
+                        <p style={{color: "red"}}>
+                            如果遇到问题，可以在浏览器中设置代理:{addr} 后 <br/>
+                            访问 http://download-mitm-cert.yaklang.io
+                            以自动下载证书
+                        </p>
+                    </div>
+                })
+            }}
+        >请先下载 SSL/TLS 证书</Button>
+    }
+
     return <div style={{height: "100%", width: "100%"}}>
         {/*{error && <Alert style={{marginBottom: 8}} message={error} type={"error"}/>}*/}
         {/*<div style={{marginLeft: 100, marginRight: 100}}>*/}
@@ -431,6 +454,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                 style={{marginLeft: 12, marginRight: 12, height: "100%"}}>
                         {passiveMode ? <div id={"mitm-plugin-operator-container"} style={{height: "100%"}}>
                             <MITMPluginOperator
+                                proxy={`http://${host}:${port}`}
+                                downloadCertNode={downloadCert()}
                                 onExit={() => {
                                     stop()
                                 }}
@@ -448,31 +473,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             <Col span={haveSideCar ? 15 : 24}
                                  style={{display: "flex", flexDirection: "column", height: "100%"}}>
                                 <PageHeader
-                                    title={'劫持 HTTP Request'}
+                                    title={'劫持 HTTP Request'} subTitle={`http://${host}:${port}`}
                                     style={{marginRight: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 8}}
                                     extra={
                                         <Space>
-                                            <Button
-                                                type={"link"}
-                                                onClick={() => {
-                                                    const text = `wget -e use_proxy=yes -e http_proxy=${addr} http://download-mitm-cert.yaklang.io -O yakit-mitm-cert.pem`
-                                                    showModal({
-                                                        title: "下载 SSL/TLS 证书以调试 HTTPS",
-                                                        content: <div>
-                                                            点击复制以下命令在命令行中一键下载证书
-                                                            <br/>
-                                                            <Text copyable={true}>{text}</Text>
-                                                            <br/>
-                                                            <br/>
-                                                            <p style={{color: "red"}}>
-                                                                如果遇到问题，可以在浏览器中设置代理:{addr} 后 <br/>
-                                                                访问 http://download-mitm-cert.yaklang.io
-                                                                以自动下载证书
-                                                            </p>
-                                                        </div>
-                                                    })
-                                                }}
-                                            >请先下载 SSL/TLS 证书</Button>
+                                            {downloadCert()}
                                             <Button danger={true} type={"primary"}
                                                     onClick={() => {
                                                         stop()

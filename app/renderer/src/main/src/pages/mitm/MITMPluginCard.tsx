@@ -16,11 +16,14 @@ import "../main.css";
 
 
 export interface MITMPluginCardProp {
+    proxy?: string
+    downloadCertNode?: any
     hooks: YakScriptHooks[]
     messages: ExecResultLog[]
     onSubmitScriptContent?: (script: string) => any
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    onExit?: () => any
 }
 
 const defaultScript = mitmPluginTemplateShort;
@@ -28,11 +31,11 @@ const defaultScript = mitmPluginTemplateShort;
 const {ipcRenderer} = window.require("electron");
 
 export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
-    const [selectedYakScriptId, setSelectYakScriptId] = useState();
-    const [yakScript, setYakScript] = useState<YakScript>();
-    const [script, setScript] = useState(defaultScript);
+    // const [selectedYakScriptId, setSelectYakScriptId] = useState();
+    // const [yakScript, setYakScript] = useState<YakScript>();
+    // const [script, setScript] = useState(defaultScript);
     const [tab, setTab] = useState("history");
-    const [userDefined, setUserDefined] = useState(false);
+    // const [userDefined, setUserDefined] = useState(false);
 
     // history
     const [total, setTotal] = useState(0);
@@ -100,10 +103,10 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                         filter={{
                             SearchURL: "",
                             Pagination: {...genDefaultPagination(), Page: 1, Limit: 20}
-                        }} 
+                        }}
                         source={""}
                         onSendToWebFuzzer={props.onSendToWebFuzzer}
-                        />
+                    />
                 </div>
             </Tabs.TabPane>
             {/*<Tabs.TabPane key={"plugin"} tab={"劫持插件"} disabled={true}>*/}

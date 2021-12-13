@@ -1,29 +1,16 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Collapse, Empty, Form, Row, Space, Tag} from "antd";
-import {YakScript, YakScriptHooks} from "../invoker/schema";
+import {Alert, Button, Card, Col, Collapse, Empty, Form, PageHeader, Row, Space, Tag} from "antd";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {showModal} from "../../utils/showModal";
 import {YakModuleList} from "../yakitStore/YakitStorePage";
 import {YakitLogViewers} from "../invoker/YakitLogFormatter";
-import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import ReactJson from "react-json-view";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {mitmPluginTemplateShort} from "../invoker/YakScriptCreator";
 import "../main.css";
-import {YakScriptHooksViewer} from "./MITMPluginCard";
-import {SwitchItem} from "../../utils/inputUtil";
+import {MITMPluginCardProp, YakScriptHooksViewer} from "./MITMPluginCard";
+import {CopyableField, SwitchItem} from "../../utils/inputUtil";
 import {EditorProps, YakCodeEditor} from "../../utils/editors";
-import ReactResizeDetector from "react-resize-detector";
-
-
-export interface MITMPluginCardProp {
-    hooks: YakScriptHooks[]
-    messages: ExecResultLog[]
-    onSubmitScriptContent?: (script: string) => any
-    onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    onExit?: () => any
-}
 
 const defaultScript = mitmPluginTemplateShort;
 
@@ -87,6 +74,12 @@ export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
     return <div id={"plugin-operator"} style={{height: "100%"}}>
         <Row style={{height: "100%"}} gutter={12}>
             <Col span={userDefined ? 12 : 8} style={{height: "100%", overflowY: "auto"}}>
+                <Alert type={"success"} style={{marginBottom: 12, fontSize: 15}} message={<>
+                    <Space direction={"vertical"}>
+                        <Space> 设置代理 <CopyableField text={props.proxy}/> 以扫描流量 </Space>
+                        {props.downloadCertNode}
+                    </Space>
+                </>}/>
                 <Card
                     className={"flex-card"}
                     bordered={false}
