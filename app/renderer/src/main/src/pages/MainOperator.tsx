@@ -257,76 +257,74 @@ export const Main: React.FC<MainProp> = (props) => {
 
     return (
         <Layout style={{width: "100%", height: "100vh"}}>
-            <Layout>
-                <Header
-                    style={{
-                        paddingLeft: 0, paddingRight: 0,
-                        backgroundColor: "#fff", height: 60
-                    }}
-
-                >
-                    <Row>
-                        <Col span={8}>
-                            <Space>
-                                <div style={{marginLeft: 8, textAlign: "center", height: 60}}>
-                                    <Image
-                                        src={YakLogoData} preview={false}
-                                        width={64}
-                                    />
-                                </div>
-                                <YakVersion/>
-                                <Divider type={"vertical"}/>
-                                <YakitVersion/>
-                                {!hideMenu && <Button
-                                    style={{marginLeft: 4, color: "#207ee8"}}
-                                    type={"ghost"} ghost={true}
-                                    onClick={e => {
-                                        setCollapsed(!collapsed)
-                                    }}
-                                    icon={
-                                        collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>
-                                    }
-                                />}
-                                <Button
-                                    style={{marginLeft: 4, color: "#207ee8"}}
-                                    type={"ghost"} ghost={true}
-                                    onClick={e => {
-                                        updateMenuItems()
-                                    }}
-                                    icon={
-                                        <ReloadOutlined/>
-                                    }
-                                >
-
-                                </Button>
-                            </Space>
-                        </Col>
-                        <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                            <Space>
-                                {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>
-                                    通信未加密
-                                </Tag>}
-                                {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
-                                <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag>
-                                <AutoUpdateYakModuleButton/>
-                                <Popconfirm
-                                    title={"确认需要退出当前会话吗？"}
-                                    onConfirm={() => {
-                                        success("退出当前 Yak 服务器成功")
-                                        setEngineStatus("error")
-                                    }}
-                                >
-                                    <Button danger={true}>退出 / 切换 Yak 服务器</Button>
-                                </Popconfirm>
-                            </Space>
-                        </Col>
-                    </Row>
-                </Header>
-                <Content style={{
+            <Header
+                style={{
+                    paddingLeft: 0, paddingRight: 0,
+                    backgroundColor: "#fff", height: 60,
+                    minHeight: 60
+                }}
+            >
+                <Row>
+                    <Col span={8}>
+                        <Space>
+                            <div style={{marginLeft: 8, textAlign: "center", height: 60}}>
+                                <Image
+                                    src={YakLogoData} preview={false}
+                                    width={64}
+                                />
+                            </div>
+                            <YakVersion/>
+                            <Divider type={"vertical"}/>
+                            <YakitVersion/>
+                            {!hideMenu && <Button
+                                style={{marginLeft: 4, color: "#207ee8"}}
+                                type={"ghost"} ghost={true}
+                                onClick={e => {
+                                    setCollapsed(!collapsed)
+                                }}
+                                icon={
+                                    collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>
+                                }
+                            />}
+                            <Button
+                                style={{marginLeft: 4, color: "#207ee8"}}
+                                type={"ghost"} ghost={true}
+                                onClick={e => {
+                                    updateMenuItems()
+                                }}
+                                icon={
+                                    <ReloadOutlined/>
+                                }
+                            >
+                            </Button>
+                        </Space>
+                    </Col>
+                    <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
+                        <Space>
+                            {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>
+                                通信未加密
+                            </Tag>}
+                            {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
+                            <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag>
+                            <AutoUpdateYakModuleButton/>
+                            <Popconfirm
+                                title={"确认需要退出当前会话吗？"}
+                                onConfirm={() => {
+                                    success("退出当前 Yak 服务器成功")
+                                    setEngineStatus("error")
+                                }}
+                            >
+                                <Button danger={true}>退出 / 切换 Yak 服务器</Button>
+                            </Popconfirm>
+                        </Space>
+                    </Col>
+                </Row>
+            </Header>
+            <Content style={{
                     margin: 12, backgroundColor: "#fff",
                     overflow: "auto"
                 }}>
-                    <Layout style={{height: "100%"}}>
+                    <Layout style={{height: "100%",overflow: 'hidden'}}>
                         {!hideMenu && <Sider
                             style={{backgroundColor: "#fff", overflow: "auto"}}
                             collapsed={collapsed}
@@ -444,6 +442,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                             <TabBarDefault {...props}/>
                                         </>
                                     }}
+                                    hideAdd={true}
                                     onEdit={(key: any, event: string) => {
                                         switch (event) {
                                             case "remove":
@@ -514,7 +513,9 @@ export const Main: React.FC<MainProp> = (props) => {
                                             {/*<Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >*/}
                                             <div style={{
                                                 overflowY: NoScrollRoutes.includes(i.route) ? "hidden" : "auto",
-                                                height: "100%"
+                                                overflowX: "hidden",
+                                                height: "100%",
+                                                maxHeight: '100%'
                                             }}>
                                                 {i.node}
                                             </div>
@@ -528,8 +529,7 @@ export const Main: React.FC<MainProp> = (props) => {
                         </Content>
                     </Layout>
 
-                </Content>
-            </Layout>
+            </Content>
         </Layout>
     );
 };
