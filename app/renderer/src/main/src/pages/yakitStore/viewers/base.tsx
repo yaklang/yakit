@@ -124,7 +124,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                     />
                 </Tabs.TabPane>
             })}
-            <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature"}>
+            <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature_0"}>
                 {<>
                     {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
                     <Card
@@ -144,7 +144,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                 </>}
             </Tabs.TabPane>
             {props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
-                <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
+                <XTerm ref={xtermRef} options={{convertEol: true, rows: 18}}/>
             </Tabs.TabPane>}
         </Tabs>
     </div>

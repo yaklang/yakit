@@ -35,12 +35,20 @@ export interface YakitLogFormatterProp {
 export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
     switch (props.level) {
         case "json":
-            return <Space direction={"vertical"} style={{width: "100%"}}>
-                {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
-                <Card title={"JSON 结果输出"} size={"small"} >
-                    <ReactJson src={props.data} enableClipboard={false}/>
-                </Card>
-            </Space>
+            try {
+                const obj = JSON.parse(props.data);
+                return <Space direction={"vertical"} style={{width: "100%"}}>
+                    {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
+                    <Card title={"JSON 结果输出"} size={"small"}>
+                        <ReactJson src={obj} enableClipboard={false}/>
+                    </Card>
+                </Space>
+            }catch (e) {
+                return <Space>
+                    {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
+                    <CodeViewer value={`${props.data}`} height={150} width={"100%"} mode={"json"}/>
+                </Space>
+            }
         case "success":
             return <Space direction={"vertical"} style={{width: "100%"}}>
                 {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
