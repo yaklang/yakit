@@ -153,6 +153,52 @@ service Yak {
   // Bruter
   rpc StartBrute(StartBruteParams) returns (stream ExecResult);
   rpc GetAvailableBruteTypes(Empty) returns (GetAvailableBruteTypesResponse);
+
+  // Tunnel Server RMI/DNSLog
+  rpc GetTunnelServerExternalIP(GetTunnelServerExternalIPParams) returns (GetTunnelServerExternalIPResponse);
+  rpc VerifyTunnelServerDomain(VerifyTunnelServerDomainParams) returns (VerifyTunnelServerDomainResponse) ;
+  rpc StartFacades(StartFacadesParams) returns (stream ExecResult);
+
+}
+
+message VerifyTunnelServerDomainParams {
+  GetTunnelServerExternalIPParams ConnectParams = 1;
+  string Domain = 2;
+}
+
+message VerifyTunnelServerDomainResponse {
+  string Domain = 1;
+  bool Ok = 2;
+  string Reason = 3;
+}
+
+message GetTunnelServerExternalIPParams {
+  string Addr = 1;
+  string Secret = 2;
+}
+
+message GetTunnelServerExternalIPResponse {
+  string IP = 1;
+}
+
+message StartFacadesParams {
+  bool EnableRMIServer = 1;
+  int32 RMILocalPort = 2;
+
+  bool EnableDNSLogServer = 3;
+  int32 DNSLogLocalPort = 4;
+
+  // 连接远程端口参数
+  GetTunnelServerExternalIPParams ConnectParam = 5;
+
+  // 远端端口开放情况
+  int32 RMIRemotePort = 6;
+  int32 DNSLogRemotePort = 7;
+
+  string ExternalDomain = 8;
+
+  //
+  bool Verify = 9;
 }
 
 message GetAvailableBruteTypesResponse {
