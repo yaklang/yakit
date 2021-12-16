@@ -1,0 +1,41 @@
+.codec-spin {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+}
+.codec-spin .ant-spin-container {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: column;
+}
+
+.codec-pageheader-title {
+    padding: 10px 20px 10px 15px;
+}
+
+.codec-function-bar {
+    margin: 0 0 10px 20px;
+}
+
+.codec-content {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: column;
+}
+
+.codec-content .exchange-btn {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.codec-content .exchange-btn .exchange-icon {
+    align-self: center;
+    cursor: pointer;
+}
+.codec-content .exchange-btn .exchange-icon:hover {
+    border: 1px solid #717272;
+    border-radius: 5px;
+    box-shadow: 1px 1px 1px;
+}
