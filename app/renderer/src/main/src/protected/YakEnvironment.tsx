@@ -21,7 +21,7 @@ import {failed, info, success} from "../utils/notification";
 import {QuestionCircleOutlined} from "@ant-design/icons";
 import {YakEditor} from "../utils/editors";
 import {ExternalUrl, openABSFile} from "../utils/openWebsite";
-import {YakLogoData} from "../utils/logo";
+import {YakLogoBanner, YakLogoData} from "../utils/logo";
 import {YakLocalProcess, yakProcess} from "./YakLocalProcess";
 import {saveAuthInfo, YakRemoteAuth} from "./YakRemoteAuth";
 import {showModal} from "../utils/showModal";
@@ -148,13 +148,13 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
             password, caPem,
         };
         render.invoke("connect-yak", {...params}).then(() => {
-            props.onConnected()
-            if (mode === "remote" && allowSave) {
-                saveAuthInfo({
-                    ...params, tls, name,
-                })
+                props.onConnected()
+                if (mode === "remote" && allowSave) {
+                    saveAuthInfo({
+                        ...params, tls, name,
+                    })
+                }
             }
-        }
         ).catch(e => {
             notification["error"]({message: "设置 Yak gRPC 引擎地址失败"})
         }).finally(() => {
@@ -168,8 +168,14 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
         return <Spin
             spinning={localLoading}
         >
-            <div style={{textAlign: "center", marginTop: 50, marginLeft: 150, marginRight: 150, marginBottom: 100}}>
-                <Image src={YakLogoData} preview={false} width={200}/>
+            <div style={{
+                textAlign: "center",
+                marginLeft: 150, marginRight: 150
+            }}>
+                <Image src={YakLogoBanner}
+                       style={{marginTop: 120, marginBottom: 40}}
+                       preview={false} width={400}
+                />
                 <br/>
                 <Text style={{color: "#999"}}>社区专业版：{version}</Text>
                 <SelectOne label={" "} colon={false} data={[
