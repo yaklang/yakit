@@ -124,7 +124,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                     />
                 </Tabs.TabPane>
             })}
-            <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature_0"}>
+            <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
                 {<>
                     {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
                     <Card

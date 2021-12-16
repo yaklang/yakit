@@ -177,7 +177,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             // console.info(data, msg)
             if (msg !== undefined) {
                 messages.push(msg as ExecResultLog)
-                if (messages.length > 50) {
+                if (messages.length > 25) {
                     messages.shift()
                 }
             }
@@ -387,6 +387,24 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 })
             }}
         >请先下载 SSL/TLS 证书</Button>
+    };
+
+    const setFilter = () => {
+        return <Button type={"link"}
+                       onClick={() => {
+                           let m = showDrawer({
+                               placement: "top", height: "50%",
+                               content: <>
+                                   <MITMFilters
+                                       filter={mitmFilter}
+                                       onFinished={(filter) => {
+                                           setMITMFilter({...filter})
+                                           m.destroy()
+                                       }}/>
+                               </>
+                           });
+                       }}
+        >设置过滤器</Button>
     }
 
     return <div style={{height: "100%", width: "100%"}}>
@@ -455,7 +473,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         {passiveMode ? <div id={"mitm-plugin-operator-container"} style={{height: "100%"}}>
                             <MITMPluginOperator
                                 proxy={`http://${host}:${port}`}
-                                downloadCertNode={downloadCert()}
+                                downloadCertNode={downloadCert()} setFilterNode={setFilter()}
                                 onExit={() => {
                                     stop()
                                 }}
@@ -552,21 +570,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                             setHijackAllResponse(!hijackAllResponse)
                                                         }}/>
                                                     </div>}
-                                                    <Button type={"link"}
-                                                            onClick={() => {
-                                                                let m = showDrawer({
-                                                                    placement: "top", height: "50%",
-                                                                    content: <>
-                                                                        <MITMFilters
-                                                                            filter={mitmFilter}
-                                                                            onFinished={(filter) => {
-                                                                                setMITMFilter({...filter})
-                                                                                m.destroy()
-                                                                            }}/>
-                                                                    </>
-                                                                });
-                                                            }}
-                                                    >设置过滤器</Button>
+                                                    {setFilter()}
                                                     <SelectOne
                                                         data={[
                                                             {text: "手动劫持", value: false},

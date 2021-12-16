@@ -20,6 +20,11 @@
     flex-direction: column;
 }
 
+.full-spin {
+    height: 100%;
+    width: 100%;
+}
+
 .flex-card .ant-card-body {
     flex: 1;
     display: flex;

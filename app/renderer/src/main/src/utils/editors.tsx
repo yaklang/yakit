@@ -21,6 +21,7 @@ export type IMonacoEditor = monacoEditor.editor.IStandaloneCodeEditor;
 export type IMonacoCodeEditor = monacoEditor.editor.ICodeEditor;
 
 export interface EditorProps {
+    loading?: boolean
     value?: string
     bytes?: boolean
     valueBytes?: Uint8Array
@@ -56,23 +57,6 @@ export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
         type={props.isRequest ? "http" : (props.isResponse ? "html" : "http")}
         readOnly={true} value={new Buffer(props.value).toString("utf-8")}
     />
-    // return <Row>
-    //     <Col span={12}>
-    //         <div style={{height: 350}}>
-    //
-    //         </div>
-    //     </Col>
-    //     <Col span={12}>
-    //         <HexEditor
-    //             showAscii={true}
-    //             columns={0x10}
-    //             data={props.value}
-    //             // nonce={nonce}
-    //             // onSetValue={handleSetValue}
-    //             // theme={{hexEditor: oneDarkPro}}
-    //         />
-    //     </Col>
-    // </Row>
 }
 
 export const YakEditor: React.FC<EditorProps> = (props) => {
@@ -407,8 +391,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
         >
             <div style={{flex: 1}}>
                 {empty && props.emptyOr}
-
                 {mode === "text" && !empty && <YakEditor
+                    loading={props.loading}
                     type={props.language || (isResponse ? "html" : "http")}
                     value={strValue} readOnly={props.readOnly}
                     setValue={setStrValue}

@@ -78,6 +78,7 @@ export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
                     <Space direction={"vertical"}>
                         <Space> 设置代理 <CopyableField text={props.proxy}/> 以扫描流量 </Space>
                         {props.downloadCertNode}
+                        {props.setFilterNode}
                     </Space>
                 </>}/>
                 <Card
