@@ -1,4 +1,3 @@
-import React from "react";
 import {YakExecutor} from "../pages/invoker/YakExecutor";
 import {
     AimOutlined,
@@ -22,6 +21,8 @@ import {YakitStorePage} from "../pages/yakitStore/YakitStorePage";
 import {PluginOperator} from "../pages/yakitStore/PluginOperator";
 import {failed} from "../utils/notification";
 import {BrutePage} from "../pages/brute/BrutePage";
+import {DataCompare} from "../pages/compare/DataCompare"
+
 
 export enum Route {
     MITM = "mitm",
@@ -33,6 +34,7 @@ export enum Route {
     HTTPFuzzer = "httpFuzzer",
     HTTPHacker = "httpHacker",
     IGNORE = "ignore",
+    DataCompare = "dataCompare",
 
     ModManager = "mod-manager",
     ModManagerLegacy = "mod-manager-legacy",
@@ -129,6 +131,7 @@ export const RouteMenuData: MenuDataProps[] = [
     {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
     {key: Route.Codec, label: "编码与解码", icon: <FireOutlined/>},
     {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined/>},
+    {key: Route.DataCompare, label: "数据对比", icon: <OneToOneOutlined/>},
 
     // {
     //     key: Route.IGNORE, label: "常用工具包", icon: <FireOutlined/>,
@@ -223,6 +226,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <PortScanPage/>
         case Route.Mod_Brute:
             return <BrutePage/>
+        case Route.DataCompare:
+            return <DataCompare/>
         default:
             return <div/>
     }
