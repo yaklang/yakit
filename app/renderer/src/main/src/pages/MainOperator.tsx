@@ -27,7 +27,7 @@ import {
 } from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification";
 import {showModal} from "../utils/showModal";
-import {YakLogoData} from "../utils/logo";
+import {YakLogoBanner, YakLogoData} from "../utils/logo";
 import {AutoUpdateYakModuleButton, YakitVersion, YakVersion} from "../utils/basic";
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema";
 import {randomString} from "../utils/randomUtil";
@@ -268,14 +268,14 @@ export const Main: React.FC<MainProp> = (props) => {
                     <Row>
                         <Col span={8}>
                             <Space>
-                                <div style={{marginLeft: 8, textAlign: "center", height: 60}}>
+                                <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
                                     <Image
-                                        src={YakLogoData} preview={false}
-                                        width={64}
+                                        src={YakLogoBanner} preview={false}
+                                        width={130} style={{marginTop: 6}}
                                     />
                                 </div>
-                                <YakVersion/>
                                 <Divider type={"vertical"}/>
+                                <YakVersion/>
                                 <YakitVersion/>
                                 {!hideMenu && <Button
                                     style={{marginLeft: 4, color: "#207ee8"}}
