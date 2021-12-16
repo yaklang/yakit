@@ -13,7 +13,8 @@ import {
     Space,
     Spin,
     Tag,
-    Typography
+    Typography,
+    Dropdown, Menu,
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -23,11 +24,18 @@ import {InputFloat, InputInteger, InputItem, ManyMultiSelectForString, OneLine, 
 import {fixEncoding} from "../../utils/convertor"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {ColumnWidthOutlined, DeleteOutlined, ProfileOutlined} from "@ant-design/icons";
+import {
+    ColumnWidthOutlined,
+    DeleteOutlined,
+    ProfileOutlined,
+    LeftOutlined,
+    RightOutlined,
+    DownOutlined
+} from "@ant-design/icons";
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard";
 
 
-const {ipcRenderer} = window.require("electron")
+const {ipcRenderer} = window.require("electron");
 
 export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (r: string) => any) => {
     let m = showDrawer({
@@ -93,20 +101,41 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // state
     const [loading, setLoading] = useState(false)
     const [content, setContent] = useState<FuzzerResponse[]>([])
-    const [templates, setTemplates] =
-        useState<{ name: string; template: string }[]>(fuzzerTemplates)
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-    const [debuggingTag, setDebuggingTag] = useState(false)
     const [fuzzToken, setFuzzToken] = useState("")
     const [search, setSearch] = useState("")
 
     const [viewMode, setViewMode] = useState<"split" | "request" | "result">("split");
-
-
     const [refreshTrigger, setRefreshTrigger] = useState(false);
     const refreshRequest = () => {
         setRefreshTrigger(!refreshTrigger);
     }
+
+    // history
+    const [history, setHistory] = useState<string[]>([]);
+    const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number>();
+
+    const withdrawRequest = () => {
+        const targetIndex = history.indexOf(request) - 1;
+        if (targetIndex >= 0) {
+            setRequest(history[targetIndex]);
+            setCurrentHistoryIndex(targetIndex);
+        }
+    }
+    const forwardRequest = () => {
+        const targetIndex = history.indexOf(request) + 1;
+        if (targetIndex < history.length) {
+            setCurrentHistoryIndex(targetIndex);
+            setRequest(history[targetIndex]);
+        }
+    };
+
+    useEffect(() => {
+        if (currentHistoryIndex === undefined) {
+            return
+        }
+        refreshRequest()
+    }, [currentHistoryIndex])
 
     useEffect(() => {
         setIsHttps(!!props.isHttps)
@@ -118,6 +147,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const submitToHTTPFuzzer = () => {
         setLoading(true)
+        if (history.includes(request)) {
+            history.splice(history.indexOf(request), 1)
+        }
+        history.push(request)
+        setHistory([...history])
+
         ipcRenderer.invoke(
             "HTTPFuzzer",
             {
@@ -254,6 +289,38 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 发送数据包
                             </Button>
                         )}
+                        <Space>
+                            <Button
+                                onClick={() => {
+                                    withdrawRequest()
+                                }}
+                                type={"link"}
+                                icon={<LeftOutlined/>}
+                            />
+                            <Button
+                                onClick={() => {
+                                    forwardRequest()
+                                }}
+                                type={"link"} icon={<RightOutlined/>}
+                            />
+                            {history.length > 1 && <Dropdown trigger={["click"]} overlay={() => {
+                                return <Menu>
+                                    {history.map((i, index) => {
+                                        return <Menu.Item
+                                            style={{width: 120}}
+                                            onClick={() => {
+                                                setRequest(i)
+                                                setCurrentHistoryIndex(index)
+                                            }}
+                                        >{`${index}`}</Menu.Item>
+                                    })}
+                                </Menu>
+                            }}>
+                                <Button size={"small"} type={"link"} onClick={e => e.preventDefault()}>
+                                    History <DownOutlined/>
+                                </Button>
+                            </Dropdown>}
+                        </Space>
                         <SwitchItem
                             label={"高级配置"} formItemStyle={{marginBottom: 0}}
                             value={advancedConfig} setValue={setAdvancedConfig}

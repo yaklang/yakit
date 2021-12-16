@@ -56,7 +56,7 @@ export interface InputItemProps {
     textarea?: boolean
     textareaRow?: number
     textareaCol?: number
-    autoSize?: boolean|object
+    autoSize?: boolean | object
     allowClear?: boolean
 
     prefix?: React.ReactNode
@@ -97,10 +97,19 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
                 disabled={!!props.disable}
                 placeholder={props.placeholder}
                 allowClear={props.allowClear}
-                value={props.value} onChange={e => {props.setValue && props.setValue(e.target.value);if(props.isBubbing)e.stopPropagation()}}
-                onPressEnter={(e)=>{if(props.isBubbing)e.stopPropagation()}}
-                onFocus={(e)=>{if(props.isBubbing)e.stopPropagation()}}
-                onClick={(e)=>{if(props.isBubbing)e.stopPropagation()}}
+                value={props.value} onChange={e => {
+                props.setValue && props.setValue(e.target.value);
+                if (props.isBubbing) e.stopPropagation()
+            }}
+                onPressEnter={(e) => {
+                    if (props.isBubbing) e.stopPropagation()
+                }}
+                onFocus={(e) => {
+                    if (props.isBubbing) e.stopPropagation()
+                }}
+                onClick={(e) => {
+                    if (props.isBubbing) e.stopPropagation()
+                }}
             />
         </> : <Input
             style={{width: props.width}}
@@ -109,12 +118,21 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
             disabled={!!props.disable}
             placeholder={props.placeholder}
             allowClear={props.allowClear}
-            value={props.value} onChange={e => {props.setValue && props.setValue(e.target.value);if(props.isBubbing)e.stopPropagation()}}
+            value={props.value} onChange={e => {
+            props.setValue && props.setValue(e.target.value);
+            if (props.isBubbing) e.stopPropagation()
+        }}
             prefix={props.prefix}
             suffix={props.suffix}
-            onPressEnter={(e)=>{if(props.isBubbing)e.stopPropagation()}}
-            onFocus={(e)=>{if(props.isBubbing)e.stopPropagation()}}
-            onClick={(e)=>{if(props.isBubbing)e.stopPropagation()}}
+            onPressEnter={(e) => {
+                if (props.isBubbing) e.stopPropagation()
+            }}
+            onFocus={(e) => {
+                if (props.isBubbing) e.stopPropagation()
+            }}
+            onClick={(e) => {
+                if (props.isBubbing) e.stopPropagation()
+            }}
         />}
 
     </Item>
@@ -311,7 +329,7 @@ export const SelectOne: React.FC<SelectOneProps> = (p) => {
 
 export interface InputBase {
     label?: string | any
-
+    help?: any
     formItemStyle?: CSSProperties
 }
 
@@ -343,7 +361,7 @@ export interface InputNumberProps extends InputBase {
 }
 
 export const InputFloat: React.FC<InputNumberProps> = (p) => {
-    return <Item label={p.label} style={{...p.formItemStyle}}>
+    return <Item label={p.label} style={{...p.formItemStyle}} help={p.help}>
         <InputNumber size={p.size} min={p.min} max={p.max} step={0.01} defaultValue={p.defaultValue} value={p.value}
                      onChange={value => {
                          switch (typeof value) {
@@ -360,7 +378,7 @@ export const InputFloat: React.FC<InputNumberProps> = (p) => {
 
 
 export const InputInteger: React.FC<InputNumberProps> = (p) => {
-    return <Item label={p.label} style={{...p.formItemStyle}}>
+    return <Item label={p.label} style={{...p.formItemStyle}} help={p.help}>
         <InputNumber width={p.width && "100%"} disabled={p.disable} style={{width: p.width}}
                      defaultValue={p.defaultValue} size={p.size}
                      min={p.min} max={p.max} step={1} value={p.value} onChange={e => p.setValue(e as number)}/>
@@ -586,11 +604,11 @@ export interface CopyableFieldProp {
 }
 
 export const CopyableField: React.FC<CopyableFieldProp> = (props) => {
-    return <div style={{width: props.width,maxWidth: props.width}}>
+    return <div style={{width: props.width, maxWidth: props.width}}>
         <Typography.Paragraph
             copyable={!props.noCopy}
             style={{marginBottom: 0, ...props.style}}
-            ellipsis={{rows:1,tooltip: props.tooltip === undefined ? true : props.tooltip}}
+            ellipsis={{rows: 1, tooltip: props.tooltip === undefined ? true : props.tooltip}}
             mark={props.mark}
         >
             {props.text}

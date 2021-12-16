@@ -59,12 +59,15 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
         }).finally(() => setTimeout(() => setLoading(false), 300))
     }
 
-    useEffect(() => {
+    const reload = () => {
         ipcRenderer.invoke("QueryYakScriptNameInExecResult", {}).then((e: { YakScriptNames: string[] }) => {
             setAvailableScriptNames(e.YakScriptNames)
         })
 
         update(1)
+    }
+    useEffect(() => {
+        reload()
     }, [props.trigger])
 
     useEffect(() => {
@@ -102,7 +105,17 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
         >
             <div style={{width: "100%", display: "flex", marginBottom: 20}}>
                 {props.YakScriptName ? undefined : <Card
-                    size={"small"} bordered={true} title={"选择想要查看的插件"}
+                    size={"small"} bordered={true}
+                    title={<Space>
+                        选择插件
+                        <Button
+                            type={"link"} onClick={() => {
+                            reload()
+                        }}
+                            size={"small"} icon={<ReloadOutlined/>}>
+
+                        </Button>
+                    </Space>}
                     style={{marginRight: 20, minWidth: 240}}
                 >
                     <List<string>

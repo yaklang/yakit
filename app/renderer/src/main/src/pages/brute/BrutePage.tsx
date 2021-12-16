@@ -1,12 +1,14 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Form, Layout, List, Checkbox, Row, Upload, Space, Input} from "antd";
-import {InboxOutlined, ReloadOutlined, UploadOutlined} from "@ant-design/icons";
+import {Button, Card, Checkbox, Col, Form, Input, List, Row, Space, Tag} from "antd";
+import {ReloadOutlined} from "@ant-design/icons";
 import {InputInteger, InputItem, SwitchItem} from "../../utils/inputUtil";
-import {HoldingIPCRenderExecStream} from "../../pages/yakitStore/PluginExecutor";
+import {HoldingIPCRenderExecStream} from "../yakitStore/PluginExecutor";
 import {randomString} from "../../utils/randomUtil";
-import {ExecResultLog, ExecResultProgress} from "../../pages/invoker/batch/ExecMessageViewer";
-import {PluginResultUI, StatusCardProps} from "../../pages/yakitStore/viewers/base";
+import {ExecResultLog, ExecResultProgress} from "../invoker/batch/ExecMessageViewer";
+import {PluginResultUI, StatusCardProps} from "../yakitStore/viewers/base";
 import {failed} from "../../utils/notification";
+import {TimeIntervalItem, TimeUnit} from "../../utils/timeInterval";
+import {showDrawer, showModal} from "../../utils/showModal";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -60,16 +62,16 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
 
     // params
     const [params, setParams] = useState<StartBruteParams>({
-        Concurrent: 0,
-        DelayMax: 0,
-        DelayMin: 0,
-        OkToStop: false,
+        Concurrent: 50,
+        DelayMax: 5,
+        DelayMin: 1,
+        OkToStop: true,
         PasswordFile: "",
         Passwords: [],
         PluginScriptName: "",
         Prefix: "",
         TargetFile: "",
-        TargetTaskConcurrent: 0,
+        TargetTaskConcurrent: 1,
         Targets: "",
         Type: "",
         UsernameFile: "",
@@ -166,7 +168,6 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                             return
                         }
 
-                        alert(JSON.stringify(params))
                         setLoading(true)
                         ipcRenderer.invoke("StartBrute", params, taskToken)
                     }} style={{width: "100%", textAlign: "center", alignItems: "center"}}>
@@ -202,18 +203,23 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                             </div>
                             <div style={{textAlign: "right", width: "100%"}}>
                                 <Space>
-                                    <span>
-                                        上传文件：
-                                        <Checkbox checked={allowTargetFileUpload} onClick={e => {
-                                            setAllowTargetFileUpload(!allowTargetFileUpload)
-                                        }}/>
-                                    </span>
-                                    <span>
-                                        高级配置：
-                                        <Checkbox checked={advanced} onClick={e => {
-                                            setAdvanced(!advanced)
-                                        }}/>
-                                    </span>
+                                    <Tag>目标并发:{params.Concurrent}</Tag>
+                                    {(params?.TargetTaskConcurrent || 1) > 1 &&
+                                    <Tag>目标内爆破并发:{params.TargetTaskConcurrent}</Tag>}
+                                    {params?.OkToStop ? <Tag>爆破成功即停止</Tag> : <Tag>爆破成功后仍继续</Tag>}
+                                    {(params?.DelayMax || 0) > 0 && <Tag>随机暂停:{params.DelayMin}-{params.DelayMax}s</Tag>}
+                                    <Button
+                                        type={"link"} size={"small"}
+                                        onClick={e => {
+                                            showModal({
+                                                title: "设置高级参数",
+                                                width: "50%",
+                                                content: <>
+                                                    <BruteParamsForm defaultParams={params} setParams={setParams}/>
+                                                </>
+                                            })
+                                        }}
+                                    >更多参数</Button>
                                     <Button
                                         danger={true}
                                         onClick={() => {
@@ -268,4 +274,59 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
             </Card>
         </div>
     </div>
+};
+
+interface BruteParamsFormProp {
+    defaultParams: StartBruteParams
+    setParams: (p: StartBruteParams) => any
+}
+
+const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
+    const [params, setParams] = useState<StartBruteParams>(props.defaultParams);
+
+    useEffect(() => {
+        if (!params) {
+            return
+        }
+        props.setParams({...params})
+    }, [params])
+
+    return <Form onSubmitCapture={e => {
+        e.preventDefault()
+
+    }} labelCol={{span: 5}} wrapperCol={{span: 14}}>
+        <InputItem label={"爆破用户"} setValue={
+            Usernames => setParams({...params, Usernames: (Usernames || "").split("\n")})}
+                   value={(params?.Usernames || []).join("\n")}
+                   textarea={true} textareaRow={5}
+        />
+        <InputItem label={"爆破密码"} setValue={
+            item => setParams({...params, Passwords: item.split("\n")})}
+                   value={(params?.Passwords || []).join("\n")}
+                   textarea={true} textareaRow={5}
+        />
+
+        <InputInteger
+            label={"目标并发"} help={"同时爆破 n 个目标"}
+            value={params.Concurrent}
+            setValue={e => setParams({...params, Concurrent: e})}
+        />
+        <InputInteger
+            label={"目标内并发"} help={"每个目标同时执行多少爆破任务"}
+            value={params.TargetTaskConcurrent}
+            setValue={e => setParams({...params, TargetTaskConcurrent: e})}
+        />
+        <SwitchItem
+            label={"自动停止"} help={"遇到第一个爆破结果时终止任务"}
+            setValue={OkToStop => setParams({...params, OkToStop})} value={params.OkToStop}
+        />
+        <InputInteger
+            label={"最小延迟"} max={params.DelayMax} min={0}
+            setValue={DelayMin => setParams({...params, DelayMin})} value={params.DelayMin}/>
+        <InputInteger
+            label={"最大延迟"} setValue={DelayMax => setParams({...params, DelayMax})}
+            value={params.DelayMax}
+            min={params.DelayMin}
+        />
+    </Form>
 };
