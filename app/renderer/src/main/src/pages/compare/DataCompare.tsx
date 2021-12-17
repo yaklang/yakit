@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from "react"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
-import { type } from "os"
 
 const { ipcRenderer } = window.require("electron")
 
