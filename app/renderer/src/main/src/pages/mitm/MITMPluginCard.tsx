@@ -17,7 +17,8 @@ import "../main.css";
 
 export interface MITMPluginCardProp {
     proxy?: string
-    downloadCertNode?: any
+    downloadCertNode?: React.ReactNode
+    setFilterNode?: React.ReactNode
     hooks: YakScriptHooks[]
     messages: ExecResultLog[]
     onSubmitScriptContent?: (script: string) => any

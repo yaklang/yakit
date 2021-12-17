@@ -129,7 +129,7 @@ export const RouteMenuData: MenuDataProps[] = [
     {key: Route.ModManager, label: "插件商店", icon: <AppstoreOutlined/>},
     {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined/>},
     {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
-    {key: Route.Codec, label: "编码与解码", icon: <FireOutlined/>},
+    {key: Route.Codec, label: "Codec", icon: <FireOutlined/>},
     {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined/>},
     {key: Route.DataCompare, label: "数据对比", icon: <OneToOneOutlined/>},
 

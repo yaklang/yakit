@@ -21,7 +21,7 @@ mac:
       arch:
         - x64
         - arm64
-  icon: "app/assets/yaklogo.icns"
+  icon: "app/assets/yakitlogo.icns"
 
 linux:
   artifactName: ${productName}-${version}-linux-amd64.${ext}
@@ -36,7 +36,7 @@ win:
     - target: nsis
       arch:
         - x64
-  icon: "app/assets/yaklogo.ico"
+  icon: "app/assets/yakitlogo.ico"
 
 #publish:
 #  - provider: generic

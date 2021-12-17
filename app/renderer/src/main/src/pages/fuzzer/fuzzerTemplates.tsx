@@ -4,7 +4,7 @@ import {InputInteger, InputItem} from "../../utils/inputUtil";
 import {RandInt, RandStrWithLen, RandStrWithMax, RandStrWIthRepeat} from "./templates/Rand";
 import {FuzzWithRange, RangeChar} from "./templates/Range";
 import {EncodeTag, SingleTag} from "./templates/SingleTag";
-import {editor} from "monaco-editor";
+import {editor, IRange, ISelection} from "monaco-editor";
 import "./style.css"
 
 export const fuzzerTemplates = [
@@ -42,17 +42,31 @@ export interface FuzzOperatorParam {
     optional?: string
 }
 
-export const monacoEditorWrite = (editor: IMonacoEditor | IMonacoCodeEditor, text: string) => {
-    if (editor) editor.trigger("keyboard", "type", {text})
+export const monacoEditorWrite = (editor: IMonacoEditor | IMonacoCodeEditor, text: string, range?: IRange) => {
+    if (editor) {
+        if (range) {
+            editor.executeEdits(editor.getValue(), [
+                {range: range, text: text}
+            ])
+            return
+        }
+
+        const selection = editor.getSelection();
+        if (selection) {
+            editor.executeEdits(editor.getValue(), [
+                {range: selection, text: text}
+            ])
+        }
+    }
+}
+
+export const monacoEditorReplace = (editor: IMonacoEditor | IMonacoCodeEditor, text: string) => {
+    if (editor) editor.setValue(text);
 }
 
 export const monacoEditorClear = (editor?: IMonacoEditor | IMonacoCodeEditor) => {
     if (editor) {
-        let range = editor.getModel()?.getFullModelRange();
-        if (range) {
-            editor.setSelection(range)
-            editor.trigger("keyboard", "type", {text: "\b"})
-        }
+        editor.getModel()?.setValue("");
     }
 };
 

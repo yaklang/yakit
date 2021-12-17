@@ -26,7 +26,7 @@ export interface YakScriptRunnerProp {
 export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     const [error, setError] = useState("");
     const [progress, setProgress] = useState<ExecResultProgress[]>([]);
-    const xtermRef = React.useRef<any>(null);
+    const [xtermRef, setXTermRef] = useState<any>();
     const [results, setResults] = useState<ExecResultLog[]>([]);
     const [statusCards, setStatusCards] = useState<ExecResultStatusCard[]>([]);
 
@@ -58,19 +58,11 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
         )
     }, [xtermRef])
 
-
-    useEffect(() => {
-        xtermFit(xtermRef, 200, 8)
-    })
-
     return <Space direction={"vertical"} style={{width: "100%"}}>
-        <div style={{overflowX: "auto"}}>
-            <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}/>
-        </div>
         <PluginResultUI
             script={props.script}
             results={results} statusCards={statusCards} progress={progress}
-            loading={!finished}
+            loading={!finished} onXtermRef={ref => setXTermRef(ref)}
         />
         {/*{progress.length > 0 ? <>*/}
         {/*    {(progress || []).map(e => {*/}
