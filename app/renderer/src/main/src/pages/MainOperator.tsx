@@ -10,7 +10,6 @@ import { CompletionTotal, setCompletions } from "../utils/monacoSpec/yakCompleti
 import { randomString } from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import { genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript } from "./invoker/schema"
-import { showByCursorContainer } from "../utils/showByCursor"
 
 import "./main.css"
 
