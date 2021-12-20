@@ -23,6 +23,22 @@
     flex-flow: column;
 }
 
+.codec-content .editor-body {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.codec-content .editor-body .expand-icon {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+}
+
+.codec-content .editor-body .activation-expand-icon {
+    color: #40a9ff;
+}
+
 .codec-content .exchange-btn {
     width: 100%;
     height: 100%;
