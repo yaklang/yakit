@@ -22,6 +22,7 @@ import {PluginOperator} from "../pages/yakitStore/PluginOperator";
 import {failed} from "../utils/notification";
 import {BrutePage} from "../pages/brute/BrutePage";
 import {DataCompare} from "../pages/compare/DataCompare"
+import {HTTPHistory} from "../components/HTTPHistory";
 
 
 export enum Route {
@@ -69,7 +70,17 @@ export enum Route {
     Mod_Subdomain = "subdomain",
     Mod_Brute = "brute",
     Mod_Crawler = "basic-crawler",
-    Mod_SpaceEngine = "spaceengine"
+    Mod_SpaceEngine = "spaceengine",
+
+    // DB
+    Database = "database",
+    DB_Ports = "db-ports",
+    DB_HTTPRequest = "db-http-request",
+    DB_Domain = "db-domains",
+    DB_ExecResults = "db-exec-results",
+
+    // Handler
+    DataHandler = "data-handler",  // include codec compare
 }
 
 export interface MenuDataProps {
@@ -92,7 +103,7 @@ export const RouteMenuData: MenuDataProps[] = [
         key: Route.HTTPHacker, label: "手工渗透测试", icon: <AimOutlined/>,
     },
     {
-        key: Route.GeneralModule, label: "通用模块", icon: <RocketOutlined/>,
+        key: Route.GeneralModule, label: "扫描模块", icon: <RocketOutlined/>,
         subMenuData: [
             {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
             {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: false},
@@ -129,9 +140,16 @@ export const RouteMenuData: MenuDataProps[] = [
     {key: Route.ModManager, label: "插件商店", icon: <AppstoreOutlined/>},
     {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined/>},
     {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
-    {key: Route.Codec, label: "Codec", icon: <FireOutlined/>},
     {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined/>},
-    {key: Route.DataCompare, label: "数据对比", icon: <OneToOneOutlined/>},
+
+    {
+        key: Route.DataHandler, label: "数据处理",
+        icon: <FunctionOutlined/>,
+        subMenuData: [
+            {key: Route.Codec, label: "Codec", icon: <FireOutlined/>},
+            {key: Route.DataCompare, label: "数据对比", icon: <OneToOneOutlined/>},
+        ],
+    }
 
     // {
     //     key: Route.IGNORE, label: "常用工具包", icon: <FireOutlined/>,
@@ -228,6 +246,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <BrutePage/>
         case Route.DataCompare:
             return <DataCompare/>
+        case Route.DB_Domain:
+            return <HTTPHistory/>
         default:
             return <div/>
     }

@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {ExecResult, YakScript} from "../invoker/schema";
-import {Button, Collapse, Divider, Popconfirm, Space} from "antd";
+import {Button, Collapse, Divider, PageHeader, Popconfirm, Space} from "antd";
 import {XTerm} from "xterm-for-react";
 import {randomString} from "../../utils/randomUtil";
 import {failed, info} from "../../utils/notification";
@@ -178,9 +178,9 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         )
     }, [xtermRef, resetFlag])
 
-    useEffect(() => {
-        xtermFit(xtermRef, undefined, 6)
-    })
+    // useEffect(() => {
+    //     xtermFit(xtermRef, undefined, 6)
+    // })
 
     useEffect(() => {
         if (!loading) {
@@ -190,25 +190,27 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
 
     return <div>
         {props.primaryParamsOnly ? <>
-            <YakScriptParamsSetter
-                {...script}
-                params={[]}
-                loading={loading}
-                onParamsConfirm={(p: YakExecutorParam[]) => {
-                    setLoading(true)
-                    setActivePanels(["console"])
-                    ipcRenderer.invoke("exec-yak-script", {
-                        Params: p,
-                        YakScriptId: props.script.Id,
-                    }, token)
-                }}
-                onCanceled={() => {
-                    ipcRenderer.invoke("cancel-exec-yak-script", token)
-                }}
-                styleSize={props.size}
-                submitVerbose={"开始执行该模块 / Start"}
-                primaryParamsOnly={true}
-            />
+            <PageHeader title={script.ScriptName} style={{marginBottom: 0, paddingBottom: 0}}>
+                <YakScriptParamsSetter
+                    {...script}
+                    params={[]}
+                    loading={loading}
+                    onParamsConfirm={(p: YakExecutorParam[]) => {
+                        setLoading(true)
+                        setActivePanels(["console"])
+                        ipcRenderer.invoke("exec-yak-script", {
+                            Params: p,
+                            YakScriptId: props.script.Id,
+                        }, token)
+                    }}
+                    onCanceled={() => {
+                        ipcRenderer.invoke("cancel-exec-yak-script", token)
+                    }}
+                    styleSize={props.size}
+                    submitVerbose={"开始执行该模块 / Start"}
+                    primaryParamsOnly={true}
+                />
+            </PageHeader>
             <Divider/>
             <PluginResultUI
                 script={script} loading={loading} progress={progress} results={results}

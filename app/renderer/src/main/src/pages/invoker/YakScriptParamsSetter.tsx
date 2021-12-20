@@ -232,9 +232,9 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         return <Form onSubmitCapture={e => {
             e.preventDefault()
             submit()
-        }} {...{labelCol: {span: 7}, wrapperCol: {span: 14}}}>
+        }} {...{labelCol: {span: 7}, wrapperCol: {span: 15}}}>
             {requiredParams.length > 0 && <>
-                <div style={{marginTop: 30}}>
+                <div style={{marginTop: 0}}>
                     {requiredParams.map((i, index) => yakScriptParamToNode(
                         i, true, `params-${index}`, !!props.loading,
                     ))}

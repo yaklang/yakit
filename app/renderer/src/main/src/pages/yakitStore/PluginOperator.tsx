@@ -131,16 +131,16 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         const key = module.GeneralModuleKey
 
         switch (key) {
-            case "basic-crawler":
-                return (
-                    <BasicCrawlerModule
-                        pluginInfo={module}
-                        fromMenu={!!props.fromMenu}
-                        trigger={trigger}
-                        update={update}
-                        updateGroups={updateGroups}
-                    />
-                )
+            // case "basic-crawler":
+            //     return (
+            //         <BasicCrawlerModule
+            //             pluginInfo={module}
+            //             fromMenu={!!props.fromMenu}
+            //             trigger={trigger}
+            //             update={update}
+            //             updateGroups={updateGroups}
+            //         />
+            //     )
             default:
                 return defaultContent()
         }
