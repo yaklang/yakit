@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {ExecResult, YakScript} from "../invoker/schema";
-import {Button, Collapse, Popconfirm, Space} from "antd";
+import {Button, Collapse, Divider, Popconfirm, Space} from "antd";
 import {XTerm} from "xterm-for-react";
 import {randomString} from "../../utils/randomUtil";
 import {failed, info} from "../../utils/notification";
@@ -13,6 +13,7 @@ import {PluginResultUI, StatusCardProps} from "./viewers/base";
 export interface PluginExecutorProp {
     script: YakScript
     size?: any
+    primaryParamsOnly?: boolean
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -130,11 +131,12 @@ export const HoldingIPCRenderExecStream = (
         ipcRenderer.removeAllListeners(`${token}-error`)
         ipcRenderer.removeAllListeners(`${token}-end`)
     }
-}
+};
 
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const {script} = props;
-    const xtermRef = useRef(null);
+    // const xtermRef = useRef(null);
+    const [xtermRef, setXTermRef] = useState<any>();
     const [token, setToken] = useState("");
     const [loading, setLoading] = useState(false);
     const [activePanels, setActivePanels] = useState<string[]>(["params"]);
@@ -177,7 +179,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     }, [xtermRef, resetFlag])
 
     useEffect(() => {
-        xtermFit(xtermRef, 256, 6)
+        xtermFit(xtermRef, undefined, 6)
     })
 
     useEffect(() => {
@@ -187,7 +189,32 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     }, [loading])
 
     return <div>
-        <Collapse
+        {props.primaryParamsOnly ? <>
+            <YakScriptParamsSetter
+                {...script}
+                params={[]}
+                loading={loading}
+                onParamsConfirm={(p: YakExecutorParam[]) => {
+                    setLoading(true)
+                    setActivePanels(["console"])
+                    ipcRenderer.invoke("exec-yak-script", {
+                        Params: p,
+                        YakScriptId: props.script.Id,
+                    }, token)
+                }}
+                onCanceled={() => {
+                    ipcRenderer.invoke("cancel-exec-yak-script", token)
+                }}
+                styleSize={props.size}
+                submitVerbose={"开始执行该模块 / Start"}
+                primaryParamsOnly={true}
+            />
+            <Divider/>
+            <PluginResultUI
+                script={script} loading={loading} progress={progress} results={results}
+                statusCards={statusCards} onXtermRef={setXTermRef}
+            />
+        </> : <Collapse
             activeKey={activePanels}
             onChange={key => {
                 if (Array.isArray(key)) setActivePanels(key)
@@ -242,6 +269,9 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                             YakScriptId: props.script.Id,
                         }, token)
                     }}
+                    onCanceled={() => {
+                        ipcRenderer.invoke("cancel-exec-yak-script", token)
+                    }}
                     styleSize={props.size}
                     submitVerbose={"开始执行该模块 / Start"}
                 />
@@ -249,12 +279,14 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             <Panel key={"console"} showArrow={false} header={<>
                 插件执行结果
             </>} collapsible={results.length <= 0 ? 'disabled' : undefined}>
-                <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
+                <div style={{width: "100%", overflowY: "auto"}}>
+                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
+                </div>
                 <PluginResultUI
                     script={script} loading={loading} progress={progress} results={results}
                     statusCards={statusCards}
                 />
             </Panel>
-        </Collapse>
+        </Collapse>}
     </div>
 };
