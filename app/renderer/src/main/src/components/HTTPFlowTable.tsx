@@ -1,11 +1,10 @@
-import React, {useEffect, useState, useRef, useMemo} from "react"
+import React, {useEffect, useState} from "react"
 import {
     Button,
     Col,
     Empty,
     Form,
     Input,
-    List,
     PageHeader,
     Pagination,
     Popconfirm,
@@ -13,25 +12,19 @@ import {
     Select,
     Space,
     Switch,
-    Table,
     Tag,
-    Typography,
     Popover
 } from "antd"
-import {yakQueryHTTPFlow, YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
-import {showByCursorContainer} from "../utils/showByCursor"
-import {showDrawer, showModal} from "../utils/showModal"
+import { YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
+import { showByCursorMenu } from "../utils/showByCursor"
+import {showDrawer} from "../utils/showModal"
 import {PaginationSchema} from "../pages/invoker/schema"
-import {formatTimestamp} from "../utils/timeUtil"
 import {CheckOutlined, ReloadOutlined, SearchOutlined, CopyOutlined} from "@ant-design/icons"
 import {
     InputItem,
     ManyMultiSelectForString,
-    MultiSelectForString,
-    OneLine,
     SwitchItem
 } from "../utils/inputUtil"
-import {SorterResult} from "antd/lib/table/interface"
 import {HTTPFlowDetail, SendToFuzzerFunc} from "./HTTPFlowDetail"
 import {failed, info, success} from "../utils/notification"
 import "./style.css"
@@ -41,7 +34,6 @@ import {CopyToClipboard} from "react-copy-to-clipboard"
 import {TableResizableColumn} from "./TableResizableColumn"
 
 const {ipcRenderer} = window.require("electron")
-const {Text} = Typography
 
 export interface HTTPHeaderItem {
     Header: string
@@ -414,6 +406,11 @@ export interface YakQueryHTTPFlowResponse {
     Pagination: PaginationSchema
 }
 
+interface CompateData{
+    content:string
+    language:string
+}
+
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData] = useState<HTTPFlow[]>([])
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>(
@@ -430,8 +427,26 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [loading, setLoading] = useState(true)
     const [selected, setSelected] = useState<HTTPFlow>()
 
+    const [compareLeft,setCompareLeft] = useState<CompateData>({content:'',language:'http'})
+    const [compareRight,setCompareRight] = useState<CompateData>({content:'',language:'http'})
+    const [compareState,setCompareState] =useState(0)
+    // 向主页发送对比数据
     useEffect(() => {
-    }, [])
+        if(compareLeft.content){
+            const params={info:compareLeft,type:1}
+            setCompareState(compareState===0?1:0)
+            
+            ipcRenderer.invoke("add-data-compare", params)
+        } 
+    }, [ compareLeft ])
+    useEffect(() => {
+        if(compareRight.content){
+            const params={info:compareRight,type:2}
+            setCompareState(compareState===0?2:0)
+            
+            ipcRenderer.invoke("add-data-compare", params)
+        }
+    }, [ compareRight ])
 
     const update = (
         page?: number,
@@ -1005,6 +1020,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     ipcRenderer.invoke("delete-http-flows-all")
                                     setLoading(true)
                                     info("正在删除...如自动刷新失败请手动刷新")
+                                    setCompareLeft({content:'',language:'http'})
+                                    setCompareRight({content:'',language:'http'})
+                                    setCompareState(0)
                                     setTimeout(() => {
                                         update(1)
                                         setTimeout(() => {
@@ -1422,30 +1440,43 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         return rowData ? (rowData.Hash === selected?.Hash ? "selected" : "") : ""
                     }}
                     onRowContextMenu={(rowData: any, event: React.MouseEvent) => {
-                        showByCursorContainer(
+                        showByCursorMenu(
                             {
-                                content: (
-                                    <>
-                                        <List bordered={true}>
-                                            <List.Item key={"123"}>
-                                                <Button
-                                                    onClick={() => {
-                                                        if (props.onSendToWebFuzzer) {
-                                                            props.onSendToWebFuzzer(
-                                                                rowData.IsHTTPS,
-                                                                new Buffer(
-                                                                    rowData.Request
-                                                                ).toString("utf8")
-                                                            )
-                                                        }
-                                                    }}
-                                                >
-                                                    发送到 Web Fuzzer
-                                                </Button>
-                                            </List.Item>
-                                        </List>
-                                    </>
-                                )
+                                content:[
+                                    {
+                                        title:'发送到 Web Fuzzer',
+                                        onClick:()=>{
+                                            if (props.onSendToWebFuzzer) {
+                                                props.onSendToWebFuzzer(
+                                                    rowData.IsHTTPS,
+                                                    new Buffer(
+                                                        rowData.Request
+                                                    ).toString("utf8")
+                                                )
+                                            }
+                                        }
+                                    },
+                                    {
+                                        title:'发送到对比器左侧',
+                                        onClick:()=>{
+                                            setCompareLeft({
+                                                content:new Buffer(rowData.Request).toString("utf8"),
+                                                language:'http'
+                                            })
+                                        },
+                                        disabled: [false,true,false][compareState]
+                                    },
+                                    {
+                                        title:'发送到对比器右侧',
+                                        onClick:()=>{
+                                            setCompareRight({
+                                                content:new Buffer(rowData.Request).toString("utf8"),
+                                                language:'http'
+                                            })
+                                        },
+                                        disabled: [false,false,true][compareState]
+                                    }
+                                ]
                             },
                             event.clientX,
                             event.clientY
