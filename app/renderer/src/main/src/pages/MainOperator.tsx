@@ -518,9 +518,10 @@ export const Main: React.FC<MainProp> = (props) => {
                                                                 </>
                                                             }
                                                         >
-                                                            <EditOutlined />
+                                                            <EditOutlined className='main-container-cion' />
                                                         </Popover>
                                                         <CloseOutlined
+                                                            className='main-container-cion'
                                                             onClick={() => {
                                                                 setTabLoading(true)
                                                                 const key = i.id
