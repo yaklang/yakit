@@ -26,6 +26,7 @@ import {HTTPHistory} from "../components/HTTPHistory";
 import {PortAssetTable} from "../pages/assetViewer/PortAssetPage";
 import {ExecResultsViewer} from "../pages/invoker/batch/ExecMessageViewer";
 import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable";
+import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage";
 
 
 export enum Route {
@@ -264,9 +265,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
         case Route.DB_Ports:
             return <PortAssetTable/>
         case Route.DB_Domain:
-            return <div>
-                DomainAsset
-            </div>
+            return <DomainAssetPage/>
         case Route.DB_ExecResults:
             return <YakScriptExecResultTable/>
         default:
