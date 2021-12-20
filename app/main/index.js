@@ -8,8 +8,10 @@ const createWindow = () => {
     win = new BrowserWindow({
         width: 1600, height: 1000,
         webPreferences: {
-            nodeIntegration: true,
+            preload: path.join(__dirname, "preload.js"),
+            nodeIntegration: false,
             contextIsolation: false,
+            sandbox: true,
         },
     })
 

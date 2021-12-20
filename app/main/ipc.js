@@ -27,8 +27,8 @@ const global = {
 let _client;
 
 const options = {
-    "grpc.max_receive_message_length": 1024 * 1024 * 100,
-    "grpc.max_send_message_length": 1024 * 1024 * 100
+    "grpc.max_receive_message_length": 1024 * 1024 * 1000,
+    "grpc.max_send_message_length": 1024 * 1024 * 1000
 }
 
 function getClient() {
