@@ -1,0 +1,12 @@
+.auto-antd-spin {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+}
+
+.auto-antd-spin .ant-spin-container {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: column;
+}
