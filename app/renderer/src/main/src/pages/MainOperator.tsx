@@ -69,7 +69,8 @@ interface PageCache {
 }
 
 const singletonRoute = [
-    Route.HTTPHacker, Route.ShellReceiver,
+    Route.HTTPHacker, Route.ShellReceiver, Route.PayloadManager,
+    Route.ModManager, Route.ModManagerLegacy, Route.YakScript,
 ]
 
 export const Main: React.FC<MainProp> = (props) => {
@@ -240,6 +241,33 @@ export const Main: React.FC<MainProp> = (props) => {
         })
     }, [])
 
+    // 新增数据对比页面
+    useEffect(() => {
+        ipcRenderer.on("main-container-add-compare", (e, params) => {
+            const newTabId = `${Route.DataCompare}-[${randomString(49)}]`;
+            const verboseNameRaw = routeKeyToLabel.get(Route.DataCompare) || `${Route.DataCompare}`;
+            appendCache(
+                newTabId,
+                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                ContentByRoute(Route.DataCompare),
+                Route.DataCompare as Route,
+            );
+
+            // 增加加载状态
+            setTabLoading(true)
+            setTimeout(() => {
+                setTabLoading(false)
+            }, 300)
+
+            // 区分新建对比页面还是别的页面请求对比的情况
+            ipcRenderer.invoke("created-data-compare")
+        })
+
+        return () => {
+            ipcRenderer.removeAllListeners("main-container-add-compare")
+        }
+    }, [pageCache])
+
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;
     const routeKeyToLabel = new Map<string, string>();
     RouteMenuData.forEach(k => {
@@ -321,213 +349,212 @@ export const Main: React.FC<MainProp> = (props) => {
                 </Row>
             </Header>
             <Content style={{
-                    margin: 12, backgroundColor: "#fff",
-                    overflow: "auto"
-                }}>
-                    <Layout style={{height: "100%",overflow: 'hidden'}}>
-                        {!hideMenu && <Sider
-                            style={{backgroundColor: "#fff", overflow: "auto"}}
-                            collapsed={collapsed}
-                            // onCollapse={r => {
-                            //     setCollapsed(r)
-                            // }}
-                        >
-                            <Spin spinning={loading}>
-                                <Space direction={"vertical"} style={{
-                                    width: "100%",
-                                }}>
-                                    <Menu
-                                        theme={"light"} style={{}}
-                                        onSelect={(e) => {
-                                            if (e.key === "ignore") {
-                                                return
-                                            }
+                margin: 12, backgroundColor: "#fff",
+                overflow: "auto"
+            }}>
+                <Layout style={{height: "100%", overflow: 'hidden'}}>
+                    {!hideMenu && <Sider
+                        style={{backgroundColor: "#fff", overflow: "auto"}}
+                        collapsed={collapsed}
+                        // onCollapse={r => {
+                        //     setCollapsed(r)
+                        // }}
+                    >
+                        <Spin spinning={loading}>
+                            <Space direction={"vertical"} style={{
+                                width: "100%",
+                            }}>
+                                <Menu
+                                    theme={"light"} style={{}}
+                                    onSelect={(e) => {
+                                        if (e.key === "ignore") {
+                                            return
+                                        }
 
-                                            if (singletonRoute.includes(e.key as Route) && routeExistedCount(e.key as Route) > 0) {
-                                                setCurrentTabByRoute(e.key as Route)
-                                            } else {
-                                                const newTabId = `${e.key}-[${randomString(49)}]`;
-                                                const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`;
-                                                appendCache(
-                                                    newTabId,
-                                                    `${verboseNameRaw}[${pageCache.length + 1}]`,
-                                                    ContentByRoute(e.key),
-                                                    e.key as Route,
-                                                );
-                                                setCurrentTabKey(newTabId)
-                                            }
+                                        if (singletonRoute.includes(e.key as Route) && routeExistedCount(e.key as Route) > 0) {
+                                            setCurrentTabByRoute(e.key as Route)
+                                        } else {
+                                            const newTabId = `${e.key}-[${randomString(49)}]`;
+                                            const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`;
+                                            appendCache(
+                                                newTabId,
+                                                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                                                ContentByRoute(e.key),
+                                                e.key as Route,
+                                            );
+                                            setCurrentTabKey(newTabId)
+                                        }
 
-                                            // 增加加载状态
-                                            setTabLoading(true)
-                                            setTimeout(() => {
-                                                setTabLoading(false)
-                                            }, 300)
+                                        // 增加加载状态
+                                        setTabLoading(true)
+                                        setTimeout(() => {
+                                            setTabLoading(false)
+                                        }, 300)
 
-                                            setRoute(e.key)
-                                        }}
-                                        mode={"inline"}
-                                    >
-                                        {menuItems.map(i => {
-                                            if (i.Group === "UserDefined") {
-                                                i.Group = "社区插件"
+                                        setRoute(e.key)
+                                    }}
+                                    mode={"inline"}
+                                >
+                                    {menuItems.map(i => {
+                                        if (i.Group === "UserDefined") {
+                                            i.Group = "社区插件"
+                                        }
+                                        return <Menu.SubMenu
+                                            icon={<EllipsisOutlined/>}
+                                            key={i.Group} title={i.Group}
+                                        >
+                                            {i.Items.map(item => {
+                                                return <MenuItem
+                                                    icon={<EllipsisOutlined/>}
+                                                    key={`plugin:${item.Group}:${item.YakScriptId}`}
+                                                >
+                                                    {item.Verbose}
+                                                </MenuItem>
+                                            })}
+                                        </Menu.SubMenu>
+                                    })}
+                                    {(RouteMenuData || []).map(i => {
+                                        if (i.subMenuData) {
+                                            if (i.key === `${Route.GeneralModule}`) {
+                                                const extraMenus = extraGeneralModule.map(i => {
+                                                    return {
+                                                        icon: <EllipsisOutlined/>,
+                                                        key: `plugin:${i.Id}`,
+                                                        label: i.GeneralModuleVerbose,
+                                                    } as MenuDataProps
+                                                })
+                                                i.subMenuData.push(...extraMenus)
+                                                let subMenuMap = new Map<string, MenuDataProps>();
+                                                i.subMenuData.forEach(e => {
+                                                    subMenuMap.set(e.key as string, e)
+                                                })
+                                                i.subMenuData = []
+                                                subMenuMap.forEach(v => i.subMenuData?.push(v));
+                                                i.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
                                             }
+                                            i.subMenuData.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0))
                                             return <Menu.SubMenu
-                                                icon={<EllipsisOutlined/>}
-                                                key={i.Group} title={i.Group}
+                                                icon={i.icon} key={i.key} title={i.label}
                                             >
-                                                {i.Items.map(item => {
-                                                    return <MenuItem
-                                                        icon={<EllipsisOutlined/>}
-                                                        key={`plugin:${item.Group}:${item.YakScriptId}`}
-                                                    >
-                                                        {item.Verbose}
+                                                {(i.subMenuData || []).map(subMenu => {
+                                                    return <MenuItem icon={subMenu.icon} key={subMenu.key}
+                                                                     disabled={subMenu.disabled}>
+                                                        {subMenu.label}
                                                     </MenuItem>
                                                 })}
                                             </Menu.SubMenu>
-                                        })}
-                                        {(RouteMenuData || []).map(i => {
-                                            if (i.subMenuData) {
-                                                if (i.key === `${Route.GeneralModule}`) {
-                                                    const extraMenus = extraGeneralModule.map(i => {
-                                                        return {
-                                                            icon: <EllipsisOutlined/>,
-                                                            key: `plugin:${i.Id}`,
-                                                            label: i.GeneralModuleVerbose,
-                                                        } as MenuDataProps
-                                                    })
-                                                    i.subMenuData.push(...extraMenus)
-                                                    let subMenuMap = new Map<string, MenuDataProps>();
-                                                    i.subMenuData.forEach(e => {
-                                                        subMenuMap.set(e.key as string, e)
-                                                    })
-                                                    i.subMenuData = []
-                                                    subMenuMap.forEach(v => i.subMenuData?.push(v));
-                                                    i.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
-                                                }
-                                                i.subMenuData.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0))
-                                                return <Menu.SubMenu
-                                                    icon={i.icon} key={i.key} title={i.label}
-                                                >
-                                                    {(i.subMenuData || []).map(subMenu => {
-                                                        return <MenuItem icon={subMenu.icon} key={subMenu.key}
-                                                                         disabled={subMenu.disabled}>
-                                                            {subMenu.label}
-                                                        </MenuItem>
-                                                    })}
-                                                </Menu.SubMenu>
-                                            }
-                                            return <MenuItem icon={i.icon} key={i.key} disabled={i.disabled}>
-                                                {i.label}
-                                            </MenuItem>
-                                        })}
-                                    </Menu>
-                                </Space>
-                            </Spin>
-                        </Sider>}
-                        <Content style={{
-                            overflow: "hidden",
-                            backgroundColor: "#fff",
-                            marginLeft: 12, height: "100%",
-                            display: 'flex',
-                        }}>
-                            <div style={{padding: 12, paddingTop: 8, overflow: 'hidden', display: 'flex', flex: '1'}}>
-                                {pageCache.length > 0 ? <Tabs
-                                    style={{display: 'flex', flex: '1'}}
-                                    className='main-content-tabs'
-                                    activeKey={currentTabKey}
-                                    onChange={setCurrentTabKey}
-                                    size={"small"} type={"editable-card"}
-                                    renderTabBar={(props, TabBarDefault) => {
-                                        return <>
-                                            <TabBarDefault {...props}/>
-                                        </>
-                                    }}
-                                    hideAdd={true}
-                                    onEdit={(key: any, event: string) => {
-                                        switch (event) {
-                                            case "remove":
-                                                // hooked by tabs closeIcon
-                                                return
-                                            case "add":
-                                                if (collapsed) {
-                                                    setCollapsed(false)
-                                                } else {
-                                                    info("请从左边菜单连选择需要新建的 Tab 窗口")
-                                                }
-                                                return
                                         }
-
-                                    }}
-                                >
-
-                                    {pageCache.map(i => {
-                                        return <Tabs.TabPane
-                                            key={i.id} tab={i.verbose}
-                                            closeIcon={<Space>
-                                                <Popover
-                                                    trigger={"click"}
-                                                    title={"修改名称"}
-                                                    content={<>
-                                                        <Input size={"small"}
-                                                               defaultValue={i.verbose}
-                                                               onBlur={(e) => {
-                                                                   updateCacheVerbose(i.id, e.target.value)
-                                                               }}/>
-                                                    </>}
-                                                >
-                                                    <EditOutlined/>
-                                                </Popover>
-                                                <CloseOutlined
-                                                    onContextMenu={(e) => {
-                                                        showByCursorContainer({
-                                                            content: <>
-                                                                <Space direction={"vertical"}>
-                                                                    <Button
-                                                                        type={"link"}
-                                                                        onClick={() => {
-                                                                            closeAllCache()
-                                                                        }}
-                                                                        size={"small"}>关闭所有Tabs</Button>
-                                                                    <Button type={"link"}
-                                                                            onClick={() => closeCacheByRoute(i.route)}
-                                                                            size={"small"}>关闭同类Tabs</Button>
-                                                                    <Button type={"link"}
-                                                                            onClick={() => closeOtherCache(i.id)}
-                                                                            size={"small"}>关闭其他Tabs</Button>
-                                                                </Space>
-                                                            </>
-                                                        }, e.clientX, e.clientY)
-                                                    }}
-                                                    onClick={() => {
-                                                        setTabLoading(true)
-                                                        const key = i.id;
-                                                        const targetIndex = getCacheIndex(key)
-                                                        if (targetIndex > 0 && pageCache[targetIndex - 1]) {
-                                                            const targetCache = pageCache[targetIndex - 1];
-                                                            setCurrentTabKey(targetCache.id)
-                                                        }
-                                                        removeCache(key);
-                                                        setTimeout(() => setTabLoading(false), 300)
-                                                    }}/>
-                                            </Space>}>
-                                            {/*<Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >*/}
-                                            <div style={{
-                                                overflowY: NoScrollRoutes.includes(i.route) ? "hidden" : "auto",
-                                                overflowX: "hidden",
-                                                height: "100%",
-                                                maxHeight: '100%'
-                                            }}>
-                                                {i.node}
-                                            </div>
-                                            {/*</Spin>*/}
-                                        </Tabs.TabPane>
+                                        return <MenuItem icon={i.icon} key={i.key} disabled={i.disabled}>
+                                            {i.label}
+                                        </MenuItem>
                                     })}
-                                </Tabs> : <>
+                                </Menu>
+                            </Space>
+                        </Spin>
+                    </Sider>}
+                    <Content style={{
+                        overflow: "hidden",
+                        backgroundColor: "#fff",
+                        marginLeft: 12, height: "100%",
+                        display: 'flex',
+                    }}>
+                        <div style={{padding: 12, paddingTop: 8, overflow: 'hidden', display: 'flex', flex: '1'}}>
+                            {pageCache.length > 0 ? <Tabs
+                                style={{display: 'flex', flex: '1'}}
+                                className='main-content-tabs'
+                                activeKey={currentTabKey}
+                                onChange={setCurrentTabKey}
+                                size={"small"} type={"editable-card"}
+                                renderTabBar={(props, TabBarDefault) => {
+                                    return <>
+                                        <TabBarDefault {...props}/>
+                                    </>
+                                }}
+                                hideAdd={true}
+                                onEdit={(key: any, event: string) => {
+                                    switch (event) {
+                                        case "remove":
+                                            // hooked by tabs closeIcon
+                                            return
+                                        case "add":
+                                            if (collapsed) {
+                                                setCollapsed(false)
+                                            } else {
+                                                info("请从左边菜单连选择需要新建的 Tab 窗口")
+                                            }
+                                            return
+                                    }
+                                }}
+                            >
 
-                                </>}
-                            </div>
-                        </Content>
-                    </Layout>
+                                {pageCache.map(i => {
+                                    return <Tabs.TabPane
+                                        key={i.id} tab={i.verbose}
+                                        closeIcon={<Space>
+                                            <Popover
+                                                trigger={"click"}
+                                                title={"修改名称"}
+                                                content={<>
+                                                    <Input size={"small"}
+                                                           defaultValue={i.verbose}
+                                                           onBlur={(e) => {
+                                                               updateCacheVerbose(i.id, e.target.value)
+                                                           }}/>
+                                                </>}
+                                            >
+                                                <EditOutlined/>
+                                            </Popover>
+                                            <CloseOutlined
+                                                onContextMenu={(e) => {
+                                                    showByCursorContainer({
+                                                        content: <>
+                                                            <Space direction={"vertical"}>
+                                                                <Button
+                                                                    type={"link"}
+                                                                    onClick={() => {
+                                                                        closeAllCache()
+                                                                    }}
+                                                                    size={"small"}>关闭所有Tabs</Button>
+                                                                <Button type={"link"}
+                                                                        onClick={() => closeCacheByRoute(i.route)}
+                                                                        size={"small"}>关闭同类Tabs</Button>
+                                                                <Button type={"link"}
+                                                                        onClick={() => closeOtherCache(i.id)}
+                                                                        size={"small"}>关闭其他Tabs</Button>
+                                                            </Space>
+                                                        </>
+                                                    }, e.clientX, e.clientY)
+                                                }}
+                                                onClick={() => {
+                                                    setTabLoading(true)
+                                                    const key = i.id;
+                                                    const targetIndex = getCacheIndex(key)
+                                                    if (targetIndex > 0 && pageCache[targetIndex - 1]) {
+                                                        const targetCache = pageCache[targetIndex - 1];
+                                                        setCurrentTabKey(targetCache.id)
+                                                    }
+                                                    removeCache(key);
+                                                    setTimeout(() => setTabLoading(false), 300)
+                                                }}/>
+                                        </Space>}>
+                                        {/*<Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >*/}
+                                        <div style={{
+                                            overflowY: NoScrollRoutes.includes(i.route) ? "hidden" : "auto",
+                                            overflowX: "hidden",
+                                            height: "100%",
+                                            maxHeight: '100%'
+                                        }}>
+                                            {i.node}
+                                        </div>
+                                        {/*</Spin>*/}
+                                    </Tabs.TabPane>
+                                })}
+                            </Tabs> : <>
+
+                            </>}
+                        </div>
+                    </Content>
+                </Layout>
 
             </Content>
         </Layout>

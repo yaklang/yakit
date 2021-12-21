@@ -27,8 +27,8 @@ const global = {
 let _client;
 
 const options = {
-    "grpc.max_receive_message_length": 1024 * 1024 * 100,
-    "grpc.max_send_message_length": 1024 * 1024 * 100
+    "grpc.max_receive_message_length": 1024 * 1024 * 1000,
+    "grpc.max_send_message_length": 1024 * 1024 * 1000
 }
 
 function getClient() {
@@ -124,5 +124,8 @@ module.exports = {
 
         // misc
         require("./handlers/misc")(win, getClient);
+        
+        // 数据对比
+        require("./handlers/dataCompare")(win, getClient);
     }
 }

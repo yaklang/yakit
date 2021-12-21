@@ -63,48 +63,6 @@ FRmP2Nx+zifhMNe300xfHzqNeN3D+Uix6+GOkBoYI65KNPGqwi8uy9HlJVx3Jkht
 WOG+9PGLcr4IRJx5LUEZ5FB1
 -----END CERTIFICATE-----`
 
-/**
- *     const [localYakStarted, setLocalYakStarted] = useState(false);
- const [localError, setLocalError] = useState<React.ReactNode>();
-
- const startError = () => {
-        setLocalError(<>
-            <Card title={"启动 Yak 异常"}
-                  style={{backgroundColor: "rgba(255,244,223,0)"}}
-                  bordered={false} hoverable={true}
-            >
-                <p style={{fontSize: 12, color: "red"}}>yakit 需要 yak gRPC 服务器才可以启动</p>
-                <br/>
-                请检查：<br/>
-                1. Yak 是否正常安装？yak 是否在环境变量中？ <br/>
-                2. 可以尝试执行一下：<Text mark={true} copyable={true}>yak grpc --port {port || "[可用端口]"}</Text> 看是否可以正常启动
-                <br/>
-                <br/>
-                如果需要安装 yak 核心请参考 <ExternalUrl url={"http://www.yaklang.io/docs/startup"} title={"Yaklang.io 安装引导"}/>
-                <br/>
-                <Tabs>
-                    <Tabs.TabPane key={"macos-linux"} tab={"MacOS / Linux 一键安装"}>
-                        <Text mark={true} copyable={true}>
-                            {"bash <(curl -s http://oss.yaklang.io/install-latest-yak.sh)"}
-                        </Text>
-                    </Tabs.TabPane>
-                    <Tabs.TabPane key={"windows"} tab={"Windows 一键安装"}>
-                        <Text mark={true} copyable={true}>
-                            {"powershell (new-object System.Net.WebClient).DownloadFile('https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_windows_amd64.exe','yak_windows_amd64.exe') && yak_windows_amd64.exe install && del /f yak_windows_amd64.exe"}
-                        </Text>
-                    </Tabs.TabPane>
-                </Tabs>
-                <br/>
-                <p style={{fontSize: 12, color: "red"}}>
-                    如果安装遇到问题，请务必参考官网安装流程 <ExternalUrl url={"http://www.yaklang.io/docs/startup"}
-                                                      title={"Yaklang.io 安装引导"}/>
-                </p>
-            </Card>
-        </>)
-        setLocalYakStarted(false)
-    }
- */
-
 
 export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
     const [connected, setConnected] = useState(false);
