@@ -203,6 +203,10 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                             YakScriptId: props.script.Id,
                         }, token)
                     }}
+                    onClearData={()=>{
+                        xtermClear(xtermRef)
+                        reset()
+                    }}
                     onCanceled={() => {
                         ipcRenderer.invoke("cancel-exec-yak-script", token)
                     }}
@@ -270,6 +274,10 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                             Params: p,
                             YakScriptId: props.script.Id,
                         }, token)
+                    }}
+                    onClearData={()=>{
+                        xtermClear(xtermRef)
+                        reset()
                     }}
                     onCanceled={() => {
                         ipcRenderer.invoke("cancel-exec-yak-script", token)

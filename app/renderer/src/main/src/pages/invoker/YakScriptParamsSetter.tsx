@@ -26,6 +26,7 @@ export interface YakScriptParamsSetterProps extends YakScript {
     params: YakExecutorParam[]
     onParamsConfirm: (params: YakExecutorParam[]) => any
     onCanceled?: () => any
+    onClearData?: () => any
     primaryParamsOnly?: boolean
     submitVerbose?: string
 
@@ -231,6 +232,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     if (props.primaryParamsOnly) {
         return <Form onSubmitCapture={e => {
             e.preventDefault()
+
             submit()
         }} {...{labelCol: {span: 7}, wrapperCol: {span: 15}}}>
             {requiredParams.length > 0 && <>
@@ -242,6 +244,11 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                style={{width: "100%", textAlign: "right"}} labelCol={{xl: 6, xxl: 4}}
                     >
                         <Space>
+                            <Button type={"link"} size={"small"} danger={true} onClick={()=>{
+                                if (props.onClearData){
+                                    props.onClearData()
+                                }
+                            }}>清除缓存</Button>
                             <Popover title={"设置额外参数"} trigger={"click"}
                                      content={<div style={{width: 700}}>
                                          {renderExtraParams(true)}
