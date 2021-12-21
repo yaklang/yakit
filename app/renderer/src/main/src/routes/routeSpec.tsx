@@ -23,6 +23,10 @@ import {failed} from "../utils/notification";
 import {BrutePage} from "../pages/brute/BrutePage";
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory";
+import {PortAssetTable} from "../pages/assetViewer/PortAssetPage";
+import {ExecResultsViewer} from "../pages/invoker/batch/ExecMessageViewer";
+import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable";
+import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage";
 
 
 export enum Route {
@@ -75,7 +79,7 @@ export enum Route {
     // DB
     Database = "database",
     DB_Ports = "db-ports",
-    DB_HTTPRequest = "db-http-request",
+    DB_HTTPHistory = "db-http-request",
     DB_Domain = "db-domains",
     DB_ExecResults = "db-exec-results",
 
@@ -149,8 +153,18 @@ export const RouteMenuData: MenuDataProps[] = [
             {key: Route.Codec, label: "Codec", icon: <FireOutlined/>},
             {key: Route.DataCompare, label: "数据对比", icon: <OneToOneOutlined/>},
         ],
-    }
+    },
 
+    {
+        key: Route.Database, label: "数据库",
+        icon: <FunctionOutlined/>,
+        subMenuData: [
+            {key: Route.DB_HTTPHistory, label: "HTTP History", icon: <OneToOneOutlined/>},
+            {key: Route.DB_Ports, label: "端口资产", icon: <OneToOneOutlined/>},
+            {key: Route.DB_Domain, label: "域名资产", icon: <FireOutlined/>},
+            {key: Route.DB_ExecResults, label: "插件执行结果", icon: <FireOutlined/>},
+        ],
+    },
     // {
     //     key: Route.IGNORE, label: "常用工具包", icon: <FireOutlined/>,
     //     subMenuData: [
@@ -246,8 +260,14 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <BrutePage/>
         case Route.DataCompare:
             return <DataCompare/>
-        case Route.DB_Domain:
+        case Route.DB_HTTPHistory:
             return <HTTPHistory/>
+        case Route.DB_Ports:
+            return <PortAssetTable/>
+        case Route.DB_Domain:
+            return <DomainAssetPage/>
+        case Route.DB_ExecResults:
+            return <YakScriptExecResultTable/>
         default:
             return <div/>
     }

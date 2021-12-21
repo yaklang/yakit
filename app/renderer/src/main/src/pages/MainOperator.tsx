@@ -71,6 +71,9 @@ interface PageCache {
 const singletonRoute = [
     Route.HTTPHacker, Route.ShellReceiver, Route.PayloadManager,
     Route.ModManager, Route.ModManagerLegacy, Route.YakScript,
+
+    // database
+    Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
 ]
 
 export const Main: React.FC<MainProp> = (props) => {
@@ -376,9 +379,10 @@ export const Main: React.FC<MainProp> = (props) => {
                                         } else {
                                             const newTabId = `${e.key}-[${randomString(49)}]`;
                                             const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`;
+                                            const verbose = singletonRoute.includes(e.key as Route) ? `${verboseNameRaw}` : `${verboseNameRaw}[${pageCache.length + 1}]`
                                             appendCache(
                                                 newTabId,
-                                                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                                                verbose,
                                                 ContentByRoute(e.key),
                                                 e.key as Route,
                                             );
