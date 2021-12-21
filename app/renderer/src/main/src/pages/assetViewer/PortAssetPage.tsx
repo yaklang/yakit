@@ -167,6 +167,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             {
                 title: "服务指纹",
                 render: (i: PortAsset) => i.ServiceType ? <div style={{width: 230, overflowX: 'hidden'}}><CopyableField
+                    noCopy={true}
                     text={i.ServiceType}/></div> : "", width: 250,
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return params && setParams && <TableFilterDropdownForm
@@ -182,6 +183,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             {
                 title: "Title",
                 render: (i: PortAsset) => i.ServiceType ? <div style={{width: 150, overflow: "auto"}}><CopyableField
+                    noCopy={true}
                     text={i.HtmlTitle}/></div> : "", width: 170,
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return params && setParams && <TableFilterDropdownForm
