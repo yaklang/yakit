@@ -1,18 +1,36 @@
 import React, {useEffect, useState} from "react";
 import {YakScript, YakScriptParam} from "./schema";
-import {Button, Card, Form, Input, InputNumber, Space, Switch, Tooltip, Typography, Spin} from "antd";
+import {
+    Button,
+    Card,
+    Form,
+    Input,
+    InputNumber,
+    Space,
+    Switch,
+    Tooltip,
+    Typography,
+    Spin,
+    Row,
+    Col,
+    Modal,
+    Popover
+} from "antd";
 import {QuestionOutlined} from "@ant-design/icons";
 import {YakExecutorParam} from "./YakExecutorParams";
+import {showModal} from "../../utils/showModal";
 
-const { Title } = Typography;
+const {Title} = Typography;
 
 export interface YakScriptParamsSetterProps extends YakScript {
     params: YakExecutorParam[]
     onParamsConfirm: (params: YakExecutorParam[]) => any
+    onCanceled?: () => any
+    primaryParamsOnly?: boolean
     submitVerbose?: string
 
     styleSize?: "big" | "small"
-    loading?:boolean
+    loading?: boolean
 }
 
 export const getValueFromParams = (params: YakExecutorParam[], key: string): any => {
@@ -86,13 +104,13 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     })
     const requiredParams: YakScriptParam[] = groupToParams.get("required") || [];
 
-    const yakScriptParamToNode = (i: YakScriptParam, required: boolean,key:string,disabled:boolean) => {
+    const yakScriptParamToNode = (i: YakScriptParam, required: boolean, key: string, disabled: boolean, formItemStyle?: React.CSSProperties) => {
         return <Form.Item
-            labelCol={{xl:6,xxl:4}}
+            labelCol={{xl: 6, xxl: 4}}
             key={key}
-            style={{marginBottom: i.Help ? undefined : 8}}
+            style={{marginBottom: 8, ...formItemStyle}}
             label={<Space size={2}>
-                <>{i.FieldVerbose && `${i.FieldVerbose}/`}{i.Field}</>
+                <>{i.FieldVerbose ? `${i.FieldVerbose}` : `${i.Field}`}</>
                 {i.Help && <Tooltip title={i.Help}>
                     <Button icon={<QuestionOutlined/>} type={"link"} size={"small"}/>
                 </Tooltip>}
@@ -126,12 +144,130 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
 
         setGroupStates(newGroups)
     };
+
+    const submit = () => {
+        let params = originParams.filter(i => {
+            // 处理 Bool 的情况
+            if (isBoolean(i.TypeVerbose)) {
+                return !!i.Value
+            }
+
+            // 真实的为空值
+            if (!(i.Value || i.DefaultValue)) {
+                if (i.Required) {
+                    i.Value = `${i.TypeVerbose}_undefined`
+                    return true
+                } else {
+                    return false
+                }
+            }
+
+            // 处理其他参数的情况
+            return true
+        })
+        props.onParamsConfirm(params.map(i => {
+            return {Key: i.Field, Value: i.Value || i.DefaultValue}
+        }))
+    }
+
     const isGroupHidden = (group: string, defaultValue: boolean) => {
         let res = defaultValue;
         groupStates.filter(i => i.group === group).forEach(i => {
             res = i.hidden
         })
         return res;
+    };
+
+    const renderExtraParams = (defaultExpand?: boolean) => {
+        return <>
+            {
+                extraGroup.length <= 1 ? <>
+                    <Title level={5} style={{fontSize: 14}}>
+                        <Space>
+                        <span>
+                            默认参数组
+                            </span>
+                            <Switch
+                                checked={!isGroupHidden("default", !defaultExpand)}
+                                onChange={(res) => {
+                                    setHideGroup('default', !res)
+                                }}
+                            />
+                        </Space>
+                    </Title>
+                    {!isGroupHidden("default", !defaultExpand) && <>
+                        {(groupToParams.get("default") || []).map((i: YakScriptParam, index) => yakScriptParamToNode(i, false, `defaultParamsGroup-${index}`, !!props.loading))}
+                    </>}
+                </> : <>
+                    {extraGroup.map((i, index) => {
+                        if ((groupToParams.get(i) || []).length <= 0) {
+                            return <></>
+                        }
+                        return <div key={`${index}`}>
+                            <Title level={5} style={{fontSize: 14}}>
+                                <Space>
+                                    <span>
+                                    参数组：{i}
+                                    </span>
+                                    <Switch
+                                        size={"small"}
+                                        checked={!isGroupHidden(i, !defaultExpand)}
+                                        onChange={(res) => {
+                                            setHideGroup(i, !res)
+                                        }}
+                                    />
+                                </Space>
+                            </Title>
+                            {!isGroupHidden(i, !defaultExpand) && <>
+                                {(groupToParams.get(i) || []).map((i: YakScriptParam, index) => yakScriptParamToNode(i, false, `paramsGroup-${index}`, !!props.loading))}
+                            </>}
+                        </div>
+                    })}
+                </>
+            }
+        </>
+    }
+
+    if (props.primaryParamsOnly) {
+        return <Form onSubmitCapture={e => {
+            e.preventDefault()
+            submit()
+        }} {...{labelCol: {span: 7}, wrapperCol: {span: 15}}}>
+            {requiredParams.length > 0 && <>
+                <div style={{marginTop: 0}}>
+                    {requiredParams.map((i, index) => yakScriptParamToNode(
+                        i, true, `params-${index}`, !!props.loading,
+                    ))}
+                    <Form.Item label={" "} colon={false}
+                               style={{width: "100%", textAlign: "right"}} labelCol={{xl: 6, xxl: 4}}
+                    >
+                        <Space>
+                            <Popover title={"设置额外参数"} trigger={"click"}
+                                     content={<div style={{width: 700}}>
+                                         {renderExtraParams(true)}
+                                     </div>}
+                            >
+                                <Button size={"small"} type={"link"}>额外参数</Button>
+                            </Popover>
+                            {props.loading ?
+                                <Button
+                                    style={{width: 120}} danger={true}
+                                    onClick={() => {
+                                        if (props.onCanceled) {
+                                            props.onCanceled()
+                                        }
+                                    }}
+                                    type={"primary"}>停止任务</Button>
+                                : <Button
+                                    style={{width: 120}} htmlType={"submit"}
+                                    type={"primary"}
+                                >启动任务</Button>
+                            }
+                        </Space>
+                    </Form.Item>
+                </div>
+            </>}
+        </Form>
     }
 
     return <div style={{
@@ -142,28 +278,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
             <Form
                 onSubmitCapture={e => {
                     e.preventDefault()
-                    let params = originParams.filter(i => {
-                        // 处理 Bool 的情况
-                        if (isBoolean(i.TypeVerbose)) {
-                            return !!i.Value
-                        }
-
-                        // 真实的为空值
-                        if (!(i.Value || i.DefaultValue)) {
-                            if (i.Required) {
-                                i.Value = `${i.TypeVerbose}_undefined`
-                                return true
-                            } else {
-                                return false
-                            }
-                        }
-
-                        // 处理其他参数的情况
-                        return true
-                    })
-                    props.onParamsConfirm(params.map(i => {
-                        return {Key: i.Field, Value: i.Value || i.DefaultValue}
-                    }))
+                    submit()
                 }}
                 {...(props.styleSize !== "big" ? {
                     labelCol: {span: 7}, wrapperCol: {span: 14}
@@ -171,70 +286,32 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     layout: "vertical",
                 })}
             >
-                {/* 设置基础必须的参数，剩下其他参数不一定是必须的*/}
-                {requiredParams.length > 0 && <>
-                    <Title level={5} style={{fontSize:14}}>
-                        <Space>
+                {props.primaryParamsOnly ? <>
+
+                </> : <>
+                    {/* 设置基础必须的参数，剩下其他参数不一定是必须的*/}
+                    {requiredParams.length > 0 && <>
+                        <Title level={5} style={{fontSize: 14}}>
+                            <Space>
                             <span>
                             必要参数
                             </span>
-                            <Tooltip title={'执行该脚本不可或缺的参数 / Necessary Params'}>
-                                <Button icon={<QuestionOutlined/>} type={"link"} size={"small"}/>
-                            </Tooltip>
-                        </Space>
-                    </Title>
-                    {requiredParams.map((i,index) => yakScriptParamToNode(i, true,`params-${index}`,!!props.loading))}
-                </>}
-                {extraGroup.length <= 1 ? <>
-                    <Title level={5} style={{fontSize:14}}>
-                        <Space>
-                        <span>
-                            默认参数组
-                            </span>
-                            <Switch
-                                checked={!isGroupHidden("default", false)}
-                                onChange={(res) => {
-                                    setHideGroup('default', !res)
-                                }}
-                            />
-                        </Space>
-                    </Title>
-                    {!isGroupHidden("default", false) && <>
-                        {(groupToParams.get("default") || []).map((i: YakScriptParam,index) => yakScriptParamToNode(i, false,`defaultParamsGroup-${index}`,!!props.loading))}
+                                <Tooltip title={'执行该脚本不可或缺的参数 / Necessary Params'}>
+                                    <Button icon={<QuestionOutlined/>} type={"link"} size={"small"}/>
+                                </Tooltip>
+                            </Space>
+                        </Title>
+                        {requiredParams.map((i, index) => yakScriptParamToNode(i, true, `params-${index}`, !!props.loading))}
                     </>}
-                </> : <>
-                    {extraGroup.map((i,index) => {
-                        if ((groupToParams.get(i) || []).length <= 0) {
-                            return <></>
-                        }
-                        return <div key={`${index}`}>
-                            <Title level={5} style={{fontSize:14}}>
-                                <Space>
-                                    <span>
-                                    参数组：{i}
-                                    </span>
-                                    <Switch
-                                        size={"small"}
-                                        checked={!isGroupHidden(i, true)}
-                                        onChange={(res) => {
-                                            setHideGroup(i, !res)
-                                        }}
-                                    />
-                                </Space>
-                            </Title>
-                            {!isGroupHidden(i, true) && <>
-                                {(groupToParams.get(i) || []).map((i: YakScriptParam,index) => yakScriptParamToNode(i, false,`paramsGroup-${index}`,!!props.loading))}
-                            </>}
-                        </div>
-                    })}
+                    {renderExtraParams()}
+                    {originParams.length <= 0 && <Form.Item label={" "} colon={false}>
+                        <h2>本模块无需设置额外参数</h2>
+                    </Form.Item>}
+                    <Form.Item colon={false} label={" "}>
+                        <Button type="primary" loading={!!props.loading}
+                                htmlType="submit"> {props.submitVerbose ? props.submitVerbose : "提交已设置的参数"} </Button>
+                    </Form.Item>
                 </>}
-                {originParams.length <= 0 && <Form.Item label={" "} colon={false}>
-                    <h2>本模块无需设置额外参数</h2>
-                </Form.Item>}
-                <Form.Item colon={false} label={" "}>
-                    <Button type="primary" loading={!!props.loading}
-                            htmlType="submit"> {props.submitVerbose ? props.submitVerbose : "提交已设置的参数"} </Button>
-                </Form.Item>
             </Form>
         </Card>
     </div>
@@ -248,7 +325,7 @@ export interface TypeVerboseToInputProp {
     setValue: (s: string | boolean | number) => any
     data?: { value: any, label: string }[]
     required?: boolean
-    disabled?:boolean
+    disabled?: boolean
 }
 
 export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {

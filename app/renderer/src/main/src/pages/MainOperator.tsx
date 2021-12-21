@@ -42,7 +42,10 @@ interface PageCache {
     route: Route
 }
 
-const singletonRoute = [Route.HTTPHacker, Route.ShellReceiver]
+const singletonRoute = [
+    Route.HTTPHacker, Route.ShellReceiver, Route.PayloadManager,
+    Route.ModManager, Route.ModManagerLegacy, Route.YakScript,
+]
 
 export const Main: React.FC<MainProp> = (props) => {
     const [route, setRoute] = useState<any>(Route.HTTPHacker)
@@ -230,10 +233,37 @@ export const Main: React.FC<MainProp> = (props) => {
         })
     }, [])
 
-    const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`
-    const routeKeyToLabel = new Map<string, string>()
-    RouteMenuData.forEach((k) => {
-        ;(k.subMenuData || []).forEach((subKey) => {
+    // 新增数据对比页面
+    useEffect(() => {
+        ipcRenderer.on("main-container-add-compare", (e, params) => {
+            const newTabId = `${Route.DataCompare}-[${randomString(49)}]`;
+            const verboseNameRaw = routeKeyToLabel.get(Route.DataCompare) || `${Route.DataCompare}`;
+            appendCache(
+                newTabId,
+                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                ContentByRoute(Route.DataCompare),
+                Route.DataCompare as Route,
+            );
+
+            // 增加加载状态
+            setTabLoading(true)
+            setTimeout(() => {
+                setTabLoading(false)
+            }, 300)
+
+            // 区分新建对比页面还是别的页面请求对比的情况
+            ipcRenderer.invoke("created-data-compare")
+        })
+
+        return () => {
+            ipcRenderer.removeAllListeners("main-container-add-compare")
+        }
+    }, [pageCache])
+
+    const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;
+    const routeKeyToLabel = new Map<string, string>();
+    RouteMenuData.forEach(k => {
+        (k.subMenuData || []).forEach(subKey => {
             routeKeyToLabel.set(`${subKey.key}`, subKey.label)
         })
 
@@ -384,9 +414,8 @@ export const Main: React.FC<MainProp> = (props) => {
                                         style={{}}
                                         selectedKeys={[]}
                                         onSelect={(e) => {
-                                            if (e.key === "ignore") {
-                                                return
-                                            }
+                                            if (e.key === "ignore") return
+                                            
 
                                             if (singletonRoute.includes(e.key as Route) && routeExistedCount(e.key as Route) > 0) {
                                                 setCurrentTabByRoute(e.key as Route)

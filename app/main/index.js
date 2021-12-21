@@ -3,13 +3,17 @@ const isDev = require("electron-is-dev");
 const path = require("path");
 const {registerIPC, clearing} = require("./ipc");
 
+// 性能优化：https://juejin.cn/post/6844904029231775758
+
 let win;
 const createWindow = () => {
     win = new BrowserWindow({
         width: 1600, height: 1000,
         webPreferences: {
-            nodeIntegration: true,
+            preload: path.join(__dirname, "preload.js"),
+            nodeIntegration: false,
             contextIsolation: false,
+            sandbox: true,
         },
     })
 

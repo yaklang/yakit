@@ -296,7 +296,18 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
             title={!props.noHeader && <Space>
                 {!props.noTitle && <span>{isResponse ? "Response" : "Request"}</span>}
                 {!props.simpleMode ? (!props.noHex && <SelectOne
-                    label={" "} colon={false} value={mode} setValue={setMode}
+                    label={" "}
+                    colon={false} value={mode}
+                    setValue={e => {
+                        if (mode === "text" && e === "hex") {
+                            setHexValue(new Buffer(strValue))
+                        }
+
+                        if (mode === "hex" && e === "text") {
+                            setStrValue(Buffer.from(hexValue).toString("utf8"))
+                        }
+                        setMode(e)
+                    }}
                     data={[
                         {text: "TEXT", value: "text"},
                         {text: "HEX", value: "hex"},
