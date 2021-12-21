@@ -48,4 +48,36 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GenerateWebsiteTree", async (e, params) => {
         return await asyncGenerateWebsiteTree(params)
     })
+
+    // asyncQueryDomains wrapper
+    const asyncQueryDomains = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryDomains(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryDomains", async (e, params) => {
+        return await asyncQueryDomains(params)
+    })
+
+    // asyncQueryDomains wrapper
+    const asyncDeleteDomains = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteDomains(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteDomains", async (e, params) => {
+        return await asyncDeleteDomains(params)
+    })
 };

@@ -45,6 +45,9 @@ interface PageCache {
 const singletonRoute = [
     Route.HTTPHacker, Route.ShellReceiver, Route.PayloadManager,
     Route.ModManager, Route.ModManagerLegacy, Route.YakScript,
+
+    // database
+    Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
 ]
 
 export const Main: React.FC<MainProp> = (props) => {

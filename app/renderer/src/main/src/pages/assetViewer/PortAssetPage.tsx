@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Col, Descriptions, Form, Modal, Popover, Row, Space, Table, Tag, Typography} from "antd";
+import {Button, Card, Col, Descriptions, Form, Modal, Popover, Row, Space, Table, Tag, Typography} from "antd";
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema";
 import {failed} from "../../utils/notification";
 import {PortAsset} from "./models";
@@ -85,7 +85,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         scroll={{x: "auto"}}
         size={"small"}
         bordered={true}
-        rowKey={(row)=>row.Id}
+        rowKey={(row) => row.Id}
         onRow={r => {
             return {
                 onClick: e => {
@@ -166,7 +166,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             },
             {
                 title: "服务指纹",
-                render: (i: PortAsset) => i.ServiceType ? <div style={{width: 230,overflowX: 'hidden'}}><CopyableField
+                render: (i: PortAsset) => i.ServiceType ? <div style={{width: 230, overflowX: 'hidden'}}><CopyableField
                     text={i.ServiceType}/></div> : "", width: 250,
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return params && setParams && <TableFilterDropdownForm
@@ -229,7 +229,8 @@ export interface PortAssetDescriptionProp {
 
 export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) => {
     const {port} = props;
-    return <Descriptions size={"small"} bordered={true} column={!port.ServiceType?1:2} title={''} style={{marginLeft:20}}>
+    return <Descriptions size={"small"} bordered={true} column={!port.ServiceType ? 1 : 2} title={''}
+                         style={{marginLeft: 20}}>
         <Descriptions.Item label={<Tag>状态</Tag>}><CopyableField
             text={`${port.State}`}/></Descriptions.Item>
         {port.HtmlTitle && <Descriptions.Item label={<Tag>Title</Tag>}><CopyableField
