@@ -182,7 +182,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                             return
                         }
                         if (!params.Type) {
-                            failed("不允许空类型")
+                            failed("爆破/未授权检查不允许为空")
                             return
                         }
 

@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react"
-import { Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Popconfirm } from "antd"
+import React, {useEffect, useState} from "react"
+import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Popconfirm} from "antd"
 import {
     AntDTreeData,
     ConvertWebsiteForestToTreeData,
     WebsiteForest
 } from "../../../components/WebsiteTree"
-import { HTTPFlowMiniTable } from "../../../components/HTTPFlowMiniTable"
-import { genDefaultPagination } from "../../invoker/schema"
-import { ReloadOutlined, SearchOutlined, DeleteOutlined } from "@ant-design/icons"
-import { InputItem } from "../../../utils/inputUtil"
+import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable"
+import {genDefaultPagination} from "../../invoker/schema"
+import {ReloadOutlined, SearchOutlined, DeleteOutlined} from "@ant-design/icons"
+import {InputItem, SwitchItem} from "../../../utils/inputUtil"
 
 import "./WebsiteTreeStyle.css"
 
@@ -22,10 +22,10 @@ export interface WebsiteTreeViewerProp {
     maxHeight?: number
 }
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [treeData, setTreeData] = useState<AntDTreeData[]>([])
-    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [autoRefresh, setAutoRefresh] = useState(!!props.targets)
     const [selected, setSelected] = useState(props.targets)
     const [limit, setLimit] = useState(20)
     const [page, setPage] = useState(1)
@@ -80,6 +80,10 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     }, [props.targets])
 
     useEffect(() => {
+        if (!autoRefresh) {
+            return
+        }
+
         const id = setInterval(() => {
             if (!autoRefresh) {
                 return
@@ -104,7 +108,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     <Button
                                         type={"link"}
                                         size={"small"}
-                                        icon={<ReloadOutlined />}
+                                        icon={<ReloadOutlined/>}
                                         onClick={() => {
                                             refresh()
                                         }}
@@ -113,7 +117,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             }
                             size={"small"}
                             extra={
-                                !props.targets && (
+                                !props.targets ? (
                                     <Space>
                                         <Form
                                             size={"small"}
@@ -135,12 +139,23 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                     size={"small"}
                                                     type='link'
                                                     htmlType='submit'
-                                                    icon={<SearchOutlined />}
+                                                    icon={<SearchOutlined/>}
                                                     style={{marginLeft: 0, marginRight: 0}}
                                                 />
                                             </Form.Item>
                                         </Form>
                                         {/*<Input onBlur={r => setSearchTarget(r.target.value)} size={"small"}/>*/}
+                                    </Space>
+                                ) : (
+                                    <Space>
+                                        <Form onSubmitCapture={e => {
+                                            e.preventDefault()
+                                        }} size={"small"}>
+                                            <SwitchItem
+                                                label={"自动刷新"} formItemStyle={{marginBottom: 0}}
+                                                value={autoRefresh} setValue={setAutoRefresh}
+                                            />
+                                        </Form>
                                     </Space>
                                 )
                             }

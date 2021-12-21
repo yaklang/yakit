@@ -169,8 +169,8 @@ export const YakitFeatureTabName = (feature: string, params: any) => {
 export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
     switch (props.feature) {
         case "website-trees":
-            return <div>
-                <WebsiteTreeViewer {...props.params} maxHeight={400}/>
+            return <div style={{height: "100%"}}>
+                <WebsiteTreeViewer {...props.params}/>
             </div>
         case "fixed-table":
             return <div>
