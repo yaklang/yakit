@@ -8,6 +8,7 @@ import {BaseTable, features, useTablePipeline} from "../alibaba/ali-react-table-
 import {CopyableField} from "../utils/inputUtil";
 import {showDrawer} from "../utils/showModal";
 import ReactResizeDetector from "react-resize-detector";
+import {useThrottleFn} from "ahooks";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -70,7 +71,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                 code: "Hash", name: "操作", render: (i: any) => {
                     return <>
                         <Space>
-                            {false&&props.onSendToWebFuzzer && <Button
+                            {false && props.onSendToWebFuzzer && <Button
                                 type={"link"} size={"small"}
                                 onClick={() => {
                                     const req = findHTTPFlowById(i);
@@ -190,14 +191,17 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
             props.onTotal(data.Total)
         })
     }
+    const updateThrottle = useThrottleFn(update, {wait: 1000})
+
+
     useEffect(() => {
-        update()
+        updateThrottle.run()
     }, [props.filter])
 
     useEffect(() => {
         if (props.simple) {
             const id = setInterval(() => {
-                update()
+                updateThrottle.run()
             }, 1000)
             return () => {
                 clearInterval(id)

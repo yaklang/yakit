@@ -5,10 +5,11 @@ import {InputInteger, InputItem, SwitchItem} from "../../utils/inputUtil";
 import {HoldingIPCRenderExecStream} from "../yakitStore/PluginExecutor";
 import {randomString} from "../../utils/randomUtil";
 import {ExecResultLog, ExecResultProgress} from "../invoker/batch/ExecMessageViewer";
-import {PluginResultUI, StatusCardProps} from "../yakitStore/viewers/base";
+import {ExecResultStatusCard, PluginResultUI, StatusCardProps} from "../yakitStore/viewers/base";
 import {failed} from "../../utils/notification";
 import {TimeIntervalItem, TimeUnit} from "../../utils/timeInterval";
 import {showDrawer, showModal} from "../../utils/showModal";
+import {useDynamicList, useMap, useThrottle, useThrottleFn} from "ahooks";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -45,20 +46,35 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false);
     const [advanced, setAdvanced] = useState(false);
     const [taskToken, setTaskToken] = useState("");
-    const [resetTrigger, setResetTrigger] = useState(false);
-    const reset = () => {
-        setResetTrigger(!resetTrigger)
-        setLogs([])
-        setStatusCards([])
-        setProgress([])
-    }
 
-    // execStream
-    const [logs, setLogs] = useState<ExecResultLog[]>([]);
-    const [progress, setProgress] = useState<ExecResultProgress[]>([]);
-    const [statusCards, setStatusCards] = useState<StatusCardProps[]>([]);
     const [xtermRef, setXtermRef] = useState<any>();
     const [loading, setLoading] = useState(false);
+
+    // 设置 IPC 回传的结果
+    const messageListProvider = useDynamicList<ExecResultLog>([]);
+    const [progressMap, progressProvider] = useMap<string, number>(new Map<string, number>());
+    const [statusMap, statusProvider] = useMap<string, StatusCardProps>(new Map<string, ExecResultStatusCard>());
+    // 为 statusSet 做节流处理，节流一定要注意 statusSet
+    const statusOpThrottle = useThrottleFn((i: string, value: ExecResultStatusCard) => {
+        statusProvider.set(i, value)
+    }, {wait: 500})
+
+    const reset = () => {
+        messageListProvider.resetList([]);
+        progressProvider.reset();
+        statusProvider.reset();
+    }
+
+    const processes: ExecResultProgress[] = [];
+    progressMap.forEach((value, id) => {
+        processes.push({id: id, progress: value})
+    })
+    processes.sort((a, b) => a.id.localeCompare(b.id))
+    const statusCards: StatusCardProps[] = [];
+    statusMap.forEach((value) => {
+        statusCards.push(value);
+    })
+    statusCards.sort((a, b) => a.Id.localeCompare(b.Id))
 
     // params
     const [params, setParams] = useState<StartBruteParams>({
@@ -107,12 +123,14 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
             "StartBrute",
             token,
             xtermRef,
-            setLogs, setProgress, setStatusCards,
+            // setLogs, setProgress, setStatusCards,
+            messageListProvider, progressProvider,
+            {...statusProvider, set: statusOpThrottle.run, flush: statusOpThrottle.flush},
             () => {
                 setTimeout(() => setLoading(false), 300)
-            }
+            }, undefined,
         )
-    }, [resetTrigger, xtermRef])
+    }, [xtermRef])
 
     return <div style={{height: "100%", backgroundColor: "#fff", width: "100%", display: "flex"}}>
         <div style={{height: "100%", width: 200,}}>
@@ -164,10 +182,11 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                             return
                         }
                         if (!params.Type) {
-                            failed("不允许空类型")
+                            failed("爆破/未授权检查不允许为空")
                             return
                         }
 
+                        reset()
                         setLoading(true)
                         ipcRenderer.invoke("StartBrute", params, taskToken)
                     }} style={{width: "100%", textAlign: "center", alignItems: "center"}}>
@@ -207,7 +226,8 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                     {(params?.TargetTaskConcurrent || 1) > 1 &&
                                     <Tag>目标内爆破并发:{params.TargetTaskConcurrent}</Tag>}
                                     {params?.OkToStop ? <Tag>爆破成功即停止</Tag> : <Tag>爆破成功后仍继续</Tag>}
-                                    {(params?.DelayMax || 0) > 0 && <Tag>随机暂停:{params.DelayMin}-{params.DelayMax}s</Tag>}
+                                    {(params?.DelayMax || 0) > 0 &&
+                                    <Tag>随机暂停:{params.DelayMin}-{params.DelayMax}s</Tag>}
                                     <Button
                                         type={"link"} size={"small"}
                                         onClick={e => {
@@ -266,8 +286,8 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
             <Card style={{flex: 1, overflow: "auto"}}>
                 <PluginResultUI
                     // script={script}
-                    loading={loading} progress={progress}
-                    results={logs}
+                    loading={loading} progress={processes}
+                    results={messageListProvider.list}
                     statusCards={statusCards}
                     onXtermRef={setXtermRef}
                 />
