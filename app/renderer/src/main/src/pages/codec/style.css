@@ -1,14 +1,3 @@
-.codec-spin {
-    display: flex;
-    flex-flow: column;
-    height: 100%;
-}
-.codec-spin .ant-spin-container {
-    flex-grow: 1;
-    display: flex;
-    flex-flow: column;
-}
-
 .codec-pageheader-title {
     padding: 10px 20px 10px 15px;
 }
@@ -23,20 +12,13 @@
     flex-flow: column;
 }
 
+.codec-content .codec-card-body .ant-card-extra {
+    padding: 2px 0;
+}
+
 .codec-content .editor-body {
     width: 100%;
     height: 100%;
-    position: relative;
-}
-
-.codec-content .editor-body .expand-icon {
-    position: absolute;
-    left: 5px;
-    top: 5px;
-}
-
-.codec-content .editor-body .activation-expand-icon {
-    color: #40a9ff;
 }
 
 .codec-content .exchange-btn {

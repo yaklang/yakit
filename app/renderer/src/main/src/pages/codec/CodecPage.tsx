@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react"
-import { Button, PageHeader, Space, Spin, Dropdown, Menu, Row, Col } from "antd"
+import { Button, PageHeader, Space, Dropdown, Menu, Row, Col } from "antd"
 import { DownOutlined, SwapOutlined, ArrowsAltOutlined } from "@ant-design/icons"
 import { YakEditor } from "../../utils/editors"
 import { failed } from "../../utils/notification"
+import { AutoSpin, AutoCard } from "../../components"
 
 import "./style.css"
 
@@ -111,7 +112,7 @@ export const CodecPage: React.FC<CodecPageProp> = (props) => {
     }, [])
 
     return (
-        <Spin spinning={loading} wrapperClassName={"codec-spin"}>
+        <AutoSpin spinning={loading}>
             <PageHeader title={"Codec"} className={"codec-pageheader-title"}></PageHeader>
             <div className={"codec-function-bar"}>
                 <Space>
@@ -164,16 +165,26 @@ export const CodecPage: React.FC<CodecPageProp> = (props) => {
             <div className={"codec-content"}>
                 <Row wrap={false} justify='space-between' style={{ flexGrow: 1 }}>
                     <Col flex={leftWidth ? "0 1 80%" : rightWidth ? "0 1 18%" : "0 1 49%"}>
-                        <div className='editor-body'>
-                            <YakEditor value={text} setValue={setText} />
-                            <ArrowsAltOutlined
-                                className={`expand-icon ${leftWidth ? "activation-expand-icon" : ""}`}
-                                onClick={() => {
-                                    setLeftWidth(!leftWidth)
-                                    setRightWidth(false)
-                                }}
-                            />
-                        </div>
+                        <AutoCard
+                            className='codec-card-body'
+                            headStyle={{ height: 28, minHeight: 28, padding: 0 }}
+                            bodyStyle={{ padding: 0 }}
+                            extra={
+                                <Button
+                                    size={"small"}
+                                    type={leftWidth ? "primary" : "link"}
+                                    icon={<ArrowsAltOutlined />}
+                                    onClick={() => {
+                                        setLeftWidth(!leftWidth)
+                                        setRightWidth(false)
+                                    }}
+                                />
+                            }
+                        >
+                            <div className='editor-body'>
+                                <YakEditor value={text} setValue={setText} />
+                            </div>
+                        </AutoCard>
                     </Col>
                     <Col flex='0 1 2%'>
                         <div className={"exchange-btn"}>
@@ -189,19 +200,29 @@ export const CodecPage: React.FC<CodecPageProp> = (props) => {
                         </div>
                     </Col>
                     <Col flex={rightWidth ? "0 1 80%" : leftWidth ? "0 1 18%" : "0 1 49%"}>
-                        <div className='editor-body'>
-                            <YakEditor value={result} setValue={setResult} readOnly={true} type={"http"} />
-                            <ArrowsAltOutlined
-                                className={`expand-icon ${rightWidth ? "activation-expand-icon" : ""}`}
-                                onClick={() => {
-                                    setRightWidth(!rightWidth)
-                                    setLeftWidth(false)
-                                }}
-                            />
-                        </div>
+                        <AutoCard
+                            className='codec-card-body'
+                            headStyle={{ height: 28, minHeight: 28, padding: 0 }}
+                            bodyStyle={{ padding: 0 }}
+                            extra={
+                                <Button
+                                    size={"small"}
+                                    type={rightWidth ? "primary" : "link"}
+                                    icon={<ArrowsAltOutlined />}
+                                    onClick={() => {
+                                        setRightWidth(!rightWidth)
+                                        setLeftWidth(false)
+                                    }}
+                                />
+                            }
+                        >
+                            <div className='editor-body'>
+                                <YakEditor value={result} setValue={setResult} readOnly={true} type={"http"} />
+                            </div>
+                        </AutoCard>
                     </Col>
                 </Row>
             </div>
-        </Spin>
+        </AutoSpin>
     )
 }
