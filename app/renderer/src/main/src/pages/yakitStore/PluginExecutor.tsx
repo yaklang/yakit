@@ -8,7 +8,7 @@ import {randomString} from "../../utils/randomUtil";
 import {failed, info} from "../../utils/notification";
 import {writeExecResultXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils";
 import {ExecResultLog, ExecResultMessage, ExecResultProgress} from "../invoker/batch/ExecMessageViewer";
-import {PluginResultUI, StatusCardProps} from "./viewers/base";
+import {ExecResultStatusCard, PluginResultUI, StatusCardProps} from "./viewers/base";
 
 export interface PluginExecutorProp {
     script: YakScript
@@ -30,39 +30,45 @@ export const HoldingIPCRenderExecStream = (
     setProgress?: (res: ExecResultProgress[]) => any,
     setStatusCards?: (res: StatusCardProps[]) => any,
     onEnd?: () => any,
-    onListened?: () => any
+    onListened?: () => any,
+    logProvider?: {
+        list: ExecResultLog[];
+        unshift: (i: ExecResultLog) => any; pop: () => any;
+    },
+    progressProvider?: { readonly set: (key: string, entry: number) => void; readonly setAll: (newMap: Iterable<readonly [string, number]>) => void; readonly remove: (key: string) => void; readonly reset: () => void; readonly get: (key: string) => (number | undefined) },
+    statusProvider?: { readonly set: (key: string, entry: StatusCardProps) => void; readonly setAll: (newMap: Iterable<readonly [string, StatusCardProps]>) => void; readonly remove: (key: string) => void; readonly reset: () => void; readonly get: (key: string) => (StatusCardProps | undefined) },
 ) => {
 
-    let messages: ExecResultMessage[] = [];
-    let processKVPair = new Map<string, number>();
-    let statusKVPair = new Map<string, StatusCardProps>();
-
-    let lastResultLen = 0;
-    const syncResults = () => {
-        if (setResults) {
-            let results = messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog);
-            if (results.length > lastResultLen) {
-                lastResultLen = results.length
-                setResults(results)
-            }
-        }
-
-        if (setProgress) {
-            const processes: ExecResultProgress[] = []
-            processKVPair.forEach((value, id) => {
-                processes.push({id: id, progress: value})
-            })
-            setProgress(processes.sort((a, b) => a.id.localeCompare(b.id)))
-        }
-
-        if (setStatusCards) {
-            const statusCards: StatusCardProps[] = [];
-            statusKVPair.forEach((value) => {
-                statusCards.push(value);
-            })
-            setStatusCards(statusCards.sort((a, b) => a.Id.localeCompare((b.Id))))
-        }
-    }
+    // let messages: ExecResultMessage[] = [];
+    // let processKVPair = new Map<string, number>();
+    // let statusKVPair = new Map<string, StatusCardProps>();
+    //
+    // let lastResultLen = 0;
+    // const syncResults = () => {
+    //     if (setResults) {
+    //         let results = messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog);
+    //         if (results.length > lastResultLen) {
+    //             lastResultLen = results.length
+    //             setResults(results)
+    //         }
+    //     }
+    //
+    //     if (setProgress) {
+    //         const processes: ExecResultProgress[] = []
+    //         processKVPair.forEach((value, id) => {
+    //             processes.push({id: id, progress: value})
+    //         })
+    //         setProgress(processes.sort((a, b) => a.id.localeCompare(b.id)))
+    //     }
+    //
+    //     if (setStatusCards) {
+    //         const statusCards: StatusCardProps[] = [];
+    //         statusKVPair.forEach((value) => {
+    //             statusCards.push(value);
+    //         })
+    //         setStatusCards(statusCards.sort((a, b) => a.Id.localeCompare((b.Id))))
+    //     }
+    // }
 
     ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
         if (data.IsMessage) {
@@ -73,7 +79,10 @@ export const HoldingIPCRenderExecStream = (
                 if (obj.type === "process") {
                     const processData = obj.content as ExecResultProgress;
                     if (processData && processData.id) {
-                        processKVPair.set(processData.id, Math.max(processKVPair.get(processData.id) || 0, processData.progress))
+                        if (progressProvider) {
+                            const processKVPair = progressProvider;
+                            processKVPair.set(processData.id, Math.max(processKVPair.get(processData.id) || 0, processData.progress))
+                        }
                     }
                     return
                 }
@@ -82,23 +91,29 @@ export const HoldingIPCRenderExecStream = (
                 const logData = obj.content as ExecResultLog;
                 if (obj.type === "log" && logData.level === "feature-status-card-data") {
                     try {
-                        const obj = JSON.parse(logData.data);
-                        const {id, data} = obj;
-                        const {timestamp} = logData;
-                        const originData = statusKVPair.get(id);
-                        if (originData && originData.Timestamp > timestamp) {
-                            return
+                        const statusKVPair = statusProvider;
+                        if (statusKVPair) {
+                            const obj = JSON.parse(logData.data);
+                            const {id, data} = obj;
+                            const {timestamp} = logData;
+                            const originData = statusKVPair.get(id);
+                            if (originData && originData.Timestamp > timestamp) {
+                                return
+                            }
+                            statusKVPair.set(id, {Id: id, Data: data, Timestamp: timestamp})
                         }
-                        statusKVPair.set(id, {Id: id, Data: data, Timestamp: timestamp})
                     } catch (e) {
                     }
                     return
                 }
-                messages.unshift(obj)
 
-                // 只缓存 100 条结果（日志类型 + 数据类型）
-                if (messages.length > 100) {
-                    messages.pop()
+
+                if (logProvider) {
+                    logProvider.unshift(obj.content as ExecResultLog);
+                    // 只缓存 100 条结果（日志类型 + 数据类型）
+                    if (logProvider.list.length > 100) {
+                        logProvider.pop()
+                    }
                 }
             } catch (e) {
 
@@ -111,21 +126,21 @@ export const HoldingIPCRenderExecStream = (
     })
     ipcRenderer.on(`${token}-end`, (e, data) => {
         info(`[Mod] ${taskName} finished`)
-        syncResults()
+        // syncResults()
         if (onEnd) {
             onEnd()
         }
     })
 
-    syncResults()
-    let id = setInterval(() => syncResults(), 500)
+    // syncResults()
+    // let id = setInterval(() => syncResults(), 500)
 
     if (onListened) {
         onListened()
     }
 
     return () => {
-        clearInterval(id);
+        // clearInterval(id);
         ipcRenderer.invoke(`cancel-${apiKey}`, token)
         ipcRenderer.removeAllListeners(`${token}-data`)
         ipcRenderer.removeAllListeners(`${token}-error`)
@@ -164,18 +179,9 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         const token = randomString(40);
         setToken(token)
 
-        return HoldingIPCRenderExecStream(
-            script.ScriptName,
-            "exec-yak-script",
-            token,
-            xtermRef,
-            setResults,
-            setProgress,
-            setStatusCards,
-            () => {
-                setTimeout(() => setLoading(false), 300)
-            }
-        )
+        return HoldingIPCRenderExecStream(script.ScriptName, "exec-yak-script", token, xtermRef, setResults, setProgress, setStatusCards, () => {
+            setTimeout(() => setLoading(false), 300)
+        })
     }, [xtermRef, resetFlag])
 
     // useEffect(() => {
@@ -203,7 +209,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                             YakScriptId: props.script.Id,
                         }, token)
                     }}
-                    onClearData={()=>{
+                    onClearData={() => {
                         xtermClear(xtermRef)
                         reset()
                     }}
@@ -275,7 +281,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                             YakScriptId: props.script.Id,
                         }, token)
                     }}
-                    onClearData={()=>{
+                    onClearData={() => {
                         xtermClear(xtermRef)
                         reset()
                     }}

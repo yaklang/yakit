@@ -38,24 +38,14 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
         }
 
         const token = randomString(40);
-        return HoldingIPCRenderExecStream(
-            "exec-script-immediately",
-            "exec-yak-script",
-            token,
-            xtermRef,
-            setResults,
-            setProgress,
-            setStatusCards,
-            () => {
-                setFinished(true)
-            },
-            () => {
-                ipcRenderer.invoke("exec-yak-script", {
-                    Params: props.params,
-                    YakScriptId: props.script.Id,
-                }, token)
-            },
-        )
+        return HoldingIPCRenderExecStream("exec-script-immediately", "exec-yak-script", token, xtermRef, setResults, setProgress, setStatusCards, () => {
+            setFinished(true)
+        }, () => {
+            ipcRenderer.invoke("exec-yak-script", {
+                Params: props.params,
+                YakScriptId: props.script.Id,
+            }, token)
+        })
     }, [xtermRef])
 
     return <Space direction={"vertical"} style={{width: "100%"}}>
