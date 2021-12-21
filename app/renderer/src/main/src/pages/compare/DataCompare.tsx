@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react"
+import { PageHeader } from "antd";
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
+
 
 const { ipcRenderer } = window.require("electron")
 
@@ -74,12 +76,13 @@ export const DataCompare: React.FC = (props) => {
                     if (res.info.type === 2) setRight(right.content)
                 })
             })
-            .catch((err) => {})
-            .finally(() => {})
+            .catch((err) => { })
+            .finally(() => { })
     }, [])
 
     return (
         <div style={{ width: "100%", display: "flex", flexFlow: "column", height: "100%", overflow: "hidden" }}>
+            <PageHeader title={"数据对比"} style={{ padding: '10px 20px 10px 15px' }}></PageHeader>
             <div ref={diffDivRef} style={{ width: "100%", flex: 1 }}></div>
         </div>
     )
