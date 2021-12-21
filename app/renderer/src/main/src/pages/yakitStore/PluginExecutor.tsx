@@ -9,6 +9,7 @@ import {failed, info} from "../../utils/notification";
 import {writeExecResultXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils";
 import {ExecResultLog, ExecResultMessage, ExecResultProgress} from "../invoker/batch/ExecMessageViewer";
 import {ExecResultStatusCard, PluginResultUI, StatusCardProps} from "./viewers/base";
+import {useDynamicList, useMap, useThrottleFn} from "ahooks";
 
 export interface PluginExecutorProp {
     script: YakScript
@@ -26,49 +27,22 @@ export const HoldingIPCRenderExecStream = (
     apiKey: string,
     token: string,
     xtermRef?: any,
-    setResults?: (res: ExecResultLog[]) => any,
-    setProgress?: (res: ExecResultProgress[]) => any,
-    setStatusCards?: (res: StatusCardProps[]) => any,
-    onEnd?: () => any,
-    onListened?: () => any,
     logProvider?: {
         list: ExecResultLog[];
         unshift: (i: ExecResultLog) => any; pop: () => any;
     },
     progressProvider?: { readonly set: (key: string, entry: number) => void; readonly setAll: (newMap: Iterable<readonly [string, number]>) => void; readonly remove: (key: string) => void; readonly reset: () => void; readonly get: (key: string) => (number | undefined) },
-    statusProvider?: { readonly set: (key: string, entry: StatusCardProps) => void; readonly setAll: (newMap: Iterable<readonly [string, StatusCardProps]>) => void; readonly remove: (key: string) => void; readonly reset: () => void; readonly get: (key: string) => (StatusCardProps | undefined) },
+    statusProvider?: {
+        set: (key: string, entry: ExecResultStatusCard) => any;
+        flush: () => any,
+        readonly setAll: (newMap: Iterable<readonly [string, StatusCardProps]>) => void;
+        readonly remove: (key: string) => void;
+        readonly reset: () => void;
+        readonly get: (key: string) => (StatusCardProps | undefined)
+    },
+    onEnd?: () => any,
+    onListened?: () => any,
 ) => {
-
-    // let messages: ExecResultMessage[] = [];
-    // let processKVPair = new Map<string, number>();
-    // let statusKVPair = new Map<string, StatusCardProps>();
-    //
-    // let lastResultLen = 0;
-    // const syncResults = () => {
-    //     if (setResults) {
-    //         let results = messages.filter(i => i.type === "log").map(i => i.content as ExecResultLog);
-    //         if (results.length > lastResultLen) {
-    //             lastResultLen = results.length
-    //             setResults(results)
-    //         }
-    //     }
-    //
-    //     if (setProgress) {
-    //         const processes: ExecResultProgress[] = []
-    //         processKVPair.forEach((value, id) => {
-    //             processes.push({id: id, progress: value})
-    //         })
-    //         setProgress(processes.sort((a, b) => a.id.localeCompare(b.id)))
-    //     }
-    //
-    //     if (setStatusCards) {
-    //         const statusCards: StatusCardProps[] = [];
-    //         statusKVPair.forEach((value) => {
-    //             statusCards.push(value);
-    //         })
-    //         setStatusCards(statusCards.sort((a, b) => a.Id.localeCompare((b.Id))))
-    //     }
-    // }
 
     ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
         if (data.IsMessage) {
@@ -126,21 +100,19 @@ export const HoldingIPCRenderExecStream = (
     })
     ipcRenderer.on(`${token}-end`, (e, data) => {
         info(`[Mod] ${taskName} finished`)
-        // syncResults()
+        if (statusProvider) {
+            statusProvider.flush()
+        }
         if (onEnd) {
             onEnd()
         }
     })
-
-    // syncResults()
-    // let id = setInterval(() => syncResults(), 500)
 
     if (onListened) {
         onListened()
     }
 
     return () => {
-        // clearInterval(id);
         ipcRenderer.invoke(`cancel-${apiKey}`, token)
         ipcRenderer.removeAllListeners(`${token}-data`)
         ipcRenderer.removeAllListeners(`${token}-error`)
@@ -156,20 +128,32 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const [loading, setLoading] = useState(false);
     const [activePanels, setActivePanels] = useState<string[]>(["params"]);
 
-    // 设置结果
-    const [results, setResults] = useState<ExecResultLog[]>([]);
-    const [progress, setProgress] = useState<ExecResultProgress[]>([]);
-    const [statusCards, setStatusCards] = useState<StatusCardProps[]>([]);
-
-    // flags
-    const [resetFlag, setResetFlag] = useState(false);
+    // 设置 IPC 回传的结果
+    const messageListProvider = useDynamicList<ExecResultLog>([]);
+    const messages = messageListProvider.list;
+    const [progressMap, progressProvider] = useMap<string, number>(new Map<string, number>());
+    const [statusMap, statusProvider] = useMap<string, StatusCardProps>(new Map<string, ExecResultStatusCard>());
+    // 为 statusSet 做节流处理，节流一定要注意 statusSet
+    const statusOpThrottle = useThrottleFn((i: string, value: ExecResultStatusCard) => {
+        statusProvider.set(i, value)
+    }, {wait: 500})
 
     const reset = () => {
-        setResetFlag(!resetFlag)
-        setResults([])
-        setProgress([])
-        setStatusCards([])
+        messageListProvider.resetList([]);
+        progressProvider.reset();
+        statusProvider.reset();
     }
+
+    const processes: ExecResultProgress[] = [];
+    progressMap.forEach((value, id) => {
+        processes.push({id: id, progress: value})
+    })
+    processes.sort((a, b) => a.id.localeCompare(b.id))
+    const statusCards: StatusCardProps[] = [];
+    statusMap.forEach((value) => {
+        statusCards.push(value);
+    })
+    statusCards.sort((a, b) => a.Id.localeCompare(b.Id))
 
     useEffect(() => {
         if (!xtermRef) {
@@ -179,10 +163,20 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         const token = randomString(40);
         setToken(token)
 
-        return HoldingIPCRenderExecStream(script.ScriptName, "exec-yak-script", token, xtermRef, setResults, setProgress, setStatusCards, () => {
-            setTimeout(() => setLoading(false), 300)
-        })
-    }, [xtermRef, resetFlag])
+        return HoldingIPCRenderExecStream(
+            script.ScriptName, "exec-yak-script", token, xtermRef,
+
+            // operations
+            messageListProvider, progressProvider, {
+                ...statusProvider,
+                set: statusOpThrottle.run,
+                flush: statusOpThrottle.flush
+            },
+
+            () => {
+                setTimeout(() => setLoading(false), 300)
+            })
+    }, [xtermRef])
 
     // useEffect(() => {
     //     xtermFit(xtermRef, undefined, 6)
@@ -223,7 +217,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             </PageHeader>
             <Divider/>
             <PluginResultUI
-                script={script} loading={loading} progress={progress} results={results}
+                script={script} loading={loading} progress={processes} results={messageListProvider.list}
                 statusCards={statusCards} onXtermRef={setXTermRef}
             />
         </> : <Collapse
@@ -294,12 +288,12 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             </Panel>
             <Panel key={"console"} showArrow={false} header={<>
                 插件执行结果
-            </>} collapsible={results.length <= 0 ? 'disabled' : undefined}>
+            </>} collapsible={messages.length <= 0 ? 'disabled' : undefined}>
                 <div style={{width: "100%", overflowY: "auto"}}>
                     <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
                 </div>
                 <PluginResultUI
-                    script={script} loading={loading} progress={progress} results={results}
+                    script={script} loading={loading} progress={processes} results={messages}
                     statusCards={statusCards}
                 />
             </Panel>

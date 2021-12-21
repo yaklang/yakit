@@ -9,7 +9,7 @@ import {ExecResultStatusCard, PluginResultUI, StatusCardProps} from "../yakitSto
 import {failed} from "../../utils/notification";
 import {TimeIntervalItem, TimeUnit} from "../../utils/timeInterval";
 import {showDrawer, showModal} from "../../utils/showModal";
-import {useDynamicList, useMap, useThrottle} from "ahooks";
+import {useDynamicList, useMap, useThrottle, useThrottleFn} from "ahooks";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -46,29 +46,24 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false);
     const [advanced, setAdvanced] = useState(false);
     const [taskToken, setTaskToken] = useState("");
-    const [resetTrigger, setResetTrigger] = useState(false);
 
-
-    // execStream
-    // const [logs, setLogs] = useState<ExecResultLog[]>([]);
-    // const [progress, setProgress] = useState<ExecResultProgress[]>([]);
-    // const [statusCards, setStatusCards] = useState<ExecResultStatusCard[]>([]);
     const [xtermRef, setXtermRef] = useState<any>();
     const [loading, setLoading] = useState(false);
 
-    // 设置缓存
+    // 设置 IPC 回传的结果
     const messageListProvider = useDynamicList<ExecResultLog>([]);
-    // 设置 Provider 缓存
     const [progressMap, progressProvider] = useMap<string, number>(new Map<string, number>());
     const [statusMap, statusProvider] = useMap<string, StatusCardProps>(new Map<string, ExecResultStatusCard>());
+    // 为 statusSet 做节流处理，节流一定要注意 statusSet
+    const statusOpThrottle = useThrottleFn((i: string, value: ExecResultStatusCard) => {
+        statusProvider.set(i, value)
+    }, {wait: 500})
+
     const reset = () => {
-        setResetTrigger(!resetTrigger);
         messageListProvider.resetList([]);
         progressProvider.reset();
         statusProvider.reset();
     }
-    // throttle
-    const statusProviderThrottle = useThrottle(statusProvider);
 
     const processes: ExecResultProgress[] = [];
     progressMap.forEach((value, id) => {
@@ -129,10 +124,11 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
             token,
             xtermRef,
             // setLogs, setProgress, setStatusCards,
-            undefined, undefined, undefined,
+            messageListProvider, progressProvider,
+            {...statusProvider, set: statusOpThrottle.run, flush: statusOpThrottle.flush},
             () => {
                 setTimeout(() => setLoading(false), 300)
-            }, undefined, messageListProvider, progressProvider, statusProviderThrottle
+            }, undefined,
         )
     }, [xtermRef])
 

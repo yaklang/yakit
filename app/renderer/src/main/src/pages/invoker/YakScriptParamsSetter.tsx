@@ -147,6 +147,10 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     };
 
     const submit = () => {
+        if (props.onClearData) {
+            props.onClearData()
+        }
+
         let params = originParams.filter(i => {
             // 处理 Bool 的情况
             if (isBoolean(i.TypeVerbose)) {
