@@ -7,7 +7,6 @@ const fs = require("fs");
 const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
-const sudo = require("sudo-prompt");
 
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
@@ -129,6 +128,15 @@ const getYakDownloadUrl = () => {
     }
 }
 
+const getLatestYakLocalEngine = () => {
+    switch (process.platform) {
+        case "darwin":
+        case "linux":
+            return path.join(yakEngineDir, "yak")
+        case "win32":
+            return path.join(yakEngineDir, "yak.exe")
+    }
+}
 
 const getYakitDownloadUrl = (version) => {
     switch (process.platform) {
@@ -146,6 +154,7 @@ const getYakitDownloadUrl = (version) => {
 }
 
 module.exports = {
+    getLatestYakLocalEngine,
     register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
             let {name, host, port, tls, caPem, password} = params;
@@ -227,8 +236,9 @@ module.exports = {
         // asyncQueryLatestYakEngineVersion wrapper
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {
-                childProcess.exec("yak -v", (err, stdout) => {
-                    const version = stdout.replaceAll("yak version ", "").trim();
+                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], (err, stdout) => {
+                    // const version = stdout.replaceAll("yak version ()", "").trim();
+                    const version = /.*?yak(\.exe)?\s+version\s+([^\s]+)/.exec(stdout)[2];
                     if (!version) {
                         if (err) {
                             reject(err)
@@ -315,6 +325,7 @@ module.exports = {
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {
+            return getLatestYakLocalEngine();
             //systemRoot := os.Getenv("WINDIR")
             // 			if systemRoot == "" {
             // 				systemRoot = os.Getenv("windir")
@@ -328,64 +339,37 @@ module.exports = {
             // 			}
             //
             // 			installed = filepath.Join(systemRoot, "System32", "yak.exe")
-            if (process.platform !== "win32") {
-                return "%WINDIR%\\System32\\yak.exe"
-            }
-            return getWindowsInstallPath();
+            // if (process.platform !== "win32") {
+            //     return "%WINDIR%\\System32\\yak.exe"
+            // }
+            // return getWindowsInstallPath();
+
         });
 
         const installYakEngine = (version) => {
             return new Promise((resolve, reject) => {
                 const origin = path.join(yakEngineDir, `yak-${version}`);
 
-                const dest = isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+                const dest = getLatestYakLocalEngine(); //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
 
-                const install = () => {
-                    sudo.exec(
-                        isWindows ?
-                            `copy ${origin} ${dest}` : `mkdir -p /usr/local/bin && cp ${origin} ${dest} && chmod +x ${dest}`,
-                        {
-                            name: "Install Yak Binary"
-                        }, err => {
-                            if (err) {
-                                reject(err)
-                            } else {
-                                resolve()
-                            }
-                        })
+                try {
+                    fs.unlinkSync(dest)
+                } catch (e) {
+                    console.info(e)
                 }
 
-                // 如果检测不到这个文件，就返回不存在
-                if (!fs.existsSync(dest)) {
-                    install()
-                } else {
-                    try {
-                        const cmd = isWindows ? `del /f ${dest}` : `rm ${dest}`;
-                        sudo.exec(cmd, {
-                            name: "Delete Old Yak"
-                        }, err => {
-                            install()
-                        })
-                    } catch (e) {
-                        console.info(e)
-                        install()
+                childProcess.exec(
+                    isWindows ?
+                        `copy ${origin} ${dest}`
+                        : `cp ${origin} ${dest} && chmod +x ${dest}`,
+                    err => {
+                        if (err) {
+                            reject(err)
+                            return
+                        }
+                        resolve()
                     }
-
-                }
-
-                // fs.access(dest, fs.constants.R_OK, ok => {
-                //     if (!ok) {
-                //         install()
-                //         return
-                //     }
-                //
-                //     let cmd = isWindows ? `del /f ${dest}` : `rm ${dest}`;
-                //     sudo.exec(cmd, {
-                //         name: "Delete Old Yak"
-                //     }, err => {
-                //         install()
-                //     })
-                // })
+                )
             })
         }
 

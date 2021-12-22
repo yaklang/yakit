@@ -1,11 +1,9 @@
-const {ipcMain, Notification} = require("electron");
+const {ipcMain, Notification, dialog} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
 const psList = require("ps-list");
-const treeKill = require("tree-kill");
-const sudoPrompt = require("sudo-prompt");
+const _sudoPrompt = require("sudo-prompt");
 const fs = require("fs");
-const net = require("net");
 const path = require("path");
 
 const isWindows = process.platform === "win32";
@@ -25,6 +23,21 @@ function notification(msg) {
 const getWindowsInstallPath = () => {
     const systemRoot = process.env["WINDIR"] || process.env["windir"] || process.env["SystemRoot"];
     return path.join(systemRoot, "System32", "yak.exe")
+};
+
+function generateWindowsSudoCommand(file, args) {
+    const cmds = args === "" ? `"'${file}'"` : `"'${file}'" "'${args}'"`
+    return `powershell.exe start-process -verb runas -WindowStyle hidden -filepath ${cmds}`
+}
+
+const getLatestYakLocalEngine = require("./upgradeUtil").getLatestYakLocalEngine;
+
+function sudoExec(cmd, opt, callback) {
+    if (isWindows) {
+        childProcess.exec(cmd, callback)
+    } else {
+        _sudoPrompt.exec(cmd, opt, callback)
+    }
 }
 
 const windowsPidTableNetstatANO = (stdout) => {
@@ -96,7 +109,7 @@ module.exports = {
                 psList().then(data => {
                     let ls = data.filter(i => {
                         try {
-                            return i.name === "yak" && i.cmd.includes("yak grpc");
+                            return i.cmd.includes("yak grpc --port ");
                         } catch (e) {
                             return false
                         }
@@ -110,6 +123,7 @@ module.exports = {
                         return {
                             port: portsRaw,
                             ...i,
+                            name: "yak",
                         }
                     }).map(i => {
                         return {port: parseInt(i.port), ...i, origin: i}
@@ -135,15 +149,16 @@ module.exports = {
                         if (!error) {
                             resolve(true)
                         } else {
-                            sudoPrompt.exec(`taskkill /F /PID ${pid}`, {
-                                "name": `taskkill F PID ${pid}`,
-                            }, err => {
-                                if (!error) {
-                                    resolve(true)
-                                } else {
-                                    reject(`${err}`)
+                            sudoExec(
+                                generateWindowsSudoCommand("taskkill", `/F /PID ${pid}`), undefined,
+                                error => {
+                                    if (!error) {
+                                        resolve(true)
+                                    } else {
+                                        reject(`${err}`)
+                                    }
                                 }
-                            })
+                            )
                         }
                     })
                 } else {
@@ -151,7 +166,7 @@ module.exports = {
                         if (!error) {
                             resolve(true)
                         } else {
-                            sudoPrompt.exec(`kill -9 ${pid}`, {
+                            sudoExec(`kill -9 ${pid}`, {
                                 name: `kill SIGKILL PID ${pid}`
                             }, err => {
                                 console.info(err)
@@ -179,47 +194,72 @@ module.exports = {
             return new Promise((resolve, reject) => {
                 const {sudo} = params;
 
-                if (process.platform === "darwin" || process.platform === "linux") {
-                    process.env.PATH = process.env.PATH + ":/usr/local/bin/"
-                }
-
-                if (!isWindows) {
-                    // 如果是 mac/ubuntu
-                    if (!fs.existsSync("/usr/local/bin")) {
-                        reject(new Error("cannot find '/usr/local/bin'"))
-                        return
-                    }
-
-                    if (!fs.existsSync("/usr/local/bin/yak")) {
-                        reject(new Error("uninstall yak engine"))
-                        return
-                    }
-                }
+                // if (process.platform === "darwin" || process.platform === "linux") {
+                //     process.env.PATH = process.env.PATH + ":/usr/local/bin/"
+                // }
+                // if (!isWindows) {
+                //     // 如果是 mac/ubuntu
+                //     if (!fs.existsSync("/usr/local/bin")) {
+                //         reject(new Error("cannot find '/usr/local/bin'"))
+                //         return
+                //     }
+                //
+                //     if (!fs.existsSync("/usr/local/bin/yak")) {
+                //         reject(new Error("uninstall yak engine"))
+                //         return
+                //     }
+                // }
 
 
                 let randPort = 50000 + getRandomInt(10000);
-                const cmd = `yak grpc --port ${randPort}`;
                 try {
                     if (sudo) {
-                        sudoPrompt.exec(cmd, {
-                                name: `yak grpc port ${randPort}`,
-                            },
-                            function (error) {
-                                if (error) {
-                                    reject(error)
+                        if (isWindows) {
+                            childProcess.exec(generateWindowsSudoCommand(
+                                getLatestYakLocalEngine(), `grpc --port ${randPort}`),
+                                err => {
+                                    if (err) {
+                                        dialog.showErrorBox("sudo start yak error", `${err}`)
+                                        reject(error)
+                                    } else {
+                                        resolve()
+                                    }
+                                })
+                        } else {
+                            const cmd = `${getLatestYakLocalEngine()} grpc --port ${randPort}`;
+                            sudoExec(cmd, {
+                                    name: `yak grpc port ${randPort}`,
+                                },
+                                function (error) {
+                                    if (error) {
+                                        reject(error)
+                                    } else {
+                                        resolve()
+                                    }
+                                }
+                            )
+                        }
+
+
+                    } else {
+                        childProcess.execFile(
+                            getLatestYakLocalEngine(),
+                            ["grpc", "--port", `${randPort}`],
+                            err => {
+                                if (err) {
+                                    reject(err)
                                 } else {
                                     resolve()
                                 }
                             }
                         )
-                    } else {
-                        childProcess.exec(cmd, err => {
-                            if (err) {
-                                reject(err)
-                            } else {
-                                resolve()
-                            }
-                        })
+                        // childProcess.exec(cmd, err => {
+                        //     if (err) {
+                        //         reject(err)
+                        //     } else {
+                        //         resolve()
+                        //     }
+                        // })
                     }
                 } catch (e) {
                     reject(e)
@@ -233,16 +273,18 @@ module.exports = {
         })
 
         ipcMain.handle("is-yak-engine-installed", e => {
-            if (!isWindows) {
-                // 如果是 mac/ubuntu
-                if (!fs.existsSync("/usr/local/bin")) {
-                    return false
-                }
-                return fs.existsSync("/usr/local/bin/yak");
+            return fs.existsSync(getLatestYakLocalEngine())
 
-            } else {
-                return fs.existsSync(getWindowsInstallPath())
-            }
+            // if (!isWindows) {
+            //     // 如果是 mac/ubuntu
+            //     if (!fs.existsSync("/usr/local/bin")) {
+            //         return false
+            //     }
+            //     return fs.existsSync("/usr/local/bin/yak");
+            //
+            // } else {
+            //     return fs.existsSync(getWindowsInstallPath())
+            // }
         })
     },
 }
