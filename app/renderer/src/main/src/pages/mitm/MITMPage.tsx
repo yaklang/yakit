@@ -459,6 +459,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                     <Button onClick={() => {
                                         start()
                                         setPassiveMode(true)
+                                        setAutoForward(true)
                                     }}>
                                         被动扫描模式
                                     </Button>

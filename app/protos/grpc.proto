@@ -209,6 +209,10 @@ message StartBruteParams {
   string Type = 1;
   string Targets = 2;
   string TargetFile = 3;
+
+  // 设置如果用户输入了，就代替默认字典
+  string ReplaceDefaultDict = 27;
+
   repeated string Usernames = 4;
   string UsernameFile = 24;
 
