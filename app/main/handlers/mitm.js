@@ -23,6 +23,13 @@ module.exports = (win, getClient) => {
                 recover: true,
             })
         }
+    });
+
+    //
+    ipcMain.handle("mitm-auto-forward", (e, value) => {
+        if (stream) {
+            stream.write({setAutoForward: true, autoForwardValue: value})
+        }
     })
 
     // 丢掉该消息
@@ -228,8 +235,8 @@ module.exports = (win, getClient) => {
 
     const asyncFetchHostIp = (params) => {
         return new Promise((resolve, reject) => {
-            DNS.lookup(params,function(err,address){ 
-                if (err){ 
+            DNS.lookup(params, function (err, address) {
+                if (err) {
                     reject(err)
                     return
                 }
