@@ -211,7 +211,8 @@ message StartBruteParams {
   string TargetFile = 3;
 
   // 设置如果用户输入了，就代替默认字典
-  string ReplaceDefaultDict = 27;
+  bool ReplaceDefaultUsernameDict = 28;
+  bool ReplaceDefaultPasswordDict = 29;
 
   repeated string Usernames = 4;
   string UsernameFile = 24;
