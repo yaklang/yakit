@@ -880,6 +880,10 @@ message MITMRequest {
   // 移除插件
   bool removeHook = 31;  // 当这个为 true 的时候，将会
   RemoveHookParams removeHookParams = 32;
+
+  // 设置自动转发
+  bool setAutoForward = 33;
+  bool autoForwardValue = 34;
 }
 
 message RemoveHookParams {

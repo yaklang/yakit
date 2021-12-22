@@ -174,7 +174,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         let messages: ExecResultLog[] = [];
         ipcRenderer.on("client-mitm-message", (e, data: ExecResult) => {
             let msg = ExtractExecResultMessage(data);
-            // console.info(data, msg)
+            console.info(data, msg)
             if (msg !== undefined) {
                 messages.push(msg as ExecResultLog)
                 if (messages.length > 25) {
@@ -254,6 +254,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             includeHostname: msg.includeHostname,
             excludeHostname: msg.excludeHostname,
         })
+        console.info(msg)
 
         // passive 模式是 mitm 插件模式
         //    在这个模式下，应该直接转发，不应该操作数据包
@@ -312,6 +313,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         return () => {
             ipcRenderer.removeAllListeners("client-mitm-hijacked")
         }
+    }, [autoForward])
+
+    useEffect(() => {
+        ipcRenderer.invoke("mitm-auto-forward", autoForward).finally(() => {
+            console.info(`设置服务端自动转发：${autoForward}`)
+        })
     }, [autoForward])
 
     useEffect(() => {
