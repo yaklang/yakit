@@ -64,7 +64,7 @@ WOG+9PGLcr4IRJx5LUEZ5FB1
 -----END CERTIFICATE-----`
 
 
-export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
+const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
     const [connected, setConnected] = useState(false);
     const [host, setHost] = useState("127.0.0.1");
     const [port, setPort] = useState(8087);
@@ -304,3 +304,5 @@ export const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
 
     </div>
 };
+
+export default YakEnvironment;

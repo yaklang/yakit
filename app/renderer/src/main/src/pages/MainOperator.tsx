@@ -1,15 +1,39 @@
-import React, { useEffect, useState } from "react"
-import { Button, Col, Image, Layout, Menu, Modal, Popconfirm, Popover, Row, Space, Tabs, Input, Divider, Tag, Spin, Dropdown } from "antd"
-import { ContentByRoute, MenuDataProps, NoScrollRoutes, Route, RouteMenuData } from "../routes/routeSpec"
-import { CloseOutlined, EditOutlined, EllipsisOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReloadOutlined } from "@ant-design/icons"
-import { failed, info, success } from "../utils/notification"
-import { showModal } from "../utils/showModal"
-import { YakLogoBanner } from "../utils/logo"
-import { AutoUpdateYakModuleButton, YakitVersion, YakVersion } from "../utils/basic"
-import { CompletionTotal, setCompletions } from "../utils/monacoSpec/yakCompletionSchema"
-import { randomString } from "../utils/randomUtil"
+import React, {useEffect, useState} from "react"
+import {
+    Button,
+    Col,
+    Image,
+    Layout,
+    Menu,
+    Modal,
+    Popconfirm,
+    Popover,
+    Row,
+    Space,
+    Tabs,
+    Input,
+    Divider,
+    Tag,
+    Spin,
+    Dropdown
+} from "antd"
+import {ContentByRoute, MenuDataProps, NoScrollRoutes, Route, RouteMenuData} from "../routes/routeSpec"
+import {
+    CloseOutlined,
+    EditOutlined,
+    EllipsisOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    ReloadOutlined
+} from "@ant-design/icons"
+import {failed, info, success} from "../utils/notification"
+import {showModal} from "../utils/showModal"
+import {YakLogoBanner} from "../utils/logo"
+import {AutoUpdateYakModuleButton, YakitVersion, YakVersion} from "../utils/basic"
+import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema"
+import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
-import { genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript } from "./invoker/schema"
+import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "./invoker/schema"
 
 import "./main.css"
 
@@ -19,10 +43,10 @@ export interface MainProp {
     onErrorConfirmed?: () => any
 }
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
 
-const { Header, Footer, Content, Sider } = Layout
+const {Header, Footer, Content, Sider} = Layout
 
 interface MenuItemGroup {
     Group: string
@@ -50,7 +74,7 @@ const singletonRoute = [
     Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
 ]
 
-export const Main: React.FC<MainProp> = (props) => {
+const Main: React.FC<MainProp> = (props) => {
     const [route, setRoute] = useState<any>(Route.HTTPHacker)
     const [collapsed, setCollapsed] = useState(false)
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
@@ -101,7 +125,7 @@ export const Main: React.FC<MainProp> = (props) => {
         setPageCache(pageCache.filter((i) => i.id !== id))
     }
     const appendCache = (id: string, verbose: string, node: any, route: Route) => {
-        setPageCache([...pageCache, { id, verbose, node, route }])
+        setPageCache([...pageCache, {id, verbose, node, route}])
     }
 
     const getCacheIndex = (id: string) => {
@@ -196,7 +220,8 @@ export const Main: React.FC<MainProp> = (props) => {
                 .catch((e) => {
                     setEngineStatus("error")
                 })
-                .finally(() => {})
+                .finally(() => {
+                })
         }, 1000)
         return () => {
             ipcRenderer.removeAllListeners("client-engine-status-error")
@@ -221,7 +246,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                         title: "Notification",
                                         content: (
                                             <>
-                                                <MDEditor.Markdown source={e} />
+                                                <MDEditor.Markdown source={e}/>
                                             </>
                                         )
                                     })
@@ -281,7 +306,7 @@ export const Main: React.FC<MainProp> = (props) => {
     const tabBarMenu = (id: any, route: string) => {
         return (
             <Menu
-                onClick={({ key }) => {
+                onClick={({key}) => {
                     switch (key) {
                         case "all":
                             closeAllCache()
@@ -329,7 +354,7 @@ export const Main: React.FC<MainProp> = (props) => {
     }
 
     return (
-        <Layout style={{ width: "100%", height: "100vh" }}>
+        <Layout style={{width: "100%", height: "100vh"}}>
             <Header
                 style={{
                     paddingLeft: 0,
@@ -342,40 +367,40 @@ export const Main: React.FC<MainProp> = (props) => {
                 <Row>
                     <Col span={8}>
                         <Space>
-                            <div style={{ marginLeft: 18, textAlign: "center", height: 60 }}>
-                                <Image src={YakLogoBanner} preview={false} width={130} style={{ marginTop: 6 }} />
+                            <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
+                                <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}}/>
                             </div>
-                            <Divider type={"vertical"} />
-                            <YakVersion />
-                            <YakitVersion />
+                            <Divider type={"vertical"}/>
+                            <YakVersion/>
+                            <YakitVersion/>
                             {!hideMenu && (
                                 <Button
-                                    style={{ marginLeft: 4, color: "#207ee8" }}
+                                    style={{marginLeft: 4, color: "#207ee8"}}
                                     type={"ghost"}
                                     ghost={true}
                                     onClick={(e) => {
                                         setCollapsed(!collapsed)
                                     }}
-                                    icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                                    icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
                                 />
                             )}
                             <Button
-                                style={{ marginLeft: 4, color: "#207ee8" }}
+                                style={{marginLeft: 4, color: "#207ee8"}}
                                 type={"ghost"}
                                 ghost={true}
                                 onClick={(e) => {
                                     updateMenuItems()
                                 }}
-                                icon={<ReloadOutlined />}
-                            ></Button>
+                                icon={<ReloadOutlined/>}
+                            />
                         </Space>
                     </Col>
-                    <Col span={16} style={{ textAlign: "right", paddingRight: 28 }}>
+                    <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
                         <Space>
                             {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>}
                             {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                             <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag>
-                            <AutoUpdateYakModuleButton />
+                            <AutoUpdateYakModuleButton/>
                             <Popconfirm
                                 title={"确认需要退出当前会话吗？"}
                                 onConfirm={() => {
@@ -396,10 +421,10 @@ export const Main: React.FC<MainProp> = (props) => {
                     overflow: "auto"
                 }}
             >
-                <Layout style={{ height: "100%", overflow: "hidden" }}>
+                <Layout style={{height: "100%", overflow: "hidden"}}>
                     {!hideMenu && (
                         <Sider
-                            style={{ backgroundColor: "#fff", overflow: "auto" }}
+                            style={{backgroundColor: "#fff", overflow: "auto"}}
                             collapsed={collapsed}
                             // onCollapse={r => {
                             //     setCollapsed(r)
@@ -418,7 +443,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                         selectedKeys={[]}
                                         onSelect={(e) => {
                                             if (e.key === "ignore") return
-                                            
+
 
                                             if (singletonRoute.includes(e.key as Route) && routeExistedCount(e.key as Route) > 0) {
                                                 setCurrentTabByRoute(e.key as Route)
@@ -444,10 +469,11 @@ export const Main: React.FC<MainProp> = (props) => {
                                                 i.Group = "社区插件"
                                             }
                                             return (
-                                                <Menu.SubMenu icon={<EllipsisOutlined />} key={i.Group} title={i.Group}>
+                                                <Menu.SubMenu icon={<EllipsisOutlined/>} key={i.Group} title={i.Group}>
                                                     {i.Items.map((item) => {
                                                         return (
-                                                            <MenuItem icon={<EllipsisOutlined />} key={`plugin:${item.Group}:${item.YakScriptId}`}>
+                                                            <MenuItem icon={<EllipsisOutlined/>}
+                                                                      key={`plugin:${item.Group}:${item.YakScriptId}`}>
                                                                 {item.Verbose}
                                                             </MenuItem>
                                                         )
@@ -460,7 +486,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                                 if (i.key === `${Route.GeneralModule}`) {
                                                     const extraMenus = extraGeneralModule.map((i) => {
                                                         return {
-                                                            icon: <EllipsisOutlined />,
+                                                            icon: <EllipsisOutlined/>,
                                                             key: `plugin:${i.Id}`,
                                                             label: i.GeneralModuleVerbose
                                                         } as MenuDataProps
@@ -479,7 +505,8 @@ export const Main: React.FC<MainProp> = (props) => {
                                                     <Menu.SubMenu icon={i.icon} key={i.key} title={i.label}>
                                                         {(i.subMenuData || []).map((subMenu) => {
                                                             return (
-                                                                <MenuItem icon={subMenu.icon} key={subMenu.key} disabled={subMenu.disabled}>
+                                                                <MenuItem icon={subMenu.icon} key={subMenu.key}
+                                                                          disabled={subMenu.disabled}>
                                                                     {subMenu.label}
                                                                 </MenuItem>
                                                             )
@@ -498,11 +525,17 @@ export const Main: React.FC<MainProp> = (props) => {
                             </Spin>
                         </Sider>
                     )}
-                    <Content style={{ overflow: "hidden", backgroundColor: "#fff", marginLeft: 12, height: "100%", display: "flex" }}>
-                        <div style={{ padding: 12, paddingTop: 8, overflow: "hidden", display: "flex", flex: "1" }}>
+                    <Content style={{
+                        overflow: "hidden",
+                        backgroundColor: "#fff",
+                        marginLeft: 12,
+                        height: "100%",
+                        display: "flex"
+                    }}>
+                        <div style={{padding: 12, paddingTop: 8, overflow: "hidden", display: "flex", flex: "1"}}>
                             {pageCache.length > 0 ? (
                                 <Tabs
-                                    style={{ display: "flex", flex: "1" }}
+                                    style={{display: "flex", flex: "1"}}
                                     className='main-content-tabs'
                                     activeKey={currentTabKey}
                                     onChange={setCurrentTabKey}
@@ -550,7 +583,7 @@ export const Main: React.FC<MainProp> = (props) => {
                                                                 </>
                                                             }
                                                         >
-                                                            <EditOutlined className='main-container-cion' />
+                                                            <EditOutlined className='main-container-cion'/>
                                                         </Popover>
                                                         <CloseOutlined
                                                             className='main-container-cion'
@@ -594,4 +627,6 @@ export const Main: React.FC<MainProp> = (props) => {
             </Content>
         </Layout>
     )
-}
+};
+
+export default Main;

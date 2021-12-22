@@ -1,3 +1,4 @@
+import React, {Suspense} from "react";
 import {YakExecutor} from "../pages/invoker/YakExecutor";
 import {
     AimOutlined,
@@ -10,8 +11,8 @@ import {
     OneToOneOutlined,
     RocketOutlined,
 } from "@ant-design/icons";
-import {HTTPHacker} from "../pages/hacker/httpHacker";
-import {CodecPage} from "../pages/codec/CodecPage";
+// import {HTTPHacker} from "../pages/hacker/httpHacker";
+// import {CodecPage} from "../pages/codec/CodecPage";
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage";
 import {YakBatchExecutor} from "../pages/invoker/batch/YakBatchExecutor";
 import {YakScriptManagerPage} from "../pages/invoker/YakScriptManager";
@@ -28,6 +29,8 @@ import {ExecResultsViewer} from "../pages/invoker/batch/ExecMessageViewer";
 import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable";
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage";
 
+const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
+const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
 
 export enum Route {
     MITM = "mitm",
@@ -245,7 +248,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
         case Route.YakScript:
             return <YakExecutor/>
         case Route.HTTPHacker:
-            return <HTTPHacker/>
+            return <Suspense fallback={<div>loading</div>}>
+                <HTTPHacker/>
+            </Suspense>
         case Route.Codec:
             return <CodecPage/>
         case Route.ModManager:

@@ -1,11 +1,16 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, Suspense, lazy} from 'react';
 import {Form, Modal, notification, Spin, Tabs, Typography} from "antd";
 
 // by types
-import {YakEnvironment} from "./protected/YakEnvironment";
 import {yakEcho} from "./utils/yakEcho";
-import {Main} from "./pages/MainOperator";
 import {failed, info, success} from "./utils/notification";
+import {AutoSpin} from "./components/AutoSpin";
+
+
+// import Main from "./pages/MainOperator";
+const Main = lazy(() => import("./pages/MainOperator"));
+// import {YakEnvironment} from "./protected/YakEnvironment";
+const YakEnvironment = lazy(() => import("./protected/YakEnvironment"));
 
 const {ipcRenderer} = window.require("electron");
 const FormItem = Form.Item;
@@ -147,24 +152,27 @@ function App() {
         return userProtocol()
     }
 
-    return connected ? <Main
-        onErrorConfirmed={() => {
-            setConnected(false)
-        }}
-    /> : <Spin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."} style={{
-        marginBottom: 100,
-    }}>
-        <YakEnvironment
-            setMode={setMode}
-            onConnected={() => {
-                testYak()
-            }}
-            onTlsGRPC={e => {
-                setTlsGRPC(e)
-            }}
-            onAddrChanged={setAddr}
-        />
-    </Spin>
+    return connected ? <Suspense fallback={<div>Loading Main</div>}>
+            <Main
+                onErrorConfirmed={() => {
+                    setConnected(false)
+                }}
+            />
+        </Suspense> :
+        <Suspense fallback={<div style={{width: "100%", marginTop: 200, textAlign: "center"}}>
+            <AutoSpin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."}/>
+        </div>}>
+            <YakEnvironment
+                setMode={setMode}
+                onConnected={() => {
+                    testYak()
+                }}
+                onTlsGRPC={e => {
+                    setTlsGRPC(e)
+                }}
+                onAddrChanged={setAddr}
+            />
+        </Suspense>
 }
 
 export default App;

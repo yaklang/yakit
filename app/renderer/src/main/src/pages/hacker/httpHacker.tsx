@@ -17,7 +17,7 @@ const defaultHTTPPacket = `GET / HTTP/1.1
 Host: www.example.com
 `
 
-export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
+const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
     const [activeTab, setActiveTag] = useState("mitm")
     const [loading, setLoading] = useState(false)
 
@@ -170,3 +170,5 @@ export const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         </Tabs>
     </div>
 };
+
+export default HTTPHacker;
