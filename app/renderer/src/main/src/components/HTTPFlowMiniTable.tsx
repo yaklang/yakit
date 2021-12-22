@@ -14,6 +14,7 @@ const {ipcRenderer} = window.require("electron");
 
 export interface HTTPFlowMiniTableProp {
     simple?: boolean
+    autoUpdate?: boolean
     source: "crawler" | "mitm" | any
     filter: YakQueryHTTPFlowRequest
     onTotal: (total: number) => any
@@ -200,6 +201,10 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
 
     useEffect(() => {
         if (props.simple) {
+
+            if (!props.autoUpdate) {
+                return
+            }
             const id = setInterval(() => {
                 updateThrottle.run()
             }, 1000)
@@ -207,7 +212,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                 clearInterval(id)
             }
         }
-    }, [props.simple])
+    }, [props.simple, props.autoUpdate])
 
     return <div style={{width: "100%", height: "100%", overflow: "auto"}}>
         <ReactResizeDetector

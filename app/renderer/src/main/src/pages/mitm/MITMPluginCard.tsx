@@ -25,6 +25,7 @@ export interface MITMPluginCardProp {
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
     onExit?: () => any
+    autoUpdate?: boolean
 }
 
 const defaultScript = mitmPluginTemplateShort;
@@ -106,6 +107,7 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                             Pagination: {...genDefaultPagination(), Page: 1, Limit: 20}
                         }}
                         source={""}
+                        autoUpdate={props.autoUpdate}
                         onSendToWebFuzzer={props.onSendToWebFuzzer}
                     />
                 </div>

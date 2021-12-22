@@ -237,6 +237,10 @@ module.exports = {
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {
                 childProcess.execFile(getLatestYakLocalEngine(), ["-v"], (err, stdout) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
                     // const version = stdout.replaceAll("yak version ()", "").trim();
                     const version = /.*?yak(\.exe)?\s+version\s+([^\s]+)/.exec(stdout)[2];
                     if (!version) {
