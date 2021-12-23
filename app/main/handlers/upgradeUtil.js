@@ -236,23 +236,27 @@ module.exports = {
         // asyncQueryLatestYakEngineVersion wrapper
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {
-                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], (err, stdout) => {
-                    if (err) {
-                        reject(err)
-                        return
-                    }
-                    // const version = stdout.replaceAll("yak version ()", "").trim();
-                    const version = /.*?yak(\.exe)?\s+version\s+([^\s]+)/.exec(stdout)[2];
-                    if (!version) {
+                try {
+                    childProcess.execFile(getLatestYakLocalEngine(), ["-v"], (err, stdout) => {
                         if (err) {
                             reject(err)
-                        } else {
-                            reject("[unknown reason] cannot fetch yak version (yak -v)")
+                            return
                         }
-                    } else {
-                        resolve(version)
-                    }
-                })
+                        // const version = stdout.replaceAll("yak version ()", "").trim();
+                        const version = /.*?yak(\.exe)?\s+version\s+([^\s]+)/.exec(stdout)[2];
+                        if (!version) {
+                            if (err) {
+                                reject(err)
+                            } else {
+                                reject("[unknown reason] cannot fetch yak version (yak -v)")
+                            }
+                        } else {
+                            resolve(version)
+                        }
+                    })
+                } catch (e) {
+                    reject(e)
+                }
             })
         }
         ipcMain.handle("get-current-yak", async (e, params) => {
@@ -359,7 +363,6 @@ module.exports = {
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
-                    console.info(e)
                 }
 
                 childProcess.exec(

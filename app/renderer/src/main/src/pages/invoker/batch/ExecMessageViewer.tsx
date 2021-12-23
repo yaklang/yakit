@@ -52,7 +52,7 @@ export const ExecResultsViewer: React.FC<ExecResultsViewerProp> = (props) => {
             return i.content
         })
         .sort((a: any, b: any) => a.timestamp - b.timestamp) as ExecResultLog[];
-    const haveCriticalResult = logs.filter(i => ["json", "success"].includes(i.level.toLowerCase())).length > 0;
+    const haveCriticalResult = logs.filter(i => ["json", "success"].includes((i?.level || "").toLowerCase())).length > 0;
 
     // 处理进度
     const progressTable = new Map<string, number>();
