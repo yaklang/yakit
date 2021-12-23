@@ -31,6 +31,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
 import {SelectOne} from "../../utils/inputUtil";
 import {MITMPluginOperator} from "./MITMPluginOperator";
+import {useLatest, useReactive} from "ahooks";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -108,6 +109,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     // yakit log message
     const [logs, setLogs] = useState<ExecResultLog[]>([]);
+    const latestLogs = useLatest<ExecResultLog[]>(logs);
 
     // filter 过滤器
     const [mitmFilter, setMITMFilter] = useState<MITMFilterSchema>({});
@@ -171,11 +173,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         })
 
         // 用于 MITM 的 Message （YakitLog）
-        let messages: ExecResultLog[] = [];
+        const messages: ExecResultLog[] = [];
         ipcRenderer.on("client-mitm-message", (e, data: ExecResult) => {
             let msg = ExtractExecResultMessage(data);
-            console.info(data, msg)
             if (msg !== undefined) {
+                // logHandler.logs.push(msg as ExecResultLog)
+                // if (logHandler.logs.length > 25) {
+                //     logHandler.logs.shift()
+                // }
                 messages.push(msg as ExecResultLog)
                 if (messages.length > 25) {
                     messages.shift()
@@ -226,7 +231,17 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         })
 
         const updateLogs = () => {
-            setLogs([...messages])
+            if (latestLogs.current.length !== messages.length) {
+                setLogs([...messages])
+                return
+            }
+
+            if (latestLogs.current.length > 0 && messages.length > 0) {
+                if (latestLogs.current[0].data !== messages[0].data) {
+                    setLogs([...messages])
+                    return
+                }
+            }
         }
         updateLogs()
         let id = setInterval(() => {
@@ -254,7 +269,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             includeHostname: msg.includeHostname,
             excludeHostname: msg.excludeHostname,
         })
-        console.info(msg)
 
         // passive 模式是 mitm 插件模式
         //    在这个模式下，应该直接转发，不应该操作数据包
@@ -725,6 +739,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             {haveSideCar && <Col span={9} style={{height: "100%"}}>
                                 <div style={{height: "100%"}}>
                                     <MITMPluginCard
+                                        autoUpdate={!passiveMode}
                                         messages={logs} hooks={mitmHooks}
                                         onSubmitScriptContent={e => {
                                             ipcRenderer.invoke("mitm-exec-script-content", e)
