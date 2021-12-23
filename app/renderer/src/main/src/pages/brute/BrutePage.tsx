@@ -2,14 +2,10 @@ import React, { useEffect, useState } from "react"
 import { Button, Card, Checkbox, Col, Form, Input, List, Row, Space, Tag } from "antd"
 import { ReloadOutlined } from "@ant-design/icons"
 import { InputInteger, InputItem, SwitchItem } from "../../utils/inputUtil"
-import { HoldingIPCRenderExecStream } from "../yakitStore/PluginExecutor"
 import { randomString } from "../../utils/randomUtil"
-import { ExecResultLog, ExecResultProgress } from "../invoker/batch/ExecMessageViewer"
-import { ExecResultStatusCard, PluginResultUI, StatusCardProps } from "../yakitStore/viewers/base"
+import { PluginResultUI } from "../yakitStore/viewers/base"
 import { warn, failed } from "../../utils/notification"
-import { TimeIntervalItem, TimeUnit } from "../../utils/timeInterval"
-import { showDrawer, showModal } from "../../utils/showModal"
-import { useDynamicList, useMap, useThrottle, useThrottleFn } from "ahooks"
+import { showModal } from "../../utils/showModal"
 
 import { AutoCard } from "../../components"
 import { useHoldingIPCRStream } from "../../hook"
@@ -40,6 +36,9 @@ export interface StartBruteParams {
     DelayMax?: number
 
     PluginScriptName?: string
+
+    usernameValue?: string
+    passwordValue?: string
 }
 
 export interface BrutePageProp {}
@@ -51,61 +50,18 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [targetTextRow, setTargetTextRow] = useState(false)
     const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false)
     const [advanced, setAdvanced] = useState(false)
-    const [taskToken, setTaskToken] = useState("")
+    const [taskToken, _] = useState(randomString(40))
 
-    const [xtermRef, setXtermRef] = useState<any>()
     const [loading, setLoading] = useState(false)
-    // const token = randomString(40)
 
-    // const [resetTrigger, setResetTrigger] = useState(false)
-
-    // const reset = () => {
-    //     setResetTrigger(!resetTrigger)
-    //     setLogs([])
-    //     setStatusCards([])
-    //     setProgress([])
-    // }
-
-    // execStream
-    // const [logs, setLogs] = useState<ExecResultLog[]>([])
-    // const [progress, setProgress] = useState<ExecResultProgress[]>([])
-
-    // const { infoState } = useHoldingIPCRStream("brute", "StartBrute", token, xtermRef, () => {
-    //     setTimeout(() => setLoading(false), 300)
-    // })
-
-    // useEffect(() => {
-    //     console.log(123, infoState)
-    // }, [infoState])
-
-    // 设置 IPC 回传的结果
-    const messageListProvider = useDynamicList<ExecResultLog>([])
-    const [progressMap, progressProvider] = useMap<string, number>(new Map<string, number>())
-    const [statusMap, statusProvider] = useMap<string, StatusCardProps>(new Map<string, ExecResultStatusCard>())
-    // 为 statusSet 做节流处理，节流一定要注意 statusSet
-    const statusOpThrottle = useThrottleFn(
-        (i: string, value: ExecResultStatusCard) => {
-            statusProvider.set(i, value)
-        },
-        { wait: 500 }
+    const [infoState, { start, reset, setXtermRef }] = useHoldingIPCRStream(
+        "brute",
+        "StartBrute",
+        taskToken,
+        () => {
+            setTimeout(() => setLoading(false), 300)
+        }
     )
-
-    const reset = () => {
-        messageListProvider.resetList([])
-        progressProvider.reset()
-        statusProvider.reset()
-    }
-
-    const processes: ExecResultProgress[] = []
-    progressMap.forEach((value, id) => {
-        processes.push({ id: id, progress: value })
-    })
-    processes.sort((a, b) => a.id.localeCompare(b.id))
-    const statusCards: StatusCardProps[] = []
-    statusMap.forEach((value) => {
-        statusCards.push(value)
-    })
-    statusCards.sort((a, b) => a.Id.localeCompare(b.Id))
 
     // params
     const [params, setParams] = useState<StartBruteParams>({
@@ -126,7 +82,10 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
         UsernameFile: "",
         Usernames: [],
         UsernamesDict: [],
-        ReplaceDefaultUsernameDict: false
+        ReplaceDefaultUsernameDict: false,
+
+        usernameValue: "",
+        passwordValue: ""
     })
 
     useEffect(() => {
@@ -151,24 +110,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
 
     useEffect(() => {
         if (availableTypes.length <= 0) loadTypes()
-
-        const token = randomString(40)
-        setTaskToken(token)
-        return HoldingIPCRenderExecStream(
-            "brute",
-            "StartBrute",
-            token,
-            xtermRef,
-            // setLogs, setProgress, setStatusCards,
-            messageListProvider,
-            progressProvider,
-            { ...statusProvider, set: statusOpThrottle.run, flush: statusOpThrottle.flush },
-            () => {
-                setTimeout(() => setLoading(false), 300)
-            },
-            undefined
-        )
-    }, [xtermRef])
+    }, [])
 
     return (
         <div style={{ height: "100%", backgroundColor: "#fff", width: "100%", display: "flex" }}>
@@ -237,23 +179,40 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 }
 
                                 const info = JSON.parse(JSON.stringify(params))
-                                info.Usernames = (info.Usernames || []).concat(info.UsernamesDict || [])
+                                info.Usernames = (info.Usernames || []).concat(
+                                    info.UsernamesDict || []
+                                )
                                 info.ReplaceDefaultUsernameDict = info.Usernames.length > 0
                                 delete info.UsernamesDict
-                                info.Passwords = (info.Passwords || []).concat(info.PasswordsDict || [])
+                                info.Passwords = (info.Passwords || []).concat(
+                                    info.PasswordsDict || []
+                                )
                                 info.ReplaceDefaultPasswordDict = info.Passwords.length > 0
                                 delete info.PasswordsDict
 
                                 reset()
                                 setLoading(true)
-                                ipcRenderer.invoke("StartBrute", info, taskToken)
+
+                                setTimeout(() => {
+                                    start()
+                                    ipcRenderer.invoke("StartBrute", info, taskToken)
+                                }, 300)
                             }}
                             style={{ width: "100%", textAlign: "center", alignItems: "center" }}
                         >
                             <Space direction={"vertical"} style={{ width: "100%" }} size={4}>
-                                <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "row",
+                                        alignItems: "center"
+                                    }}
+                                >
                                     <span style={{ marginRight: 8 }}>输入目标: </span>
-                                    <Form.Item required={true} style={{ marginBottom: 0, flex: "1 1 0px" }}>
+                                    <Form.Item
+                                        required={true}
+                                        style={{ marginBottom: 0, flex: "1 1 0px" }}
+                                    >
                                         {targetTextRow ? (
                                             <Input.TextArea />
                                         ) : (
@@ -267,9 +226,14 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                 <Input
                                                     style={{ marginRight: 8, height: 42, flex: 1 }}
                                                     allowClear={true}
-                                                    placeholder={"内容规则 域名(:端口)/IP(:端口)/IP段"}
+                                                    placeholder={
+                                                        "内容规则 域名(:端口)/IP(:端口)/IP段"
+                                                    }
                                                     onChange={(e) => {
-                                                        setParams({ ...params, Targets: e.target.value })
+                                                        setParams({
+                                                            ...params,
+                                                            Targets: e.target.value
+                                                        })
                                                     }}
                                                 />
                                                 {loading ? (
@@ -277,14 +241,21 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                         style={{ height: 42, width: 180 }}
                                                         type={"primary"}
                                                         onClick={() => {
-                                                            ipcRenderer.invoke("cancel-StartBrute", taskToken)
+                                                            ipcRenderer.invoke(
+                                                                "cancel-StartBrute",
+                                                                taskToken
+                                                            )
                                                         }}
                                                         danger={true}
                                                     >
                                                         立即停止任务
                                                     </Button>
                                                 ) : (
-                                                    <Button style={{ height: 42, width: 180 }} type={"primary"} htmlType={"submit"}>
+                                                    <Button
+                                                        style={{ height: 42, width: 180 }}
+                                                        type={"primary"}
+                                                        htmlType={"submit"}
+                                                    >
                                                         开始检测
                                                     </Button>
                                                 )}
@@ -295,8 +266,14 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 <div style={{ textAlign: "left", width: "100%", marginLeft: 68 }}>
                                     <Space>
                                         <Tag>目标并发:{params.Concurrent}</Tag>
-                                        {(params?.TargetTaskConcurrent || 1) > 1 && <Tag>目标内爆破并发:{params.TargetTaskConcurrent}</Tag>}
-                                        {params?.OkToStop ? <Tag>爆破成功即停止</Tag> : <Tag>爆破成功后仍继续</Tag>}
+                                        {(params?.TargetTaskConcurrent || 1) > 1 && (
+                                            <Tag>目标内爆破并发:{params.TargetTaskConcurrent}</Tag>
+                                        )}
+                                        {params?.OkToStop ? (
+                                            <Tag>爆破成功即停止</Tag>
+                                        ) : (
+                                            <Tag>爆破成功后仍继续</Tag>
+                                        )}
                                         {(params?.DelayMax || 0) > 0 && (
                                             <Tag>
                                                 随机暂停:{params.DelayMin}-{params.DelayMax}s
@@ -311,7 +288,10 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                     width: "50%",
                                                     content: (
                                                         <>
-                                                            <BruteParamsForm defaultParams={params} setParams={setParams} />
+                                                            <BruteParamsForm
+                                                                defaultParams={params}
+                                                                setParams={setParams}
+                                                            />
                                                         </>
                                                     )
                                                 })
@@ -323,8 +303,16 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 </div>
                                 {advanced && (
                                     <div style={{ textAlign: "left" }}>
-                                        <Form onSubmitCapture={(e) => e.preventDefault()} size={"small"} layout={"inline"}>
-                                            <SwitchItem label={"自动字典"} setValue={() => {}} formItemStyle={{ marginBottom: 0 }} />
+                                        <Form
+                                            onSubmitCapture={(e) => e.preventDefault()}
+                                            size={"small"}
+                                            layout={"inline"}
+                                        >
+                                            <SwitchItem
+                                                label={"自动字典"}
+                                                setValue={() => {}}
+                                                formItemStyle={{ marginBottom: 0 }}
+                                            />
                                             <InputItem
                                                 label={"爆破用户"}
                                                 style={{ marginBottom: 0 }}
@@ -343,8 +331,16 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                     </Button>
                                                 }
                                             />
-                                            <InputInteger label={"并发目标"} setValue={() => {}} formItemStyle={{ marginBottom: 0 }} />
-                                            <InputInteger label={"随机延时"} setValue={() => {}} formItemStyle={{ marginBottom: 0 }} />
+                                            <InputInteger
+                                                label={"并发目标"}
+                                                setValue={() => {}}
+                                                formItemStyle={{ marginBottom: 0 }}
+                                            />
+                                            <InputInteger
+                                                label={"随机延时"}
+                                                setValue={() => {}}
+                                                formItemStyle={{ marginBottom: 0 }}
+                                            />
                                         </Form>
                                     </div>
                                 )}
@@ -361,9 +357,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     <PluginResultUI
                         // script={script}
                         loading={loading}
-                        progress={processes}
-                        results={messageListProvider.list}
-                        statusCards={statusCards}
+                        progress={infoState.processState}
+                        results={infoState.messageSate}
+                        statusCards={infoState.statusState}
                         onXtermRef={setXtermRef}
                     />
                 </AutoCard>
@@ -395,24 +391,70 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
             labelCol={{ span: 5 }}
             wrapperCol={{ span: 14 }}
         >
-            <SelectItem label={"爆破用户字典"} onChange={(value, dict) => setParams({ ...params, UsernamesDict: dict.split("\n") })} />
+            <SelectItem
+                label={"爆破用户字典"}
+                value={params.usernameValue || ""}
+                onChange={(value, dict) =>
+                    setParams({ ...params, usernameValue: value, UsernamesDict: dict.split("\n") })
+                }
+            />
 
             <InputItem
                 label={"爆破用户"}
-                setValue={(Usernames) => setParams({ ...params, Usernames: (Usernames || "").split("\n") })}
+                setValue={(Usernames) =>
+                    setParams({ ...params, Usernames: (Usernames || "").split("\n") })
+                }
                 value={(params?.Usernames || []).join("\n")}
                 textarea={true}
                 textareaRow={5}
             />
 
-            <SelectItem label={"爆破密码字典"} onChange={(value, dict) => setParams({ ...params, PasswordsDict: dict.split("\n") })} />
-            <InputItem label={"爆破密码"} setValue={(item) => setParams({ ...params, Passwords: item.split("\n") })} value={(params?.Passwords || []).join("\n")} textarea={true} textareaRow={5} />
+            <SelectItem
+                label={"爆破密码字典"}
+                value={params.passwordValue || ""}
+                onChange={(value, dict) =>
+                    setParams({ ...params, passwordValue: value, PasswordsDict: dict.split("\n") })
+                }
+            />
+            <InputItem
+                label={"爆破密码"}
+                setValue={(item) => setParams({ ...params, Passwords: item.split("\n") })}
+                value={(params?.Passwords || []).join("\n")}
+                textarea={true}
+                textareaRow={5}
+            />
 
-            <InputInteger label={"目标并发"} help={"同时爆破 n 个目标"} value={params.Concurrent} setValue={(e) => setParams({ ...params, Concurrent: e })} />
-            <InputInteger label={"目标内并发"} help={"每个目标同时执行多少爆破任务"} value={params.TargetTaskConcurrent} setValue={(e) => setParams({ ...params, TargetTaskConcurrent: e })} />
-            <SwitchItem label={"自动停止"} help={"遇到第一个爆破结果时终止任务"} setValue={(OkToStop) => setParams({ ...params, OkToStop })} value={params.OkToStop} />
-            <InputInteger label={"最小延迟"} max={params.DelayMax} min={0} setValue={(DelayMin) => setParams({ ...params, DelayMin })} value={params.DelayMin} />
-            <InputInteger label={"最大延迟"} setValue={(DelayMax) => setParams({ ...params, DelayMax })} value={params.DelayMax} min={params.DelayMin} />
+            <InputInteger
+                label={"目标并发"}
+                help={"同时爆破 n 个目标"}
+                value={params.Concurrent}
+                setValue={(e) => setParams({ ...params, Concurrent: e })}
+            />
+            <InputInteger
+                label={"目标内并发"}
+                help={"每个目标同时执行多少爆破任务"}
+                value={params.TargetTaskConcurrent}
+                setValue={(e) => setParams({ ...params, TargetTaskConcurrent: e })}
+            />
+            <SwitchItem
+                label={"自动停止"}
+                help={"遇到第一个爆破结果时终止任务"}
+                setValue={(OkToStop) => setParams({ ...params, OkToStop })}
+                value={params.OkToStop}
+            />
+            <InputInteger
+                label={"最小延迟"}
+                max={params.DelayMax}
+                min={0}
+                setValue={(DelayMin) => setParams({ ...params, DelayMin })}
+                value={params.DelayMin}
+            />
+            <InputInteger
+                label={"最大延迟"}
+                setValue={(DelayMax) => setParams({ ...params, DelayMax })}
+                value={params.DelayMax}
+                min={params.DelayMin}
+            />
         </Form>
     )
 }
