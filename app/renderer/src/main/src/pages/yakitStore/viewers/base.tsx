@@ -53,7 +53,7 @@ const idToColor = (id: string) => {
         case id.includes("panic"):
             return "#ffccc7"
         default:
-            return "#000"
+            return "#8c8c8c"
     }
 }
 
@@ -110,7 +110,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                                 <h2>{card.tag}</h2>
                                 <div style={{ display: 'flex' ,justifyContent: 'space-between'}}>
                                     {card.info.map((info)=>{
-                                        return <Statistic valueStyle={{color:idToColor(info.Id)}} key={info.Id} title={info.Id} value={info.Data}/>
+                                        return <Statistic valueStyle={{color:idToColor(info.Id)}} key={info.Id} title={card.info.length>1?info.Id:''} value={info.Data}/>
                                     })}
                                 </div>
                             </div>
