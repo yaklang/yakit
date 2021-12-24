@@ -7,7 +7,7 @@ import {Space} from "antd";
 import {PluginResultUI} from "../yakitStore/viewers/base";
 import {useCreation} from "ahooks";
 
-import { useHoldingIPCRStream } from "../../hook";
+import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream";
 
 
 const {ipcRenderer} = window.require("electron");

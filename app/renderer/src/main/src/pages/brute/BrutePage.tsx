@@ -8,7 +8,7 @@ import { warn, failed } from "../../utils/notification"
 import { showModal } from "../../utils/showModal"
 
 import { AutoCard } from "../../components"
-import { useHoldingIPCRStream } from "../../hook"
+import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import { SelectItem } from "../../utils/SelectItem"
 
 const { ipcRenderer } = window.require("electron")

@@ -8,7 +8,7 @@ import {randomString} from "../../utils/randomUtil";
 import {xtermClear} from "../../utils/xtermUtils";
 import {PluginResultUI} from "./viewers/base";
 
-import { useHoldingIPCRStream } from "../../hook";
+import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream";
 
 export interface PluginExecutorProp {
     script: YakScript
