@@ -1,11 +1,11 @@
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import {
     ExecResultLog,
     ExecResultMessage,
     ExecResultProgress
 } from "../../pages/invoker/batch/ExecMessageViewer"
 import { ExecResult } from "../../pages/invoker/schema"
-import { StatusCardProps } from "../../pages/yakitStore/viewers/base"
+import { StatusCardInfoProps, StatusCardProps } from "../../pages/yakitStore/viewers/base"
 import { writeExecResultXTerm } from "../../utils/xtermUtils"
 import { failed, info } from "../../utils/notification"
 import { useGetState } from "ahooks"
@@ -15,7 +15,14 @@ const { ipcRenderer } = window.require("electron")
 interface InfoState {
     messageSate: ExecResultLog[]
     processState: ExecResultProgress[]
-    statusState: StatusCardProps[]
+    statusState: StatusCardInfoProps[]
+}
+
+interface CacheStatusCardProps {
+    Id: string
+    Data: string
+    Timestamp: number
+    Tags?: string[]
 }
 
 export default function useHoldingIPCRStream(
@@ -34,33 +41,58 @@ export default function useHoldingIPCRStream(
 
     let messages = useRef<ExecResultMessage[]>([])
     let processKVPair = useRef<Map<string, number>>(new Map<string, number>())
-    let statusKVPair = useRef<Map<string, StatusCardProps>>(new Map<string, StatusCardProps>())
+    let statusKVPair = useRef<Map<string, CacheStatusCardProps>>(
+        new Map<string, CacheStatusCardProps>()
+    )
 
-    const syncResults = useCallback(() => {
-        let results = messages.current
-            .filter((i) => i.type === "log")
-            .map((i) => i.content as ExecResultLog)
+    useEffect(() => {
+        const syncResults = () => {
+            let results = messages.current
+                .filter((i) => i.type === "log")
+                .map((i) => i.content as ExecResultLog)
 
-        const processes: ExecResultProgress[] = []
-        processKVPair.current.forEach((value, id) => {
-            processes.push({ id: id, progress: value })
-        })
+            const processes: ExecResultProgress[] = []
+            processKVPair.current.forEach((value, id) => {
+                processes.push({ id: id, progress: value })
+            })
 
-        const statusCards: StatusCardProps[] = []
-        statusKVPair.current.forEach((value) => {
-            statusCards.push(value)
-        })
+            const cacheStatusKVPair: { [x: string]: StatusCardInfoProps } = {}
+            const statusCards: StatusCardProps[] = []
+            statusKVPair.current.forEach((value) => {
+                const item = JSON.parse(JSON.stringify(value))
+                item.Tag = item.Tags[0] || ""
+                delete item.Tags
+                statusCards.push(item)
+            })
+            statusCards.sort((a, b) => a.Id.localeCompare(b.Id))
+            for (let item of statusCards) {
+                if (item.Tag) {
+                    if (cacheStatusKVPair[item.Tag]) {
+                        cacheStatusKVPair[item.Tag].info.push(item)
+                    } else {
+                        cacheStatusKVPair[item.Tag] = { tag: item.Tag, info: [item] }
+                    }
+                } else {
+                    cacheStatusKVPair[item.Id] = { tag: item.Id, info: [item] }
+                }
+            }
 
-        setInfoState({
-            messageSate: results,
-            processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
-            statusState: statusCards.sort((a, b) => a.Id.localeCompare(b.Id))
-        })
-    }, [])
-    // 定时器变量
-    var time: any = null
+            if (
+                JSON.stringify(infoState) !==
+                JSON.stringify({
+                    messageSate: results,
+                    processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
+                    statusState: Object.values(cacheStatusKVPair)
+                })
+            ) {
+                setInfoState({
+                    messageSate: results,
+                    processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
+                    statusState: Object.values(cacheStatusKVPair)
+                })
+            }
+        }
 
-    const start = useCallback(() => {
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
             if (data.IsMessage) {
                 try {
@@ -88,7 +120,7 @@ export default function useHoldingIPCRStream(
                     if (obj.type === "log" && logData.level === "feature-status-card-data") {
                         try {
                             const obj = JSON.parse(logData.data)
-                            const { id, data } = obj
+                            const { id, data, tags } = obj
                             const { timestamp } = logData
                             const originData = statusKVPair.current.get(id)
                             if (originData && originData.Timestamp > timestamp) {
@@ -97,7 +129,8 @@ export default function useHoldingIPCRStream(
                             statusKVPair.current.set(id, {
                                 Id: id,
                                 Data: data,
-                                Timestamp: timestamp
+                                Timestamp: timestamp,
+                                Tags: Array.isArray(tags) ? tags : []
                             })
                         } catch (e) {}
                         return
@@ -121,29 +154,28 @@ export default function useHoldingIPCRStream(
             if (onEnd) {
                 onEnd()
             }
-            remove()
         })
 
         syncResults()
-        time = setInterval(() => syncResults(), 500)
+        const time = setInterval(() => syncResults(), 500)
 
         if (onListened) onListened()
-    }, [])
 
-    const remove = () => {
-        if (time) clearInterval(time)
-        ipcRenderer.invoke(`cancel-${apiKey}`, token)
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-    }
+        return () => {
+            if (time) clearInterval(time)
+            ipcRenderer.invoke(`cancel-${apiKey}`, token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [])
 
     const reset = () => {
         messages.current = []
         processKVPair.current = new Map<string, number>()
-        statusKVPair.current = new Map<string, StatusCardProps>()
+        statusKVPair.current = new Map<string, CacheStatusCardProps>()
         setInfoState({ messageSate: [], processState: [], statusState: [] })
     }
 
-    return [infoState, { start, reset, setXtermRef }, xtermRef] as const
+    return [infoState, { reset, setXtermRef }, xtermRef] as const
 }

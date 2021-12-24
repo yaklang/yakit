@@ -27,7 +27,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const [loading, setLoading] = useState(false);
     const [activePanels, setActivePanels] = useState<string[]>(["params"]);
 
-    const [infoState, { start, reset, setXtermRef }, xtermRef] = useHoldingIPCRStream(
+    const [infoState, { reset, setXtermRef }, xtermRef] = useHoldingIPCRStream(
         script.ScriptName,
         "exec-yak-script",
         token,
@@ -53,7 +53,6 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                         setLoading(true)
                         setTimeout(() => {
                             setActivePanels(["console"])
-                            start()
                             ipcRenderer.invoke("exec-yak-script", {
                                 Params: p,
                                 YakScriptId: props.script.Id,
@@ -128,7 +127,6 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                         setLoading(true)
                         setTimeout(() => {
                             setActivePanels(["console"])
-                            start()
                             ipcRenderer.invoke("exec-yak-script", {
                                 Params: p,
                                 YakScriptId: props.script.Id,

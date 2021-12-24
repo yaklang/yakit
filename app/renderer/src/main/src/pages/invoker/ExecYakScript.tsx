@@ -19,7 +19,7 @@ export interface YakScriptRunnerProp {
 
 export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     const token= useCreation(()=>randomString(40),[]);
-    const [infoState, { start, reset, setXtermRef }] = useHoldingIPCRStream(
+    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream(
         "exec-script-immediately", 
         "exec-yak-script",
         token,
@@ -37,7 +37,6 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     const [finished, setFinished] = useState(false);
 
     useEffect(()=>{
-        start()
         return () => reset()
     },[])
 

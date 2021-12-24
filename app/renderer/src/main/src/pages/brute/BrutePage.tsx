@@ -50,11 +50,11 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [targetTextRow, setTargetTextRow] = useState(false)
     const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false)
     const [advanced, setAdvanced] = useState(false)
-    const [taskToken, _] = useState(randomString(40))
+    const [taskToken, setTaskToken] = useState(randomString(40))
 
     const [loading, setLoading] = useState(false)
 
-    const [infoState, { start, reset, setXtermRef }] = useHoldingIPCRStream(
+    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream(
         "brute",
         "StartBrute",
         taskToken,
@@ -163,7 +163,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
 
                                 //输入目标的正则规则
                                 const targetsReg: RegExp =
-                                    /^((([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(:([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5]))?)|((((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?))((\/([1-2][0-9]|3[0-2]|[1-9]))|(:([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])))?))$/g
+                                    /^((([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(:([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5]))?)|(localhost)|((((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?))((\/([1-2][0-9]|3[0-2]|[1-9]))|(:([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])))?))$/g
 
                                 if (!params.Targets && !params.TargetFile) {
                                     failed("不允许空目标")
@@ -194,7 +194,6 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 setLoading(true)
 
                                 setTimeout(() => {
-                                    start()
                                     ipcRenderer.invoke("StartBrute", info, taskToken)
                                 }, 300)
                             }}
@@ -392,37 +391,138 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
             wrapperCol={{ span: 14 }}
         >
             <SelectItem
+                style={{ marginBottom: 10 }}
                 label={"爆破用户字典"}
                 value={params.usernameValue || ""}
-                onChange={(value, dict) =>
-                    setParams({ ...params, usernameValue: value, UsernamesDict: dict.split("\n") })
-                }
+                onChange={(value, dict) => {
+                    if (!dict && (params.Usernames || []).length === 0) {
+                        setParams({
+                            ...params,
+                            usernameValue: value,
+                            UsernamesDict: [],
+                            ReplaceDefaultUsernameDict: false
+                        })
+                    } else {
+                        setParams({
+                            ...params,
+                            usernameValue: value,
+                            UsernamesDict: dict ? dict.split("\n") : []
+                        })
+                    }
+                }}
             />
 
             <InputItem
+                style={{ marginBottom: 5 }}
                 label={"爆破用户"}
-                setValue={(Usernames) =>
-                    setParams({ ...params, Usernames: (Usernames || "").split("\n") })
-                }
+                setValue={(Usernames) => {
+                    if ((params.UsernamesDict || []).length === 0 && !Usernames) {
+                        setParams({
+                            ...params,
+                            Usernames: [],
+                            ReplaceDefaultUsernameDict: false
+                        })
+                    } else {
+                        setParams({
+                            ...params,
+                            Usernames: Usernames ? Usernames.split("\n") : []
+                        })
+                    }
+                }}
                 value={(params?.Usernames || []).join("\n")}
                 textarea={true}
                 textareaRow={5}
             />
 
+            <Form.Item label={" "} colon={false} style={{ marginBottom: 5 }}>
+                <Checkbox
+                    checked={!params.ReplaceDefaultUsernameDict}
+                    onChange={(e) => {
+                        if (
+                            (params.UsernamesDict || []).length === 0 &&
+                            (params.Usernames || []).length === 0
+                        ) {
+                            warn("在内容未填时此项必须勾选")
+                            setParams({
+                                ...params,
+                                ReplaceDefaultUsernameDict: false
+                            })
+                        } else {
+                            setParams({
+                                ...params,
+                                ReplaceDefaultUsernameDict: !params.ReplaceDefaultUsernameDict
+                            })
+                        }
+                    }}
+                ></Checkbox>
+                &nbsp;
+                <span style={{ color: "rgb(100,100,100)" }}>同时使用默认用户字典</span>
+            </Form.Item>
+
             <SelectItem
+                style={{ marginBottom: 10 }}
                 label={"爆破密码字典"}
                 value={params.passwordValue || ""}
-                onChange={(value, dict) =>
-                    setParams({ ...params, passwordValue: value, PasswordsDict: dict.split("\n") })
-                }
+                onChange={(value, dict) => {
+                    if (!dict && (params.Passwords || []).length === 0) {
+                        setParams({
+                            ...params,
+                            passwordValue: value,
+                            PasswordsDict: [],
+                            ReplaceDefaultPasswordDict: false
+                        })
+                    } else {
+                        setParams({
+                            ...params,
+                            passwordValue: value,
+                            PasswordsDict: dict ? dict.split("\n") : []
+                        })
+                    }
+                }}
             />
             <InputItem
+                style={{ marginBottom: 5 }}
                 label={"爆破密码"}
-                setValue={(item) => setParams({ ...params, Passwords: item.split("\n") })}
+                setValue={(item) => {
+                    if ((params.PasswordsDict || []).length === 0 && !item) {
+                        setParams({
+                            ...params,
+                            Passwords: [],
+                            ReplaceDefaultPasswordDict: false
+                        })
+                    } else {
+                        setParams({ ...params, Passwords: item ? item.split("\n") : [] })
+                    }
+                }}
                 value={(params?.Passwords || []).join("\n")}
                 textarea={true}
                 textareaRow={5}
             />
+
+            <Form.Item label={" "} colon={false} style={{ marginBottom: 5 }}>
+                <Checkbox
+                    checked={!params.ReplaceDefaultPasswordDict}
+                    onChange={(e) => {
+                        if (
+                            (params.PasswordsDict || []).length === 0 &&
+                            (params.Passwords || []).length === 0
+                        ) {
+                            warn("在内容未填时此项必须勾选")
+                            setParams({
+                                ...params,
+                                ReplaceDefaultPasswordDict: false
+                            })
+                        } else {
+                            setParams({
+                                ...params,
+                                ReplaceDefaultPasswordDict: !params.ReplaceDefaultPasswordDict
+                            })
+                        }
+                    }}
+                ></Checkbox>
+                &nbsp;
+                <span style={{ color: "rgb(100,100,100)" }}>同时使用默认用户字典</span>
+            </Form.Item>
 
             <InputInteger
                 label={"目标并发"}
