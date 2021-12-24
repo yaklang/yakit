@@ -16,6 +16,12 @@ export interface StatusCardProps {
     Id: string
     Data: string
     Timestamp: number
+    Tag?: string
+}
+
+export interface StatusCardInfoProps{
+    tag: string
+    info: StatusCardProps[]
 }
 
 export type ExecResultStatusCard = StatusCardProps
@@ -24,7 +30,7 @@ export interface PluginResultUIProp {
     loading: boolean
     results: ExecResultLog[]
     progress: ExecResultProgress[]
-    statusCards: ExecResultStatusCard[]
+    statusCards: StatusCardInfoProps[]
     script?: YakScript
 
     onXtermRef?: (ref: any) => any
@@ -47,7 +53,7 @@ const idToColor = (id: string) => {
         case id.includes("panic"):
             return "#ffccc7"
         default:
-            return "#fff"
+            return "#8c8c8c"
     }
 }
 
@@ -96,11 +102,19 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
         {statusCards.length > 0 && <div style={{marginTop: 8, marginBottom: 8}}>
             <Row gutter={8}>
                 {statusCards.map((card, index) => {
-                    return <Col key={card.Id} span={8} style={{marginBottom: 8}}>
+                    return <Col key={card.tag} span={8} style={{marginBottom: 8}}>
                         <Card hoverable={true} bodyStyle={{padding: 12}} style={{
-                            backgroundColor: idToColor(card.Id)
+                            // backgroundColor: idToColor(card.Id)
                         }}>
-                            <Statistic title={card.Id} value={card.Data}/>
+                            <div>
+                                <h2>{card.tag}</h2>
+                                <div style={{ display: 'flex' ,justifyContent: 'space-between'}}>
+                                    {card.info.map((info)=>{
+                                        return <Statistic valueStyle={{color:idToColor(info.Id)}} key={info.Id} title={card.info.length>1?info.Id:''} value={info.Data}/>
+                                    })}
+                                </div>
+                            </div>
+                            
                         </Card>
                     </Col>
                 })}

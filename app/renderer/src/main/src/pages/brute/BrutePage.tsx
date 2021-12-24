@@ -1,26 +1,30 @@
-import React, {useEffect, useState} from "react";
-import {Button, Card, Checkbox, Col, Form, Input, List, Row, Space, Tag} from "antd";
-import {ReloadOutlined} from "@ant-design/icons";
-import {InputInteger, InputItem, SwitchItem} from "../../utils/inputUtil";
-import {HoldingIPCRenderExecStream} from "../yakitStore/PluginExecutor";
-import {randomString} from "../../utils/randomUtil";
-import {ExecResultLog, ExecResultProgress} from "../invoker/batch/ExecMessageViewer";
-import {ExecResultStatusCard, PluginResultUI, StatusCardProps} from "../yakitStore/viewers/base";
-import {failed} from "../../utils/notification";
-import {TimeIntervalItem, TimeUnit} from "../../utils/timeInterval";
-import {showDrawer, showModal} from "../../utils/showModal";
-import {useDynamicList, useMap, useThrottle, useThrottleFn} from "ahooks";
+import React, { useEffect, useState } from "react"
+import { Button, Card, Checkbox, Col, Form, Input, List, Row, Space, Tag } from "antd"
+import { ReloadOutlined } from "@ant-design/icons"
+import { InputInteger, InputItem, SwitchItem } from "../../utils/inputUtil"
+import { randomString } from "../../utils/randomUtil"
+import { PluginResultUI } from "../yakitStore/viewers/base"
+import { warn, failed } from "../../utils/notification"
+import { showModal } from "../../utils/showModal"
 
-const {ipcRenderer} = window.require("electron");
+import { AutoCard } from "../../components"
+import { useHoldingIPCRStream } from "../../hook"
+import { SelectItem } from "../../utils/SelectItem"
+
+const { ipcRenderer } = window.require("electron")
 
 export interface StartBruteParams {
     Type: string
     Targets: string
     TargetFile?: string
     Usernames?: string[]
+    UsernamesDict?: string[]
     UsernameFile?: string
+    ReplaceDefaultUsernameDict?: boolean
     Passwords?: string[]
+    PasswordsDict?: string[]
     PasswordFile?: string
+    ReplaceDefaultPasswordDict?: boolean
 
     Prefix?: string
 
@@ -32,49 +36,32 @@ export interface StartBruteParams {
     DelayMax?: number
 
     PluginScriptName?: string
+
+    usernameValue?: string
+    passwordValue?: string
 }
 
-export interface BrutePageProp {
-
-}
+export interface BrutePageProp {}
 
 export const BrutePage: React.FC<BrutePageProp> = (props) => {
-    const [availableTypes, setAvailableTypes] = useState<string[]>([]);
-    const [typeLoading, setTypeLoading] = useState(false);
-    const [selectedType, setSelectedType] = useState<string>("");
-    const [targetTextRow, setTargetTextRow] = useState(false);
-    const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false);
-    const [advanced, setAdvanced] = useState(false);
-    const [taskToken, setTaskToken] = useState("");
+    const [typeLoading, setTypeLoading] = useState(false)
+    const [availableTypes, setAvailableTypes] = useState<string[]>([])
+    const [selectedType, setSelectedType] = useState<string[]>([])
+    const [targetTextRow, setTargetTextRow] = useState(false)
+    const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false)
+    const [advanced, setAdvanced] = useState(false)
+    const [taskToken, setTaskToken] = useState(randomString(40))
 
-    const [xtermRef, setXtermRef] = useState<any>();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false)
 
-    // 设置 IPC 回传的结果
-    const messageListProvider = useDynamicList<ExecResultLog>([]);
-    const [progressMap, progressProvider] = useMap<string, number>(new Map<string, number>());
-    const [statusMap, statusProvider] = useMap<string, StatusCardProps>(new Map<string, ExecResultStatusCard>());
-    // 为 statusSet 做节流处理，节流一定要注意 statusSet
-    const statusOpThrottle = useThrottleFn((i: string, value: ExecResultStatusCard) => {
-        statusProvider.set(i, value)
-    }, {wait: 500})
-
-    const reset = () => {
-        messageListProvider.resetList([]);
-        progressProvider.reset();
-        statusProvider.reset();
-    }
-
-    const processes: ExecResultProgress[] = [];
-    progressMap.forEach((value, id) => {
-        processes.push({id: id, progress: value})
-    })
-    processes.sort((a, b) => a.id.localeCompare(b.id))
-    const statusCards: StatusCardProps[] = [];
-    statusMap.forEach((value) => {
-        statusCards.push(value);
-    })
-    statusCards.sort((a, b) => a.Id.localeCompare(b.Id))
+    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream(
+        "brute",
+        "StartBrute",
+        taskToken,
+        () => {
+            setTimeout(() => setLoading(false), 300)
+        }
+    )
 
     // params
     const [params, setParams] = useState<StartBruteParams>({
@@ -84,6 +71,8 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
         OkToStop: true,
         PasswordFile: "",
         Passwords: [],
+        PasswordsDict: [],
+        ReplaceDefaultPasswordDict: false,
         PluginScriptName: "",
         Prefix: "",
         TargetFile: "",
@@ -91,210 +80,292 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
         Targets: "",
         Type: "",
         UsernameFile: "",
-        Usernames: []
-    });
+        Usernames: [],
+        UsernamesDict: [],
+        ReplaceDefaultUsernameDict: false,
+
+        usernameValue: "",
+        passwordValue: ""
+    })
 
     useEffect(() => {
-        setParams({...params, Type: selectedType})
+        setParams({ ...params, Type: selectedType.join(",") })
     }, [selectedType])
 
     const loadTypes = () => {
-        setTypeLoading(true);
-        ipcRenderer.invoke("GetAvailableBruteTypes").then((d: { Types: string[] }) => {
-            const types = d.Types.sort((a, b) => a.localeCompare(b))
-            setAvailableTypes(types)
+        setTypeLoading(true)
+        ipcRenderer
+            .invoke("GetAvailableBruteTypes")
+            .then((d: { Types: string[] }) => {
+                const types = d.Types.sort((a, b) => a.localeCompare(b))
+                setAvailableTypes(types)
 
-            if (selectedType.length <= 0 && d.Types.length > 0) {
-                setSelectedType([types[0]].join(","))
-            }
-        }).catch(e => {
-        }).finally(() => setTimeout(() => setTypeLoading(false), 300))
+                if (selectedType.length <= 0 && d.Types.length > 0) {
+                    setSelectedType([types[0]])
+                }
+            })
+            .catch((e) => {})
+            .finally(() => setTimeout(() => setTypeLoading(false), 300))
     }
 
     useEffect(() => {
-        if (availableTypes.length <= 0) {
-            loadTypes()
-        }
+        if (availableTypes.length <= 0) loadTypes()
+    }, [])
 
-        const token = randomString(40);
-        setTaskToken(token);
-        return HoldingIPCRenderExecStream(
-            "brute",
-            "StartBrute",
-            token,
-            xtermRef,
-            // setLogs, setProgress, setStatusCards,
-            messageListProvider, progressProvider,
-            {...statusProvider, set: statusOpThrottle.run, flush: statusOpThrottle.flush},
-            () => {
-                setTimeout(() => setLoading(false), 300)
-            }, undefined,
-        )
-    }, [xtermRef])
-
-    return <div style={{height: "100%", backgroundColor: "#fff", width: "100%", display: "flex"}}>
-        <div style={{height: "100%", width: 200,}}>
-            <Card
-                loading={typeLoading}
-                size={"small"}
-                style={{marginRight: 8, height: "100%"}} bodyStyle={{padding: 8}}
-                title={<div>
-                    可用爆破类型 <Button
-                    type={"link"}
+    return (
+        <div style={{ height: "100%", backgroundColor: "#fff", width: "100%", display: "flex" }}>
+            <div style={{ height: "100%", width: 200 }}>
+                <Card
+                    loading={typeLoading}
                     size={"small"}
-                    icon={<ReloadOutlined/>}
-                    onClick={() => {
-                        loadTypes()
-                    }}
-                />
-                </div>}
-            >
-                <List<string>
-                    dataSource={availableTypes}
-                    renderItem={i => {
-                        const included = selectedType.includes(i);
-                        return <div key={i} style={{margin: 4}}>
-                            <Checkbox checked={included} onChange={e => {
+                    style={{ marginRight: 8, height: "100%" }}
+                    bodyStyle={{ padding: 8 }}
+                    title={
+                        <div>
+                            可用爆破类型{" "}
+                            <Button
+                                type={"link"}
+                                size={"small"}
+                                icon={<ReloadOutlined />}
+                                onClick={() => {
+                                    loadTypes()
+                                }}
+                            />
+                        </div>
+                    }
+                >
+                    <Checkbox.Group
+                        value={selectedType}
+                        style={{ marginLeft: 4 }}
+                        onChange={(checkedValue) => {
+                            if (checkedValue.length === 0) {
+                                warn("该部分最少需选择一个类型")
+                                return
+                            }
+                            setSelectedType(checkedValue as string[])
+                        }}
+                    >
+                        {availableTypes.map((item) => (
+                            <Row key={item}>
+                                <Checkbox value={item}>{item}</Checkbox>
+                            </Row>
+                        ))}
+                    </Checkbox.Group>
+                </Card>
+            </div>
+            <div style={{ flex: 1, width: "100%", display: "flex", flexDirection: "column" }}>
+                <Row style={{ marginBottom: 30, marginTop: 35 }}>
+                    <Col span={3} />
+                    <Col span={17}>
+                        <Form
+                            onSubmitCapture={(e) => {
                                 e.preventDefault()
 
-                                if (included) {
-                                    setSelectedType([...selectedType.split(",").filter(target => i !== target)].join(","))
-                                } else {
-                                    setSelectedType([...selectedType.split(",").filter(target => i !== target), i].join(","))
+                                //输入目标的正则规则
+                                const targetsReg: RegExp =
+                                    /^((([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(:([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5]))?)|(localhost)|((((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?))((\/([1-2][0-9]|3[0-2]|[1-9]))|(:([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])))?))$/g
+
+                                if (!params.Targets && !params.TargetFile) {
+                                    failed("不允许空目标")
+                                    return
                                 }
-                            }}>
-                                {i}
-                            </Checkbox>
-                        </div>
-                    }}
-                />
-            </Card>
-        </div>
-        <div style={{flex: 1, width: "100%", display: "flex", flexDirection: "column"}}>
-            <Row style={{marginBottom: 30, marginTop: 35,}}>
-                <Col span={3}/>
-                <Col span={17}>
-                    <Form onSubmitCapture={e => {
-                        e.preventDefault()
+                                if (!targetsReg.test(params.Targets)) {
+                                    failed("请输入内容为 域名(:端口)/IP(:端口)/IP段")
+                                    return
+                                }
+                                if (!params.Type) {
+                                    failed("不允许空类型")
+                                    return
+                                }
 
-                        if ((!params.Targets) && (!params.TargetFile)) {
-                            failed("不允许空目标")
-                            return
-                        }
-                        if (!params.Type) {
-                            failed("爆破/未授权检查不允许为空")
-                            return
-                        }
+                                const info = JSON.parse(JSON.stringify(params))
+                                info.Usernames = (info.Usernames || []).concat(
+                                    info.UsernamesDict || []
+                                )
+                                info.ReplaceDefaultUsernameDict = info.Usernames.length > 0
+                                delete info.UsernamesDict
+                                info.Passwords = (info.Passwords || []).concat(
+                                    info.PasswordsDict || []
+                                )
+                                info.ReplaceDefaultPasswordDict = info.Passwords.length > 0
+                                delete info.PasswordsDict
 
-                        reset()
-                        setLoading(true)
-                        ipcRenderer.invoke("StartBrute", params, taskToken)
-                    }} style={{width: "100%", textAlign: "center", alignItems: "center"}}>
-                        <Space direction={"vertical"} style={{width: "100%"}} size={4}>
-                            <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
-                                <span style={{marginRight: 8}}>输入目标: </span>
-                                <Form.Item
-                                    required={true}
-                                    style={{marginBottom: 0, flex: '1 1 0px'}}
+                                reset()
+                                setLoading(true)
+
+                                setTimeout(() => {
+                                    ipcRenderer.invoke("StartBrute", info, taskToken)
+                                }, 300)
+                            }}
+                            style={{ width: "100%", textAlign: "center", alignItems: "center" }}
+                        >
+                            <Space direction={"vertical"} style={{ width: "100%" }} size={4}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "row",
+                                        alignItems: "center"
+                                    }}
                                 >
-                                    {targetTextRow ? <Input.TextArea/> : <Row style={{
-                                        width: "100%", display: "flex", flexDirection: "row",
-                                    }}>
-                                        <Input
-                                            style={{marginRight: 8, height: 42, flex: 1}} allowClear={true}
-                                            onChange={e => {
-                                                setParams({...params, Targets: e.target.value})
+                                    <span style={{ marginRight: 8 }}>输入目标: </span>
+                                    <Form.Item
+                                        required={true}
+                                        style={{ marginBottom: 0, flex: "1 1 0px" }}
+                                    >
+                                        {targetTextRow ? (
+                                            <Input.TextArea />
+                                        ) : (
+                                            <Row
+                                                style={{
+                                                    width: "100%",
+                                                    display: "flex",
+                                                    flexDirection: "row"
+                                                }}
+                                            >
+                                                <Input
+                                                    style={{ marginRight: 8, height: 42, flex: 1 }}
+                                                    allowClear={true}
+                                                    placeholder={
+                                                        "内容规则 域名(:端口)/IP(:端口)/IP段"
+                                                    }
+                                                    onChange={(e) => {
+                                                        setParams({
+                                                            ...params,
+                                                            Targets: e.target.value
+                                                        })
+                                                    }}
+                                                />
+                                                {loading ? (
+                                                    <Button
+                                                        style={{ height: 42, width: 180 }}
+                                                        type={"primary"}
+                                                        onClick={() => {
+                                                            ipcRenderer.invoke(
+                                                                "cancel-StartBrute",
+                                                                taskToken
+                                                            )
+                                                        }}
+                                                        danger={true}
+                                                    >
+                                                        立即停止任务
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        style={{ height: 42, width: 180 }}
+                                                        type={"primary"}
+                                                        htmlType={"submit"}
+                                                    >
+                                                        开始检测
+                                                    </Button>
+                                                )}
+                                            </Row>
+                                        )}
+                                    </Form.Item>
+                                </div>
+                                <div style={{ textAlign: "left", width: "100%", marginLeft: 68 }}>
+                                    <Space>
+                                        <Tag>目标并发:{params.Concurrent}</Tag>
+                                        {(params?.TargetTaskConcurrent || 1) > 1 && (
+                                            <Tag>目标内爆破并发:{params.TargetTaskConcurrent}</Tag>
+                                        )}
+                                        {params?.OkToStop ? (
+                                            <Tag>爆破成功即停止</Tag>
+                                        ) : (
+                                            <Tag>爆破成功后仍继续</Tag>
+                                        )}
+                                        {(params?.DelayMax || 0) > 0 && (
+                                            <Tag>
+                                                随机暂停:{params.DelayMin}-{params.DelayMax}s
+                                            </Tag>
+                                        )}
+                                        <Button
+                                            type={"link"}
+                                            size={"small"}
+                                            onClick={(e) => {
+                                                showModal({
+                                                    title: "设置高级参数",
+                                                    width: "50%",
+                                                    content: (
+                                                        <>
+                                                            <BruteParamsForm
+                                                                defaultParams={params}
+                                                                setParams={setParams}
+                                                            />
+                                                        </>
+                                                    )
+                                                })
                                             }}
-                                        />
-                                        {loading ? <Button
-                                            style={{height: 42, width: 180}}
-                                            type={"primary"}
-                                            onClick={() => {
-                                                ipcRenderer.invoke("cancel-StartBrute", taskToken)
-                                            }}
-                                            danger={true}
-                                        >立即停止任务</Button> : <Button
-                                            style={{height: 42, width: 180}}
-                                            type={"primary"} htmlType={"submit"}
-                                        >开始检测</Button>}
-                                    </Row>}
-                                </Form.Item>
-                            </div>
-                            <div style={{textAlign: "right", width: "100%"}}>
-                                <Space>
-                                    <Tag>目标并发:{params.Concurrent}</Tag>
-                                    {(params?.TargetTaskConcurrent || 1) > 1 &&
-                                    <Tag>目标内爆破并发:{params.TargetTaskConcurrent}</Tag>}
-                                    {params?.OkToStop ? <Tag>爆破成功即停止</Tag> : <Tag>爆破成功后仍继续</Tag>}
-                                    {(params?.DelayMax || 0) > 0 &&
-                                    <Tag>随机暂停:{params.DelayMin}-{params.DelayMax}s</Tag>}
-                                    <Button
-                                        type={"link"} size={"small"}
-                                        onClick={e => {
-                                            showModal({
-                                                title: "设置高级参数",
-                                                width: "50%",
-                                                content: <>
-                                                    <BruteParamsForm defaultParams={params} setParams={setParams}/>
-                                                </>
-                                            })
-                                        }}
-                                    >更多参数</Button>
-                                    <Button
-                                        danger={true}
-                                        onClick={() => {
-                                            setLoading(false)
-                                            reset()
-                                        }}
-                                        size={"small"}
-                                        type={"link"}
-                                    >重置数据</Button>
-                                </Space>
-                            </div>
-                            {advanced && <div style={{textAlign: "left"}}>
-                                <Form onSubmitCapture={e => e.preventDefault()} size={"small"} layout={"inline"}>
-                                    <SwitchItem
-                                        label={"自动字典"} setValue={() => {
-                                    }} formItemStyle={{marginBottom: 0}}/>
-                                    <InputItem
-                                        label={"爆破用户"} style={{marginBottom: 0}}
-                                        suffix={<Button size={"small"} type={"link"}>
-                                            导入文件
-                                        </Button>}
-                                    />
-                                    <InputItem
-                                        label={"爆破密码"} style={{marginBottom: 0}}
-                                        suffix={<Button size={"small"} type={"link"}>
-                                            导入文件
-                                        </Button>}
-                                    />
-                                    <InputInteger label={"并发目标"} setValue={() => {
-                                    }} formItemStyle={{marginBottom: 0}}/>
-                                    <InputInteger label={"随机延时"} setValue={() => {
-                                    }} formItemStyle={{marginBottom: 0}}/>
-                                </Form>
-                            </div>}
-                        </Space>
-                    </Form>
-                </Col>
-            </Row>
-            {/*<Row style={{marginBottom: 8}}>*/}
-            {/*    <Col span={24}>*/}
-            {/*        */}
-            {/*    </Col>*/}
-            {/*</Row>*/}
-            <Card style={{flex: 1, overflow: "auto"}}>
-                <PluginResultUI
-                    // script={script}
-                    loading={loading} progress={processes}
-                    results={messageListProvider.list}
-                    statusCards={statusCards}
-                    onXtermRef={setXtermRef}
-                />
-            </Card>
+                                        >
+                                            更多参数
+                                        </Button>
+                                    </Space>
+                                </div>
+                                {advanced && (
+                                    <div style={{ textAlign: "left" }}>
+                                        <Form
+                                            onSubmitCapture={(e) => e.preventDefault()}
+                                            size={"small"}
+                                            layout={"inline"}
+                                        >
+                                            <SwitchItem
+                                                label={"自动字典"}
+                                                setValue={() => {}}
+                                                formItemStyle={{ marginBottom: 0 }}
+                                            />
+                                            <InputItem
+                                                label={"爆破用户"}
+                                                style={{ marginBottom: 0 }}
+                                                suffix={
+                                                    <Button size={"small"} type={"link"}>
+                                                        导入文件
+                                                    </Button>
+                                                }
+                                            />
+                                            <InputItem
+                                                label={"爆破密码"}
+                                                style={{ marginBottom: 0 }}
+                                                suffix={
+                                                    <Button size={"small"} type={"link"}>
+                                                        导入文件
+                                                    </Button>
+                                                }
+                                            />
+                                            <InputInteger
+                                                label={"并发目标"}
+                                                setValue={() => {}}
+                                                formItemStyle={{ marginBottom: 0 }}
+                                            />
+                                            <InputInteger
+                                                label={"随机延时"}
+                                                setValue={() => {}}
+                                                formItemStyle={{ marginBottom: 0 }}
+                                            />
+                                        </Form>
+                                    </div>
+                                )}
+                            </Space>
+                        </Form>
+                    </Col>
+                </Row>
+                {/*<Row style={{marginBottom: 8}}>*/}
+                {/*    <Col span={24}>*/}
+                {/*        */}
+                {/*    </Col>*/}
+                {/*</Row>*/}
+                <AutoCard style={{ flex: 1, overflow: "auto" }} bodyStyle={{ padding: 10 }}>
+                    <PluginResultUI
+                        // script={script}
+                        loading={loading}
+                        progress={infoState.processState}
+                        results={infoState.messageSate}
+                        statusCards={infoState.statusState}
+                        onXtermRef={setXtermRef}
+                    />
+                </AutoCard>
+            </div>
         </div>
-    </div>
-};
+    )
+}
 
 interface BruteParamsFormProp {
     defaultParams: StartBruteParams
@@ -302,51 +373,188 @@ interface BruteParamsFormProp {
 }
 
 const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
-    const [params, setParams] = useState<StartBruteParams>(props.defaultParams);
+    const [params, setParams] = useState<StartBruteParams>(props.defaultParams)
 
     useEffect(() => {
         if (!params) {
             return
         }
-        props.setParams({...params})
+        props.setParams({ ...params })
     }, [params])
 
-    return <Form onSubmitCapture={e => {
-        e.preventDefault()
+    return (
+        <Form
+            onSubmitCapture={(e) => {
+                e.preventDefault()
+            }}
+            labelCol={{ span: 5 }}
+            wrapperCol={{ span: 14 }}
+        >
+            <SelectItem
+                style={{ marginBottom: 10 }}
+                label={"爆破用户字典"}
+                value={params.usernameValue || ""}
+                onChange={(value, dict) => {
+                    if (!dict && (params.Usernames || []).length === 0) {
+                        setParams({
+                            ...params,
+                            usernameValue: value,
+                            UsernamesDict: [],
+                            ReplaceDefaultUsernameDict: false
+                        })
+                    } else {
+                        setParams({
+                            ...params,
+                            usernameValue: value,
+                            UsernamesDict: dict ? dict.split("\n") : []
+                        })
+                    }
+                }}
+            />
 
-    }} labelCol={{span: 5}} wrapperCol={{span: 14}}>
-        <InputItem label={"爆破用户"} setValue={
-            Usernames => setParams({...params, Usernames: (Usernames || "").split("\n")})}
-                   value={(params?.Usernames || []).join("\n")}
-                   textarea={true} textareaRow={5}
-        />
-        <InputItem label={"爆破密码"} setValue={
-            item => setParams({...params, Passwords: item.split("\n")})}
-                   value={(params?.Passwords || []).join("\n")}
-                   textarea={true} textareaRow={5}
-        />
+            <InputItem
+                style={{ marginBottom: 5 }}
+                label={"爆破用户"}
+                setValue={(Usernames) => {
+                    if ((params.UsernamesDict || []).length === 0 && !Usernames) {
+                        setParams({
+                            ...params,
+                            Usernames: [],
+                            ReplaceDefaultUsernameDict: false
+                        })
+                    } else {
+                        setParams({
+                            ...params,
+                            Usernames: Usernames ? Usernames.split("\n") : []
+                        })
+                    }
+                }}
+                value={(params?.Usernames || []).join("\n")}
+                textarea={true}
+                textareaRow={5}
+            />
 
-        <InputInteger
-            label={"目标并发"} help={"同时爆破 n 个目标"}
-            value={params.Concurrent}
-            setValue={e => setParams({...params, Concurrent: e})}
-        />
-        <InputInteger
-            label={"目标内并发"} help={"每个目标同时执行多少爆破任务"}
-            value={params.TargetTaskConcurrent}
-            setValue={e => setParams({...params, TargetTaskConcurrent: e})}
-        />
-        <SwitchItem
-            label={"自动停止"} help={"遇到第一个爆破结果时终止任务"}
-            setValue={OkToStop => setParams({...params, OkToStop})} value={params.OkToStop}
-        />
-        <InputInteger
-            label={"最小延迟"} max={params.DelayMax} min={0}
-            setValue={DelayMin => setParams({...params, DelayMin})} value={params.DelayMin}/>
-        <InputInteger
-            label={"最大延迟"} setValue={DelayMax => setParams({...params, DelayMax})}
-            value={params.DelayMax}
-            min={params.DelayMin}
-        />
-    </Form>
-};
+            <Form.Item label={" "} colon={false} style={{ marginBottom: 5 }}>
+                <Checkbox
+                    checked={!params.ReplaceDefaultUsernameDict}
+                    onChange={(e) => {
+                        if (
+                            (params.UsernamesDict || []).length === 0 &&
+                            (params.Usernames || []).length === 0
+                        ) {
+                            warn("在内容未填时此项必须勾选")
+                            setParams({
+                                ...params,
+                                ReplaceDefaultUsernameDict: false
+                            })
+                        } else {
+                            setParams({
+                                ...params,
+                                ReplaceDefaultUsernameDict: !params.ReplaceDefaultUsernameDict
+                            })
+                        }
+                    }}
+                ></Checkbox>
+                &nbsp;
+                <span style={{ color: "rgb(100,100,100)" }}>同时使用默认用户字典</span>
+            </Form.Item>
+
+            <SelectItem
+                style={{ marginBottom: 10 }}
+                label={"爆破密码字典"}
+                value={params.passwordValue || ""}
+                onChange={(value, dict) => {
+                    if (!dict && (params.Passwords || []).length === 0) {
+                        setParams({
+                            ...params,
+                            passwordValue: value,
+                            PasswordsDict: [],
+                            ReplaceDefaultPasswordDict: false
+                        })
+                    } else {
+                        setParams({
+                            ...params,
+                            passwordValue: value,
+                            PasswordsDict: dict ? dict.split("\n") : []
+                        })
+                    }
+                }}
+            />
+            <InputItem
+                style={{ marginBottom: 5 }}
+                label={"爆破密码"}
+                setValue={(item) => {
+                    if ((params.PasswordsDict || []).length === 0 && !item) {
+                        setParams({
+                            ...params,
+                            Passwords: [],
+                            ReplaceDefaultPasswordDict: false
+                        })
+                    } else {
+                        setParams({ ...params, Passwords: item ? item.split("\n") : [] })
+                    }
+                }}
+                value={(params?.Passwords || []).join("\n")}
+                textarea={true}
+                textareaRow={5}
+            />
+
+            <Form.Item label={" "} colon={false} style={{ marginBottom: 5 }}>
+                <Checkbox
+                    checked={!params.ReplaceDefaultPasswordDict}
+                    onChange={(e) => {
+                        if (
+                            (params.PasswordsDict || []).length === 0 &&
+                            (params.Passwords || []).length === 0
+                        ) {
+                            warn("在内容未填时此项必须勾选")
+                            setParams({
+                                ...params,
+                                ReplaceDefaultPasswordDict: false
+                            })
+                        } else {
+                            setParams({
+                                ...params,
+                                ReplaceDefaultPasswordDict: !params.ReplaceDefaultPasswordDict
+                            })
+                        }
+                    }}
+                ></Checkbox>
+                &nbsp;
+                <span style={{ color: "rgb(100,100,100)" }}>同时使用默认用户字典</span>
+            </Form.Item>
+
+            <InputInteger
+                label={"目标并发"}
+                help={"同时爆破 n 个目标"}
+                value={params.Concurrent}
+                setValue={(e) => setParams({ ...params, Concurrent: e })}
+            />
+            <InputInteger
+                label={"目标内并发"}
+                help={"每个目标同时执行多少爆破任务"}
+                value={params.TargetTaskConcurrent}
+                setValue={(e) => setParams({ ...params, TargetTaskConcurrent: e })}
+            />
+            <SwitchItem
+                label={"自动停止"}
+                help={"遇到第一个爆破结果时终止任务"}
+                setValue={(OkToStop) => setParams({ ...params, OkToStop })}
+                value={params.OkToStop}
+            />
+            <InputInteger
+                label={"最小延迟"}
+                max={params.DelayMax}
+                min={0}
+                setValue={(DelayMin) => setParams({ ...params, DelayMin })}
+                value={params.DelayMin}
+            />
+            <InputInteger
+                label={"最大延迟"}
+                setValue={(DelayMax) => setParams({ ...params, DelayMax })}
+                value={params.DelayMax}
+                min={params.DelayMin}
+            />
+        </Form>
+    )
+}
