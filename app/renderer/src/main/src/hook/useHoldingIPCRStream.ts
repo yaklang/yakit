@@ -3,11 +3,11 @@ import {
     ExecResultLog,
     ExecResultMessage,
     ExecResultProgress
-} from "../../pages/invoker/batch/ExecMessageViewer"
-import { ExecResult } from "../../pages/invoker/schema"
-import { StatusCardInfoProps, StatusCardProps } from "../../pages/yakitStore/viewers/base"
-import { writeExecResultXTerm } from "../../utils/xtermUtils"
-import { failed, info } from "../../utils/notification"
+} from "../pages/invoker/batch/ExecMessageViewer"
+import { ExecResult } from "../pages/invoker/schema"
+import { StatusCardInfoProps, StatusCardProps } from "../pages/yakitStore/viewers/base"
+import { writeExecResultXTerm } from "../utils/xtermUtils"
+import { failed, info } from "../utils/notification"
 import { useGetState } from "ahooks"
 
 const { ipcRenderer } = window.require("electron")
