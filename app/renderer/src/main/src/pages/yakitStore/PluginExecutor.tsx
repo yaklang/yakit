@@ -14,6 +14,8 @@ export interface PluginExecutorProp {
     script: YakScript
     size?: any
     primaryParamsOnly?: boolean
+    extraNode?: React.ReactNode
+    subTitle?: React.ReactNode
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -27,7 +29,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const [loading, setLoading] = useState(false);
     const [activePanels, setActivePanels] = useState<string[]>(["params"]);
 
-    const [infoState, { reset, setXtermRef }, xtermRef] = useHoldingIPCRStream(
+    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
         script.ScriptName,
         "exec-yak-script",
         token,
@@ -44,7 +46,11 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
 
     return <div>
         {props.primaryParamsOnly ? <>
-            <PageHeader title={script.ScriptName} style={{marginBottom: 0, paddingBottom: 0}}>
+            <PageHeader
+                title={script.ScriptName} style={{marginBottom: 0, paddingBottom: 0}}
+                subTitle={props.subTitle}
+                extra={props.extraNode}
+            >
                 <YakScriptParamsSetter
                     {...script}
                     params={[]}

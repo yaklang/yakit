@@ -7,7 +7,7 @@ import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invo
 import {failed} from "../../utils/notification";
 import {CopyableField, SwitchItem} from "../../utils/inputUtil";
 import {formatDate} from "../../utils/timeUtil";
-import {PluginOperator} from "./PluginOperator";
+import {PluginManagement, PluginOperator} from "./PluginOperator";
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator";
 
 const {ipcRenderer} = window.require("electron");
@@ -22,6 +22,15 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [keyword, setKeyword] = useState("");
     const [ignored, setIgnored] = useState(false);
     const [history, setHistory] = useState(false);
+
+    const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        setLoading(true)
+        setTimeout(() => {
+            setLoading(false)
+        }, 200)
+    }, [script])
 
     return <div style={{height: "100%"}}>
         <Row style={{height: "100%"}} gutter={16}>
@@ -121,15 +130,18 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 </Card>
             </Col>
             <Col span={16}>
-                {script ? <Card
-                    title={<Space>
-                        <div>
-                            Yak[{script?.Type}] 模块详情
-                        </div>
-                    </Space>} bordered={false} size={"small"}
-                >
-                    <PluginOperator yakScriptId={script.Id}/>
-                </Card> : <Empty style={{marginTop: 100}}>
+                {script ? (
+                    <Card
+                        loading={loading}
+                        title={<Space>
+                            <div>
+                                Yak[{script?.Type}] 模块详情
+                            </div>
+                        </Space>} bordered={false} size={"small"}
+                    >
+                        <PluginOperator yakScriptId={script.Id}/>
+                    </Card>
+                ) : <Empty style={{marginTop: 100}}>
                     在左侧所选模块查看详情
                 </Empty>}
             </Col>
@@ -257,27 +269,26 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                         <Col span={12} style={{textAlign: "right"}}>
                             <Space>
                                 <CopyableField noCopy={true} text={formatDate(i.CreatedAt)}/>
-                                <Popover
-                                    title={"确定要删除该插件吗？"}
-                                    content={<>
-                                        <Popconfirm
-                                            title={"确定要删除该插件？删除之后不可恢复"}
-                                            onConfirm={() => {
-                                                ipcRenderer.invoke("delete-yak-script", i.Id)
-                                                setLoading(true)
-                                                setTimeout(() => setTrigger(!trigger), 300)
-                                            }}
-                                        >
-                                            <Button size={"small"} danger={true} type={"link"}>删除插件</Button>
-                                        </Popconfirm>
-                                    </>}
+
+                                <Button
+                                    size={"small"} type={"link"} style={{marginRight: 0}}
+                                    onClick={() => {
+                                        const modal = showModal({
+                                            title: `插件管理: ${i.ScriptName}`,
+                                            content: <>
+                                                <PluginManagement script={i} vertical={true} update={() => {
+                                                    setLoading(true)
+                                                    modal.destroy()
+                                                    setTimeout(() => {
+                                                        setTrigger(!trigger)
+                                                    }, 300)
+                                                }}/>
+                                            </>
+                                        })
+                                    }}
                                 >
-                                    <Button
-                                        size={"small"} type={"link"} style={{marginRight: 0}}
-                                    >
-                                        <SettingOutlined/>
-                                    </Button>
-                                </Popover>
+                                    <SettingOutlined/>
+                                </Button>
                             </Space>
                         </Col>
                     </Row>

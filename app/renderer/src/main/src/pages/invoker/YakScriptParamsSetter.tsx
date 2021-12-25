@@ -19,6 +19,7 @@ import {
 import {QuestionOutlined} from "@ant-design/icons";
 import {YakExecutorParam} from "./YakExecutorParams";
 import {showModal} from "../../utils/showModal";
+import {useMemoizedFn} from "ahooks";
 
 const {Title} = Typography;
 
@@ -107,7 +108,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
 
     const yakScriptParamToNode = (i: YakScriptParam, required: boolean, key: string, disabled: boolean, formItemStyle?: React.CSSProperties) => {
         return <Form.Item
-            labelCol={{xl: 6, xxl: 4}}
+            labelCol={{span: 6}}
             key={key}
             style={{marginBottom: 8, ...formItemStyle}}
             label={<Space size={2}>
@@ -175,31 +176,36 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         }))
     }
 
-    const isGroupHidden = (group: string, defaultValue: boolean) => {
+    const isGroupHidden = useMemoizedFn((group: string, defaultValue: boolean) => {
+        if (group === "default") {
+            return false
+        }
+
         let res = defaultValue;
         groupStates.filter(i => i.group === group).forEach(i => {
             res = i.hidden
         })
         return res;
-    };
+    })
 
     const renderExtraParams = (defaultExpand?: boolean) => {
         return <>
             {
-                extraGroup.length <= 1 ? <>
-                    <Title level={5} style={{fontSize: 14}}>
-                        <Space>
-                        <span>
-                            默认参数组
-                            </span>
-                            <Switch
-                                checked={!isGroupHidden("default", !defaultExpand)}
-                                onChange={(res) => {
-                                    setHideGroup('default', !res)
-                                }}
-                            />
-                        </Space>
-                    </Title>
+                (extraGroup.length <= 1 && extraGroup.length > 0) ? <>
+                    {/*<Title level={5} style={{fontSize: 14}}>*/}
+                    {/*    <Space>*/}
+                    {/*    <span>*/}
+                    {/*        默认参数组*/}
+                    {/*        </span>*/}
+                    {/*        <Switch*/}
+                    {/*            size={"small"}*/}
+                    {/*            defaultChecked={!isGroupHidden("default", !defaultExpand)}*/}
+                    {/*            onChange={(res) => {*/}
+                    {/*                setHideGroup('default', !res)*/}
+                    {/*            }}*/}
+                    {/*        />*/}
+                    {/*    </Space>*/}
+                    {/*</Title>*/}
                     {!isGroupHidden("default", !defaultExpand) && <>
                         {(groupToParams.get("default") || []).map((i: YakScriptParam, index) => yakScriptParamToNode(i, false, `defaultParamsGroup-${index}`, !!props.loading))}
                     </>}
@@ -239,44 +245,72 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
 
             submit()
         }} {...{labelCol: {span: 7}, wrapperCol: {span: 15}}}>
-            {requiredParams.length > 0 && <>
+            {requiredParams.length > 0 ? <>
                 <div style={{marginTop: 0}}>
                     {requiredParams.map((i, index) => yakScriptParamToNode(
                         i, true, `params-${index}`, !!props.loading,
                     ))}
-                    <Form.Item label={" "} colon={false}
-                               style={{width: "100%", textAlign: "right"}} labelCol={{xl: 6, xxl: 4}}
-                    >
-                        <Space>
-                            <Button type={"link"} size={"small"} danger={true} onClick={()=>{
-                                if (props.onClearData){
-                                    props.onClearData()
-                                }
-                            }}>清除缓存</Button>
-                            <Popover title={"设置额外参数"} trigger={"click"}
-                                     content={<div style={{width: 700}}>
-                                         {renderExtraParams(true)}
-                                     </div>}
-                            >
-                                <Button size={"small"} type={"link"}>额外参数</Button>
-                            </Popover>
-                            {props.loading ?
-                                <Button
-                                    style={{width: 120}} danger={true}
-                                    onClick={() => {
-                                        if (props.onCanceled) {
-                                            props.onCanceled()
-                                        }
-                                    }}
-                                    type={"primary"}>停止任务</Button>
-                                : <Button
-                                    style={{width: 120}} htmlType={"submit"}
-                                    type={"primary"}
-                                >启动任务</Button>
-                            }
-                        </Space>
-                    </Form.Item>
                 </div>
+                <Form.Item label={" "} colon={false}
+                           style={{width: "100%", textAlign: "right"}} labelCol={{span: 6}}
+                >
+                    <Space>
+                        <Button type={"link"} size={"small"} danger={true} onClick={() => {
+                            if (props.onClearData) {
+                                props.onClearData()
+                            }
+                        }}>清除缓存</Button>
+                        {groupToParams.size > 0 && <Popover title={"设置额外参数"} trigger={"click"}
+                                                            content={<div style={{width: 700}}>
+                                                                {renderExtraParams(true)}
+                                                            </div>}
+                        >
+                            <Button size={"small"} type={"link"}>额外参数</Button>
+                        </Popover>}
+                        {props.loading ?
+                            <Button
+                                style={{width: 120}} danger={true}
+                                onClick={() => {
+                                    if (props.onCanceled) {
+                                        props.onCanceled()
+                                    }
+                                }}
+                                type={"primary"}>停止任务</Button>
+                            : <Button
+                                style={{width: 120}} htmlType={"submit"}
+                                type={"primary"}
+                            >启动任务</Button>
+                        }
+                    </Space>
+                </Form.Item>
+            </> : <>
+                <Form.Item
+                    style={{width: "100%", textAlign: "right"}}
+                >
+                    <Space>
+                        {props.loading ?
+                            <Button
+                                style={{width: 200}} danger={true}
+                                onClick={() => {
+                                    if (props.onCanceled) {
+                                        props.onCanceled()
+                                    }
+                                }}
+                                type={"primary"}>停止任务</Button>
+                            : <Button
+                                style={{width: 200}} htmlType={"submit"}
+                                type={"primary"}
+                            >启动任务</Button>
+                        }
+                        {groupToParams.size > 0 && <Popover title={"设置额外参数"} trigger={"click"}
+                                                            content={<div style={{width: 700}}>
+                                                                {renderExtraParams(true)}
+                                                            </div>}
+                        >
+                            <Button size={"small"} type={"link"}>额外参数</Button>
+                        </Popover>}
+                    </Space>
+                </Form.Item>
             </>}
         </Form>
     }

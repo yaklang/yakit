@@ -3,7 +3,7 @@ import {Button, Card, Col, Form, Modal, notification, Popconfirm, Row, Space, Sp
 import {ExecHistoryTable} from "./YakExecutorHistoryTable";
 import "./xtermjs-yak-executor.css"
 import {IMonacoEditor, YakEditor} from "../../utils/editors";
-import {DeleteOutlined, QuestionCircleOutlined, ReloadOutlined} from "@ant-design/icons";
+import {DeleteOutlined, QuestionOutlined, ReloadOutlined} from "@ant-design/icons";
 import {YakScriptManagerPage} from "./YakScriptManager";
 import {getRandomInt, randomString} from "../../utils/randomUtil";
 import {showDrawer, showModal} from "../../utils/showModal";
@@ -109,7 +109,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                             <Tag color={"orange"}>{"default"}</Tag>}
                                         {yakScript?.Help &&
                                         <Button
-                                            icon={<QuestionCircleOutlined/>}
+                                            icon={<QuestionOutlined/>}
                                             onClick={e => {
                                                 showModal({
                                                     title: "帮助信息",
