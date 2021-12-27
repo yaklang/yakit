@@ -182,12 +182,10 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 info.Usernames = (info.Usernames || []).concat(
                                     info.UsernamesDict || []
                                 )
-                                info.ReplaceDefaultUsernameDict = info.Usernames.length > 0
                                 delete info.UsernamesDict
                                 info.Passwords = (info.Passwords || []).concat(
                                     info.PasswordsDict || []
                                 )
-                                info.ReplaceDefaultPasswordDict = info.Passwords.length > 0
                                 delete info.PasswordsDict
 
                                 reset()

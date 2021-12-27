@@ -110,7 +110,7 @@ export const RouteMenuData: MenuDataProps[] = [
         key: Route.HTTPHacker, label: "手工渗透测试", icon: <AimOutlined/>,
     },
     {
-        key: Route.GeneralModule, label: "扫描模块", icon: <RocketOutlined/>,
+        key: Route.GeneralModule, label: "基础安全工具", icon: <RocketOutlined/>,
         subMenuData: [
             {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
             {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: false},

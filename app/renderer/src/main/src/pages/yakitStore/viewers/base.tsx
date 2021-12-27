@@ -51,7 +51,7 @@ const idToColor = (id: string) => {
         case id.includes("miss"):
         case id.includes("failed"):
         case id.includes("panic"):
-            return "#ffccc7"
+            return "#ea5f5f"
         default:
             return "#8c8c8c"
     }
@@ -101,16 +101,14 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
     return <div style={{width: "100%"}}>
         {statusCards.length > 0 && <div style={{marginTop: 8, marginBottom: 8}}>
             <Row gutter={8}>
-                {statusCards.map((card, index) => {
+                {statusCards.map((card, cardIndex) => {
                     return <Col key={card.tag} span={8} style={{marginBottom: 8}}>
-                        <Card hoverable={true} bodyStyle={{padding: 12}} style={{
-                            // backgroundColor: idToColor(card.Id)
-                        }}>
+                        <Card hoverable={true} bodyStyle={{padding: 12}}>
                             <div>
                                 <h2>{card.tag}</h2>
                                 <div style={{ display: 'flex' ,justifyContent: 'space-between'}}>
-                                    {card.info.map((info)=>{
-                                        return <Statistic valueStyle={{color:idToColor(info.Id)}} key={info.Id} title={card.info.length>1?info.Id:''} value={info.Data}/>
+                                    {card.info.map((info,infoIndex)=>{
+                                        return <Statistic valueStyle={{color:idToColor(info.Id),textAlign:`${(infoIndex>=1)&&(card.info.length===infoIndex+1)?'right':'left'}`}} key={info.Id} title={card.info.length>1?info.Id:''} value={info.Data}/>
                                     })}
                                 </div>
                             </div>
