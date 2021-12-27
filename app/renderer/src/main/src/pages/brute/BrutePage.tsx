@@ -137,13 +137,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     <Checkbox.Group
                         value={selectedType}
                         style={{ marginLeft: 4 }}
-                        onChange={(checkedValue) => {
-                            if (checkedValue.length === 0) {
-                                warn("该部分最少需选择一个类型")
-                                return
-                            }
-                            setSelectedType(checkedValue as string[])
-                        }}
+                        onChange={(checkedValue) => setSelectedType(checkedValue as string[])}
                     >
                         {availableTypes.map((item) => (
                             <Row key={item}>
@@ -161,20 +155,13 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                             onSubmitCapture={(e) => {
                                 e.preventDefault()
 
-                                //输入目标的正则规则
-                                const targetsReg: RegExp =
-                                    /^((([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(:([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5]))?)|(localhost)|((((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?))((\/([1-2][0-9]|3[0-2]|[1-9]))|(:([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])))?))$/g
-
                                 if (!params.Targets && !params.TargetFile) {
-                                    failed("不允许空目标")
+                                    failed("请填写爆破目标")
                                     return
                                 }
-                                if (!targetsReg.test(params.Targets)) {
-                                    failed("请输入内容为 域名(:端口)/IP(:端口)/IP段")
-                                    return
-                                }
+
                                 if (!params.Type) {
-                                    failed("不允许空类型")
+                                    failed("请至少选择一个爆破类型")
                                     return
                                 }
 
