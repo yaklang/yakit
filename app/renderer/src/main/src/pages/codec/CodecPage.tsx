@@ -3,7 +3,8 @@ import {Button, PageHeader, Space, Dropdown, Menu, Row, Col} from "antd"
 import {DownOutlined, SwapOutlined, ArrowsAltOutlined} from "@ant-design/icons"
 import {YakEditor} from "../../utils/editors"
 import {failed} from "../../utils/notification"
-import {AutoSpin, AutoCard} from "../../components"
+import { AutoCard } from "../../components/AutoCard"
+import { AutoSpin } from "../../components/AutoSpin"
 
 import "./style.css"
 

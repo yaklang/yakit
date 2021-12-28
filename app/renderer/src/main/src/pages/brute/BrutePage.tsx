@@ -7,7 +7,7 @@ import { PluginResultUI } from "../yakitStore/viewers/base"
 import { warn, failed } from "../../utils/notification"
 import { showModal } from "../../utils/showModal"
 
-import { AutoCard } from "../../components"
+import { AutoCard } from "../../components/AutoCard"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import { SelectItem } from "../../utils/SelectItem"
 
@@ -54,14 +54,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
 
     const [loading, setLoading] = useState(false)
 
-    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream(
-        "brute",
-        "StartBrute",
-        taskToken,
-        () => {
-            setTimeout(() => setLoading(false), 300)
-        }
-    )
+    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream("brute", "StartBrute", taskToken, () => {
+        setTimeout(() => setLoading(false), 300)
+    })
 
     // params
     const [params, setParams] = useState<StartBruteParams>({
@@ -166,13 +161,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 }
 
                                 const info = JSON.parse(JSON.stringify(params))
-                                info.Usernames = (info.Usernames || []).concat(
-                                    info.UsernamesDict || []
-                                )
+                                info.Usernames = (info.Usernames || []).concat(info.UsernamesDict || [])
                                 delete info.UsernamesDict
-                                info.Passwords = (info.Passwords || []).concat(
-                                    info.PasswordsDict || []
-                                )
+                                info.Passwords = (info.Passwords || []).concat(info.PasswordsDict || [])
                                 delete info.PasswordsDict
 
                                 info.Targets = info.Targets.split(",").join("\n")
@@ -195,10 +186,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                     }}
                                 >
                                     <span style={{ marginRight: 8 }}>输入目标: </span>
-                                    <Form.Item
-                                        required={true}
-                                        style={{ marginBottom: 0, flex: "1 1 0px" }}
-                                    >
+                                    <Form.Item required={true} style={{ marginBottom: 0, flex: "1 1 0px" }}>
                                         {targetTextRow ? (
                                             <Input.TextArea />
                                         ) : (
@@ -214,61 +202,29 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                     value={params.Targets}
                                                     allowClear={true}
                                                     placeholder={
-                                                        "内容规则 域名(:端口)/IP(:端口)/IP段"
+                                                        "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割"
                                                     }
                                                     suffix={
-                                                        <Upload
-                                                            accept={"text/plain"}
-                                                            multiple={false}
-                                                            maxCount={1}
-                                                            showUploadList={false}
-                                                            beforeUpload={(f) => {
-                                                                if (f.type !== "text/plain") {
-                                                                    failed(
-                                                                        `${f.name}非txt文件，请上传txt格式文件！`
-                                                                    )
-                                                                    return false
-                                                                }
-
-                                                                ipcRenderer
-                                                                    .invoke(
-                                                                        "fetch-file-content",
-                                                                        f.path
-                                                                    )
-                                                                    .then((res) => {
-                                                                        const content =
-                                                                            !!params.Targets
-                                                                                ? `${
-                                                                                      (
-                                                                                          params.Targets ||
-                                                                                          ""
-                                                                                      ).endsWith(
-                                                                                          ","
-                                                                                      )
-                                                                                          ? params.Targets
-                                                                                          : params.Targets +
-                                                                                            ","
-                                                                                  }${res
-                                                                                      .split("\n")
-                                                                                      .join(",")}`
-                                                                                : res
-                                                                                      .split("\n")
-                                                                                      .join(",")
-                                                                        setParams({
-                                                                            ...params,
-                                                                            Targets: content
-                                                                        })
-                                                                    })
-                                                                return false
+                                                        <UploadOutlined
+                                                            style={{
+                                                                cursor: "pointer",
+                                                                color: "#1890ff"
                                                             }}
-                                                        >
-                                                            <UploadOutlined
-                                                                style={{
-                                                                    cursor: "pointer",
-                                                                    color: "#1890ff"
-                                                                }}
-                                                            />
-                                                        </Upload>
+                                                            onClick={(e) => {
+                                                                showModal({
+                                                                    title: "批量添加爆破目标",
+                                                                    width: "50%",
+                                                                    content: (
+                                                                        <>
+                                                                            <UploadTarget
+                                                                                defaultParams={params}
+                                                                                setParams={setParams}
+                                                                            />
+                                                                        </>
+                                                                    )
+                                                                })
+                                                            }}
+                                                        />
                                                     }
                                                     onChange={(e) => {
                                                         setParams({
@@ -282,10 +238,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                         style={{ height: 42, width: 180 }}
                                                         type={"primary"}
                                                         onClick={() => {
-                                                            ipcRenderer.invoke(
-                                                                "cancel-StartBrute",
-                                                                taskToken
-                                                            )
+                                                            ipcRenderer.invoke("cancel-StartBrute", taskToken)
                                                         }}
                                                         danger={true}
                                                     >
@@ -310,11 +263,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                         {(params?.TargetTaskConcurrent || 1) > 1 && (
                                             <Tag>目标内爆破并发:{params.TargetTaskConcurrent}</Tag>
                                         )}
-                                        {params?.OkToStop ? (
-                                            <Tag>爆破成功即停止</Tag>
-                                        ) : (
-                                            <Tag>爆破成功后仍继续</Tag>
-                                        )}
+                                        {params?.OkToStop ? <Tag>爆破成功即停止</Tag> : <Tag>爆破成功后仍继续</Tag>}
                                         {(params?.DelayMax || 0) > 0 && (
                                             <Tag>
                                                 随机暂停:{params.DelayMin}-{params.DelayMax}s
@@ -480,10 +429,7 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                 <Checkbox
                     checked={!params.ReplaceDefaultUsernameDict}
                     onChange={(e) => {
-                        if (
-                            (params.UsernamesDict || []).length === 0 &&
-                            (params.Usernames || []).length === 0
-                        ) {
+                        if ((params.UsernamesDict || []).length === 0 && (params.Usernames || []).length === 0) {
                             warn("在内容未填时此项必须勾选")
                             setParams({
                                 ...params,
@@ -545,10 +491,7 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                 <Checkbox
                     checked={!params.ReplaceDefaultPasswordDict}
                     onChange={(e) => {
-                        if (
-                            (params.PasswordsDict || []).length === 0 &&
-                            (params.Passwords || []).length === 0
-                        ) {
+                        if ((params.PasswordsDict || []).length === 0 && (params.Passwords || []).length === 0) {
                             warn("在内容未填时此项必须勾选")
                             setParams({
                                 ...params,
@@ -598,5 +541,64 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                 min={params.DelayMin}
             />
         </Form>
+    )
+}
+
+interface UploadTargetProps {
+    defaultParams: StartBruteParams
+    setParams: (p: StartBruteParams) => any
+}
+
+const UploadTarget: React.FC<UploadTargetProps> = (props) => {
+    const [targets, setTargets] = useState<string>(props.defaultParams.Targets.split(",").join("\n"))
+
+    useEffect(() => {
+        if (!targets) {
+            return
+        }
+
+        const str = targets.split("\n").join(",")
+        props.setParams({
+            ...props.defaultParams,
+            Targets: str.endsWith(",") ? str.substring(0, str.length - 1) : str
+        })
+    }, [targets])
+
+    return (
+        <Upload.Dragger
+            className='targets-upload-dragger'
+            accept={"text/plain"}
+            multiple={false}
+            maxCount={1}
+            showUploadList={false}
+            beforeUpload={(f) => {
+                if (f.type !== "text/plain") {
+                    failed(`${f.name}非txt文件，请上传txt格式文件！`)
+                    return false
+                }
+
+                ipcRenderer.invoke("fetch-file-content", f.path).then((res) => {
+                    setTargets(res)
+                })
+                return false
+            }}
+        >
+            <InputItem
+                label={"扫描目标"}
+                setValue={(value) => setTargets(value)}
+                value={targets}
+                textarea={true}
+                textareaRow={9}
+                isBubbing={true}
+                help={
+                    <div>
+                        域名(:端口)/IP(:端口)/IP段均可，请按行分割
+                        <br />
+                        可将TXT文件拖入框内或
+                        <span style={{ color: "rgb(25,143,255)" }}>点击此处</span>上传
+                    </div>
+                }
+            />
+        </Upload.Dragger>
     )
 }
