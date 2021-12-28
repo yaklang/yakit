@@ -156,12 +156,12 @@ const Main: React.FC<MainProp> = (props) => {
         return targets.length
     }
 
-    useEffect(()=>{
-        setInterval(()=>{
-            ipcRenderer
-            .invoke("fetch-cup-percent", {})
-        },2000)
-    },[])
+    // useEffect(()=>{
+    //     setInterval(()=>{
+    //         ipcRenderer
+    //         .invoke("fetch-cup-percent", {})
+    //     },2000)
+    // },[])
 
     const updateMenuItems = () => {
         setLoading(true)
