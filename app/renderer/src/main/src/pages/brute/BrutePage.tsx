@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
-import { Button, Card, Checkbox, Col, Form, Input, List, Row, Space, Tag } from "antd"
-import { ReloadOutlined } from "@ant-design/icons"
+import { Button, Card, Checkbox, Col, Form, Input, Row, Space, Tag, Upload } from "antd"
+import { ReloadOutlined, UploadOutlined } from "@ant-design/icons"
 import { InputInteger, InputItem, SwitchItem } from "../../utils/inputUtil"
 import { randomString } from "../../utils/randomUtil"
 import { PluginResultUI } from "../yakitStore/viewers/base"
@@ -175,6 +175,8 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 )
                                 delete info.PasswordsDict
 
+                                info.Targets = info.Targets.split(",").join("\n")
+
                                 reset()
                                 setLoading(true)
 
@@ -209,9 +211,64 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                             >
                                                 <Input
                                                     style={{ marginRight: 8, height: 42, flex: 1 }}
+                                                    value={params.Targets}
                                                     allowClear={true}
                                                     placeholder={
                                                         "内容规则 域名(:端口)/IP(:端口)/IP段"
+                                                    }
+                                                    suffix={
+                                                        <Upload
+                                                            accept={"text/plain"}
+                                                            multiple={false}
+                                                            maxCount={1}
+                                                            showUploadList={false}
+                                                            beforeUpload={(f) => {
+                                                                if (f.type !== "text/plain") {
+                                                                    failed(
+                                                                        `${f.name}非txt文件，请上传txt格式文件！`
+                                                                    )
+                                                                    return false
+                                                                }
+
+                                                                ipcRenderer
+                                                                    .invoke(
+                                                                        "fetch-file-content",
+                                                                        f.path
+                                                                    )
+                                                                    .then((res) => {
+                                                                        const content =
+                                                                            !!params.Targets
+                                                                                ? `${
+                                                                                      (
+                                                                                          params.Targets ||
+                                                                                          ""
+                                                                                      ).endsWith(
+                                                                                          ","
+                                                                                      )
+                                                                                          ? params.Targets
+                                                                                          : params.Targets +
+                                                                                            ","
+                                                                                  }${res
+                                                                                      .split("\n")
+                                                                                      .join(",")}`
+                                                                                : res
+                                                                                      .split("\n")
+                                                                                      .join(",")
+                                                                        setParams({
+                                                                            ...params,
+                                                                            Targets: content
+                                                                        })
+                                                                    })
+                                                                return false
+                                                            }}
+                                                        >
+                                                            <UploadOutlined
+                                                                style={{
+                                                                    cursor: "pointer",
+                                                                    color: "#1890ff"
+                                                                }}
+                                                            />
+                                                        </Upload>
                                                     }
                                                     onChange={(e) => {
                                                         setParams({

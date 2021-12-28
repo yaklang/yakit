@@ -835,7 +835,7 @@ const StyledArtTableWrapper = styled__default.div `
 `;
 
 const DefaultEmptyContent = React.memo(() => (React.createElement(React.Fragment, null,
-    React.createElement("img", { alt: "empty-image", className: "empty-image", src: "//img.alicdn.com/tfs/TB1l1LcM3HqK1RjSZJnXXbNLpXa-50-50.svg" }),
+    React.createElement("img", { alt: "empty-image", className: "empty-image", src: "https://img.alicdn.com/tfs/TB1l1LcM3HqK1RjSZJnXXbNLpXa-50-50.svg" }),
     React.createElement("div", { className: "empty-tips" },
         "\u6CA1\u6709\u7B26\u5408\u67E5\u8BE2\u6761\u4EF6\u7684\u6570\u636E",
         React.createElement("br", null),
