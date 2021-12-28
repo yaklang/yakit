@@ -20,6 +20,7 @@ const CodecMenu: CodecType[] = [
     {
         verbose: "Java",
         subTypes: [
+            {key: "java-unserialize-hex-dumper", verbose: "反序列化(SerialDumper)"},
             {key: "java-unserialize-hex", verbose: "反序列化 Java 对象流(hex)"},
             {key: "java-unserialize-base64", verbose: "反序列化 Java 对象流(base64)"},
             {key: "java-serialize-json", verbose: "Java 对象流序列化（JSON=>HEX）"}
