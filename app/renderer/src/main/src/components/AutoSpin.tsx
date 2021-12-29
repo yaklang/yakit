@@ -1,7 +1,7 @@
 import React from "react"
 import { Spin, SpinProps } from "antd"
 
-import "./style.css"
+import "./AutoSpin.css"
 
 export interface AutoSpinProps extends SpinProps {
     children?: React.ReactNode

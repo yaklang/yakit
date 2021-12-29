@@ -244,7 +244,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                     <div style={{textAlign: "center"}}>
                         <Space style={{
                             color: '#888',
-                            marginBottom: 200,
+                            marginBottom: tls? 200 : 0,
                         }}>
                             <Button type={"link"} onClick={() => {
                                 showModal({
