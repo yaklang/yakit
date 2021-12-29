@@ -182,22 +182,30 @@ message GetTunnelServerExternalIPResponse {
 }
 
 message StartFacadesParams {
-  bool EnableRMIServer = 1;
-  int32 RMILocalPort = 2;
-
+  // 端口复用的
+  string LocalFacadeHost = 41;
+  int32 LocalFacadePort = 42;
+//  bool EnableRMIServer = 1;
+//  int32 RMILocalPort = 2;
+//
   bool EnableDNSLogServer = 3;
   int32 DNSLogLocalPort = 4;
+//
+//  bool EnableHTTPServer = 23;
+//  int32 HTTPServerPort = 24;
 
   // 连接远程端口参数
   GetTunnelServerExternalIPParams ConnectParam = 5;
 
   // 远端端口开放情况
-  int32 RMIRemotePort = 6;
+//  int32 RMIRemotePort = 6;
+  int32 FacadeRemotePort = 16;
   int32 DNSLogRemotePort = 7;
 
+  // 外部域名
   string ExternalDomain = 8;
 
-  //
+  // 验证端口是否转发成功
   bool Verify = 9;
 }
 

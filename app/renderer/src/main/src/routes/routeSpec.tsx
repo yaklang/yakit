@@ -28,6 +28,7 @@ import {PortAssetTable} from "../pages/assetViewer/PortAssetPage";
 import {ExecResultsViewer} from "../pages/invoker/batch/ExecMessageViewer";
 import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable";
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage";
+import {ReverseServerPage} from "../pages/reverse/ReverseServerPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -35,7 +36,6 @@ const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
 export enum Route {
     MITM = "mitm",
     YakScript = "yakScript",
-    ShellReceiver = "shellReceiver",
     Codec = "codec",
     WebShellManager = "webShellManager",
     HistoryRequests = "historyRequests",
@@ -88,6 +88,12 @@ export enum Route {
 
     // Handler
     DataHandler = "data-handler",  // include codec compare
+
+    // 反连
+    ReverseManager = `reverse`,
+    ReverseServer = "reverse-server",
+    ShellReceiver = "shellReceiver",
+
 }
 
 export interface MenuDataProps {
@@ -147,8 +153,13 @@ export const RouteMenuData: MenuDataProps[] = [
     {key: Route.ModManager, label: "插件商店", icon: <AppstoreOutlined/>},
     {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined/>},
     {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
-    {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined/>},
-
+    {
+        key: Route.ReverseManager, label: "反连管理", icon: <AppstoreOutlined/>,
+        subMenuData: [
+            {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined/>},
+            {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined/>},
+        ]
+    },
     {
         key: Route.DataHandler, label: "数据处理",
         icon: <FunctionOutlined/>,
@@ -273,6 +284,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <DomainAssetPage/>
         case Route.DB_ExecResults:
             return <YakScriptExecResultTable/>
+        case Route.ReverseServer:
+            return <ReverseServerPage/>
         default:
             return <div/>
     }
