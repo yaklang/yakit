@@ -1,7 +1,7 @@
 import React from "react"
 import { Card, CardProps } from "antd"
 
-import "./style.css"
+import "./AutoCard.css"
 
 export interface AutoCardProps extends CardProps {
     style?: React.CSSProperties

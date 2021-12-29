@@ -3,7 +3,9 @@ import {Button, PageHeader, Space, Dropdown, Menu, Row, Col} from "antd"
 import {DownOutlined, SwapOutlined, ArrowsAltOutlined} from "@ant-design/icons"
 import {YakEditor} from "../../utils/editors"
 import {failed} from "../../utils/notification"
-import {AutoSpin, AutoCard} from "../../components"
+import { LineConversionIcon } from "../../assets/icons"
+import { AutoCard } from "../../components/AutoCard"
+import { AutoSpin } from "../../components/AutoSpin"
 
 import "./style.css"
 
@@ -81,8 +83,11 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [text, setText] = useState("")
     const [result, setResult] = useState("")
     const [loading, setLoading] = useState(true)
+    
     const [leftWidth, setLeftWidth] = useState<boolean>(false)
     const [rightWidth, setRightWidth] = useState<boolean>(false)
+    const [leftLine,setLeftLine] = useState<boolean>(true)
+    const [rightLine,setRightLine] = useState<boolean>(false)
 
     const codec = (t: string) => {
         if (!t) {
@@ -172,19 +177,27 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             headStyle={{height: 28, minHeight: 28, padding: 0}}
                             bodyStyle={{padding: 0}}
                             extra={
-                                <Button
-                                    size={"small"}
-                                    type={leftWidth ? "primary" : "link"}
-                                    icon={<ArrowsAltOutlined/>}
-                                    onClick={() => {
-                                        setLeftWidth(!leftWidth)
-                                        setRightWidth(false)
-                                    }}
-                                />
+                                <>
+                                    <Button
+                                        size={"small"}
+                                        type={leftLine ? "primary" : "link"}
+                                        icon={<LineConversionIcon/>}
+                                        onClick={() => setLeftLine(!leftLine)}
+                                    />
+                                    <Button
+                                        size={"small"}
+                                        type={leftWidth ? "primary" : "link"}
+                                        icon={<ArrowsAltOutlined/>}
+                                        onClick={() => {
+                                            setLeftWidth(!leftWidth)
+                                            setRightWidth(false)
+                                        }}
+                                    />
+                                </>
                             }
                         >
                             <div className='editor-body'>
-                                <YakEditor value={text} setValue={setText}/>
+                                <YakEditor value={text} noWordWrap={!leftLine} setValue={setText}/>
                             </div>
                         </AutoCard>
                     </Col>
@@ -207,19 +220,27 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             headStyle={{height: 28, minHeight: 28, padding: 0}}
                             bodyStyle={{padding: 0}}
                             extra={
-                                <Button
-                                    size={"small"}
-                                    type={rightWidth ? "primary" : "link"}
-                                    icon={<ArrowsAltOutlined/>}
-                                    onClick={() => {
-                                        setRightWidth(!rightWidth)
-                                        setLeftWidth(false)
-                                    }}
-                                />
+                                <>
+                                   <Button
+                                        size={"small"}
+                                        type={rightLine ? "primary" : "link"}
+                                        icon={<LineConversionIcon/>}
+                                        onClick={() => setRightLine(!rightLine)}
+                                    />
+                                    <Button
+                                        size={"small"}
+                                        type={rightWidth ? "primary" : "link"}
+                                        icon={<ArrowsAltOutlined/>}
+                                        onClick={() => {
+                                            setRightWidth(!rightWidth)
+                                            setLeftWidth(false)
+                                        }}
+                                    />
+                                </>
                             }
                         >
                             <div className='editor-body'>
-                                <YakEditor value={result} setValue={setResult} readOnly={true} type={"http"}/>
+                                <YakEditor value={result} noWordWrap={!rightLine} setValue={setResult} readOnly={true} type={"http"}/>
                             </div>
                         </AutoCard>
                     </Col>

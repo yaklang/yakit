@@ -159,6 +159,13 @@ const Main: React.FC<MainProp> = (props) => {
         return targets.length
     }
 
+    // useEffect(()=>{
+    //     setInterval(()=>{
+    //         ipcRenderer
+    //         .invoke("fetch-cup-percent", {})
+    //     },2000)
+    // },[])
+
     const updateMenuItems = () => {
         setLoading(true)
         ipcRenderer
@@ -492,7 +499,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             icon: <EllipsisOutlined/>,
                                                             key: `plugin:${i.Id}`,
                                                             label: i.GeneralModuleVerbose
-                                                        } as MenuDataProps
+                                                        } as unknown as MenuDataProps
                                                     })
                                                     i.subMenuData.push(...extraMenus)
                                                     let subMenuMap = new Map<string, MenuDataProps>()
