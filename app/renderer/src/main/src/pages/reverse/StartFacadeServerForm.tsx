@@ -34,7 +34,7 @@ export const StartFacadeServerForm: React.FC<StartFacadeServerFormProp> = (props
     const [remoteMode, setRemoteMode] = useState(false);
     const {params, setParams} = props;
 
-    return <div>
+    return <div style={{marginTop: 20}}>
         <Form
             layout={"horizontal"} labelCol={{span: 4}} wrapperCol={{span: 18}}
             onSubmitCapture={e => {

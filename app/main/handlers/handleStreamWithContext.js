@@ -7,6 +7,11 @@ module.exports = {
         }
     },
     registerHandler: (windows, stream, streamMap, token)=>{
+        const currentStream = streamMap.get(token);
+        if (!!currentStream) {
+            return
+        }
+
         streamMap.set(token, stream);
         stream.on("data", data => {
             if (!windows) {
