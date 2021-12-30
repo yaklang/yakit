@@ -2615,6 +2615,13 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-sparklines@^1.7.2":
+  version "1.7.2"
+  resolved "https://registry.npmmirror.com/@types/react-sparklines/download/@types/react-sparklines-1.7.2.tgz#c14e80623abd3669a10f18d13f6fb9fbdc322f70"
+  integrity sha1-wU6AYjq9NmmhDxjRP2+5+9wyL3A=
+  dependencies:
+    "@types/react" "*"
+
 "@types/react@*", "@types/react@^17.0.0":
   version "17.0.15"
   resolved "https://registry.nlark.com/@types/react/download/@types/react-17.0.15.tgz?cache=0&sync_timestamp=1627126099658&other_urls=https%3A%2F%2Fregistry.nlark.com%2F%40types%2Freact%2Fdownload%2F%40types%2Freact-17.0.15.tgz"
@@ -12864,6 +12871,13 @@ react-sortable-hoc@^2.0.0:
     "@babel/runtime" "^7.2.0"
     invariant "^2.2.4"
     prop-types "^15.5.7"
+
+react-sparklines@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.nlark.com/react-sparklines/download/react-sparklines-1.7.0.tgz#9b1d97e8c8610095eeb2ad658d2e1fcf91f91a60"
+  integrity sha1-mx2X6MhhAJXusq1ljS4fz5H5GmA=
+  dependencies:
+    prop-types "^15.5.10"
 
 react-textarea-autosize@^8.3.2:
   version "8.3.3"

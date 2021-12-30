@@ -130,5 +130,7 @@ module.exports = {
 
         //
         require("./handlers/facadeServer")(win, getClient);
+        // 小工具插件
+        require("./handlers/pluginTool")(win, getClient);
     }
 }

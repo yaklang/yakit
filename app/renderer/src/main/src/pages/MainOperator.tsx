@@ -34,6 +34,8 @@ import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletion
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "./invoker/schema"
+import { PerformanceDisplay } from "../components/PerformanceDisplay"
+
 
 import "./main.css"
 
@@ -158,13 +160,6 @@ const Main: React.FC<MainProp> = (props) => {
         })
         return targets.length
     }
-
-    // useEffect(()=>{
-    //     setInterval(()=>{
-    //         ipcRenderer
-    //         .invoke("fetch-cup-percent", {})
-    //     },2000)
-    // },[])
 
     const updateMenuItems = () => {
         setLoading(true)
@@ -406,10 +401,11 @@ const Main: React.FC<MainProp> = (props) => {
                         </Space>
                     </Col>
                     <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
+                        <PerformanceDisplay />
                         <Space>
-                            {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>}
+                            {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                             {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
-                            <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag>
+                            {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
                             <AutoUpdateYakModuleButton/>
                             <Popconfirm
                                 title={"确认需要退出当前会话吗？"}
