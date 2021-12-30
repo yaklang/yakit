@@ -145,10 +145,10 @@ export default function useHoldingIPCRStream(
             }
             writeExecResultXTerm(getXtermRef(), data)
         })
-        ipcRenderer.on(`${token}-error`, (e, error) => {
+        ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
             failed(`[Mod] ${taskName} error: ${error}`)
         })
-        ipcRenderer.on(`${token}-end`, (e, data) => {
+        ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             info(`[Mod] ${taskName} finished`)
             syncResults()
             if (onEnd) {

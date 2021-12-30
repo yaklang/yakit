@@ -139,7 +139,7 @@ export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boo
                 </div>
             })
         }
-    }).catch(e => {
+    }).catch((e: any) => {
 
     })
 }

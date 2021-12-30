@@ -42,7 +42,7 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
                 data = data.substr(1)
             }
             setLatestVersion(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed(`${e}`)
         }).finally(
             () => setTimeout(() => setLatestLoading(false), 300)
@@ -53,7 +53,7 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
         setLoading(true)
         ipcRenderer.invoke("yakit-version").then((data: string) => {
             setCurrentVersion(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed(`${e}`)
         }).finally(
             () => setTimeout(() => setLoading(false), 300)
@@ -95,7 +95,7 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
             </>,
             onOk: () => {
                 ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
-                }).catch(err => {
+                }).catch((err: any) => {
                 })
             }
 
@@ -137,7 +137,7 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
                             ipcRenderer.invoke("download-latest-yakit", latestVersion).then(() => {
                                 success("下载完毕")
                                 install(latestVersion)
-                            }).catch(e => {
+                            }).catch((e: any) => {
                                 failed("下载失败")
                             }).finally(() => {
                                 setTimeout(() => setDownloading(false), 100)

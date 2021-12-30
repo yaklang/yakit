@@ -50,7 +50,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             }
         }).then(data => {
             setResponse(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed("QueryPorts failed: " + `${e}`)
         }).finally(() => setTimeout(() => setLoading(false), 300))
     }
@@ -277,7 +277,7 @@ export const PortDeleteForm: React.FC<PortDeleteFormProp> = (props) => {
         e.preventDefault()
         ipcRenderer.invoke("DeletePorts", {All: false, ...params}).then(() => {
 
-        }).catch(e => {
+        }).catch((e: any) => {
             failed("删除失败")
         }).finally(() => {
             props.onFinished()
@@ -292,7 +292,7 @@ export const PortDeleteForm: React.FC<PortDeleteFormProp> = (props) => {
                     title: "确定要删除全部吗？不可恢复", onOk: () => {
                         ipcRenderer.invoke("DeletePorts", {All: true}).then(() => {
 
-                        }).catch(e => {
+                        }).catch((e: any) => {
                             failed("删除失败")
                         }).finally(() => {
                             props.onFinished()

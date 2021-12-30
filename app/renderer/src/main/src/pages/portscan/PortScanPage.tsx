@@ -91,10 +91,10 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
             }
             writeExecResultXTerm(xtermRef, data)
         })
-        ipcRenderer.on(`${token}-error`, (e, error) => {
+        ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
             failed(`[PortScan] error:  ${error}`)
         })
-        ipcRenderer.on(`${token}-end`, (e, data) => {
+        ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             info("[PortScan] finished")
             setLoading(false)
         })
@@ -158,7 +158,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         } 
 
                                         setUploadLoading(true)
-                                        ipcRenderer.invoke("fetch-file-content", f.path).then((res)=>{
+                                        ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res)=>{
                                             setParams({...params, Targets:res})
                                             setTimeout(() => {
                                                 setUploadLoading(false)

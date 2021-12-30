@@ -33,11 +33,11 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 
     useEffect(() => {
         const flag = randomString(30);
-        ipcRenderer.on(flag, (e, data: HTTPFlow) => {
+        ipcRenderer.on(flag, (e: any, data: HTTPFlow) => {
             setHash(data.Hash)
             setLoading(false)
         })
-        ipcRenderer.on(`ERROR:${flag}`, (e, data: string) => {
+        ipcRenderer.on(`ERROR:${flag}`, (e: any, data: string) => {
             setLoading(false)
             failed("分析参数失败：" + data)
         })
@@ -75,11 +75,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             return
         }
 
-        ipcRenderer.on(props.hash, (e, data: HTTPFlow) => {
+        ipcRenderer.on(props.hash, (e: any, data: HTTPFlow) => {
             setFlow(data)
             setTimeout(() => setLoading(false), 300)
         })
-        ipcRenderer.on(`ERROR:${props.hash}`, (e, details) => {
+        ipcRenderer.on(`ERROR:${props.hash}`, (e: any, details: any) => {
             failed(`查询该请求失败[${props.hash}]: ` + details)
         })
 
@@ -232,7 +232,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setLoading(true)
         ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
             setFlow(i)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed(`Query HTTPFlow failed: ${e}`)
         }).finally(() => {
             setLoading(false)

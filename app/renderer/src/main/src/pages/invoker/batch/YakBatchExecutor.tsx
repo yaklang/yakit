@@ -139,10 +139,10 @@ export const YakBatchExecutor: React.FC<YakBatchExecutorProp> = (props) => {
                 return
             }
         })
-        ipcRenderer.on(errorChannel, (e, error) => {
+        ipcRenderer.on(errorChannel, (e: any, error: any) => {
             setError(error)
         })
-        ipcRenderer.on(endChannel, (e, data) => {
+        ipcRenderer.on(endChannel, (e: any, data: any) => {
             info("模块加载完成 / 执行完毕")
             setExecuting(false)
             updateTasks()

@@ -71,7 +71,7 @@ function App() {
 
     useEffect(() => {
         setLoading(true)
-        ipcRenderer.invoke("get-value", UserProtocolAgreed).then(value => {
+        ipcRenderer.invoke("get-value", UserProtocolAgreed).then((value: any) => {
             setAgreed(!!value)
         }).catch(() => {
         }).finally(() => setTimeout(() => setLoading(false), 300))
@@ -103,10 +103,10 @@ function App() {
             return
         }
 
-        ipcRenderer.on("client-yak-local-grpc-error", async (e: any, data) => {
+        ipcRenderer.on("client-yak-local-grpc-error", async (e: any, data: any) => {
             failed("Yak 本地 gRPC 服务器发生错误: " + data)
         })
-        ipcRenderer.on("client-yak-local-grpc-close", async (e: any, msg) => {
+        ipcRenderer.on("client-yak-local-grpc-close", async (e: any, msg: any) => {
             info("Yak 本地 gRPC 服务器已退出: " + msg)
         });
 
@@ -117,7 +117,7 @@ function App() {
     }, [mode])
 
     useEffect(() => {
-        ipcRenderer.on("client-echo-yak", async (e: any, ok, text) => {
+        ipcRenderer.on("client-echo-yak", async (e: any, ok: boolean, text: string) => {
             if (ok) {
                 // success("Yakit Server 认证成功")
             } else {

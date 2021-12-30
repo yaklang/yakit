@@ -481,7 +481,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
             })
-            .catch((e) => {
+            .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
             })
             .finally(() => {

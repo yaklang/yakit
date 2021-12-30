@@ -50,7 +50,7 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
         console.info(newParams)
         ipcRenderer.invoke("QueryExecHistory", newParams).then(data => {
             setResponse(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed("QueryExecHistory failed: " + `${e}`)
         }).finally(() => {
             setTimeout(() => setLoading(false), 200)

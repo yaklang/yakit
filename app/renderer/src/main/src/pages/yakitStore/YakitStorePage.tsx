@@ -193,7 +193,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         setLoading(true)
         ipcRenderer.invoke("QueryYakScript", newParams).then(data => {
             setResponse(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed("Query Local Yak Script failed: " + `${e}`)
         }).finally(() => {
             setTimeout(() => setLoading(false), 200)

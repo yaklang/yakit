@@ -28,7 +28,7 @@ export const DocumentEditor: React.FC<DocumentEditorProp> = (props) => {
                             Markdown: markdown,
                         }).then(() => {
                             success("保存文档成功")
-                        }).catch(e => {
+                        }).catch((e: any) => {
                             console.info(e)
                         }).finally()
                     }}

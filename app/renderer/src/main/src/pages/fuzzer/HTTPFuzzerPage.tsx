@@ -192,7 +192,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             setContent([...buffer])
         }
-        ipcRenderer.on(dataToken, (e, data) => {
+        ipcRenderer.on(dataToken, (e: any, data: any) => {
             const response = new Buffer(data.ResponseRaw).toString(
                 fixEncoding(data.GuessResponseEncoding)
             )

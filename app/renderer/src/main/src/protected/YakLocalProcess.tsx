@@ -145,7 +145,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                             <Popconfirm
                                                                 title={"将会强制关闭该进程"}
                                                                 onConfirm={() => {
-                                                                    ipcRenderer.invoke("kill-yak-grpc", i.pid).catch(e => {
+                                                                    ipcRenderer.invoke("kill-yak-grpc", i.pid).catch((e: any) => {
 
                                                                     }).finally(update)
                                                                 }}

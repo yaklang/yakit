@@ -9,4 +9,20 @@ module.exports = (win, getClient) => {
         let stream = getClient().StartBrute(params);
         handlerHelper.registerHandler(win, stream, streamPortScanMap, token)
     })
+
+    // asyncGetTunnelServerExternalIP wrapper
+    const asyncGetTunnelServerExternalIP = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetTunnelServerExternalIP(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetTunnelServerExternalIP", async (e, params) => {
+        return await asyncGetTunnelServerExternalIP(params)
+    })
 }
