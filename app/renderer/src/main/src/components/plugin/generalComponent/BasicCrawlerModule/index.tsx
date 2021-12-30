@@ -54,7 +54,7 @@ export const BasicCrawlerModule: React.FC<BasicCrawlerProp> = (props) => {
             .then((data: { Markdown: string }) => {
                 setMarkdown(data.Markdown)
             })
-            .catch((e) => {
+            .catch((e: any) => {
                 setMarkdown("")
             })
     }, [props.pluginInfo])
@@ -154,7 +154,7 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
                         .then(() => {
                             success("添加成功")
                         })
-                        .catch((e) => {
+                        .catch((e: any) => {
                             failed(`${e}`)
                         })
                 }}

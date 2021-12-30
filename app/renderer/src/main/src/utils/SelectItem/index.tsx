@@ -32,7 +32,7 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
             .then((data: { Groups: string[] }) => {
                 setLists(data.Groups || [])
             })
-            .catch((e) => {
+            .catch((e: any) => {
                 failed(e?.details || "获取字典列表失败！")
             })
             .finally()

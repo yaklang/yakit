@@ -1,31 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {IpcRenderer} from "electron";
-import {
-    Alert,
-    Button,
-    Card,
-    Form, Image,
-    Typography,
-    Input,
-    InputNumber,
-    notification,
-    Popconfirm,
-    Popover,
-    Space, Spin,
-    Tabs,
-    Tag,
-    Tooltip, Modal
-} from "antd";
-import {CopyableField, InputItem, SelectOne, SwitchItem} from "../utils/inputUtil";
-import {failed, info, success} from "../utils/notification";
+import {Button, Form, Image, Input, InputNumber, notification, Popover, Space, Spin, Tag, Typography} from "antd";
+import {InputItem, SelectOne, SwitchItem} from "../utils/inputUtil";
 import {QuestionCircleOutlined} from "@ant-design/icons";
 import {YakEditor} from "../utils/editors";
-import {ExternalUrl, openABSFile} from "../utils/openWebsite";
-import {YakLogoBanner, YakLogoData} from "../utils/logo";
+import {YakLogoBanner} from "../utils/logo";
 import {YakLocalProcess, yakProcess} from "./YakLocalProcess";
 import {saveAuthInfo, YakRemoteAuth} from "./YakRemoteAuth";
 import {showModal} from "../utils/showModal";
-import {divider} from "@uiw/react-md-editor";
 import {YakUpgrade} from "../components/YakUpgrade";
 import {UserProtocol} from "../App";
 import {YakitUpgrade} from "../components/YakitUpgrade";
@@ -41,7 +22,7 @@ export interface YakEnvironmentProp {
 
 const FormItem = Form.Item;
 const {ipcRenderer} = window.require("electron");
-const render: IpcRenderer = ipcRenderer;
+const render = ipcRenderer;
 
 const pemPlaceHolder = `-----BEGIN CERTIFICATE-----
 MIIDDjCCAfagAwIBAgIQdtJUoUlZeG+SAmgFo8TjpzANBgkqhkiG9w0BAQsFADAg
@@ -113,7 +94,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                     })
                 }
             }
-        ).catch(e => {
+        ).catch(() => {
             notification["error"]({message: "设置 Yak gRPC 引擎地址失败"})
         }).finally(() => {
             setTimeout(() => {
@@ -244,7 +225,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                     <div style={{textAlign: "center"}}>
                         <Space style={{
                             color: '#888',
-                            marginBottom: tls? 200 : 0,
+                            marginBottom: tls ? 200 : 0,
                         }}>
                             <Button type={"link"} onClick={() => {
                                 showModal({

@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react"
-import { Button, Card, Checkbox, Col, Form, Input, Row, Space, Tag, Upload } from "antd"
-import { ReloadOutlined, UploadOutlined } from "@ant-design/icons"
-import { InputInteger, InputItem, SwitchItem } from "../../utils/inputUtil"
-import { randomString } from "../../utils/randomUtil"
-import { PluginResultUI } from "../yakitStore/viewers/base"
-import { warn, failed } from "../../utils/notification"
-import { showModal } from "../../utils/showModal"
+import React, {useEffect, useState} from "react"
+import {Button, Card, Checkbox, Col, Form, Input, Row, Space, Tag, Upload} from "antd"
+import {ReloadOutlined, UploadOutlined} from "@ant-design/icons"
+import {InputInteger, InputItem, SwitchItem} from "../../utils/inputUtil"
+import {randomString} from "../../utils/randomUtil"
+import {PluginResultUI} from "../yakitStore/viewers/base"
+import {warn, failed} from "../../utils/notification"
+import {showModal} from "../../utils/showModal"
 
-import { AutoCard } from "../../components/AutoCard"
+import {AutoCard} from "../../components/AutoCard"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
-import { SelectItem } from "../../utils/SelectItem"
+import {SelectItem} from "../../utils/SelectItem"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 export interface StartBruteParams {
     Type: string
@@ -41,7 +41,8 @@ export interface StartBruteParams {
     passwordValue?: string
 }
 
-export interface BrutePageProp {}
+export interface BrutePageProp {
+}
 
 export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [typeLoading, setTypeLoading] = useState(false)
@@ -54,7 +55,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
 
     const [loading, setLoading] = useState(false)
 
-    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream("brute", "StartBrute", taskToken, () => {
+    const [infoState, {reset, setXtermRef}] = useHoldingIPCRStream("brute", "StartBrute", taskToken, () => {
         setTimeout(() => setLoading(false), 300)
     })
 
@@ -84,7 +85,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     })
 
     useEffect(() => {
-        setParams({ ...params, Type: selectedType.join(",") })
+        setParams({...params, Type: selectedType.join(",")})
     }, [selectedType])
 
     const loadTypes = () => {
@@ -99,7 +100,8 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     setSelectedType([types[0]])
                 }
             })
-            .catch((e) => {})
+            .catch((e: any) => {
+            })
             .finally(() => setTimeout(() => setTypeLoading(false), 300))
     }
 
@@ -108,20 +110,20 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     }, [])
 
     return (
-        <div style={{ height: "100%", backgroundColor: "#fff", width: "100%", display: "flex" }}>
-            <div style={{ height: "100%", width: 200 }}>
+        <div style={{height: "100%", backgroundColor: "#fff", width: "100%", display: "flex"}}>
+            <div style={{height: "100%", width: 200}}>
                 <Card
                     loading={typeLoading}
                     size={"small"}
-                    style={{ marginRight: 8, height: "100%" }}
-                    bodyStyle={{ padding: 8 }}
+                    style={{marginRight: 8, height: "100%"}}
+                    bodyStyle={{padding: 8}}
                     title={
                         <div>
                             可用爆破类型{" "}
                             <Button
                                 type={"link"}
                                 size={"small"}
-                                icon={<ReloadOutlined />}
+                                icon={<ReloadOutlined/>}
                                 onClick={() => {
                                     loadTypes()
                                 }}
@@ -131,7 +133,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                 >
                     <Checkbox.Group
                         value={selectedType}
-                        style={{ marginLeft: 4 }}
+                        style={{marginLeft: 4}}
                         onChange={(checkedValue) => setSelectedType(checkedValue as string[])}
                     >
                         {availableTypes.map((item) => (
@@ -142,9 +144,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     </Checkbox.Group>
                 </Card>
             </div>
-            <div style={{ flex: 1, width: "100%", display: "flex", flexDirection: "column" }}>
-                <Row style={{ marginBottom: 30, marginTop: 35 }}>
-                    <Col span={3} />
+            <div style={{flex: 1, width: "100%", display: "flex", flexDirection: "column"}}>
+                <Row style={{marginBottom: 30, marginTop: 35}}>
+                    <Col span={3}/>
                     <Col span={17}>
                         <Form
                             onSubmitCapture={(e) => {
@@ -175,9 +177,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                     ipcRenderer.invoke("StartBrute", info, taskToken)
                                 }, 300)
                             }}
-                            style={{ width: "100%", textAlign: "center", alignItems: "center" }}
+                            style={{width: "100%", textAlign: "center", alignItems: "center"}}
                         >
-                            <Space direction={"vertical"} style={{ width: "100%" }} size={4}>
+                            <Space direction={"vertical"} style={{width: "100%"}} size={4}>
                                 <div
                                     style={{
                                         display: "flex",
@@ -185,10 +187,10 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                         alignItems: "center"
                                     }}
                                 >
-                                    <span style={{ marginRight: 8 }}>输入目标: </span>
-                                    <Form.Item required={true} style={{ marginBottom: 0, flex: "1 1 0px" }}>
+                                    <span style={{marginRight: 8}}>输入目标: </span>
+                                    <Form.Item required={true} style={{marginBottom: 0, flex: "1 1 0px"}}>
                                         {targetTextRow ? (
-                                            <Input.TextArea />
+                                            <Input.TextArea/>
                                         ) : (
                                             <Row
                                                 style={{
@@ -198,7 +200,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                 }}
                                             >
                                                 <Input
-                                                    style={{ marginRight: 8, height: 42, flex: 1 }}
+                                                    style={{marginRight: 8, height: 42, flex: 1}}
                                                     value={params.Targets}
                                                     allowClear={true}
                                                     placeholder={
@@ -235,7 +237,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                 />
                                                 {loading ? (
                                                     <Button
-                                                        style={{ height: 42, width: 180 }}
+                                                        style={{height: 42, width: 180}}
                                                         type={"primary"}
                                                         onClick={() => {
                                                             ipcRenderer.invoke("cancel-StartBrute", taskToken)
@@ -246,7 +248,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                                     </Button>
                                                 ) : (
                                                     <Button
-                                                        style={{ height: 42, width: 180 }}
+                                                        style={{height: 42, width: 180}}
                                                         type={"primary"}
                                                         htmlType={"submit"}
                                                     >
@@ -257,7 +259,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                         )}
                                     </Form.Item>
                                 </div>
-                                <div style={{ textAlign: "left", width: "100%", marginLeft: 68 }}>
+                                <div style={{textAlign: "left", width: "100%", marginLeft: 68}}>
                                     <Space>
                                         <Tag>目标并发:{params.Concurrent}</Tag>
                                         {(params?.TargetTaskConcurrent || 1) > 1 && (
@@ -292,7 +294,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                     </Space>
                                 </div>
                                 {advanced && (
-                                    <div style={{ textAlign: "left" }}>
+                                    <div style={{textAlign: "left"}}>
                                         <Form
                                             onSubmitCapture={(e) => e.preventDefault()}
                                             size={"small"}
@@ -300,12 +302,13 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                         >
                                             <SwitchItem
                                                 label={"自动字典"}
-                                                setValue={() => {}}
-                                                formItemStyle={{ marginBottom: 0 }}
+                                                setValue={() => {
+                                                }}
+                                                formItemStyle={{marginBottom: 0}}
                                             />
                                             <InputItem
                                                 label={"爆破用户"}
-                                                style={{ marginBottom: 0 }}
+                                                style={{marginBottom: 0}}
                                                 suffix={
                                                     <Button size={"small"} type={"link"}>
                                                         导入文件
@@ -314,7 +317,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                             />
                                             <InputItem
                                                 label={"爆破密码"}
-                                                style={{ marginBottom: 0 }}
+                                                style={{marginBottom: 0}}
                                                 suffix={
                                                     <Button size={"small"} type={"link"}>
                                                         导入文件
@@ -323,13 +326,15 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                             />
                                             <InputInteger
                                                 label={"并发目标"}
-                                                setValue={() => {}}
-                                                formItemStyle={{ marginBottom: 0 }}
+                                                setValue={() => {
+                                                }}
+                                                formItemStyle={{marginBottom: 0}}
                                             />
                                             <InputInteger
                                                 label={"随机延时"}
-                                                setValue={() => {}}
-                                                formItemStyle={{ marginBottom: 0 }}
+                                                setValue={() => {
+                                                }}
+                                                formItemStyle={{marginBottom: 0}}
                                             />
                                         </Form>
                                     </div>
@@ -343,7 +348,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                 {/*        */}
                 {/*    </Col>*/}
                 {/*</Row>*/}
-                <AutoCard style={{ flex: 1, overflow: "auto" }} bodyStyle={{ padding: 10 }}>
+                <AutoCard style={{flex: 1, overflow: "auto"}} bodyStyle={{padding: 10}}>
                     <PluginResultUI
                         // script={script}
                         loading={loading}
@@ -370,7 +375,7 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
         if (!params) {
             return
         }
-        props.setParams({ ...params })
+        props.setParams({...params})
     }, [params])
 
     return (
@@ -378,11 +383,11 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
             onSubmitCapture={(e) => {
                 e.preventDefault()
             }}
-            labelCol={{ span: 5 }}
-            wrapperCol={{ span: 14 }}
+            labelCol={{span: 5}}
+            wrapperCol={{span: 14}}
         >
             <SelectItem
-                style={{ marginBottom: 10 }}
+                style={{marginBottom: 10}}
                 label={"爆破用户字典"}
                 value={params.usernameValue || ""}
                 onChange={(value, dict) => {
@@ -404,7 +409,7 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
             />
 
             <InputItem
-                style={{ marginBottom: 5 }}
+                style={{marginBottom: 5}}
                 label={"爆破用户"}
                 setValue={(Usernames) => {
                     if ((params.UsernamesDict || []).length === 0 && !Usernames) {
@@ -425,7 +430,7 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                 textareaRow={5}
             />
 
-            <Form.Item label={" "} colon={false} style={{ marginBottom: 5 }}>
+            <Form.Item label={" "} colon={false} style={{marginBottom: 5}}>
                 <Checkbox
                     checked={!params.ReplaceDefaultUsernameDict}
                     onChange={(e) => {
@@ -444,11 +449,11 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                     }}
                 ></Checkbox>
                 &nbsp;
-                <span style={{ color: "rgb(100,100,100)" }}>同时使用默认用户字典</span>
+                <span style={{color: "rgb(100,100,100)"}}>同时使用默认用户字典</span>
             </Form.Item>
 
             <SelectItem
-                style={{ marginBottom: 10 }}
+                style={{marginBottom: 10}}
                 label={"爆破密码字典"}
                 value={params.passwordValue || ""}
                 onChange={(value, dict) => {
@@ -469,7 +474,7 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                 }}
             />
             <InputItem
-                style={{ marginBottom: 5 }}
+                style={{marginBottom: 5}}
                 label={"爆破密码"}
                 setValue={(item) => {
                     if ((params.PasswordsDict || []).length === 0 && !item) {
@@ -479,7 +484,7 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                             ReplaceDefaultPasswordDict: false
                         })
                     } else {
-                        setParams({ ...params, Passwords: item ? item.split("\n") : [] })
+                        setParams({...params, Passwords: item ? item.split("\n") : []})
                     }
                 }}
                 value={(params?.Passwords || []).join("\n")}
@@ -487,7 +492,7 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                 textareaRow={5}
             />
 
-            <Form.Item label={" "} colon={false} style={{ marginBottom: 5 }}>
+            <Form.Item label={" "} colon={false} style={{marginBottom: 5}}>
                 <Checkbox
                     checked={!params.ReplaceDefaultPasswordDict}
                     onChange={(e) => {
@@ -506,37 +511,37 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                     }}
                 ></Checkbox>
                 &nbsp;
-                <span style={{ color: "rgb(100,100,100)" }}>同时使用默认用户字典</span>
+                <span style={{color: "rgb(100,100,100)"}}>同时使用默认用户字典</span>
             </Form.Item>
 
             <InputInteger
                 label={"目标并发"}
                 help={"同时爆破 n 个目标"}
                 value={params.Concurrent}
-                setValue={(e) => setParams({ ...params, Concurrent: e })}
+                setValue={(e) => setParams({...params, Concurrent: e})}
             />
             <InputInteger
                 label={"目标内并发"}
                 help={"每个目标同时执行多少爆破任务"}
                 value={params.TargetTaskConcurrent}
-                setValue={(e) => setParams({ ...params, TargetTaskConcurrent: e })}
+                setValue={(e) => setParams({...params, TargetTaskConcurrent: e})}
             />
             <SwitchItem
                 label={"自动停止"}
                 help={"遇到第一个爆破结果时终止任务"}
-                setValue={(OkToStop) => setParams({ ...params, OkToStop })}
+                setValue={(OkToStop) => setParams({...params, OkToStop})}
                 value={params.OkToStop}
             />
             <InputInteger
                 label={"最小延迟"}
                 max={params.DelayMax}
                 min={0}
-                setValue={(DelayMin) => setParams({ ...params, DelayMin })}
+                setValue={(DelayMin) => setParams({...params, DelayMin})}
                 value={params.DelayMin}
             />
             <InputInteger
                 label={"最大延迟"}
-                setValue={(DelayMax) => setParams({ ...params, DelayMax })}
+                setValue={(DelayMax) => setParams({...params, DelayMax})}
                 value={params.DelayMax}
                 min={params.DelayMin}
             />
@@ -577,7 +582,7 @@ const UploadTarget: React.FC<UploadTargetProps> = (props) => {
                     return false
                 }
 
-                ipcRenderer.invoke("fetch-file-content", f.path).then((res) => {
+                ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
                     setTargets(res)
                 })
                 return false
@@ -593,9 +598,9 @@ const UploadTarget: React.FC<UploadTargetProps> = (props) => {
                 help={
                     <div>
                         域名(:端口)/IP(:端口)/IP段均可，请按行分割
-                        <br />
+                        <br/>
                         可将TXT文件拖入框内或
-                        <span style={{ color: "rgb(25,143,255)" }}>点击此处</span>上传
+                        <span style={{color: "rgb(25,143,255)"}}>点击此处</span>上传
                     </div>
                 }
             />

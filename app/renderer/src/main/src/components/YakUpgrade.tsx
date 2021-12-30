@@ -44,7 +44,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
         setLatestLoading(true)
         ipcRenderer.invoke("query-latest-yak-version").then((data: string) => {
             setLatestVersion(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed(`${e}`)
         }).finally(
             () => setTimeout(() => setLatestLoading(false), 300)
@@ -55,7 +55,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
         setLoading(true)
         ipcRenderer.invoke("get-current-yak").then((data: string) => {
             setCurrentVersion(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             setCurrentVersion("")
             failed(<>
                 获取 Yak 引擎当前版本失败，请按提示安装即可<Popover content={`${e}`}>
@@ -120,7 +120,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
             onOk: () => {
                 ipcRenderer.invoke("install-yak-engine", latestVersion).then(() => {
                     success("安装成功，如未生效，重启 Yakit 即可")
-                }).catch(err => {
+                }).catch((err: any) => {
                     failed(`安装失败: ${err}`)
                 }).finally(updateCurrent)
             }
@@ -173,7 +173,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                             ipcRenderer.invoke("download-latest-yak", latestVersion).then(() => {
                                 success("下载完毕")
                                 install(latestVersion)
-                            }).catch(e => {
+                            }).catch((e: any) => {
                                 failed("下载失败")
                             }).finally(() => {
                                 setTimeout(() => setDownloading(false), 100)

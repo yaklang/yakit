@@ -38,7 +38,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             .then((data: { Groups: string[] }) => {
                 setGroups(data.Groups)
             })
-            .catch((e) => {
+            .catch((e: any) => {
                 console.info(e)
             })
             .finally()
@@ -65,11 +65,11 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     .then((data: { Markdown: string }) => {
                         setMarkdown(data.Markdown)
                     })
-                    .catch((e) => {
+                    .catch((e: any) => {
                         setMarkdown("")
                     })
             })
-            .catch((e) => {
+            .catch((e: any) => {
                 failed("Query YakScript By ID failed")
             })
             .finally(() =>
@@ -271,7 +271,7 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
                         .then(() => {
                             success("添加成功")
                         })
-                        .catch((e) => {
+                        .catch((e: any) => {
                             failed(`${e}`)
                         })
                 }}
@@ -370,7 +370,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                                                     updateGroups()
                                                     m.destroy()
                                                 })
-                                                .catch((e) => {
+                                                .catch((e: any) => {
                                                     console.info(e)
                                                 })
                                                 .finally()
@@ -399,7 +399,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                             .then((e) => {
                                 success("显示该模块")
                             })
-                            .catch((e) => {
+                            .catch((e: any) => {
                             })
                             .finally(() => {
                             })
@@ -419,7 +419,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                         .then((e) => {
                             success("忽略该模块")
                         })
-                        .catch((e) => {
+                        .catch((e: any) => {
                         })
                         .finally(() => {
                         })
@@ -461,7 +461,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                             )
                         })
                     })
-                    .catch((e) => {
+                    .catch((e: any) => {
                         console.info(e)
                     })
             }}

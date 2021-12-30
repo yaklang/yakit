@@ -23,9 +23,9 @@ export const AnalyzerPage: React.FC<AnalyzerPageProp> = (props) => {
     }, [props])
 
     useEffect(() => {
-        ipcRenderer.on("client-http-analyze-data", (e, data) => {
+        ipcRenderer.on("client-http-analyze-data", (e: any, data: any) => {
         })
-        ipcRenderer.on("client-http-analyze-error", (e, details) => {
+        ipcRenderer.on("client-http-analyze-error", (e: any, details: any) => {
             setError(details)
         })
         return () => {

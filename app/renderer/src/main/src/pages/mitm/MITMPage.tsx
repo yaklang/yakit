@@ -194,7 +194,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         })
 
         // let currentFlow: HTTPFlow[] = []
-        ipcRenderer.on("client-mitm-history-update", (e, data) => {
+        ipcRenderer.on("client-mitm-history-update", (e: any, data: any) => {
             // currentFlow.push(data.historyHTTPFlow as HTTPFlow)
             //
             // if (currentFlow.length > 30) {
@@ -358,7 +358,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const start = () => {
         setLoading(true)
         setError("")
-        ipcRenderer.invoke("mitm-start-call", host, port, downstreamProxy).catch(e => {
+        ipcRenderer.invoke("mitm-start-call", host, port, downstreamProxy).catch((e: any) => {
             notification["error"]({message: `启动中间人劫持失败：${e}`})
         })
     }
@@ -367,7 +367,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         setLoading(true)
         ipcRenderer.invoke("mitm-stop-call").then(() => {
             setStatus("idle")
-        }).catch(e => {
+        }).catch((e: any) => {
             notification["error"]({message: `停止中间人劫持失败：${e}`})
         }).finally(() => setTimeout(() => {
             setLoading(false)

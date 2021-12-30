@@ -38,7 +38,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
     const updateGroup = () => {
         ipcRenderer.invoke("GetAllPayloadGroup").then((data: { Groups: string[] }) => {
             setGroups(data.Groups || [])
-        }).catch(e => {
+        }).catch((e: any) => {
             failed(e?.details || "call GetAllPayloadGroup failed")
         }).finally()
     };
@@ -51,7 +51,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
             }
         } as QueryPayloadParams).then(data => {
             setResponse(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed(e?.details || "query payload failed")
         })
     }
@@ -115,7 +115,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                                 Group: element,
                                             }).then(() => {
                                                 updateGroup()
-                                            }).catch(e => {
+                                            }).catch((e: any) => {
                                                 failed("Delete Payload By Group failed")
                                             })
                                         }}
@@ -205,7 +205,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
 
                     ipcRenderer.invoke("SavePayload", params).then(() => {
                     props.onFinished && props.onFinished(params.Group)
-                }).catch(e => {
+                }).catch((e: any) => {
                     failed("创建 Payload 失败 / 字典")
                 }).finally(props.onFinally)
                 }} wrapperCol={{span: 14}} labelCol={{span: 6}}>

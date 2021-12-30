@@ -168,7 +168,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     info("创建 / 保存 Yak 脚本成功")
                     props.onCreated && props.onCreated(params)
                     props.onChanged && props.onChanged(data)
-                }).catch(e => {
+                }).catch((e: any) => {
                     failed(`保存 Yak 模块失败: ${e}`)
                 })
             }}
@@ -358,7 +358,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                     })
                                 }
 
-                            }).catch(e => {
+                            }).catch((e: any) => {
                                 failed(`保存 Yak 模块失败: ${e}`)
                             }).finally(() => {
                                 setTimeout(() => setLoading(false), 400)
@@ -467,7 +467,7 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
                         info("创建 / 保存 Yak 脚本成功")
                         props.onUpdate(data)
                         // setModified(data)
-                    }).catch(e => {
+                    }).catch((e: any) => {
                         failed(`保存 Yak 模块失败: ${e}`)
                     }).finally(() => {
                         props.onExit(params)
@@ -512,7 +512,7 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
                                 })
                             }
 
-                        }).catch(e => {
+                        }).catch((e: any) => {
                             failed(`保存 Yak 模块失败: ${e}`)
                         }).finally(() => {
                             // setTimeout(() => setLoading(false), 400)

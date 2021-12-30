@@ -45,7 +45,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         setLoading(true)
         ipcRenderer.invoke("QueryDomains", newParams).then(data => {
             setResponse(data)
-        }).catch(e => {
+        }).catch((e: any) => {
             failed("QueryExecHistory failed: " + `${e}`)
         }).finally(() => {
             setTimeout(() => setLoading(false), 200)

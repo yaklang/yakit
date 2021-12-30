@@ -168,7 +168,7 @@ const Main: React.FC<MainProp> = (props) => {
             .then((data: { Groups: MenuItemGroup[] }) => {
                 setMenuItems(data.Groups)
             })
-            .catch((e) => {
+            .catch((e: any) => {
                 failed("Update Menu Item Failed")
             })
             .finally(() => {
@@ -222,7 +222,7 @@ const Main: React.FC<MainProp> = (props) => {
         let id = setInterval(() => {
             ipcRenderer
                 .invoke("engine-status")
-                .catch((e) => {
+                .catch((e: any) => {
                     setEngineStatus("error")
                 })
                 .finally(() => {

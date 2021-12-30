@@ -51,7 +51,7 @@ export const saveAuthInfo = (info: YakitAuthInfo, alias?: string) => {
             </>}/>
         </>,
         onOk: () => {
-            ipcRenderer.invoke("save-yakit-remote-auth", info).then().catch(e => {
+            ipcRenderer.invoke("save-yakit-remote-auth", info).then().catch((e: any) => {
                 console.info(e)
             })
         },
@@ -66,7 +66,7 @@ export const YakRemoteAuth: React.FC<YakRemoteAuthProp> = (props) => {
     const update = () => {
         ipcRenderer.invoke("get-yakit-remote-auth-all").then(e => {
             setAuthInfos([...e, {name: "", host: "127.0.0.1", port: 8087, caPem: "", tls: false, password: ""}])
-        }).catch(e => {
+        }).catch((e: any) => {
         }).finally()
     }
 

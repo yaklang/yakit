@@ -15,7 +15,7 @@ export const ShellReceiverPage: React.FC<ShellReceiverPageProp> = (props) => {
     const [addrs, setAddrs] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [updatingAddrs, setUpdatingAddrs] = useState(true);
-
+    
     const waitingSyncAddr = () => {
         setUpdatingAddrs(true)
     };
@@ -47,7 +47,7 @@ export const ShellReceiverPage: React.FC<ShellReceiverPageProp> = (props) => {
         setTimeout(() => {
             ipcRenderer.invoke("listening-port", host, port).then(() => {
                 success("监听端口成功")
-            }).catch(e => {
+            }).catch((e: any) => {
                 failed(`ERROR: ${JSON.stringify(e)}`)
             }).finally(() => {
                 waitingSyncAddr()
@@ -89,7 +89,7 @@ export const ShellReceiverPage: React.FC<ShellReceiverPageProp> = (props) => {
 
     useEffect(() => {
         const errorKey = "client-listening-port-end";
-        ipcRenderer.on(errorKey, (e, data) => {
+        ipcRenderer.on(errorKey, (e: any, data: any) => {
             Modal.info({title: `端口[${data}]被关闭`})
         })
         return () => {
