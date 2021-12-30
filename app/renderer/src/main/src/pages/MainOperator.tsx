@@ -407,9 +407,6 @@ const Main: React.FC<MainProp> = (props) => {
                     </Col>
                     <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
                         <Space>
-                            <div >
-                                CPU:{}%
-                            </div>
                             {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>}
                             {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                             <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag>

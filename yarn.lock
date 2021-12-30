@@ -981,10 +981,10 @@ electron-updater@^4.3.9:
     lodash.isequal "^4.5.0"
     semver "^7.3.5"
 
-electron@^15.3.0:
-  version "15.3.0"
-  resolved "https://registry.npmmirror.com/electron/download/electron-15.3.0.tgz?cache=0&sync_timestamp=1634791314915&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Felectron%2Fdownload%2Felectron-15.3.0.tgz#f9803c5a05b2dac12efc6d4203492c7e204b4819"
-  integrity sha1-+YA8WgWy2sEu/G1CA0ksfiBLSBk=
+electron@16.0.2:
+  version "16.0.2"
+  resolved "https://registry.npmmirror.com/electron/download/electron-16.0.2.tgz#6d0ae3152c410478dfffdbf80852a3840679b8c5"
+  integrity sha512-kT746yVMztrP4BbT3nrFNcUcfgFu2yelUw6TWBVTy0pju+fBISaqcvoiMrq+8U0vRpoXSu2MJYygOf4T0Det7g==
   dependencies:
     "@electron/get" "^1.13.0"
     "@types/node" "^14.6.2"
