@@ -67,7 +67,10 @@ interface PageCache {
 }
 
 const singletonRoute = [
-    Route.HTTPHacker, Route.ShellReceiver, Route.PayloadManager,
+    Route.HTTPHacker,
+    Route.ShellReceiver,
+    Route.ReverseServer,
+    Route.PayloadManager,
     Route.ModManager, Route.ModManagerLegacy, Route.YakScript,
 
     // database

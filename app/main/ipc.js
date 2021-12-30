@@ -127,5 +127,8 @@ module.exports = {
         
         // 数据对比
         require("./handlers/dataCompare")(win, getClient);
+
+        //
+        require("./handlers/facadeServer")(win, getClient);
     }
 }
