@@ -3,7 +3,7 @@ import {Alert, Button, Card, Divider, Form, PageHeader, Row, Space, Tag, Typogra
 import {CopyableField, InputItem, SwitchItem} from "../../utils/inputUtil";
 import {StartFacadeServerForm, StartFacadeServerParams} from "./StartFacadeServerForm";
 import {randomString} from "../../utils/randomUtil";
-import {info} from "../../utils/notification";
+import {failed, info} from "../../utils/notification";
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import {ExecResult} from "../invoker/schema";
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
@@ -67,6 +67,10 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
             }
             try {
                 const message = ExtractExecResultMessage(data) as ExecResultLog;
+                if (message.level !== "facades-msg") {
+                    info(JSON.stringify(message))
+                    return
+                }
                 const obj = JSON.parse(message.data) as ReverseNotification;
                 obj.timestamp = message.timestamp;
                 messages.unshift(obj)
@@ -78,7 +82,10 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
             }
 
         })
-        ipcRenderer.on(`${token}-error`, (data: any) => {
+        ipcRenderer.on(`${token}-error`, (e: any, data: any) => {
+            if (data) {
+                failed(`error: ${JSON.stringify(data)}`)
+            }
         })
         ipcRenderer.on(`${token}-end`, () => {
             setLoading(false)
@@ -102,6 +109,7 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
         }, 500)
         return () => {
             clearInterval(id)
+            ipcRenderer.invoke("cancel-StartFacades", token)
             ipcRenderer.removeAllListeners(`${token}-end`);
             ipcRenderer.removeAllListeners(`${token}-error`);
             ipcRenderer.removeAllListeners(`${token}-data`);
@@ -167,7 +175,8 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
                     closable={true}
                     color={"green"}>公网 <Text strong={true} style={{color: "#229900"}} copyable={true}
                 >{bridgeIP}</Text></Tag> : <Form onSubmitCapture={e => e.preventDefault()}>
-                    <SwitchItem label={"公网穿透服务"} value={bridge} setValue={setBridge} formItemStyle={{marginBottom: 0}}/>
+                    <SwitchItem size={"small"} label={"公网穿透服务"} value={bridge} setValue={setBridge}
+                                formItemStyle={{marginBottom: 0}}/>
                 </Form>}
                 使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连
             </Space>}
@@ -233,7 +242,10 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
                     params={params} setParams={setParams}
                     remoteMode={!!bridgeIP}
                     onSubmit={() => {
-                        ipcRenderer.invoke("StartFacades", params, token).then(() => {
+                        ipcRenderer.invoke("StartFacades", {
+                            ...params,
+                            ConnectParam: (!!bridgeIP) ? params.ConnectParam : undefined
+                        } as StartFacadeServerParams, token).then(() => {
                             info("开始启动反连服务器")
                             setLoading(true)
                         })
