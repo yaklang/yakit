@@ -9,8 +9,11 @@ export const ShellItem = (props) => {
     const [haveConnIn, setHaveConnIn] = useState(false);
     const [local, setLocal] = useState("");
     const [remote, setRemote] = useState("");
-    const {removeListenPort, addr} = props;
-    const xtermRef = React.useRef(null);
+    const [copyLoading, setCopyLoading] = useState(false)
+    const { removeListenPort, addr } = props
+    const xtermRef = React.useRef(null)
+    const timeRef = React.useRef(null)
+
     const write = (s) => {
         if (!xtermRef || !xtermRef.current) {
             return
@@ -81,20 +84,40 @@ export const ShellItem = (props) => {
                         convertEol: true
                     }}
                     onKey={({ key, event }) => {
-                        const code = key.charCodeAt(0)
-                        if (code === 127 && xtermRef?.current) {
-                            //Backspace
-                            xtermRef.current.terminal.write("\x1b[D \x1b[D")
-                        }
+                        if (!copyLoading) {
+                            const code = key.charCodeAt(0)
+                            if (code === 127 && xtermRef?.current) {
+                                //Backspace
+                                xtermRef.current.terminal.write("\x1b[D \x1b[D")
+                            }
 
-                        write(key)
+                            write(key)
+                        }
                     }}
                     customKeyEventHandler={(e) => {
                         if (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) {
-                            navigator.clipboard.readText().then((res) => {
-                                write(res)
-                            })
+                            setCopyLoading(true)
+                            if (timeRef.current) return
+                            timeRef.current = setTimeout(() => {
+                                navigator.clipboard.readText().then((res) => {
+                                    write(res)
+                                    timeRef.current = null
+                                    setCopyLoading(false)
+                                })
+                            }, 200)
                         }
+                        if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
+                            const str = xtermRef.current.terminal.getSelection()
+                            setCopyLoading(true)
+                            if (timeRef.current) return
+                            timeRef.current = setTimeout(() => {
+                                ipcRenderer.invoke("copy-clipboard", str).finally(() => {
+                                    timeRef.current = null
+                                    setCopyLoading(false)
+                                })
+                            }, 300)
+                        }
+                        return true
                     }}
                 />
             </Spin>
