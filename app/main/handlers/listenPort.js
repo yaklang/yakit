@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron");
+const {ipcMain, clipboard} = require("electron");
 
 module.exports = (win, getClient) => {
 
@@ -66,4 +66,9 @@ module.exports = (win, getClient) => {
         })
         streams[addr] = stream;
     })
+
+
+    ipcMain.handle("copy-clipboard", (e, text) => {
+        clipboard.writeText(text);
+    });
 }
