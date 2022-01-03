@@ -27,6 +27,25 @@ const editorCodecHandlerFactory = (typeStr: CodecType) => {
     }
 }
 
+const editorFullCodecHandlerFactory = (typeStr: CodecType) => {
+    return (e: IMonacoCodeEditor) => {
+        try {
+            // @ts-ignore
+            const text = e.getModel()?.getValueInRange(e.getSelection()) || "";
+            if (!!text) {
+                execCodec(typeStr, text, false, e)
+            } else {
+                const model = e.getModel();
+                const fullText = model?.getValue();
+                execCodec(typeStr, fullText || "", false, e, true)
+            }
+        } catch (e) {
+            failed("editor exec codec failed")
+            console.error(e)
+        }
+    }
+}
+
 export interface MutateHTTPRequestParams {
     Request: Uint8Array
     FuzzMethods: string[]
@@ -82,6 +101,17 @@ export const MonacoEditorCodecActions: MonacoEditorActions[] = [
     return {id: i.id, label: i.label, contextMenuGroupId: "codec", run: editorCodecHandlerFactory(i.id as CodecType)}
 });
 
+export const MonacoEditorFullCodecActions: MonacoEditorActions[] = [
+    {id: "pretty-packet", label: "美化数据包(JSON)"},
+].map(i => {
+    return {
+        id: i.id,
+        label: i.label,
+        contextMenuGroupId: "pretty",
+        run: editorFullCodecHandlerFactory(i.id as CodecType)
+    }
+})
+
 export const MonacoEditorMutateHTTPRequestActions: {
     id: CodecType | string, label: string,
     contextMenuGroupId: "codec" | string,
@@ -117,10 +147,15 @@ export const MonacoEditorMutateHTTPRequestActions: {
     }
 })
 
-export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boolean, replaceEditor?: IMonacoCodeEditor) => {
+export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boolean, replaceEditor?: IMonacoCodeEditor, clear?: boolean) => {
     return ipcRenderer.invoke("Codec", {Text: text, Type: typeStr}).then((result: { Result: string }) => {
         if (replaceEditor) {
-            monacoEditorWrite(replaceEditor, result.Result)
+            if (clear) {
+                monacoEditorClear(replaceEditor)
+                replaceEditor.getModel()?.setValue(result.Result)
+            }else{
+                monacoEditorWrite(replaceEditor, result.Result)
+            }
         }
 
         if (noPrompt) {

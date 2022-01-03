@@ -7,6 +7,7 @@ import {FuzzableParamList} from "./FuzzableParamList";
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
 import {randomString} from "../utils/randomUtil";
 import {HTTPPacketFuzzable} from "./HTTPHistory";
+import {AutoSpin} from "./AutoSpin";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -235,7 +236,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         }).catch((e: any) => {
             failed(`Query HTTPFlow failed: ${e}`)
         }).finally(() => {
-            setLoading(false)
+            setTimeout(() => setLoading(false), 200)
         })
     }, [props.hash])
 
@@ -244,22 +245,20 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     }
 
     return <Row gutter={8} style={{height: "100%"}}>
+
         <Col span={12}>
-            <HTTPPacketEditor
-                originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}
-                defaultHeight={props.defaultHeight}
-            />
+            <AutoSpin spinning={loading}>
+                <HTTPPacketEditor
+                    originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}
+                    defaultHeight={props.defaultHeight} defaultHttps={props.defaultHttps}
+                />
+            </AutoSpin>
+
         </Col>
         <Col span={12}>
-            <HTTPPacketEditor originValue={flow.Response} readOnly={true} defaultHeight={props.defaultHeight}/>
-            {/*<YakHTTPPacketViewer isResponse value={flow?.Response || []}/>*/}
-            {/*<CodeViewer*/}
-            {/*    value={new Buffer(flow?.Response).toString("utf-8")}*/}
-            {/*    mode={"http"} height={350} width={"100%"}*/}
-            {/*/>*/}
-            {/*<YakEditor readOnly={true} type={"html"}*/}
-            {/*           value={new Buffer(flow.Response).toString("utf-8")}*/}
-            {/*/>*/}
+            <AutoSpin spinning={loading}>
+                <HTTPPacketEditor originValue={flow.Response} readOnly={true} defaultHeight={props.defaultHeight}/>
+            </AutoSpin>
         </Col>
     </Row>
 

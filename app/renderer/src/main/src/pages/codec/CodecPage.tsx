@@ -3,9 +3,9 @@ import {Button, PageHeader, Space, Dropdown, Menu, Row, Col} from "antd"
 import {DownOutlined, SwapOutlined, ArrowsAltOutlined} from "@ant-design/icons"
 import {YakEditor} from "../../utils/editors"
 import {failed} from "../../utils/notification"
-import { LineConversionIcon } from "../../assets/icons"
-import { AutoCard } from "../../components/AutoCard"
-import { AutoSpin } from "../../components/AutoSpin"
+import {LineConversionIcon} from "../../assets/icons"
+import {AutoCard} from "../../components/AutoCard"
+import {AutoSpin} from "../../components/AutoSpin"
 
 import "./style.css"
 
@@ -72,8 +72,23 @@ const CodecMenu: CodecType[] = [
             {key: "json-inline", verbose: "JSON 压缩成一行"}
         ]
     },
+    {
+        verbose: "美化",
+        subTypes: [
+            {key: "pretty-packet", verbose: "HTTP 数据包美化"},
+            {key: "json-formatter", verbose: "JSON 美化（缩进4）"},
+            {key: "json-formatter-2", verbose: "JSON 美化（缩进2）"},
+            {key: "json-inline", verbose: "JSON 压缩成一行"},
+        ],
+    },
     {key: "fuzz", verbose: "模糊测试(标签同 Web Fuzzer)"},
-    {key: "http-get-query", verbose: "解析 HTTP 参数"}
+    {
+        verbose: "HTTP", subTypes: [
+            {key: "http-get-query", verbose: "解析 HTTP 参数"},
+            {key: "pretty-packet", verbose: "HTTP 数据包美化"},
+            {key: "packet-from-url", verbose: "从 URL 中加载数据包"},
+        ]
+    },
 ]
 
 export interface CodecPageProp {
@@ -83,11 +98,11 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [text, setText] = useState("")
     const [result, setResult] = useState("")
     const [loading, setLoading] = useState(true)
-    
+
     const [leftWidth, setLeftWidth] = useState<boolean>(false)
     const [rightWidth, setRightWidth] = useState<boolean>(false)
-    const [leftLine,setLeftLine] = useState<boolean>(true)
-    const [rightLine,setRightLine] = useState<boolean>(false)
+    const [leftLine, setLeftLine] = useState<boolean>(true)
+    const [rightLine, setRightLine] = useState<boolean>(false)
 
     const codec = (t: string) => {
         if (!t) {
@@ -221,7 +236,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             bodyStyle={{padding: 0}}
                             extra={
                                 <>
-                                   <Button
+                                    <Button
                                         size={"small"}
                                         type={rightLine ? "primary" : "link"}
                                         icon={<LineConversionIcon/>}
@@ -240,7 +255,8 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             }
                         >
                             <div className='editor-body'>
-                                <YakEditor value={result} noWordWrap={!rightLine} setValue={setResult} readOnly={true} type={"http"}/>
+                                <YakEditor value={result} noWordWrap={!rightLine} setValue={setResult} readOnly={true}
+                                           type={"http"}/>
                             </div>
                         </AutoCard>
                     </Col>

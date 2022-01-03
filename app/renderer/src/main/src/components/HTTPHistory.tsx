@@ -6,6 +6,7 @@ import {HTTPFlowDetailMini} from "./HTTPFlowDetail";
 import {VerticalResize} from "../components/VerticalResize";
 
 export interface HTTPPacketFuzzable {
+    defaultHttps?: boolean
     sendToWebFuzzer?: (isHttps: boolean, request: string) => any
 }
 
@@ -45,6 +46,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             <HTTPFlowDetailMini
                 noHeader={true}
                 hash={selected.Hash}
+                defaultHttps={selected.IsHTTPS}
                 sendToWebFuzzer={props.sendToWebFuzzer}
                 // defaultHeight={detailHeight}
             />

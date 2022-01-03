@@ -34,26 +34,6 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerMap, token)
     })
 
-    // ipcMain.handle("http-fuzzer", (e, token, params) => {
-    //     let client = getClient();
-    //     let stream = client.HTTPFuzzer({
-    //         Request: params.request,
-    //         IsHTTPS: params.isHttps,
-    //         ForceFuzz: params.forceFuzz,
-    //         Concurrent: params.concurrent,
-    //         PerRequestTimeoutSeconds: params.timeout,
-    //         Proxy: params.proxy,
-    //     });
-    //     stream.on("data", (data) => {
-    //         if (win && data) win.webContents.send("client-http-fuzzer-data", data)
-    //     })
-    //     stream.on("error", (err) => {
-    //         if (win && err) win.webContents.send("client-http-fuzzer-error", err.details)
-    //     })
-    //     stream.on("end", () => {
-    //         if (win) win.webContents.send("client-http-fuzzer-end")
-    //     })
-    // })
 
     ipcMain.handle("analyze-fuzzer-response", (e, rsp, flag) => {
         getClient().ConvertFuzzerResponseToHTTPFlow(rsp, (err, req) => {
@@ -81,5 +61,21 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("HTTPRequestMutate", async (e, params) => {
         return await asyncHTTPRequestMutate(params)
+    })
+
+    // asyncRedirectRequest wrapper
+    const asyncRedirectRequest = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().RedirectRequest(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("RedirectRequest", async (e, params) => {
+        return await asyncRedirectRequest(params)
     })
 }

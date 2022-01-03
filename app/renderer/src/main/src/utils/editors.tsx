@@ -11,7 +11,12 @@ import {Button, Card, Form, Input, Popover, Space, Spin, Tag} from "antd";
 import {SelectOne} from "./inputUtil";
 import {FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons";
 import {showDrawer} from "./showModal";
-import {MonacoEditorActions, MonacoEditorCodecActions, MonacoEditorMutateHTTPRequestActions} from "./encodec";
+import {
+    MonacoEditorActions,
+    MonacoEditorCodecActions,
+    MonacoEditorFullCodecActions,
+    MonacoEditorMutateHTTPRequestActions
+} from "./encodec";
 import {HTTPPacketFuzzable} from "../components/HTTPHistory";
 import ReactResizeDetector from "react-resize-detector";
 
@@ -350,7 +355,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     type={"primary"}
                     icon={<ThunderboltFilled/>}
                     onClick={() => {
-                        if (props.sendToWebFuzzer) props.sendToWebFuzzer(false, strValue);
+                        if (props.sendToWebFuzzer) props.sendToWebFuzzer(props.defaultHttps || false, strValue);
                     }}
                 >FUZZ</Button>}
                 {!props.disableFullscreen && !props.simpleMode && <Button
@@ -411,6 +416,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     actions={[
                         ...MonacoEditorCodecActions,
                         ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
+                        ...(props.noPacketModifier ? [] : MonacoEditorFullCodecActions),
                         ...(props.actions || []),
                     ]}
                     editorDidMount={editor => {
