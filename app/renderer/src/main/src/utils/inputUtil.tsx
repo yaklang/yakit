@@ -430,6 +430,7 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
         >
             {p.data.map(i => {
                 return <Select.Option
+                    key={`${i.value}`}
                     value={i.value.toString()}
                 >{i?.label?.toString()}</Select.Option>
             })}
