@@ -124,7 +124,7 @@ module.exports = {
 
         // misc
         require("./handlers/misc")(win, getClient);
-        
+
         // 数据对比
         require("./handlers/dataCompare")(win, getClient);
 
@@ -132,5 +132,8 @@ module.exports = {
         require("./handlers/facadeServer")(win, getClient);
         // 小工具插件
         require("./handlers/pluginTool")(win, getClient);
+
+        // terminal
+        require("./handlers/terminal")(win, getClient);
     }
 }

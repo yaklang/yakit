@@ -115,9 +115,8 @@ export const PortListening = (props) => {
 
                             </Space>
                             <Spin spinning={!haveConnIn} tip={"正在等待 TCP 连接连入..."}>
-
                                 <XTerm ref={xtermRef} onKey={({key, event}) => {
-                                    if (key.charCodeAt(0) == 13) {
+                                    if (key.charCodeAt(0) === 13) {
                                         write("\n")
                                     }
                                     write(key)
