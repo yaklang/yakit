@@ -157,6 +157,7 @@ export interface YakModuleListProp {
     trigger?: boolean
     isIgnored?: boolean
     isHistory?: boolean
+    onYakScriptRender?: (i: YakScript) => any
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -174,7 +175,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }, Total: 0
     });
     const [trigger, setTrigger] = useState(false);
-
 
     const update = (page?: number, limit?: number,
                     keyword?: string, Type?: string,
@@ -230,6 +230,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             let isAnonymous = false;
             if (i.Author === "" || i.Author === "anonymous") {
                 isAnonymous = true
+            }
+
+            if (props.onYakScriptRender) {
+                return props.onYakScriptRender(i)
             }
 
             return <List.Item style={{marginLeft: 0}} key={i.Id}>

@@ -114,9 +114,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // filter 过滤器
     const [mitmFilter, setMITMFilter] = useState<MITMFilterSchema>({});
 
-    // hooks 当前插件所有的 Hook 内容
-    const [mitmHooks, setMITMHooks] = useState<YakScriptHooks[]>([]);
-
     // 这个 Forward 主要用来转发修改后的内容，同时可以转发请求和响应
     const forward = () => {
         // ID 不存在
@@ -186,11 +183,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     messages.shift()
                 }
             }
-        })
-
-        // 用于 MITM 的 查看当前 Hooks
-        ipcRenderer.on("client-mitm-hooks", (e, data: YakScriptHooks[]) => {
-            setMITMHooks([...data])
         })
 
         // let currentFlow: HTTPFlow[] = []
@@ -499,7 +491,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                 onExit={() => {
                                     stop()
                                 }}
-                                messages={logs} hooks={mitmHooks}
+                                messages={logs}
                                 onSubmitScriptContent={e => {
                                     ipcRenderer.invoke("mitm-exec-script-content", e)
                                 }}
@@ -740,7 +732,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                 <div style={{height: "100%"}}>
                                     <MITMPluginCard
                                         autoUpdate={!passiveMode}
-                                        messages={logs} hooks={mitmHooks}
+                                        messages={logs} // hooks={mitmHooks}
                                         onSubmitScriptContent={e => {
                                             ipcRenderer.invoke("mitm-exec-script-content", e)
                                         }}
