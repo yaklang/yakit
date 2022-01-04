@@ -87,6 +87,7 @@ service Yak {
 
   // Fuzzer
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
+  rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
   rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
   rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
 
@@ -185,20 +186,20 @@ message StartFacadesParams {
   // 端口复用的
   string LocalFacadeHost = 41;
   int32 LocalFacadePort = 42;
-//  bool EnableRMIServer = 1;
-//  int32 RMILocalPort = 2;
-//
+  //  bool EnableRMIServer = 1;
+  //  int32 RMILocalPort = 2;
+  //
   bool EnableDNSLogServer = 3;
   int32 DNSLogLocalPort = 4;
-//
-//  bool EnableHTTPServer = 23;
-//  int32 HTTPServerPort = 24;
+  //
+  //  bool EnableHTTPServer = 23;
+  //  int32 HTTPServerPort = 24;
 
   // 连接远程端口参数
   GetTunnelServerExternalIPParams ConnectParam = 5;
 
   // 远端端口开放情况
-//  int32 RMIRemotePort = 6;
+  //  int32 RMIRemotePort = 6;
   int32 FacadeRemotePort = 16;
   int32 DNSLogRemotePort = 7;
 
@@ -727,6 +728,14 @@ message FuzzerRequest {
   bool NoFollowRedirect = 9;
   bool NoFollowMetaRedirect = 10;
   bool FollowJSRedirect = 11;
+}
+
+message RedirectRequestParams {
+  string Request = 1;
+  string Response = 2;
+  bool IsHttps = 3;
+  double PerRequestTimeoutSeconds = 4;
+  string Proxy = 5;
 }
 
 message ExtractedUrl {

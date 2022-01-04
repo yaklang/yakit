@@ -14,7 +14,7 @@ import {
     Spin,
     Tag,
     Typography,
-    Dropdown, Menu,
+    Dropdown, Menu, Popover,
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -33,6 +33,8 @@ import {
     DownOutlined
 } from "@ant-design/icons";
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard";
+import {failed} from "../../utils/notification";
+import {AutoSpin} from "../../components/AutoSpin";
 
 
 const {ipcRenderer} = window.require("electron");
@@ -93,10 +95,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [request, setRequest] = useState(props.request || defaultPostTemplate)
     const [concurrent, setConcurrent] = useState(20)
     const [forceFuzz, setForceFuzz] = useState(true)
-    const [timeout, setTimeout] = useState(5.0)
+    const [timeout, setParamTimeout] = useState(5.0)
     const [proxy, setProxy] = useState("")
     const [actualHost, setActualHost] = useState("")
     const [advancedConfig, setAdvancedConfig] = useState(false);
+    const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>();
 
     // state
     const [loading, setLoading] = useState(false)
@@ -104,6 +107,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [fuzzToken, setFuzzToken] = useState("")
     const [search, setSearch] = useState("")
+    const [targetUrl, setTargetUrl] = useState("");
 
     const [viewMode, setViewMode] = useState<"split" | "request" | "result">("split");
     const [refreshTrigger, setRefreshTrigger] = useState(false);
@@ -259,10 +263,113 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     };
 
+    const responseViewer = (rsp: FuzzerResponse) => {
+        return <HTTPPacketEditor
+            simpleMode={viewMode === "request"}
+            originValue={rsp.ResponseRaw}
+            bordered={true} hideSearch={true}
+            emptyOr={!rsp?.Ok && (
+                <Result
+                    status={"error"} title={"请求失败"}
+                    // no such host
+                    subTitle={(() => {
+                        const reason = content[0]!.Reason;
+                        if (reason.includes("tcp: i/o timeout")) {
+                            return "网络超时"
+                        }
+                        if (reason.includes("no such host")) {
+                            return "DNS 错误或主机错误"
+                        }
+                        return undefined
+                    })()}
+                >
+                    <>详细原因：{rsp.Reason}</>
+                </Result>
+            )}
+            readOnly={true} extra={
+            viewMode === "request" ? <Button
+                    size={"small"}
+                    type={"link"}
+                    icon={<ColumnWidthOutlined/>}
+                    onClick={() => {
+                        setViewMode("result")
+                    }}
+                /> :
+                <Space>
+                    {loading && <Spin size={"small"} spinning={loading}/>}
+                    {onlyOneResponse
+                        ?
+                        <Space>
+                            <Tag>{content[0].DurationMs}ms</Tag>
+                            <Space key='single'>
+                                <Button
+                                    size={"small"}
+                                    onClick={() => {
+                                        analyzeFuzzerResponse(rsp, r => {
+                                            setRequest(r)
+                                            refreshRequest()
+                                        })
+                                    }}
+                                    type={"primary"}
+                                    icon={<ProfileOutlined/>}
+                                >
+                                    详情
+                                </Button>
+                                <Button
+                                    type={"primary"}
+                                    size={"small"}
+                                    onClick={() => {
+                                        setContent([])
+                                    }}
+                                    danger={true}
+                                    icon={<DeleteOutlined/>}
+                                >
+
+                                </Button>
+                            </Space>
+                        </Space>
+                        :
+                        <Space key='list'>
+                            <Tag color={"green"}>成功:{successResults.length}</Tag>
+                            <Input
+                                size={"small"}
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value)
+                                }}
+                            />
+                            {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
+                            <Button
+                                size={"small"}
+                                onClick={() => {
+                                    setContent([])
+                                }}
+                            >
+                                清除数据
+                            </Button>
+                        </Space>
+                    }
+                    <Button
+                        size={"small"}
+                        type={viewMode === "result" ? "primary" : "link"}
+                        icon={<ColumnWidthOutlined/>}
+                        onClick={() => {
+                            if (viewMode === "result") {
+                                setViewMode("split")
+                            } else {
+                                setViewMode("result")
+                            }
+                        }}
+                    />
+                </Space>
+        }
+        />
+    }
+
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8}>
-                <Col span={12} style={{textAlign: "left"}}>
+                <Col span={24} style={{textAlign: "left"}}>
                     <Space>
                         {loading ? (
                             <Button
@@ -281,6 +388,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 style={{width: 150}}
                                 onClick={() => {
                                     setContent([])
+                                    setRedirectedResponse(undefined)
                                     submitToHTTPFuzzer()
                                 }}
                                 // size={"small"}
@@ -326,6 +434,27 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             value={advancedConfig} setValue={setAdvancedConfig}
                             size={"small"}
                         />
+                        {
+                            onlyOneResponse && content[0].Ok && <Form.Item style={{marginBottom: 0}}>
+                                <Button onClick={() => {
+                                    setLoading(true)
+                                    ipcRenderer.invoke("RedirectRequest", {
+                                        Request: request,
+                                        Response: new Buffer(content[0].ResponseRaw).toString("utf8"),
+                                        IsHttps: isHttps,
+                                        PerRequestTimeoutSeconds: timeout,
+                                        Proxy: proxy,
+                                    }).then((rsp: FuzzerResponse) => {
+
+                                        setRedirectedResponse(rsp)
+                                    }).catch(e => {
+                                        failed(`"ERROR in: ${e}"`)
+                                    }).finally(() => {
+                                        setTimeout(() => setLoading(false), 300)
+                                    })
+                                }}>跟随重定向</Button>
+                            </Form.Item>
+                        }
                         {loading && <Space>
                             <Spin size={"small"}/>
                             <div style={{color: "#3a8be3"}}>
@@ -346,8 +475,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {actualHost !== "" && <Tag color={"red"}>请求 Host:{actualHost}</Tag>}
                     </Space>
                 </Col>
-                <Col span={12} style={{textAlign: "left"}}>
-                </Col>
+                {/*<Col span={12} style={{textAlign: "left"}}>*/}
+                {/*</Col>*/}
             </Row>
 
             {advancedConfig && <Row style={{marginTop: 8}} gutter={8}>
@@ -498,7 +627,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             formItemStyle={{marginBottom: 4}}
                                             size={"small"}
                                             label={<OneLine width={68}>超时时间</OneLine>}
-                                            setValue={setTimeout}
+                                            setValue={setParamTimeout}
                                             value={timeout}
                                         />
                                     </Col>
@@ -526,6 +655,41 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         onEditor={setReqEditor}
                         onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
                         extra={<Space>
+                            <Popover
+                                trigger={"click"}
+                                title={"从 URL 加载数据包"}
+                                content={<div style={{width: 400}}>
+                                    <Form layout={"vertical"} onSubmitCapture={e => {
+                                        e.preventDefault()
+
+                                        ipcRenderer.invoke("Codec", {
+                                            Type: "packet-from-url", Text: targetUrl,
+                                        }).then(e => {
+                                            if (e?.Result) {
+                                                setRequest(e.Result)
+                                                refreshRequest()
+                                            }
+                                        }).finally(() => {
+
+                                        })
+                                    }} size={"small"}>
+                                        <InputItem
+                                            label={"从 URL 构造请求"} value={targetUrl} setValue={setTargetUrl}
+                                            extraFormItemProps={{style: {marginBottom: 8}}}
+                                        >
+
+                                        </InputItem>
+                                        <Form.Item style={{marginBottom: 8}}>
+                                            <Button type={"primary"} htmlType={"submit"}>构造请求</Button>
+                                        </Form.Item>
+                                    </Form>
+                                </div>}
+                            >
+                                <Button size={"small"} type={"primary"}>
+                                    URL
+                                </Button>
+                            </Popover>
+
                             <Button
                                 size={"small"}
                                 type={viewMode === "request" ? "primary" : "link"}
@@ -542,94 +706,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     />
                 </Col>
                 <Col span={24 - getLeftSpan()}>
-                    {onlyOneResponse ? (
-                        <>
-                            <HTTPPacketEditor
-                                simpleMode={viewMode === "request"}
-                                originValue={content[0].ResponseRaw}
-                                bordered={true} hideSearch={true}
-                                emptyOr={!content[0].Ok && (
-                                    <Result
-                                        status={"error"} title={"请求失败"}
-                                        // no such host
-                                        subTitle={(() => {
-                                            const reason = content[0]!.Reason;
-                                            if (reason.includes("tcp: i/o timeout")) {
-                                                return "网络超时"
-                                            }
-                                            if (reason.includes("no such host")) {
-                                                return "DNS 错误或主机错误"
-                                            }
-                                            return undefined
-                                        })()}
-                                    >
-                                        <>详细原因：{content[0].Reason}</>
-                                    </Result>
-                                )}
-                                readOnly={true} extra={
-                                viewMode === "request" ? <Button
-                                        size={"small"}
-                                        type={"link"}
-                                        icon={<ColumnWidthOutlined/>}
-                                        onClick={() => {
-                                            setViewMode("result")
+                    <AutoSpin spinning={loading}>
+                        {onlyOneResponse ? (
+                            <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
+                        ) : (
+                            <>
+                                {(content || []).length > 0 ? (
+                                    <HTTPFuzzerResultsCard
+                                        setRequest={r => {
+                                            setRequest(r)
+                                            refreshRequest()
                                         }}
-                                    /> :
-                                    <Space>
-                                        {loading && <Spin size={"small"} spinning={loading}/>}
-                                        {onlyOneResponse
-                                            ?
-                                            <Space>
-                                                <Tag>{content[0].DurationMs}ms</Tag>
-                                                <Space key='single'>
-                                                    <Button
-                                                        size={"small"}
-                                                        onClick={() => {
-                                                            analyzeFuzzerResponse(content[0], r => {
-                                                                setRequest(r)
-                                                                refreshRequest()
-                                                            })
-                                                        }}
-                                                        type={"primary"}
-                                                        icon={<ProfileOutlined/>}
-                                                    >
-                                                        详情
-                                                    </Button>
-                                                    <Button
-                                                        type={"primary"}
-                                                        size={"small"}
-                                                        onClick={() => {
-                                                            setContent([])
-                                                        }}
-                                                        danger={true}
-                                                        icon={<DeleteOutlined/>}
-                                                    >
-
-                                                    </Button>
-                                                </Space>
-                                            </Space>
-                                            :
-                                            <Space key='list'>
-                                                <Tag color={"green"}>成功:{successResults.length}</Tag>
-                                                <Input
-                                                    size={"small"}
-                                                    value={search}
-                                                    onChange={(e) => {
-                                                        setSearch(e.target.value)
-                                                    }}
-                                                />
-                                                {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
-                                                <Button
-                                                    size={"small"}
-                                                    onClick={() => {
-                                                        setContent([])
-                                                    }}
-                                                >
-                                                    清除数据
-                                                </Button>
-                                            </Space>
-                                        }
-                                        <Button
+                                        extra={<Button
                                             size={"small"}
                                             type={viewMode === "result" ? "primary" : "link"}
                                             icon={<ColumnWidthOutlined/>}
@@ -640,45 +728,19 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     setViewMode("result")
                                                 }
                                             }}
-                                        />
-                                    </Space>
-                            }
-                            />
-                            {/*<YakEditor*/}
-                            {/*    readOnly={true} bytes={true} valueBytes={content[0].ResponseRaw}*/}
-                            {/*/>*/}
-                        </>
-                    ) : (
-                        <>
-                            {(content || []).length > 0 ? (
-                                <HTTPFuzzerResultsCard
-                                    setRequest={r => {
-                                        setRequest(r)
-                                        refreshRequest()
-                                    }}
-                                    extra={<Button
-                                        size={"small"}
-                                        type={viewMode === "result" ? "primary" : "link"}
-                                        icon={<ColumnWidthOutlined/>}
-                                        onClick={() => {
-                                            if (viewMode === "result") {
-                                                setViewMode("split")
-                                            } else {
-                                                setViewMode("result")
-                                            }
-                                        }}
-                                    />}
-                                    failedResponses={failedResults}
-                                    successResponses={successResults}
-                                />
-                            ) : (
-                                <Result
-                                    status={"info"}
-                                    title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                    subTitle={"本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"}
-                                />
-                            )}
-                        </>)}
+                                        />}
+                                        failedResponses={failedResults}
+                                        successResponses={successResults}
+                                    />
+                                ) : (
+                                    <Result
+                                        status={"info"}
+                                        title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                        subTitle={"本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"}
+                                    />
+                                )}
+                            </>)}
+                    </AutoSpin>
                 </Col>
             </Row>
             {/*<LinerResizeCols*/}
