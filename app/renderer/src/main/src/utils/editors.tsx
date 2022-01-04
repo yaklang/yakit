@@ -427,7 +427,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                 />}
                 {mode === "hex" && !empty && <HexEditor
                     showAscii={true}
-                    columns={0x10}
                     data={hexValue}
                     showRowLabels={true}
                     showColumnLabels={false}
