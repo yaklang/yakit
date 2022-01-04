@@ -160,6 +160,57 @@ service Yak {
   rpc VerifyTunnelServerDomain(VerifyTunnelServerDomainParams) returns (VerifyTunnelServerDomainResponse) ;
   rpc StartFacades(StartFacadesParams) returns (stream ExecResult);
 
+  // Risk
+  rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
+  rpc QueryRisk(QueryRiskRequest) returns (Risk);
+  rpc DeleteRisk(QueryRiskRequest) returns (Empty);
+}
+
+message QueryRiskRequest {
+  int64 Id = 1;
+  string Hash = 2;
+}
+
+message Risk {
+  string Hash = 1;
+
+  string IP = 2;
+  string Url = 3;
+  int32  Port = 4;
+  string Host = 5;
+
+  string Title = 6;
+  string TitleVerbose = 7;
+  string RiskType = 8;
+  string RiskTypeVerbose = 9;
+  string Parameter = 10;
+  string Payload = 11;
+  string Details = 12;
+
+  string FromYakScript = 13;
+  bool WaitingVerified = 14;
+  string ReverseToken = 15;
+
+  int64 Id = 18;
+  int64 CreatedAt = 16;
+  int64 UpdatedAt = 17;
+}
+
+message QueryRisksRequest {
+  Paging Pagination = 1;
+
+  string Search = 2;
+  string Network = 3;
+  string Ports = 4;
+  string RiskType = 5;
+  string Token = 6;
+  bool WaitingVerified = 7;
+}
+
+message QueryRisksResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Risk Data = 3;
 }
 
 message VerifyTunnelServerDomainParams {

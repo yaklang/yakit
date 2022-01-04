@@ -7,6 +7,7 @@ import {
     CodeOutlined,
     EllipsisOutlined,
     FireOutlined,
+    BugOutlined,
     FunctionOutlined,
     OneToOneOutlined,
     RocketOutlined,
@@ -29,6 +30,7 @@ import {ExecResultsViewer} from "../pages/invoker/batch/ExecMessageViewer";
 import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable";
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage";
 import {ReverseServerPage} from "../pages/reverse/ReverseServerPage";
+import {RiskPage} from "../pages/risks/RiskPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -85,6 +87,7 @@ export enum Route {
     DB_HTTPHistory = "db-http-request",
     DB_Domain = "db-domains",
     DB_ExecResults = "db-exec-results",
+    DB_Risk = "db-risks",
 
     // Handler
     DataHandler = "data-handler",  // include codec compare
@@ -177,6 +180,7 @@ export const RouteMenuData: MenuDataProps[] = [
             {key: Route.DB_Ports, label: "端口资产", icon: <OneToOneOutlined/>},
             {key: Route.DB_Domain, label: "域名资产", icon: <FireOutlined/>},
             {key: Route.DB_ExecResults, label: "插件执行结果", icon: <FireOutlined/>},
+            {key: Route.DB_Risk, label: "漏洞与风险", icon: <BugOutlined/>},
         ],
     },
     // {
@@ -286,6 +290,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <YakScriptExecResultTable/>
         case Route.ReverseServer:
             return <ReverseServerPage/>
+        case Route.DB_Risk:
+            return <RiskPage/>
         default:
             return <div/>
     }

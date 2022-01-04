@@ -80,4 +80,52 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteDomains", async (e, params) => {
         return await asyncDeleteDomains(params)
     })
+
+    // asyncQueryRisks wrapper
+    const asyncQueryRisks = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryRisks(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryRisks", async (e, params) => {
+        return await asyncQueryRisks(params)
+    })
+
+    // asyncQueryRisk wrapper
+    const asyncQueryRisk = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryRisk(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryRisk", async (e, params) => {
+        return await asyncQueryRisk(params)
+    })
+
+    // asyncDeleteRisk wrapper
+    const asyncDeleteRisk = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteRisk(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteRisk", async (e, params) => {
+        return await asyncDeleteRisk(params)
+    })
 };

@@ -34,7 +34,7 @@ import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletion
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "./invoker/schema"
-import { PerformanceDisplay } from "../components/PerformanceDisplay"
+import {PerformanceDisplay} from "../components/PerformanceDisplay"
 
 
 import "./main.css"
@@ -77,6 +77,7 @@ const singletonRoute = [
 
     // database
     Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
+    Route.DB_Risk,
 ]
 
 const Main: React.FC<MainProp> = (props) => {
@@ -401,7 +402,7 @@ const Main: React.FC<MainProp> = (props) => {
                         </Space>
                     </Col>
                     <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                        <PerformanceDisplay />
+                        <PerformanceDisplay/>
                         <Space>
                             {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                             {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
