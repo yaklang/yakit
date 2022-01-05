@@ -29,8 +29,8 @@ const {ipcRenderer} = window.require("electron");
 
 const {Text} = Typography;
 
-const BRIDGE_ADDR = "yak-bridge-addr";
-const BRIDGE_SECRET = "yak-bridge-secret";
+export const BRIDGE_ADDR = "yak-bridge-addr";
+export const BRIDGE_SECRET = "yak-bridge-secret";
 
 export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
     const [bridge, setBridge] = useState(false);

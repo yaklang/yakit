@@ -1,19 +1,104 @@
-import React, {useEffect, useRef, useState} from "react";
-import {Spin, Tag, Button, Card, ButtonProps, Popconfirm, Space, Alert, Badge, Timeline} from "antd";
-import {XTerm} from "xterm-for-react";
+import React, {useEffect, useState} from "react";
+import {
+    Alert,
+    Badge,
+    Button,
+    ButtonProps,
+    Card,
+    Divider,
+    Form, Modal,
+    Popconfirm, Popover,
+    Space,
+    Spin,
+    Tag,
+    Timeline,
+    Typography
+} from "antd";
 import {ExecResult} from "../pages/invoker/schema";
 import {showModal} from "./showModal";
-import {failed} from "./notification";
 import {openExternalWebsite} from "./openWebsite";
 import {ExecResultLog, ExecResultMessage} from "../pages/invoker/batch/ExecMessageViewer";
 import {LogLevelToCode} from "../components/HTTPFlowTable";
 import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter";
+import {InputItem} from "./inputUtil";
+import {useGetState, useLatest, useMemoizedFn} from "ahooks";
+import {ReloadOutlined} from "@ant-design/icons";
+import {getValue} from "./kv";
+import {BRIDGE_ADDR, BRIDGE_SECRET} from "../pages/reverse/ReverseServerPage";
+import {failed, info} from "./notification";
 
 export interface YakVersionProp {
 
 }
 
 const {ipcRenderer} = window.require("electron");
+
+interface ReverseDetail {
+    PublicReverseIP: string
+    PublicReversePort: number
+    LocalReverseAddr: string
+    LocalReversePort: number
+}
+
+export const ReversePlatformStatus = React.memo(() => {
+    const [ok, setOk] = useState(false)
+    const [details, setDetails] = useState<ReverseDetail>({
+        LocalReverseAddr: "",
+        LocalReversePort: 0,
+        PublicReverseIP: "",
+        PublicReversePort: 0
+    });
+
+    useEffect(() => {
+        const update = () => {
+            ipcRenderer.invoke("get-global-reverse-server-status").then(setOk)
+        }
+
+        let id = setInterval(() => {
+            update()
+        }, 1000)
+        return () => {
+            clearInterval(id)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!ok) {
+            setDetails({LocalReverseAddr: "", LocalReversePort: 0, PublicReverseIP: "", PublicReversePort: 0})
+            return
+        }
+    }, [ok])
+
+    useEffect(() => {
+        if (details.PublicReverseIP === "") {
+            let id = setInterval(() => {
+                ipcRenderer.invoke("GetGlobalReverseServer", {}).then((data: ReverseDetail) => {
+                    setDetails(data)
+                })
+            }, 1000)
+            return () => {
+                clearInterval(id)
+            }
+        }
+    }, [details])
+
+    const flag = (ok && !!details.PublicReverseIP && !!details.PublicReversePort);
+    return <Popover visible={ok ? undefined : false} content={<div>
+        <Space direction={"vertical"}>
+            <Text copyable={true}>rmi://{details.PublicReverseIP}:{details.PublicReversePort}</Text>
+            <Text copyable={true}>http://{details.PublicReverseIP}:{details.PublicReversePort}</Text>
+            <Text copyable={true}>https://{details.PublicReverseIP}:{details.PublicReversePort}</Text>
+        </Space>
+    </div>} title={"公网反连配置"}>
+        <Tag
+            color={flag ? "green" : "red"}
+        >{flag
+            ? `公网反连:${details.PublicReverseIP}:${details.PublicReversePort}`
+            :
+            "未配置公网反连"
+        }</Tag>
+    </Popover>
+})
 
 export const YakVersion: React.FC<YakVersionProp> = (props) => {
     const [version, setVersion] = useState<string>("dev")
@@ -193,8 +278,159 @@ export const AutoUpdateYakModuleButton: React.FC<AutoUpdateYakModuleButtonProp> 
             })
         }}
     >
-        <Button {...props}>
+        <Button {...props} type={"link"}>
             更新 Yakit 插件商店
         </Button>
     </Popconfirm>
 };
+
+const {Text} = Typography;
+
+interface NetInterface {
+    Name: string
+    Addr: string
+    IP: string
+}
+
+export const ConfigGlobalReverseButton = React.memo(() => {
+    const [addr, setAddr, getAddr] = useGetState("");
+    const [password, setPassword, getPassword] = useGetState("");
+    const [localIP, setLocalIP, getLocalIP] = useGetState("");
+    const [ifaces, setIfaces] = useState<NetInterface[]>([]);
+    const [visible, setVisible] = useState(false);
+    const [ok, setOk] = useState(false)
+
+    const getStatus = useMemoizedFn(() => {
+        ipcRenderer.invoke("get-global-reverse-server-status").then(setOk)
+    })
+    const cancel = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-global-reverse-server-status").finally(() => {
+            getStatus()
+        })
+    });
+    useEffect(() => {
+        if (!visible) {
+            return
+        }
+        getStatus()
+    }, [visible])
+
+    // 设置 Bridge
+    useEffect(() => {
+        if (!addr) {
+            getValue(BRIDGE_ADDR).then((data: string) => {
+                if (!!data) {
+                    setAddr(`${data}`)
+                }
+            })
+        }
+
+        if (!password) {
+            getValue(BRIDGE_SECRET).then((data: string) => {
+                if (!!data) {
+                    setPassword(`${data}`)
+                }
+            })
+        }
+
+        return () => {
+            cancel()
+        }
+    }, [])
+
+    const updateIface = useMemoizedFn(() => {
+        ipcRenderer.invoke("AvailableLocalAddr", {}).then((data: { Interfaces: NetInterface[] }) => {
+            const arr = (data.Interfaces || []).filter(i => i.IP !== "127.0.0.1");
+            setIfaces(arr)
+        })
+    })
+
+    useEffect(() => {
+        if (visible) {
+            updateIface()
+        }
+    }, [visible])
+
+    useEffect(() => {
+        if (ifaces.length === 1) {
+            setLocalIP(ifaces[0].IP)
+        }
+    }, [ifaces])
+
+    return <div>
+        <Button type={"link"}
+                onClick={() => {
+                    setVisible(true)
+                }}
+        >配置全局反连</Button>
+        <Modal visible={visible}
+               width={"60%"}
+               okButtonProps={{hidden: true}}
+               cancelButtonProps={{hidden: true}}
+               closable={true}
+               onCancel={() => {
+                   setVisible(false)
+               }} afterClose={() => setVisible(false)}>
+            <Form
+                style={{marginTop: 20}}
+                onSubmitCapture={e => {
+                    e.preventDefault()
+
+                    ipcRenderer.invoke("ConfigGlobalReverse", {
+                        ConnectParams: {Addr: addr, Secret: password},
+                        LocalAddr: localIP,
+                    }).then(() => {
+                        info("配置公网反连服务器成功")
+                        getStatus()
+                        // setVisible(false)
+                    }).catch(e => {
+                        failed(`Config Global Reverse Server failed: ${e}`)
+                    })
+
+                }} labelCol={{span: 5}} wrapperCol={{span: 14}}>
+                <InputItem
+                    label={"本地反连 IP"}
+                    value={localIP} disable={ok}
+                    setValue={setLocalIP}
+                    help={<div>
+                        <Button type={"link"} size={"small"} onClick={() => {
+                            updateIface()
+                        }} icon={<ReloadOutlined/>}>
+                            更新 yak 引擎本地 IP
+                        </Button>
+                    </div>}
+                />
+                <Divider orientation={"left"}>公网反连配置</Divider>
+                <Form.Item label={" "} colon={false}>
+                    <Alert message={<Space direction={"vertical"}>
+                        <div>在公网服务器上运行</div>
+                        <Text code={true} copyable={true}>yak bridge --secret [your-password]</Text>
+                        <div>或</div>
+                        <Text code={true} copyable={true}>
+                            docker run -it --rm --net=host v1ll4n/yak-bridge yak bridge --secret
+                            [your-password]
+                        </Text>
+                        <div>已配置</div>
+                    </Space>}/>
+                </Form.Item>
+                <InputItem
+                    label={"Yak Bridge 地址"} value={addr}
+                    setValue={setAddr} disable={ok}
+                    help={"格式 host:port, 例如 cybertunnel.run:64333"}
+                />
+                <InputItem
+                    label={"Yak Bridge 密码"}
+                    setValue={setPassword} value={password}
+                    type={"password"} disable={ok}
+                    help={`yak bridge 命令的 --secret 参数值`}
+                />
+                <Form.Item colon={false} label={" "}>
+                    <Button type="primary" htmlType="submit" disabled={ok}> 配置反连 </Button>
+                    {ok && <Button type="primary" danger={true} onClick={() => {
+                        cancel()
+                    }}> 停止 </Button>}
+                </Form.Item>
+            </Form>
+        </Modal>
+    </div>
+})

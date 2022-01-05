@@ -24,12 +24,21 @@ import {
     EllipsisOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    ReloadOutlined
+    ReloadOutlined,
+    PoweroffOutlined,
+    DownOutlined,
+    SettingOutlined,
 } from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {YakLogoBanner} from "../utils/logo"
-import {AutoUpdateYakModuleButton, YakitVersion, YakVersion} from "../utils/basic"
+import {
+    AutoUpdateYakModuleButton,
+    ConfigGlobalReverseButton,
+    ReversePlatformStatus,
+    YakitVersion,
+    YakVersion
+} from "../utils/basic"
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema"
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
@@ -407,16 +416,23 @@ const Main: React.FC<MainProp> = (props) => {
                             {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                             {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                             {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                            <AutoUpdateYakModuleButton/>
-                            <Popconfirm
-                                title={"确认需要退出当前会话吗？"}
-                                onConfirm={() => {
-                                    success("退出当前 Yak 服务器成功")
-                                    setEngineStatus("error")
-                                }}
-                            >
-                                <Button danger={true}>退出 / 切换 Yak 服务器</Button>
-                            </Popconfirm>
+                            <ReversePlatformStatus/>
+                            <Dropdown overlay={<Menu>
+                                <Menu.Item key={"update"}>
+                                    <AutoUpdateYakModuleButton/>
+                                </Menu.Item>
+                                <Menu.Item key={"reverse-global"}>
+                                    <ConfigGlobalReverseButton/>
+                                </Menu.Item>
+                            </Menu>} trigger={["click"]}>
+                                <Button icon={<SettingOutlined/>}>
+                                    全局配置
+                                </Button>
+                            </Dropdown>
+                            <Button type={"primary"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
+                                success("退出当前 Yak 服务器成功")
+                                setEngineStatus("error")
+                            }}/>
                         </Space>
                     </Col>
                 </Row>

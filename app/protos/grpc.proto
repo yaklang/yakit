@@ -161,11 +161,19 @@ service Yak {
   rpc StartFacades(StartFacadesParams) returns (stream ExecResult);
   rpc ConfigGlobalReverse(ConfigGlobalReverseParams) returns (stream Empty);
   rpc AvailableLocalAddr(Empty) returns (AvailableLocalAddrResponse);
+  rpc GetGlobalReverseServer(Empty) returns (GetGlobalReverseServerResponse);
 
   // Risk
   rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
   rpc QueryRisk(QueryRiskRequest) returns (Risk);
   rpc DeleteRisk(QueryRiskRequest) returns (Empty);
+}
+
+message GetGlobalReverseServerResponse {
+  string PublicReverseIP = 1;
+  int32 PublicReversePort = 2;
+  string LocalReverseAddr = 3;
+  int32 LocalReversePort = 4;
 }
 
 message AvailableLocalAddrResponse {
