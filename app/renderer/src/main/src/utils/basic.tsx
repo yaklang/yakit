@@ -308,6 +308,19 @@ export const ConfigGlobalReverseButton = React.memo(() => {
             getStatus()
         })
     });
+    const login = useMemoizedFn(() => {
+        ipcRenderer.invoke("ConfigGlobalReverse", {
+            ConnectParams: {Addr: addr, Secret: password},
+            LocalAddr: localIP,
+        }).then(() => {
+            info("配置公网反连服务器成功")
+            getStatus()
+            // setVisible(false)
+        }).catch(e => {
+            failed(`Config Global Reverse Server failed: ${e}`)
+        })
+    })
+
     useEffect(() => {
         if (!visible) {
             return
@@ -337,6 +350,19 @@ export const ConfigGlobalReverseButton = React.memo(() => {
             cancel()
         }
     }, [])
+
+    // 如果 addr 和 password 都存在，且没有连接，则马上连接一次
+    useEffect(() => {
+        if (visible) {
+            return
+        }
+
+        if (ok) {
+            return
+        }
+
+        login()
+    }, [addr, password, visible, ok])
 
     const updateIface = useMemoizedFn(() => {
         ipcRenderer.invoke("AvailableLocalAddr", {}).then((data: { Interfaces: NetInterface[] }) => {
@@ -376,17 +402,7 @@ export const ConfigGlobalReverseButton = React.memo(() => {
                 onSubmitCapture={e => {
                     e.preventDefault()
 
-                    ipcRenderer.invoke("ConfigGlobalReverse", {
-                        ConnectParams: {Addr: addr, Secret: password},
-                        LocalAddr: localIP,
-                    }).then(() => {
-                        info("配置公网反连服务器成功")
-                        getStatus()
-                        // setVisible(false)
-                    }).catch(e => {
-                        failed(`Config Global Reverse Server failed: ${e}`)
-                    })
-
+                    login()
                 }} labelCol={{span: 5}} wrapperCol={{span: 14}}>
                 <InputItem
                     label={"本地反连 IP"}
