@@ -159,11 +159,28 @@ service Yak {
   rpc GetTunnelServerExternalIP(GetTunnelServerExternalIPParams) returns (GetTunnelServerExternalIPResponse);
   rpc VerifyTunnelServerDomain(VerifyTunnelServerDomainParams) returns (VerifyTunnelServerDomainResponse) ;
   rpc StartFacades(StartFacadesParams) returns (stream ExecResult);
+  rpc ConfigGlobalReverse(ConfigGlobalReverseParams) returns (stream Empty);
+  rpc AvailableLocalAddr(Empty) returns (AvailableLocalAddrResponse);
 
   // Risk
   rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
   rpc QueryRisk(QueryRiskRequest) returns (Risk);
   rpc DeleteRisk(QueryRiskRequest) returns (Empty);
+}
+
+message AvailableLocalAddrResponse {
+  repeated NetInterface Interfaces = 1;
+}
+
+message NetInterface {
+  string Name = 1;
+  string Addr = 2;
+  string IP = 3;
+}
+
+message ConfigGlobalReverseParams {
+  GetTunnelServerExternalIPParams ConnectParams = 1;
+  string LocalAddr = 2;
 }
 
 message QueryRiskRequest {
