@@ -417,7 +417,7 @@ const Main: React.FC<MainProp> = (props) => {
                             {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                             {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
                             <ReversePlatformStatus/>
-                            <Dropdown overlay={<Menu>
+                            <Dropdown forceRender={true} overlay={<Menu>
                                 <Menu.Item key={"update"}>
                                     <AutoUpdateYakModuleButton/>
                                 </Menu.Item>

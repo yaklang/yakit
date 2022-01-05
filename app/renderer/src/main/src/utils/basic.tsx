@@ -23,7 +23,7 @@ import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter";
 import {InputItem} from "./inputUtil";
 import {useGetState, useLatest, useMemoizedFn} from "ahooks";
 import {ReloadOutlined} from "@ant-design/icons";
-import {getValue} from "./kv";
+import {getValue, saveValue} from "./kv";
 import {BRIDGE_ADDR, BRIDGE_SECRET} from "../pages/reverse/ReverseServerPage";
 import {failed, info} from "./notification";
 
@@ -301,7 +301,11 @@ export const ConfigGlobalReverseButton = React.memo(() => {
     const [ok, setOk] = useState(false)
 
     const getStatus = useMemoizedFn(() => {
-        ipcRenderer.invoke("get-global-reverse-server-status").then(setOk)
+        ipcRenderer.invoke("get-global-reverse-server-status").then((r) => {
+            setOk(r)
+            saveValue(BRIDGE_ADDR, addr)
+            saveValue(BRIDGE_SECRET, password)
+        })
     })
     const cancel = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-global-reverse-server-status").finally(() => {
@@ -313,7 +317,6 @@ export const ConfigGlobalReverseButton = React.memo(() => {
             ConnectParams: {Addr: addr, Secret: password},
             LocalAddr: localIP,
         }).then(() => {
-            info("配置公网反连服务器成功")
             getStatus()
             // setVisible(false)
         }).catch(e => {
@@ -353,15 +356,25 @@ export const ConfigGlobalReverseButton = React.memo(() => {
 
     // 如果 addr 和 password 都存在，且没有连接，则马上连接一次
     useEffect(() => {
+        // 可见就退出
         if (visible) {
             return
         }
 
+        // 如果已经连上就退出
         if (ok) {
             return
         }
 
-        login()
+        if (!!addr && !!password) {
+            login()
+            let id = setInterval(() => {
+                login()
+            }, 1000)
+            return () => {
+                clearInterval(id)
+            }
+        }
     }, [addr, password, visible, ok])
 
     const updateIface = useMemoizedFn(() => {
