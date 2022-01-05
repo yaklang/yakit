@@ -15,6 +15,7 @@ import {SelectOne} from "../../utils/inputUtil";
 import {monacoEditorClear, monacoEditorWrite} from "../fuzzer/fuzzerTemplates";
 import {XTerm} from "xterm-for-react";
 import {writeExecResultXTerm, writeXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils";
+import {Terminal} from "./Terminal";
 
 const {Text} = Typography;
 
@@ -312,6 +313,16 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                 xtermClear(xtermRef)
                                             }}
                                         />
+                                        <Button size={"small"} onClick={() => {
+                                            let m = showModal({
+                                                title: "terminal",
+                                                content: <>
+                                                    <Terminal/>
+                                                </>
+                                            })
+                                        }}>
+                                            Terminal
+                                        </Button>
                                     </Space>} size={"small"} bordered={true}
                                     bodyStyle={{padding: 0}}
                                 >
