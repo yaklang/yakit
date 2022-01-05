@@ -129,6 +129,13 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                 width: 100,
             },
             {
+                name: "Payloads",
+                code: "Payloads",
+                render: (value: any, row: any, rowIndex: number) => {
+                    return `${value}`
+                }, width: 300,
+            },
+            {
                 name: "延迟(ms)",
                 code: "DurationMs",
                 render: (value: any, row: any, rowIndex: number) => {

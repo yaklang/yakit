@@ -81,6 +81,7 @@ export interface FuzzerResponse {
 
     Ok: boolean
     Reason: string
+    Payloads?: string[]
 }
 
 const defaultPostTemplate = `POST / HTTP/1.1
@@ -200,6 +201,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const response = new Buffer(data.ResponseRaw).toString(
                 fixEncoding(data.GuessResponseEncoding)
             )
+            console.info(data.Payloads)
             buffer.push({
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
@@ -215,7 +217,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 UUID: data.UUID,
                 Timestamp: data.Timestamp,
                 ResponseRaw: data.ResponseRaw,
-                RequestRaw: data.RequestRaw
+                RequestRaw: data.RequestRaw,
+                Payloads: data.Payloads,
             } as FuzzerResponse)
             // setContent([...buffer])
         })
@@ -706,7 +709,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     />
                 </Col>
                 <Col span={24 - getLeftSpan()}>
-                    <AutoSpin spinning={loading}>
+                    <AutoSpin spinning={false}>
                         {onlyOneResponse ? (
                             <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
                         ) : (

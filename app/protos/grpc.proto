@@ -848,6 +848,9 @@ message FuzzerResponse {
 
   // IsHTTPS
   bool IsHTTPS = 33;
+
+  // payloads
+  repeated string Payloads = 34;
 }
 
 message Paging {
