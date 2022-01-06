@@ -88,7 +88,7 @@ module.exports = {
                                 let ports = pidToPorts.get(i.pid);
                                 if (ports.length > 0) {
                                     ports.forEach(i => {
-                                        if (parseInt(i)>60000) {
+                                        if (parseInt(i)>50000) {
                                             return
                                         }
                                         portsRaw = i
@@ -216,7 +216,7 @@ module.exports = {
                 // }
 
 
-                let randPort = 40000 + getRandomInt(10000);
+                let randPort = 40000 + getRandomInt(9999);
                 try {
                     if (sudo) {
                         if (isWindows) {
