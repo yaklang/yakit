@@ -127,7 +127,9 @@ function App() {
             setTimeout(() => setLoading(false), 500)
         })
 
-        testYak()
+        if (mode === "remote") {
+            testYak()
+        }
         return () => {
             ipcRenderer.removeAllListeners("client-echo-yak")
         }

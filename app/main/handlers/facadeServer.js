@@ -69,13 +69,17 @@ module.exports = (win, getClient) => {
     // asyncGetGlobalReverseServer wrapper
     const asyncGetGlobalReverseServer = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().GetGlobalReverseServer(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
+            try {
+                getClient().GetGlobalReverseServer(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            }catch (e) {
+                reject(e)
+            }
         })
     }
     ipcMain.handle("GetGlobalReverseServer", async (e, params) => {
