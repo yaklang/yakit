@@ -6,6 +6,8 @@ import {useMemoizedFn} from "ahooks";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {ReloadOutlined} from "@ant-design/icons";
 import {failed} from "../../utils/notification";
+import {showModal} from "../../utils/showModal";
+import ReactJson from "react-json-view";
 
 export interface RiskTableProp {
 
@@ -62,7 +64,23 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             {title: "标题", render: (i: Risk) => i?.TitleVerbose || i.Title},
             {title: "类型", render: (i: Risk) => i?.RiskTypeVerbose || i.RiskType},
             {title: "IP", render: (i: Risk) => i?.IP || "-"},
-            {title: "发现时间", render: (i: Risk) => <Tag>{i.CreatedAt > 0 ? formatTimestamp(i.CreatedAt) : "-"}</Tag>}
+            {title: "Token", render: (i: Risk) => i?.ReverseToken || "-"},
+            {title: "发现时间", render: (i: Risk) => <Tag>{i.CreatedAt > 0 ? formatTimestamp(i.CreatedAt) : "-"}</Tag>},
+            {
+                title: "操作", render: (i: Risk) => <Space>
+                    <Button
+                        type={"link"}
+                        onClick={() => {
+                            showModal({
+                                width: "60",
+                                title: "详情", content: <div style={{overflow: "auto"}}>
+                                    <ReactJson src={i}/>
+                                </div>
+                            })
+                        }}
+                    >详情</Button>
+                </Space>
+            }
         ]}
         rowKey={e => e.Hash}
         loading={loading}

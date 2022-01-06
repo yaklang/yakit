@@ -313,16 +313,16 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                 xtermClear(xtermRef)
                                             }}
                                         />
-                                        <Button size={"small"} onClick={() => {
-                                            let m = showModal({
-                                                title: "terminal",
-                                                content: <>
-                                                    <Terminal/>
-                                                </>
-                                            })
-                                        }}>
-                                            Terminal
-                                        </Button>
+                                        {/*<Button size={"small"} onClick={() => {*/}
+                                        {/*    let m = showModal({*/}
+                                        {/*        title: "terminal",*/}
+                                        {/*        content: <>*/}
+                                        {/*            <Terminal/>*/}
+                                        {/*        </>*/}
+                                        {/*    })*/}
+                                        {/*}}>*/}
+                                        {/*    Terminal*/}
+                                        {/*</Button>*/}
                                     </Space>} size={"small"} bordered={true}
                                     bodyStyle={{padding: 0}}
                                 >

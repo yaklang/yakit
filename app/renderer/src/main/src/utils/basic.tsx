@@ -15,7 +15,7 @@ import {
     Typography
 } from "antd";
 import {ExecResult} from "../pages/invoker/schema";
-import {showModal} from "./showModal";
+import {showDrawer, showModal} from "./showModal";
 import {openExternalWebsite} from "./openWebsite";
 import {ExecResultLog, ExecResultMessage} from "../pages/invoker/batch/ExecMessageViewer";
 import {LogLevelToCode} from "../components/HTTPFlowTable";
@@ -26,6 +26,7 @@ import {ReloadOutlined} from "@ant-design/icons";
 import {getValue, saveValue} from "./kv";
 import {BRIDGE_ADDR, BRIDGE_SECRET} from "../pages/reverse/ReverseServerPage";
 import {failed, info} from "./notification";
+import {RiskTable} from "../pages/risks/RiskTable";
 
 export interface YakVersionProp {
 
@@ -91,6 +92,15 @@ export const ReversePlatformStatus = React.memo(() => {
         </Space>
     </div>} title={"公网反连配置"}>
         <Tag
+            onClick={() => {
+                showDrawer({
+                    title: "Risk 表 (包含反连)",
+                    width: "70%",
+                    content: <>
+                        <RiskTable/>
+                    </>
+                })
+            }}
             color={flag ? "green" : "red"}
         >{flag
             ? `公网反连:${details.PublicReverseIP}:${details.PublicReversePort}`
