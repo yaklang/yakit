@@ -31,10 +31,7 @@ const options = {
     "grpc.max_send_message_length": 1024 * 1024 * 1000
 }
 
-function getClient() {
-    if (_client) {
-        return _client
-    }
+function newClient() {
     const md = new grpc.Metadata();
     md.set("authorization", `bearer ${global.password}`)
 
@@ -42,7 +39,7 @@ function getClient() {
         const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
             return callback(null, md)
         });
-        _client = new Yak(
+        return new Yak(
             global.defaultYakGRPCAddr,
             // grpc.credentials.createInsecure(),
             grpc.credentials.combineChannelCredentials(grpc.credentials.createSsl(
@@ -55,13 +52,24 @@ function getClient() {
             options,
         )
     } else {
-        _client = new Yak(
+        return new Yak(
             global.defaultYakGRPCAddr,
             grpc.credentials.createInsecure(),
             options,
         )
     }
+}
 
+function getClient(createNew) {
+    if (!!createNew) {
+        return newClient()
+    }
+
+    if (_client) {
+        return _client
+    }
+
+    _client = newClient()
     return getClient()
 }
 
@@ -70,6 +78,37 @@ module.exports = {
         require("./handlers/yakLocal").clearing();
     },
     registerIPC: (win) => {
+        let count = 0;
+        setInterval(() => {
+            if (!global.defaultYakGRPCAddr) {
+                return
+            }
+
+            if (count >= 5) {
+                console.info("reconnect failed")
+                win.webContents.send("client-engine-status-error")
+                count = 0
+            }
+
+            try {
+                if (!_client) {
+                    _client = getClient(true)
+                }
+                getClient().Echo({text: "heartbeat"}, (err, data) => {
+                    if (err) {
+                        _client = null;
+                        count++
+                        return
+                    }
+                    win.webContents.send("client-engine-status-ok")
+                    count = 0
+                })
+            } catch (e) {
+                _client = undefined;
+                count++
+            }
+        }, 1000)
+
         ipcMain.handle("yakit-connect-status", () => {
             return {
                 addr: global.defaultYakGRPCAddr,
