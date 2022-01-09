@@ -44,7 +44,6 @@ module.exports = (win, getClient) => {
         if (!existed) {
             return
         }
-        console.info(buf)
         existed.process.stdin.write(buf)
     })
 }

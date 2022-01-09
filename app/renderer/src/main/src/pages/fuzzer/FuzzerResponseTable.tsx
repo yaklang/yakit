@@ -99,7 +99,9 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
     const {content, setRequest} = props;
     const [tableHeight, setTableHeight] = useState(0);
     const pipeline = useTablePipeline({
-        components: antd,
+        components: antd, primaryKey: (raw: FuzzerResponse)=>{
+            return raw.UUID
+        }
     }).input({
         dataSource: content,
         columns: props.success ? [
