@@ -56,7 +56,7 @@ export const Terminal = React.memo(() => {
         ipcRenderer.invoke("write-terminal", token, data)
     })
 
-    return <AutoCard>
+    return <AutoCard bodyStyle={{padding: 0}}>
         <div style={{width: "100%"}}>
             <XTerm
                 ref={xtermRef}
