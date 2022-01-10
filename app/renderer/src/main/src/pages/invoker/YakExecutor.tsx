@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react"
-import { Tabs, Button, Menu, Dropdown, Modal, notification, Space, Typography, Input, Upload } from "antd"
+import { Tabs, Button, Menu, Dropdown, Modal, notification, Space, Typography, Input, Upload, Empty } from "antd"
 import "./xtermjs-yak-executor.css"
 import { YakEditor } from "../../utils/editors"
 import {
@@ -10,7 +10,8 @@ import {
     DeleteOutlined,
     ExclamationCircleOutlined,
     FullscreenOutlined,
-    FullscreenExitOutlined
+    FullscreenExitOutlined,
+    FileAddOutlined
 } from "@ant-design/icons"
 import { YakScriptManagerPage } from "./YakScriptManager"
 import { getRandomInt } from "../../utils/randomUtil"
@@ -127,6 +128,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     // 获取和保存近期打开文件信息，同时展示打开默认内容
     useEffect(() => {
         let time: any = null
+        let timer: any = null
         setLoading(true)
         ipcRenderer
             .invoke("get-value", RecentFileList)
@@ -150,12 +152,17 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 setTimeout(() => setLoading(false), 300)
                 time = setInterval(() => {
                     autoSave()
+                    saveFiliList()
                 }, 2000)
+                timer = setInterval(() => {
+                    saveFiliList()
+                }, 5000)
             })
 
         return () => {
             saveFiliList()
             if (time) clearInterval(time)
+            if (timer) clearInterval(timer)
         }
     }, [])
 
@@ -243,11 +250,22 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     })
                     .then(() => {
                         const suffix = name.split(".").pop()
-                        const tabs = cloneDeep(tabList)
-                        tabs[index].tab = name
-                        tabs[index].isFile = true
-                        tabs[index].route = path
-                        tabs[index].suffix = suffix === "yak" ? suffix : "http"
+
+                        var tabs = cloneDeep(tabList)
+                        var active = null
+                        tabs = tabs.filter((item) => item.route !== path)
+                        tabs = tabs.map((item, index) => {
+                            if (!item.route && item.tab === info.tab) {
+                                active = index
+                                item.tab = name
+                                item.isFile = true
+                                item.suffix = suffix === "yak" ? suffix : "http"
+                                item.route = path
+                                return item
+                            }
+                            return item
+                        })
+                        if (active !== null) setActiveTab(`${active}`)
                         setTabList(tabs)
                         const file: tabCodeProps = {
                             tab: name,
@@ -275,7 +293,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     const tabs = cloneDeep(tabList)
                     tabs.splice(i, 1)
                     setTabList(tabs)
-                    if (tabs.length >= 1) setActiveTab(`0`)
+                    setActiveTab(tabs.length >= 1 ? `0` : "")
                 }
             }
             const files = cloneDeep(fileList)
@@ -292,7 +310,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 const tabs = cloneDeep(tabList)
                 tabs.splice(+index, 1)
                 setTabList(tabs)
-                if (tabs.length >= 1) setActiveTab(`0`)
+                setActiveTab(tabs.length >= 1 ? `0` : "")
             }
         }
     })
@@ -302,7 +320,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         tabs.splice(hintIndex, 1)
         setTabList(tabs)
         setHintShow(false)
-        if (tabs.length >= 1) setActiveTab(`0`)
+        setActiveTab(tabs.length >= 1 ? `0` : "")
     })
     // 删除文件
     const delCode = useMemoizedFn((index) => {
@@ -316,7 +334,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                         const tabs = cloneDeep(tabList)
                         tabs.splice(i, 1)
                         setTabList(tabs)
-                        if (tabs.length >= 1) setActiveTab(`0`)
+                        setActiveTab(tabs.length >= 1 ? `0` : "")
                     }
                 }
                 const arr = cloneDeep(fileList)
@@ -335,16 +353,17 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         if (!renameCache) return
 
         if (!tabInfo.route) return
-        const routes = tabInfo.route?.indexOf("/") > -1 ? tabInfo.route?.split("/") : tabInfo.route?.split("\\")
+        const flagStr = tabInfo.route?.indexOf("/") > -1 ? "/" : "\\"
+        const routes = tabInfo.route?.split(flagStr)
         routes?.pop()
         ipcRenderer
-            .invoke("is-exists-file", routes?.concat([renameCache]).join("/"))
+            .invoke("is-exists-file", routes?.concat([renameCache]).join(flagStr))
             .then(() => {
-                const newRoute = routes?.concat([renameCache]).join("/")
+                const newRoute = routes?.concat([renameCache]).join(flagStr)
                 if (!tabInfo.route || !newRoute) return
                 renameFile(index, renameCache, tabInfo.route, newRoute)
             })
-            .catch((err) => {
+            .catch(() => {
                 setRenameHint(true)
             })
     })
@@ -353,21 +372,35 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         (index: number, rename: string, oldRoute: string, newRoute: string, callback?: () => void) => {
             ipcRenderer.invoke("rename-file", { old: oldRoute, new: newRoute }).then(() => {
                 const suffix = rename.split(".").pop()
-                const tabs = cloneDeep(fileList)
-                tabs[index].tab = rename
-                tabs[index].suffix = suffix === "yak" ? suffix : "http"
-                tabs[index].route = newRoute
-                setFileList(tabs)
-                const arr = tabList.map((item: tabCodeProps) => {
+
+                var files = cloneDeep(fileList)
+                var tabs = cloneDeep(tabList)
+                var active = null
+                files = files.filter((item) => item.route !== newRoute)
+                tabs = tabs.filter((item) => item.route !== newRoute)
+
+                files = files.map((item) => {
                     if (item.route === oldRoute) {
-                        const info: tabCodeProps = item
-                        info.tab = rename
-                        info.route = newRoute
-                        return info
+                        item.tab = rename
+                        item.suffix = suffix === "yak" ? suffix : "http"
+                        item.route = newRoute
+                        return item
                     }
                     return item
                 })
-                setTabList(arr)
+                tabs = tabs.map((item, index) => {
+                    if (item.route === oldRoute) {
+                        active = index
+                        item.tab = rename
+                        item.suffix = suffix === "yak" ? suffix : "http"
+                        item.route = newRoute
+                        return item
+                    }
+                    return item
+                })
+                if (active !== null) setActiveTab(`${active}`)
+                setFileList(files)
+                setTabList(tabs)
 
                 if (callback) callback()
             })
@@ -382,26 +415,21 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 closeCode(index, isFileList)
                 return
             case "other":
-                const tabInfo = cloneDeep(tabList[index])
+                const tabInfo: tabCodeProps = cloneDeep(tabList[index])
                 for (let i in tabList) {
                     if (i !== index && !tabList[i].isFile) {
-                        if (+i > +index) {
-                            const arr = [tabInfo].concat(tabList.splice(+i, tabList.length - 1))
-                            setActiveTab("1")
-                            setTabList(arr)
-                            setHintFile(arr[1].tab)
-                            setHintIndex(1)
-                            setHintShow(true)
-                            return
-                        } else {
-                            const arr = tabList.splice(+i, tabList.length - 1)
-                            setActiveTab("0")
-                            setTabList(arr)
-                            setHintFile(arr[0].tab)
-                            setHintIndex(0)
-                            setHintShow(true)
-                            return
-                        }
+                        const arr: tabCodeProps[] =
+                            +i > +index
+                                ? [tabInfo].concat(tabList.splice(+i, tabList.length))
+                                : tabList.splice(+i, tabList.length)
+                        const num = +i > +index ? 1 : 0
+
+                        setActiveTab(`${num}`)
+                        setTabList(arr)
+                        setHintFile(arr[num].tab)
+                        setHintIndex(num)
+                        setHintShow(true)
+                        return
                     }
                 }
                 const code = cloneDeep(tabList[index])
@@ -411,7 +439,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
             case "all":
                 for (let i in tabList) {
                     if (!tabList[i].isFile) {
-                        const arr = tabList.splice(+i, tabList.length - 1)
+                        const arr = tabList.splice(+i, tabList.length)
                         setActiveTab("0")
                         setTabList(arr)
                         setHintFile(arr[0].tab)
@@ -420,6 +448,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                         return
                     }
                 }
+                setActiveTab("")
                 setTabList([])
                 return
             case "remove":
@@ -517,6 +546,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     if (e.keyCode === 78 && (e.ctrlKey || e.metaKey)) {
                         newFile()
                     }
+                    if (e.keyCode === 83 && (e.ctrlKey || e.metaKey) && activeTab) {
+                        saveCode(tabList[+activeTab], +activeTab)
+                    }
                 }}
             >
                 <div style={{ width: `${fullScreen ? 0 : 15}%` }}>
@@ -536,213 +568,223 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     </AutoSpin>
                 </div>
                 <div style={{ width: `${fullScreen ? 100 : 85}%` }} className='executor-right-body'>
-                    <div style={{ width: "100%", height: "70%" }}>
-                        <Tabs
-                            className={"right-editor"}
-                            style={{ height: "100%" }}
-                            type='editable-card'
-                            activeKey={activeTab}
-                            hideAdd={true}
-                            onChange={(activeTab) => setActiveTab(activeTab)}
-                            onEdit={(key, event: "add" | "remove") => {
-                                switch (event) {
-                                    case "remove":
-                                        closeCode(key, false)
-                                        return
-                                    case "add":
-                                        return
-                                }
-                            }}
-                            renderTabBar={(props, TabBarDefault) => {
-                                return bars(props, TabBarDefault)
-                            }}
-                            tabBarExtraContent={
-                                tabList.length && (
-                                    <Space style={{ marginRight: 5 }}>
-                                        <Button
-                                            style={{ height: 25 }}
-                                            type={"link"}
-                                            size={"small"}
-                                            disabled={tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"}
-                                            onClick={(e) => {
-                                                let m = showDrawer({
-                                                    width: "60%",
-                                                    placement: "left",
-                                                    title: "选择你的 Yak 模块执行特定功能",
-                                                    content: (
-                                                        <>
-                                                            <YakScriptManagerPage
-                                                                type={"yak"}
-                                                                onLoadYakScript={(s) => {
-                                                                    const arr = cloneDeep(tabList)
-                                                                    const tab = arr[+activeTab]
-                                                                    tab.code = s.Content
-                                                                    info(`加载 Yak 模块：${s.ScriptName}`)
-                                                                    xtermClear(xtermRef)
-                                                                    setTabList(arr)
-                                                                    m.destroy()
-                                                                }}
-                                                            />
-                                                        </>
-                                                    )
-                                                })
-                                            }}
-                                        >
-                                            Yak脚本模板
-                                        </Button>
-
-                                        <Button
-                                            icon={
-                                                fullScreen ? (
-                                                    <FullscreenExitOutlined style={{ fontSize: 15 }} />
-                                                ) : (
-                                                    <FullscreenOutlined style={{ fontSize: 15 }} />
-                                                )
-                                            }
-                                            type={"link"}
-                                            size={"small"}
-                                            style={{ width: 30, height: 25 }}
-                                            onClick={() => setFullScreen(!fullScreen)}
-                                        ></Button>
-
-                                        {executing ? (
+                    {tabList.length > 0 && (
+                        <div style={{ width: "100%", height: "70%" }}>
+                            <Tabs
+                                className={"right-editor"}
+                                style={{ height: "100%" }}
+                                type='editable-card'
+                                activeKey={activeTab}
+                                hideAdd={true}
+                                onChange={(activeTab) => setActiveTab(activeTab)}
+                                onEdit={(key, event: "add" | "remove") => {
+                                    switch (event) {
+                                        case "remove":
+                                            closeCode(key, false)
+                                            return
+                                        case "add":
+                                            return
+                                    }
+                                }}
+                                renderTabBar={(props, TabBarDefault) => {
+                                    return bars(props, TabBarDefault)
+                                }}
+                                tabBarExtraContent={
+                                    tabList.length && (
+                                        <Space style={{ marginRight: 5 }}>
                                             <Button
-                                                icon={<PoweroffOutlined style={{ fontSize: 15 }} />}
-                                                type={"link"}
-                                                danger={true}
-                                                size={"small"}
-                                                style={{ width: 30, height: 25 }}
-                                                onClick={() => ipcRenderer.invoke("cancel-yak")}
-                                            ></Button>
-                                        ) : (
-                                            <Button
-                                                icon={<PlayCircleOutlined style={{ fontSize: 15 }} />}
+                                                style={{ height: 25 }}
                                                 type={"link"}
                                                 size={"small"}
-                                                style={{ width: 30, height: 25 }}
                                                 disabled={tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"}
-                                                onClick={() => {
-                                                    setErrors([])
-                                                    setExecuting(true)
-                                                    ipcRenderer.invoke("exec-yak", {
-                                                        Script: tabList[+activeTab].code,
-                                                        Params: []
+                                                onClick={(e) => {
+                                                    let m = showDrawer({
+                                                        width: "60%",
+                                                        placement: "left",
+                                                        title: "选择你的 Yak 模块执行特定功能",
+                                                        content: (
+                                                            <>
+                                                                <YakScriptManagerPage
+                                                                    type={"yak"}
+                                                                    onLoadYakScript={(s) => {
+                                                                        const tab: tabCodeProps = {
+                                                                            tab: `Untitle-${unTitleCount}.yak`,
+                                                                            code: s.Content,
+                                                                            suffix: "yak",
+                                                                            isFile: false
+                                                                        }
+                                                                        info(`加载 Yak 模块：${s.ScriptName}`)
+                                                                        xtermClear(xtermRef)
+                                                                        setActiveTab(`${tabList.length}`)
+                                                                        setTabList(tabList.concat([tab]))
+                                                                        setUnTitleCount(unTitleCount + 1)
+                                                                        m.destroy()
+                                                                    }}
+                                                                />
+                                                            </>
+                                                        )
                                                     })
                                                 }}
+                                            >
+                                                Yak脚本模板
+                                            </Button>
+
+                                            <Button
+                                                icon={
+                                                    fullScreen ? (
+                                                        <FullscreenExitOutlined style={{ fontSize: 15 }} />
+                                                    ) : (
+                                                        <FullscreenOutlined style={{ fontSize: 15 }} />
+                                                    )
+                                                }
+                                                type={"link"}
+                                                size={"small"}
+                                                style={{ width: 30, height: 25 }}
+                                                onClick={() => setFullScreen(!fullScreen)}
                                             ></Button>
-                                        )}
-                                    </Space>
-                                )
-                            }
-                        >
-                            {tabList.map((item, index) => {
-                                return (
-                                    <TabPane tab={item.tab} key={`${index}`}>
-                                        <div style={{ height: "100%" }}>
-                                            <AutoSpin spinning={executing}>
-                                                <div
-                                                    style={{ height: "100%" }}
-                                                    onKeyDown={(e) => {
-                                                        if (e.keyCode === 83 && (e.ctrlKey || e.metaKey)) {
-                                                            saveCode(item, index)
-                                                        }
+
+                                            {executing ? (
+                                                <Button
+                                                    icon={<PoweroffOutlined style={{ fontSize: 15 }} />}
+                                                    type={"link"}
+                                                    danger={true}
+                                                    size={"small"}
+                                                    style={{ width: 30, height: 25 }}
+                                                    onClick={() => ipcRenderer.invoke("cancel-yak")}
+                                                ></Button>
+                                            ) : (
+                                                <Button
+                                                    icon={<PlayCircleOutlined style={{ fontSize: 15 }} />}
+                                                    type={"link"}
+                                                    size={"small"}
+                                                    style={{ width: 30, height: 25 }}
+                                                    disabled={
+                                                        tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
+                                                    }
+                                                    onClick={() => {
+                                                        setErrors([])
+                                                        setExecuting(true)
+                                                        ipcRenderer.invoke("exec-yak", {
+                                                            Script: tabList[+activeTab].code,
+                                                            Params: []
+                                                        })
                                                     }}
-                                                >
-                                                    <YakEditor
-                                                        type={item.suffix}
-                                                        value={item.code}
-                                                        setValue={(value) => {
-                                                            modifyCode(value, index)
-                                                        }}
-                                                    />
-                                                </div>
-                                            </AutoSpin>
-                                        </div>
-                                    </TabPane>
-                                )
-                            })}
-                        </Tabs>
-                    </div>
-                    <div style={{ width: "100%", height: "30%", overflow: "auto", borderTop: "1px solid #dfdfdf" }}>
-                        <Tabs
-                            style={{ height: "100%" }}
-                            className={"right-xterm"}
-                            size={"small"}
-                            tabBarExtraContent={
-                                <Space>
-                                    <SelectOne
-                                        formItemStyle={{ marginBottom: 0 }}
-                                        value={outputEncoding}
-                                        setValue={setOutputEncoding}
-                                        size={"small"}
-                                        data={[
-                                            { text: "GBxxx编码", value: "latin1" },
-                                            { text: "UTF-8编码", value: "utf8" }
-                                        ]}
-                                    />
-                                    <Button
-                                        size={"small"}
-                                        icon={<DeleteOutlined />}
-                                        type={"link"}
-                                        onClick={(e) => {
-                                            xtermClear(xtermRef)
+                                                ></Button>
+                                            )}
+                                        </Space>
+                                    )
+                                }
+                            >
+                                {tabList.map((item, index) => {
+                                    return (
+                                        <TabPane tab={item.tab} key={`${index}`}>
+                                            <div style={{ height: "100%" }}>
+                                                <AutoSpin spinning={executing}>
+                                                    <div style={{ height: "100%" }}>
+                                                        <YakEditor
+                                                            type={item.suffix}
+                                                            value={item.code}
+                                                            setValue={(value) => {
+                                                                modifyCode(value, index)
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </AutoSpin>
+                                            </div>
+                                        </TabPane>
+                                    )
+                                })}
+                            </Tabs>
+                        </div>
+                    )}
+                    {tabList.length > 0 && (
+                        <div style={{ width: "100%", height: "30%", overflow: "auto", borderTop: "1px solid #dfdfdf" }}>
+                            <Tabs
+                                style={{ height: "100%" }}
+                                className={"right-xterm"}
+                                size={"small"}
+                                tabBarExtraContent={
+                                    <Space>
+                                        <SelectOne
+                                            formItemStyle={{ marginBottom: 0 }}
+                                            value={outputEncoding}
+                                            setValue={setOutputEncoding}
+                                            size={"small"}
+                                            data={[
+                                                { text: "GBxxx编码", value: "latin1" },
+                                                { text: "UTF-8编码", value: "utf8" }
+                                            ]}
+                                        />
+                                        <Button
+                                            size={"small"}
+                                            icon={<DeleteOutlined />}
+                                            type={"link"}
+                                            onClick={(e) => {
+                                                xtermClear(xtermRef)
+                                            }}
+                                        />
+                                    </Space>
+                                }
+                            >
+                                <TabPane
+                                    tab={<div style={{ width: 50, textAlign: "center" }}>输出</div>}
+                                    key={"output"}
+                                >
+                                    <XTerm
+                                        ref={xtermRef}
+                                        options={{
+                                            convertEol: true,
+                                            theme: {
+                                                foreground: "#536870",
+                                                background: "#E8E9E8",
+                                                cursor: "#536870",
+
+                                                black: "#002831",
+                                                brightBlack: "#001e27",
+
+                                                red: "#d11c24",
+                                                brightRed: "#bd3613",
+
+                                                green: "#738a05",
+                                                brightGreen: "#475b62",
+
+                                                yellow: "#a57706",
+                                                brightYellow: "#536870",
+
+                                                blue: "#2176c7",
+                                                brightBlue: "#708284",
+
+                                                magenta: "#c61c6f",
+                                                brightMagenta: "#5956ba",
+
+                                                cyan: "#259286",
+                                                brightCyan: "#819090",
+
+                                                white: "#eae3cb",
+                                                brightWhite: "#fcf4dc"
+                                            }
+                                        }}
+                                        onResize={(r) => {
+                                            xtermFit(xtermRef, r.cols, 14)
                                         }}
                                     />
-                                </Space>
-                            }
-                        >
-                            <TabPane tab={<div style={{ width: 50, textAlign: "center" }}>输出</div>} key={"output"}>
-                                <XTerm
-                                    ref={xtermRef}
-                                    options={{
-                                        convertEol: true,
-                                        theme: {
-                                            foreground: "#536870",
-                                            background: "#E8E9E8",
-                                            cursor: "#536870",
-
-                                            black: "#002831",
-                                            brightBlack: "#001e27",
-
-                                            red: "#d11c24",
-                                            brightRed: "#bd3613",
-
-                                            green: "#738a05",
-                                            brightGreen: "#475b62",
-
-                                            yellow: "#a57706",
-                                            brightYellow: "#536870",
-
-                                            blue: "#2176c7",
-                                            brightBlue: "#708284",
-
-                                            magenta: "#c61c6f",
-                                            brightMagenta: "#5956ba",
-
-                                            cyan: "#259286",
-                                            brightCyan: "#819090",
-
-                                            white: "#eae3cb",
-                                            brightWhite: "#fcf4dc"
-                                        }
-                                    }}
-                                    onResize={(r) => {
-                                        xtermFit(xtermRef, r.cols, 14)
-                                    }}
-                                />
-                            </TabPane>
-                            <TabPane
-                                tab={
-                                    <div style={{ width: 50, textAlign: "center" }} key={"terminal"}>
-                                        终端(监修中)
-                                    </div>
-                                }
-                                disabled
-                            >
-                                <Terminal />
-                            </TabPane>
-                        </Tabs>
-                    </div>
+                                </TabPane>
+                                <TabPane
+                                    tab={
+                                        <div style={{ width: 50, textAlign: "center" }} key={"terminal"}>
+                                            终端(监修中)
+                                        </div>
+                                    }
+                                    disabled
+                                >
+                                    <Terminal />
+                                </TabPane>
+                            </Tabs>
+                        </div>
+                    )}
+                    {tabList.length === 0 && (
+                        <Empty className='right-empty' description={<p>请点击左侧打开或新建文件</p>}></Empty>
+                    )}
                 </div>
 
                 <Modal
@@ -769,16 +811,21 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
 
                 <Modal
                     visible={renameHint}
-                    title='Warning'
                     onCancel={() => setHintShow(false)}
                     footer={[
+                        <Button key='link' onClick={() => setRenameHint(false)}>
+                            取消
+                        </Button>,
                         <Button
                             key='back'
+                            type='primary'
                             onClick={() => {
                                 const oldRoute = tabList[renameIndex].route
-                                const routes = oldRoute?.split("/")
+                                if (!oldRoute) return
+                                const flagStr = oldRoute?.indexOf("/") > -1 ? "/" : "\\"
+                                const routes = oldRoute?.split(flagStr)
                                 routes?.pop()
-                                const newRoute = routes?.concat([renameCache]).join("/")
+                                const newRoute = routes?.concat([renameCache]).join(flagStr)
                                 if (!oldRoute || !newRoute) return
                                 renameFile(renameIndex, renameCache, oldRoute, newRoute, () => {
                                     setRenameHint(false)
@@ -786,13 +833,14 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                             }}
                         >
                             确定
-                        </Button>,
-                        <Button key='link' type='primary' onClick={() => setRenameHint(false)}>
-                            取消
                         </Button>
                     ]}
                 >
-                    <p>{`是否要覆盖已存在的文件吗？`}</p>
+                    <div style={{ height: 40 }}>
+                        <ExclamationCircleOutlined style={{ fontSize: 22, color: "#faad14" }} />
+                        <span style={{ fontSize: 18, marginLeft: 15 }}>文件已存在</span>
+                    </div>
+                    <p style={{ fontSize: 15, marginLeft: 37 }}>{`是否要覆盖已存在的文件吗？`}</p>
                 </Modal>
             </div>
         </AutoCard>
@@ -839,7 +887,7 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                 backgroundColor: "#e8e9e8",
                 borderBottom: "2px solid #d7d7d7"
             }}
-            bodyStyle={{ padding: 0,paddingTop:7, backgroundColor: "#efefef" }}
+            bodyStyle={{ padding: 0, paddingTop: 7, backgroundColor: "#efefef" }}
             extra={
                 <>
                     <Upload multiple={false} maxCount={1} showUploadList={false} beforeUpload={(f: any) => addFile(f)}>
@@ -849,43 +897,61 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                 </>
             }
         >
-            <div className={"file-list"}>
-                {lists.map((item, index) => {
-                    return (
-                        <Dropdown
-                            key={index}
-                            overlay={CustomMenu(`${index}`, true, fileMenu, fileFunction)}
-                            trigger={["contextMenu"]}
-                        >
-                            <div
-                                className={`list-opt ${activeFile === item.route ? "selected" : ""}`}
-                                style={{ top: `${index * 22}px` }}
-                                onClick={() => openFile({ name: item.tab, path: item.route })}
+            {lists.length > 0 && (
+                <div className={"file-list"}>
+                    {lists.map((item, index) => {
+                        return (
+                            <Dropdown
+                                key={index}
+                                overlay={CustomMenu(`${index}`, true, fileMenu, fileFunction)}
+                                trigger={["contextMenu"]}
                             >
-                                <div>
-                                    {renameFlag && renameIndex === index ? (
-                                        <div>
-                                            <Input
-                                                id='rename-input'
-                                                className='input'
-                                                size='small'
-                                                value={renameCache}
-                                                onChange={(e) => setRenameCache(e.target.value)}
-                                            ></Input>
-                                        </div>
-                                    ) : (
-                                        <div className='name'>
-                                            <Text ellipsis={{ tooltip: item.tab }} style={{ width: "100%" }}>
-                                                {item.tab}
-                                            </Text>
-                                        </div>
-                                    )}
+                                <div
+                                    className={`list-opt ${activeFile === item.route ? "selected" : ""}`}
+                                    style={{ top: `${index * 22}px` }}
+                                    onClick={() => openFile({ name: item.tab, path: item.route })}
+                                >
+                                    <div>
+                                        {renameFlag && renameIndex === index ? (
+                                            <div>
+                                                <Input
+                                                    id='rename-input'
+                                                    className='input'
+                                                    size='small'
+                                                    value={renameCache}
+                                                    onChange={(e) => setRenameCache(e.target.value)}
+                                                ></Input>
+                                            </div>
+                                        ) : (
+                                            <div className='name'>
+                                                <Text ellipsis={{ tooltip: item.tab }} style={{ width: "100%" }}>
+                                                    {item.tab}
+                                                </Text>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        </Dropdown>
-                    )
-                })}
-            </div>
+                            </Dropdown>
+                        )
+                    })}
+                </div>
+            )}
+            {lists.length === 0 && (
+                <Empty
+                    className='file-empty '
+                    imageStyle={{ display: "none" }}
+                    description={
+                        <div style={{ marginTop: 90 }}>
+                            <Button
+                                type='link'
+                                icon={<FileAddOutlined style={{ fontSize: 30 }} />}
+                                onClick={newFile}
+                            ></Button>
+                            <p style={{ marginTop: 10 }}>新建文件</p>
+                        </div>
+                    }
+                ></Empty>
+            )}
         </AutoCard>
     )
 }
