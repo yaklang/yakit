@@ -1078,6 +1078,9 @@ message ExecRequest {
   string Script = 2;
   string ScriptId = 3;
   int64 YakScriptId = 5;
+
+  // 这个是为了满足 Runner 的情况，属于特殊情况
+  string RunnerParamRaw = 6;
 }
 
 message ExecResult {
