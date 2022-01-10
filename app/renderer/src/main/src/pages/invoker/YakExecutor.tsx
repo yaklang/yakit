@@ -839,7 +839,7 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                 backgroundColor: "#e8e9e8",
                 borderBottom: "2px solid #d7d7d7"
             }}
-            bodyStyle={{ padding: 0, backgroundColor: "#efefef" }}
+            bodyStyle={{ padding: 0,paddingTop:7, backgroundColor: "#efefef" }}
             extra={
                 <>
                     <Upload multiple={false} maxCount={1} showUploadList={false} beforeUpload={(f: any) => addFile(f)}>

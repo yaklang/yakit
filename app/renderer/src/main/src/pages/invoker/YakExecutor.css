@@ -15,7 +15,6 @@
 .executor-file-list .file-list {
     width: 100%;
     height: 100%;
-    margin-top: 7px;
     position: relative;
     overflow: auto;
 }
