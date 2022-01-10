@@ -1,5 +1,6 @@
 const { ipcMain, dialog } = require("electron");
 const FS = require("fs");
+const PATH = require("path");
 
 module.exports = (win, getClient) => {
   let stream;
@@ -61,10 +62,18 @@ module.exports = (win, getClient) => {
   });
 
   // 弹出保存窗口
-  const asyncSaveFileDialog = (params) => {
-    return dialog.showSaveDialog({
-      title: "保存文件",
-      defaultPath: params,
+  const asyncSaveFileDialog = async (params) => {
+    return new Promise((resolve, reject) => {
+      dialog
+        .showSaveDialog({
+          title: "保存文件",
+          defaultPath: params,
+        })
+        .then((res) => {
+          const params = res;
+          params.name = PATH.basename(res.filePath);
+          resolve(params);
+        });
     });
   };
   ipcMain.handle("show-save-dialog", async (e, params) => {
