@@ -219,6 +219,8 @@ message Risk {
   int64 Id = 18;
   int64 CreatedAt = 16;
   int64 UpdatedAt = 17;
+
+  string Severity = 19;
 }
 
 message QueryRisksRequest {

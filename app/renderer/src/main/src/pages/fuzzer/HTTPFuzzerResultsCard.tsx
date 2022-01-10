@@ -1,8 +1,9 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Card, Space} from "antd";
 import {FuzzerResponse} from "./HTTPFuzzerPage";
 import {SelectOne} from "../../utils/inputUtil";
 import {FuzzerResponseTableEx} from "./FuzzerResponseTable";
+import {AutoCard} from "../../components/AutoCard";
 
 export interface HTTPFuzzerResultsCardProp {
     extra?: React.ReactNode
@@ -13,6 +14,13 @@ export interface HTTPFuzzerResultsCardProp {
 
 export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props) => {
     const [showSuccess, setShowSuccess] = useState(true);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setLoading(true)
+        setTimeout(() => setLoading(false), 500)
+    }, [])
+
     return <Card
         size={"small"} style={{height: "100%"}}
         className={"flex-card"}
@@ -29,13 +37,15 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
         bodyStyle={{padding: 0, width: "100%"}}
     >
         <div style={{flex: 1}}>
-            {showSuccess ? <FuzzerResponseTableEx
+            {loading && <AutoCard loading={true}/>}
+            {(showSuccess && !loading) && <FuzzerResponseTableEx
                 success={showSuccess}
                 setRequest={s => {
                     props.setRequest && props.setRequest(s)
                 }}
                 content={props.successResponses}
-            /> : <FuzzerResponseTableEx
+            />}
+            {(!showSuccess && !loading) && <FuzzerResponseTableEx
                 success={showSuccess}
                 setRequest={s => {
                     props.setRequest && props.setRequest(s)
