@@ -110,6 +110,7 @@ export interface MenuDataProps {
 export const NoScrollRoutes: Route[] = [
     Route.HTTPHacker,
     Route.Mod_Brute,
+    Route.YakScript
 ];
 
 export const RouteMenuData: MenuDataProps[] = [

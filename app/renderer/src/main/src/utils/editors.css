@@ -1,0 +1,11 @@
+.hex-editor-style .byteValue > .nybbleHighValue {
+    word-spacing: -0.5em;
+}
+
+.hex-editor-style .byteValue > .nybbleLowValue {
+    word-spacing: -0.5em;
+}
+
+.hex-editor-style .asciiValue {
+    word-spacing: -0.5em;
+}

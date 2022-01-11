@@ -93,4 +93,9 @@ module.exports = (win, getClient) => {
   ipcMain.handle("clear-compute-percent", () => {
     if (time) clearInterval(time);
   });
+
+  // 获取操作系统类型
+  ipcMain.handle("fetch-system-name", () => {
+    return OS.type();
+  });
 };
