@@ -111,6 +111,12 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                 }
             },
             {
+                name: "time", code: "Timestamp", features: {
+                    sortable: sortAsNumber,
+                },
+                render: v => <Tag >{`${formatTimestamp(v)}`}</Tag>, width: 165,
+            },
+            {
                 name: "StatusCode", code: "StatusCode", features: {
                     sortable: sortAsNumber,
                 },
