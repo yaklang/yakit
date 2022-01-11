@@ -62,6 +62,7 @@ export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (r: string)
 export interface HTTPFuzzerPageProp {
     isHttps?: boolean
     request?: string
+    system?: string
 }
 
 const {Text} = Typography
@@ -116,9 +117,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRefreshTrigger(!refreshTrigger);
     }
 
-    // 系统类型
-    const [system,setSystem]=useState<string>("")
-
     // history
     const [history, setHistory] = useState<string[]>([]);
     const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number>();
@@ -137,11 +135,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setRequest(history[targetIndex]);
         }
     };
-
-    //获取系统类型
-    useEffect(()=>{
-        ipcRenderer.invoke('fetch-system-name').then((res)=>{setSystem(res)})
-    },[])
 
     useEffect(() => {
         if (currentHistoryIndex === undefined) {
@@ -276,7 +269,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const responseViewer = (rsp: FuzzerResponse) => {
         return <HTTPPacketEditor
-            system={system}
+            system={props.system}
             simpleMode={viewMode === "request"}
             originValue={rsp.ResponseRaw}
             bordered={true} hideSearch={true}
@@ -660,7 +653,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             <Row style={{flex: "1"}} gutter={5}>
                 <Col span={getLeftSpan()}>
                     <HTTPPacketEditor
-                        system={system}
+                        system={props.system}
                         simpleMode={viewMode === "result"}
                         refreshTrigger={refreshTrigger}
                         hideSearch={true} bordered={true}

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {Col, Input, Popover, Row, Space, Spin, Tabs} from "antd";
 import {MITMPage} from "../mitm/MITMPage";
 import {HTTPFuzzerPage} from "../fuzzer/HTTPFuzzerPage";
@@ -17,6 +17,8 @@ const defaultHTTPPacket = `GET / HTTP/1.1
 Host: www.example.com
 `
 
+const {ipcRenderer} = window.require("electron");
+
 const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
     const [activeTab, setActiveTag] = useState("mitm")
     const [loading, setLoading] = useState(false)
@@ -24,6 +26,14 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
     // 管理 Fuzzer 状态
     const [fuzzers, setFuzzers] = useState<{ verbose: string, key: string, node: React.ReactNode }[]>([]);
     const [fuzzerCounter, setFuzzerCounter] = useState(0);
+
+    // 系统类型
+    const [system,setSystem]=useState<string>("")
+
+    //获取系统类型
+    useEffect(()=>{
+        ipcRenderer.invoke('fetch-system-name').then((res)=>{setSystem(res)})
+    },[])
 
     const sendToFuzzer = (isHttps: boolean, request: string) => {
         const counter = fuzzerCounter + 1
@@ -36,6 +46,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
             node: <HTTPFuzzerPage
                 isHttps={isHttps}
                 request={request}
+                system={system}
             />
         }])
 
