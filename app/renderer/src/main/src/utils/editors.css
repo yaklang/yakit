@@ -1,0 +1,11 @@
+.hex-editor-style.cCsCJP .byteValue > .nybbleHighValue {
+    word-spacing: -0.5em;
+}
+
+.hex-editor-style.cCsCJP .byteValue > .nybbleLowValue {
+    word-spacing: -0.5em;
+}
+
+.hex-editor-style.cCsCJP .asciiValue {
+    word-spacing: -0.5em;
+}
