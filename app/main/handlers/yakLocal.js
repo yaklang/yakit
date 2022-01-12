@@ -1,10 +1,9 @@
-const {ipcMain, Notification, dialog} = require("electron");
+const {ipcMain, dialog} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
 const psList = require("ps-list");
 const _sudoPrompt = require("sudo-prompt");
 const fs = require("fs");
-const path = require("path");
 
 const isWindows = process.platform === "win32";
 
@@ -15,15 +14,6 @@ if (process.platform === "darwin" || process.platform === "linux") {
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
-
-function notification(msg) {
-    new Notification({title: msg}).show()
-}
-
-const getWindowsInstallPath = () => {
-    const systemRoot = process.env["WINDIR"] || process.env["windir"] || process.env["SystemRoot"];
-    return path.join(systemRoot, "System32", "yak.exe")
-};
 
 function generateWindowsSudoCommand(file, args) {
     const cmds = args === "" ? `"'${file}'"` : `"'${file}'" "'${args}'"`
@@ -39,6 +29,7 @@ function sudoExec(cmd, opt, callback) {
         _sudoPrompt.exec(cmd, opt, callback)
     }
 }
+
 
 const windowsPidTableNetstatANO = (stdout) => {
     let lines = stdout.split("\n").map(i => i.trim());
@@ -66,7 +57,6 @@ const windowsPidTableNetstatANO = (stdout) => {
 
 module.exports = {
     clearing: () => {
-
     },
     register: (win, getClient) => {
         // asyncPsList wrapper
@@ -88,7 +78,7 @@ module.exports = {
                                 let ports = pidToPorts.get(i.pid);
                                 if (ports.length > 0) {
                                     ports.forEach(i => {
-                                        if (parseInt(i)>50000) {
+                                        if (parseInt(i) > 50000) {
                                             return
                                         }
                                         portsRaw = i
@@ -247,17 +237,32 @@ module.exports = {
 
 
                     } else {
-                        childProcess.execFile(
+                        const progress = childProcess.execFile(
                             getLatestYakLocalEngine(),
                             ["grpc", "--port", `${randPort}`],
                             err => {
                                 if (err) {
+                                    fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
                                     reject(err)
                                 } else {
                                     resolve()
                                 }
                             }
                         )
+                        if (process.platform === "darwin") {
+                            // progress.on("error", err => {
+                            //     console.info(err)
+                            //     fs.writeFileSync("/tmp/yakit-yak-process-error.txt", `${err}`)
+                            // })
+                            // progress.on("exit", (code, sig) => {
+                            //     fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `code:${code} sig:${sig}`)
+                            // })
+                            // progress.on("message", msg => {
+                            //     fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `${msg}`)
+                            // })
+                            // progress.stdout.pipe(fs.createWriteStream("/tmp/yakit-yak-stdout.txt"))
+                            // progress.stderr.pipe(fs.createWriteStream("/tmp/yakit-yak-stderr.txt"))
+                        }
                         // childProcess.exec(cmd, err => {
                         //     if (err) {
                         //         reject(err)
