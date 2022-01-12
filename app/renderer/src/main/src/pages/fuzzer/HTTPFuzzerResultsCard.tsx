@@ -10,6 +10,7 @@ export interface HTTPFuzzerResultsCardProp {
     successResponses: FuzzerResponse[]
     failedResponses: FuzzerResponse[]
     setRequest?: (s: string) => any
+    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
 }
 
 export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props) => {
@@ -39,6 +40,7 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
         <div style={{flex: 1}}>
             {loading && <AutoCard loading={true}/>}
             {(showSuccess && !loading) && <FuzzerResponseTableEx
+                onSendToWebFuzzer={props.onSendToWebFuzzer}
                 success={showSuccess}
                 setRequest={s => {
                     props.setRequest && props.setRequest(s)
