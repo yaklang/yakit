@@ -8,6 +8,7 @@ import {WebsiteTreeViewer} from "../yakitStore/viewers/WebsiteTree";
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable";
 import {HTTPHistory} from "../../components/HTTPHistory";
 import "../main.css";
+import { useMemoizedFn } from "ahooks";
 
 export interface HTTPHackerProp {
 
@@ -35,7 +36,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         ipcRenderer.invoke('fetch-system-name').then((res)=>{setSystem(res)})
     },[])
 
-    const sendToFuzzer = (isHttps: boolean, request: string) => {
+    const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
         const counter = fuzzerCounter + 1
         setFuzzerCounter(counter)
         const newFuzzerId = randomString(100);
@@ -47,6 +48,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 isHttps={isHttps}
                 request={request}
                 system={system}
+                onSendToWebFuzzer={sendToFuzzer}
             />
         }])
 
@@ -54,7 +56,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         setActiveTag(newFuzzerId)
         // setCurrentRequest({isHttps, request})
         setTimeout(() => setLoading(false), 300)
-    }
+    })
 
     const changeVerboseForFuzzer = (key: string, verbose: string) => {
         setFuzzers(fuzzers.map(i => {

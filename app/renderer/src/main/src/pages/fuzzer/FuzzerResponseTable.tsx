@@ -13,6 +13,7 @@ export interface FuzzerResponseTableProp {
     content: FuzzerResponse[]
     setRequest: (s: string | any) => any
     success?: boolean
+    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
 }
 
 const {Text} = Typography;
@@ -93,7 +94,7 @@ export const FuzzerResponseTable: React.FC<FuzzerResponseTableProp> = (props) =>
     </>
 };
 
-const sortAsNumber = (a: any, b: any) => parseInt(a) > parseInt(b)
+const sortAsNumber = (a: any, b: any) => parseInt(a) > parseInt(b) ? 1 : -1
 
 export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) => {
     const {content, setRequest} = props;
@@ -106,9 +107,21 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
         dataSource: content,
         columns: props.success ? [
             {
+                name: "请求", code: "Count", features: {
+                    sortable: sortAsNumber,
+                },
+                width: 70,
+            },
+            {
                 name: "Method", code: "Method", width: 100, features: {
                     sortable: true,
                 }
+            },
+            {
+                name: "time", code: "Timestamp", features: {
+                    sortable: sortAsNumber,
+                },
+                render: v => <Tag >{`${formatTimestamp(v)}`}</Tag>, width: 165,
             },
             {
                 name: "StatusCode", code: "StatusCode", features: {
@@ -134,7 +147,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                 name: "Payloads",
                 code: "Payloads",
                 render: (value: any, row: any, rowIndex: number) => {
-                    return `${value}`
+                    return <Text ellipsis={{tooltip: true}}>{`${value}`}</Text>
                 }, width: 300,
             },
             {
@@ -159,12 +172,12 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                     return <Space direction={"vertical"}>
                         <Button size={"small"} type={"primary"} onClick={() => {
                             const res = content.filter(i => i.UUID === v);
-                            if ((res || []).length > 0) {
-                                analyzeFuzzerResponse(res[0], setRequest)
+                            if ((res || []).length > 0 && props.onSendToWebFuzzer) {
+                                analyzeFuzzerResponse(res[0], props.onSendToWebFuzzer)
                             }
                         }}>请求详情</Button>
                     </Space>
-                }, width: 100, lock: true, features: {sortable: sortAsNumber}
+                }, width: 100, lock: true,
             }
         ] : [
             {
