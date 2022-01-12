@@ -237,9 +237,10 @@ module.exports = {
 
 
                     } else {
-                        const progress = childProcess.execFile(
+                        const progress = childProcess.spawn(
                             getLatestYakLocalEngine(),
                             ["grpc", "--port", `${randPort}`],
+                            {stdio: "ignore"},
                             err => {
                                 if (err) {
                                     fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
@@ -250,18 +251,18 @@ module.exports = {
                             }
                         )
                         if (process.platform === "darwin") {
-                            // progress.on("error", err => {
-                            //     console.info(err)
-                            //     fs.writeFileSync("/tmp/yakit-yak-process-error.txt", `${err}`)
-                            // })
-                            // progress.on("exit", (code, sig) => {
-                            //     fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `code:${code} sig:${sig}`)
-                            // })
-                            // progress.on("message", msg => {
-                            //     fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `${msg}`)
-                            // })
-                            // progress.stdout.pipe(fs.createWriteStream("/tmp/yakit-yak-stdout.txt"))
-                            // progress.stderr.pipe(fs.createWriteStream("/tmp/yakit-yak-stderr.txt"))
+                            progress.on("error", err => {
+                                console.info(err)
+                                fs.writeFileSync("/tmp/yakit-yak-process-error.txt", `${err}`)
+                            })
+                            progress.on("exit", (code, sig) => {
+                                fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `code:${code} sig:${sig}`)
+                            })
+                            progress.on("message", msg => {
+                                fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `${msg}`)
+                            })
+                            progress.stdout.pipe(fs.createWriteStream("/tmp/yakit-yak-stdout.txt"))
+                            progress.stderr.pipe(fs.createWriteStream("/tmp/yakit-yak-stderr.txt"))
                         }
                         // childProcess.exec(cmd, err => {
                         //     if (err) {
