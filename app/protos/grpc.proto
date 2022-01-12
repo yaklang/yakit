@@ -702,6 +702,7 @@ message CodecRequest {
   string Text = 1;
   string Type = 2;
   bool Auto = 3;
+  repeated ExecParamItem Params = 4;
 }
 
 message CodecResponse {

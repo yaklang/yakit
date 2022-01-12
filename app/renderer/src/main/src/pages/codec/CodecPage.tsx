@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, PageHeader, Space, Dropdown, Menu, Row, Col} from "antd"
+import {Button, PageHeader, Space, Dropdown, Menu, Row, Col, Tag, Divider, Typography, Alert} from "antd"
 import {DownOutlined, SwapOutlined, ArrowsAltOutlined} from "@ant-design/icons"
 import {YakEditor} from "../../utils/editors"
 import {failed} from "../../utils/notification"
@@ -8,6 +8,10 @@ import {AutoCard} from "../../components/AutoCard"
 import {AutoSpin} from "../../components/AutoSpin"
 
 import "./style.css"
+import {YakExecutorParam} from "../invoker/YakExecutorParams";
+import {YakScriptParam} from "../invoker/schema";
+import {useMemoizedFn} from "ahooks";
+import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -15,7 +19,136 @@ export interface CodecType {
     key?: string
     verbose: string
     subTypes?: CodecType[]
+    params?: YakScriptParam[],
+    help?: React.ReactNode
 }
+
+const {Text} = Typography;
+
+const generateSM4AmpAESParams = () => {
+    return [
+        {
+            Field: "key",
+            FieldVerbose: "密钥（HEX 编码）",
+            Required: true,
+            TypeVerbose: "string",
+            Help: "HEX(十六进制) 编码后的 KEY"
+        },
+        {Field: "iv", FieldVerbose: "IV-初始块（HEX 编码）", TypeVerbose: "string", Help: "十六进制编码后的 IV（初始块）"},
+    ] as YakScriptParam[]
+};
+
+const SM4AmpAESEncHelp = () => {
+    return <>
+        <Text>加密：任何文本被加密成的 <Text mark={true}>结果经过 HEX 编码</Text></Text>
+        <br/>
+        <Text>密钥：<Text mark={true}>被 HEX 编码</Text> 的 <Text mark={true}>长度为16位</Text> 的字符串 （为兼容 Key 中不可见字符）</Text>
+    </>
+}
+
+
+const SM4AmpAESDecHelp = () => {
+    return <>
+        <Text>解密：解密的密文需要经过 <Text mark={true}>HEX 编码</Text> 后作为输入</Text>
+        <br/>
+        <Text>密钥：<Text mark={true}>被 HEX 编码</Text> 的 <Text mark={true}>长度为16位</Text> 的字符串（为兼容 Key 中不可见字符）</Text>
+    </>
+}
+
+const EncAmpDecMenu: CodecType[] = [
+    {
+        verbose: "国密算法(sm4)对称加解密",
+        subTypes: [
+            {
+                key: "sm4-cbc-encrypt", verbose: "SM4-CBC 加密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESEncHelp(),
+            },
+            {
+                key: "sm4-cbc-decrypt", verbose: "SM4-CBC 解密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESDecHelp(),
+            },
+            {
+                key: "sm4-cfb-encrypt",
+                verbose: "SM4-CFB 加密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESEncHelp()
+            },
+            {
+                key: "sm4-cfb-decrypt",
+                verbose: "SM4-CFB 解密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESDecHelp()
+            },
+            {
+                key: "sm4-ebc-encrypt",
+                verbose: "SM4-EBC 加密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESEncHelp()
+            },
+            {
+                key: "sm4-ebc-decrypt",
+                verbose: "SM4-EBC 解密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESDecHelp()
+            },
+            {
+                key: "sm4-ofb-encrypt",
+                verbose: "SM4-OFB 加密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESEncHelp()
+            },
+            {
+                key: "sm4-ofb-decrypt",
+                verbose: "SM4-OFB 解密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESDecHelp()
+            },
+            {
+                key: "sm4-gcm-encrypt",
+                verbose: "SM4-GCM 加密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESEncHelp()
+            },
+            {
+                key: "sm4-gcm-decrypt",
+                verbose: "SM4-GCM 解密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESDecHelp()
+            },
+        ],
+    },
+    {
+        verbose: "AES对称加解密",
+        subTypes: [
+            {
+                key: "aes-cbc-encrypt",
+                verbose: "AES-CBC 加密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESEncHelp()
+            },
+            {
+                key: "aes-cbc-decrypt",
+                verbose: "AES-CBC 解密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESDecHelp()
+            },
+            {
+                key: "aes-gcm-encrypt",
+                verbose: "AES-GCM 加密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESEncHelp()
+            },
+            {
+                key: "aes-gcm-decrypt",
+                verbose: "AES-GCM 解密",
+                params: generateSM4AmpAESParams(),
+                help: SM4AmpAESDecHelp()
+            },
+        ],
+    }
+];
 
 const CodecMenu: CodecType[] = [
     {key: "jwt-parse-weak", verbose: "JWT解析与弱密码"},
@@ -56,9 +189,10 @@ const CodecMenu: CodecType[] = [
         ]
     },
     {
-        verbose: "计算",
+        verbose: "计算(HASH)",
         subTypes: [
             {key: "md5", verbose: "计算 md5"},
+            {key: "sm3", verbose: "计算 SM3(国密3)"},
             {key: "sha1", verbose: "计算 Sha1"},
             {key: "sha256", verbose: "计算 Sha256"},
             {key: "sha512", verbose: "计算 Sha512"}
@@ -104,18 +238,21 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [leftLine, setLeftLine] = useState<boolean>(true)
     const [rightLine, setRightLine] = useState<boolean>(false)
 
-    const codec = (t: string) => {
+    const [codecType, setCodecType] = useState<CodecType>();
+    const [params, setParams] = useState<YakExecutorParam[]>([]);
+
+    const codec = (t: string, params?: YakExecutorParam[]) => {
         if (!t) {
             failed("BUG: 空的解码类型")
             return
         }
         ipcRenderer
-            .invoke("Codec", {Type: t, Text: text})
+            .invoke("Codec", {Type: t, Text: text, Params: params || []})
             .then((res) => {
                 onHandledResult(res?.Result || "")
             })
             .catch((err) => {
-                onHandleError(err.details)
+                onHandleError(`${err}`)
             })
     }
 
@@ -133,55 +270,104 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
         }, 300)
     }, [])
 
-    return (
-        <AutoSpin spinning={loading}>
-            <PageHeader title={"Codec"} className={"codec-pageheader-title"}></PageHeader>
-            <div className={"codec-function-bar"}>
-                <Space>
-                    {CodecMenu.map((item) => {
-                        if ((item.subTypes || []).length > 0) {
-                            return (
-                                <Dropdown
-                                    key={item.verbose}
-                                    overlay={
-                                        <Menu>
-                                            {item.subTypes?.map((subItem) => {
-                                                return (
-                                                    <Menu.Item key={`${subItem.key}`}>
+    const renderCodecTypes = useMemoizedFn((items: CodecType[], notAutoExec?: boolean) => {
+        return (
+            items.map((item) => {
+                if ((item.subTypes || []).length > 0) {
+                    return (
+                        <Dropdown
+                            key={item.verbose}
+                            overlay={
+                                <Menu activeKey={codecType?.key}>
+                                    {item.subTypes?.map((subItem) => {
+                                        return (
+                                            <Menu.Item key={`${subItem.key}`}>
                                                         <span
                                                             onClick={() => {
-                                                                codec(subItem.key || "")
+                                                                setCodecType(subItem)
+                                                                if (!notAutoExec) {
+                                                                    codec(subItem.key || "")
+                                                                }
                                                             }}
                                                         >
                                                             {subItem.verbose}
                                                         </span>
-                                                    </Menu.Item>
-                                                )
-                                            })}
-                                        </Menu>
-                                    }
-                                    placement='bottomLeft'
-                                >
-                                    <Button>
-                                        {item.verbose}
-                                        <DownOutlined/>
-                                    </Button>
-                                </Dropdown>
-                            )
-                        } else {
-                            return (
-                                <Button
-                                    key={item.key}
-                                    onClick={() => {
-                                        codec(item.key || "")
-                                    }}
-                                    style={{marginRight: 8}}
-                                >
-                                    {item.verbose}
-                                </Button>
-                            )
-                        }
-                    })}
+                                            </Menu.Item>
+                                        )
+                                    })}
+                                </Menu>
+                            }
+                            placement='bottomLeft'
+                        >
+                            <Button
+                                type={((item?.subTypes || []).filter(i => {
+                                    return i.key === codecType?.key
+                                })).length > 0 ? "primary" : undefined}
+                            >
+                                {item.verbose}
+                                <DownOutlined/>
+                            </Button>
+                        </Dropdown>
+                    )
+                } else {
+                    return (
+                        <Button
+                            key={item.key}
+                            type={codecType?.key === item.key ? "primary" : undefined}
+                            onClick={() => {
+                                setCodecType(item);
+                                if (!notAutoExec) {
+                                    codec(item.key || "")
+                                }
+                            }}
+                            style={{marginRight: 8}}
+                        >
+                            {item.verbose}
+                        </Button>
+                    )
+                }
+            })
+        )
+    })
+
+    return (
+        <AutoSpin spinning={loading}>
+            <PageHeader
+                title={"Codec"} className={"codec-pageheader-title"}
+                subTitle={<>
+                    {codecType && <Tag color={"geekblue"}>当前类型：{codecType?.verbose}</Tag>}
+                </>}
+            />
+            <div className={"codec-function-bar"}>
+                <Space direction={"vertical"} style={{width: "100%"}}>
+                    <Space>
+                        {renderCodecTypes(CodecMenu)}
+                    </Space>
+                    <Space>
+                        {renderCodecTypes(EncAmpDecMenu, true)}
+                    </Space>
+                    {codecType && codecType?.params && codecType.params.length > 0 && <Row
+                        style={{width: "100%"}}
+                        gutter={20}
+                    >
+                        <Col span={codecType?.help ? 18 : 24}>
+                            <Divider>设置参数</Divider>
+                            <YakScriptParamsSetter
+                                primaryParamsOnly={true} styleSize={"small"}
+                                Params={(codecType?.params || [])}
+                                params={[]}
+                                onParamsConfirm={finalParams => {
+                                    setParams([...finalParams])
+                                    codec(codecType?.key || "", finalParams)
+                                }}
+                                hideClearButton={true}
+                                submitVerbose={"执行"}
+                            />
+                        </Col>
+                        {codecType?.help && <Col span={6} style={{paddingTop: 30}}>
+                            <Alert type={"info"} message={codecType?.help}/>
+                        </Col>}
+                    </Row>}
                 </Space>
             </div>
             <div className={"codec-content"}>
