@@ -23,13 +23,16 @@ import {useMemoizedFn} from "ahooks";
 
 const {Title} = Typography;
 
-export interface YakScriptParamsSetterProps extends YakScript {
+export interface YakScriptParamsSetterProps {
+    Params: YakScriptParam[]
     params: YakExecutorParam[]
     onParamsConfirm: (params: YakExecutorParam[]) => any
     onCanceled?: () => any
     onClearData?: () => any
     primaryParamsOnly?: boolean
     submitVerbose?: string
+    cancelVerbose?: string
+    hideClearButton?: boolean
 
     styleSize?: "big" | "small"
     loading?: boolean
@@ -255,11 +258,11 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                            style={{width: "100%", textAlign: "right"}} labelCol={{span: 6}}
                 >
                     <Space>
-                        <Button type={"link"} size={"small"} danger={true} onClick={() => {
+                        {!props.hideClearButton && <Button type={"link"} size={"small"} danger={true} onClick={() => {
                             if (props.onClearData) {
                                 props.onClearData()
                             }
-                        }}>清除缓存</Button>
+                        }}>清除缓存</Button>}
                         {groupToParams.size > 0 && <Popover title={"设置额外参数"} trigger={"click"}
                                                             content={<div style={{width: 700}}>
                                                                 {renderExtraParams(true)}
@@ -275,11 +278,11 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                         props.onCanceled()
                                     }
                                 }}
-                                type={"primary"}>停止任务</Button>
+                                type={"primary"}>{props.cancelVerbose ? props.cancelVerbose : "停止任务"}</Button>
                             : <Button
                                 style={{width: 120}} htmlType={"submit"}
                                 type={"primary"}
-                            >启动任务</Button>
+                            >{props.submitVerbose ? props.submitVerbose : "启动任务"}</Button>
                         }
                     </Space>
                 </Form.Item>

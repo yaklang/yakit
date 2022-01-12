@@ -55,10 +55,10 @@ app.on('window-all-closed', function () {
 })
 
 app.on('browser-window-focus', function () {
-    globalShortcut.register("CommandOrControl+R", () => {
-        console.log("CommandOrControl+R is pressed: Shortcut Disabled");
-    });
-    globalShortcut.register("F5", () => {
-        console.log("F5 is pressed: Shortcut Disabled");
-    });
+    // globalShortcut.register("CommandOrControl+R", () => {
+    //     console.log("CommandOrControl+R is pressed: Shortcut Disabled");
+    // });
+    // globalShortcut.register("F5", () => {
+    //     console.log("F5 is pressed: Shortcut Disabled");
+    // });
 });
