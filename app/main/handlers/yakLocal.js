@@ -220,7 +220,7 @@ module.exports = {
                             ).on("error", err => {
                                 if (err) {
                                     dialog.showErrorBox("sudo start yak error", `${err}`)
-                                    reject(error)
+                                    reject(err)
                                 }
                             }).on("spawn", () => {
                                 resolve()
