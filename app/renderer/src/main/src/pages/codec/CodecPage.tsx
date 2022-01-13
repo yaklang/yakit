@@ -281,17 +281,17 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                                 <Menu activeKey={codecType?.key}>
                                     {item.subTypes?.map((subItem) => {
                                         return (
-                                            <Menu.Item key={`${subItem.key}`}>
-                                                        <span
-                                                            onClick={() => {
-                                                                setCodecType(subItem)
-                                                                if (!notAutoExec) {
-                                                                    codec(subItem.key || "")
-                                                                }
-                                                            }}
-                                                        >
-                                                            {subItem.verbose}
-                                                        </span>
+                                            <Menu.Item 
+                                                key={`${subItem.key}`}
+                                                onClick={() => {
+                                                    setCodecType(subItem)
+                                                    if (!notAutoExec) {
+                                                        codec(subItem.key || "")
+                                                    }
+                                                }}>
+                                                    <span>
+                                                        {subItem.verbose}
+                                                    </span>
                                             </Menu.Item>
                                         )
                                     })}
