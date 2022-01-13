@@ -1,9 +1,10 @@
 const {ipcMain} = require("electron");
 const DNS = require("dns");
 
-let mitmClient = undefined;
 
 module.exports = (win, originGetClient) => {
+    let mitmClient = undefined;
+
     function getClient() {
         if (!mitmClient) {
             mitmClient = originGetClient(true)
@@ -240,6 +241,7 @@ module.exports = (win, originGetClient) => {
         if (stream) {
             stream.cancel()
             stream = null;
+            mitmClient = null;
         }
     })
 
