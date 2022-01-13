@@ -73,7 +73,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                         ipcRenderer.invoke("cancel-exec-yak-script", token)
                     }}
                     styleSize={props.size}
-                    submitVerbose={"开始执行该模块 / Start"}
+                    submitVerbose={"开始执行"}
                     primaryParamsOnly={true}
                 />
             </PageHeader>
@@ -147,7 +147,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                         ipcRenderer.invoke("cancel-exec-yak-script", token)
                     }}
                     styleSize={props.size}
-                    submitVerbose={"开始执行该模块 / Start"}
+                    submitVerbose={"开始执行"}
                 />
             </Panel>
             <Panel key={"console"} showArrow={false} header={<>

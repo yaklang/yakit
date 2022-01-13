@@ -24,7 +24,11 @@ const getLatestYakLocalEngine = require("./upgradeUtil").getLatestYakLocalEngine
 
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
-        childProcess.exec(cmd, callback)
+        childProcess.spawn(cmd, {stdio: ["ignore", "ignore", "ignore"]}).on("error", err => {
+            callback(err)
+        }).on("spawn", () => {
+            callback(null)
+        })
     } else {
         _sudoPrompt.exec(cmd, opt, callback)
     }
@@ -210,16 +214,17 @@ module.exports = {
                 try {
                     if (sudo) {
                         if (isWindows) {
-                            childProcess.exec(generateWindowsSudoCommand(
+                            childProcess.spawn(generateWindowsSudoCommand(
                                 getLatestYakLocalEngine(), `grpc --port ${randPort}`),
-                                err => {
-                                    if (err) {
-                                        dialog.showErrorBox("sudo start yak error", `${err}`)
-                                        reject(error)
-                                    } else {
-                                        resolve()
-                                    }
-                                })
+                                {stdio: ["ignore", "ignore", "ignore"]},
+                            ).on("error", err => {
+                                if (err) {
+                                    dialog.showErrorBox("sudo start yak error", `${err}`)
+                                    reject(error)
+                                }
+                            }).on("spawn", () => {
+                                resolve()
+                            })
                         } else {
                             const cmd = `${getLatestYakLocalEngine()} grpc --port ${randPort}`;
                             sudoExec(cmd, {
@@ -237,33 +242,30 @@ module.exports = {
 
 
                     } else {
-                        const progress = childProcess.spawn(
+                        childProcess.spawn(
                             getLatestYakLocalEngine(),
                             ["grpc", "--port", `${randPort}`],
-                            {stdio: "ignore"},
-                            err => {
-                                if (err) {
-                                    fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
-                                    reject(err)
-                                } else {
-                                    resolve()
-                                }
+                            {stdio: ["ignore", "ignore", "ignore"]},
+                        ).on("error", err => {
+                            if (err) {
+                                fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
+                                reject(err)
                             }
-                        )
-                        if (process.platform === "darwin") {
-                            progress.on("error", err => {
-                                console.info(err)
-                                fs.writeFileSync("/tmp/yakit-yak-process-error.txt", `${err}`)
-                            })
-                            progress.on("exit", (code, sig) => {
-                                fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `code:${code} sig:${sig}`)
-                            })
-                            progress.on("message", msg => {
-                                fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `${msg}`)
-                            })
-                            progress.stdout.pipe(fs.createWriteStream("/tmp/yakit-yak-stdout.txt"))
-                            progress.stderr.pipe(fs.createWriteStream("/tmp/yakit-yak-stderr.txt"))
-                        }
+                        }).on("spawn", () => resolve())
+                        // if (process.platform === "darwin") {
+                        //     progress.on("error", err => {
+                        //         console.info(err)
+                        //         fs.writeFileSync("/tmp/yakit-yak-process-error.txt", `${err}`)
+                        //     })
+                        //     progress.on("exit", (code, sig) => {
+                        //         fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `code:${code} sig:${sig}`)
+                        //     })
+                        //     progress.on("message", msg => {
+                        //         fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `${msg}`)
+                        //     })
+                        //     progress.stdout.pipe(fs.createWriteStream("/tmp/yakit-yak-stdout.txt"))
+                        //     progress.stderr.pipe(fs.createWriteStream("/tmp/yakit-yak-stderr.txt"))
+                        // }
                         // childProcess.exec(cmd, err => {
                         //     if (err) {
                         //         reject(err)

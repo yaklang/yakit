@@ -1,4 +1,4 @@
-const {ipcMain, Notification, shell} = require("electron");
+const {ipcMain, shell, dialog} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
 const path = require("path");
@@ -10,36 +10,52 @@ const request = require("request");
 
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
-fs.mkdirSync(secretDir, {recursive: true})
-const basicDir = path.join(homeDir, "base");
-fs.mkdirSync(basicDir, {recursive: true})
-const yakEngineDir = path.join(homeDir, "yak-engine")
-fs.mkdirSync(yakEngineDir, {recursive: true})
 
+const basicDir = path.join(homeDir, "base");
+const yakEngineDir = path.join(homeDir, "yak-engine")
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
 const basicKvPath = path.join(basicDir, "yakit-local.json")
 
+const initMkbaseDir = async () => {
+    return new Promise((resolve, reject) => {
+        try {
+            fs.mkdirSync(secretDir, {recursive: true})
+            fs.mkdirSync(basicDir, {recursive: true})
+            fs.mkdirSync(yakEngineDir, {recursive: true})
+            resolve()
+        } catch (e) {
+            reject(e)
+        }
+    })
+}
+
 const kvpairs = new Map();
 
-const getKVPair = () => {
-    const keys = [];
-    kvpairs.forEach((_, e) => {
-        keys.push(e)
-    })
-    keys.map(i => kvpairs.delete(i));
+const getKVPair = (callback) => {
+    kvpairs.clear()
 
     try {
-        const data = fs.readFileSync(basicKvPath);
-        JSON.parse(data).forEach(i => {
-            if (i["key"]) {
-                kvpairs.set(i["key"], i["value"])
+        fs.readFile(basicKvPath, (err, data) => {
+            if (!!err) {
+                callback(err)
+                return
+            }
+
+            JSON.parse(data.toString()).forEach(i => {
+                if (i["key"]) {
+                    kvpairs.set(i["key"], i["value"])
+                }
+            })
+
+            if (callback) {
+                callback(null)
             }
         })
     } catch (e) {
+        console.info(e)
     }
 }
-getKVPair()
 
 const setKVPair = (k, v) => {
     kvpairs.set(`${k}`, v)
@@ -76,7 +92,6 @@ const loadSecrets = () => {
             })
         })
     } catch (e) {
-        console.info(e)
     }
 };
 
@@ -109,13 +124,6 @@ const saveAllSecret = (authInfos) => {
     );
     fs.writeFileSync(secretFile, new Buffer(authFileStr, "utf8"))
 };
-
-const getWindowsInstallPath = () => {
-    const systemRoot = process.env["WINDIR"] || process.env["windir"] || process.env["SystemRoot"];
-    return path.join(systemRoot, "System32", "yak.exe")
-}
-
-loadSecrets()
 
 const getYakDownloadUrl = () => {
     switch (process.platform) {
@@ -155,6 +163,9 @@ const getYakitDownloadUrl = (version) => {
 
 module.exports = {
     getLatestYakLocalEngine,
+    initial: async () => {
+        return await initMkbaseDir();
+    },
     register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
             let {name, host, port, tls, caPem, password} = params;
@@ -398,9 +409,19 @@ module.exports = {
             setKVPair(key, value)
         })
 
-        ipcMain.handle("get-value", (e, key) => {
-            getKVPair()
-            return kvpairs.get(key)
+        const asyncGetValueByKey = (key) => {
+            return new Promise((resolve, reject) => {
+                getKVPair((err) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(kvpairs.get(key))
+                    }
+                })
+            })
+        }
+        ipcMain.handle("get-value", async (e, key) => {
+            return await asyncGetValueByKey(key)
         })
     },
 }
