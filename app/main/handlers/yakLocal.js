@@ -24,11 +24,12 @@ const getLatestYakLocalEngine = require("./upgradeUtil").getLatestYakLocalEngine
 
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
-        childProcess.spawn(cmd, {stdio: ["ignore", "ignore", "ignore"]}).on("error", err => {
-            callback(err)
-        }).on("spawn", () => {
-            callback(null)
-        })
+        childProcess.exec(
+            cmd,
+            {maxBuffer: 1000 * 1000 * 1000},
+            (err) => {
+                callback(err)
+            })
     } else {
         _sudoPrompt.exec(cmd, opt, callback)
     }
@@ -154,7 +155,7 @@ module.exports = {
                                     if (!error) {
                                         resolve(true)
                                     } else {
-                                        reject(`${err}`)
+                                        reject(`${error}`)
                                     }
                                 }
                             )
@@ -167,12 +168,11 @@ module.exports = {
                         } else {
                             sudoExec(`kill -9 ${pid}`, {
                                 name: `kill SIGKILL PID ${pid}`
-                            }, err => {
-                                console.info(err)
+                            }, error => {
                                 if (!error) {
                                     resolve(true)
                                 } else {
-                                    reject(`${err}`)
+                                    reject(`${error}`)
                                 }
                             })
                         }
@@ -193,33 +193,17 @@ module.exports = {
             return new Promise((resolve, reject) => {
                 const {sudo} = params;
 
-                // if (process.platform === "darwin" || process.platform === "linux") {
-                //     process.env.PATH = process.env.PATH + ":/usr/local/bin/"
-                // }
-                // if (!isWindows) {
-                //     // 如果是 mac/ubuntu
-                //     if (!fs.existsSync("/usr/local/bin")) {
-                //         reject(new Error("cannot find '/usr/local/bin'"))
-                //         return
-                //     }
-                //
-                //     if (!fs.existsSync("/usr/local/bin/yak")) {
-                //         reject(new Error("uninstall yak engine"))
-                //         return
-                //     }
-                // }
-
-
                 let randPort = 40000 + getRandomInt(9999);
                 try {
                     if (sudo) {
                         if (isWindows) {
-                            childProcess.spawn(generateWindowsSudoCommand(
-                                getLatestYakLocalEngine(), `grpc --port ${randPort}`),
-                                {stdio: ["ignore", "ignore", "ignore"]},
+                            childProcess.exec(
+                                generateWindowsSudoCommand(
+                                    getLatestYakLocalEngine(), `grpc --port ${randPort}`,
+                                ),
+                                {maxBuffer: 1000 * 1000 * 1000},
                             ).on("error", err => {
                                 if (err) {
-                                    dialog.showErrorBox("sudo start yak error", `${err}`)
                                     reject(err)
                                 }
                             }).on("spawn", () => {
@@ -239,8 +223,6 @@ module.exports = {
                                 }
                             )
                         }
-
-
                     } else {
                         childProcess.spawn(
                             getLatestYakLocalEngine(),
@@ -252,27 +234,6 @@ module.exports = {
                                 reject(err)
                             }
                         }).on("spawn", () => resolve())
-                        // if (process.platform === "darwin") {
-                        //     progress.on("error", err => {
-                        //         console.info(err)
-                        //         fs.writeFileSync("/tmp/yakit-yak-process-error.txt", `${err}`)
-                        //     })
-                        //     progress.on("exit", (code, sig) => {
-                        //         fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `code:${code} sig:${sig}`)
-                        //     })
-                        //     progress.on("message", msg => {
-                        //         fs.writeFileSync("/tmp/yakit-yak-process-message.txt", `${msg}`)
-                        //     })
-                        //     progress.stdout.pipe(fs.createWriteStream("/tmp/yakit-yak-stdout.txt"))
-                        //     progress.stderr.pipe(fs.createWriteStream("/tmp/yakit-yak-stderr.txt"))
-                        // }
-                        // childProcess.exec(cmd, err => {
-                        //     if (err) {
-                        //         reject(err)
-                        //     } else {
-                        //         resolve()
-                        //     }
-                        // })
                     }
                 } catch (e) {
                     reject(e)

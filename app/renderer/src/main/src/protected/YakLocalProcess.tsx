@@ -2,9 +2,11 @@ import React, {useEffect, useState} from "react";
 import {CopyableField, SelectOne} from "../utils/inputUtil";
 import {Button, Card, Col, Form, List, Modal, Popconfirm, Row, Space, Tag} from "antd";
 import ReactJson from "react-json-view";
-import {failed, success} from "../utils/notification";
+import {failed, info, success} from "../utils/notification";
 import {showModal} from "../utils/showModal";
 import {YakUpgrade} from "../components/YakUpgrade";
+import {useMemoizedFn, useThrottle, useThrottleFn} from "ahooks";
+import {AutoSpin} from "../components/AutoSpin";
 
 export interface YakLocalProcessProp {
     onConnected?: (port: number, host: string) => any
@@ -24,23 +26,35 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
     const [process, setProcess] = useState<yakProcess[]>([]);
     const [shouldAutoStart, setShouldAutoStart] = useState(false);
     const [installed, setInstalled] = useState(false);
+    const [psIng, setPsIng] = useState(false);
 
-    const update = () => {
+    const update = useMemoizedFn(() => {
         let noProcess = true;
         ipcRenderer.invoke("is-yak-engine-installed").then(ok => {
             setInstalled(ok)
-        })
+        });
+
+        if (psIng) {
+            return
+        }
+        setPsIng(true)
         ipcRenderer.invoke("ps-yak-grpc").then((i: yakProcess[]) => {
             setProcess(i.map((element: yakProcess) => {
                 noProcess = false;
-                return {port: element.port, pid: element.pid, cmd: element.cmd, origin: element.origin}
+                return {
+                    port: element.port,
+                    pid: element.pid,
+                    cmd: element.cmd,
+                    origin: element.origin,
+                }
             }).filter(i => true))
         }).finally(() => {
             if (noProcess) {
                 setShouldAutoStart(true)
             }
+            setPsIng(false)
         })
-    }
+    })
 
     useEffect(() => {
         update()
@@ -71,19 +85,16 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
     const startYakGRPCServer = (sudo: boolean) => {
         ipcRenderer.invoke("start-local-yak-grpc-server", {
             sudo,
+        }).then(() => {
+            info("启动 yak grpc 进程成功")
         }).catch((e: Error) => {
             const flag = `${e.message}`;
-            if (flag.includes(`cannot find '/usr/local/bin'`)) {
-                failed("未安装 Yak 引擎（找不到 /usr/local/bin 目录）")
-                promptInstallYakEngine()
-                return
-            }
             if (flag.includes(`uninstall yak engine`)) {
                 failed("未安装 Yak 引擎")
                 promptInstallYakEngine()
                 return
             }
-            // failed(`${e.message}`)
+            failed(`${e.message}`)
         }).finally(() => {
             update()
         })
@@ -128,19 +139,22 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                     <Space>
                                                         <Tag color={"green"}>PID: {i.pid}</Tag>
                                                         <CopyableField
-                                                            text={`yak grpc --port ${i.port}`} width={300}
+                                                            text={`yak grpc --port ${i.port === 0 ? "获取中" : i.port}`}
+                                                            width={300}
                                                         />
                                                     </Space>
                                                 </Col>
                                                 <Col span={12}>
                                                     <div style={{width: "100%", textAlign: "right"}}>
                                                         <Space>
-                                                            <Button size={"small"} type={"primary"}
-                                                                    disabled={!props.onConnected}
-                                                                    onClick={() => {
-                                                                        props.onConnected && props.onConnected(
-                                                                            i.port, "localhost")
-                                                                    }}
+                                                            <Button
+                                                                size={"small"} type={"primary"}
+                                                                disabled={!props.onConnected}
+                                                                loading={i.port <= 0}
+                                                                onClick={() => {
+                                                                    props.onConnected && props.onConnected(
+                                                                        i.port, "localhost")
+                                                                }}
                                                             >连接引擎</Button>
                                                             <Popconfirm
                                                                 title={"将会强制关闭该进程"}

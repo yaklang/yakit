@@ -36,7 +36,6 @@ app.whenReady().then(() => {
     try{
         registerIPC(win);
     }catch (e) {
-        dialog.showMessageBox({title: "test"})
     }
 
     //
