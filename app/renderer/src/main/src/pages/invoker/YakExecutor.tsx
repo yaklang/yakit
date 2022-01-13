@@ -173,7 +173,6 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 setTimeout(() => setLoading(false), 300)
                 time = setInterval(() => {
                     autoSave()
-                    saveFiliList()
                 }, 2000)
                 timer = setInterval(() => {
                     saveFiliList()
