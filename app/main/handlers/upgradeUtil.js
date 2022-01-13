@@ -92,7 +92,6 @@ const loadSecrets = () => {
             })
         })
     } catch (e) {
-        console.info(e)
     }
 };
 

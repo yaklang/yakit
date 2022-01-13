@@ -24,7 +24,11 @@ const getLatestYakLocalEngine = require("./upgradeUtil").getLatestYakLocalEngine
 
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
-        childProcess.exec(cmd, callback)
+        childProcess.spawn(cmd, {stdio: ["ignore", "ignore", "ignore"]}).on("error", err => {
+            callback(err)
+        }).on("spawn", () => {
+            callback(null)
+        })
     } else {
         _sudoPrompt.exec(cmd, opt, callback)
     }
@@ -210,16 +214,17 @@ module.exports = {
                 try {
                     if (sudo) {
                         if (isWindows) {
-                            childProcess.exec(generateWindowsSudoCommand(
+                            childProcess.spawn(generateWindowsSudoCommand(
                                 getLatestYakLocalEngine(), `grpc --port ${randPort}`),
-                                err => {
-                                    if (err) {
-                                        dialog.showErrorBox("sudo start yak error", `${err}`)
-                                        reject(error)
-                                    } else {
-                                        resolve()
-                                    }
-                                })
+                                {stdio: ["ignore", "ignore", "ignore"]},
+                            ).on("error", err => {
+                                if (err) {
+                                    dialog.showErrorBox("sudo start yak error", `${err}`)
+                                    reject(error)
+                                }
+                            }).on("spawn", () => {
+                                resolve()
+                            })
                         } else {
                             const cmd = `${getLatestYakLocalEngine()} grpc --port ${randPort}`;
                             sudoExec(cmd, {
@@ -240,16 +245,13 @@ module.exports = {
                         childProcess.spawn(
                             getLatestYakLocalEngine(),
                             ["grpc", "--port", `${randPort}`],
-                            {stdio: "ignore"},
-                            err => {
-                                if (err) {
-                                    fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
-                                    reject(err)
-                                } else {
-                                    resolve()
-                                }
+                            {stdio: ["ignore", "ignore", "ignore"]},
+                        ).on("error", err => {
+                            if (err) {
+                                fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
+                                reject(err)
                             }
-                        )
+                        }).on("spawn", () => resolve())
                         // if (process.platform === "darwin") {
                         //     progress.on("error", err => {
                         //         console.info(err)
