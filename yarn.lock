@@ -1872,11 +1872,6 @@ protoc-gen-ts@^0.3.9:
   resolved "https://registry.nlark.com/protoc-gen-ts/download/protoc-gen-ts-0.3.9.tgz"
   integrity sha1-XsfSdU1DxHhyJ2CJc+myOvpxnqc=
 
-ps-list@^7.2.0:
-  version "7.2.0"
-  resolved "https://registry.nlark.com/ps-list/download/ps-list-7.2.0.tgz#3d110e1de8249a4b178c9b1cf2a215d1e4e42fc0"
-  integrity sha1-PREOHegkmksXjJsc8qIV0eTkL8A=
-
 psl@^1.1.28:
   version "1.8.0"
   resolved "https://registry.nlark.com/psl/download/psl-1.8.0.tgz#9326f8bcfb013adcc005fdff056acce020e51c24"

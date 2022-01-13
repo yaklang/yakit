@@ -35,7 +35,6 @@
     "electron-updater": "^4.3.9",
     "google-protobuf": "^3.17.3",
     "process": "^0.11.10",
-    "ps-list": "^7.2.0",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",
     "sudo-prompt": "^9.2.1",
