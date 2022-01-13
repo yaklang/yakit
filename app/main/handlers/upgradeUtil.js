@@ -1,4 +1,4 @@
-const {ipcMain, shell} = require("electron");
+const {ipcMain, shell, dialog} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
 const path = require("path");
@@ -17,10 +17,17 @@ const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
 const basicKvPath = path.join(basicDir, "yakit-local.json")
 
-const initMkbaseDir = () => {
-    fs.mkdirSync(secretDir, {recursive: true})
-    fs.mkdirSync(basicDir, {recursive: true})
-    fs.mkdirSync(yakEngineDir, {recursive: true})
+const initMkbaseDir = async () => {
+    return new Promise((resolve, reject) => {
+        try {
+            fs.mkdirSync(secretDir, {recursive: true})
+            fs.mkdirSync(basicDir, {recursive: true})
+            fs.mkdirSync(yakEngineDir, {recursive: true})
+            resolve()
+        } catch (e) {
+            reject(e)
+        }
+    })
 }
 
 const kvpairs = new Map();
@@ -157,9 +164,10 @@ const getYakitDownloadUrl = (version) => {
 
 module.exports = {
     getLatestYakLocalEngine,
+    initial: async () => {
+        return await initMkbaseDir();
+    },
     register: (win, getClient) => {
-        initMkbaseDir()
-
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
             let {name, host, port, tls, caPem, password} = params;
             name = name || `${host}:${port}`

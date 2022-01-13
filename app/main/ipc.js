@@ -1,6 +1,5 @@
-const {ipcMain} = require("electron");
+const {ipcMain, nativeImage, Notification} = require("electron");
 const path = require("path");
-const fs = require("fs");
 const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader")
@@ -84,7 +83,7 @@ module.exports = {
                 return
             }
 
-            if (count >= 5) {
+            if (count >= 10) {
                 console.info("reconnect failed")
                 win.webContents.send("client-engine-status-error")
                 count = 0
@@ -157,7 +156,15 @@ module.exports = {
         require("./handlers/menu")(win, getClient);
 
         // 管理 yak 引擎版本 / 升级等
-        require("./handlers/upgradeUtil").register(win, getClient);
+        const upgradeUtil = require("./handlers/upgradeUtil");
+        upgradeUtil.initial().then(() => {
+            upgradeUtil.register(win, getClient)
+        }).catch(e => {
+            new Notification({
+                title: "Loading upgradeUtil.js failed", body: `${e}`,
+                icon: nativeImage.createEmpty(), urgency: "critical",
+            }).show()
+        })
 
         require("./handlers/version")(win, getClient);
 

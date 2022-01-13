@@ -1,4 +1,4 @@
-const {app, BrowserWindow, globalShortcut} = require("electron");
+const {app, BrowserWindow, globalShortcut, dialog} = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const {registerIPC, clearing} = require("./ipc");
@@ -33,7 +33,11 @@ const createWindow = () => {
 app.whenReady().then(() => {
     createWindow()
 
-    registerIPC(win);
+    try{
+        registerIPC(win);
+    }catch (e) {
+        dialog.showMessageBox({title: "test"})
+    }
 
     //
     // // autoUpdater.autoDownload = false
