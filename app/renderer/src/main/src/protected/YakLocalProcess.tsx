@@ -27,6 +27,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
     const [shouldAutoStart, setShouldAutoStart] = useState(false);
     const [installed, setInstalled] = useState(false);
     const [psIng, setPsIng] = useState(false);
+    const [notified, setNotified] = useState(false);
 
     const update = useMemoizedFn(() => {
         let noProcess = true;
@@ -39,6 +40,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
         }
         setPsIng(true)
         ipcRenderer.invoke("ps-yak-grpc").then((i: yakProcess[]) => {
+            setNotified(false)
             setProcess(i.map((element: yakProcess) => {
                 noProcess = false;
                 return {
@@ -48,6 +50,11 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                     origin: element.origin,
                 }
             }).filter(i => true))
+        }).catch(e => {
+            if (!notified) {
+                failed(`PS | GREP yak failed ${e}`)
+                setNotified(true)
+            }
         }).finally(() => {
             if (noProcess) {
                 setShouldAutoStart(true)

@@ -1,7 +1,7 @@
 const {ipcMain, dialog} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
-const psList = require("./libs/ps-list");
+const psList = require("./libs/ps-yak-process");
 const _sudoPrompt = require("sudo-prompt");
 const fs = require("fs");
 

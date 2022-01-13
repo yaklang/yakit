@@ -75,16 +75,18 @@ const nonWindowsMultipleCalls = async (options = {}) => {
 const ERROR_MESSAGE_PARSING_FAILED = 'ps output parsing failed';
 
 const psFields = 'pid,ppid,uid,%cpu,%mem,comm,args';
+// const psFields = 'pid,ppid,uid,comm,args';
 
 // TODO: Use named capture groups when targeting Node.js 10
 const psOutputRegex = /^[ \t]*(?<pid>\d+)[ \t]+(?<ppid>\d+)[ \t]+(?<uid>\d+)[ \t]+(?<cpu>\d+\.\d+)[ \t]+(?<memory>\d+\.\d+)[ \t]+/;
+// const psOutputRegex = /^[ \t]*(?<pid>\d+)[ \t]+(?<ppid>\d+)[ \t]+(?<uid>\d+)[ \t]+/;
 
 const nonWindowsSingleCall = async (options = {}) => {
     const flags = options.all === false ? 'wwxo' : 'awwxo';
 
     // TODO: Use the promise version of `execFile` when https://github.com/nodejs/node/issues/28244 is fixed.
     const [psPid, stdout] = await new Promise((resolve, reject) => {
-        const child = childProcess.execFile('ps', [flags, psFields], {maxBuffer: TEN_MEGABYTES}, (error, stdout) => {
+        const child = childProcess.exec(`ps ${flags} ${psFields} | grep yak`, {maxBuffer: TEN_MEGABYTES}, (error, stdout) => {
             if (error === null) {
                 resolve([child.pid, stdout]);
             } else {
@@ -107,6 +109,7 @@ const nonWindowsSingleCall = async (options = {}) => {
         }
 
         const {pid, ppid, uid, cpu, memory} = match.groups;
+        // const {pid, ppid, uid} = match.groups;
 
         const processInfo = {
             pid: Number.parseInt(pid, 10),
@@ -118,18 +121,18 @@ const nonWindowsSingleCall = async (options = {}) => {
             cmd: undefined
         };
 
-        if (processInfo.pid === psPid) {
-            psIndex = index;
-            commPosition = line.indexOf('ps', match[0].length);
-            argsPosition = line.indexOf('ps', commPosition + 2);
-        }
+        // if (processInfo.pid === psPid) {
+        //     psIndex = index;
+        //     commPosition = line.indexOf('ps', match[0].length);
+        //     argsPosition = line.indexOf('ps', commPosition + 2);
+        // }
 
         return processInfo;
     });
 
-    if (psIndex === undefined || commPosition === -1 || argsPosition === -1) {
-        throw new Error(ERROR_MESSAGE_PARSING_FAILED);
-    }
+    // if (psIndex === undefined || commPosition === -1 || argsPosition === -1) {
+    //     throw new Error(ERROR_MESSAGE_PARSING_FAILED);
+    // }
 
     const commLength = argsPosition - commPosition;
     for (const [index, line] of lines.entries()) {
@@ -144,20 +147,11 @@ const nonWindowsSingleCall = async (options = {}) => {
 const nonWindows = async (options = {}) => {
     try {
         return await nonWindowsSingleCall(options);
-    } catch (_) { // If the error is not a parsing error, it should manifest itself in multicall version too.
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        console.info("111111111111111111111111111111111")
-        return nonWindowsMultipleCalls(options);
+    } catch (err) { // If the error is not a parsing error, it should manifest itself in multicall version too.
+        return await new Promise((_, rej) => {
+            rej(err)
+        })
+        // return nonWindowsMultipleCalls(options);
     }
 };
 
