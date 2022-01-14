@@ -167,6 +167,15 @@ module.exports = (win, originGetClient) => {
         }
     })
 
+    // 清除 mitm 插件缓存
+    ipcMain.handle("mitm-clear-plugin-cache", () => {
+        if (stream) {
+            stream.write({
+                setClearMITMPluginContext: true,
+            })
+        }
+    })
+
     // 开始调用 MITM，设置 stream
     let isFirstData = true
     ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy) => {
