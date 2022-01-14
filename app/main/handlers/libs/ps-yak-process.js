@@ -86,7 +86,7 @@ const nonWindowsSingleCall = async (options = {}) => {
 
     // TODO: Use the promise version of `execFile` when https://github.com/nodejs/node/issues/28244 is fixed.
     const [psPid, stdout] = await new Promise((resolve, reject) => {
-        const child = childProcess.exec(`ps ${flags} ${psFields} | grep yak`, {maxBuffer: TEN_MEGABYTES}, (error, stdout) => {
+        const child = childProcess.exec(`ps ${flags} ${psFields} | grep 'yak grpc'`, {maxBuffer: TEN_MEGABYTES}, (error, stdout) => {
             if (error === null) {
                 resolve([child.pid, stdout]);
             } else {
@@ -96,7 +96,6 @@ const nonWindowsSingleCall = async (options = {}) => {
     });
 
     const lines = stdout.trim().split('\n');
-    lines.shift();
 
     let psIndex;
     let commPosition;
