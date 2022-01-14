@@ -44,6 +44,7 @@ export interface EditorProps {
 
     noMiniMap?: boolean,
     noLineNumber?: boolean
+    lineNumbersMinChars?: number
 
     actions?: IMonacoActionDescriptor[]
     triggerId?: any
@@ -187,7 +188,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                             renderLineHighlight: "line",
                             lineNumbers: props.noLineNumber ? "off" : "on",
                             minimap: props.noMiniMap ? {enabled: false} : undefined,
-                            lineNumbersMinChars: 4,
+                            lineNumbersMinChars: props.lineNumbersMinChars || 5,
                         }}
                     />
                 </div>
