@@ -77,37 +77,6 @@ module.exports = {
         require("./handlers/yakLocal").clearing();
     },
     registerIPC: (win) => {
-        let count = 0;
-        setInterval(() => {
-            if (!global.defaultYakGRPCAddr) {
-                return
-            }
-
-            if (count >= 10) {
-                console.info("reconnect failed")
-                win.webContents.send("client-engine-status-error")
-                count = 0
-            }
-
-            try {
-                if (!_client) {
-                    _client = getClient(true)
-                }
-                getClient().Echo({text: "heartbeat"}, (err, data) => {
-                    if (err) {
-                        _client = null;
-                        count++
-                        return
-                    }
-                    win.webContents.send("client-engine-status-ok")
-                    count = 0
-                })
-            } catch (e) {
-                _client = undefined;
-                count++
-            }
-        }, 1000)
-
         ipcMain.handle("yakit-connect-status", () => {
             return {
                 addr: global.defaultYakGRPCAddr,

@@ -82,64 +82,56 @@ const psOutputRegex = /^[ \t]*(?<pid>\d+)[ \t]+(?<ppid>\d+)[ \t]+(?<uid>\d+)[ \t
 // const psOutputRegex = /^[ \t]*(?<pid>\d+)[ \t]+(?<ppid>\d+)[ \t]+(?<uid>\d+)[ \t]+/;
 
 const nonWindowsSingleCall = async (options = {}) => {
-    const flags = options.all === false ? 'wwxo' : 'awwxo';
-
-    // TODO: Use the promise version of `execFile` when https://github.com/nodejs/node/issues/28244 is fixed.
-    const [psPid, stdout] = await new Promise((resolve, reject) => {
-        const child = childProcess.exec(`ps ${flags} ${psFields} | grep 'yak grpc'`, {maxBuffer: TEN_MEGABYTES}, (error, stdout) => {
-            if (error === null) {
-                resolve([child.pid, stdout]);
-            } else {
-                reject(error);
-            }
+    let stdout = "";
+    try {
+        const flags = options.all === false ? 'wwxo' : 'awwxo';
+        // TODO: Use the promise version of `execFile` when https://github.com/nodejs/node/issues/28244 is fixed.
+        const [psPid, stdoutRaw] = await new Promise((resolve, reject) => {
+            const child = childProcess.exec(`ps ${flags} ${psFields} | grep 'yak grpc' | grep -v grep`, {maxBuffer: TEN_MEGABYTES}, (error, stdout) => {
+                if (error === null) {
+                    resolve([child.pid, stdout]);
+                } else {
+                    reject(error);
+                }
+            });
         });
-    });
+        stdout = stdoutRaw;
+    } catch (e) {
+        stdout = ""
+    }
 
-    const lines = stdout.trim().split('\n');
-
-    let psIndex;
-    let commPosition;
-    let argsPosition;
+    const lines = stdout.trim().split('\n').filter(i => !!i);
 
     const processes = lines.map((line, index) => {
         const match = psOutputRegex.exec(line);
         if (match === null) {
-            throw new Error(ERROR_MESSAGE_PARSING_FAILED);
+            return {pid: 0};
         }
 
         const {pid, ppid, uid, cpu, memory} = match.groups;
         // const {pid, ppid, uid} = match.groups;
 
-        const processInfo = {
+        return {
             pid: Number.parseInt(pid, 10),
             ppid: Number.parseInt(ppid, 10),
             uid: Number.parseInt(uid, 10),
             cpu: Number.parseFloat(cpu),
             memory: Number.parseFloat(memory),
             name: undefined,
-            cmd: undefined
+            cmd: line
         };
-
-        // if (processInfo.pid === psPid) {
-        //     psIndex = index;
-        //     commPosition = line.indexOf('ps', match[0].length);
-        //     argsPosition = line.indexOf('ps', commPosition + 2);
-        // }
-
-        return processInfo;
     });
 
     // if (psIndex === undefined || commPosition === -1 || argsPosition === -1) {
     //     throw new Error(ERROR_MESSAGE_PARSING_FAILED);
     // }
 
-    const commLength = argsPosition - commPosition;
-    for (const [index, line] of lines.entries()) {
-        processes[index].name = line.slice(commPosition, commPosition + commLength).trim();
-        processes[index].cmd = line.slice(argsPosition).trim();
-    }
+    // const commLength = argsPosition - commPosition;
+    // for (const [index, line] of lines.entries()) {
+    //     processes[index].name = line.slice(commPosition, commPosition + commLength).trim();
+    //     processes[index].cmd = line.slice(argsPosition).trim();
+    // }
 
-    processes.splice(psIndex, 1);
     return processes;
 };
 
