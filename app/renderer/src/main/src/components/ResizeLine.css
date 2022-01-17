@@ -1,0 +1,14 @@
+.resize-line-style {
+    display: none;
+    position: absolute;
+    border-left: 2px dashed #434344;
+    z-index: 99;
+}
+.resize-line-hor {
+    top: 0;
+    bottom: 0;
+}
+.resize-line-ver {
+    left: 0;
+    right: 0;
+}
