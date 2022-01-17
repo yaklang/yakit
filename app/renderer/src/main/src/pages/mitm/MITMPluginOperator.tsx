@@ -27,7 +27,7 @@ import {MITMPluginCardProp, YakScriptHooksViewer} from "./MITMPluginCard";
 import {CopyableField, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {EditorProps, YakCodeEditor} from "../../utils/editors";
 import {YakScript, YakScriptHooks} from "../invoker/schema";
-import {useMap} from "ahooks";
+import {useMap, useMemoizedFn} from "ahooks";
 import {failed} from "../../utils/notification";
 import {CloseOutlined, PoweroffOutlined} from "@ant-design/icons";
 import {AutoCard} from "../../components/AutoCard";
@@ -154,6 +154,7 @@ export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
                             <YakModuleList
                                 Type={"mitm"}
                                 onClicked={(script: YakScript) => {
+
                                 }}
                                 Keyword={""}
                                 onYakScriptRender={(i: YakScript) => {
@@ -196,9 +197,16 @@ interface MITMYakScriptLoaderProps {
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
 }
 
+function clearMITMPluginCache() {
+    ipcRenderer.invoke("mitm-clear-plugin-cache").catch(e => {
+        failed(`清除插件缓存失败: ${e}`)
+    })
+}
+
 const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     const {hooks, script, onSubmitYakScriptId} = p;
     const i = script;
+
     return <Card
         onClick={() => {
             const checked = !!hooks.get(i.ScriptName);
@@ -223,6 +231,7 @@ const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                             {...script}
                             params={[]}
                             onParamsConfirm={(p: YakExecutorParam[]) => {
+                                clearMITMPluginCache()
                                 onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
                                 m2.destroy()
                             }}
@@ -231,6 +240,7 @@ const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     </>, width: "50%",
                 })
             } else {
+                clearMITMPluginCache()
                 p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
             }
         }}

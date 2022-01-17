@@ -33,14 +33,14 @@ module.exports = (win, getClient) => {
                     if (data?.result === text) {
                         win.webContents.send("client-engine-status-ok")
                     } else {
-                        // win.webContents.send("client-engine-status-error")
+                        win.webContents.send("client-engine-status-error")
                     }
                 }
             })
         } catch (e) {
             client = null;
             if (win) {
-                // win.webContents.send("client-engine-status-error")
+                win.webContents.send("client-engine-status-error")
             }
         }
     })

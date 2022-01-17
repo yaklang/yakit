@@ -983,6 +983,9 @@ message MITMRequest {
   // 设置自动转发
   bool setAutoForward = 33;
   bool autoForwardValue = 34;
+
+  // 设置清除上下文
+  bool setClearMITMPluginContext = 35;
 }
 
 message RemoveHookParams {

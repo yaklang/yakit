@@ -229,7 +229,7 @@ const Main: React.FC<MainProp> = (props) => {
             if (engineStatus === "ok") setEngineStatus("error")
         })
 
-        let id = setInterval(() => {
+        const updateEngineStatus = () => {
             ipcRenderer
                 .invoke("engine-status")
                 .catch((e: any) => {
@@ -237,7 +237,8 @@ const Main: React.FC<MainProp> = (props) => {
                 })
                 .finally(() => {
                 })
-        }, 1000)
+        }
+        let id = setInterval(updateEngineStatus, 3000)
         return () => {
             ipcRenderer.removeAllListeners("client-engine-status-error")
             ipcRenderer.removeAllListeners("client-engine-status-ok")
