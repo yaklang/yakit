@@ -696,6 +696,7 @@ message YakScript {
   bool IsGeneralModule = 13;
   string GeneralModuleVerbose = 14;
   string GeneralModuleKey = 15;
+  string FromGit = 16;
 }
 
 message CodecRequest {
