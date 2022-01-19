@@ -1,14 +1,23 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Empty, Form, Input, List, Popconfirm, Popover, Row, Space, Tabs, Tag} from "antd";
-import {DownloadOutlined, PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
+import {Button, Card, Col, Empty, Form, Input, List, Popconfirm, Popover, Row, Space, Tabs, Tag, Tooltip} from "antd";
+import {
+    DownloadOutlined,
+    PlusOutlined,
+    ReloadOutlined,
+    SearchOutlined,
+    SettingOutlined,
+    GithubOutlined
+} from "@ant-design/icons";
 import {showDrawer, showModal} from "../../utils/showModal";
-import {AutoUpdateYakModuleViewer} from "../../utils/basic";
+import {AutoUpdateYakModuleViewer, startExecYakCode} from "../../utils/basic";
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema";
 import {failed} from "../../utils/notification";
-import {CopyableField, SwitchItem} from "../../utils/inputUtil";
+import {CopyableField, InputItem, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {formatDate} from "../../utils/timeUtil";
 import {PluginManagement, PluginOperator} from "./PluginOperator";
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator";
+import {startExecuteYakScript} from "../invoker/ExecYakScript";
+import {YakExecutorParam} from "../invoker/YakExecutorParams";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -40,7 +49,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     bordered={true}
                     style={{height: "100%", overflow: "auto"}}
                     title={<Space>
-                        插件商店
+                        插件仓库
                         <Button
                             size={"small"}
                             type={"link"}
@@ -73,20 +82,35 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     </Space>}
                     size={"small"}
                     extra={<Space>
-                        <Popconfirm
-                            title={"更新模块数据库？"}
-                            onConfirm={e => {
+                        <Button
+                            size={"small"} type={"primary"} icon={<DownloadOutlined/>}
+                            onClick={() => {
                                 showModal({
-                                    title: "自动更新 Yak 模块", content: <>
-                                        <AutoUpdateYakModuleViewer/>
-                                    </>, width: "60%",
+                                    width: 700,
+                                    title: "导入插件方式", content: <>
+                                        <div style={{width: 600}}>
+                                            <LoadYakitPluginForm/>
+                                        </div>
+                                    </>
                                 })
                             }}
                         >
-                            <Button size={"small"} type={"primary"} icon={<DownloadOutlined/>}>
-                                更新商店
-                            </Button>
-                        </Popconfirm>
+                            导入
+                        </Button>
+                        {/*<Popconfirm*/}
+                        {/*    title={"更新模块数据库？"}*/}
+                        {/*    onConfirm={e => {*/}
+                        {/*        showModal({*/}
+                        {/*            title: "自动更新 Yak 模块", content: <>*/}
+                        {/*                <AutoUpdateYakModuleViewer/>*/}
+                        {/*            </>, width: "60%",*/}
+                        {/*        })*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*    <Button size={"small"} type={"primary"} icon={<DownloadOutlined/>}>*/}
+                        {/*        导入*/}
+                        {/*    </Button>*/}
+                        {/*</Popconfirm>*/}
                         <Button
                             size={"small"} type={"link"} icon={<PlusOutlined/>}
                             onClick={() => {
@@ -239,7 +263,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             return <List.Item style={{marginLeft: 0}} key={i.Id}>
                 <Card
                     size={"small"} bordered={true} hoverable={true}
-                    title={i.ScriptName} style={{
+                    title={<Space>
+                        <div>{i.ScriptName}</div>
+                        {gitUrlIcon(i.FromGit)}
+                    </Space>} style={{
                     width: "100%",
                     backgroundColor: props.currentId === i.Id ? "rgba(79,188,255,0.26)" : "#fff"
                 }}
@@ -271,11 +298,15 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                             </Space>
                         </Col>
                         <Col span={12} style={{textAlign: "right"}}>
-                            <Space>
+                            <Space size={2}>
                                 <CopyableField noCopy={true} text={formatDate(i.CreatedAt)}/>
-
+                                {gitUrlIcon(i.FromGit, true)}
                                 <Button
-                                    size={"small"} type={"link"} style={{marginRight: 0}}
+                                    size={"small"} type={"link"}
+                                    style={{
+                                        paddingLeft: 0, paddingRight: 0,
+                                        marginLeft: 0, marginRight: 0,
+                                    }}
                                     onClick={() => {
                                         const modal = showModal({
                                             title: `插件管理: ${i.ScriptName}`,
@@ -338,3 +369,97 @@ const KeywordSetter: React.FC<KeywordSetterProp> = (props) => {
         </Form>
     </div>
 };
+
+const loadYakitPluginCode = `yakit.AutoInitYakit()
+log.setLevel("info")
+
+gitUrl = cli.String("giturl")
+proxy = cli.String("proxy")
+
+yakit.Info("检查导入插件参数")
+if gitUrl == "" {
+    yakit.Error("插件仓库为空")
+    die("empty giturl")
+}
+yakit.Info("准备导入 yak 插件：%v", gitUrl)
+
+
+if proxy != "" {
+    yakit.Info("使用代理: %v", proxy)
+    log.Info("proxy: %v", proxy)
+    die(yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl, proxy))
+} else{
+    yakit.Info("未使用代理")
+    die(yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl))
+}
+
+yakit.Output("导入插件成功")
+`
+
+export const LoadYakitPluginForm = React.memo(() => {
+    const [gitUrl, setGitUrl] = useState("");
+    const [proxy, setProxy] = useState("");
+    const [official, setOfficial] = useState(false);
+
+    useEffect(() => {
+        if (official) {
+            setGitUrl("https://github.com/yaklang/yakit-store")
+        }
+    }, [official]);
+
+    return <Form
+        labelCol={{span: 5}} wrapperCol={{span: 14}}
+        onSubmitCapture={e => {
+            e.preventDefault()
+
+            const params: YakExecutorParam[] = [
+                {Key: "giturl", Value: gitUrl},
+            ];
+
+            if (proxy.trim() !== "") {
+                params.push({Value: proxy.trim(), Key: "proxy"})
+            }
+            startExecYakCode(
+                "导入 Yak 插件",
+                {
+                    Script: loadYakitPluginCode, Params: params
+                },
+            )
+        }}
+    >
+        <SelectOne label={" "} colon={false} data={[
+            {text: "使用官方源", value: true},
+            {text: "第三方仓库源", value: false},
+        ]} value={official} setValue={setOfficial}/>
+        <InputItem
+            disable={official} required={true}
+            label={"Git 仓库"} value={gitUrl} setValue={setGitUrl}
+            help={"例如 https://github.com/yaklang/yakit-store"}
+        />
+        <InputItem
+            label={"代理"}
+            value={proxy}
+            setValue={setProxy}
+            help={"访问中国大陆无法访问的代码仓库"}
+        />
+        <Form.Item colon={false} label={" "}>
+            <Button type="primary" htmlType="submit"> 导入 </Button>
+        </Form.Item>
+    </Form>
+})
+
+const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
+    if (!url) {
+        return <></>
+    }
+
+    if (url.startsWith("https://github.com/yaklang/yakit-store") && !noTag) {
+        return <Tag color={"green"}>yaklang.io</Tag>
+    }
+
+    return <Tooltip title={url}>
+        <Button type={"link"} style={{
+            paddingLeft: 0, paddingRight: 0, marginLeft: 0, marginRight: 0,
+        }} icon={<GithubOutlined/>}/>
+    </Tooltip>
+}

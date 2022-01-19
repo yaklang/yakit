@@ -154,7 +154,7 @@ export const RouteMenuData: MenuDataProps[] = [
         ],
     },
 
-    {key: Route.ModManager, label: "插件商店", icon: <AppstoreOutlined/>},
+    {key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined/>},
     {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined/>},
     {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
     {

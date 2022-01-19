@@ -19,7 +19,7 @@ export interface StatusCardProps {
     Tag?: string
 }
 
-export interface StatusCardInfoProps{
+export interface StatusCardInfoProps {
     tag: string
     info: StatusCardProps[]
 }
@@ -32,6 +32,7 @@ export interface PluginResultUIProp {
     progress: ExecResultProgress[]
     statusCards: StatusCardInfoProps[]
     script?: YakScript
+    defaultConsole?: boolean
 
     onXtermRef?: (ref: any) => any
 }
@@ -57,9 +58,9 @@ const idToColor = (id: string) => {
     }
 }
 
-export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
+export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
     const {loading, results, progress, script, statusCards} = props;
-    const [active, setActive] = useState("feature-0");
+    const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0");
     const xtermRef = useRef(null)
 
     useEffect(() => {
@@ -98,7 +99,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
         features.filter((data, i) => features.indexOf(data) === i)
         : [];
 
-    return <div style={{width: "100%"}}>
+    return <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column"}}>
         {statusCards.length > 0 && <div style={{marginTop: 8, marginBottom: 8}}>
             <Row gutter={8}>
                 {statusCards.map((card, cardIndex) => {
@@ -106,13 +107,16 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                         <Card hoverable={true} bodyStyle={{padding: 12}}>
                             <div>
                                 <h2>{card.tag}</h2>
-                                <div style={{ display: 'flex' ,justifyContent: 'space-between'}}>
-                                    {card.info.map((info,infoIndex)=>{
-                                        return <Statistic valueStyle={{color:idToColor(info.Id),textAlign:`${(infoIndex>=1)&&(card.info.length===infoIndex+1)?'right':'left'}`}} key={info.Id} title={card.info.length>1?info.Id:''} value={info.Data}/>
+                                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                    {card.info.map((info, infoIndex) => {
+                                        return <Statistic valueStyle={{
+                                            color: idToColor(info.Id),
+                                            textAlign: `${(infoIndex >= 1) && (card.info.length === infoIndex + 1) ? 'right' : 'left'}`
+                                        }} key={info.Id} title={card.info.length > 1 ? info.Id : ''} value={info.Data}/>
                                     })}
                                 </div>
                             </div>
-                            
+
                         </Card>
                     </Col>
                 })}
@@ -122,9 +126,12 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
             {progressBars.map(i => i.node)}
         </div>}
         <Tabs
+            style={{flex: 1}}
+            className={"main-content-tabs"}
             size={"small"}
             activeKey={active}
             onChange={setActive}
+            // forceRender={true}
         >
             {(finalFeatures || []).map((i, index) => {
                 return <Tabs.TabPane
@@ -156,11 +163,13 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = (props) => {
                 </>}
             </Tabs.TabPane>
             {props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
-                <XTerm ref={xtermRef} options={{convertEol: true, rows: 18}}/>
+                <div style={{width: "100%", height: "100%"}}>
+                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}/>
+                </div>
             </Tabs.TabPane>}
         </Tabs>
     </div>
-};
+});
 
 export interface YakitFeatureRenderProp {
     feature: string

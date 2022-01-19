@@ -3,8 +3,22 @@ const FS = require("fs");
 const PATH = require("path");
 
 module.exports = (win, getClient) => {
+
+  const handlerHelper = require("./handleStreamWithContext");
+
+  const streamExecMap = new Map();
+  ipcMain.handle("cancel-ExecYakCode", handlerHelper.cancelHandler(streamExecMap));
+  ipcMain.handle("ExecYakCode", (e, params, token) => {
+    let stream = getClient().Exec(params);
+    handlerHelper.registerHandler(win, stream, streamExecMap, token)
+  })
+
+  
   let stream;
   ipcMain.handle("cancel-yak", async () => {
+    if (stream) stream.cancel();
+  });
+  ipcMain.handle("cancel-exec-yak", async () => {
     if (stream) stream.cancel();
   });
   ipcMain.handle("exec-yak", async (e, execRequest) => {
