@@ -1,0 +1,35 @@
+.bug-test-executor.ant-tabs-card.ant-tabs-small > .ant-tabs-nav .ant-tabs-tab {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+.bug-test-executor.ant-tabs-top > .ant-tabs-nav {
+    margin: 0 0 5px 0;
+}
+.bug-test-executor {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+}
+.bug-test-executor .ant-tabs-content-holder {
+    flex-grow: 1;
+}
+
+.bug-test-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+}
+.bug-test-container .bug-test-list {
+    padding-left: 20px;
+    flex-grow: 1;
+    overflow: auto hidden;
+}
+.bug-test-container .bug-test-list .list-item {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e8e8e8;
+    margin-bottom: 8px;
+    padding-left: 5px;
+}
