@@ -119,7 +119,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                     <MITMPage onSendToWebFuzzer={sendToFuzzer}/>
                 </div>
             </Tabs.TabPane>
-            <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false}>
+            <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false} forceRender={true}>
                 <div style={{height: "100%"}}>
                     <HTTPHistory sendToWebFuzzer={sendToFuzzer}/>
                 </div>
