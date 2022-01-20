@@ -119,6 +119,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     const [errors, setErrors] = useState<string[]>([])
     const [executing, setExecuting] = useState(false)
     const [outputEncoding, setOutputEncoding] = useState<"utf8" | "latin1">("utf8")
+    const xtermAsideRef = useRef(null)
     const xtermRef = useRef(null)
 
     const [extraParams, setExtraParams] = useState("");
@@ -485,13 +486,23 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         }
     }
 
+    const xtermResize = () => {
+        if (!xtermAsideRef || !xtermAsideRef.current) return
+        const aside = xtermAsideRef.current as unknown as HTMLDivElement
+        if (xtermRef) xtermFit(xtermRef, 100, Math.floor(aside.clientHeight / 18) - 1)
+    }
+
     useEffect(() => {
         if (tabList.length === 0) setFullScreen(false)
     }, [tabList])
 
     useEffect(() => {
-        if (xtermRef) {
-            xtermFit(xtermRef, 100, 14)
+        if (xtermRef) xtermResize()
+        
+        window.onresize=()=>{xtermResize()}
+
+        return () => {
+            window.onresize = null
         }
     })
 
@@ -741,7 +752,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                         </div>
                     )}
                     {tabList.length > 0 && (
-                        <div style={{width: "100%", height: "30%", overflow: "auto", borderTop: "1px solid #dfdfdf"}}>
+                        <div ref={xtermAsideRef} style={{width: "100%", height: "30%", overflow: "auto", borderTop: "1px solid #dfdfdf"}}>
                             <Tabs
                                 style={{height: "100%"}}
                                 className={"right-xterm"}
@@ -808,7 +819,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                             }
                                         }}
                                         onResize={(r) => {
-                                            xtermFit(xtermRef, r.cols, 14)
+                                            xtermFit(xtermRef, r.cols, r.rows)
                                         }}
                                     />
                                 </TabPane>
