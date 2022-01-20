@@ -111,9 +111,7 @@ export const ExecResultsViewer: React.FC<ExecResultsViewerProp> = (props) => {
             <Tag
                 color={LogLevelToCode(latestLogData.level)}
             >{formatTimestamp(latestLogData?.timestamp)}: {(latestLogData.level).toUpperCase()}</Tag>
-            <div style={{width: "100%", overflow: "auto"}}>
-                <Text copyable={true}>{latestLogData.data}</Text>
-            </div>
+            <Text style={{maxWidth: 300}} ellipsis={{tooltip: true}} copyable={true}>{latestLogData.data}</Text>
         </Space>
         return <Card hoverable={true} bodyStyle={{
             padding: 6, margin: 0,
