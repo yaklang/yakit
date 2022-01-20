@@ -119,6 +119,12 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                 setMenuHeight(window.innerHeight - 350 >= 200 ? window.innerHeight - 350 : 200)
             }, 100)
         }
+        ipcRenderer.on("bug-test-hidden", (e: any, flag: any) => {
+            setCollapsed(true)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("bug-test-hidden")
+        }
     }, [])
 
     return (
@@ -332,7 +338,6 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
 
         let updateTableTick = setInterval(updateTasks, 1000)
         ipcRenderer.on(dataChannel, async (e: any, data: ExecBatchYakScriptResult) => {
-            console.log(data)
             let element = tempTasks.get(data.Id)
             if (element === undefined) {
                 tempTasks.set(data.Id, {
@@ -367,10 +372,9 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
             setExecuting(false)
             updateTasks()
         })
-
         ipcRenderer.invoke(
             "exec-batch-yak-script",
-            {...params, Keyword: props.keyword.split("-"[0]), Target: ""},
+            {...params, Keyword: props.keyword.split("-")[0], Target: ""},
             token
         )
         setExecuting(true)
@@ -510,7 +514,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                     <ExecResultsViewer results={ele.data.Results} oneLine={true} />
                                 </div>
                                 <Divider type='vertical' />
-                                <div>
+                                <div style={{flexGrow: 1, textAlign: "right"}}>
                                     <Space>
                                         <Button
                                             type={"primary"}
@@ -565,111 +569,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                         ))}
                     </div>
                 </div>
-                {/* <List>
-                    <VirtualList data={tasks} height={listHeight} itemHeight={40} itemKey={(item) => item.Id}>
-                        {(item) => (
-                            <List.Item key={item.Id}>
-                                <div>{item.Id}</div>
-                            </List.Item>
-                        )}
-                    </VirtualList>
-                </List> */}
-
-                {/* <Table<ExecBatchYakScriptTask>
-                        pagination={false}
-                        dataSource={tasks}
-                        bordered={true}
-                        size={"small"}
-                        rowKey={(row) => {
-                            return row.Id
-                        }}
-                        columns={[
-                            {
-                                title: "模块名称",
-                                width: 400,
-                                render: (i: ExecBatchYakScriptTask) => (
-                                    <div style={{overflow: "auto", width: 400}}>
-                                        <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 300}}>
-                                            {i.Id}
-                                        </Text>
-                                    </div>
-                                )
-                            },
-                            {
-                                title: "模块状态",
-                                width: 150,
-                                render: (i: ExecBatchYakScriptTask) => StatusToVerboseTag(i.Status)
-                            },
-                            {
-                                title: "执行过程预览",
-                                render: (i: ExecBatchYakScriptTask) => {
-                                    return <ExecResultsViewer results={i.Results} oneLine={true} />
-                                }
-                            },
-                            {
-                                title: "操作",
-                                render: (i: ExecBatchYakScriptTask) => (
-                                    <div>
-                                        <Space>
-                                            <Button
-                                                type={"primary"}
-                                                size={"small"}
-                                                onClick={(e) => {
-                                                    if (!i.PoC) {
-                                                        Modal.error({title: "没有模块信息"})
-                                                        return
-                                                    }
-                                                    showModal({
-                                                        title: `单体模块测试: ${i.PoC.ScriptName}`,
-                                                        width: "75%",
-                                                        content: (
-                                                            <>
-                                                                <YakScriptOperator script={i.PoC} />
-                                                            </>
-                                                        )
-                                                    })
-                                                }}
-                                            >
-                                                单体检测 / Single Exec
-                                            </Button>
-                                            <Button
-                                                size={"small"}
-                                                onClick={(e) => {
-                                                    if (!i.PoC) {
-                                                        Modal.error({title: "没有模块信息"})
-                                                        return
-                                                    }
-                                                    showModal({
-                                                        title: `源码: ${i.PoC.ScriptName}`,
-                                                        width: "75%",
-                                                        content: (
-                                                            <>
-                                                                <div style={{height: 400}}>
-                                                                    <YakEditor
-                                                                        readOnly={true}
-                                                                        type={"yaml"}
-                                                                        value={i.PoC.Content}
-                                                                    />
-                                                                </div>
-                                                            </>
-                                                        )
-                                                    })
-                                                }}
-                                            >
-                                                源码 / Source
-                                            </Button>
-                                        </Space>
-                                    </div>
-                                )
-                            }
-                        ]}
-                    ></Table> */}
             </div>
-            {/*<Col span={8} style={{height: "100%"}}>*/}
-            {/*    <YakScriptManagerPage type={"nuclei"} onlyViewer={true} keyword={props.keyword.split('-')[0]} limit={params.Limit}/>*/}
-            {/*</Col>*/}
-            {/*<Col span={16}>*/}
-            {/*</Col>*/}
         </div>
     )
 }

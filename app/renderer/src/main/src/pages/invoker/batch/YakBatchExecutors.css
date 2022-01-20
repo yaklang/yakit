@@ -19,6 +19,7 @@
     height: 100%;
     display: flex;
     flex-flow: column;
+    padding-top: 10px;
 }
 .bug-test-container .bug-test-list {
     padding-left: 20px;

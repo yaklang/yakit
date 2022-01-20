@@ -200,6 +200,14 @@ const Main: React.FC<MainProp> = (props) => {
             })
     }
 
+    useEffect(()=>{
+        const key = currentTabKey.split("-")[0]
+        const hasBug = pageCache.filter((item) => item.id.split("-")[0] === "poc").length === 1
+        if (key !== "poc" && hasBug) {
+            ipcRenderer.invoke("main-bug-test", false)
+        }
+    },[currentTabKey])
+
     useEffect(() => {
         if (engineStatus === "error") {
             props.onErrorConfirmed && props.onErrorConfirmed()
