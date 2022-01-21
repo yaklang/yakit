@@ -16,6 +16,8 @@ export interface ResizeBoxProps {
 
     style?: React.CSSProperties
     lineStyle?: React.CSSProperties
+
+    onChangeSize?: () => void
 }
 
 export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
@@ -28,13 +30,15 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
         secondMinSize = "100px",
         secondNode,
         style,
-        lineStyle
+        lineStyle,
+        onChangeSize
     } = props
 
     const bodyRef = useRef(null)
     const firstRef = useRef(null)
     const secondRef = useRef(null)
     const lineRef = useRef(null)
+    const maskRef = useRef(null)
 
     const moveSize = (size: number) => {
         if (!firstRef || !firstRef.current) return
@@ -51,6 +55,8 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
             first.style.width = firstSize
             second.style.width = secondSize
         }
+
+        if (onChangeSize) onChangeSize()
     }
 
     const bodyResize = () => {
@@ -73,6 +79,15 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
         }
     }
 
+    const moveStart = () => {
+        if (!maskRef || !maskRef.current) return
+        ;(maskRef.current as unknown as HTMLDivElement).style.display = "block"
+    }
+    const moveEnd = () => {
+        if (!maskRef || !maskRef.current) return
+        ;(maskRef.current as unknown as HTMLDivElement).style.display = "none"
+    }
+
     useEffect(() => {
         let timer: any = null
         window.onresize = () => {
@@ -90,7 +105,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
                 style={{
                     width: `${isVer ? "100%" : firstRatio}`,
                     height: `${isVer ? firstRatio : "100%"}`,
-                    padding: `${isVer ? "0 0 2px 0" : "0 2px 0 0 "}`,
+                    padding: `${isVer ? "0 0 2px 0" : "0 2px 0 0 "}`
                 }}
             >
                 {firstNode}
@@ -110,7 +125,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
                 style={{
                     width: `${isVer ? "100%" : secondRatio}`,
                     height: `${isVer ? secondRatio : "100%"}`,
-                    padding: `${isVer ? "2px 0 0 0" : "0 0 0 2px"}`,
+                    padding: `${isVer ? "2px 0 0 0" : "0 0 0 2px"}`
                 }}
             >
                 {secondNode}
@@ -122,8 +137,12 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
                 resizeRef={lineRef}
                 minSize={firstMinSize}
                 maxSize={secondMinSize}
+                onStart={moveStart}
+                onEnd={moveEnd}
                 onChangeSize={moveSize}
             ></ResizeLine>
+
+            <div ref={maskRef} className='mask-body'></div>
         </div>
     )
 }

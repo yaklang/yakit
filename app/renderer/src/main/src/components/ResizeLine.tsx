@@ -9,11 +9,13 @@ export interface ResizeLineProps {
     bodyRef: any
     resizeRef: any
 
+    onStart?: () => void
+    onEnd?: () => void
     onChangeSize: (distance: number) => void
 }
 
 export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
-    const {isVer = false, minSize, maxSize, bodyRef, resizeRef, onChangeSize} = props
+    const {isVer = false, minSize, maxSize, bodyRef, resizeRef, onStart, onEnd, onChangeSize} = props
 
     let min, max
     // 判断最小值和最大值是什么类型的值，只支持纯数字和像素
@@ -40,6 +42,7 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
         const line = lineRef.current as unknown as HTMLDivElement
 
         resize.onmousedown = (e: any) => {
+            if (onStart) onStart()
             let isMove = true
             const start = isVer ? e.layerY : e.layerX
             const first = isVer ? e.clientY : e.clientX
@@ -49,10 +52,13 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
             line.style.display = "inline"
 
             body.onmousemove = (event: any) => {
+                const bodyRect = body.getBoundingClientRect()
                 // 计算分割线距离body开始边框和结束边框的距离
                 const distance = [
-                    isVer ? event.layerY : event.layerX,
-                    isVer ? body.clientHeight - event.layerY : body.clientWidth - event.layerX
+                    isVer ? event.clientY - bodyRect.top : event.clientX - bodyRect.left,
+                    isVer
+                        ? body.clientHeight - event.clientY + bodyRect.top
+                        : body.clientWidth - event.clientX + bodyRect.left
                 ]
                 if (distance[0] <= min || distance[1] <= max) return
                 const second = isVer ? event.clientY : event.clientX
@@ -65,6 +71,7 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
 
                 if (e.clientY > window.innerWidth || e.clientY < 0 || e.clientX < 0 || e.clientX > window.innerHeight) {
                 }
+                if (onEnd) onEnd()
                 line.style.display = "none"
                 body.onmousemove = null
                 const end = (isVer ? line.style.top : line.style.left).split("px")[0] || start
@@ -82,7 +89,9 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
         <div
             ref={lineRef}
             className={`resize-line-style ${isVer ? "resize-line-ver" : "resize-line-hor"}`}
-            style={isVer ? {top: `0px`} : {left: `0px`}}
+            style={
+                isVer ? {top: `0px`, borderTop: "2px dashed #434344"} : {left: `0px`, borderLeft: "2px dashed #434344"}
+            }
         ></div>
     )
 }
