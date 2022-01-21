@@ -101,7 +101,7 @@ export default function useHoldingIPCRStream(
                     )
 
                     // 处理 Process KVPair
-                    if (obj.type === "process") {
+                    if (obj.type === "progress") {
                         const processData = obj.content as ExecResultProgress
                         if (processData && processData.id) {
                             processKVPair.current.set(
