@@ -278,7 +278,9 @@ export const YakBatchExecutor: React.FC<YakBatchExecutorProp> = (props) => {
                     pagination={false}
                     dataSource={tasks}
                     bordered={true} size={"small"}
-                    rowKey={(row)=>{return row.Id}}
+                    rowKey={(row) => {
+                        return row.Id
+                    }}
                     columns={[
                         {
                             title: "模块名称",
@@ -317,7 +319,7 @@ export const YakBatchExecutor: React.FC<YakBatchExecutorProp> = (props) => {
                                                 </>
                                             })
                                         }}
-                                    >单体检测 / Single Exec</Button>
+                                    >单独检测</Button>
                                     <Button
                                         size={"small"}
                                         onClick={e => {
@@ -337,7 +339,7 @@ export const YakBatchExecutor: React.FC<YakBatchExecutorProp> = (props) => {
                                                 </>
                                             })
                                         }}
-                                    >源码 / Source</Button>
+                                    >源码</Button>
                                     <Button type={"primary"} size={"small"} disabled={true}>待开发...</Button>
                                 </Space>
                             </div>

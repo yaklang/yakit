@@ -535,10 +535,10 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                                 })
                                             }}
                                         >
-                                            单体检测 / Single Exec
+                                            复测
                                         </Button>
                                         <Button
-                                            size={"small"}
+                                            size={"small"} style={{marginRight: 8}}
                                             onClick={(e) => {
                                                 if (!ele.data.PoC) {
                                                     Modal.error({title: "没有模块信息"})
@@ -561,7 +561,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                                 })
                                             }}
                                         >
-                                            源码 / Source
+                                            源码
                                         </Button>
                                     </Space>
                                 </div>
