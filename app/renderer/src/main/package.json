@@ -20,7 +20,7 @@
     "@types/react-resizable": "^1.7.4",
     "@types/react-sparklines": "^1.7.2",
     "@uiw/react-md-editor": "^3.6.5",
-    "ahooks": "^3.0.8",
+    "ahooks": "^3.1.6",
     "ali-react-table": "2.6.1",
     "antd": "4.17.2",
     "bizcharts": "^4.1.12",
@@ -65,7 +65,13 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "off"
+      ]
+    }
   },
   "browserslist": {
     "production": [

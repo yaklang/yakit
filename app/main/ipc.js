@@ -150,5 +150,8 @@ module.exports = {
 
         // terminal
         require("./handlers/terminal")(win, getClient);
+
+        // 通信
+        require('./handlers/communication')(win, getClient);
     }
 }

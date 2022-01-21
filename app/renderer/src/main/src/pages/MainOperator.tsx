@@ -87,6 +87,8 @@ const singletonRoute = [
     // database
     Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
     Route.DB_Risk,
+    
+    Route.PoC
 ]
 
 const Main: React.FC<MainProp> = (props) => {
@@ -197,6 +199,14 @@ const Main: React.FC<MainProp> = (props) => {
                 setExtraGeneralModule(data.Data)
             })
     }
+
+    useEffect(()=>{
+        const key = currentTabKey.split("-")[0]
+        const hasBug = pageCache.filter((item) => item.id.split("-")[0] === "poc").length === 1
+        if (key !== "poc" && hasBug) {
+            ipcRenderer.invoke("main-bug-test", false)
+        }
+    },[currentTabKey])
 
     useEffect(() => {
         if (engineStatus === "error") {

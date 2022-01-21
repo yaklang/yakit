@@ -27,6 +27,11 @@ import {getValue, saveValue} from "./kv";
 import {BRIDGE_ADDR, BRIDGE_SECRET} from "../pages/reverse/ReverseServerPage";
 import {failed, info} from "./notification";
 import {RiskTable} from "../pages/risks/RiskTable";
+import {YakExecutorParam, YakExecutorParamsProp} from "../pages/invoker/YakExecutorParams";
+import useHoldingIPCRStream from "../hook/useHoldingIPCRStream";
+import {randomString} from "./randomUtil";
+import {PluginResultUI} from "../pages/yakitStore/viewers/base";
+import {AutoCard} from "../components/AutoCard";
 
 export interface YakVersionProp {
 
@@ -289,7 +294,7 @@ export const AutoUpdateYakModuleButton: React.FC<AutoUpdateYakModuleButtonProp> 
         }}
     >
         <Button {...props} type={"link"}>
-            更新 Yakit 插件商店
+            更新 Yakit 插件仓库
         </Button>
     </Popconfirm>
 };
@@ -472,4 +477,53 @@ export const ConfigGlobalReverseButton = React.memo(() => {
             </Form>
         </Modal>
     </div>
+});
+
+interface YakScriptParam {
+    Script: string
+    Params: YakExecutorParam[]
+}
+
+export const startExecYakCode = (
+    verbose: string,
+    params: YakScriptParam) => {
+    let m = showModal({
+        width: "60%", maskClosable: false,
+        title: `正在执行：${verbose}`,
+        content: <div style={{height: 400, overflowY: "auto"}}>
+            <AutoCard>
+                <StartToExecYakScriptViewer script={params} verbose={verbose}/>
+            </AutoCard>
+        </div>
+    })
+}
+
+const StartToExecYakScriptViewer = React.memo((props: {
+    verbose: string,
+    script: YakScriptParam,
+}) => {
+    const {script, verbose} = props;
+    const [token, setToken] = useState(randomString(40));
+    const [loading, setLoading] = useState(true);
+    const [infoState, {reset, setXtermRef}] = useHoldingIPCRStream(
+        verbose, "ExecYakCode",
+        token, () => setTimeout(() => setLoading(false), 300),
+        () => {
+            ipcRenderer.invoke("ExecYakCode", script, token).then(() => {
+                info(`执行 ${verbose} 成功`)
+            }).catch(e => {
+                failed(`执行 ${verbose} 遇到问题：${e}`)
+            })
+        }
+    )
+
+    return (
+        <PluginResultUI
+            loading={loading} defaultConsole={false}
+            statusCards={infoState.statusState}
+            progress={infoState.processState}
+            results={infoState.messageSate}
+            onXtermRef={setXtermRef}
+        />
+    )
 })

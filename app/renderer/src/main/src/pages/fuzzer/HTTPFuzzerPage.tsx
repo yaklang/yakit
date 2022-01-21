@@ -322,6 +322,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             {loading && <Spin size={"small"} spinning={loading} />}
                             {onlyOneResponse ? (
                                 <Space>
+                                    {content[0].IsHttps && <Tag>{content[0].IsHttps ? "https" : ""}</Tag>}
                                     <Tag>{content[0].DurationMs}ms</Tag>
                                     <Space key='single'>
                                         <Button

@@ -3081,14 +3081,20 @@ aggregate-error@^3.0.0:
     clean-stack "^2.0.0"
     indent-string "^4.0.0"
 
-ahooks@^3.0.8:
-  version "3.0.8"
-  resolved "https://registry.npmmirror.com/ahooks/download/ahooks-3.0.8.tgz#77a683b0348c4a61b37d55cd7712f5447380941d"
-  integrity sha512-5baHmCZHeuR5QKYdUyZwPhCT4MZJcyWsjSp7CdaE4XvnOsI8NSfLYld4KAIEHKUrNVUZxF3xi0/QGudAC4id8Q==
+ahooks-v3-count@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmmirror.com/ahooks-v3-count/download/ahooks-v3-count-1.0.0.tgz#ddeb392e009ad6e748905b3cbf63a9fd8262ca80"
+  integrity sha512-V7uUvAwnimu6eh/PED4mCDjE7tokeZQLKlxg9lCTMPhN+NjsSbtdacByVlR1oluXQzD3MOw55wylDmQo4+S9ZQ==
+
+ahooks@^3.1.6:
+  version "3.1.6"
+  resolved "https://registry.npmmirror.com/ahooks/download/ahooks-3.1.6.tgz#722700b6d0d8985ac30f595527e07b310f1c8b99"
+  integrity sha512-WSEHy+eGWohAvyRKL+ZEiIefx30BDJwMaKEzYAZ88pdRhGjg17aSGVzI3lkJkzWHg+tjNz4sK6gFf3ouQ4xCzg==
   dependencies:
+    ahooks-v3-count "^1.0.0"
     dayjs "^1.9.1"
     intersection-observer "^0.12.0"
-    js-cookie "^3.0.0"
+    js-cookie "^2.x.x"
     lodash "^4.17.21"
     resize-observer-polyfill "^1.5.1"
     screenfull "^5.0.0"
@@ -8893,10 +8899,10 @@ jest@26.6.0:
     import-local "^3.0.2"
     jest-cli "^26.6.0"
 
-js-cookie@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.npmmirror.com/js-cookie/download/js-cookie-3.0.1.tgz#9e39b4c6c2f56563708d7d31f6f5f21873a92414"
-  integrity sha512-+0rgsUXZu4ncpPxRL+lNEptWMOWl9etvPHc/koSRp6MPwpRYAhmk0dUG00J4bxVV3r9uUzfo24wW0knS07SKSw==
+js-cookie@^2.x.x:
+  version "2.2.1"
+  resolved "https://registry.npmmirror.com/js-cookie/download/js-cookie-2.2.1.tgz#69e106dc5d5806894562902aa5baec3744e9b2b8"
+  integrity sha512-HvdH2LzI/EAZcUwA8+0nKNtWHqS+ZmijLA30RwZA0bo7ToCckjK5MkGhjED9KoRcXO6BaGI3I9UIzSA1FKFPOQ==
 
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"

@@ -103,6 +103,7 @@ export interface YakScript {
     IsGeneralModule?: boolean
     GeneralModuleVerbose?: string
     GeneralModuleKey?: string
+    FromGit?: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

@@ -5,32 +5,34 @@ import {
     Card,
     Checkbox,
     Col,
-    Collapse,
+    Divider,
     Empty,
     Form,
     List,
-    PageHeader,
-    Radio,
+    Popconfirm,
     Row,
     Space,
-    Tag
+    Statistic,
+    Tag, Tooltip
 } from "antd";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {showModal} from "../../utils/showModal";
 import {YakModuleList} from "../yakitStore/YakitStorePage";
 import {YakitLogViewers} from "../invoker/YakitLogFormatter";
-import ReactJson from "react-json-view";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {mitmPluginTemplateShort} from "../invoker/YakScriptCreator";
 import "../main.css";
-import {MITMPluginCardProp, YakScriptHooksViewer} from "./MITMPluginCard";
-import {CopyableField, SelectOne, SwitchItem} from "../../utils/inputUtil";
+import {MITMPluginCardProp} from "./MITMPluginCard";
+import {CopyableField, SelectOne} from "../../utils/inputUtil";
 import {EditorProps, YakCodeEditor} from "../../utils/editors";
 import {YakScript, YakScriptHooks} from "../invoker/schema";
-import {useMap, useMemoizedFn} from "ahooks";
+import {useMap} from "ahooks";
 import {failed} from "../../utils/notification";
-import {CloseOutlined, PoweroffOutlined} from "@ant-design/icons";
+import {PoweroffOutlined, ThunderboltFilled, UserOutlined, QuestionCircleOutlined} from "@ant-design/icons";
 import {AutoCard} from "../../components/AutoCard";
+import {StatusCardProps} from "../yakitStore/viewers/base";
+import moment from "moment";
+import {formatDate} from "../../utils/timeUtil";
 
 const defaultScript = mitmPluginTemplateShort;
 
@@ -42,9 +44,13 @@ const updateHooks = () => {
     })
 }
 
-export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
-    const [initialed, setInitialed] = useState(false);
+export interface MITMPluginOperatorProps extends MITMPluginCardProp {
+    status: StatusCardProps[]
+}
 
+export const MITMPluginOperator = React.memo((props: MITMPluginOperatorProps) => {
+    const [initialed, setInitialed] = useState(false);
+    const {status} = props;
     const [script, setScript] = useState(defaultScript);
     // const [userDefined, setUserDefined] = useState(false);
     const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>());
@@ -79,6 +85,8 @@ export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
         }
     });
     hooksItem = hooksItem.sort((a, b) => a.name.localeCompare(b.name))
+
+    const currentTimestamp: number = (props?.messages || []).length > 0 ? props.messages[0].timestamp : moment().unix()
 
     return <div id={"plugin-operator"} style={{height: "100%"}}>
         <Row style={{height: "100%"}} gutter={12}>
@@ -142,7 +150,7 @@ export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
                             {/* 用户热加载代码 */}
                             <YakCodeEditor
                                 noHeader={true} noPacketModifier={true}
-                                originValue={Buffer.from(script)}
+                                originValue={Buffer.from(script || "")}
                                 onChange={e => setScript(e.toString())}
                                 language={"yak"}
                                 extraEditorProps={{
@@ -160,6 +168,10 @@ export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
                                 onYakScriptRender={(i: YakScript) => {
                                     return <MITMYakScriptLoader
                                         script={i} hooks={hooks}
+                                        onSendToPatch={code => {
+                                            setScript(code)
+                                            setMode("hot-patch")
+                                        }}
                                         onSubmitYakScriptId={props.onSubmitYakScriptId}
                                     />
                                 }}
@@ -171,6 +183,10 @@ export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
                                     {hooksItem.map(i => {
                                         return <>
                                             <MITMYakScriptLoader
+                                                onSendToPatch={code => {
+                                                    setScript(code)
+                                                    setMode("hot-patch")
+                                                }}
                                                 script={{ScriptName: i.name} as YakScript} hooks={hooks}
                                                 onSubmitYakScriptId={props.onSubmitYakScriptId}
                                             />
@@ -184,16 +200,27 @@ export const MITMPluginOperator: React.FC<MITMPluginCardProp> = (props) => {
                     </AutoCard>
                 </div>
             </Col>
-            <Col span={userDefined ? 12 : 16} style={{height: "100%", overflowY: "auto"}}>
-                <YakitLogViewers data={props.messages}/>
+            <Col span={userDefined ? 12 : 16} style={{height: "100%", overflow: "hidden"}}>
+                <AutoCard
+                    title={<Space>
+                        <Tag color={"geekblue"}>{formatDate(currentTimestamp)}</Tag>
+                    </Space>}
+                    size={"small"}
+                    bodyStyle={{overflowY: "auto"}}
+                >
+                    <StatusCardViewer status={status}/>
+                    <Divider style={{marginTop: 8}}/>
+                    <YakitLogViewers data={props.messages} onlyTime={true}/>
+                </AutoCard>
             </Col>
         </Row>
     </div>
-};
+});
 
 interface MITMYakScriptLoaderProps {
     script: YakScript
     hooks: Map<string, boolean>
+    onSendToPatch?: (code: string) => any
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
 }
 
@@ -208,50 +235,92 @@ const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     const i = script;
 
     return <Card
-        onClick={() => {
-            const checked = !!hooks.get(i.ScriptName);
-
-            if (checked) {
-                ipcRenderer.invoke("mitm-remove-hook", {
-                    HookName: [],
-                    RemoveHookID: [i.ScriptName],
-                } as any)
-                return
-            }
-
-            if (!p.onSubmitYakScriptId) {
-                return
-            }
-
-            if ((script.Params || []).length > 0) {
-                let m2 = showModal({
-                    title: `设置 [${script.ScriptName}] 的参数`,
-                    content: <>
-                        <YakScriptParamsSetter
-                            {...script}
-                            params={[]}
-                            onParamsConfirm={(p: YakExecutorParam[]) => {
-                                clearMITMPluginCache()
-                                onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
-                                m2.destroy()
-                            }}
-                            submitVerbose={"设置 MITM 参数"}
-                        />
-                    </>, width: "50%",
-                })
-            } else {
-                clearMITMPluginCache()
-                p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
-            }
-        }}
         size={"small"}
         bodyStyle={{paddingLeft: 12, paddingTop: 8, paddingBottom: 8, paddingRight: 12}}
         style={{
             width: "100%", marginBottom: 4,
             // backgroundColor: hooks.get(i.ScriptName) ? "#d6e4ff" : undefined
         }} hoverable={true}
-    ><Space>
-        <Checkbox checked={!!hooks.get(i.ScriptName)}/>{i.ScriptName}
-    </Space></Card>
+    >
+        <div style={{display: "flex", flexDirection: "row", width: "100%"}}>
+            <Checkbox
+                style={{marginRight: 6}}
+                checked={!!hooks.get(i.ScriptName)}
+                onClick={() => {
+                    const checked = !!hooks.get(i.ScriptName);
 
+                    if (checked) {
+                        ipcRenderer.invoke("mitm-remove-hook", {
+                            HookName: [],
+                            RemoveHookID: [i.ScriptName],
+                        } as any)
+                        return
+                    }
+
+                    if (!p.onSubmitYakScriptId) {
+                        return
+                    }
+
+                    if ((script.Params || []).length > 0) {
+                        let m2 = showModal({
+                            title: `设置 [${script.ScriptName}] 的参数`,
+                            content: <>
+                                <YakScriptParamsSetter
+                                    {...script}
+                                    params={[]}
+                                    onParamsConfirm={(p: YakExecutorParam[]) => {
+                                        clearMITMPluginCache()
+                                        onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
+                                        m2.destroy()
+                                    }}
+                                    submitVerbose={"设置 MITM 参数"}
+                                />
+                            </>, width: "50%",
+                        })
+                    } else {
+                        clearMITMPluginCache()
+                        p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
+                    }
+                }}
+            />
+            <div style={{marginRight: 6}}>
+                {!!i.ScriptName ? i.ScriptName : `{hot-patched}`}
+            </div>
+            {script.Help && <Tooltip title={script.Help}>
+                <Button size={"small"} type={"link"} icon={<QuestionCircleOutlined/>}/>
+            </Tooltip>}
+
+            <div style={{flex: 1, textAlign: "right"}}>
+                {script.Author && <Tooltip title={script.Author}>
+                    <Button size={"small"} type={"link"} icon={<UserOutlined/>}/>
+                </Tooltip>}
+                <Popconfirm
+                    disabled={!p.onSendToPatch}
+                    title={"发送到【热加载】中调试代码？"}
+                    onConfirm={() => {
+                        let _ = p.onSendToPatch && p.onSendToPatch(script.Content);
+                    }}
+                >
+                    <Button
+                        disabled={!p.onSendToPatch}
+                        type={"link"}
+                        size={"small"}
+                        icon={<ThunderboltFilled/>}>
+                    </Button>
+                </Popconfirm>
+            </div>
+        </div>
+    </Card>
+})
+
+const StatusCardViewer = React.memo((p: { status: StatusCardProps[] }) => {
+    return <Row gutter={12}>
+        {p.status.map(i => {
+            return <Col span={6} style={{marginBottom: 8}}>
+                <Card hoverable={true} bordered={true} size={"small"}>
+                    <Statistic title={i.Id} value={i.Data}/>
+                </Card>
+            </Col>
+        })}
+    </Row>
 })

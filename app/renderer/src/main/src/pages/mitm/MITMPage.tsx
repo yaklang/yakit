@@ -31,7 +31,8 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
 import {SelectOne} from "../../utils/inputUtil";
 import {MITMPluginOperator} from "./MITMPluginOperator";
-import {useLatest, useReactive} from "ahooks";
+import {useGetState, useLatest, useMemoizedFn, useReactive} from "ahooks";
+import {StatusCardProps} from "../yakitStore/viewers/base";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -110,40 +111,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // yakit log message
     const [logs, setLogs] = useState<ExecResultLog[]>([]);
     const latestLogs = useLatest<ExecResultLog[]>(logs);
+    const [_, setLatestStatusHash, getLatestStatusHash] = useGetState("");
+    const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
 
     // filter 过滤器
     const [mitmFilter, setMITMFilter] = useState<MITMFilterSchema>({});
-
-    // 这个 Forward 主要用来转发修改后的内容，同时可以转发请求和响应
-    const forward = () => {
-        // ID 不存在
-        if (!currentPacketId) {
-            return
-        }
-
-        setLoading(true);
-        setStatus("hijacking");
-        setAllowHijackCurrentResponse(false)
-        setForResponse(false)
-
-        if (forResponse) {
-            ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacket, currentPacketId).finally(() => {
-                clearCurrentPacket()
-                setTimeout(() => setLoading(false))
-            })
-        } else {
-            ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId).finally(() => {
-                clearCurrentPacket()
-                setTimeout(() => setLoading(false))
-            })
-        }
-    }
-
-    const recover = () => {
-        ipcRenderer.invoke("mitm-recover").then(() => {
-            // success("恢复 MITM 会话成功")
-        })
-    }
 
     // 用于接受后端传回的信息
     useEffect(() => {
@@ -171,6 +143,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
         // 用于 MITM 的 Message （YakitLog）
         const messages: ExecResultLog[] = [];
+        const statusMap = new Map<string, StatusCardProps>();
+        let lastStatusHash = '';
         ipcRenderer.on("client-mitm-message", (e, data: ExecResult) => {
             let msg = ExtractExecResultMessage(data);
             if (msg !== undefined) {
@@ -178,7 +152,25 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 // if (logHandler.logs.length > 25) {
                 //     logHandler.logs.shift()
                 // }
-                messages.push(msg as ExecResultLog)
+                const currentLog = msg as ExecResultLog;
+                if (currentLog.level === "feature-status-card-data") {
+                    lastStatusHash = `${currentLog.timestamp}-${currentLog.data}`
+
+                    try {
+                        // 解析 Object
+                        const obj = JSON.parse(currentLog.data)
+                        const {id, data} = obj;
+                        if(!data) {
+                            statusMap.delete(`${id}`)
+                        }else{
+                            statusMap.set(`${id}`, {Data: data, Id: id, Timestamp: currentLog.timestamp})
+                        }
+                    } catch (e) {
+
+                    }
+                    return
+                }
+                messages.push(currentLog)
                 if (messages.length > 25) {
                     messages.shift()
                 }
@@ -234,6 +226,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     return
                 }
             }
+
+            if (getLatestStatusHash() !== lastStatusHash) {
+                setLatestStatusHash(lastStatusHash)
+
+                const tmpCurrent: StatusCardProps[] = [];
+                statusMap.forEach((value, key) => {
+                    tmpCurrent.push(value)
+                })
+                setStatusCards(tmpCurrent.sort((a, b) => a.Id.localeCompare(b.Id)))
+            }
         }
         updateLogs()
         let id = setInterval(() => {
@@ -252,8 +254,37 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             allowHijackedResponseByRequest(currentPacketId)
         }
     }, [hijackAllResponse, currentPacketId])
+
+    useEffect(() => {
+        ipcRenderer.on("client-mitm-hijacked", forwardHandler);
+        return () => {
+            ipcRenderer.removeAllListeners("client-mitm-hijacked")
+        }
+    }, [autoForward])
+
+    useEffect(() => {
+        ipcRenderer.invoke("mitm-auto-forward", autoForward).finally(() => {
+            console.info(`设置服务端自动转发：${autoForward}`)
+        })
+    }, [autoForward])
+
+    useEffect(() => {
+        if (currentPacketId <= 0 && status === "hijacked") {
+            recover()
+            const id = setInterval(() => {
+                recover()
+            }, 500)
+            return () => {
+                clearInterval(id)
+            }
+        }
+    }, [currentPacketId])
+
+    const addr = `http://${host}:${port}`;
+
+
     // 自动转发劫持，进行的操作
-    const forwardHandler = (e: any, msg: MITMResponse) => {
+    const forwardHandler = useMemoizedFn((e: any, msg: MITMResponse) => {
         setMITMFilter({
             includeSuffix: msg.includeSuffix,
             excludeMethod: msg.excludeMethod,
@@ -312,50 +343,48 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 }
             }
         }
-    }
+    })
 
-    useEffect(() => {
-        ipcRenderer.on("client-mitm-hijacked", forwardHandler);
-        return () => {
-            ipcRenderer.removeAllListeners("client-mitm-hijacked")
+    // 这个 Forward 主要用来转发修改后的内容，同时可以转发请求和响应
+    const forward = useMemoizedFn(() => {
+        // ID 不存在
+        if (!currentPacketId) {
+            return
         }
-    }, [autoForward])
 
-    useEffect(() => {
-        ipcRenderer.invoke("mitm-auto-forward", autoForward).finally(() => {
-            console.info(`设置服务端自动转发：${autoForward}`)
+        setLoading(true);
+        setStatus("hijacking");
+        setAllowHijackCurrentResponse(false)
+        setForResponse(false)
+
+        if (forResponse) {
+            ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacket, currentPacketId).finally(() => {
+                clearCurrentPacket()
+                setTimeout(() => setLoading(false))
+            })
+        } else {
+            ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId).finally(() => {
+                clearCurrentPacket()
+                setTimeout(() => setLoading(false))
+            })
+        }
+    })
+
+    const recover = useMemoizedFn(() => {
+        ipcRenderer.invoke("mitm-recover").then(() => {
+            // success("恢复 MITM 会话成功")
         })
-    }, [autoForward])
+    })
 
-    useEffect(() => {
-        if (currentPacketId <= 0 && status === "hijacked") {
-            recover()
-            const id = setInterval(() => {
-                recover()
-            }, 500)
-            return () => {
-                clearInterval(id)
-            }
-        }
-    }, [currentPacketId])
-
-    const addr = `http://${host}:${port}`;
-
-    if (!initialed) {
-        return <div style={{textAlign: "center", paddingTop: 120}}>
-            <Spin spinning={true} tip={"正在初始化 MITM"}/>
-        </div>
-    }
-
-    const start = () => {
+    const start = useMemoizedFn(() => {
         setLoading(true)
         setError("")
         ipcRenderer.invoke("mitm-start-call", host, port, downstreamProxy).catch((e: any) => {
             notification["error"]({message: `启动中间人劫持失败：${e}`})
         })
-    }
+    })
 
-    const stop = () => {
+    const stop = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer.invoke("mitm-stop-call").then(() => {
             setStatus("idle")
@@ -365,20 +394,20 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setLoading(false)
             setPassiveMode(false)
         }, 300))
-    }
+    })
 
-    const hijacking = () => {
+    const hijacking = useMemoizedFn(() => {
         // setCurrentPacket(new Buffer([]));
         clearCurrentPacket()
         setLoading(true);
         setStatus("hijacking");
-    }
+    })
 
     function getCurrentId() {
         return currentPacketId
     }
 
-    const downloadCert = () => {
+    const downloadCert = useMemoizedFn(() => {
         return <Button
             type={"link"}
             onClick={() => {
@@ -400,9 +429,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 })
             }}
         >请先下载 SSL/TLS 证书</Button>
-    };
+    })
 
-    const setFilter = () => {
+    const setFilter = useMemoizedFn(() => {
         return <Button type={"link"}
                        onClick={() => {
                            let m = showDrawer({
@@ -418,8 +447,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                            });
                        }}
         >设置过滤器</Button>
-    }
+    })
 
+    if (!initialed) {
+        return <div style={{textAlign: "center", paddingTop: 120}}>
+            <Spin spinning={true} tip={"正在初始化 MITM"}/>
+        </div>
+    }
     return <div style={{height: "100%", width: "100%"}}>
         {/*{error && <Alert style={{marginBottom: 8}} message={error} type={"error"}/>}*/}
         {/*<div style={{marginLeft: 100, marginRight: 100}}>*/}
@@ -491,7 +525,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                 onExit={() => {
                                     stop()
                                 }}
-                                messages={logs}
+                                messages={logs} status={statusCards}
                                 onSubmitScriptContent={e => {
                                     ipcRenderer.invoke("mitm-exec-script-content", e)
                                 }}

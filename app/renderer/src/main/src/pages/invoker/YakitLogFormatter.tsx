@@ -14,22 +14,24 @@ import {CodeViewer} from "../../utils/codeViewer";
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
     finished?: boolean
+    onlyTime?: boolean
 }
 
-export const YakitLogViewers: React.FC<YakitLogViewersProp> = (props) => {
+export const YakitLogViewers = React.memo((props: YakitLogViewersProp) => {
     return <Timeline pending={!props.finished} reverse={true}>
         {(props.data || []).map(e => {
             return <Timeline.Item color={LogLevelToCode(e.level)}>
-                <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
+                <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} onlyTime={props.onlyTime}/>
             </Timeline.Item>
         })}
     </Timeline>
-};
+});
 
 export interface YakitLogFormatterProp {
     level: string
     data: string | any
     timestamp: number
+    onlyTime?: boolean
 }
 
 export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
@@ -38,20 +40,23 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
             try {
                 const obj = JSON.parse(props.data);
                 return <Space direction={"vertical"} style={{width: "100%"}}>
-                    {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
+                    {props.timestamp > 0 &&
+                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                     <Card title={"JSON 结果输出"} size={"small"}>
                         <ReactJson src={obj} enableClipboard={false}/>
                     </Card>
                 </Space>
-            }catch (e) {
+            } catch (e) {
                 return <Space>
-                    {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
+                    {props.timestamp > 0 &&
+                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                     <CodeViewer value={`${props.data}`} height={150} width={"100%"} mode={"json"}/>
                 </Space>
             }
         case "success":
             return <Space direction={"vertical"} style={{width: "100%"}}>
-                {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
+                {props.timestamp > 0 &&
+                <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                 <Card size={"small"} title={<Tag color={"green"}>模块执行结果</Tag>}>
                     {props.data}
                 </Card>
@@ -59,7 +64,8 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
         case "json-table":
             let obj: { head: string[], data: string[][] } = JSON.parse(props.data)
             return <Space direction={"vertical"} style={{width: "100%"}}>
-                {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
+                {props.timestamp > 0 &&
+                <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                 <Card
                     size={"small"} title={<Tag color={"green"}>直接结果(表格)</Tag>}
                     extra={[
@@ -102,7 +108,8 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
         case "json-graph":
             let graphData: GraphData = JSON.parse(props.data);
             return <Space direction={"vertical"}>
-                {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
+                {props.timestamp > 0 &&
+                <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                 <Card
                     size={"small"} title={<Tag color={"green"}>直接结果(图)</Tag>}
                     extra={[
@@ -131,7 +138,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
             </Space>
     }
     return <Space>
-        {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp)}</Tag>}
+        {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
         <Typography.Text copyable={false}>
             {props.data}
         </Typography.Text>

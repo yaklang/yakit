@@ -621,6 +621,7 @@ message SavePayloadRequest {
   bool IsFile = 1;
   string Group = 2;
   string Content = 3;
+  repeated string FileName = 4;
 }
 
 message DeletePayloadByGroupRequest {
@@ -629,6 +630,7 @@ message DeletePayloadByGroupRequest {
 
 message DeletePayloadRequest {
   int64 Id = 1;
+  repeated int64 Ids = 2;
 }
 
 message QueryPayloadRequest {
@@ -696,6 +698,7 @@ message YakScript {
   bool IsGeneralModule = 13;
   string GeneralModuleVerbose = 14;
   string GeneralModuleKey = 15;
+  string FromGit = 16;
 }
 
 message CodecRequest {

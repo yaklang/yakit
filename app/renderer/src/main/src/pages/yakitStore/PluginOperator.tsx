@@ -411,7 +411,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
         ) : (
             <Popconfirm
                 title={
-                    "忽略该模块将会导致模块在插件商店不可见，需要在插件商店中查看"
+                    "忽略该模块将会导致模块在插件仓库不可见，需要在插件仓库中查看"
                 }
                 onConfirm={() => {
                     ipcRenderer
