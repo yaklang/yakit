@@ -1,0 +1,6 @@
+.payload-manager-page {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+    overflow: hidden;
+}

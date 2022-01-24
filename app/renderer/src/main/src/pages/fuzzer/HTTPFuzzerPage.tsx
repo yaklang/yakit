@@ -37,6 +37,7 @@ import {
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
+import { ResizeBox } from "../../components/ResizeBox"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -680,7 +681,129 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 </Row>
             )}
             <Divider style={{marginTop: 12, marginBottom: 4}} />
-            <Row style={{flex: "1"}} gutter={5}>
+            <ResizeBox firstNode={<HTTPPacketEditor
+                        system={props.system}
+                        simpleMode={viewMode === "result"}
+                        refreshTrigger={refreshTrigger}
+                        hideSearch={true}
+                        bordered={true}
+                        originValue={new Buffer(request)}
+                        actions={[
+                            {
+                                id: "packet-from-url",
+                                label: "URL转数据包",
+                                contextMenuGroupId: "urlPacket",
+                                run: () => {
+                                    setUrlPacketShow(true)
+                                }
+                            }
+                        ]}
+                        onEditor={setReqEditor}
+                        onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
+                        extra={
+                            <Space>
+                                <Popover
+                                    trigger={"click"}
+                                    title={"从 URL 加载数据包"}
+                                    content={
+                                        <div style={{width: 400}}>
+                                            <Form
+                                                layout={"vertical"}
+                                                onSubmitCapture={(e) => {
+                                                    e.preventDefault()
+
+                                                    ipcRenderer
+                                                        .invoke("Codec", {
+                                                            Type: "packet-from-url",
+                                                            Text: targetUrl
+                                                        })
+                                                        .then((e) => {
+                                                            if (e?.Result) {
+                                                                setRequest(e.Result)
+                                                                refreshRequest()
+                                                            }
+                                                        })
+                                                        .finally(() => {})
+                                                }}
+                                                size={"small"}
+                                            >
+                                                <InputItem
+                                                    label={"从 URL 构造请求"}
+                                                    value={targetUrl}
+                                                    setValue={setTargetUrl}
+                                                    extraFormItemProps={{style: {marginBottom: 8}}}
+                                                ></InputItem>
+                                                <Form.Item style={{marginBottom: 8}}>
+                                                    <Button type={"primary"} htmlType={"submit"}>
+                                                        构造请求
+                                                    </Button>
+                                                </Form.Item>
+                                            </Form>
+                                        </div>
+                                    }
+                                >
+                                    <Button size={"small"} type={"primary"}>
+                                        URL
+                                    </Button>
+                                </Popover>
+
+                                <Button
+                                    size={"small"}
+                                    type={viewMode === "request" ? "primary" : "link"}
+                                    icon={<ColumnWidthOutlined />}
+                                    onClick={() => {
+                                        if (viewMode === "request") {
+                                            setViewMode("split")
+                                        } else {
+                                            setViewMode("request")
+                                        }
+                                    }}
+                                />
+                            </Space>
+                        }
+                    />} 
+                    secondNode={<AutoSpin spinning={false}>
+                    {onlyOneResponse ? (
+                        <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
+                    ) : (
+                        <>
+                            {(content || []).length > 0 ? (
+                                <HTTPFuzzerResultsCard
+                                    onSendToWebFuzzer={props.onSendToWebFuzzer}
+                                    setRequest={(r) => {
+                                        setRequest(r)
+                                        refreshRequest()
+                                    }}
+                                    extra={
+                                        <Button
+                                            size={"small"}
+                                            type={viewMode === "result" ? "primary" : "link"}
+                                            icon={<ColumnWidthOutlined />}
+                                            onClick={() => {
+                                                if (viewMode === "result") {
+                                                    setViewMode("split")
+                                                } else {
+                                                    setViewMode("result")
+                                                }
+                                            }}
+                                        />
+                                    }
+                                    failedResponses={failedResults}
+                                    successResponses={successResults}
+                                />
+                            ) : (
+                                <Result
+                                    status={"info"}
+                                    title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                    subTitle={
+                                        "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                    }
+                                />
+                            )}
+                        </>
+                    )}
+                </AutoSpin>}></ResizeBox>
+            {/* <Row style={{flex: "1"}} gutter={5}>
                 <Col span={getLeftSpan()}>
                     <HTTPPacketEditor
                         system={props.system}
@@ -807,7 +930,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )}
                     </AutoSpin>
                 </Col>
-            </Row>
+            </Row> */}
             {/*<LinerResizeCols*/}
             {/*    style={{flex: "1"}}*/}
             {/*    leftNode={*/}
