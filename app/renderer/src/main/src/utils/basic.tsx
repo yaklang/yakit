@@ -91,9 +91,9 @@ export const ReversePlatformStatus = React.memo(() => {
     const flag = (ok && !!details.PublicReverseIP && !!details.PublicReversePort);
     return <Popover visible={ok ? undefined : false} content={<div>
         <Space direction={"vertical"}>
-            <Text copyable={true}>rmi://{details.PublicReverseIP}:{details.PublicReversePort}</Text>
-            <Text copyable={true}>http://{details.PublicReverseIP}:{details.PublicReversePort}</Text>
-            <Text copyable={true}>https://{details.PublicReverseIP}:{details.PublicReversePort}</Text>
+            <Text copyable={true}>{`rmi://${details.PublicReverseIP}:${details.PublicReversePort}`}</Text>
+            <Text copyable={true}>{`http://${details.PublicReverseIP}:${details.PublicReversePort}`}</Text>
+            <Text copyable={true}>{`https://${details.PublicReverseIP}:${details.PublicReversePort}`}</Text>
         </Space>
     </div>} title={"公网反连配置"}>
         <Tag
