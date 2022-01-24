@@ -1,3 +1,4 @@
+/* 隐藏上传拖拽框的虚线边框样式 */
 .targets-upload-dragger.ant-upload.ant-upload-drag{
     background-color: #fff;
     border: 0;
