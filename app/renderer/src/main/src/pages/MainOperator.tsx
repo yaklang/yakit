@@ -564,9 +564,10 @@ const Main: React.FC<MainProp> = (props) => {
                         backgroundColor: "#fff",
                         marginLeft: 12,
                         height: "100%",
-                        display: "flex"
+                        display: "flex",
+                        flexFlow: "column"
                     }}>
-                        <div style={{padding: 12, paddingTop: 8, overflow: "hidden", display: "flex", flex: "1"}}>
+                        <div style={{padding: 12, paddingTop: 8, overflow: "hidden", flex: "1", display: "flex", flexFlow: "column" }}>
                             {pageCache.length > 0 ? (
                                 <Tabs
                                     style={{display: "flex", flex: "1"}}

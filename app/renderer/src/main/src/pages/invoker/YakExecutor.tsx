@@ -41,6 +41,7 @@ import {AutoSpin} from "../../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
 import {Terminal} from "./Terminal"
 import {useMemoizedFn} from "ahooks"
+import {ResizeBox} from "../../components/ResizeBox"
 
 import "./YakExecutor.css"
 
@@ -81,8 +82,7 @@ const CustomMenu = (
     )
 }
 
-export interface YakExecutorProp {
-}
+export interface YakExecutorProp {}
 
 interface tabCodeProps {
     tab: string
@@ -122,7 +122,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     const xtermAsideRef = useRef(null)
     const xtermRef = useRef(null)
 
-    const [extraParams, setExtraParams] = useState("");
+    const [extraParams, setExtraParams] = useState("")
 
     // trigger for updating
     const [triggerForUpdatingHistory, setTriggerForUpdatingHistory] = useState<any>(0)
@@ -168,8 +168,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     setUnTitleCount(unTitleCount + 1)
                 }
             })
-            .catch(() => {
-            })
+            .catch(() => {})
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
                 time = setInterval(() => {
@@ -491,6 +490,14 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         const aside = xtermAsideRef.current as unknown as HTMLDivElement
         if (xtermRef) xtermFit(xtermRef, 100, Math.floor(aside.clientHeight / 18) - 1)
     }
+    const openFileLayout = (file: any) => {
+        if (tabList.length === 0) {
+            setTimeout(() => {
+                xtermResize()
+            }, 200)
+        }
+        addFile(file)
+    }
 
     useEffect(() => {
         if (tabList.length === 0) setFullScreen(false)
@@ -498,8 +505,10 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
 
     useEffect(() => {
         if (xtermRef) xtermResize()
-        
-        window.onresize=()=>{xtermResize()}
+
+        window.onresize = () => {
+            xtermResize()
+        }
 
         return () => {
             window.onresize = null
@@ -593,13 +602,264 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                             setRenameCache={setRenameCache}
                             addFile={addFile}
                             newFile={newFile}
-                            openFile={addFile}
+                            openFile={openFileLayout}
                             fileFunction={fileFunction}
                         />
                     </AutoSpin>
                 </div>
                 <div style={{width: `${fullScreen ? 100 : 85}%`}} className='executor-right-body'>
                     {tabList.length > 0 && (
+                        <ResizeBox
+                            isVer
+                            firstNode={
+                                <Tabs
+                                    className={"right-editor"}
+                                    style={{height: "100%"}}
+                                    type='editable-card'
+                                    activeKey={activeTab}
+                                    hideAdd={true}
+                                    onChange={(activeTab) => setActiveTab(activeTab)}
+                                    onEdit={(key, event: "add" | "remove") => {
+                                        switch (event) {
+                                            case "remove":
+                                                closeCode(key, false)
+                                                return
+                                            case "add":
+                                                return
+                                        }
+                                    }}
+                                    renderTabBar={(props, TabBarDefault) => {
+                                        return bars(props, TabBarDefault)
+                                    }}
+                                    tabBarExtraContent={
+                                        tabList.length && (
+                                            <Space style={{marginRight: 5}} size={0}>
+                                                <Button
+                                                    style={{height: 25}}
+                                                    type={"link"}
+                                                    size={"small"}
+                                                    disabled={
+                                                        tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
+                                                    }
+                                                    onClick={(e) => {
+                                                        let m = showDrawer({
+                                                            width: "60%",
+                                                            placement: "left",
+                                                            title: "选择你的 Yak 模块执行特定功能",
+                                                            content: (
+                                                                <>
+                                                                    <YakScriptManagerPage
+                                                                        type={"yak"}
+                                                                        onLoadYakScript={(s) => {
+                                                                            const tab: tabCodeProps = {
+                                                                                tab: `Untitle-${unTitleCount}.yak`,
+                                                                                code: s.Content,
+                                                                                suffix: "yak",
+                                                                                isFile: false
+                                                                            }
+                                                                            info(`加载 Yak 模块：${s.ScriptName}`)
+                                                                            xtermClear(xtermRef)
+                                                                            setActiveTab(`${tabList.length}`)
+                                                                            setTabList(tabList.concat([tab]))
+                                                                            setUnTitleCount(unTitleCount + 1)
+                                                                            m.destroy()
+                                                                        }}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        })
+                                                    }}
+                                                >
+                                                    Yak脚本模板
+                                                </Button>
+
+                                                <Button
+                                                    icon={
+                                                        fullScreen ? (
+                                                            <FullscreenExitOutlined style={{fontSize: 15}} />
+                                                        ) : (
+                                                            <FullscreenOutlined style={{fontSize: 15}} />
+                                                        )
+                                                    }
+                                                    type={"link"}
+                                                    size={"small"}
+                                                    style={{width: 30, height: 25}}
+                                                    onClick={() => setFullScreen(!fullScreen)}
+                                                />
+                                                <Popover
+                                                    trigger={["click"]}
+                                                    title={"设置命令行额外参数"}
+                                                    content={
+                                                        <Space style={{width: 400}}>
+                                                            <div>yak {tabList[+activeTab]?.tab || "[file]"}</div>
+                                                            <Divider type={"vertical"} />
+                                                            <Paragraph
+                                                                style={{marginBottom: 0}}
+                                                                editable={{
+                                                                    onChange: setExtraParams
+                                                                }}
+                                                            >
+                                                                {extraParams}
+                                                            </Paragraph>
+                                                        </Space>
+                                                    }
+                                                >
+                                                    <Button type={"link"} icon={<EllipsisOutlined />} />
+                                                </Popover>
+                                                {executing ? (
+                                                    <Button
+                                                        icon={<PoweroffOutlined style={{fontSize: 15}} />}
+                                                        type={"link"}
+                                                        danger={true}
+                                                        size={"small"}
+                                                        style={{width: 30, height: 25}}
+                                                        onClick={() => ipcRenderer.invoke("cancel-yak")}
+                                                    />
+                                                ) : (
+                                                    <Button
+                                                        icon={<CaretRightOutlined style={{fontSize: 15}} />}
+                                                        type={"link"}
+                                                        ghost={true}
+                                                        size={"small"}
+                                                        style={{width: 30, height: 25}}
+                                                        disabled={
+                                                            tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
+                                                        }
+                                                        onClick={() => {
+                                                            setErrors([])
+                                                            setExecuting(true)
+                                                            ipcRenderer.invoke("exec-yak", {
+                                                                Script: tabList[+activeTab].code,
+                                                                Params: [],
+                                                                RunnerParamRaw: extraParams
+                                                            })
+                                                        }}
+                                                    />
+                                                )}
+                                            </Space>
+                                        )
+                                    }
+                                >
+                                    {tabList.map((item, index) => {
+                                        return (
+                                            <TabPane tab={item.tab} key={`${index}`}>
+                                                <div style={{height: "100%"}}>
+                                                    <AutoSpin spinning={executing}>
+                                                        <div style={{height: "100%"}}>
+                                                            <YakEditor
+                                                                type={item.suffix}
+                                                                value={item.code}
+                                                                setValue={(value) => {
+                                                                    modifyCode(value, index)
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </AutoSpin>
+                                                </div>
+                                            </TabPane>
+                                        )
+                                    })}
+                                </Tabs>
+                            }
+                            firstRatio='70%'
+                            secondNode={
+                                <div
+                                    ref={xtermAsideRef}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        overflow: "auto",
+                                        borderTop: "1px solid #dfdfdf"
+                                    }}
+                                >
+                                    <Tabs
+                                        style={{height: "100%"}}
+                                        className={"right-xterm"}
+                                        size={"small"}
+                                        tabBarExtraContent={
+                                            <Space>
+                                                <SelectOne
+                                                    formItemStyle={{marginBottom: 0}}
+                                                    value={outputEncoding}
+                                                    setValue={setOutputEncoding}
+                                                    size={"small"}
+                                                    data={[
+                                                        {text: "GBxxx编码", value: "latin1"},
+                                                        {text: "UTF-8编码", value: "utf8"}
+                                                    ]}
+                                                />
+                                                <Button
+                                                    size={"small"}
+                                                    icon={<DeleteOutlined />}
+                                                    type={"link"}
+                                                    onClick={(e) => {
+                                                        xtermClear(xtermRef)
+                                                    }}
+                                                />
+                                            </Space>
+                                        }
+                                    >
+                                        <TabPane
+                                            tab={<div style={{width: 50, textAlign: "center"}}>输出</div>}
+                                            key={"output"}
+                                        >
+                                            <XTerm
+                                                ref={xtermRef}
+                                                options={{
+                                                    convertEol: true,
+                                                    theme: {
+                                                        foreground: "#536870",
+                                                        background: "#E8E9E8",
+                                                        cursor: "#536870",
+
+                                                        black: "#002831",
+                                                        brightBlack: "#001e27",
+
+                                                        red: "#d11c24",
+                                                        brightRed: "#bd3613",
+
+                                                        green: "#738a05",
+                                                        brightGreen: "#475b62",
+
+                                                        yellow: "#a57706",
+                                                        brightYellow: "#536870",
+
+                                                        blue: "#2176c7",
+                                                        brightBlue: "#708284",
+
+                                                        magenta: "#c61c6f",
+                                                        brightMagenta: "#5956ba",
+
+                                                        cyan: "#259286",
+                                                        brightCyan: "#819090",
+
+                                                        white: "#eae3cb",
+                                                        brightWhite: "#fcf4dc"
+                                                    }
+                                                }}
+                                                onResize={(r) => {
+                                                    xtermFit(xtermRef, r.cols, r.rows)
+                                                }}
+                                            />
+                                        </TabPane>
+                                        <TabPane
+                                            tab={
+                                                <div style={{width: 50, textAlign: "center"}} key={"terminal"}>
+                                                    终端(监修中)
+                                                </div>
+                                            }
+                                            disabled
+                                        >
+                                            <Terminal />
+                                        </TabPane>
+                                    </Tabs>
+                                </div>
+                            }
+                            secondRatio='30%'
+                            onChangeSize={() => xtermResize()}
+                        ></ResizeBox>
+                    )}
+                    {/* {false && tabList.length > 0 && (
                         <div style={{width: "100%", height: "70%"}}>
                             <Tabs
                                 className={"right-editor"}
@@ -663,9 +923,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                             <Button
                                                 icon={
                                                     fullScreen ? (
-                                                        <FullscreenExitOutlined style={{fontSize: 15}}/>
+                                                        <FullscreenExitOutlined style={{fontSize: 15}} />
                                                     ) : (
-                                                        <FullscreenOutlined style={{fontSize: 15}}/>
+                                                        <FullscreenOutlined style={{fontSize: 15}} />
                                                     )
                                                 }
                                                 type={"link"}
@@ -676,29 +936,26 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                             <Popover
                                                 trigger={["click"]}
                                                 title={"设置命令行额外参数"}
-                                                content={<Space style={{width: 400}}>
-                                                    <div>
-                                                        yak {tabList[+activeTab]?.tab || "[file]"}
-                                                    </div>
-                                                    <Divider type={"vertical"}/>
-                                                    <Paragraph
-                                                        style={{marginBottom: 0}}
-                                                        editable={{
-                                                            onChange: setExtraParams,
-                                                        }}
-                                                    >
-                                                        {extraParams}
-                                                    </Paragraph>
-                                                </Space>}
+                                                content={
+                                                    <Space style={{width: 400}}>
+                                                        <div>yak {tabList[+activeTab]?.tab || "[file]"}</div>
+                                                        <Divider type={"vertical"} />
+                                                        <Paragraph
+                                                            style={{marginBottom: 0}}
+                                                            editable={{
+                                                                onChange: setExtraParams
+                                                            }}
+                                                        >
+                                                            {extraParams}
+                                                        </Paragraph>
+                                                    </Space>
+                                                }
                                             >
-                                                <Button
-                                                    type={"link"}
-                                                    icon={<EllipsisOutlined/>}
-                                                />
+                                                <Button type={"link"} icon={<EllipsisOutlined />} />
                                             </Popover>
                                             {executing ? (
                                                 <Button
-                                                    icon={<PoweroffOutlined style={{fontSize: 15}}/>}
+                                                    icon={<PoweroffOutlined style={{fontSize: 15}} />}
                                                     type={"link"}
                                                     danger={true}
                                                     size={"small"}
@@ -707,8 +964,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                 />
                                             ) : (
                                                 <Button
-                                                    icon={<CaretRightOutlined style={{fontSize: 15}}/>}
-                                                    type={"link"} ghost={true}
+                                                    icon={<CaretRightOutlined style={{fontSize: 15}} />}
+                                                    type={"link"}
+                                                    ghost={true}
                                                     size={"small"}
                                                     style={{width: 30, height: 25}}
                                                     disabled={
@@ -720,7 +978,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                         ipcRenderer.invoke("exec-yak", {
                                                             Script: tabList[+activeTab].code,
                                                             Params: [],
-                                                            RunnerParamRaw: extraParams,
+                                                            RunnerParamRaw: extraParams
                                                         })
                                                     }}
                                                 />
@@ -751,8 +1009,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                             </Tabs>
                         </div>
                     )}
-                    {tabList.length > 0 && (
-                        <div ref={xtermAsideRef} style={{width: "100%", height: "30%", overflow: "auto", borderTop: "1px solid #dfdfdf"}}>
+                    {false && tabList.length > 0 && (
+                        <div
+                            ref={xtermAsideRef}
+                            style={{width: "100%", height: "30%", overflow: "auto", borderTop: "1px solid #dfdfdf"}}
+                        >
                             <Tabs
                                 style={{height: "100%"}}
                                 className={"right-xterm"}
@@ -771,7 +1032,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                         />
                                         <Button
                                             size={"small"}
-                                            icon={<DeleteOutlined/>}
+                                            icon={<DeleteOutlined />}
                                             type={"link"}
                                             onClick={(e) => {
                                                 xtermClear(xtermRef)
@@ -780,10 +1041,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                     </Space>
                                 }
                             >
-                                <TabPane
-                                    tab={<div style={{width: 50, textAlign: "center"}}>输出</div>}
-                                    key={"output"}
-                                >
+                                <TabPane tab={<div style={{width: 50, textAlign: "center"}}>输出</div>} key={"output"}>
                                     <XTerm
                                         ref={xtermRef}
                                         options={{
@@ -831,11 +1089,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                     }
                                     disabled
                                 >
-                                    <Terminal/>
+                                    <Terminal />
                                 </TabPane>
                             </Tabs>
                         </div>
-                    )}
+                    )} */}
                     {tabList.length === 0 && (
                         <Empty className='right-empty' description={<p>请点击左侧打开或新建文件</p>}></Empty>
                     )}
@@ -857,7 +1115,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     ]}
                 >
                     <div style={{height: 40}}>
-                        <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
+                        <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
                         <span style={{fontSize: 18, marginLeft: 15}}>文件未保存</span>
                     </div>
                     <p style={{fontSize: 15, marginLeft: 37}}>{`是否要保存${hintFile}里面的内容吗？`}</p>
@@ -891,7 +1149,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     ]}
                 >
                     <div style={{height: 40}}>
-                        <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
+                        <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
                         <span style={{fontSize: 18, marginLeft: 15}}>文件已存在</span>
                     </div>
                     <p style={{fontSize: 15, marginLeft: 37}}>{`是否要覆盖已存在的文件吗？`}</p>
@@ -947,9 +1205,9 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
             extra={
                 <>
                     <Upload multiple={false} maxCount={1} showUploadList={false} beforeUpload={(f: any) => addFile(f)}>
-                        <FolderOpenOutlined className='file-list-icon' title='Open File'/>
+                        <FolderOpenOutlined className='file-list-icon' title='Open File' />
                     </Upload>
-                    <FolderAddOutlined className='file-list-icon' title='New File' onClick={newFile}/>
+                    <FolderAddOutlined className='file-list-icon' title='New File' onClick={newFile} />
                 </>
             }
         >
@@ -1000,7 +1258,7 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                         <div style={{marginTop: 90}}>
                             <Button
                                 type='link'
-                                icon={<FileAddOutlined style={{fontSize: 30}}/>}
+                                icon={<FileAddOutlined style={{fontSize: 30}} />}
                                 onClick={newFile}
                             ></Button>
                             <p style={{marginTop: 10}}>新建文件</p>
