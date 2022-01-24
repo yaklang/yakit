@@ -195,6 +195,10 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                                         })
                                                         .then(() => {
                                                             updateGroup()
+                                                            if (selected === element) {
+                                                                setSelected("")
+                                                                setResponse(undefined)
+                                                            }
                                                         })
                                                         .catch((e: any) => {
                                                             failed("Delete Payload By Group failed")
