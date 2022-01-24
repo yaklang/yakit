@@ -7,7 +7,7 @@
 .resize-box .resize-split-line:hover {
     border: 2px solid rgb(0, 174, 255);
 }
-.resize-box .mask-body{
+.resize-box .mask-body {
     position: absolute;
     top: 0;
     left: 0;
@@ -15,4 +15,5 @@
     width: 100%;
     height: 100%;
     display: none;
+    z-index: 9;
 }

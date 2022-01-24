@@ -49,7 +49,7 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
             // 生成移动分割线的初始坐标
             if (isVer) line.style.top = `${start}px`
             else line.style.left = `${start}px`
-            line.style.display = "inline"
+            line.style.display = "inline-block"
 
             body.onmousemove = (event: any) => {
                 const bodyRect = body.getBoundingClientRect()
@@ -92,6 +92,9 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
             style={
                 isVer ? {top: `0px`, borderTop: "2px dashed #434344"} : {left: `0px`, borderLeft: "2px dashed #434344"}
             }
+            draggable
+            onDragEnter={(e) => e.preventDefault()}
+            onDragOver={(e) => e.preventDefault()}
         ></div>
     )
 }
