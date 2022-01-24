@@ -20,6 +20,7 @@ import {QuestionOutlined} from "@ant-design/icons";
 import {YakExecutorParam} from "./YakExecutorParams";
 import {showModal} from "../../utils/showModal";
 import {useMemoizedFn} from "ahooks";
+import {YakCodeEditor} from "../../utils/editors";
 
 const {Title} = Typography;
 
@@ -411,6 +412,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "boolean":
             return <Switch checked={props.value as boolean} disabled={!!props.disabled} onChange={props.setValue}/>
         case "textarea":
+        case "text":
             return <Input.TextArea
                 value={props.value as string} rows={5}
                 onChange={e => {
@@ -419,6 +421,15 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
                 required={props.required}
                 disabled={!!props.disabled}
             />
+        case "yak":
+            return <div style={{height: 300, width: "100%"}}>
+                <YakCodeEditor
+                    originValue={new Buffer(props.value as string)}
+                    onChange={i => {
+                        props.setValue(i.toString())
+                    }}
+                />
+            </div>
         case "str":
         case "string":
         default:
