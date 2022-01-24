@@ -92,6 +92,7 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
             style={
                 isVer ? {top: `0px`, borderTop: "2px dashed #434344"} : {left: `0px`, borderLeft: "2px dashed #434344"}
             }
+            draggable
         ></div>
     )
 }
