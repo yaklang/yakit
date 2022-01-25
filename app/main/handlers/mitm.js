@@ -2,16 +2,16 @@ const {ipcMain} = require("electron");
 const DNS = require("dns");
 
 
-module.exports = (win, originGetClient) => {
-    let mitmClient = undefined;
-
-    function getClient() {
-        if (!mitmClient) {
-            mitmClient = originGetClient(true)
-            return mitmClient
-        }
-        return mitmClient
-    }
+// module.exports = (win, originGetClient) => {
+module.exports = (win, getClient) => {
+    // let mitmClient = undefined;
+    // function getClient() {
+    //     if (!mitmClient) {
+    //         mitmClient = originGetClient(true)
+    //         return mitmClient
+    //     }
+    //     return mitmClient
+    // }
 
     let stream;
     let currentPort;

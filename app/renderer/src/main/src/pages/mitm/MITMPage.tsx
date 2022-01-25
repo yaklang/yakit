@@ -198,7 +198,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 failed("MITM 劫持服务器异常或被关闭")
                 Modal.error({
                     mask: true, title: "启动 MITM 服务器 ERROR!",
-                    content: <>{error}</>
+                    content: <>{msg}</>
                 })
             }
             ipcRenderer.invoke("mitm-stop-call")

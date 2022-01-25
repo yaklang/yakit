@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import {Alert, Button, Card, Modal, Popconfirm, Popover, Progress, Space, Spin, Tag, Typography} from "antd";
 import {failed, info, success} from "../utils/notification";
 import {yakProcess} from "../protected/YakLocalProcess";
+import {showModal} from "../utils/showModal";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -39,6 +40,8 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
     const [downloadProgress, setDownloadProgress] = useState<DownloadingState>();
     const [winPath, setWinPath] = useState("");
     const [platformArch, setPlatformArch] = useState("");
+
+    const latestVersionWithoutV = latestVersion.startsWith("v") ? latestVersion.slice(1) : latestVersion;
 
     const queryLatestVersion = () => {
         setLatestLoading(true)
@@ -158,9 +161,11 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
             <Spin spinning={loading}>
                 <Alert
                     type={"success"}
-                    message={<Space>
-                        当前最新的 Yak 引擎版本为
-                        <Tag color={"green"}>{latestVersion}</Tag>
+                    message={<Space direction={"vertical"}>
+                        <Space>
+                            当前最新的 Yak 引擎版本为
+                            <Tag color={"green"}>{latestVersion}</Tag>
+                        </Space>
                     </Space>}/>
             </Spin>
             <Spin spinning={downloading}>
@@ -189,6 +194,35 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                     <Button type={"link"} onClick={() => {
                         install(latestVersion)
                     }}>我已经下载，点此安装</Button>
+                    <Button danger={true} size={"small"} onClick={() => {
+                        showModal({
+                            title: "yak 核心引擎下载链接",
+                            width: "60%",
+                            content: <Space direction={"vertical"}>
+                                <Space>
+                                    Windows(x64) 下载：
+                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV}/yak_windows_amd64.exe</div>
+                                </Space>
+                                <Space>
+                                    MacOS(intel/m1) 下载：
+                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV}/yak_darwin_amd64</div>
+                                </Space>
+                                <Space>
+                                    Linux(x64) 下载：
+                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV}/yak_linux_amd64</div>
+                                </Space>
+                                <Alert message={<div>
+                                    手动下载完成后 Windows 用户可以把引擎放在 %HOME%/yakit-projects/yak-engine/yak.exe 即可识别
+                                    <br/>
+                                    MacOS / Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
+                                </div>}>
+
+                                </Alert>
+                            </Space>
+                        })
+                    }}>
+                        网络问题无法下载？手动下载
+                    </Button>
                 </Space>
             </Spin>
             {downloadProgress && <Progress percent={
