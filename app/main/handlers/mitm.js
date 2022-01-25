@@ -93,6 +93,14 @@ module.exports = (win, originGetClient) => {
         }
     })
 
+    ipcMain.handle("mitm-enable-plugin-mode", (e) => {
+        if (stream) {
+            stream.write({
+                setPluginMode: true,
+            })
+        }
+    })
+
     // 用来关闭 MITM 劫持的信息流
     ipcMain.handle("mitm-close-stream", e => {
         if (stream) {

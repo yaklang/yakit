@@ -76,6 +76,10 @@ const allowHijackedResponseByRequest = (id: number) => {
     return ipcRenderer.invoke("mitm-hijacked-current-response", id)
 }
 
+const enableMITMPluginMode = () => {
+    return ipcRenderer.invoke("mitm-enable-plugin-mode")
+}
+
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [status, setStatus] = useState<"idle" | "hijacked" | "hijacking">("idle");
     const [passiveMode, setPassiveMode] = useState(false);
@@ -507,6 +511,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         start()
                                         setPassiveMode(true)
                                         setAutoForward(true)
+                                        enableMITMPluginMode().then(()=>{
+                                            info("被动扫描插件模式已启动")
+                                        })
                                     }}>
                                         被动扫描模式
                                     </Button>
