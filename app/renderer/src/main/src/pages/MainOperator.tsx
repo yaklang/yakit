@@ -314,6 +314,16 @@ const Main: React.FC<MainProp> = (props) => {
         }
     }, [pageCache])
 
+    useEffect(()=>{
+        ipcRenderer.on("fetch-new-main-menu", (e) => {
+            updateMenuItems()
+        })
+
+        return ()=>{
+            ipcRenderer.removeAllListeners("fetch-new-main-menu")
+        }
+    },[])
+
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;
     const routeKeyToLabel = new Map<string, string>();
     RouteMenuData.forEach(k => {
