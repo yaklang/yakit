@@ -168,6 +168,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                     </Menu>
                                 </div>
                             }
+                            onVisibleChange={(value) => setCollapsed(!value)}
                         >
                             {collapsed ? (
                                 <UpCircleTwoTone
