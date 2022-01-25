@@ -989,6 +989,9 @@ message MITMRequest {
 
   // 设置清除上下文
   bool setClearMITMPluginContext = 35;
+
+  // 设置启用插件模式，自动加载所有主插件。
+  bool setPluginMode = 36;
 }
 
 message RemoveHookParams {
