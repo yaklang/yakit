@@ -384,7 +384,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         }}
                     >
                         {groups.map((item) => {
-                            return <Option key={item}>{item}</Option>
+                            return <Option key={item} value={item}>{item}</Option>
                         })}
                     </Select>
                 </Form.Item>
@@ -464,7 +464,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         }}
                     >
                         {groups.map((item) => {
-                            return <Option key={item}>{item}</Option>
+                            return <Option value={item} key={item}>{item}</Option>
                         })}
                     </Select>
                 </Form.Item>
