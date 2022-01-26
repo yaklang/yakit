@@ -188,7 +188,6 @@ export const YakitFeatureTabName = (feature: string, params: any) => {
 }
 
 export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
-    console.log(props.execResultsLog)
     switch (props.feature) {
         case "website-trees":
             return <div style={{height: "100%"}}>
