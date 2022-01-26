@@ -269,7 +269,6 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
     const {script} = props
     const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
 
-
     const [params, setParams] = useState<{
         Group: string
         YakScriptId: number
@@ -374,7 +373,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                 title={`添加到左侧菜单栏中[${script?.Id}]`}
                 content={<>{script && <AddToMenuActionForm script={script} updateGroups={updateGroups} />}</>}
             >
-                <Button size={"small"} type={"primary"}>
+                <Button size={"small"} type={"primary"} ghost>
                     添加到菜单栏
                 </Button>
             </Popover>
@@ -497,7 +496,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                     // setTimeout(() => setTrigger(!trigger), 300)
                 }}
             >
-                <Button size={"small"} danger={true} type={"link"}>
+                <Button size={"small"} danger={true}>
                     删除插件
                 </Button>
             </Popconfirm>
