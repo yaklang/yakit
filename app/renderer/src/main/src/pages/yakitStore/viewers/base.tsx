@@ -29,6 +29,7 @@ export type ExecResultStatusCard = StatusCardProps
 export interface PluginResultUIProp {
     loading: boolean
     results: ExecResultLog[]
+    feature?: ExecResultLog[]
     progress: ExecResultProgress[]
     statusCards: StatusCardInfoProps[]
     script?: YakScript
@@ -59,7 +60,7 @@ const idToColor = (id: string) => {
 }
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
-    const {loading, results, progress, script, statusCards} = props;
+    const {loading, results, feature, progress, script, statusCards} = props;
     const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0");
     const xtermRef = useRef(null)
 
@@ -93,7 +94,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             return {feature: "", params: undefined, key: ""}
         }
     }).filter(i => i.feature !== "");
-
 
     const finalFeatures = features.length > 0 ?
         features.filter((data, i) => features.indexOf(data) === i)
@@ -139,7 +139,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     key={`feature-${index}`}>
                     <YakitFeatureRender
                         params={i.params} feature={i.feature}
-                        execResultsLog={results}
+                        execResultsLog={feature || []}
                     />
                 </Tabs.TabPane>
             })}
@@ -188,6 +188,7 @@ export const YakitFeatureTabName = (feature: string, params: any) => {
 }
 
 export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
+    console.log(props.execResultsLog)
     switch (props.feature) {
         case "website-trees":
             return <div style={{height: "100%"}}>

@@ -16,6 +16,7 @@ interface InfoState {
     messageSate: ExecResultLog[]
     processState: ExecResultProgress[]
     statusState: StatusCardInfoProps[]
+    featureMessageState: ExecResultLog[]
 }
 
 interface CacheStatusCardProps {
@@ -35,11 +36,13 @@ export default function useHoldingIPCRStream(
     const [infoState, setInfoState] = useState<InfoState>({
         messageSate: [],
         processState: [],
-        statusState: []
+        statusState: [],
+        featureMessageState: []
     })
     const [xtermRef, setXtermRef, getXtermRef] = useGetState<any>(null)
 
     let messages = useRef<ExecResultMessage[]>([])
+    let featureMessages = useRef<ExecResultMessage[]>([])
     let processKVPair = useRef<Map<string, number>>(new Map<string, number>())
     let statusKVPair = useRef<Map<string, CacheStatusCardProps>>(
         new Map<string, CacheStatusCardProps>()
@@ -50,6 +53,10 @@ export default function useHoldingIPCRStream(
             let results = messages.current
                 .filter((i) => i.type === "log")
                 .map((i) => i.content as ExecResultLog)
+
+            let featureResults = featureMessages.current
+                .filter((i) => i.type === "log")
+                .map((i) => i.content as ExecResultLog).filter((i) => i.data !== 'null')
 
             const processes: ExecResultProgress[] = []
             processKVPair.current.forEach((value, id) => {
@@ -87,6 +94,7 @@ export default function useHoldingIPCRStream(
             ) {
                 setInfoState({
                     messageSate: results,
+                    featureMessageState: featureResults,
                     processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
                     statusState: Object.values(cacheStatusKVPair)
                 })
@@ -135,6 +143,15 @@ export default function useHoldingIPCRStream(
                         } catch (e) {}
                         return
                     }
+
+                    if (obj.type === "log" && logData.level === "feature-table-data") {
+                        console.log(obj)
+                        try {
+                            featureMessages.current.unshift(obj)
+                        } catch (e) {}
+                        return
+                    }
+
                     messages.current.unshift(obj)
 
                     // 只缓存 100 条结果（日志类型 + 数据类型）
@@ -174,7 +191,7 @@ export default function useHoldingIPCRStream(
         messages.current = []
         processKVPair.current = new Map<string, number>()
         statusKVPair.current = new Map<string, CacheStatusCardProps>()
-        setInfoState({ messageSate: [], processState: [], statusState: [] })
+        setInfoState({ messageSate: [], processState: [], statusState: [], featureMessageState: [] })
     }
 
     return [infoState, { reset, setXtermRef }, xtermRef] as const
