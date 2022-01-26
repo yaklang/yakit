@@ -145,7 +145,6 @@ export default function useHoldingIPCRStream(
                     }
 
                     if (obj.type === "log" && logData.level === "feature-table-data") {
-                        console.log(obj)
                         try {
                             featureMessages.current.unshift(obj)
                         } catch (e) {}
