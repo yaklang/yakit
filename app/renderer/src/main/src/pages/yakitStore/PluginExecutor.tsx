@@ -83,7 +83,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             </PageHeader>
             <Divider/>
             <PluginResultUI
-                script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate}
+                script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate} feature={infoState.featureMessageState}
                 statusCards={infoState.statusState} onXtermRef={setXtermRef}
             />
         </> : <Collapse
@@ -161,7 +161,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                     <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
                 </div>
                 <PluginResultUI
-                    script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate}
+                    script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate} feature={infoState.featureMessageState}
                     statusCards={infoState.statusState}
                 />
             </Panel>
