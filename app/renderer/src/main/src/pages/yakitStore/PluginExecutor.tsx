@@ -16,6 +16,9 @@ export interface PluginExecutorProp {
     primaryParamsOnly?: boolean
     extraNode?: React.ReactNode
     subTitle?: React.ReactNode
+
+    settingShow?: boolean
+    settingNode?: React.ReactNode
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -23,7 +26,7 @@ const {ipcRenderer} = window.require("electron");
 const {Panel} = Collapse;
 
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
-    const {script} = props;
+    const {script, settingShow, settingNode} = props;
 
     const [token, setToken] = useState(randomString(40));
     const [loading, setLoading] = useState(false);
@@ -51,6 +54,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 subTitle={props.subTitle}
                 extra={props.extraNode}
             >
+                {!!settingShow && settingNode}
                 <YakScriptParamsSetter
                     {...script}
                     params={[]}

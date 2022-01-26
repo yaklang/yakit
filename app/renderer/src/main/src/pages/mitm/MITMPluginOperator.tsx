@@ -90,7 +90,7 @@ export const MITMPluginOperator = React.memo((props: MITMPluginOperatorProps) =>
 
     return <div id={"plugin-operator"} style={{height: "100%"}}>
         <Row style={{height: "100%"}} gutter={12}>
-            <Col span={userDefined ? 12 : 8}
+            <Col span={userDefined ? 16 : 8}
                  style={{height: "100%", overflowY: "auto", display: "flex", flexDirection: "column"}}>
                 <Alert type={"success"} style={{marginBottom: 12, fontSize: 15}} message={<>
                     <Space direction={"vertical"}>
@@ -200,7 +200,7 @@ export const MITMPluginOperator = React.memo((props: MITMPluginOperatorProps) =>
                     </AutoCard>
                 </div>
             </Col>
-            <Col span={userDefined ? 12 : 16} style={{height: "100%", overflow: "hidden"}}>
+            <Col span={userDefined ? 8 : 16} style={{height: "100%", overflow: "hidden"}}>
                 <AutoCard
                     title={<Space>
                         <Tag color={"geekblue"}>{formatDate(currentTimestamp)}</Tag>
