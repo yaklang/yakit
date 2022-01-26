@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Spin, Typography} from "antd"
+import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Spin, Typography, Select} from "antd"
 import {DeleteOutlined} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
@@ -13,6 +13,7 @@ import "./PayloadManager.css"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
+const {Option} = Select
 
 export interface PayloadManagerPageProp {}
 
@@ -335,6 +336,22 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         Content: "",
         IsFile: false
     })
+    const [groups, setGroups] = useState<string[]>([])
+
+    const updateGroup = () => {
+        ipcRenderer
+            .invoke("GetAllPayloadGroup")
+            .then((data: {Groups: string[]}) => {
+                setGroups(data.Groups || [])
+            })
+            .catch((e: any) => {
+                failed(e?.details || "call GetAllPayloadGroup failed")
+            })
+            .finally()
+    }
+    useEffect(() => {
+        updateGroup()
+    }, [])
 
     return (
         <div>
@@ -355,12 +372,28 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                 wrapperCol={{span: 14}}
                 labelCol={{span: 6}}
             >
-                <InputItem
+                <Form.Item label={"字典名/组"} required>
+                    <Select
+                        mode='tags'
+                        allowClear
+                        removeIcon={""}
+                        value={params.Group ? [params.Group] : []}
+                        onChange={(value) => {
+                            const str = value.length === 0 ? "" : value.pop() || ""
+                            setParams({...params, Group: str})
+                        }}
+                    >
+                        {groups.map((item) => {
+                            return <Option key={item}>{item}</Option>
+                        })}
+                    </Select>
+                </Form.Item>
+                {/* <InputItem
                     label={"字典名/组"}
                     setValue={(Group) => setParams({...params, Group})}
                     value={params.Group}
                     required={true}
-                />
+                /> */}
                 <Form.Item label={"字典内容"}>
                     <div style={{height: 300}}>
                         <YakEditor setValue={(Content) => setParams({...params, Content})} value={params.Content} />
@@ -383,6 +416,22 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         IsFile: false
     })
     const [uploadLoading, setUploadLoading] = useState(false)
+    const [groups, setGroups] = useState<string[]>([])
+
+    const updateGroup = () => {
+        ipcRenderer
+            .invoke("GetAllPayloadGroup")
+            .then((data: {Groups: string[]}) => {
+                setGroups(data.Groups || [])
+            })
+            .catch((e: any) => {
+                failed(e?.details || "call GetAllPayloadGroup failed")
+            })
+            .finally()
+    }
+    useEffect(() => {
+        updateGroup()
+    }, [])
 
     return (
         <div>
@@ -403,12 +452,22 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                 wrapperCol={{span: 14}}
                 labelCol={{span: 6}}
             >
-                <InputItem
-                    label={"字典名/组"}
-                    setValue={(Group) => setParams({...params, Group})}
-                    value={params.Group}
-                    required={true}
-                />
+                <Form.Item label={"字典名/组"} required>
+                    <Select
+                        mode='tags'
+                        allowClear
+                        removeIcon={""}
+                        value={params.Group ? [params.Group] : []}
+                        onChange={(value) => {
+                            const str = value.length === 0 ? "" : value.pop() || ""
+                            setParams({...params, Group: str})
+                        }}
+                    >
+                        {groups.map((item) => {
+                            return <Option key={item}>{item}</Option>
+                        })}
+                    </Select>
+                </Form.Item>
                 <Upload.Dragger
                     className='targets-upload-dragger'
                     accept={"text/plain"}
