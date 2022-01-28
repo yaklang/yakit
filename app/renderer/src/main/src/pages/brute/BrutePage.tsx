@@ -354,6 +354,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                         loading={loading}
                         progress={infoState.processState}
                         results={infoState.messageSate}
+                        feature={infoState.featureMessageState}
                         statusCards={infoState.statusState}
                         onXtermRef={setXtermRef}
                     />

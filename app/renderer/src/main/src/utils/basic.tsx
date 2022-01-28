@@ -521,6 +521,7 @@ const StartToExecYakScriptViewer = React.memo((props: {
         <PluginResultUI
             loading={loading} defaultConsole={false}
             statusCards={infoState.statusState}
+            feature={infoState.featureMessageState}
             progress={infoState.processState}
             results={infoState.messageSate}
             onXtermRef={setXtermRef}

@@ -127,9 +127,9 @@ export const RouteMenuData: MenuDataProps[] = [
         subMenuData: [
             {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
             {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: false},
-            {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
+            // {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
             // {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
-            {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
+            // {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
         ],
     },
     {

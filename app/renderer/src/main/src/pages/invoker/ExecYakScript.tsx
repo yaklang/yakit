@@ -43,7 +43,8 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     return <Space direction={"vertical"} style={{width: "100%"}}>
         <PluginResultUI
             script={props.script}
-            results={infoState.messageSate} statusCards={infoState.statusState} progress={infoState.processState}
+            results={infoState.messageSate} statusCards={infoState.statusState}
+            progress={infoState.processState} feature={infoState.featureMessageState}
             loading={!finished} onXtermRef={ref => setXtermRef(ref)}
         />
     </Space>

@@ -10,6 +10,9 @@ import {ExecResultLog} from "./batch/ExecMessageViewer";
 import {LogLevelToCode} from "../../components/HTTPFlowTable";
 import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRiskViewer";
 import {CodeViewer} from "../../utils/codeViewer";
+import {YakEditor} from "../../utils/editors";
+import {AutoCard} from "../../components/AutoCard";
+import MDEditor from "@uiw/react-md-editor";
 
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
@@ -53,6 +56,14 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                     <CodeViewer value={`${props.data}`} height={150} width={"100%"} mode={"json"}/>
                 </Space>
             }
+        case "markdown":
+            return <MDEditor.Markdown source={props.data} />
+        case "text":
+            return <div style={{height: 300}}>
+                <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
+                    <YakEditor readOnly={true} type={"http"} value={props.data}/>
+                </AutoCard>
+            </div>
         case "success":
             return <Space direction={"vertical"} style={{width: "100%"}}>
                 {props.timestamp > 0 &&

@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {YakScript} from "../../invoker/schema";
 import {YakitLog} from "../../../components/yakitLogSchema";
-import {Card, Col, Divider, Progress, Row, Statistic, Tabs, Timeline, Tree} from "antd";
+import {Card, Col, Divider, Progress, Row, Space, Statistic, Tabs, Timeline, Tree} from "antd";
 import {LogLevelToCode} from "../../../components/HTTPFlowTable";
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter";
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer";
@@ -10,6 +10,7 @@ import {ConvertWebsiteForestToTreeData} from "../../../components/WebsiteTree";
 import {WebsiteTreeViewer} from "./WebsiteTree";
 import {BasicTable} from "./BasicTable";
 import {XTerm} from "xterm-for-react";
+import {formatDate} from "../../../utils/timeUtil";
 
 
 export interface StatusCardProps {
@@ -99,6 +100,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         features.filter((data, i) => features.indexOf(data) === i)
         : [];
 
+    const timelineItemProps = (results || []).filter(i => {
+        return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
+    }).splice(0, 25);
+
     return <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column"}}>
         {statusCards.length > 0 && <div style={{marginTop: 8, marginBottom: 8}}>
             <Row gutter={8}>
@@ -147,15 +152,18 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 {<>
                     {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
                     <Card
-                        size={"small"} hoverable={true} bordered={true} title={`任务额外日志与结果`}
+                        size={"small"} hoverable={true} bordered={true} title={<Space>
+                        <div>
+                            任务额外日志与结果
+                        </div>
+                        {(timelineItemProps||[]).length > 0 ? formatDate(timelineItemProps[0].timestamp) : ""}
+                    </Space>}
                         style={{marginBottom: 20, marginRight: 2}}
                     >
                         <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                            {(results || []).filter(i => {
-                                return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
-                            }).splice(0, 25).map((e, index) => {
+                            {timelineItemProps.map((e, index) => {
                                 return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
-                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
+                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} onlyTime={true}/>
                                 </Timeline.Item>
                             })}
                         </Timeline>
@@ -199,11 +207,21 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
                     columns={(props.params["columns"] || []) as string[]}
                     data={(props.execResultsLog || []).filter(i => i.level === "feature-table-data").map(i => {
                         try {
-                            return JSON.parse(i.data).data;
+                            const originData = JSON.parse(i.data)
+                            return {...originData.data, table_name: originData?.table_name};
                         } catch (e) {
                             return {} as any
                         }
 
+                    }).filter(i => {
+                        try{
+                            if ((i?.table_name || "") === (props.params?.table_name || "")) {
+                                return true
+                            }
+                        }catch (e) {
+                            return false
+                        }
+                        return false
                     })}
                 />
             </div>
