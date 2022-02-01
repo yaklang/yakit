@@ -11,7 +11,6 @@ import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import ReactJson from "react-json-view";
 import {SelectOne} from "../../utils/inputUtil";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
-import {mitmPluginTemplateShort} from "../invoker/YakScriptCreator";
 import "../main.css";
 
 
@@ -27,8 +26,6 @@ export interface MITMPluginCardProp {
     onExit?: () => any
     autoUpdate?: boolean
 }
-
-const defaultScript = mitmPluginTemplateShort;
 
 const {ipcRenderer} = window.require("electron");
 
