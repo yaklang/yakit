@@ -167,6 +167,39 @@ service Yak {
   rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
   rpc QueryRisk(QueryRiskRequest) returns (Risk);
   rpc DeleteRisk(QueryRiskRequest) returns (Empty);
+
+  // DNSLog
+  rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
+  rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+}
+
+message YakDNSLogBridgeAddr {
+  string DNSLogAddr = 1;
+}
+
+message QueryDNSLogByTokenRequest {
+  string Token = 1;
+  string DNSLogAddr = 2;
+}
+
+message QueryDNSLogByTokenResponse {
+  repeated DNSLogEvent Events = 1;
+}
+
+message DNSLogEvent {
+  string DNSType = 1;
+  string Token = 2;
+  string Domain = 3;
+  string RemoteAddr = 4;
+  string RemoteIP = 5;
+  int32 RemotePort = 6;
+  bytes Raw = 7;
+  int64 Timestamp = 8;
+}
+
+message DNSLogRootDomain {
+  string Domain = 1;
+  string Token = 2;
 }
 
 message GetGlobalReverseServerResponse {
