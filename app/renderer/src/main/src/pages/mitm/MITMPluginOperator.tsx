@@ -20,7 +20,6 @@ import {showModal} from "../../utils/showModal";
 import {YakModuleList} from "../yakitStore/YakitStorePage";
 import {YakitLogViewers} from "../invoker/YakitLogFormatter";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
-import {mitmPluginTemplateShort} from "../invoker/YakScriptCreator";
 import "../main.css";
 import {MITMPluginCardProp} from "./MITMPluginCard";
 import {CopyableField, SelectOne} from "../../utils/inputUtil";
@@ -33,8 +32,9 @@ import {AutoCard} from "../../components/AutoCard";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import moment from "moment";
 import {formatDate} from "../../utils/timeUtil";
+import {MITMPluginTemplateShort} from "../invoker/data/MITMPluginTamplate";
 
-const defaultScript = mitmPluginTemplateShort;
+const defaultScript = MITMPluginTemplateShort;
 
 const {ipcRenderer} = window.require("electron");
 

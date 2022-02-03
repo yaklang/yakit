@@ -88,7 +88,7 @@ const singletonRoute = [
     Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
     Route.DB_Risk,
     
-    Route.PoC
+    Route.PoC, Route.DNSLog,
 ]
 
 const Main: React.FC<MainProp> = (props) => {

@@ -163,7 +163,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             {[
                                 {tab: "YAK", key: "yak"},
                                 {tab: "YAML", key: "nuclei"},
-                                {tab: "MITM", key: "mitm"}
+                                {tab: "MITM", key: "mitm"},
+                                {tab: "Packet", key: "packet-hack"},
+                                {tab: "CODEC", key: "codec"},
                             ].map((e) => {
                                 return (
                                     <Tabs.TabPane tab={e.tab} key={e.key}>
@@ -393,7 +395,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     </List.Item>
                 )
             }}
-        ></List>
+        />
     )
 }
 

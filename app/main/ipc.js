@@ -153,5 +153,8 @@ module.exports = {
 
         // 通信
         require('./handlers/communication')(win, getClient);
+
+        // dnslog
+        require("./handlers/dnslog").register(win, getClient);
     }
 }

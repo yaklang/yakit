@@ -32,6 +32,7 @@ import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable";
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage";
 import {ReverseServerPage} from "../pages/reverse/ReverseServerPage";
 import {RiskPage} from "../pages/risks/RiskPage";
+import {DNSLogPage} from "../pages/dnslog/DNSLogPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -99,6 +100,7 @@ export enum Route {
     ReverseManager = `reverse`,
     ReverseServer = "reverse-server",
     ShellReceiver = "shellReceiver",
+    DNSLog = "dnslog",
 
 }
 
@@ -165,6 +167,7 @@ export const RouteMenuData: MenuDataProps[] = [
         key: Route.ReverseManager, label: "反连管理", icon: <AppstoreOutlined/>,
         subMenuData: [
             {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined/>},
+            {key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined/>},
             {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined/>},
         ]
     },
@@ -299,6 +302,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <ReverseServerPage/>
         case Route.DB_Risk:
             return <RiskPage/>
+        case Route.DNSLog:
+            return <DNSLogPage/>
         default:
             return <div/>
     }
