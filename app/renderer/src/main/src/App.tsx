@@ -135,6 +135,31 @@ function App() {
         }
     }, [])
 
+    useEffect(() => {
+        let originEvent = document.onkeydown;
+        document.onkeydown = (ev) => {
+            let code = ev.code
+
+            // 屏蔽当前事件
+            if (ev.metaKey && code === 'KeyR') {
+                return false
+            }
+
+            // 屏蔽关闭事件
+            if (ev.metaKey && code === 'KeyW') {
+                return false
+            }
+
+
+            // @ts-ignore
+            originEvent && originEvent(ev)
+            return
+        }
+        return () => {
+            document.onkeydown = originEvent
+        }
+    }, [])
+
     const userProtocol = () => <Modal
         title={"用户协议"} visible={true} width={"75%"}
         onCancel={() => {

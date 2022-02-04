@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {Ref, useEffect, useState} from "react"
 import {
     Button,
     Col,
@@ -33,6 +33,8 @@ import Highlighter from "react-highlight-words"
 import {CopyToClipboard} from "react-copy-to-clipboard"
 import {TableResizableColumn} from "./TableResizableColumn"
 import { formatTimestamp } from "../utils/timeUtil"
+import {useHotkeys} from "react-hotkeys-hook";
+import {useGetState} from "ahooks";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -426,11 +428,19 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [autoReload, setAutoReload] = useState(true)
     const [total, setTotal] = useState<number>(0)
     const [loading, setLoading] = useState(true)
-    const [selected, setSelected] = useState<HTTPFlow>()
+    const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
 
     const [compareLeft,setCompareLeft] = useState<CompateData>({content:'',language:'http'})
     const [compareRight,setCompareRight] = useState<CompateData>({content:'',language:'http'})
     const [compareState,setCompareState] =useState(0)
+
+    const ref = useHotkeys('ctrl+r', e => {
+        const selected = getSelected()
+        if (selected && props.onSendToWebFuzzer) {
+            props.onSendToWebFuzzer(selected?.IsHTTPS, new Buffer(selected.Request).toString())
+        }
+    })
+
     // 向主页发送对比数据
     useEffect(() => {
         if(compareLeft.content){
@@ -523,7 +533,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     }, [autoReload])
 
     return (
-        <div style={{width: "100%", height: "100%", overflow: "auto"}}>
+        <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "auto"}}>
             {!props.noHeader && (
                 <PageHeader
                     title={"HTTP History"}

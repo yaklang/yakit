@@ -36,8 +36,10 @@
     "react-codemirror2": "^7.2.1",
     "react-copy-to-clipboard": "^5.0.4",
     "react-dom": "^17.0.2",
+    "react-error-overlay": "6.0.9",
     "react-hex-editor": "^0.3.0",
     "react-highlight-words": "^0.17.0",
+    "react-hotkeys-hook": "^3.4.4",
     "react-json-view": "^1.21.3",
     "react-markdown": "^7.0.1",
     "react-monaco-editor": "^0.44.0",
@@ -52,8 +54,7 @@
     "xterm-addon-search": "^0.8.2",
     "xterm-addon-search-bar": "^0.2.0",
     "xterm-addon-unicode11": "^0.3.0",
-    "xterm-for-react": "^1.0.4",
-    "react-error-overlay": "6.0.9"
+    "xterm-for-react": "^1.0.4"
   },
   "scripts": {
     "electron-render": "BROWSER=none react-app-rewired start",
