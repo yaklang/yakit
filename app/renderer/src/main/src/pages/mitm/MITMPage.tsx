@@ -1,9 +1,8 @@
-import React, {useEffect, useState} from "react";
+import React, {Ref, useEffect, useState} from "react";
 import {
-    Alert,
-    Button, Checkbox,
+    Button,
+    Checkbox,
     Col,
-    Divider,
     Form,
     Input,
     InputNumber,
@@ -13,26 +12,26 @@ import {
     Row,
     Space,
     Spin,
-    Steps,
-    Switch,
     Tag,
     Typography
 } from "antd";
-import {failed, info, warn} from "../../utils/notification";
+import {failed, info} from "../../utils/notification";
 import {CheckOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons";
 import {HTTPPacketEditor} from "../../utils/editors";
 import {MITMFilters, MITMFilterSchema} from "./MITMFilters";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {MITMPluginCard} from "./MITMPluginCard";
-import {ExecResult, YakScriptHooks} from "../invoker/schema";
+import {ExecResult} from "../invoker/schema";
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
 import {SelectOne} from "../../utils/inputUtil";
 import {MITMPluginOperator} from "./MITMPluginOperator";
-import {useGetState, useLatest, useMemoizedFn, useReactive} from "ahooks";
+import {useGetState, useLatest, useMemoizedFn} from "ahooks";
 import {StatusCardProps} from "../yakitStore/viewers/base";
+import {useHotkeys} from "react-hotkeys-hook";
+import * as monaco from 'monaco-editor';
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -102,7 +101,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]));
 
     // 自动转发 与 劫持响应的自动设置
-    const [autoForward, setAutoForward] = useState(true);
+    const [autoForward, setAutoForward, getAutoForward] = useGetState(true);
     const [hijackAllResponse, setHijackAllResponse] = useState(false); // 劫持所有请求
     const [allowHijackCurrentResponse, setAllowHijackCurrentResponse] = useState(false); // 仅劫持一个请求
     const [initialed, setInitialed] = useState(false);
@@ -164,9 +163,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         // 解析 Object
                         const obj = JSON.parse(currentLog.data)
                         const {id, data} = obj;
-                        if(!data) {
+                        if (!data) {
                             statusMap.delete(`${id}`)
-                        }else{
+                        } else {
                             statusMap.set(`${id}`, {Data: data, Id: id, Timestamp: currentLog.timestamp})
                         }
                     } catch (e) {
@@ -453,6 +452,23 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         >设置过滤器</Button>
     })
 
+    const handleAutoForward = useMemoizedFn((e: boolean) => {
+        if (e) {
+            info("切换为劫持自动放行模式（仅记录）")
+            setHijackAllResponse(false)
+        } else {
+            info("切换为手动放行模式（可修改劫持）")
+        }
+        setAutoForward(e)
+        if (currentPacket && currentPacketId) {
+            forward()
+        }
+    })
+
+    const shiftAutoForwardHotkey = useHotkeys('ctrl+t', () => {
+        handleAutoForward(!autoForward)
+    }, [autoForward])
+
     if (!initialed) {
         return <div style={{textAlign: "center", paddingTop: 120}}>
             <Spin spinning={true} tip={"正在初始化 MITM"}/>
@@ -511,7 +527,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         start()
                                         setPassiveMode(true)
                                         setAutoForward(true)
-                                        enableMITMPluginMode().then(()=>{
+                                        enableMITMPluginMode().then(() => {
                                             info("被动扫描插件模式已启动")
                                         })
                                     }}>
@@ -523,7 +539,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     </Spin>
                 case "hijacking":
                 case "hijacked":
-                    return <div id={"mitm-hijacking-container"}
+                    return <div id={"mitm-hijacking-container"} ref={shiftAutoForwardHotkey as Ref<any>} tabIndex={-1}
                                 style={{marginLeft: 12, marginRight: 12, height: "100%"}}>
                         {passiveMode ? <div id={"mitm-plugin-operator-container"} style={{height: "100%"}}>
                             <MITMPluginOperator
@@ -633,18 +649,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         ]}
                                                         value={autoForward}
                                                         formItemStyle={{marginBottom: 0}}
-                                                        setValue={e => {
-                                                            if (e) {
-                                                                info("切换为劫持自动放行模式（仅记录）")
-                                                                setHijackAllResponse(false)
-                                                            } else {
-                                                                info("切换为手动放行模式（可修改劫持）")
-                                                            }
-                                                            setAutoForward(e)
-                                                            if (currentPacket && currentPacketId) {
-                                                                forward()
-                                                            }
-                                                        }}
+                                                        setValue={handleAutoForward}
                                                     />
                                                     {/*<div>*/}
                                                     {/*    <span>自动放行：</span>*/}
@@ -703,15 +708,36 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                             refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
                                             actions={forResponse ? [
                                                 {
+                                                    id: "trigger-auto-hijacked", label: "切换自动/手动劫持模式",
+                                                    keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_T ],
+                                                    run: ()=>{
+                                                        handleAutoForward(!getAutoForward())
+                                                    }, contextMenuGroupId: "Actions",
+                                                },
+                                                {
                                                     id: "forward-response",
                                                     label: "放行该 HTTP Response",
+                                                    /*
+                                                    * 	keybindings: [
+		monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
+		// chord
+		monaco.KeyMod.chord(
+			monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
+			monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM
+		)
+	],
+                                                    * */
+                                                    // keybindings: [
+                                                    //     monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F,
+                                                    // ],
                                                     run: function () {
-                                                        hijacking()
-                                                        forwardResponse(getCurrentId()).finally(() => {
-                                                            setTimeout(() => setLoading(false), 300)
-                                                        })
+                                                        forward()
+                                                        // hijacking()
+                                                        // forwardResponse(getCurrentId()).finally(() => {
+                                                        //     setTimeout(() => setLoading(false), 300)
+                                                        // })
                                                     },
-                                                    contextMenuGroupId: "Actions"
+                                                    contextMenuGroupId: "Actions",
                                                 },
                                                 {
                                                     id: "drop-response",
@@ -726,8 +752,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                 },
                                             ] : [
                                                 {
+                                                    id: "trigger-auto-hijacked", label: "切换自动/手动劫持模式",
+                                                    keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_T ],
+                                                    run: ()=>{
+                                                        handleAutoForward(!getAutoForward())
+                                                    }, contextMenuGroupId: "Actions",
+                                                },
+                                                {
                                                     id: "send-to-fuzzer",
                                                     label: "发送到 Web Fuzzer",
+                                                    keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_R],
                                                     run: function (StandaloneEditor: any) {
                                                         props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, StandaloneEditor.getModel().getValue())
                                                     },
@@ -736,11 +770,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                 {
                                                     id: "forward-response",
                                                     label: "放行该 HTTP Request",
+                                                    keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F],
                                                     run: function () {
-                                                        hijacking()
-                                                        forwardRequest(getCurrentId()).finally(() => {
-                                                            setTimeout(() => setLoading(false), 300)
-                                                        })
+                                                        forward()
+                                                        // hijacking()
+                                                        // forwardRequest(getCurrentId()).finally(() => {
+                                                        //     setTimeout(() => setLoading(false), 300)
+                                                        // })
                                                     },
                                                     contextMenuGroupId: "Actions"
                                                 },

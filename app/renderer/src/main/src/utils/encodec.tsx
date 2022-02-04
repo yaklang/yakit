@@ -85,6 +85,7 @@ export interface MonacoEditorActions {
     label: string,
     contextMenuGroupId: "codec" | string,
     run: (editor: IMonacoCodeEditor) => any
+    keybindings?: any[]
 }
 
 export const MonacoEditorCodecActions: MonacoEditorActions[] = [
