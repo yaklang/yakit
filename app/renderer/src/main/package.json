@@ -52,7 +52,8 @@
     "xterm-addon-search": "^0.8.2",
     "xterm-addon-search-bar": "^0.2.0",
     "xterm-addon-unicode11": "^0.3.0",
-    "xterm-for-react": "^1.0.4"
+    "xterm-for-react": "^1.0.4",
+    "react-error-overlay": "6.0.9"
   },
   "scripts": {
     "electron-render": "BROWSER=none react-app-rewired start",
@@ -87,6 +88,10 @@
   },
   "devDependencies": {
     "prettier": "^2.4.1"
+  },
+  "resolutions": {
+    "//": "See https://github.com/facebook/create-react-app/issues/11773",
+    "react-error-overlay": "6.0.9"
   },
   "homepage": "."
 }
