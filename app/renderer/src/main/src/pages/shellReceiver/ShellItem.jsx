@@ -1,7 +1,8 @@
-import React, {useEffect, useState} from "react";
-import {Button, PageHeader, Popconfirm, Space, Spin, Tabs, Tag} from "antd";
+import React, {useEffect, useMemo, useState} from "react";
+import {Button, PageHeader, Popconfirm, Space, Spin, Switch, Tag} from "antd";
 import {XTerm} from "xterm-for-react";
 import {YakEditor} from "../../utils/editors";
+import {useGetState, useMemoizedFn} from "ahooks";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -10,18 +11,21 @@ export const ShellItem = (props) => {
     const [local, setLocal] = useState("");
     const [remote, setRemote] = useState("");
     const [copyLoading, setCopyLoading] = useState(false)
-    const { removeListenPort, addr } = props
+    const {removeListenPort, addr} = props
     const xtermRef = React.useRef(null)
     const timeRef = React.useRef(null)
+    const [echoBack, setEchoBack, getEchoBack] = useGetState(true);
 
-    const write = (s) => {
+    const write = useMemoizedFn((s) => {
         if (!xtermRef || !xtermRef.current) {
             return
         }
         const str = s.charCodeAt(0) === 13 ? String.fromCharCode(10) : s
-        xtermRef.current.terminal.write(str)
+        if (getEchoBack()) {
+            xtermRef.current.terminal.write(str)
+        }
         ipcRenderer.invoke("listening-port-input", props.addr, str)
-    }
+    })
 
     useEffect(() => {
         const key = `client-listening-port-data-${props.addr}`
@@ -52,7 +56,9 @@ export const ShellItem = (props) => {
     return (
         <div>
             <PageHeader
-                title={"正在监听端口: " + addr}
+                title={<Space>
+                    {"正在监听端口: " + addr}
+                </Space>}
                 subTitle={
                     <Space>
                         {local && remote ? (
@@ -65,16 +71,22 @@ export const ShellItem = (props) => {
                     </Space>
                 }
                 extra={
-                    <Popconfirm
-                        title={"确定关闭该端口吗？"}
-                        onConfirm={() => {
-                            removeListenPort(addr)
-                        }}
-                    >
-                        <Button danger={true} type={"primary"}>
-                            强制断开端口
-                        </Button>
-                    </Popconfirm>
+                    <Space>
+                        <span>
+                        回显:
+                        <Switch size={"small"} checked={echoBack} onChange={setEchoBack}/>
+                    </span>
+                        <Popconfirm
+                            title={"确定关闭该端口吗？"}
+                            onConfirm={() => {
+                                removeListenPort(addr)
+                            }}
+                        >
+                            <Button danger={true} type={"primary"}>
+                                强制断开端口
+                            </Button>
+                        </Popconfirm>
+                    </Space>
                 }
             />
             <Spin spinning={!haveConnIn} tip={"正在等待 TCP 连接连入..."}>
@@ -83,7 +95,7 @@ export const ShellItem = (props) => {
                     options={{
                         convertEol: true
                     }}
-                    onKey={({ key, event }) => {
+                    onKey={({key, event}) => {
                         if (!copyLoading) {
                             const code = key.charCodeAt(0)
                             if (code === 127 && xtermRef?.current) {

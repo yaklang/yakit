@@ -28,10 +28,11 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
 import {SelectOne} from "../../utils/inputUtil";
 import {MITMPluginOperator} from "./MITMPluginOperator";
-import {useGetState, useLatest, useMemoizedFn} from "ahooks";
+import {useGetState, useLatest, useMemoizedFn, useMouse} from "ahooks";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import {useHotkeys} from "react-hotkeys-hook";
 import * as monaco from 'monaco-editor';
+import {scanPacket} from "../../utils/scanPacket";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -119,6 +120,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     // filter 过滤器
     const [mitmFilter, setMITMFilter] = useState<MITMFilterSchema>({});
+
+    // mouse
+    const mouseState = useMouse();
 
     // 用于接受后端传回的信息
     useEffect(() => {
@@ -706,100 +710,108 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                             noPacketModifier={true}
                                             readOnly={status === "hijacking"}
                                             refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
-                                            actions={forResponse ? [
-                                                {
-                                                    id: "trigger-auto-hijacked", label: "切换自动/手动劫持模式",
-                                                    keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_T ],
-                                                    run: ()=>{
-                                                        handleAutoForward(!getAutoForward())
-                                                    }, contextMenuGroupId: "Actions",
-                                                },
-                                                {
-                                                    id: "forward-response",
-                                                    label: "放行该 HTTP Response",
-                                                    /*
-                                                    * 	keybindings: [
-		monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
-		// chord
-		monaco.KeyMod.chord(
-			monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
-			monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM
-		)
-	],
-                                                    * */
-                                                    // keybindings: [
-                                                    //     monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F,
-                                                    // ],
-                                                    run: function () {
-                                                        forward()
-                                                        // hijacking()
-                                                        // forwardResponse(getCurrentId()).finally(() => {
-                                                        //     setTimeout(() => setLoading(false), 300)
-                                                        // })
+                                            actions={[
+                                                // {
+                                                //     id: "send-to-scan-packet", label: "发送到数据包扫描器",
+                                                //     run: e => {
+                                                //         // console.info(mouseState)
+                                                //         scanPacket(mouseState, false, "GET / HTTP/1.1\r\nHost: www.baidu.com", "")
+                                                //     }, contextMenuGroupId: "Scanners",
+                                                // },
+                                                ...(forResponse ? [
+                                                    {
+                                                        id: "trigger-auto-hijacked", label: "切换自动/手动劫持模式",
+                                                        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_T],
+                                                        run: () => {
+                                                            handleAutoForward(!getAutoForward())
+                                                        }, contextMenuGroupId: "Actions",
                                                     },
-                                                    contextMenuGroupId: "Actions",
-                                                },
-                                                {
-                                                    id: "drop-response",
-                                                    label: "丢弃该 HTTP Response",
-                                                    run: function () {
-                                                        hijacking()
-                                                        dropResponse(getCurrentId()).finally(() => {
-                                                            setTimeout(() => setLoading(false), 300)
-                                                        })
+                                                    {
+                                                        id: "forward-response",
+                                                        label: "放行该 HTTP Response",
+                                                        /*
+                                                        * 	keybindings: [
+            monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
+            // chord
+            monaco.KeyMod.chord(
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM
+            )
+        ],
+                                                        * */
+                                                        // keybindings: [
+                                                        //     monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F,
+                                                        // ],
+                                                        run: function () {
+                                                            forward()
+                                                            // hijacking()
+                                                            // forwardResponse(getCurrentId()).finally(() => {
+                                                            //     setTimeout(() => setLoading(false), 300)
+                                                            // })
+                                                        },
+                                                        contextMenuGroupId: "Actions",
                                                     },
-                                                    contextMenuGroupId: "Actions"
-                                                },
-                                            ] : [
-                                                {
-                                                    id: "trigger-auto-hijacked", label: "切换自动/手动劫持模式",
-                                                    keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_T ],
-                                                    run: ()=>{
-                                                        handleAutoForward(!getAutoForward())
-                                                    }, contextMenuGroupId: "Actions",
-                                                },
-                                                {
-                                                    id: "send-to-fuzzer",
-                                                    label: "发送到 Web Fuzzer",
-                                                    keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_R],
-                                                    run: function (StandaloneEditor: any) {
-                                                        props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, StandaloneEditor.getModel().getValue())
+                                                    {
+                                                        id: "drop-response",
+                                                        label: "丢弃该 HTTP Response",
+                                                        run: function () {
+                                                            hijacking()
+                                                            dropResponse(getCurrentId()).finally(() => {
+                                                                setTimeout(() => setLoading(false), 300)
+                                                            })
+                                                        },
+                                                        contextMenuGroupId: "Actions"
                                                     },
-                                                    contextMenuGroupId: "Actions"
-                                                },
-                                                {
-                                                    id: "forward-response",
-                                                    label: "放行该 HTTP Request",
-                                                    keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F],
-                                                    run: function () {
-                                                        forward()
-                                                        // hijacking()
-                                                        // forwardRequest(getCurrentId()).finally(() => {
-                                                        //     setTimeout(() => setLoading(false), 300)
-                                                        // })
+                                                ] : [
+                                                    {
+                                                        id: "trigger-auto-hijacked", label: "切换自动/手动劫持模式",
+                                                        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_T],
+                                                        run: () => {
+                                                            handleAutoForward(!getAutoForward())
+                                                        }, contextMenuGroupId: "Actions",
                                                     },
-                                                    contextMenuGroupId: "Actions"
-                                                },
-                                                {
-                                                    id: "drop-response",
-                                                    label: "丢弃该 HTTP Request",
-                                                    run: function () {
-                                                        hijacking()
-                                                        dropRequest(getCurrentId()).finally(() => {
-                                                            setTimeout(() => setLoading(false), 300)
-                                                        })
+                                                    {
+                                                        id: "send-to-fuzzer",
+                                                        label: "发送到 Web Fuzzer",
+                                                        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_R],
+                                                        run: function (StandaloneEditor: any) {
+                                                            props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, StandaloneEditor.getModel().getValue())
+                                                        },
+                                                        contextMenuGroupId: "Actions"
                                                     },
-                                                    contextMenuGroupId: "Actions"
-                                                },
-                                                {
-                                                    id: "hijack-current-response",
-                                                    label: "劫持该 Request 对应的响应",
-                                                    run: function () {
-                                                        allowHijackedResponseByRequest(getCurrentId())
+                                                    {
+                                                        id: "forward-response",
+                                                        label: "放行该 HTTP Request",
+                                                        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F],
+                                                        run: function () {
+                                                            forward()
+                                                            // hijacking()
+                                                            // forwardRequest(getCurrentId()).finally(() => {
+                                                            //     setTimeout(() => setLoading(false), 300)
+                                                            // })
+                                                        },
+                                                        contextMenuGroupId: "Actions"
                                                     },
-                                                    contextMenuGroupId: "Actions"
-                                                },
-                                            ]}
+                                                    {
+                                                        id: "drop-response",
+                                                        label: "丢弃该 HTTP Request",
+                                                        run: function () {
+                                                            hijacking()
+                                                            dropRequest(getCurrentId()).finally(() => {
+                                                                setTimeout(() => setLoading(false), 300)
+                                                            })
+                                                        },
+                                                        contextMenuGroupId: "Actions"
+                                                    },
+                                                    {
+                                                        id: "hijack-current-response",
+                                                        label: "劫持该 Request 对应的响应",
+                                                        run: function () {
+                                                            allowHijackedResponseByRequest(getCurrentId())
+                                                        },
+                                                        contextMenuGroupId: "Actions"
+                                                    },
+                                                ])]}
                                         />
                                     </div>
                                     {/*</Spin>*/}

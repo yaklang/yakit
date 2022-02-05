@@ -1,10 +1,11 @@
 import React from "react";
 import {showModal} from "./showModal";
 import {Space} from "antd";
-import {IMonacoCodeEditor, IMonacoEditor, YakEditor} from "./editors";
+import {IMonacoActionDescriptor, IMonacoCodeEditor, IMonacoEditor, YakEditor} from "./editors";
 import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "../pages/fuzzer/fuzzerTemplates";
 import {editor} from "monaco-editor";
 import {failed} from "./notification";
+import IEditorAction = editor.IEditorAction;
 
 export type CodecType = |
     "fuzz" | "md5" | "sha1" | "sha256" | "sha512"
@@ -22,7 +23,6 @@ const editorCodecHandlerFactory = (typeStr: CodecType) => {
             execCodec(typeStr, text, false, e)
         } catch (e) {
             failed("editor exec codec failed")
-            console.error(e)
         }
     }
 }
@@ -80,7 +80,7 @@ const editorMutateHTTPRequestHandlerFactory = (params: MutateHTTPRequestParams) 
     }
 }
 
-export interface MonacoEditorActions {
+export interface MonacoEditorActions extends IMonacoActionDescriptor {
     id: CodecType | string,
     label: string,
     contextMenuGroupId: "codec" | string,
@@ -154,7 +154,7 @@ export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boo
             if (clear) {
                 monacoEditorClear(replaceEditor)
                 replaceEditor.getModel()?.setValue(result.Result)
-            }else{
+            } else {
                 monacoEditorWrite(replaceEditor, result.Result)
             }
         }
