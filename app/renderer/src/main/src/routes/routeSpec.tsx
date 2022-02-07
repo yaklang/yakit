@@ -33,6 +33,7 @@ import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage";
 import {ReverseServerPage} from "../pages/reverse/ReverseServerPage";
 import {RiskPage} from "../pages/risks/RiskPage";
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage";
+import {BatchExecutorPage} from "../pages/invoker/batch/BatchExecutorPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -48,6 +49,7 @@ export enum Route {
     IGNORE = "ignore",
     DataCompare = "dataCompare",
 
+    ModManagerDetail = "mod-manager-detail",
     ModManager = "mod-manager",
     ModManagerLegacy = "mod-manager-legacy",
 
@@ -102,6 +104,8 @@ export enum Route {
     ShellReceiver = "shellReceiver",
     DNSLog = "dnslog",
 
+    // 测试
+    BatchExecutorPage = "batch-executor-page-ex",
 }
 
 export interface MenuDataProps {
@@ -160,7 +164,14 @@ export const RouteMenuData: MenuDataProps[] = [
         // ],
     },
 
-    {key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined/>},
+    {
+        key: Route.ModManagerDetail, label: "插件管理", icon: <AppstoreOutlined/>,
+        subMenuData: [
+            {key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined/>},
+            {key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined/>},
+        ]
+    },
+
     {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined/>},
     {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
     {
@@ -280,8 +291,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <CodecPage/>
         case Route.ModManager:
             return <YakitStorePage/>
-        case Route.ModManagerLegacy:
-            return <YakScriptManagerPage/>
         case Route.PayloadManager:
             return <PayloadManagerPage/>
         case Route.Mod_ScanPort:
@@ -304,6 +313,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number): JSX.Ele
             return <RiskPage/>
         case Route.DNSLog:
             return <DNSLogPage/>
+        case Route.BatchExecutorPage:
+            return <BatchExecutorPage/>
         default:
             return <div/>
     }

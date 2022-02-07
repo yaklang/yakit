@@ -76,7 +76,7 @@ export interface ExecBatchYakScriptTask {
     Results: ExecResult[]
 }
 
-export const YakBatchExecutor: React.FC<YakBatchExecutorProp> = (props) => {
+export const YakBatchExecutorLegacy: React.FC<YakBatchExecutorProp> = (props) => {
     const [params, setParams] = useState<ExecBatchYakScriptParams>({
         Concurrent: 5,
         Keyword: props.keyword,
@@ -349,12 +349,6 @@ export const YakBatchExecutor: React.FC<YakBatchExecutorProp> = (props) => {
 
                 </Table>
             </div>
-            {/*<Col span={8} style={{height: "100%"}}>*/}
-            {/*    <YakScriptManagerPage type={"nuclei"} onlyViewer={true} keyword={props.keyword} limit={params.Limit}/>*/}
-            {/*</Col>*/}
-            {/*<Col span={16}>*/}
-
-            {/*</Col>*/}
         </Row>
     </div>
 };

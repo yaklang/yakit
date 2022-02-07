@@ -162,24 +162,6 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                     {i.node}
                 </div>
             </Tabs.TabPane>)}
-            {/*<Tabs.TabPane tab={"Web Fuzzer"} key={"fuzzer"}>*/}
-            {/*    <HTTPFuzzerPage*/}
-            {/*        isHttps={currentRequest?.isHttps}*/}
-            {/*        request={currentRequest?.request}*/}
-            {/*    />*/}
-            {/*</Tabs.TabPane>*/}
-            {/*<Tabs.TabPane tab={"PoC / 模块管理"} key={"yak-script-manager"}>*/}
-            {/*    <YakScriptManagerPage/>*/}
-            {/*</Tabs.TabPane>*/}
-            {/*<Tabs.TabPane tab={"Yak 远程执行"} key={"yak-runner"}>*/}
-            {/*    <YakExecutor/>*/}
-            {/*</Tabs.TabPane>*/}
-            {/*<Tabs.TabPane tab={"Reverse Shell Receiver"} key={"shell-receiver"}>*/}
-            {/*    <ShellReceiverPage/>*/}
-            {/*</Tabs.TabPane>*/}
-            {/*<Tabs.TabPane tab={"编码与解码"} key={"codec"}>*/}
-            {/*    <CodecPage/>*/}
-            {/*</Tabs.TabPane>*/}
         </Tabs>
     </div>
 };

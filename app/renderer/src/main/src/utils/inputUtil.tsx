@@ -28,10 +28,11 @@ import {FormItemProps} from "@ant-design/compatible/lib/form";
 export interface OneLineProp extends JSX.ElementChildrenAttribute {
     width?: string | number
     overflow?: string
+    maxWidth?: string | any
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
-    return <div style={{whiteSpace: "nowrap", width: props.width, overflow: props.overflow || "auto"}}>
+    return <div style={{whiteSpace: "nowrap", width: props.width, overflow: props.overflow || "auto", maxWidth: props.maxWidth}}>
         {props.children}
     </div>
 };
@@ -598,6 +599,7 @@ export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
 export interface CopyableFieldProp {
     text?: string
     width?: any
+    maxWidth?: any
     style?: React.CSSProperties;
     noCopy?: boolean
     mark?: boolean
@@ -605,7 +607,7 @@ export interface CopyableFieldProp {
 }
 
 export const CopyableField: React.FC<CopyableFieldProp> = (props) => {
-    return <div style={{width: props.width, maxWidth: props.width}}>
+    return <div style={{width: props.width, maxWidth: props.maxWidth}}>
         <Typography.Paragraph
             copyable={!props.noCopy}
             style={{marginBottom: 0, ...props.style}}

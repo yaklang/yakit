@@ -31,7 +31,7 @@ export default function useHoldingIPCRStream(
     apiKey: string,
     token: string,
     onEnd?: () => any,
-    onListened?: () => any
+    onListened?: () => any,
 ) {
     const [infoState, setInfoState] = useState<InfoState>({
         messageSate: [],
