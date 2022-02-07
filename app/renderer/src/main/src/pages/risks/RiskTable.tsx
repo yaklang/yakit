@@ -97,6 +97,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     filterName={"Search"}
                                     confirm={confirm}
                                     setSelectedKeys={setSelectedKeys}
+                                    update={update}
                                 />
                             )
                         )
@@ -119,6 +120,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     filterName={"RiskType"}
                                     confirm={confirm}
                                     setSelectedKeys={setSelectedKeys}
+                                    update={update}
                                 />
                             )
                         )
@@ -141,6 +143,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     filterName={"Network"}
                                     confirm={confirm}
                                     setSelectedKeys={setSelectedKeys}
+                                    update={update}
                                 />
                             )
                         )
@@ -211,12 +214,13 @@ export interface TableFilterDropdownStringProp<T> {
     // from parentcotnext
     confirm?: any
     setSelectedKeys?: (keys: React.Key[]) => any
+    update?: (page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => any
 }
 
 export type FilterDropdownStringProp = TableFilterDropdownStringProp<QueryRisksParams>
 
 export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (props) => {
-    const {params, setParams, setSelectedKeys} = props
+    const {params, setParams, setSelectedKeys, update} = props
     return (
         <div style={{padding: 8}}>
             <Form
@@ -258,7 +262,7 @@ export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (pr
                 <Form.Item style={{marginBottom: 0, marginTop: 0}} colon={false} label={" "}>
                     <Space>
                         <Button type='primary' htmlType='submit'>
-                            设置搜索条件
+                            搜索
                         </Button>
                         <Button
                             onClick={() => {
@@ -268,6 +272,9 @@ export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (pr
                                     // @ts-ignore
                                     newParams[props.filterName] = ""
                                     setParams(newParams)
+                                    setTimeout(() => {
+                                        if (update) update(1)
+                                    }, 50)
                                 }
                             }}
                         >
