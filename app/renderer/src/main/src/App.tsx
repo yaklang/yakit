@@ -141,12 +141,12 @@ function App() {
             let code = ev.code
 
             // 屏蔽当前事件
-            if (ev.metaKey && code === 'KeyR') {
+            if ((ev.metaKey || ev.ctrlKey) && code === 'KeyR') {
                 return false
             }
 
             // 屏蔽关闭事件
-            if (ev.metaKey && code === 'KeyW') {
+            if ((ev.metaKey || ev.ctrlKey) && code === 'KeyW') {
                 return false
             }
 
