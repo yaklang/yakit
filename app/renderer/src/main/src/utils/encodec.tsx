@@ -5,7 +5,6 @@ import {IMonacoActionDescriptor, IMonacoCodeEditor, IMonacoEditor, YakEditor} fr
 import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "../pages/fuzzer/fuzzerTemplates";
 import {editor} from "monaco-editor";
 import {failed} from "./notification";
-import IEditorAction = editor.IEditorAction;
 
 export type CodecType = |
     "fuzz" | "md5" | "sha1" | "sha256" | "sha512"

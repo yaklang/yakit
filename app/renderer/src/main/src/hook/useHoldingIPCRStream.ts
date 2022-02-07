@@ -88,6 +88,7 @@ export default function useHoldingIPCRStream(
                 JSON.stringify(infoState) !==
                 JSON.stringify({
                     messageSate: results,
+                    featureMessageState: featureResults,
                     processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
                     statusState: Object.values(cacheStatusKVPair)
                 })
