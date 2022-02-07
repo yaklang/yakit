@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Space, Table, Tag} from "antd";
+import {Button, Form, Space, Table, Tag} from "antd";
 import {Risk} from "./schema";
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema";
 import {useMemoizedFn} from "ahooks";
@@ -8,6 +8,8 @@ import {ReloadOutlined} from "@ant-design/icons";
 import {failed} from "../../utils/notification";
 import {showModal} from "../../utils/showModal";
 import ReactJson from "react-json-view";
+import {InputItem} from "../../utils/inputUtil";
+import {SearchOutlined} from "@ant-design/icons"
 
 export interface RiskTableProp {
 
@@ -31,6 +33,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const limit = response.Pagination.Limit;
     const [loading, setLoading] = useState(false);
 
+    const page = pagination.Page;
+    
     const update = useMemoizedFn((page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
         const paginationProps = {
             Page: page || 1,
