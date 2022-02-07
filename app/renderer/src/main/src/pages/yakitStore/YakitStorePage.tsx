@@ -21,6 +21,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {AutoCard} from "../../components/AutoCard"
 
 import "./YakitStorePage.css"
+import {getValue, saveValue} from "../../utils/kv";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -472,6 +473,8 @@ if proxy != "" {
 yakit.Output("导入插件成功")
 `
 
+const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY";
+
 export const LoadYakitPluginForm = React.memo(() => {
     const [gitUrl, setGitUrl] = useState("")
     const [proxy, setProxy] = useState("")
@@ -483,12 +486,24 @@ export const LoadYakitPluginForm = React.memo(() => {
         }
     }, [official])
 
+    useEffect(()=>{
+        getValue(YAKIT_DEFAULT_LOAD_GIT_PROXY).then(e => {
+            if (e) {
+                setProxy(`${e}`)
+            }
+        })
+    }, [])
+
     return (
         <Form
             labelCol={{span: 5}}
             wrapperCol={{span: 14}}
             onSubmitCapture={(e) => {
                 e.preventDefault()
+
+                if (proxy !== "") {
+                    saveValue(YAKIT_DEFAULT_LOAD_GIT_PROXY, proxy)
+                }
 
                 const params: YakExecutorParam[] = [{Key: "giturl", Value: gitUrl}]
 
@@ -530,7 +545,7 @@ export const LoadYakitPluginForm = React.memo(() => {
     )
 })
 
-const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
+export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
     if (!url) {
         return <></>
     }

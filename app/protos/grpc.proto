@@ -21,11 +21,19 @@ message DeleteYakScriptRequest {
 
 message ExecBatchYakScriptRequest {
   string Target = 1;
+  repeated ExecParamItem ExtraParams = 7;
+
+  // 筛选与限制
   string Keyword = 2;
+  string ExcludedYakScript = 22;
   int64 Limit = 3;
+
+  // 默认总用时
   int64 TotalTimeoutSeconds = 4;
+
   // 模块类型，默认为 nuclei
   string Type = 5;
+
   // 并发
   int64 Concurrent = 6;
 }

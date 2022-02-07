@@ -17,18 +17,6 @@ module.exports = (win, getClient) => {
         return await asyncQueryYakScript(params)
     })
 
-    ipcMain.handle("query-yak-script", (e, params) => {
-        getClient().QueryYakScript(params, (err, data) => {
-            if (data) {
-                if (win) win.webContents.send("client-query-yak-script-data", data);
-            }
-
-            if (err) {
-                if (win) win.webContents.send("client-query-yak-script-error", err?.details || "UNKNOWN ERROR")
-            }
-
-        })
-    })
     ipcMain.handle("update-nuclei-poc", (e) => {
         getClient().LoadNucleiTemplates({}, (err) => {
             if (err) {
@@ -142,6 +130,19 @@ module.exports = (win, getClient) => {
             }
             win.webContents.send(`${token}-exec-batch-yak-script-end`)
         })
+    })
+
+
+    /*
+    * 这个接口用于控制批量执行 Yak 模块
+    *    不仅可用在批量执行 nuclei 脚本，也可以用于批量执行 yak 脚本
+    * */
+    const handlerHelper = require("./handleStreamWithContext");
+    const streamExecBatchYakScriptMap = new Map();
+    ipcMain.handle("cancel-ExecBatchYakScript", handlerHelper.cancelHandler(streamExecBatchYakScriptMap));
+    ipcMain.handle("ExecBatchYakScript", (e, params, token) => {
+        let stream = getClient().ExecBatchYakScript(params);
+        handlerHelper.registerHandler(win, stream, streamExecBatchYakScriptMap, token)
     })
 
     // asyncGetYakScriptById wrapper

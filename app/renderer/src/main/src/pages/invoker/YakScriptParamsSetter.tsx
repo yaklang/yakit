@@ -264,13 +264,16 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                 props.onClearData()
                             }
                         }}>清除缓存</Button>}
-                        {groupToParams.size > 0 && <Popover title={"设置额外参数"} trigger={"click"}
-                                                            content={<div style={{width: 700}}>
-                                                                {renderExtraParams(true)}
-                                                            </div>}
-                        >
-                            <Button size={"small"} type={"link"}>额外参数</Button>
-                        </Popover>}
+                        {groupToParams.size > 0 && (
+                            groupToParams.size === 1 && ((groupToParams.get("default") || []).length <= 0) ? "" :
+                                <Popover title={"设置额外参数"} trigger={"click"}
+                                         content={<div style={{width: 700}}>
+                                             {renderExtraParams(true)}
+                                         </div>}
+                                >
+                                    <Button size={"small"} type={"link"}>额外参数</Button>
+                                </Popover>
+                        )}
                         {props.loading ?
                             <Button
                                 style={{width: 120}} danger={true}

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Space, Table, Tag} from "antd";
+import {Button, Form, Space, Table, Tag} from "antd";
 import {Risk} from "./schema";
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema";
 import {useMemoizedFn} from "ahooks";
@@ -8,6 +8,8 @@ import {ReloadOutlined} from "@ant-design/icons";
 import {failed} from "../../utils/notification";
 import {showModal} from "../../utils/showModal";
 import ReactJson from "react-json-view";
+import {InputItem} from "../../utils/inputUtil";
+import {SearchOutlined} from "@ant-design/icons"
 
 export interface RiskTableProp {
 
@@ -31,6 +33,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const limit = response.Pagination.Limit;
     const [loading, setLoading] = useState(false);
 
+    const page = pagination.Page;
+    
     const update = useMemoizedFn((page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
         const paginationProps = {
             Page: page || 1,
@@ -50,55 +54,200 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         update(1);
     }, [])
 
-    return <Table<Risk>
-        title={() => {
-            return <Space>
-                {"风险与漏洞"}
-                <Button size={"small"} type={"link"} onClick={() => {
-                    update()
-                }} icon={<ReloadOutlined/>}/>
-            </Space>
-        }}
-        size={"small"} bordered={true}
-        columns={[
-            {title: "标题", render: (i: Risk) => i?.TitleVerbose || i.Title},
-            {title: "类型", render: (i: Risk) => i?.RiskTypeVerbose || i.RiskType},
-            {title: "IP", render: (i: Risk) => i?.IP || "-"},
-            {title: "Token", render: (i: Risk) => i?.ReverseToken || "-"},
-            {title: "发现时间", render: (i: Risk) => <Tag>{i.CreatedAt > 0 ? formatTimestamp(i.CreatedAt) : "-"}</Tag>},
-            {
-                title: "操作", render: (i: Risk) => <Space>
-                    <Button
-                        type={"link"}
-                        onClick={() => {
-                            showModal({
-                                width: "60",
-                                title: "详情", content: <div style={{overflow: "auto"}}>
-                                    <ReactJson src={i}/>
-                                </div>
-                            })
-                        }}
-                    >详情</Button>
-                </Space>
-            }
-        ]}
-        rowKey={e => e.Hash}
-        loading={loading}
-        dataSource={response.Data}
-        pagination={{
-            pageSize: limit,
-            showSizeChanger: true,
-            total,
-            pageSizeOptions: ["5", "10", "20"],
-            onChange: (page: number, limit?: number) => {
-                // submit(page, limit)
-            },
-            onShowSizeChange: (old, limit) => {
-                // dispatch({type: "updateParams", payload: {page: 1, limit}})
-                // submit(1, limit)
-            }
-        }}
-    >
+    return (
+        <Table<Risk>
+            title={() => {
+                return (
+                    <Space>
+                        {"风险与漏洞"}
+                        <Button
+                            size={"small"}
+                            type={"link"}
+                            onClick={() => {
+                                update()
+                            }}
+                            icon={<ReloadOutlined/>}
+                        />
+                    </Space>
+                )
+            }}
+            size={"small"}
+            bordered={true}
+            columns={[
+                {
+                    title: "标题",
+                    render: (i: Risk) => i?.TitleVerbose || i.Title,
+                    filterIcon: (filtered) => {
+                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
+                    },
+                    filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                        return (
+                            params &&
+                            setParams && (
+                                <TableFilterDropdownString
+                                    label={"搜索关键字"}
+                                    params={params}
+                                    setParams={setParams}
+                                    filterName={"Search"}
+                                    confirm={confirm}
+                                    setSelectedKeys={setSelectedKeys}
+                                />
+                            )
+                        )
+                    }
+                },
+                {
+                    title: "类型",
+                    render: (i: Risk) => i?.RiskTypeVerbose || i.RiskType,
+                    filterIcon: (filtered) => {
+                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
+                    },
+                    filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                        return (
+                            params &&
+                            setParams && (
+                                <TableFilterDropdownString
+                                    label={"搜索类型关键字"}
+                                    params={params}
+                                    setParams={setParams}
+                                    filterName={"RiskType"}
+                                    confirm={confirm}
+                                    setSelectedKeys={setSelectedKeys}
+                                />
+                            )
+                        )
+                    }
+                },
+                {
+                    title: "IP",
+                    render: (i: Risk) => i?.IP || "-",
+                    filterIcon: (filtered) => {
+                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
+                    },
+                    filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                        return (
+                            params &&
+                            setParams && (
+                                <TableFilterDropdownString
+                                    label={"搜索网段"}
+                                    params={params}
+                                    setParams={setParams}
+                                    filterName={"Network"}
+                                    confirm={confirm}
+                                    setSelectedKeys={setSelectedKeys}
+                                />
+                            )
+                        )
+                    }
+                },
+                {title: "Token", render: (i: Risk) => i?.ReverseToken || "-"},
+                {
+                    title: "发现时间",
+                    render: (i: Risk) => <Tag>{i.CreatedAt > 0 ? formatTimestamp(i.CreatedAt) : "-"}</Tag>
+                },
+                {
+                    title: "操作",
+                    render: (i: Risk) => (
+                        <Space>
+                            <Button
+                                type={"link"}
+                                onClick={() => {
+                                    showModal({
+                                        width: "60",
+                                        title: "详情",
+                                        content: (
+                                            <div style={{overflow: "auto"}}>
+                                                <ReactJson src={i}/>
+                                            </div>
+                                        )
+                                    })
+                                }}
+                            >
+                                详情
+                            </Button>
+                        </Space>
+                    )
+                }
+            ]}
+            rowKey={(e) => e.Hash}
+            loading={loading}
+            dataSource={response.Data}
+            pagination={{
+                current: +page,
+                pageSize: limit,
+                showSizeChanger: true,
+                total,
+                showTotal: (total) => <Tag>Total:{total}</Tag>,
+                pageSizeOptions: ["5", "10", "20"]
+            }}
+            onChange={(pagination, filters, sorter, extra) => {
+                const action = extra.action
+                switch (action) {
+                    case "paginate":
+                        const current = pagination.current
+                        update(+page === current ? 1 : current, pagination.pageSize)
+                        return
+                    case "filter":
+                        update()
+                        return
+                }
+            }}
+        />
+    )
+}
 
-    </Table>
-};
+export interface TableFilterDropdownStringProp<T> {
+    label: string
+    filterName: string
+    params?: T
+    setParams?: (y: T) => any
+
+    // from parentcotnext
+    confirm?: any
+    setSelectedKeys?: (keys: React.Key[]) => any
+}
+
+export type FilterDropdownStringProp = TableFilterDropdownStringProp<QueryRisksParams>
+
+export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (props) => {
+    const {params, setParams, setSelectedKeys} = props
+    return (
+        <div style={{padding: 8}}>
+            <Form
+                size={"small"}
+                onSubmitCapture={(e) => {
+                    e.preventDefault()
+
+                    if (setSelectedKeys) {
+                        // @ts-ignore
+                        if (params[props.filterName]) {
+                            const obj = {}
+                            obj[props.filterName] = params ? params[props.filterName] : ""
+                            // @ts-ignore
+                            setSelectedKeys([obj])
+                        } else {
+                            setSelectedKeys([])
+                        }
+                    }
+                    if (props.confirm) {
+                        props.confirm()
+                    }
+                }}
+            >
+                <InputItem
+                    style={{marginBottom: 4}}
+                    label={props.label}
+                    // @ts-ignore
+                    value={params[props.filterName]}
+                    setValue={(e) => {
+                        if (params && setParams) {
+                            const newParams = {...params}
+                            // @ts-ignore
+                            newParams[props.filterName] = e
+                            setParams(newParams)
+                        }
+                    }}
+                />
+            </Form>
+        </div>);
+}

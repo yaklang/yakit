@@ -24,7 +24,7 @@ import {YakEditor} from "../../utils/editors";
 import {YakScriptParamsSetter} from "./YakScriptParamsSetter";
 import {InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil";
 import {startExecuteYakScript} from "./ExecYakScript";
-import {YakBatchExecutor} from "./batch/YakBatchExecutor";
+import {YakBatchExecutorLegacy} from "./batch/YakBatchExecutorLegacy";
 
 export interface YakScriptManagerPageProp {
     type?: "yak" | "nuclei" | string
@@ -65,35 +65,15 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
         if (page) newParams.Pagination.Page = page;
         if (limit) newParams.Pagination.Limit = limit;
         setLoading(true)
-        setTimeout(() => {
-            setLoading(false)
-        }, 3000)
-        ipcRenderer.invoke("query-yak-script", newParams)
+
+        ipcRenderer.invoke("QueryYakScript", newParams).then((data: QueryYakScriptsResponse) => {
+            setResponse(data)
+        }).finally(() => setTimeout(() => setLoading(false), 300))
     };
 
     useEffect(() => {
         update(1)
     }, [params.Type])
-
-    useEffect(() => {
-        const handleData = (e: any, data: QueryYakScriptsResponse) => {
-            setResponse(data)
-            setTimeout(() => setLoading(false), 400)
-        }
-        const handleError = (e: any, data: any) => {
-            failed(data)
-            setTimeout(() => setLoading(false), 400)
-        };
-        ipcRenderer.on("client-query-yak-script-data", handleData);
-        ipcRenderer.on("client-query-yak-script-error", handleError);
-
-        update(1)
-        return () => {
-            ipcRenderer.removeListener("client-query-yak-script-data", handleData)
-            ipcRenderer.removeListener("client-query-yak-script-error", handleError)
-        }
-    }, [])
-
 
     const renderTable = () => {
         return <Space direction={"vertical"} style={{width: "100%"}}>
@@ -117,9 +97,10 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                             showDrawer({
                                 title: "", width: "93%", mask: false, keyboard: false,
                                 content: <>
-                                    <YakBatchExecutor
+                                    <YakBatchExecutorLegacy
                                         keyword={params.Keyword || ""}
-                                        verbose={`自定义搜索关键字: ${params.Keyword}`}/>
+                                        verbose={`自定义搜索关键字: ${params.Keyword}`}
+                                    />
                                 </>,
                             })
                         }}>批量</Button>

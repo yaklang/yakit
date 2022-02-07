@@ -479,27 +479,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         </div>
     }
     return <div style={{height: "100%", width: "100%"}}>
-        {/*{error && <Alert style={{marginBottom: 8}} message={error} type={"error"}/>}*/}
-        {/*<div style={{marginLeft: 100, marginRight: 100}}>*/}
-        {/*    <Steps size={"small"} current={status === "idle" ? 0 : 1}>*/}
-        {/*        <Step*/}
-        {/*            title={"填写 MITM 代理端口"} active={status === "idle"}*/}
-        {/*            key={"idle"} subTitle={`${host}:${port}`}*/}
-        {/*            status={status === "idle" ? "process" : "finish"}*/}
-        {/*        >*/}
-        {/*        </Step>*/}
-        {/*        <Step title={"开始劫持 / 被动扫描"} key={"hijacked"}*/}
-        {/*              subTitle={status === "idle" ? undefined : <>*/}
-        {/*                  <Space>*/}
-        {/*                      <Divider type={"vertical"}/>*/}
-        {/*                      <>工具栏</>*/}
-        {/*                      <Switch size={"small"} checked={haveSideCar} onChange={setHaveSideCar}/>*/}
-        {/*                  </Space>*/}
-        {/*              </>}*/}
-        {/*              active={status === "hijacked" || status === "hijacking"}>*/}
-        {/*        </Step>*/}
-        {/*    </Steps>*/}
-        {/*</div>*/}
         {(() => {
             switch (status) {
                 case "idle":
