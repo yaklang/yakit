@@ -56,7 +56,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [port, setPort] = useState<PortAsset>();
     const [advanced, setAdvanced] = useState(false);
 
-    const [uploadLoading,setUploadLoading]=useState(false)
+    const [uploadLoading, setUploadLoading] = useState(false)
 
     useEffect(() => {
         if (xtermRef) xtermFit(xtermRef, 128, 10);
@@ -148,58 +148,60 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                 <Upload.Dragger
                                     className='targets-upload-dragger'
                                     accept={'text/plain'}
-                                    multiple={false} 
+                                    multiple={false}
                                     maxCount={1}
                                     showUploadList={false}
-                                    beforeUpload={ (f) => {
-                                        if(f.type!=="text/plain"){
+                                    beforeUpload={(f) => {
+                                        if (f.type !== "text/plain") {
                                             failed(`${f.name}非txt文件，请上传txt格式文件！`)
                                             return false
-                                        } 
+                                        }
 
                                         setUploadLoading(true)
-                                        ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res)=>{
-                                            setParams({...params, Targets:res})
+                                        ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
+                                            setParams({...params, Targets: res})
                                             setTimeout(() => {
                                                 setUploadLoading(false)
                                             }, 100);
                                         })
                                         return false
                                     }}>
-                                        <Spin spinning={uploadLoading}>
+                                    <Spin spinning={uploadLoading}>
                                         <InputItem label={"扫描目标"} setValue={Targets => setParams({...params, Targets})}
-                                        value={params.Targets} textarea={true} textareaRow={6} isBubbing={true}
-                                        help={<div>
-                                            域名/主机/IP/IP段均可，逗号分隔或按行分割
-                                            <br/>
-                                            可将TXT文件拖入框内或<span style={{color:'rgb(25,143,255)'}}>点击此处</span>上传
-                                        </div>}
+                                                   value={params.Targets} textarea={true} textareaRow={6}
+                                                   isBubbing={true}
+                                                   help={<div>
+                                                       域名/主机/IP/IP段均可，逗号分隔或按行分割
+                                                       <br/>
+                                                       可将TXT文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
+                                                   </div>}
                                         />
-                                        </Spin>
+                                    </Spin>
                                 </Upload.Dragger>
-                                    
-                                    <InputItem prefixNode={
+                                <InputItem prefixNode={
                                     <div style={{margin: '5px 0'}}>
                                         预设端口
                                         <Select
-                                        style={{width: 200,marginLeft: 5}}
-                                        size={"small"} mode={"multiple"} bordered={true}
-                                        onChange={(value: string[]) => {
-                                            let res: string = (value || []).map(i => {
-                                                // @ts-ignore
-                                                return PresetPorts[i] || ""
-                                            }).join(",");
-                                            setParams({...params, Ports: res})
-                                        }}
-                                    >
-                                        <Select.Option value={"top100"}>常见100端口</Select.Option>
-                                        <Select.Option value={"top1000+"}>常见一两千</Select.Option>
-                                    </Select>
+                                            style={{width: 200, marginLeft: 5}}
+                                            size={"small"} mode={"multiple"} bordered={true}
+                                            onChange={(value: string[]) => {
+                                                let res: string = (value || []).map(i => {
+                                                    // @ts-ignore
+                                                    return PresetPorts[i] || ""
+                                                }).join(",");
+                                                setParams({...params, Ports: res})
+                                            }}
+                                        >
+                                            <Select.Option value={"top100"}>常见100端口</Select.Option>
+                                            <Select.Option value={"top1000+"}>常见一两千</Select.Option>
+                                        </Select>
                                     </div>
-                                    } 
-                                    label={"扫描端口 （服务端去重）"} setValue={Ports => setParams({...params, Ports})}
-                                           value={params.Ports} allowClear={true} textarea={true} autoSize={{minRows: 2, maxRows: 6}} help={<Space style={{marginTop: 4, marginBottom: 6}}>
-                                </Space>}
+                                }
+                                           label={"扫描端口 （服务端去重）"} setValue={Ports => setParams({...params, Ports})}
+                                           value={params.Ports} allowClear={true} textarea={true}
+                                           autoSize={{minRows: 2, maxRows: 6}}
+                                           help={<Space style={{marginTop: 4, marginBottom: 6}}>
+                                           </Space>}
                                 />
                                 <Form.Item label={"并发"}
                                            help={`最多同时扫描${params.Concurrent}个端口`} style={{width: "100%"}}

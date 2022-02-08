@@ -11,9 +11,11 @@ import {
     Radio,
     Row,
     Select,
+    Spin,
     Switch,
     Tag,
-    Typography
+    Typography,
+    Upload
 } from 'antd';
 import '@ant-design/compatible/assets/index.css';
 import {DeleteOutlined, PlusOutlined} from "@ant-design/icons"
@@ -32,7 +34,12 @@ export interface OneLineProp extends JSX.ElementChildrenAttribute {
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
-    return <div style={{whiteSpace: "nowrap", width: props.width, overflow: props.overflow || "auto", maxWidth: props.maxWidth}}>
+    return <div style={{
+        whiteSpace: "nowrap",
+        width: props.width,
+        overflow: props.overflow || "auto",
+        maxWidth: props.maxWidth
+    }}>
         {props.children}
     </div>
 };
@@ -462,6 +469,63 @@ export interface SwitchItemProps extends InputBase {
     help?: string
 
     setValue(b: boolean): any
+}
+
+export interface InputFileNameItem {
+    label?: string
+    content?: string
+    loadContent?: boolean
+    setContent?: (i: string) => any
+    filename?: string
+    setFileName?: (i: string) => any
+    accept?: string[]
+}
+
+const {ipcRenderer} = window.require("electron");
+export const InputFileNameItem: React.FC<InputFileNameItem> = p => {
+    const [uploadLoading, setUploadLoading] = useState(false);
+    return <Item>
+        <Upload.Dragger
+            className='targets-upload-dragger'
+            accept={(p.accept || [])?.join(",")}
+            multiple={false}
+            maxCount={1}
+            showUploadList={false}
+            beforeUpload={(f: any) => {
+                // 设置名字
+                p.setFileName && p.setFileName(f?.path)
+                if (!p.loadContent) {
+                    return false
+                }
+
+                setUploadLoading(true)
+                ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
+                    p.setContent && p.setContent(res)
+                    setTimeout(() => {
+                        setUploadLoading(false)
+                    }, 100);
+                })
+                return false
+            }}>
+            <Spin spinning={uploadLoading}>
+                {p.loadContent ? <InputItem
+                    label={p.label} setValue={Targets => p.setContent && p.setContent(Targets)}
+                    value={p.content} textarea={true} textareaRow={6}
+                    isBubbing={true}
+                    help={<div>
+                        可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
+                    </div>}
+                /> : <InputItem
+                    label={p.label} value={p.filename} setValue={f => p.setFileName && p.setFileName(f)}
+                    isBubbing={true} allowClear={true} help={<div>
+                    可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
+                </div>}
+                />
+                }
+
+            </Spin>
+        </Upload.Dragger>
+    </Item>
 }
 
 export const SwitchItem: React.FC<SwitchItemProps> = p => {

@@ -20,7 +20,11 @@ message DeleteYakScriptRequest {
 }
 
 message ExecBatchYakScriptRequest {
+  // 目标会被自动拆分
   string Target = 1;
+  string TargetFile = 11;
+
+  // 额外参数可以被添加
   repeated ExecParamItem ExtraParams = 7;
 
   // 筛选与限制
@@ -36,6 +40,9 @@ message ExecBatchYakScriptRequest {
 
   // 并发
   int64 Concurrent = 6;
+
+  // 精确使用脚本名称
+  repeated string ScriptNames = 8;
 }
 
 message ExecBatchYakScriptResult {
@@ -48,6 +55,12 @@ message ExecBatchYakScriptResult {
   // 脚本的详细信息
   YakScript PoC = 7;
   ExecResult Result = 8;
+
+  // 如果是整体进度信息，则在这儿展示
+  bool ProgressMessage = 9;
+  double ProgressPercent = 10;
+  int64 ProgressTotal = 11;
+  int64 ProgressCount = 12;
 }
 
 message GetYakScriptByIdRequest {

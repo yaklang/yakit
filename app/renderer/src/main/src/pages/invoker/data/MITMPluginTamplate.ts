@@ -63,6 +63,30 @@ mirrorNewWebsitePath = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rs
 mirrorNewWebsitePathParams = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
     
 }
+
+
+# hijackHTTPRequest 每一个新的 HTTPRequest 将会被这个 HOOK 劫持，劫持后通过 forward(modifed) 来把修改后的请求覆盖，如果需要屏蔽该数据包，通过 drop() 来屏蔽
+# ATTENTION-DEMO:
+#   hijacked = str.ReplaceAll(string(req), "abc", "bcd")
+#       1. forward(hijacked)：确认转发
+#       2. drop() 丢包
+#       3. 如果 forward 和 drop 都没有被调用，则使用默认数据流
+#       4. 如果 drop 和 forward 在一个劫持中都被调用到了，以 drop 为准
+/*
+# Demo2 Best In Practice
+hijackHTTPRequest = func(isHttps, url, req, forward, drop) {
+    if str.Contains(string(req), "/products/plugins/plugin_11") {
+        forward(str.ReplaceAll(string(req), "/products/plugins/plugin_11", "/products/plugins/plugin_create"))
+    } 
+
+    if str.Contains(string(req), "/products/plugins/plugin_12") {
+        drop()
+    } 
+}
+*/
+hijackHTTPRequest = func(isHttps, url, req, forward /*func(modifiedRequest []byte)*/, drop /*func()*/) {
+
+}
 `
 
 export const MITMPluginTemplateShort = `# mirrorHTTPFlow 会镜像所有的流量到这里，包括 .js / .css / .jpg 这类一般会被劫持程序过滤的请求
@@ -90,4 +114,27 @@ mirrorNewWebsitePathParams = func(isHttps /*bool*/, url /*string*/, req /*[]byte
     
 }
 
+
+# hijackHTTPRequest 每一个新的 HTTPRequest 将会被这个 HOOK 劫持，劫持后通过 forward(modifed) 来把修改后的请求覆盖，如果需要屏蔽该数据包，通过 drop() 来屏蔽
+# ATTENTION-DEMO:
+#   hijacked = str.ReplaceAll(string(req), "abc", "bcd")
+#       1. forward(hijacked)：确认转发
+#       2. drop() 丢包
+#       3. 如果 forward 和 drop 都没有被调用，则使用默认数据流
+#       4. 如果 drop 和 forward 在一个劫持中都被调用到了，以 drop 为准
+/*
+# Demo2 Best In Practice
+hijackHTTPRequest = func(isHttps, url, req, forward, drop) {
+    if str.Contains(string(req), "/products/plugins/plugin_11") {
+        forward(str.ReplaceAll(string(req), "/products/plugins/plugin_11", "/products/plugins/plugin_create"))
+    } 
+
+    if str.Contains(string(req), "/products/plugins/plugin_12") {
+        drop()
+    } 
+}
+*/
+hijackHTTPRequest = func(isHttps, url, req, forward /*func(modifiedRequest []byte)*/, drop /*func()*/) {
+
+}
 `
