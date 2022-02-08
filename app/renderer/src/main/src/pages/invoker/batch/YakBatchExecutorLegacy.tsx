@@ -374,13 +374,13 @@ export const YakBatchExecutorLegacy: React.FC<YakBatchExecutorProp> = (props) =>
 export const StatusToVerboseTag = (status: string) => {
     switch (status.toLowerCase()) {
         case "waiting":
-            return <Tag color={"geekblue"}>等待执行/Wait</Tag>
+            return <Tag color={"geekblue"}>等待执行</Tag>
         case "data":
         case "executing":
         case "running":
-            return <Tag color={"orange"}>正在执行/Running</Tag>
+            return <Tag color={"orange"}>正在执行</Tag>
         case "end":
-            return <Tag color={"green"}>执行结束/End</Tag>
+            return <Tag color={"green"}>执行结束</Tag>
         default:
             return <Tag color={"blue"}>{status}</Tag>
     }
