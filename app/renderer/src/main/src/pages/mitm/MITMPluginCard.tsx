@@ -45,14 +45,14 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
     }, [])
 
     return <div style={{height: "100%"}}>
-        <Tabs
+        {/* <Tabs
             className={"httphacker-tabs"}
             size={"small"} type={"card"} activeKey={tab} onChange={setTab}
             style={{
                 paddingTop: 4
             }}
         >
-            <Tabs.TabPane key={"history"} tab={"历史请求"}>
+            <Tabs.TabPane key={"history"} tab={"历史请求"}> */}
                 <div style={{height: "100%", overflow: "hidden"}}>
                     <HTTPFlowMiniTable
                         simple={true}
@@ -66,8 +66,8 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                         onSendToWebFuzzer={props.onSendToWebFuzzer}
                     />
                 </div>
-            </Tabs.TabPane>
-        </Tabs>
+            {/* </Tabs.TabPane>
+        </Tabs> */}
     </div>
 };
 
