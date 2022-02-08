@@ -713,6 +713,7 @@ message QueryYakScriptRequest {
   bool IsHistory = 4;
   bool IsIgnore = 5;
   bool IsGeneralModule = 6;
+  bool IsBatch = 7;
 }
 
 message QueryYakScriptResponse {

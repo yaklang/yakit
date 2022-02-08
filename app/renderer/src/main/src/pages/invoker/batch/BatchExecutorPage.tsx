@@ -112,10 +112,15 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
 
     const search = useMemoizedFn(() => {
         setLoading(true)
-        queryYakScriptList(pluginType, (data, total) => {
-            setTotal(total || 0)
-            setScripts(data)
-        }, () => setTimeout(() => setLoading(false), 300), limit, keyword)
+        queryYakScriptList(
+            pluginType,
+            (data, total) => {
+                setTotal(total || 0)
+                setScripts(data)
+            }, () => setTimeout(() => setLoading(false), 300),
+            limit, keyword,
+            pluginType === "yak" ? true : undefined,
+        )
     })
 
     useEffect(() => {
@@ -171,7 +176,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
 
         })
         ipcRenderer.on(`${token}-error`, async (e, data) => {
-            console.info(data)
+            failed(`批量执行插件遇到问题: ${data}`)
         })
         ipcRenderer.on(`${token}-end`, async (e) => {
             setTimeout(() => setExecuting(false), 300)
