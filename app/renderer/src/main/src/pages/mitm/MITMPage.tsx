@@ -701,7 +701,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         </Col>
                                     </Row>
                                 </PageHeader>
-                                <div style={{flex: 1}}>
+                                <div style={{flex: 1, overflowY: 'hidden'}}>
                                     {/*<Spin wrapperClassName={"mitm-loading-spin"} spinning={status === "hijacking"}>*/}
                                     <div style={{height: "100%"}}>
                                     {autoForward ? (
