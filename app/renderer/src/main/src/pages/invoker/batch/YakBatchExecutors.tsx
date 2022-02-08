@@ -238,7 +238,10 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
         Limit: 10000,
         Target: "",
         DisableNucleiWorkflow: true,
-        ExcludedYakScript: ["[fingerprinthub-web-fingerprints]: FingerprintHub Technology Fingerprint"],
+        ExcludedYakScript: [
+            "[fingerprinthub-web-fingerprints]: FingerprintHub Technology Fingerprint",
+            "[tech-detect]: Wappalyzer Technology Detection",
+        ],
         TotalTimeoutSeconds: 180,
         Type: "nuclei"
     })
