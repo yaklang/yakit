@@ -10,14 +10,14 @@ export const queryYakScriptList = (
     onFinally?: () => any,
     limit?: number,
     keyword?: string,
-    isBatch?: boolean,
+    extraParam?: QueryYakScriptRequest
 ) => {
     if (limit !== undefined && limit <= 0) {
         limit = 200
     }
     ipcRenderer.invoke("QueryYakScript", {
         Type: pluginType, Pagination: genDefaultPagination(limit),
-        Keyword: keyword, IsBatch: isBatch,
+        Keyword: keyword, ...(extraParam || {})
     } as QueryYakScriptRequest).then((rsp: QueryYakScriptsResponse) => {
         onResult(rsp.Data, rsp.Total)
     }).catch(e => {

@@ -114,6 +114,9 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     IsHistory?: boolean
     IsIgnore?: boolean
     IsBatch?: boolean
+    IsGeneralModule?: boolean
+    ExcludeNucleiWorkflow?: boolean
+    ExcludeScriptNames?: string[]
 }
 
 /*

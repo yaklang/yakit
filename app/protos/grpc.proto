@@ -29,7 +29,8 @@ message ExecBatchYakScriptRequest {
 
   // 筛选与限制
   string Keyword = 2;
-  string ExcludedYakScript = 22;
+  repeated string ExcludedYakScript = 22;
+  bool DisableNucleiWorkflow = 23;
   int64 Limit = 3;
 
   // 默认总用时
@@ -57,10 +58,19 @@ message ExecBatchYakScriptResult {
   ExecResult Result = 8;
 
   // 如果是整体进度信息，则在这儿展示
+  // 处理这几个消息的时候，其他都不应该生效
   bool ProgressMessage = 9;
   double ProgressPercent = 10;
   int64 ProgressTotal = 11;
   int64 ProgressCount = 12;
+
+  // 任务相关内容
+  string Target = 13;
+  repeated ExecParamItem ExtraParam = 14;
+  string TaskId = 15;
+
+  // 当前时间
+  int64 Timestamp = 16;
 }
 
 message GetYakScriptByIdRequest {
@@ -714,6 +724,8 @@ message QueryYakScriptRequest {
   bool IsIgnore = 5;
   bool IsGeneralModule = 6;
   bool IsBatch = 7;
+  bool ExcludeNucleiWorkflow = 8;
+  repeated string ExcludeScriptNames = 9;
 }
 
 message QueryYakScriptResponse {

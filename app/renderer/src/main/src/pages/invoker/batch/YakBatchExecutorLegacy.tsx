@@ -55,6 +55,8 @@ export interface ExecBatchYakScriptParams {
     TotalTimeoutSeconds: number
     Type: "yak" | "nuclei" | string
     Concurrent: number
+    DisableNucleiWorkflow?: boolean
+    ExcludedYakScript?: string[]
 }
 
 export interface ExecBatchYakScriptResult {
@@ -64,6 +66,17 @@ export interface ExecBatchYakScriptResult {
     Reason?: string
     PoC: YakScript
     Result?: ExecResult
+
+    ProgressMessage?: boolean
+    ProgressPercent?: number
+    ProgressTotal?: number
+    ProgressCount?: number
+
+    TaskId?: string
+    ExtraParams?: { Key: string, Value: string }[]
+    Target?: string
+
+    Timestamp: number
 }
 
 export interface ExecBatchYakScriptTask {
@@ -80,6 +93,7 @@ export const YakBatchExecutorLegacy: React.FC<YakBatchExecutorProp> = (props) =>
     const [params, setParams] = useState<ExecBatchYakScriptParams>({
         Concurrent: 5,
         Keyword: props.keyword,
+        DisableNucleiWorkflow: true,
         Limit: 100,
         Target: "",
         TotalTimeoutSeconds: 180,
@@ -113,6 +127,10 @@ export const YakBatchExecutorLegacy: React.FC<YakBatchExecutorProp> = (props) =>
 
         let updateTableTick = setInterval(updateTasks, 1000);
         ipcRenderer.on(dataChannel, async (e: any, data: ExecBatchYakScriptResult) => {
+            if (data.ProgressMessage) {
+                return
+            }
+
             let element = tempTasks.get(data.Id);
             if (element === undefined) {
                 tempTasks.set(data.Id, {
