@@ -31,6 +31,7 @@ import {TabBarMenu, MenuInfoProps} from "../../../components/TabBarMenu"
 
 import ".//YakBatchExecutors.css"
 import {useUpdate, useVirtualList} from "ahooks"
+import {ExecBatchYakScriptParams, ExecBatchYakScriptResult, ExecBatchYakScriptTask} from "./YakBatchExecutorLegacy";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -227,34 +228,6 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
 }
 * */
 
-export interface ExecBatchYakScriptParams {
-    Target: string
-    Keyword: string
-    Limit: number
-    TotalTimeoutSeconds: number
-    Type: "yak" | "nuclei" | string
-    Concurrent: number
-}
-
-export interface ExecBatchYakScriptResult {
-    Id: string
-    Status: string
-    Ok?: boolean
-    Reason?: string
-    PoC: YakScript
-    Result?: ExecResult
-}
-
-export interface ExecBatchYakScriptTask {
-    progress: number
-    Id: string
-    Status: string
-    Ok?: boolean
-    Reason?: string
-    PoC: YakScript
-    Results: ExecResult[]
-}
-
 const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
     const update = useUpdate()
 
@@ -264,6 +237,11 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
         Keyword: props.keyword.split("-")[0],
         Limit: 10000,
         Target: "",
+        DisableNucleiWorkflow: true,
+        ExcludedYakScript: [
+            "[fingerprinthub-web-fingerprints]: FingerprintHub Technology Fingerprint",
+            "[tech-detect]: Wappalyzer Technology Detection",
+        ],
         TotalTimeoutSeconds: 180,
         Type: "nuclei"
     })
@@ -339,6 +317,9 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
 
         let updateTableTick = setInterval(updateTasks, 1000)
         ipcRenderer.on(dataChannel, async (e: any, data: ExecBatchYakScriptResult) => {
+            if (data.ProgressMessage) {
+                return
+            }
             let element = tempTasks.get(data.Id)
             if (element === undefined) {
                 tempTasks.set(data.Id, {
@@ -497,7 +478,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                     </Form>
                 </Col>
             </Row>
-            <Divider style={{margin: "10px 0"}} />
+            <Divider style={{margin: "10px 0"}}/>
             <div ref={listRef} className='bug-test-list'>
                 <div ref={containerRef} style={{height: listHeight, overflow: "auto"}}>
                     <div ref={wrapperRef}>
@@ -506,15 +487,15 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                 <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 260}}>
                                     {ele.data.Id}
                                 </Text>
-                                <Divider type='vertical' />
+                                <Divider type='vertical'/>
                                 <div style={{width: 120, textAlign: "center"}}>
                                     {StatusToVerboseTag(ele.data.Status)}
                                 </div>
-                                <Divider type='vertical' />
+                                <Divider type='vertical'/>
                                 <div>
-                                    <ExecResultsViewer results={ele.data.Results} oneLine={true} />
+                                    <ExecResultsViewer results={ele.data.Results} oneLine={true}/>
                                 </div>
-                                <Divider type='vertical' />
+                                <Divider type='vertical'/>
                                 <div style={{flexGrow: 1, textAlign: "right"}}>
                                     <Space>
                                         <Button
@@ -530,7 +511,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                                     width: "75%",
                                                     content: (
                                                         <>
-                                                            <YakScriptOperator script={ele.data.PoC} />
+                                                            <YakScriptOperator script={ele.data.PoC}/>
                                                         </>
                                                     )
                                                 })

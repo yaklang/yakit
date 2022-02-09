@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {Ref, useEffect, useRef, useState} from "react";
 import {queryYakScriptList} from "../../yakitStore/network";
-import {Button, Card, Checkbox, Divider, Form, Popover, Progress, Space, Tag, Tooltip} from "antd";
+import {Button, Card, Checkbox, Divider, Form, List, Popover, Progress, Space, Tabs, Tag, Tooltip} from "antd";
 import {AutoCard} from "../../../components/AutoCard";
 import {
     CopyableField,
@@ -11,13 +11,16 @@ import {
     SelectOne,
     SwitchItem
 } from "../../../utils/inputUtil";
-import {YakScript} from "../schema";
+import {ExecResult, QueryYakScriptRequest, YakScript} from "../schema";
 import {QuestionCircleOutlined, SearchOutlined, SettingOutlined, UserOutlined} from "@ant-design/icons"
-import {useGetState, useMemoizedFn, useVirtualList} from "ahooks";
+import {useCreation, useGetState, useMemoizedFn, useSize, useVirtualList} from "ahooks";
 import ReactResizeDetector from "react-resize-detector";
 import {showModal} from "../../../utils/showModal";
 import {randomString} from "../../../utils/randomUtil";
 import {failed} from "../../../utils/notification";
+import {ExecBatchYakScriptResult} from "./YakBatchExecutorLegacy";
+import moment from "moment";
+import {ExecResultsViewer} from "./ExecMessageViewer";
 
 export interface BatchExecutorPageProp {
 
@@ -79,8 +82,6 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
     const [executing, setExecuting] = useState(false);
     const [token, setToken] = useState<string>(randomString(40));
     const [percent, setPercent] = useState(0.0);
-    const [totalTask, setTotalTask] = useState(0);
-    const [finishedTasks, setFinishedTask] = useState(0);
 
     // 处理性能问题
     const containerRef = useRef();
@@ -112,10 +113,19 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
 
     const search = useMemoizedFn(() => {
         setLoading(true)
-        queryYakScriptList(pluginType, (data, total) => {
-            setTotal(total || 0)
-            setScripts(data)
-        }, () => setTimeout(() => setLoading(false), 300), limit, keyword)
+        queryYakScriptList(
+            pluginType,
+            (data, total) => {
+                setTotal(total || 0)
+                setScripts(data)
+            }, () => setTimeout(() => setLoading(false), 300),
+            limit, keyword,
+            (pluginType === "yak" ? {
+                IsBatch: true
+            } : {
+                ExcludeNucleiWorkflow: true,
+            }) as any,
+        )
     })
 
     useEffect(() => {
@@ -143,8 +153,6 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
 
     const run = useMemoizedFn((t: TargetRequest) => {
         setPercent(0)
-        setTotalTask(0)
-        setFinishedTask(0)
         StartExecBatchYakScript(t, selected, token).then(() => {
             setExecuting(true)
         }).catch(e => {
@@ -158,11 +166,8 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: any) => {
             try {
-                console.info(data)
                 if (data.ProgressMessage) {
                     setPercent(data.ProgressPercent)
-                    setTotalTask(data.ProgressTotal)
-                    setFinishedTask(data.ProgressPercent)
                     return
                 }
             } catch (e) {
@@ -171,7 +176,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
 
         })
         ipcRenderer.on(`${token}-error`, async (e, data) => {
-            console.info(data)
+            failed(`批量执行插件遇到问题: ${data}`)
         })
         ipcRenderer.on(`${token}-end`, async (e) => {
             setTimeout(() => setExecuting(false), 300)
@@ -275,23 +280,22 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
                 title={<Space>
                     {"已选插件 / 当页插件 / 插件总量"}
                     <Tag>{`${selected.length} / ${scripts.length} / ${total}`}</Tag>
+                </Space>}
+                size={"small"} bordered={false}
+                extra={<Space>
                     {(percent > 0 || executing) && <div style={{width: 200}}>
                         <Progress status={executing ? "active" : undefined} percent={
                             parseInt((percent * 100).toFixed(0))
                         }/>
                     </div>}
                 </Space>}
-                size={"small"} bordered={false}
-                extra={<Button size={"small"}>
-
-                </Button>}
                 bodyStyle={{display: "flex", flexDirection: "column"}}
             >
                 <ExecSelectedPlugins selected={selected} onSubmit={run} onCancel={cancel} loading={executing}/>
                 <Divider style={{margin: 4}}/>
                 <div style={{flex: '1'}}>
-                    <AutoCard style={{backgroundColor: "#eee"}}>
-
+                    <AutoCard style={{padding: 4}} bodyStyle={{padding: 4}} bordered={false}>
+                        <BatchExecutorResultUI token={token}/>
                     </AutoCard>
                 </div>
             </AutoCard>
@@ -346,14 +350,14 @@ export const YakScriptWithCheckboxLine: React.FC<YakScriptWithCheckboxLineProp> 
     </Card>
 };
 
-export interface ExecSelectedPluginsProp {
+interface ExecSelectedPluginsProp {
     selected: string[]
     onSubmit: (target: TargetRequest) => any
     loading?: boolean
     onCancel: () => any
 }
 
-export interface TargetRequest {
+interface TargetRequest {
     target: string
     targetFile: string
     allowFuzz: boolean
@@ -361,7 +365,7 @@ export interface TargetRequest {
     totalTimeout: number
 }
 
-export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props) => {
+const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props) => {
     const [multiline, setMultiline] = useState(false);
     const [target, setTarget] = useState<TargetRequest>({
         allowFuzz: true, target: "", targetFile: "",
@@ -397,11 +401,12 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
 
             <Form.Item colon={false} label={" "}>
                 <Space>
-                    <Button type="primary" htmlType="submit" disabled={selected.length === 0}
+                    <Button type="primary" htmlType="submit"
+                            disabled={props.loading ? false : selected.length === 0}
                             loading={props.loading}> 执行任务 </Button>
                     {props.loading && <Button
                         type="primary" danger={true}
-                        disabled={selected.length === 0}
+                        disabled={props.loading ? false : selected.length === 0}
                         onClick={props.onCancel}
                     > 停止执行该任务 </Button>}
                     <Popover title={"额外配置"} content={<div style={{width: 340}}>
@@ -434,4 +439,220 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
             </Form.Item>
         </Form>
     </div>
+});
+
+interface BatchExecutorResultUIProp {
+    token: string
+}
+
+interface BatchTask {
+    PoC: YakScript
+    Target: string
+    ExtraParam: { Key: string, Value: string }[]
+    TaskId: string
+    Results: ExecBatchYakScriptResult[]
+    CreatedAt: number
+}
+
+const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
+    const [total, setTotal] = useState(0);
+    const [finished, setFinished] = useState(0);
+    const [activeTask, setActiveTask] = useState<BatchTask[]>([]);
+    const allTasksMap = useCreation<Map<string, BatchTask>>(() => {
+        return new Map<string, BatchTask>()
+    }, [])
+    const [allTasks, setAllTasks] = useState<BatchTask[]>([]);
+
+    useEffect(() => {
+        const update = () => {
+            const result: BatchTask[] = [];
+            allTasksMap.forEach(value => {
+                result.push(value)
+            })
+            setAllTasks(result);
+        }
+        update()
+        const id = setInterval(update, 3000)
+        return () => {
+            clearInterval(id)
+        }
+    }, [])
+
+    useEffect(() => {
+        const activeTask = new Map<string, ExecBatchYakScriptResult[]>();
+        ipcRenderer.on(`${props.token}-data`, async (e, data: ExecBatchYakScriptResult) => {
+            // 处理进度信息
+            if (data.ProgressMessage) {
+                setTotal(data.ProgressTotal || 0)
+                setFinished(data.ProgressCount || 0)
+                return
+            }
+
+            // 处理其他任务信息
+            const taskId: string = data.TaskId || "";
+            if (taskId === "") {
+                return
+            }
+
+            // 缓存内容
+            let result = activeTask.get(taskId);
+            if (!result) {
+                result = []
+            }
+            result.push(data)
+            activeTask.set(taskId, result)
+
+            // 设置状态
+            if (data.Status === "end") {
+                activeTask.delete(taskId)
+                return
+            }
+
+            // 看一下输出结果
+            if (data.Result && data.Result.IsMessage) {
+                console.info(new Buffer(data.Result.Message).toString())
+            }
+        })
+
+        let cached = "";
+        const syncActiveTask = () => {
+            if (activeTask.size <= 0) {
+                setActiveTask([]);
+                return
+            }
+            const result: BatchTask[] = [];
+            const tasks: string[] = [];
+            activeTask.forEach(value => {
+                if (value.length <= 0) {
+                    return
+                }
+
+                const first = value[0];
+                const task = {
+                    Target: first.Target || "",
+                    ExtraParam: first.ExtraParams || [],
+                    PoC: first.PoC,
+                    TaskId: first.TaskId,
+                    CreatedAt: first.Timestamp,
+                } as BatchTask;
+                task.Results = value;
+                result.push(task)
+                tasks.push(`${value.length}` + task.TaskId)
+            })
+
+            const tasksRaw = tasks.sort().join("|")
+            if (tasksRaw !== cached) {
+                cached = tasksRaw
+                setActiveTask(result)
+                result.forEach((value) => {
+                    allTasksMap.set(value.TaskId, value)
+                })
+            }
+        }
+
+        let id = setInterval(syncActiveTask, 1000);
+        return () => {
+            clearInterval(id);
+        }
+    }, [props.token])
+    return <div style={{height: "100%", overflow: "auto"}}>
+        <Tabs>
+            <Tabs.TabPane tab={"执行中的任务"} key={"executing"}>
+                <List<BatchTask>
+                    pagination={false}
+                    dataSource={activeTask.sort((a, b) => a.TaskId.localeCompare(b.TaskId))}
+                    renderItem={(task: BatchTask) => {
+                        const res = task.Results[task.Results.length - 1];
+                        return (
+                            <Card
+                                bordered={false}
+                                style={{marginBottom: 8, width: "100%"}}
+                                size={"small"}
+                                title={<Space>
+                                    {task.Target + " / " + task.PoC.ScriptName}
+                                    <Timer fromTimestamp={task.CreatedAt}/>
+                                </Space>}>
+                                <div style={{width: "100%"}}>
+                                    <ExecResultsViewer
+                                        results={task.Results.map(i => i.Result).filter(i => !!i) as ExecResult[]}
+                                        oneLine={true}
+                                    />
+                                </div>
+                            </Card>
+                        )
+                    }}
+                />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab={`历史任务列表[${allTasks.length}]`} key={"results"} forceRender={true}>
+                <BatchTaskViewer tasks={allTasks}/>
+            </Tabs.TabPane>
+        </Tabs>
+    </div>
+};
+
+interface TimerProp {
+    fromTimestamp: number
+    color?: any
+}
+
+const Timer: React.FC<TimerProp> = React.memo((props) => {
+    const [duration, setDuration] = useState<number>();
+
+    useEffect(() => {
+        const updateTime = () => {
+            const durationNow = moment().diff(moment.unix(props.fromTimestamp));
+            const seconds = parseInt(`${durationNow / 1000}`);
+            setDuration(seconds)
+        }
+        updateTime()
+        let id = setInterval(() => {
+            updateTime()
+        }, 1000)
+        return () => {
+            clearInterval(id)
+        }
+    }, [props.fromTimestamp])
+
+    if (!duration) {
+        return <></>
+    }
+    return <Tag color={props.color || "green"}>已运行{duration}秒</Tag>
+});
+
+
+interface BatchTaskViewerProp {
+    tasks: BatchTask[]
+}
+
+const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
+    const containerRef = useRef();
+    const listRef = useRef();
+    const [height, setHeight] = useState(300);
+    const [list, scrollTo] = useVirtualList<BatchTask>(props.tasks, {
+        containerTarget: containerRef,
+        wrapperTarget: listRef,
+        itemHeight: 50,
+        overscan: 5,
+    })
+
+    return <AutoCard bodyStyle={{padding: 0}} style={{height: "100%"}}>
+        <ReactResizeDetector
+            onResize={(width, height) => {
+                if (!width || !height) {
+                    return
+                }
+                setHeight(height)
+            }}
+            handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
+        />
+        <div ref={containerRef as Ref<any>} style={{height: height, overflow: "auto"}}>
+            <div ref={listRef as Ref<any>}>
+                {list.map(i => {
+                    return <Card style={{height: 50}} bodyStyle={{padding: 4}} bordered={false}>
+                        {i.data.TaskId}
+                    </Card>
+                })}
+            </div>
+        </div>
+    </AutoCard>
 });

@@ -2,10 +2,11 @@ import React from "react";
 import {ExecResult} from "../schema";
 import {Alert, Button, Card, Progress, Space, Tag, Timeline, Typography} from "antd";
 import {YakitLogFormatter} from "../YakitLogFormatter";
-import {formatTimestamp} from "../../../utils/timeUtil";
+import {formatTime, formatTimestamp} from "../../../utils/timeUtil";
 import {LogLevelToCode} from "../../../components/HTTPFlowTable";
 import {showModal} from "../../../utils/showModal";
 import {Header} from "antd/es/layout/layout";
+import {useMemoizedFn} from "ahooks";
 
 const {Text} = Typography;
 
@@ -68,7 +69,7 @@ export const ExecResultsViewer: React.FC<ExecResultsViewerProp> = (props) => {
         }
     })
 
-    const full = () => {
+    const full = useMemoizedFn(() => {
         let progressBars: { id: string, node: React.ReactNode }[] = [];
         progressTable.forEach((v, k) => {
             progressBars.push({
@@ -96,7 +97,7 @@ export const ExecResultsViewer: React.FC<ExecResultsViewerProp> = (props) => {
                 })}
             </Timeline>
         </Space>
-    }
+    })
 
     if (props.oneLine) {
         let progressOneLine: { id: string, node: React.ReactNode }[] = [];
@@ -110,8 +111,8 @@ export const ExecResultsViewer: React.FC<ExecResultsViewerProp> = (props) => {
         const latestLog = logs.length > 0 && latestLogData && <Space>
             <Tag
                 color={LogLevelToCode(latestLogData.level)}
-            >{formatTimestamp(latestLogData?.timestamp)}: {(latestLogData.level).toUpperCase()}</Tag>
-            <Text style={{maxWidth: 300}} ellipsis={{tooltip: true}} copyable={true}>{latestLogData.data}</Text>
+            >{formatTime(latestLogData?.timestamp)}: {(latestLogData.level).toUpperCase()}</Tag>
+            <Text style={{maxWidth: 1200}} ellipsis={{tooltip: true}} copyable={true}>{latestLogData.data}</Text>
         </Space>
         return <Card hoverable={true} bodyStyle={{
             padding: 6, margin: 0,
@@ -125,7 +126,7 @@ export const ExecResultsViewer: React.FC<ExecResultsViewerProp> = (props) => {
             })
         }}>
             <Space>
-                {haveCriticalResult ? <Tag color={"red"}>命中 / Hit</Tag> : <Tag color={"gray"}>未命中 / Missed</Tag>}
+                {haveCriticalResult ? <Tag color={"red"}>HIT</Tag> : <Tag color={"gray"}>暂无结果</Tag>}
                 {progressTable.size > 0 ? <Space>
                     {progressOneLine.map(i => i.node)}
                 </Space> : undefined}
@@ -135,5 +136,5 @@ export const ExecResultsViewer: React.FC<ExecResultsViewerProp> = (props) => {
             </Space>
         </Card>
     }
-    return full();
+    return <>{full()}</>;
 };
