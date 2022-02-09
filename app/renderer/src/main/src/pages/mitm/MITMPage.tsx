@@ -13,10 +13,11 @@ import {
     Space,
     Spin,
     Tag,
+    Tooltip,
     Typography
 } from "antd";
-import {failed, info} from "../../utils/notification";
-import {CheckOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons";
+import {failed, info, success} from "../../utils/notification";
+import {CheckOutlined, PoweroffOutlined, ReloadOutlined, CopyOutlined} from "@ant-design/icons";
 import {HTTPPacketEditor} from "../../utils/editors";
 import {MITMFilters, MITMFilterSchema} from "./MITMFilters";
 import {showDrawer, showModal} from "../../utils/showModal";
@@ -33,6 +34,7 @@ import {StatusCardProps} from "../yakitStore/viewers/base";
 import {useHotkeys} from "react-hotkeys-hook";
 import * as monaco from 'monaco-editor';
 import {scanPacket} from "../../utils/scanPacket";
+import CopyToClipboard from "react-copy-to-clipboard";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -415,31 +417,34 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     }
 
     const downloadCert = useMemoizedFn(() => {
-        return <Button
-            type={"link"}
-            onClick={() => {
-                const text = `wget -e use_proxy=yes -e http_proxy=${addr} http://download-mitm-cert.yaklang.io -O yakit-mitm-cert.pem`
-                showModal({
-                    title: "下载 SSL/TLS 证书以调试 HTTPS",
-                    content: <div>
-                        点击复制以下命令在命令行中一键下载证书
-                        <br/>
-                        <Text copyable={true}>{text}</Text>
-                        <br/>
-                        <br/>
-                        <p style={{color: "red"}}>
-                            如果遇到问题，可以在浏览器中设置代理:{addr} 后 <br/>
-                            访问 http://download-mitm-cert.yaklang.io
-                            以自动下载证书
-                        </p>
-                    </div>
-                })
-            }}
-        >请先下载 SSL/TLS 证书</Button>
+        return <Tooltip title={'请先下载 SSL/TLS 证书'}>
+            <Button
+                type={"link"}
+                style={{padding: '4px 6px'}}
+                onClick={() => {
+                    const text = `wget -e use_proxy=yes -e http_proxy=${addr} http://download-mitm-cert.yaklang.io -O yakit-mitm-cert.pem`
+                    showModal({
+                        title: "下载 SSL/TLS 证书以调试 HTTPS",
+                        content: <div>
+                            点击复制以下命令在命令行中一键下载证书
+                            <br/>
+                            <Text copyable={true}>{text}</Text>
+                            <br/>
+                            <br/>
+                            <p style={{color: "red"}}>
+                                如果遇到问题，可以在浏览器中设置代理:{addr} 后 <br/>
+                                访问 http://download-mitm-cert.yaklang.io
+                                以自动下载证书
+                            </p>
+                        </div>
+                    })
+                }}
+            >SSL/TLS</Button>
+        </Tooltip>
     })
 
     const setFilter = useMemoizedFn(() => {
-        return <Button type={"link"}
+        return <Button type={"link"} style={{padding: '4px 6px'}}
                        onClick={() => {
                            let m = showDrawer({
                                placement: "top", height: "50%",
@@ -542,21 +547,23 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                 onSendToWebFuzzer={props.onSendToWebFuzzer}
                             />
                         </div> : <Row gutter={14} style={{height: "100%"}}>
-                            <Col span={haveSideCar ? 15 : 24}
+                            <Col span={haveSideCar ? 24 : 24}
                                  style={{display: "flex", flexDirection: "column", height: "100%"}}>
                                 <PageHeader
+                                    className="mitm-header-title"
                                     title={'劫持 HTTP Request'} subTitle={`http://${host}:${port}`}
                                     style={{marginRight: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 8}}
                                     extra={
                                         <Space>
+                                            {setFilter()}
                                             {downloadCert()}
-                                            <Button danger={true} type={"primary"}
+                                            <Button danger={true} type={"link"}
                                                     onClick={() => {
                                                         stop()
                                                         setUrlInfo("监听中...")
                                                         setIpInfo("")
                                                     }} icon={<PoweroffOutlined/>}
-                                            >停止劫持</Button>
+                                            ></Button>
                                         </Space>}>
                                     <Row>
                                         <Col span={12}>
@@ -624,7 +631,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                             setHijackAllResponse(!hijackAllResponse)
                                                         }}/>
                                                     </div>}
-                                                    {setFilter()}
                                                     <SelectOne
                                                         data={[
                                                             {text: "手动劫持", value: false},
@@ -660,11 +666,27 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         maxWidth: 300
                                                     }}>{status === 'hijacking' ? '目标：监听中...' : `目标：${urlInfo}`}</Text>
                                                     {ipInfo && status !== 'hijacking' &&
-                                                    <Tag color='green' title={ipInfo} style={{
-                                                        marginLeft: 5,
-                                                        alignSelf: 'center',
-                                                        maxWidth: 140
-                                                    }}>{`${ipInfo}`}</Tag>}
+                                                        <Tag
+                                                        color='green'
+                                                        title={ipInfo}
+                                                        style={{
+                                                            marginLeft: 5,
+                                                            alignSelf: "center",
+                                                            maxWidth: 140,
+                                                            cursor: "pointer"
+                                                        }}
+                                                        > 
+                                                        {`${ipInfo}`}
+                                                        <CopyToClipboard
+                                                            text={`${ipInfo}`}
+                                                            onCopy={(text, ok) => {
+                                                                if (ok) success("已复制到粘贴板")
+                                                            }}
+                                                        >
+                                                            <CopyOutlined style={{marginLeft: 5}} />
+                                                        </CopyToClipboard>
+                                                        </Tag>
+                                                    }
                                                 </>
                                             }
                                             </div>
@@ -679,124 +701,181 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         </Col>
                                     </Row>
                                 </PageHeader>
-                                <div style={{flex: 1}}>
+                                <div style={{flex: 1, overflowY: 'hidden'}}>
                                     {/*<Spin wrapperClassName={"mitm-loading-spin"} spinning={status === "hijacking"}>*/}
                                     <div style={{height: "100%"}}>
-                                        <HTTPPacketEditor
-                                            originValue={currentPacket}
-                                            noHeader={true} bordered={false}
-                                            onChange={setModifiedPacket}
-                                            noPacketModifier={true}
-                                            readOnly={status === "hijacking"}
-                                            refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
-                                            actions={[
-                                                // {
-                                                //     id: "send-to-scan-packet", label: "发送到数据包扫描器",
-                                                //     run: e => {
-                                                //         // console.info(mouseState)
-                                                //         scanPacket(mouseState, false, "GET / HTTP/1.1\r\nHost: www.baidu.com", "")
-                                                //     }, contextMenuGroupId: "Scanners",
-                                                // },
-                                                ...(forResponse ? [
-                                                    {
-                                                        id: "trigger-auto-hijacked", label: "切换自动/手动劫持模式",
-                                                        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_T],
-                                                        run: () => {
-                                                            handleAutoForward(!getAutoForward())
-                                                        }, contextMenuGroupId: "Actions",
-                                                    },
-                                                    {
-                                                        id: "forward-response",
-                                                        label: "放行该 HTTP Response",
-                                                        /*
-                                                        * 	keybindings: [
-            monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
-            // chord
-            monaco.KeyMod.chord(
-                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
-                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM
-            )
-        ],
-                                                        * */
-                                                        // keybindings: [
-                                                        //     monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F,
-                                                        // ],
-                                                        run: function () {
-                                                            forward()
-                                                            // hijacking()
-                                                            // forwardResponse(getCurrentId()).finally(() => {
-                                                            //     setTimeout(() => setLoading(false), 300)
-                                                            // })
-                                                        },
-                                                        contextMenuGroupId: "Actions",
-                                                    },
-                                                    {
-                                                        id: "drop-response",
-                                                        label: "丢弃该 HTTP Response",
-                                                        run: function () {
-                                                            hijacking()
-                                                            dropResponse(getCurrentId()).finally(() => {
-                                                                setTimeout(() => setLoading(false), 300)
-                                                            })
-                                                        },
-                                                        contextMenuGroupId: "Actions"
-                                                    },
-                                                ] : [
-                                                    {
-                                                        id: "trigger-auto-hijacked", label: "切换自动/手动劫持模式",
-                                                        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_T],
-                                                        run: () => {
-                                                            handleAutoForward(!getAutoForward())
-                                                        }, contextMenuGroupId: "Actions",
-                                                    },
-                                                    {
-                                                        id: "send-to-fuzzer",
-                                                        label: "发送到 Web Fuzzer",
-                                                        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_R],
-                                                        run: function (StandaloneEditor: any) {
-                                                            props.onSendToWebFuzzer && props.onSendToWebFuzzer(true, StandaloneEditor.getModel().getValue())
-                                                        },
-                                                        contextMenuGroupId: "Actions"
-                                                    },
-                                                    {
-                                                        id: "forward-response",
-                                                        label: "放行该 HTTP Request",
-                                                        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F],
-                                                        run: function () {
-                                                            forward()
-                                                            // hijacking()
-                                                            // forwardRequest(getCurrentId()).finally(() => {
-                                                            //     setTimeout(() => setLoading(false), 300)
-                                                            // })
-                                                        },
-                                                        contextMenuGroupId: "Actions"
-                                                    },
-                                                    {
-                                                        id: "drop-response",
-                                                        label: "丢弃该 HTTP Request",
-                                                        run: function () {
-                                                            hijacking()
-                                                            dropRequest(getCurrentId()).finally(() => {
-                                                                setTimeout(() => setLoading(false), 300)
-                                                            })
-                                                        },
-                                                        contextMenuGroupId: "Actions"
-                                                    },
-                                                    {
-                                                        id: "hijack-current-response",
-                                                        label: "劫持该 Request 对应的响应",
-                                                        run: function () {
-                                                            allowHijackedResponseByRequest(getCurrentId())
-                                                        },
-                                                        contextMenuGroupId: "Actions"
-                                                    },
-                                                ])]}
-                                        />
+                                    {autoForward ? (
+                                                        <MITMPluginCard
+                                                            autoUpdate={!passiveMode}
+                                                            messages={logs} // hooks={mitmHooks}
+                                                            onSubmitScriptContent={(e) => {
+                                                                ipcRenderer.invoke("mitm-exec-script-content", e)
+                                                            }}
+                                                            onSubmitYakScriptId={(
+                                                                id: number,
+                                                                params: YakExecutorParam[]
+                                                            ) => {
+                                                                info(`加载 MITM 插件[${id}]`)
+                                                                ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
+                                                            }}
+                                                            onSendToWebFuzzer={props.onSendToWebFuzzer}
+                                                        />
+                                                    ) : (
+                                                        <HTTPPacketEditor
+                                                            originValue={currentPacket}
+                                                            noHeader={true}
+                                                            bordered={false}
+                                                            onChange={setModifiedPacket}
+                                                            noPacketModifier={true}
+                                                            readOnly={status === "hijacking"}
+                                                            refreshTrigger={
+                                                                (forResponse ? `rsp` : `req`) + `${currentPacketId}`
+                                                            }
+                                                            actions={[
+                                                                // {
+                                                                //     id: "send-to-scan-packet", label: "发送到数据包扫描器",
+                                                                //     run: e => {
+                                                                //         // console.info(mouseState)
+                                                                //         scanPacket(mouseState, false, "GET / HTTP/1.1\r\nHost: www.baidu.com", "")
+                                                                //     }, contextMenuGroupId: "Scanners",
+                                                                // },
+                                                                ...(forResponse
+                                                                    ? [
+                                                                          {
+                                                                              id: "trigger-auto-hijacked",
+                                                                              label: "切换自动/手动劫持模式",
+                                                                              keybindings: [
+                                                                                  monaco.KeyMod.WinCtrl |
+                                                                                      monaco.KeyCode.KEY_T
+                                                                              ],
+                                                                              run: () => {
+                                                                                  handleAutoForward(!getAutoForward())
+                                                                              },
+                                                                              contextMenuGroupId: "Actions"
+                                                                          },
+                                                                          {
+                                                                              id: "forward-response",
+                                                                              label: "放行该 HTTP Response",
+                                                                              /*
+                                                * 	keybindings: [
+    monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
+    // chord
+    monaco.KeyMod.chord(
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM
+    )
+],
+                                                * */
+                                                                              // keybindings: [
+                                                                              //     monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F,
+                                                                              // ],
+                                                                              run: function () {
+                                                                                  forward()
+                                                                                  // hijacking()
+                                                                                  // forwardResponse(getCurrentId()).finally(() => {
+                                                                                  //     setTimeout(() => setLoading(false), 300)
+                                                                                  // })
+                                                                              },
+                                                                              contextMenuGroupId: "Actions"
+                                                                          },
+                                                                          {
+                                                                              id: "drop-response",
+                                                                              label: "丢弃该 HTTP Response",
+                                                                              run: function () {
+                                                                                  hijacking()
+                                                                                  dropResponse(getCurrentId()).finally(
+                                                                                      () => {
+                                                                                          setTimeout(
+                                                                                              () => setLoading(false),
+                                                                                              300
+                                                                                          )
+                                                                                      }
+                                                                                  )
+                                                                              },
+                                                                              contextMenuGroupId: "Actions"
+                                                                          }
+                                                                      ]
+                                                                    : [
+                                                                          {
+                                                                              id: "trigger-auto-hijacked",
+                                                                              label: "切换自动/手动劫持模式",
+                                                                              keybindings: [
+                                                                                  monaco.KeyMod.WinCtrl |
+                                                                                      monaco.KeyCode.KEY_T
+                                                                              ],
+                                                                              run: () => {
+                                                                                  handleAutoForward(!getAutoForward())
+                                                                              },
+                                                                              contextMenuGroupId: "Actions"
+                                                                          },
+                                                                          {
+                                                                              id: "send-to-fuzzer",
+                                                                              label: "发送到 Web Fuzzer",
+                                                                              keybindings: [
+                                                                                  monaco.KeyMod.WinCtrl |
+                                                                                      monaco.KeyCode.KEY_R
+                                                                              ],
+                                                                              run: function (StandaloneEditor: any) {
+                                                                                  props.onSendToWebFuzzer &&
+                                                                                      props.onSendToWebFuzzer(
+                                                                                          true,
+                                                                                          StandaloneEditor.getModel().getValue()
+                                                                                      )
+                                                                              },
+                                                                              contextMenuGroupId: "Actions"
+                                                                          },
+                                                                          {
+                                                                              id: "forward-response",
+                                                                              label: "放行该 HTTP Request",
+                                                                              keybindings: [
+                                                                                  monaco.KeyMod.WinCtrl |
+                                                                                      monaco.KeyCode.KEY_F
+                                                                              ],
+                                                                              run: function () {
+                                                                                  forward()
+                                                                                  // hijacking()
+                                                                                  // forwardRequest(getCurrentId()).finally(() => {
+                                                                                  //     setTimeout(() => setLoading(false), 300)
+                                                                                  // })
+                                                                              },
+                                                                              contextMenuGroupId: "Actions"
+                                                                          },
+                                                                          {
+                                                                              id: "drop-response",
+                                                                              label: "丢弃该 HTTP Request",
+                                                                              run: function () {
+                                                                                  hijacking()
+                                                                                  dropRequest(getCurrentId()).finally(
+                                                                                      () => {
+                                                                                          setTimeout(
+                                                                                              () => setLoading(false),
+                                                                                              300
+                                                                                          )
+                                                                                      }
+                                                                                  )
+                                                                              },
+                                                                              contextMenuGroupId: "Actions"
+                                                                          },
+                                                                          {
+                                                                              id: "hijack-current-response",
+                                                                              label: "劫持该 Request 对应的响应",
+                                                                              run: function () {
+                                                                                  allowHijackedResponseByRequest(
+                                                                                      getCurrentId()
+                                                                                  )
+                                                                              },
+                                                                              contextMenuGroupId: "Actions"
+                                                                          }
+                                                                      ])
+                                                            ]}
+                                                        />
+                                                    )}
+                                        
                                     </div>
                                     {/*</Spin>*/}
                                 </div>
                             </Col>
-                            {haveSideCar && <Col span={9} style={{height: "100%"}}>
+                            {/* {haveSideCar && <Col span={9} style={{height: "100%"}}>
                                 <div style={{height: "100%"}}>
                                     <MITMPluginCard
                                         autoUpdate={!passiveMode}
@@ -811,7 +890,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         onSendToWebFuzzer={props.onSendToWebFuzzer}
                                     />
                                 </div>
-                            </Col>}
+                            </Col>} */}
                         </Row>}
                     </div>
                 default:
