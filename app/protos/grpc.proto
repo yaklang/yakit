@@ -773,6 +773,7 @@ message CodecRequest {
   string Type = 2;
   bool Auto = 3;
   repeated ExecParamItem Params = 4;
+  string ScriptName = 5;
 }
 
 message CodecResponse {

@@ -9,9 +9,10 @@ import {AutoSpin} from "../../components/AutoSpin"
 
 import "./style.css"
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
-import {YakScriptParam} from "../invoker/schema";
+import {YakScript, YakScriptParam} from "../invoker/schema";
 import {useMemoizedFn} from "ahooks";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
+import {queryYakScriptList} from "../yakitStore/network";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -21,6 +22,7 @@ export interface CodecType {
     subTypes?: CodecType[]
     params?: YakScriptParam[],
     help?: React.ReactNode
+    isYakScript?: boolean
 }
 
 const {Text} = Typography;
@@ -240,14 +242,15 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
 
     const [codecType, setCodecType] = useState<CodecType>();
     const [params, setParams] = useState<YakExecutorParam[]>([]);
+    const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([]);
 
-    const codec = (t: string, params?: YakExecutorParam[]) => {
+    const codec = (t: string, params?: YakExecutorParam[], isYakScript?: boolean) => {
         if (!t) {
             failed("BUG: 空的解码类型")
             return
         }
         ipcRenderer
-            .invoke("Codec", {Type: t, Text: text, Params: params || []})
+            .invoke("Codec", {Type: t, Text: text, Params: params || [], ScriptName: isYakScript ? t : ""})
             .then((res) => {
                 onHandledResult(res?.Result || "")
             })
@@ -270,7 +273,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
         }, 300)
     }, [])
 
-    const renderCodecTypes = useMemoizedFn((items: CodecType[], notAutoExec?: boolean) => {
+    const renderCodecTypes = useMemoizedFn((items: CodecType[], notAutoExec?: boolean, isYakScript?: boolean) => {
         return (
             items.map((item) => {
                 if ((item.subTypes || []).length > 0) {
@@ -281,12 +284,12 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                                 <Menu activeKey={codecType?.key}>
                                     {item.subTypes?.map((subItem) => {
                                         return (
-                                            <Menu.Item 
+                                            <Menu.Item
                                                 key={`${subItem.key}`}
                                                 onClick={() => {
                                                     setCodecType(subItem)
                                                     if (!notAutoExec) {
-                                                        codec(subItem.key || "")
+                                                        codec(subItem.key || "", [], isYakScript)
                                                     }
                                                 }}>
                                                     <span>
@@ -317,7 +320,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             onClick={() => {
                                 setCodecType(item);
                                 if (!notAutoExec) {
-                                    codec(item.key || "")
+                                    codec(item.key || "", [], isYakScript)
                                 }
                             }}
                             style={{marginRight: 8}}
@@ -329,6 +332,14 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
             })
         )
     })
+
+    useEffect(() => {
+        queryYakScriptList("codec", (i: YakScript[], total) => {
+            setCodecPlugin(i.map(script => {
+                return {key: script.ScriptName, help: script.Help, verbose: script.ScriptName, isYakScript: true}
+            }))
+        })
+    }, [])
 
     return (
         <AutoSpin spinning={loading}>
@@ -345,6 +356,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                     </Space>
                     <Space>
                         {renderCodecTypes(EncAmpDecMenu, true)}
+                        {renderCodecTypes(codecPlugin)}
                     </Space>
                     {codecType && codecType?.params && codecType.params.length > 0 && <Row
                         style={{width: "100%"}}
@@ -358,7 +370,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                                 params={[]}
                                 onParamsConfirm={finalParams => {
                                     setParams([...finalParams])
-                                    codec(codecType?.key || "", finalParams)
+                                    codec(codecType?.key || "", finalParams, codecType?.isYakScript)
                                 }}
                                 hideClearButton={true}
                                 submitVerbose={"执行"}

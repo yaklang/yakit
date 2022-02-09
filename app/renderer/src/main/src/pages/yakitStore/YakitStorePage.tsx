@@ -25,7 +25,8 @@ import {getValue, saveValue} from "../../utils/kv";
 
 const {ipcRenderer} = window.require("electron")
 
-export interface YakitStorePageProp {}
+export interface YakitStorePageProp {
+}
 
 export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [script, setScript] = useState<YakScript>()
@@ -55,7 +56,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             <Space>
                                 插件仓库
                                 <Button size={"small"} type={"link"} onClick={(e) => setTrigger(!trigger)}>
-                                    <ReloadOutlined />
+                                    <ReloadOutlined/>
                                 </Button>
                                 <Button
                                     size={"small"}
@@ -81,7 +82,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         })
                                     }}
                                 >
-                                    <SearchOutlined />
+                                    <SearchOutlined/>
                                 </Button>
                             </Space>
                         }
@@ -91,7 +92,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 <Button
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<DownloadOutlined />}
+                                    icon={<DownloadOutlined/>}
                                     onClick={() => {
                                         showModal({
                                             width: 700,
@@ -99,7 +100,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             content: (
                                                 <>
                                                     <div style={{width: 600}}>
-                                                        <LoadYakitPluginForm />
+                                                        <LoadYakitPluginForm/>
                                                     </div>
                                                 </>
                                             )
@@ -125,7 +126,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 <Button
                                     size={"small"}
                                     type={"link"}
-                                    icon={<PlusOutlined />}
+                                    icon={<PlusOutlined/>}
                                     onClick={() => {
                                         let m = showDrawer({
                                             title: "创建新插件",
@@ -143,9 +144,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             keyboard: false
                                         })
                                     }}
-                                >
-                                    新插件
-                                </Button>
+                                />
+                                {/*    新插件*/}
+                                {/*</Button>*/}
                             </Space>
                         }
                     >
@@ -197,7 +198,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             bordered={false}
                             size={"small"}
                         >
-                            <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)} />
+                            <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)}/>
                         </Card>
                     ) : (
                         <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
@@ -355,7 +356,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                 </Col>
                                 <Col span={12} style={{textAlign: "right"}}>
                                     <Space size={2}>
-                                        <CopyableField noCopy={true} text={formatDate(i.CreatedAt)} />
+                                        <CopyableField noCopy={true} text={formatDate(i.CreatedAt)}/>
                                         {gitUrlIcon(i.FromGit, true)}
                                         {/* <Button
                                             size={"small"}
@@ -434,8 +435,8 @@ const KeywordSetter: React.FC<KeywordSetterProp> = (props) => {
                         }}
                     />
                 </Form.Item>
-                <SwitchItem label={"查看历史记录"} value={history} setValue={setHistory} />
-                <SwitchItem label={"查看已忽略/隐藏的插件"} value={ignored} setValue={setIgnored} />
+                <SwitchItem label={"查看历史记录"} value={history} setValue={setHistory}/>
+                <SwitchItem label={"查看已忽略/隐藏的插件"} value={ignored} setValue={setIgnored}/>
                 <Form.Item>
                     <Button type='primary' htmlType='submit'>
                         {" "}
@@ -486,7 +487,7 @@ export const LoadYakitPluginForm = React.memo(() => {
         }
     }, [official])
 
-    useEffect(()=>{
+    useEffect(() => {
         getValue(YAKIT_DEFAULT_LOAD_GIT_PROXY).then(e => {
             if (e) {
                 setProxy(`${e}`)
@@ -534,7 +535,7 @@ export const LoadYakitPluginForm = React.memo(() => {
                 setValue={setGitUrl}
                 help={"例如 https://github.com/yaklang/yakit-store"}
             />
-            <InputItem label={"代理"} value={proxy} setValue={setProxy} help={"访问中国大陆无法访问的代码仓库"} />
+            <InputItem label={"代理"} value={proxy} setValue={setProxy} help={"访问中国大陆无法访问的代码仓库"}/>
             <Form.Item colon={false} label={" "}>
                 <Button type='primary' htmlType='submit'>
                     {" "}
@@ -564,7 +565,7 @@ export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
                     marginLeft: 0,
                     marginRight: 0
                 }}
-                icon={<GithubOutlined />}
+                icon={<GithubOutlined/>}
             />
         </Tooltip>
     )
