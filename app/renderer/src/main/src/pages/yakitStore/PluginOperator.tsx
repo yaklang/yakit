@@ -178,9 +178,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     )}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文档"} key={"docs"}>
-                    {markdown ? (
-                        <div>
-                            {script && (
+                    {script && (
                                 <div style={{textAlign: "right", marginBottom: 10}}>
                                     <Button
                                         onClick={(e) => {
@@ -209,7 +207,9 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                         编辑文档
                                     </Button>
                                 </div>
-                            )}
+                    )}
+                    {markdown ? (
+                        <div>
                             <MDEditor.Markdown source={markdown} />
                         </div>
                     ) : (
