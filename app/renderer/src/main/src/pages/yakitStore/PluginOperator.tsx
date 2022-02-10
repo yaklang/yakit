@@ -14,6 +14,8 @@ import {openABSFile} from "../../utils/openWebsite"
 import {EditOutlined, QuestionOutlined, SettingOutlined} from "@ant-design/icons"
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator"
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
+import {getValue} from "../../utils/kv";
+import {useGetState} from "ahooks";
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -39,7 +41,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const updateGroups = () => {
         ipcRenderer
             .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId})
-            .then((data: {Groups: string[]}) => {
+            .then((data: { Groups: string[] }) => {
                 setGroups(data.Groups)
             })
             .catch((e: any) => {
@@ -66,7 +68,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         YakScriptId: e?.Id,
                         YakScriptName: e?.ScriptName
                     })
-                    .then((data: {Markdown: string}) => {
+                    .then((data: { Markdown: string }) => {
                         setMarkdown(data.Markdown)
                     })
                     .catch((e: any) => {
@@ -94,7 +96,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                 <Space>
                                     {script.Help && (
                                         <Tooltip title={script.Help}>
-                                            <Button type={"link"} icon={<QuestionOutlined />} />
+                                            <Button type={"link"} icon={<QuestionOutlined/>}/>
                                         </Tooltip>
                                     )}
                                     <Space size={8}>
@@ -104,19 +106,19 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                         <p style={{color: "#999999", marginBottom: 0}}>作者:{script?.Author}</p>
                                         {script?.Tags
                                             ? (script?.Tags || "")
-                                                  .split(",")
-                                                  .filter((i) => !!i)
-                                                  .map((i) => {
-                                                      return (
-                                                          <Tag
-                                                              style={{marginLeft: 2, marginRight: 0}}
-                                                              key={`${i}`}
-                                                              color={"geekblue"}
-                                                          >
-                                                              {i}
-                                                          </Tag>
-                                                      )
-                                                  })
+                                                .split(",")
+                                                .filter((i) => !!i)
+                                                .map((i) => {
+                                                    return (
+                                                        <Tag
+                                                            style={{marginLeft: 2, marginRight: 0}}
+                                                            key={`${i}`}
+                                                            color={"geekblue"}
+                                                        >
+                                                            {i}
+                                                        </Tag>
+                                                    )
+                                                })
                                             : "No Tags"}
                                     </Space>
                                 </Space>
@@ -127,14 +129,14 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                         <Tooltip placement='top' title={"插件管理"}>
                                             <Button
                                                 type={"link"}
-                                                icon={<SettingOutlined />}
+                                                icon={<SettingOutlined/>}
                                                 onClick={() => setSettingShow(!settingShow)}
                                             ></Button>
                                         </Tooltip>
                                         <Tooltip placement='top' title={"编辑插件"}>
                                             <Button
                                                 type={"link"}
-                                                icon={<EditOutlined />}
+                                                icon={<EditOutlined/>}
                                                 style={{color: "#a7a7a7"}}
                                                 onClick={(e) => {
                                                     let m = showDrawer({
@@ -179,54 +181,54 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文档"} key={"docs"}>
                     {script && (
-                                <div style={{textAlign: "right", marginBottom: 10}}>
-                                    <Button
-                                        onClick={(e) => {
-                                            let m = showDrawer({
-                                                title: "编辑文档",
-                                                keyboard: false,
-                                                width: "94%",
-                                                onClose: () => {
-                                                    update()
-                                                    m.destroy()
-                                                },
-                                                content: (
-                                                    <>
-                                                        <DocumentEditor
-                                                            onFinished={() => {
-                                                                m.destroy()
-                                                            }}
-                                                            markdown={markdown}
-                                                            yakScript={script}
-                                                        />
-                                                    </>
-                                                )
-                                            })
-                                        }}
-                                    >
-                                        编辑文档
-                                    </Button>
-                                </div>
+                        <div style={{textAlign: "right", marginBottom: 10}}>
+                            <Button
+                                onClick={(e) => {
+                                    let m = showDrawer({
+                                        title: "编辑文档",
+                                        keyboard: false,
+                                        width: "94%",
+                                        onClose: () => {
+                                            update()
+                                            m.destroy()
+                                        },
+                                        content: (
+                                            <>
+                                                <DocumentEditor
+                                                    onFinished={() => {
+                                                        m.destroy()
+                                                    }}
+                                                    markdown={markdown}
+                                                    yakScript={script}
+                                                />
+                                            </>
+                                        )
+                                    })
+                                }}
+                            >
+                                编辑文档
+                            </Button>
+                        </div>
                     )}
                     {markdown ? (
                         <div>
-                            <MDEditor.Markdown source={markdown} />
+                            <MDEditor.Markdown source={markdown}/>
                         </div>
                     ) : (
-                        <Empty style={{marginTop: 80}} description={"插件作者未添加文档"} />
+                        <Empty style={{marginTop: 80}} description={"插件作者未添加文档"}/>
                     )}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"源码"} key={"code"}>
                     <div style={{height: 500}}>
-                        <YakEditor type={script?.Type || "yak"} value={script?.Content} readOnly={true} />
+                        <YakEditor type={script?.Type || "yak"} value={script?.Content} readOnly={true}/>
                     </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"历史"} key={"history"}>
-                    {script && <PluginHistoryTable script={script} trigger={trigger} />}
+                    {script && <PluginHistoryTable script={script} trigger={trigger}/>}
                     {/*<ExecHistoryTable mini={false} trigger={null as any}/>*/}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"结果"} key={"results"}>
-                    {script && <YakScriptExecResultTable YakScriptName={script.ScriptName} trigger={trigger} />}
+                    {script && <YakScriptExecResultTable YakScriptName={script.ScriptName} trigger={trigger}/>}
                 </Tabs.TabPane>
             </Tabs>
         )
@@ -267,7 +269,8 @@ export interface AddToMenuActionFormProp {
 
 export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) => {
     const {script} = props
-    const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
+    const updateGroups = props?.updateGroups ? props.updateGroups : () => {
+    }
 
     const [params, setParams] = useState<{
         Group: string
@@ -339,8 +342,10 @@ interface PluginManagementProps {
 
 export const PluginManagement: React.FC<PluginManagementProps> = React.memo<PluginManagementProps>((props) => {
     const {script, groups, style} = props
-    const update = props?.update ? props.update : () => {}
-    const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
+    const update = props?.update ? props.update : () => {
+    }
+    const updateGroups = props?.updateGroups ? props.updateGroups : () => {
+    }
 
     return (
         <Space style={{...style}} direction={props.vertical ? "vertical" : "horizontal"}>
@@ -371,7 +376,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
             </Button> */}
             <Popover
                 title={`添加到左侧菜单栏中[${script?.Id}]`}
-                content={<>{script && <AddToMenuActionForm script={script} updateGroups={updateGroups} />}</>}
+                content={<>{script && <AddToMenuActionForm script={script} updateGroups={updateGroups}/>}</>}
             >
                 <Button size={"small"} type={"primary"} ghost>
                     添加到菜单栏
@@ -428,8 +433,10 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                                 .then((e) => {
                                     success("显示该模块")
                                 })
-                                .catch((e: any) => {})
-                                .finally(() => {})
+                                .catch((e: any) => {
+                                })
+                                .finally(() => {
+                                })
                         }}
                     >
                         <Button size={"small"}>取消隐藏 / 取消忽略</Button>
@@ -444,8 +451,10 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                             .then((e) => {
                                 success("忽略该模块")
                             })
-                            .catch((e: any) => {})
-                            .finally(() => {})
+                            .catch((e: any) => {
+                            })
+                            .finally(() => {
+                            })
                     }}
                 >
                     <Button size={"small"} danger={true}>
@@ -453,40 +462,13 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                     </Button>
                 </Popconfirm>
             )}
-            <Popconfirm
-                title={"导出成功后，将会自动打开导出的路径"}
-                onConfirm={(e) => {
-                    ipcRenderer
-                        .invoke("ExportYakScript", {
-                            YakScriptId: script?.Id
-                        })
-                        .then((data: {OutputDir: string}) => {
-                            showModal({
-                                title: "导出成功!",
-                                content: (
-                                    <>
-                                        <Space direction={"vertical"}>
-                                            <CopyableField text={data.OutputDir} />
-                                            <Button
-                                                type={"link"}
-                                                onClick={() => {
-                                                    openABSFile(data.OutputDir)
-                                                }}
-                                            >
-                                                在文件夹中打开
-                                            </Button>
-                                        </Space>
-                                    </>
-                                )
-                            })
-                        })
-                        .catch((e: any) => {
-                            console.info(e)
-                        })
-                }}
-            >
-                <Button size={"small"}>导出插件</Button>
-            </Popconfirm>
+            <Button size={"small"} onClick={() => {
+                showModal({
+                    title: "导出插件配置", width: "40%", content: <>
+                        <OutputPluginForm YakScriptId={script.Id}/>
+                    </>
+                })
+            }}>导出插件</Button>
             <Popconfirm
                 title={"确定要删除该插件？删除之后不可恢复"}
                 onConfirm={() => {
@@ -503,3 +485,74 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
         </Space>
     )
 })
+
+export interface OutputPluginFormProp {
+    YakScriptId: any
+}
+
+export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((props) => {
+    const [_, setLocalPath, getLocalPath] = useGetState("");
+    const [pluginDirName, setPluginDirName, getPluginDirName] = useGetState("");
+
+    useEffect(() => {
+        getValue("YAKIT_DEFAULT_LOAD_LOCAL_PATH").then(e => {
+            if (e) {
+                setLocalPath(e)
+            }
+        })
+    }, [])
+
+    return <>
+        <Form onSubmitCapture={e => {
+            e.preventDefault()
+
+            ipcRenderer
+                .invoke("ExportYakScript", {
+                    YakScriptId: props.YakScriptId,
+                    OutputDir: getLocalPath(),
+                    OutputPluginDir: getPluginDirName(),
+                })
+                .then((data: { OutputDir: string }) => {
+                    showModal({
+                        title: "导出成功!",
+                        content: (
+                            <>
+                                <Space direction={"vertical"}>
+                                    <CopyableField text={data.OutputDir}/>
+                                    <Button
+                                        type={"link"}
+                                        onClick={() => {
+                                            openABSFile(data.OutputDir)
+                                        }}
+                                    >
+                                        在文件夹中打开
+                                    </Button>
+                                </Space>
+                            </>
+                        )
+                    })
+                })
+                .catch((e: any) => {
+                    failed(`导出失败: ${e}`)
+                })
+        }}>
+            <InputItem
+                label={"本地仓库路径"}
+                help={"可在【导出】或仓库配置中配置"}
+                value={getLocalPath()}
+                setValue={setLocalPath}
+                required={true}
+            />
+            <InputItem
+                label={"插件文件夹名"}
+                help={"插件文件夹名，尽量精简，无特殊字符"}
+                value={getPluginDirName()}
+                setValue={setPluginDirName}
+                required={true}
+            />
+            <Form.Item colon={false} label={" "}>
+                <Button type="primary" htmlType="submit"> 导出到目标路径 </Button>
+            </Form.Item>
+        </Form>
+    </>
+});

@@ -651,7 +651,7 @@ export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
     return <Item label={p.label} help={p.help} style={{...p.formItemStyle}}>
         <Select
             value={p.value} onChange={e => p.setValue && p.setValue(e)}
-            disabled={p.disabled}
+            disabled={p.disabled} size={p.size}
         >
             {p.data.map(e => <Select.Option key={e.value} value={e.value}>
                 {e.text}
