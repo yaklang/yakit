@@ -335,9 +335,9 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
 
     useEffect(() => {
         queryYakScriptList("codec", (i: YakScript[], total) => {
-            setCodecPlugin(i.map(script => {
-                return {key: script.ScriptName, help: script.Help, verbose: script.ScriptName, isYakScript: true}
-            }))
+            setCodecPlugin([{subTypes: i.map(script => {
+                    return {key: script.ScriptName, help: script.Help, verbose: script.ScriptName, isYakScript: true}
+                }), key:"from-yakit-codec-plugin", verbose: "CODEC 社区插件"}])
         })
     }, [])
 
@@ -356,7 +356,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                     </Space>
                     <Space>
                         {renderCodecTypes(EncAmpDecMenu, true)}
-                        {renderCodecTypes(codecPlugin)}
+                        {renderCodecTypes(codecPlugin, false, true)}
                     </Space>
                     {codecType && codecType?.params && codecType.params.length > 0 && <Row
                         style={{width: "100%"}}
