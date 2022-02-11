@@ -12,7 +12,7 @@ import {showDrawer, showModal} from "../../utils/showModal"
 import {AutoUpdateYakModuleViewer, startExecYakCode} from "../../utils/basic"
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 import {failed} from "../../utils/notification"
-import {CopyableField, InputItem, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {CopyableField, InputItem, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
 import {PluginManagement, PluginOperator} from "./PluginOperator"
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator"
@@ -25,7 +25,8 @@ import {getValue, saveValue} from "../../utils/kv";
 
 const {ipcRenderer} = window.require("electron")
 
-export interface YakitStorePageProp {}
+export interface YakitStorePageProp {
+}
 
 export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [script, setScript] = useState<YakScript>()
@@ -35,6 +36,16 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [history, setHistory] = useState(false)
 
     const [loading, setLoading] = useState(false)
+    const [localPluginDir, setLocalPluginDir] = useState("");
+    const [pluginType, setPluginType] = useState<"yak" | "mitm" | "nuclei" | "codec" | "packet-hack">("yak");
+
+    useEffect(() => {
+        getValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH).then(e => {
+            if (e) {
+                setLocalPluginDir(`${e}`)
+            }
+        })
+    }, [])
 
     useEffect(() => {
         setLoading(true)
@@ -44,172 +55,215 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     }, [script])
 
     return (
-        <div style={{height: "100%"}}>
-            <Row style={{height: "100%"}} gutter={16}>
-                <Col span={8} style={{height: "100%"}}>
-                    <AutoCard
-                        bodyStyle={{padding: 0, overflow: "hidden"}}
-                        bordered={true}
-                        style={{height: "100%"}}
+        <div style={{height: "100%", display: "flex", flex: "row"}}>
+            <div style={{width: 470}}>
+                <AutoCard
+                    bodyStyle={{padding: 0, overflow: "auto"}}
+                    bordered={false}
+                    style={{height: "100%"}}
+                    title={
+                        <Space size={0}>
+                            类型：
+                            <ManySelectOne
+                                size={"small"}
+                                data={[
+                                    {text: "YAK 插件", value: "yak"},
+                                    {text: "MITM 插件", value: "mitm"},
+                                    {text: "CODEC插件", value: "codec"},
+                                    {text: "数据包扫描", value: "packet-hack"},
+                                    {text: "YAML POC", value: "nuclei"},
+                                ]}
+                                value={pluginType} setValue={setPluginType}
+                                formItemStyle={{marginBottom: 0, width: 115}}
+                            />
+                            <Button size={"small"} type={"link"} onClick={(e) => setTrigger(!trigger)}>
+                                <ReloadOutlined/>
+                            </Button>
+                            <Button
+                                size={"small"}
+                                type={"link"}
+                                onClick={(e) => {
+                                    let m = showModal({
+                                        title: "设置 Keyword",
+                                        content: (
+                                            <>
+                                                <KeywordSetter
+                                                    defaultIgnore={ignored}
+                                                    defaultHistory={history}
+                                                    onFinished={(e, ignored, history) => {
+                                                        setKeyword(e)
+                                                        setIgnored(ignored)
+                                                        setHistory(history)
+                                                        m.destroy()
+                                                    }}
+                                                    defaultValue={keyword}
+                                                />
+                                            </>
+                                        )
+                                    })
+                                }}
+                            >
+                                <SearchOutlined/>
+                            </Button>
+                        </Space>
+                    }
+                    size={"small"}
+                    extra={
+                        <Space size={1}>
+                            <Popover
+                                title={"额外设置"}
+                                content={<>
+                                    <Form onSubmitCapture={e => {
+                                        e.preventDefault()
+
+                                        saveValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH, localPluginDir)
+                                    }} size={"small"}>
+                                        <InputItem
+                                            label={"本地插件仓库"} value={localPluginDir} setValue={setLocalPluginDir}
+                                            extraFormItemProps={{style: {marginBottom: 4}}}
+                                        />
+                                        <Form.Item colon={false} label={" "} style={{marginBottom: 12}}>
+                                            <Button type="primary" htmlType="submit"> 设置 </Button>
+                                        </Form.Item>
+                                    </Form>
+                                </>}
+                                trigger={["click"]}
+                            >
+                                <Button
+                                    icon={<SettingOutlined/>} size={"small"} type={"link"}
+                                    style={{marginRight: 3}}
+                                />
+                            </Popover>
+                            <Button
+                                size={"small"}
+                                type={"primary"}
+                                icon={<DownloadOutlined/>}
+                                onClick={() => {
+                                    showModal({
+                                        width: 700,
+                                        title: "导入插件方式",
+                                        content: (
+                                            <>
+                                                <div style={{width: 600}}>
+                                                    <LoadYakitPluginForm/>
+                                                </div>
+                                            </>
+                                        )
+                                    })
+                                }}
+                            >
+                                导入
+                            </Button>
+                            {/*<Popconfirm*/}
+                            {/*    title={"更新模块数据库？"}*/}
+                            {/*    onConfirm={e => {*/}
+                            {/*        showModal({*/}
+                            {/*            title: "自动更新 Yak 模块", content: <>*/}
+                            {/*                <AutoUpdateYakModuleViewer/>*/}
+                            {/*            </>, width: "60%",*/}
+                            {/*        })*/}
+                            {/*    }}*/}
+                            {/*>*/}
+                            {/*    <Button size={"small"} type={"primary"} icon={<DownloadOutlined/>}>*/}
+                            {/*        导入*/}
+                            {/*    </Button>*/}
+                            {/*</Popconfirm>*/}
+                            <Button
+                                size={"small"}
+                                type={"link"}
+                                icon={<PlusOutlined/>}
+                                onClick={() => {
+                                    let m = showDrawer({
+                                        title: "创建新插件",
+                                        width: "100%",
+                                        content: (
+                                            <>
+                                                <YakScriptCreatorForm
+                                                    onChanged={(e) => setTrigger(!trigger)}
+                                                    onCreated={() => {
+                                                        m.destroy()
+                                                    }}
+                                                />
+                                            </>
+                                        ),
+                                        keyboard: false
+                                    })
+                                }}
+                            >
+                                新插件
+                            </Button>
+                        </Space>
+                    }
+                >
+                    <YakModuleList
+                        currentId={script?.Id}
+                        Keyword={keyword}
+                        Type={pluginType}
+                        onClicked={setScript}
+                        trigger={trigger}
+                        isHistory={history}
+                        isIgnored={ignored}
+                    />
+                    {/*<Tabs*/}
+                    {/*    className='yak-store-list'*/}
+                    {/*    tabPosition={"left"}*/}
+                    {/*    size={"small"}*/}
+                    {/*    tabBarStyle={{*/}
+                    {/*        padding: 0,*/}
+                    {/*        margin: 0,*/}
+                    {/*        width: 70,*/}
+                    {/*        marginLeft: -20*/}
+                    {/*    }}*/}
+                    {/*    direction={"ltr"}*/}
+                    {/*>*/}
+                    {/*    {[*/}
+                    {/*        {tab: "YAK", key: "yak"},*/}
+                    {/*        {tab: "YAML", key: "nuclei"},*/}
+                    {/*        {tab: "MITM", key: "mitm"},*/}
+                    {/*        {tab: "Packet", key: "packet-hack"},*/}
+                    {/*        {tab: "CODEC", key: "codec"},*/}
+                    {/*    ].map((e) => {*/}
+                    {/*        return (*/}
+                    {/*            <Tabs.TabPane tab={e.tab} key={e.key}>*/}
+                    {/*                <YakModuleList*/}
+                    {/*                    currentId={script?.Id}*/}
+                    {/*                    Keyword={keyword}*/}
+                    {/*                    Type={e.key as any}*/}
+                    {/*                    onClicked={setScript}*/}
+                    {/*                    trigger={trigger}*/}
+                    {/*                    isHistory={history}*/}
+                    {/*                    isIgnored={ignored}*/}
+                    {/*                />*/}
+                    {/*            </Tabs.TabPane>*/}
+                    {/*        )*/}
+                    {/*    })}*/}
+                    {/*</Tabs>*/}
+                </AutoCard>
+            </div>
+            <div style={{flex: 1}}>
+                {script ? (
+                    <Card
+                        loading={loading}
                         title={
                             <Space>
-                                插件仓库
-                                <Button size={"small"} type={"link"} onClick={(e) => setTrigger(!trigger)}>
-                                    <ReloadOutlined />
-                                </Button>
-                                <Button
-                                    size={"small"}
-                                    type={"link"}
-                                    onClick={(e) => {
-                                        let m = showModal({
-                                            title: "设置 Keyword",
-                                            content: (
-                                                <>
-                                                    <KeywordSetter
-                                                        defaultIgnore={ignored}
-                                                        defaultHistory={history}
-                                                        onFinished={(e, ignored, history) => {
-                                                            setKeyword(e)
-                                                            setIgnored(ignored)
-                                                            setHistory(history)
-                                                            m.destroy()
-                                                        }}
-                                                        defaultValue={keyword}
-                                                    />
-                                                </>
-                                            )
-                                        })
-                                    }}
-                                >
-                                    <SearchOutlined />
-                                </Button>
+                                <div>Yak[{script?.Type}] 模块详情</div>
                             </Space>
                         }
+                        bordered={false}
                         size={"small"}
-                        extra={
-                            <Space>
-                                <Button
-                                    size={"small"}
-                                    type={"primary"}
-                                    icon={<DownloadOutlined />}
-                                    onClick={() => {
-                                        showModal({
-                                            width: 700,
-                                            title: "导入插件方式",
-                                            content: (
-                                                <>
-                                                    <div style={{width: 600}}>
-                                                        <LoadYakitPluginForm />
-                                                    </div>
-                                                </>
-                                            )
-                                        })
-                                    }}
-                                >
-                                    导入
-                                </Button>
-                                {/*<Popconfirm*/}
-                                {/*    title={"更新模块数据库？"}*/}
-                                {/*    onConfirm={e => {*/}
-                                {/*        showModal({*/}
-                                {/*            title: "自动更新 Yak 模块", content: <>*/}
-                                {/*                <AutoUpdateYakModuleViewer/>*/}
-                                {/*            </>, width: "60%",*/}
-                                {/*        })*/}
-                                {/*    }}*/}
-                                {/*>*/}
-                                {/*    <Button size={"small"} type={"primary"} icon={<DownloadOutlined/>}>*/}
-                                {/*        导入*/}
-                                {/*    </Button>*/}
-                                {/*</Popconfirm>*/}
-                                <Button
-                                    size={"small"}
-                                    type={"link"}
-                                    icon={<PlusOutlined />}
-                                    onClick={() => {
-                                        let m = showDrawer({
-                                            title: "创建新插件",
-                                            width: "100%",
-                                            content: (
-                                                <>
-                                                    <YakScriptCreatorForm
-                                                        onChanged={(e) => setTrigger(!trigger)}
-                                                        onCreated={() => {
-                                                            m.destroy()
-                                                        }}
-                                                    />
-                                                </>
-                                            ),
-                                            keyboard: false
-                                        })
-                                    }}
-                                >
-                                    新插件
-                                </Button>
-                            </Space>
-                        }
                     >
-                        <Tabs
-                            className='yak-store-list'
-                            tabPosition={"left"}
-                            size={"small"}
-                            tabBarStyle={{
-                                padding: 0,
-                                margin: 0,
-                                width: 70,
-                                marginLeft: -20
-                            }}
-                            direction={"ltr"}
-                        >
-                            {[
-                                {tab: "YAK", key: "yak"},
-                                {tab: "YAML", key: "nuclei"},
-                                {tab: "MITM", key: "mitm"},
-                                {tab: "Packet", key: "packet-hack"},
-                                {tab: "CODEC", key: "codec"},
-                            ].map((e) => {
-                                return (
-                                    <Tabs.TabPane tab={e.tab} key={e.key}>
-                                        <YakModuleList
-                                            currentId={script?.Id}
-                                            Keyword={keyword}
-                                            Type={e.key as any}
-                                            onClicked={setScript}
-                                            trigger={trigger}
-                                            isHistory={history}
-                                            isIgnored={ignored}
-                                        />
-                                    </Tabs.TabPane>
-                                )
-                            })}
-                        </Tabs>
-                    </AutoCard>
-                </Col>
-                <Col span={16}>
-                    {script ? (
-                        <Card
-                            loading={loading}
-                            title={
-                                <Space>
-                                    <div>Yak[{script?.Type}] 模块详情</div>
-                                </Space>
-                            }
-                            bordered={false}
-                            size={"small"}
-                        >
-                            <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)} />
-                        </Card>
-                    ) : (
-                        <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
-                    )}
-                </Col>
-            </Row>
+                        <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)}/>
+                    </Card>
+                ) : (
+                    <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
+                )}
+            </div>
         </div>
     )
 }
 
 export interface YakModuleListProp {
-    Type: "yak" | "mitm" | "nuclei"
+    Type: "yak" | "mitm" | "nuclei" | string
     Keyword: string
     onClicked: (y: YakScript) => any
     currentId?: number
@@ -286,7 +340,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     return (
         <List<YakScript>
             loading={loading}
-            style={{width: "100%", height: 200}}
+            style={{width: "100%", height: 200, marginBottom: 16}}
             dataSource={response.Data}
             split={false}
             pagination={{
@@ -355,7 +409,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                 </Col>
                                 <Col span={12} style={{textAlign: "right"}}>
                                     <Space size={2}>
-                                        <CopyableField noCopy={true} text={formatDate(i.CreatedAt)} />
+                                        <CopyableField noCopy={true} text={formatDate(i.CreatedAt)}/>
                                         {gitUrlIcon(i.FromGit, true)}
                                         {/* <Button
                                             size={"small"}
@@ -434,8 +488,8 @@ const KeywordSetter: React.FC<KeywordSetterProp> = (props) => {
                         }}
                     />
                 </Form.Item>
-                <SwitchItem label={"查看历史记录"} value={history} setValue={setHistory} />
-                <SwitchItem label={"查看已忽略/隐藏的插件"} value={ignored} setValue={setIgnored} />
+                <SwitchItem label={"查看历史记录"} value={history} setValue={setHistory}/>
+                <SwitchItem label={"查看已忽略/隐藏的插件"} value={ignored} setValue={setIgnored}/>
                 <Form.Item>
                     <Button type='primary' htmlType='submit'>
                         {" "}
@@ -446,6 +500,25 @@ const KeywordSetter: React.FC<KeywordSetterProp> = (props) => {
         </div>
     )
 }
+
+const loadLocalYakitPluginCode = `yakit.AutoInitYakit()
+
+log.setLevel("info")
+
+localPath = cli.String("local-path")
+if localPath == "" {
+    yakit.Error("本地仓库路径为空")
+    return
+}
+
+err = yakit.UpdateYakitStoreLocal(localPath)
+if err != nil {
+    yakit.Error("更新本地仓库失败：%v", err)
+    die(err)
+}
+
+yakit.Output("更新本地仓库成功")
+`
 
 const loadYakitPluginCode = `yakit.AutoInitYakit()
 log.setLevel("info")
@@ -464,29 +537,47 @@ yakit.Info("准备导入 yak 插件：%v", gitUrl)
 if proxy != "" {
     yakit.Info("使用代理: %v", proxy)
     log.Info("proxy: %v", proxy)
-    die(yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl, proxy))
+    err := yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl, proxy)
+    if err != nil {
+        yakit.Error("加载远程 URL 失败：%v", err)
+        die(err)
+    }
 } else{
     yakit.Info("未使用代理")
-    die(yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl))
+    err = yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl)
+    if err != nil {
+        yakit.Error("加载远程 URL 失败：%v", err)
+        die(err)
+    }
 }
 
 yakit.Output("导入插件成功")
 `
 
 const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY";
+const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH";
 
 export const LoadYakitPluginForm = React.memo(() => {
     const [gitUrl, setGitUrl] = useState("")
     const [proxy, setProxy] = useState("")
-    const [official, setOfficial] = useState(false)
+    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local">("official")
+    const [localPath, setLocalPath] = useState("");
 
     useEffect(() => {
-        if (official) {
+        getValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH).then(e => {
+            if (e) {
+                setLocalPath(e)
+            }
+        })
+    }, [])
+
+    useEffect(() => {
+        if (loadMode === "official") {
             setGitUrl("https://github.com/yaklang/yakit-store")
         }
-    }, [official])
+    }, [loadMode])
 
-    useEffect(()=>{
+    useEffect(() => {
         getValue(YAKIT_DEFAULT_LOAD_GIT_PROXY).then(e => {
             if (e) {
                 setProxy(`${e}`)
@@ -505,36 +596,52 @@ export const LoadYakitPluginForm = React.memo(() => {
                     saveValue(YAKIT_DEFAULT_LOAD_GIT_PROXY, proxy)
                 }
 
-                const params: YakExecutorParam[] = [{Key: "giturl", Value: gitUrl}]
-
-                if (proxy.trim() !== "") {
-                    params.push({Value: proxy.trim(), Key: "proxy"})
+                if (localPath !== "") {
+                    saveValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH, localPath)
                 }
-                startExecYakCode("导入 Yak 插件", {
-                    Script: loadYakitPluginCode,
-                    Params: params
-                })
+
+                if (["official", "giturl"].includes(loadMode)) {
+                    const params: YakExecutorParam[] = [{Key: "giturl", Value: gitUrl}]
+                    if (proxy.trim() !== "") {
+                        params.push({Value: proxy.trim(), Key: "proxy"})
+                    }
+                    startExecYakCode("导入 Yak 插件", {
+                        Script: loadYakitPluginCode,
+                        Params: params
+                    })
+                } else {
+                    startExecYakCode("导入 Yak 插件（本地）", {
+                        Script: loadLocalYakitPluginCode,
+                        Params: [{Key: "local-path", Value: localPath}]
+                    })
+                }
             }}
         >
             <SelectOne
                 label={" "}
                 colon={false}
                 data={[
-                    {text: "使用官方源", value: true},
-                    {text: "第三方仓库源", value: false}
+                    {text: "使用官方源", value: "official"},
+                    {text: "第三方仓库源", value: "giturl"},
+                    {text: "本地仓库", value: "local"},
                 ]}
-                value={official}
-                setValue={setOfficial}
+                value={loadMode}
+                setValue={setLoadMode}
             />
-            <InputItem
-                disable={official}
-                required={true}
-                label={"Git 仓库"}
-                value={gitUrl}
-                setValue={setGitUrl}
-                help={"例如 https://github.com/yaklang/yakit-store"}
-            />
-            <InputItem label={"代理"} value={proxy} setValue={setProxy} help={"访问中国大陆无法访问的代码仓库"} />
+            {["official", "giturl"].includes(loadMode) && <>
+                <InputItem
+                    disable={loadMode === "official"}
+                    required={true}
+                    label={"Git 仓库"}
+                    value={gitUrl}
+                    setValue={setGitUrl}
+                    help={"例如 https://github.com/yaklang/yakit-store"}
+                />
+                <InputItem label={"代理"} value={proxy} setValue={setProxy} help={"访问中国大陆无法访问的代码仓库"}/>
+            </>}
+            {loadMode === "local" && <>
+                <InputItem label={"本地仓库地址"} value={localPath} setValue={setLocalPath}/>
+            </>}
             <Form.Item colon={false} label={" "}>
                 <Button type='primary' htmlType='submit'>
                     {" "}
@@ -564,7 +671,7 @@ export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
                     marginLeft: 0,
                     marginRight: 0
                 }}
-                icon={<GithubOutlined />}
+                icon={<GithubOutlined/>}
             />
         </Tooltip>
     )

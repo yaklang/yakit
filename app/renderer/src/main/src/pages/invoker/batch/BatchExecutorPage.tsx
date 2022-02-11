@@ -251,7 +251,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
     })
 
     return <div style={{width: "100%", height: "100%", display: "flex", overflowY: "hidden"}}>
-        <div style={{width: 400, height: "100%"}}>
+        <div style={{width: 470, height: "100%"}}>
             {/*<AutoSpin*/}
             {/*    spinning={loading}*/}
             {/*>*/}

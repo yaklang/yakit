@@ -535,6 +535,7 @@ message HTTPCookie {
 message ExportYakScriptRequest {
   int64 YakScriptId = 1;
   string OutputDir = 2;
+  string OutputPluginDir = 3;
 }
 
 message ExportYakScriptResponse {
@@ -773,6 +774,7 @@ message CodecRequest {
   string Type = 2;
   bool Auto = 3;
   repeated ExecParamItem Params = 4;
+  string ScriptName = 5;
 }
 
 message CodecResponse {
