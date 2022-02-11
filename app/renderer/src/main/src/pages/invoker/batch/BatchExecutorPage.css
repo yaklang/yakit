@@ -1,0 +1,32 @@
+.history-list-body {
+    padding-left: 20px;
+}
+.history-list-body .list-opt {
+    height: 25px;
+    cursor: pointer;
+}
+.history-list-body .list-opt:hover {
+    background-color: #bae7ff;
+}
+.history-list-body .list-opt + .list-opt {
+    margin-top: 5px;
+}
+
+.exec-result-body{
+    width: 100%;
+    height: 100%;
+}
+
+.history-list-task-opt{
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    padding: 0 5px;
+    border-top: 1px solid #e8e8e8;
+    border-bottom: 1px solid #e8e8e8;
+}
+.history-list-task-opt + .history-list-task-opt{
+    margin-top: 8px;
+}

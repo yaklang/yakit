@@ -12,7 +12,7 @@ export const AutoCard: React.FC<AutoCardProps> = (props) => {
     const { style, children, bodyStyle, ...rest } = props
 
     return (
-        <Card {...rest} style={{ ...style, width: "100%", height: "100%", display: "flex", flexFlow: "column" }} bodyStyle={{ ...bodyStyle, flexGrow: 1 }}>
+        <Card {...rest} style={{ ...style, width: "100%", height: "100%", display: "flex", flexFlow: "column" }} bodyStyle={{ ...bodyStyle, flex: 1 }}>
             {children}
         </Card>
     )

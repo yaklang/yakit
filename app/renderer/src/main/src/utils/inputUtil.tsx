@@ -72,6 +72,8 @@ export interface InputItemProps {
 
     // 放在form-item里面的前缀元素
     prefixNode?: React.ReactNode
+    // 放在form-item里面的前缀元素
+    suffixNode?: React.ReactNode
     // 是否阻止事件冒泡
     isBubbing?: boolean
 }
@@ -142,7 +144,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
                 if (props.isBubbing) e.stopPropagation()
             }}
         />}
-
+        {props.suffixNode}
     </Item>
 };
 
@@ -479,6 +481,9 @@ export interface InputFileNameItem {
     filename?: string
     setFileName?: (i: string) => any
     accept?: string[]
+
+    // 提示信息内容组件
+    hint?: React.ReactNode
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -511,15 +516,17 @@ export const InputFileNameItem: React.FC<InputFileNameItem> = p => {
                 {p.loadContent ? <InputItem
                     label={p.label} setValue={Targets => p.setContent && p.setContent(Targets)}
                     value={p.content} textarea={true} textareaRow={6}
+                    placeholder="请输入绝对路径"
                     isBubbing={true}
-                    help={<div>
+                    help={p.hint ? p.hint : (<div>
                         可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
-                    </div>}
+                    </div>)}
                 /> : <InputItem
                     label={p.label} value={p.filename} setValue={f => p.setFileName && p.setFileName(f)}
-                    isBubbing={true} allowClear={true} help={<div>
+                    placeholder="请输入绝对路径"
+                    isBubbing={true} allowClear={false} help={p.hint ? p.hint : (<div>
                     可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
-                </div>}
+                </div>)}
                 />
                 }
 
