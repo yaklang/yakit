@@ -168,7 +168,7 @@ export const RouteMenuData: MenuDataProps[] = [
         key: Route.ModManagerDetail, label: "插件管理", icon: <AppstoreOutlined/>,
         subMenuData: [
             {key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined/>},
-            {key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined/>},
+            {key: Route.BatchExecutorPage, label: "插件批量执行(研发中)", icon: <AppstoreOutlined/>},
         ]
     },
 
