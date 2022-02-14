@@ -249,6 +249,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
             failed("BUG: 空的解码类型")
             return
         }
+        
         ipcRenderer
             .invoke("Codec", {Type: t, Text: text, Params: params || [], ScriptName: isYakScript ? t : ""})
             .then((res) => {
@@ -268,9 +269,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
 
     useEffect(() => {
         setLoading(true)
-        setTimeout(() => {
-            setLoading(false)
-        }, 300)
+        setTimeout(() => setLoading(false), 300)
     }, [])
 
     const renderCodecTypes = useMemoizedFn((items: CodecType[], notAutoExec?: boolean, isYakScript?: boolean) => {
