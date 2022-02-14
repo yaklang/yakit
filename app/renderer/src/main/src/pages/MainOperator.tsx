@@ -6,7 +6,6 @@ import {
     Layout,
     Menu,
     Modal,
-    Popconfirm,
     Popover,
     Row,
     Space,
@@ -15,7 +14,8 @@ import {
     Divider,
     Tag,
     Spin,
-    Dropdown
+    Dropdown,
+    Typography
 } from "antd"
 import {ContentByRoute, MenuDataProps, NoScrollRoutes, Route, RouteMenuData} from "../routes/routeSpec"
 import {
@@ -58,6 +58,7 @@ const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
 
 const {Header, Footer, Content, Sider} = Layout
+const {Text} = Typography
 
 interface MenuItemGroup {
     Group: string
@@ -447,10 +448,10 @@ const Main: React.FC<MainProp> = (props) => {
                                 </Menu.Item>
                             </Menu>} trigger={["click"]}>
                                 <Button icon={<SettingOutlined/>}>
-                                    全局配置
+                                    配置
                                 </Button>
                             </Dropdown>
-                            <Button type={"primary"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
+                            <Button type={"link"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
                                 success("退出当前 Yak 服务器成功")
                                 setEngineStatus("error")
                             }}/>
@@ -518,7 +519,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                         return (
                                                             <MenuItem icon={<EllipsisOutlined/>}
                                                                       key={`plugin:${item.Group}:${item.YakScriptId}`}>
-                                                                {item.Verbose}
+                                                                <Text ellipsis={{tooltip: true}}>{item.Verbose}</Text>
                                                             </MenuItem>
                                                         )
                                                     })}
@@ -551,7 +552,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             return (
                                                                 <MenuItem icon={subMenu.icon} key={subMenu.key}
                                                                           disabled={subMenu.disabled}>
-                                                                    {subMenu.label}
+                                                                    <Text ellipsis={{tooltip: true}}>{subMenu.label}</Text>
                                                                 </MenuItem>
                                                             )
                                                         })}

@@ -1,6 +1,6 @@
 import React, {Ref, useEffect, useRef, useState} from "react";
 import {queryYakScriptList} from "../../yakitStore/network";
-import {Button, Card, Checkbox, Divider, Form, List, message, Popover, Progress, Space, Tabs, Tag, Tooltip, Typography} from "antd";
+import {Button, Card, Checkbox, Col, Divider, Form, List, Popover, Progress, Row, Space, Tabs, Tag, Tooltip, Typography} from "antd";
 import {AutoCard} from "../../../components/AutoCard";
 import {
     CopyableField,
@@ -365,7 +365,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
                 <Divider style={{margin: 4}}/>
                 <div style={{flex: '1', overflow: "hidden"}}>
                     <AutoCard style={{padding: 4}} bodyStyle={{padding: 4, overflow: "hidden"}} bordered={false}>
-                        <BatchExecutorResultUI token={token}/>
+                        <BatchExecutorResultUI token={token} executing={executing}/>
                     </AutoCard>
                 </div>
             </AutoCard>
@@ -477,7 +477,7 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
                                 onClick={props.onCancel}
                             >
                                 {" "}
-                                停止执行该任务{" "}
+                                停止执行{" "}
                             </Button>
                         ) : (
                             <Button
@@ -569,6 +569,7 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
 
 interface BatchExecutorResultUIProp {
     token: string
+    executing?: boolean
 }
 
 interface BatchTask {
@@ -685,6 +686,7 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
         <Tabs className="exec-result-body">
             <Tabs.TabPane tab={"执行中的任务"} key={"executing"}>
                 <List<BatchTask>
+                    style={{height: '100%', overflow: "auto"}}
                     pagination={false}
                     dataSource={activeTask.sort((a, b) => a.TaskId.localeCompare(b.TaskId))}
                     rowKey={(item) => item.TaskId}
@@ -695,10 +697,16 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
                                 bordered={false}
                                 style={{marginBottom: 8, width: "100%"}}
                                 size={"small"}
-                                title={<Space>
-                                    {task.Target + " / " + task.PoC.ScriptName}
-                                    <Timer fromTimestamp={task.CreatedAt}/>
-                                </Space>}>
+                                title={
+                                    <Row gutter={8}>
+                                        <Col span={20}>
+                                        <Text ellipsis={{tooltip: true}}>{task.Target + " / " + task.PoC.ScriptName}</Text>
+                                        </Col>
+                                        <Col span={4}>
+                                        <Timer fromTimestamp={task.CreatedAt} executing={!!props.executing}/>
+                                        </Col>
+                                    </Row>
+                                }>
                                 <div style={{width: "100%"}}>
                                     <ExecResultsViewer
                                         results={task.Results.map(i => i.Result).filter(i => !!i) as ExecResult[]}
@@ -745,7 +753,9 @@ const Timer: React.FC<TimerProp> = React.memo((props) => {
     if (!duration) {
         return <></>
     }
-    return <Tag color={props.color || "green"}>已运行{duration}秒</Tag>
+
+    if(!props.executing) return <Tag style={{maxWidth: 103}} color={"red"}>已中断</Tag>
+    return <Tag style={{maxWidth: 103}} color={props.color || "green"}>已运行{duration}秒</Tag>
 });
 
 
@@ -796,7 +806,7 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
             .sort((a: any, b: any) => a.timestamp - b.timestamp) as ExecResultLog[]
         const haveResult = logs.filter((i) => ["json", "success"].includes((i?.level || "").toLowerCase())).length > 0
 
-        return haveResult ? <Tag color={"red"}>HIT</Tag> : <Tag color={"gray"}>无结果</Tag>
+        return haveResult ? <Tag color={"red"}>HIT</Tag> : "-"
     }
 
     const details = (task: BatchTask) => {
