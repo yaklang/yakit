@@ -507,7 +507,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const sortFilter = (column: string, type: any) => {
         const keyRelation: any = {
             UpdatedAt: "updated_at",
-            BodyLength: "body_length"
+            BodyLength: "body_length",
+            StatusCode: "status_code"
         }
 
         if (column && type) {
@@ -578,6 +579,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     info("正在删除...如自动刷新失败请手动刷新")
                                     setTimeout(() => {
                                         update(1)
+                                        if(props.onSelected) props.onSelected(undefined)
                                     }, 400)
                                 }}
                             >
@@ -628,6 +630,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     setCompareState(0)
                                     setTimeout(() => {
                                         update(1)
+                                        if(props.onSelected) props.onSelected(undefined)
                                         setTimeout(() => {
                                             setAutoReload(true)
                                         }, 1000)
@@ -722,11 +725,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         },
                         {
                             dataKey: "StatusCode",
-                            width: 90,
+                            width: 100,
+                            sortable: true,
                             headRender: () => {
                                 return (
                                     <div
-                                        style={{display: "flex", justifyContent: "space-between"}}
+                                        style={{display: "inline-flex"}}
                                     >
                                         状态码
                                         <Popover
@@ -869,7 +873,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         },
                         {
                             dataKey: "BodyLength",
-                            // sortable: params && true,
+                            width: 120,
+                            sortable: true,
                             headRender: () => {
                                 return (
                                     <div style={{display: "inline-block", position: "relative"}}>
