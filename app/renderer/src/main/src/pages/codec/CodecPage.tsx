@@ -1,5 +1,20 @@
 import React, {useEffect, useState} from "react"
-import {Button, PageHeader, Space, Dropdown, Menu, Row, Col, Tag, Divider, Typography, Alert, Popover, Input, List} from "antd"
+import {
+    Button,
+    PageHeader,
+    Space,
+    Dropdown,
+    Menu,
+    Row,
+    Col,
+    Tag,
+    Divider,
+    Typography,
+    Alert,
+    Popover,
+    Input,
+    List
+} from "antd"
 import {DownOutlined, SwapOutlined, ArrowsAltOutlined} from "@ant-design/icons"
 import {YakEditor} from "../../utils/editors"
 import {failed} from "../../utils/notification"
@@ -13,6 +28,7 @@ import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {queryYakScriptList} from "../yakitStore/network";
 
 import "./style.css"
+import {execCodec} from "../../utils/encodec";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -252,11 +268,11 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
             failed("BUG: 空的解码类型")
             return
         }
-        if(!text) {
+        if (!text && !isYakScript) {
             failed("左侧编辑器内容为空，请输入内容后重试!")
             return
         }
-        
+
         ipcRenderer
             .invoke("Codec", {Type: t, Text: text, Params: params || [], ScriptName: isYakScript ? t : ""})
             .then((res) => {
@@ -344,9 +360,16 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
-                setCodecPlugin([{subTypes: i.map(script => {
-                        return {key: script.ScriptName, help: script.Help, verbose: script.ScriptName, isYakScript: true}
-                }), key:"from-yakit-codec-plugin", verbose: "CODEC 社区插件"}])
+                setCodecPlugin([{
+                    subTypes: i.map(script => {
+                        return {
+                            key: script.ScriptName,
+                            help: script.Help,
+                            verbose: script.ScriptName,
+                            isYakScript: true
+                        }
+                    }), key: "from-yakit-codec-plugin", verbose: "CODEC 社区插件"
+                }])
             },
             () => setTimeout(() => setPluginLoading(false), 300),
             10,
@@ -364,6 +387,10 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                 title={"Codec"} className={"codec-pageheader-title"}
                 subTitle={<>
                     {codecType && <Tag color={"geekblue"}>当前类型：{codecType?.verbose}</Tag>}
+                    {codecType && (codecType?.params || []).length <= 0 &&
+                    <Button type={"primary"} size={"small"} onClick={e => {
+                        codec(codecType?.key || "", [], codecType?.isYakScript)
+                    }}>立即执行</Button>}
                 </>}
             />
             <div className={"codec-function-bar"}>
@@ -374,16 +401,16 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                     <Space>
                         {renderCodecTypes(EncAmpDecMenu, true)}
                         {/* {renderCodecTypes(codecPlugin, false, true)} */}
-                        <Popover 
-                            overlayClassName="codec-plugin-lib" 
-                            trigger="hover" 
+                        <Popover
+                            overlayClassName="codec-plugin-lib"
+                            trigger="hover"
                             placement="bottomLeft"
                             visible={pluginVisible}
                             onVisibleChange={setPluginVisible}
                             content={
                                 <div style={{width: 250}}>
-                                    <Input placeholder="模糊搜索插件名" allowClear onChange={event=>{
-                                        if(timer){
+                                    <Input placeholder="模糊搜索插件名" allowClear onChange={event => {
+                                        if (timer) {
                                             clearTimeout(timer)
                                             timer = null
                                         }
@@ -407,8 +434,10 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                                         </List.Item>}
                                     />
                                 </div>
-                        }>
-                            <Button type={(codecPlugin[0]?.subTypes || []).filter(item => codecType?.key === item.key).length !== 0 ? 'primary': 'default'}>CODEC 社区插件 <DownOutlined style={{fontSize: 10}} /></Button>
+                            }>
+                            <Button
+                                type={(codecPlugin[0]?.subTypes || []).filter(item => codecType?.key === item.key).length !== 0 ? 'primary' : 'default'}>CODEC
+                                社区插件 <DownOutlined style={{fontSize: 10}}/></Button>
                         </Popover>
                     </Space>
                     {codecType && codecType?.params && codecType.params.length > 0 && <Row
