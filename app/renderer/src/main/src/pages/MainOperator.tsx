@@ -47,6 +47,8 @@ import {PerformanceDisplay} from "../components/PerformanceDisplay"
 
 
 import "./main.css"
+import {useHotkeys} from "react-hotkeys-hook";
+import {execTest} from "./invoker/ExecutePacketYakScript";
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -88,7 +90,7 @@ const singletonRoute = [
     // database
     Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
     Route.DB_Risk,
-    
+
     Route.PoC, Route.DNSLog, Route.BatchExecutorPage,
 ]
 
@@ -201,13 +203,13 @@ const Main: React.FC<MainProp> = (props) => {
             })
     }
 
-    useEffect(()=>{
+    useEffect(() => {
         const key = currentTabKey.split("-")[0]
         const hasBug = pageCache.filter((item) => item.id.split("-")[0] === "poc").length === 1
         if (key !== "poc" && hasBug) {
             ipcRenderer.invoke("main-bug-test", false)
         }
-    },[currentTabKey])
+    }, [currentTabKey])
 
     useEffect(() => {
         if (engineStatus === "error") {
@@ -256,6 +258,11 @@ const Main: React.FC<MainProp> = (props) => {
             clearInterval(id)
         }
     }, [])
+
+    useHotkeys("Ctrl+Alt+T", () => {
+        // alert(1)
+        // execTest()
+    })
 
     useEffect(() => {
         ipcRenderer.invoke("query-latest-notification").then((e: string) => {
@@ -315,15 +322,15 @@ const Main: React.FC<MainProp> = (props) => {
         }
     }, [pageCache])
 
-    useEffect(()=>{
+    useEffect(() => {
         ipcRenderer.on("fetch-new-main-menu", (e) => {
             updateMenuItems()
         })
 
-        return ()=>{
+        return () => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
         }
-    },[])
+    }, [])
 
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;
     const routeKeyToLabel = new Map<string, string>();
@@ -578,7 +585,14 @@ const Main: React.FC<MainProp> = (props) => {
                         display: "flex",
                         flexFlow: "column"
                     }}>
-                        <div style={{padding: 12, paddingTop: 8, overflow: "hidden", flex: "1", display: "flex", flexFlow: "column" }}>
+                        <div style={{
+                            padding: 12,
+                            paddingTop: 8,
+                            overflow: "hidden",
+                            flex: "1",
+                            display: "flex",
+                            flexFlow: "column"
+                        }}>
                             {pageCache.length > 0 ? (
                                 <Tabs
                                     style={{display: "flex", flex: "1"}}

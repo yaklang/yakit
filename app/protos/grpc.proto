@@ -107,6 +107,7 @@ service Yak {
   rpc IgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc UnIgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
+  rpc ExecutePacketYakScript(ExecutePacketYakScriptParams) returns (stream ExecResult);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -202,6 +203,13 @@ service Yak {
   // DNSLog
   rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
   rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+}
+
+message ExecutePacketYakScriptParams {
+  string ScriptName = 1;
+  bool IsHttps = 2;
+  bytes Request = 3;
+  bytes Response = 4;
 }
 
 message YakDNSLogBridgeAddr {
