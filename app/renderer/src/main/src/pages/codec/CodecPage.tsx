@@ -1,18 +1,18 @@
 import React, {useEffect, useState} from "react"
-import {Button, PageHeader, Space, Dropdown, Menu, Row, Col, Tag, Divider, Typography, Alert} from "antd"
+import {Button, PageHeader, Space, Dropdown, Menu, Row, Col, Tag, Divider, Typography, Alert, Popover, Input, List} from "antd"
 import {DownOutlined, SwapOutlined, ArrowsAltOutlined} from "@ant-design/icons"
 import {YakEditor} from "../../utils/editors"
 import {failed} from "../../utils/notification"
 import {LineConversionIcon} from "../../assets/icons"
 import {AutoCard} from "../../components/AutoCard"
 import {AutoSpin} from "../../components/AutoSpin"
-
-import "./style.css"
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {YakScript, YakScriptParam} from "../invoker/schema";
 import {useMemoizedFn} from "ahooks";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {queryYakScriptList} from "../yakitStore/network";
+
+import "./style.css"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -243,12 +243,20 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [codecType, setCodecType] = useState<CodecType>();
     const [params, setParams] = useState<YakExecutorParam[]>([]);
     const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([]);
+    const [pluginLoading, setPluginLoading] = useState<boolean>(false)
+    const [pluginVisible, setPluginVisible] = useState<boolean>(false)
+    let timer: any = null
 
     const codec = (t: string, params?: YakExecutorParam[], isYakScript?: boolean) => {
         if (!t) {
             failed("BUG: 空的解码类型")
             return
         }
+        if(!text) {
+            failed("左侧编辑器内容为空，请输入内容后重试!")
+            return
+        }
+        
         ipcRenderer
             .invoke("Codec", {Type: t, Text: text, Params: params || [], ScriptName: isYakScript ? t : ""})
             .then((res) => {
@@ -268,9 +276,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
 
     useEffect(() => {
         setLoading(true)
-        setTimeout(() => {
-            setLoading(false)
-        }, 300)
+        setTimeout(() => setLoading(false), 300)
     }, [])
 
     const renderCodecTypes = useMemoizedFn((items: CodecType[], notAutoExec?: boolean, isYakScript?: boolean) => {
@@ -333,12 +339,23 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
         )
     })
 
-    useEffect(() => {
-        queryYakScriptList("codec", (i: YakScript[], total) => {
-            setCodecPlugin([{subTypes: i.map(script => {
-                    return {key: script.ScriptName, help: script.Help, verbose: script.ScriptName, isYakScript: true}
+    const search = useMemoizedFn((keyword?: string) => {
+        setPluginLoading(true)
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                setCodecPlugin([{subTypes: i.map(script => {
+                        return {key: script.ScriptName, help: script.Help, verbose: script.ScriptName, isYakScript: true}
                 }), key:"from-yakit-codec-plugin", verbose: "CODEC 社区插件"}])
-        })
+            },
+            () => setTimeout(() => setPluginLoading(false), 300),
+            10,
+            keyword
+        )
+    })
+
+    useEffect(() => {
+        search()
     }, [])
 
     return (
@@ -356,7 +373,43 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                     </Space>
                     <Space>
                         {renderCodecTypes(EncAmpDecMenu, true)}
-                        {renderCodecTypes(codecPlugin, false, true)}
+                        {/* {renderCodecTypes(codecPlugin, false, true)} */}
+                        <Popover 
+                            overlayClassName="codec-plugin-lib" 
+                            trigger="hover" 
+                            placement="bottomLeft"
+                            visible={pluginVisible}
+                            onVisibleChange={setPluginVisible}
+                            content={
+                                <div style={{width: 250}}>
+                                    <Input placeholder="模糊搜索插件名" allowClear onChange={event=>{
+                                        if(timer){
+                                            clearTimeout(timer)
+                                            timer = null
+                                        }
+                                        timer = setTimeout(() => {
+                                            search(event.target.value)
+                                        }, 500);
+                                    }}></Input>
+                                    <List
+                                        loading={pluginLoading}
+                                        size="small"
+                                        dataSource={codecPlugin[0]?.subTypes || []}
+                                        rowKey={row => row.key || ""}
+                                        renderItem={item => <List.Item>
+                                            <div style={{width: "100%", padding: "5px 7px"}} onClick={() => {
+                                                setCodecType(item)
+                                                codec(item.key || "", [], true)
+                                                setPluginVisible(false)
+                                            }}>
+                                                {item.key || ""}
+                                            </div>
+                                        </List.Item>}
+                                    />
+                                </div>
+                        }>
+                            <Button type={(codecPlugin[0]?.subTypes || []).filter(item => codecType?.key === item.key).length !== 0 ? 'primary': 'default'}>CODEC 社区插件 <DownOutlined style={{fontSize: 10}} /></Button>
+                        </Popover>
                     </Space>
                     {codecType && codecType?.params && codecType.params.length > 0 && <Row
                         style={{width: "100%"}}

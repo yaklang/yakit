@@ -5,6 +5,19 @@
 .codec-function-bar {
     margin: 0 0 10px 20px;
 }
+.codec-plugin-lib .ant-popover-inner-content {
+    padding: 5px;
+}
+.codec-plugin-lib .ant-list .ant-list-item {
+    padding: 0;
+    cursor: pointer;
+}
+.codec-plugin-lib .ant-list .ant-list-item:hover {
+    background-color: #f5f5f5;
+}
+.codec-plugin-lib .ant-list.ant-list-split .ant-list-item {
+    border-bottom: 0;
+}
 
 .codec-content {
     flex-grow: 1;
