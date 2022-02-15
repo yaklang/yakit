@@ -56,6 +56,21 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         }
     )
 
+    const delRisk = useMemoizedFn((hash: string) => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("DeleteRisk", {
+                Hash: hash
+            })
+            .then(() => {
+                update(1)
+            })
+            .catch((e) => {
+                failed(`DelRisk failed: ${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+
     useEffect(() => {
         update(1)
     }, [])
@@ -173,6 +188,13 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                 }}
                             >
                                 详情
+                            </Button>
+                            <Button
+                                type={"link"}
+                                danger
+                                onClick={() => delRisk(i.Hash)}
+                            >
+                                删除
                             </Button>
                         </Space>
                     )

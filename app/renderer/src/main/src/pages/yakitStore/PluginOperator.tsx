@@ -17,6 +17,8 @@ import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTabl
 import {getValue} from "../../utils/kv";
 import {useGetState} from "ahooks";
 
+import "./PluginOperator.css"
+
 export interface YakScriptOperatorProp {
     yakScriptId: number
     size?: "big" | "small"
@@ -88,7 +90,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
 
     const defaultContent = () => {
         return (
-            <Tabs type={"card"} defaultValue={"runner"} tabPosition={"right"}>
+            <Tabs className="plugin-store-info" style={{height: "100%"}} type={"card"} defaultValue={"runner"} tabPosition={"right"}>
                 <Tabs.TabPane tab={"执行"} key={"runner"}>
                     {script && (
                         <PluginExecutor
@@ -219,7 +221,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     )}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"源码"} key={"code"}>
-                    <div style={{height: 500}}>
+                    <div style={{height: "100%"}}>
                         <YakEditor type={script?.Type || "yak"} value={script?.Content} readOnly={true}/>
                     </div>
                 </Tabs.TabPane>
@@ -259,7 +261,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         update()
     }, [props.yakScriptId])
 
-    return <div style={{marginLeft: 16}}>{!!script && !!props.fromMenu ? showContent(script) : defaultContent()}</div>
+    return <div style={{marginLeft: 16, height: "100%"}}>{!!script && !!props.fromMenu ? showContent(script) : defaultContent()}</div>
 }
 
 export interface AddToMenuActionFormProp {

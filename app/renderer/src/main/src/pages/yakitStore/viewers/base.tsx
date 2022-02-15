@@ -11,6 +11,7 @@ import {WebsiteTreeViewer} from "./WebsiteTree";
 import {BasicTable} from "./BasicTable";
 import {XTerm} from "xterm-for-react";
 import {formatDate} from "../../../utils/timeUtil";
+import { xtermFit } from "../../../utils/xtermUtils";
 
 
 export interface StatusCardProps {
@@ -135,8 +136,12 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             className={"main-content-tabs"}
             size={"small"}
             activeKey={active}
-            onChange={setActive}
-            // forceRender={true}
+            onChange={activeKey => {
+                setActive(activeKey)
+                setTimeout(() => {
+                    if (xtermRef) xtermFit(xtermRef, 50, 18)
+                }, 50);
+            }}
         >
             {(finalFeatures || []).map((i, index) => {
                 return <Tabs.TabPane
@@ -172,7 +177,11 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             </Tabs.TabPane>
             {props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
                 <div style={{width: "100%", height: "100%"}}>
-                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}/>
+                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
+                        onResize={(r) => {
+                            xtermFit(xtermRef, 50, 18)
+                        }}
+                    />
                 </div>
             </Tabs.TabPane>}
         </Tabs>
