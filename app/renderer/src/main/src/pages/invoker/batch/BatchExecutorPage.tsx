@@ -1,6 +1,6 @@
 import React, {Ref, useEffect, useRef, useState} from "react";
 import {queryYakScriptList} from "../../yakitStore/network";
-import {Button, Card, Checkbox, Col, Divider, Form, List, Popover, Progress, Row, Space, Tabs, Tag, Tooltip, Typography} from "antd";
+import {Button, Card, Checkbox, Col, Divider, Form, List, Popover, Progress, Row, Space, Switch, Tabs, Tag, Tooltip, Typography} from "antd";
 import {AutoCard} from "../../../components/AutoCard";
 import {
     CopyableField,
@@ -182,6 +182,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
 
     const run = useMemoizedFn((t: TargetRequest) => {
         setPercent(0)
+
         //@ts-ignore
         const time = Date.parse(new Date()) / 1000
         const obj: TaskHistoryProps = {
@@ -192,7 +193,6 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
             keyword: keyword || "",
             time: formatTimestamp(time)
         }
-
         const arr=[...taskHistory]
         if(taskHistory.length===10) arr.pop()
         arr.unshift(obj)
@@ -678,6 +678,8 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
         let id = setInterval(syncActiveTask, 1000);
         return () => {
             ipcRenderer.removeAllListeners(`${props.token}-data`)
+            allTasksMap.clear()
+            setAllTasks([])
             clearInterval(id);
         }
     }, [props.token])
@@ -764,10 +766,13 @@ interface BatchTaskViewerProp {
 }
 
 const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
+    const [tasks, setTasks, getTasks] = useGetState<BatchTask[]>([]);
+    const [checked,setChecked] = useState<boolean>(false)
+
     const containerRef = useRef();
     const listRef = useRef();
     const [height, setHeight] = useState(300);
-    const [list, scrollTo] = useVirtualList<BatchTask>(props.tasks, {
+    const [list, scrollTo] = useVirtualList<BatchTask>(getTasks(), {
         containerTarget: containerRef,
         wrapperTarget: listRef,
         itemHeight: 40,
@@ -912,47 +917,75 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
         )
     }
 
-    return <AutoCard bodyStyle={{padding: 0, overflow: "hidden"}} style={{height: "100%"}}>
-        <ReactResizeDetector
-            onResize={(width, height) => {
-                if (!width || !height) {
-                    return
-                }
-                setHeight(height)
-            }}
-            handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
-        />
-        <div ref={containerRef as Ref<any>} style={{height: height, overflow: "auto"}}>
-            <div ref={listRef as Ref<any>}>
-                {list.map(i => {
-                    return <div className="history-list-task-opt" key={i.data.TaskId}>
-                        <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 300}}>{`${i.data.Target} / ${i.data.PoC.ScriptName}`}</Text>
-                        <Divider type='vertical'/>
-                        {statusTag(i.data)}
-                        <Divider type='vertical'/>
-                        <Tag color="green">{formatTimestamp(i.data.CreatedAt)}</Tag>
-                        <Divider type='vertical'/>
-                        <Button type="link" onClick={(e)=>{
-                            let m = showDrawer({
-                                title: "poc详情",
-                                keyboard: false,
-                                width: "60%",
-                                onClose: ()=>{
-                                    m.destroy()
-                                },
-                                content: (details(i.data))
-                            })
-                            setTimeout(() => {
-                                // @ts-ignore
-                                const execResults: ExecResult[] = i.data.Results.filter(
-                                    (item) => !!item.Result
-                                ).map((item) => item.Result)
-                                for (let item of execResults) writeExecResultXTerm(getXtermRef(), item)
-                            }, 500)
-                        }}>详情</Button>
-                    </div>
-                })}
-            </div>
+    useEffect(()=>{
+        if(!checked) setTasks(props.tasks)
+    }, [props.tasks])
+    useEffect(()=>{
+        if(checked){
+            const filterTasks: BatchTask[] = getTasks()
+                .filter(item => item.Results.length !== 0)
+                .filter(item => 
+                    (convertTask(item).filter((e) => e.type === "log")
+                         .map((i) => i.content)
+                         .sort((a: any, b: any) => a.timestamp - b.timestamp) as ExecResultLog[])
+                         .filter((i) => ["json", "success"]
+                         .includes((i?.level || "").toLowerCase())).length > 0
+                )
+            setTasks(filterTasks)
+        }else{
+            setTasks(props.tasks)
+        }
+    }, [checked])
+
+    return <div style={{width: "100%", height: "100%",display: "flex", flexFlow: "column"}}>
+        <div style={{height: 30, width: "100%", padding: "0 0 4px 5px"}}>
+            <span style={{display: "inline-block", height: 22,marginRight: 5}}>展示命中项</span>
+            <Switch checked={checked} onChange={checked => setChecked(checked)}></Switch>
         </div>
-    </AutoCard>
+        <div style={{flex: 1, overflow: "hidden"}}>
+            <AutoCard bodyStyle={{padding: 0, overflow: "hidden"}} style={{height: "100%"}}>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!width || !height) {
+                        return
+                    }
+                    setHeight(height)
+                }}
+                handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
+            />
+            <div ref={containerRef as Ref<any>} style={{height: height, overflow: "auto"}}>
+                <div ref={listRef as Ref<any>}>
+                    {list.map(i => {
+                        return <div className="history-list-task-opt" key={i.data.TaskId}>
+                            <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 300}}>{`${i.data.Target} / ${i.data.PoC.ScriptName}`}</Text>
+                            <Divider type='vertical'/>
+                            {statusTag(i.data)}
+                            <Divider type='vertical'/>
+                            <Tag color="green">{formatTimestamp(i.data.CreatedAt)}</Tag>
+                            <Divider type='vertical'/>
+                            <Button type="link" onClick={(e)=>{
+                                let m = showDrawer({
+                                    title: "poc详情",
+                                    keyboard: false,
+                                    width: "60%",
+                                    onClose: ()=>{
+                                        m.destroy()
+                                    },
+                                    content: (details(i.data))
+                                })
+                                setTimeout(() => {
+                                    // @ts-ignore
+                                    const execResults: ExecResult[] = i.data.Results.filter(
+                                        (item) => !!item.Result
+                                    ).map((item) => item.Result)
+                                    for (let item of execResults) writeExecResultXTerm(getXtermRef(), item)
+                                }, 500)
+                            }}>详情</Button>
+                        </div>
+                    })}
+                </div>
+            </div>
+            </AutoCard>
+        </div>
+    </div>
 });

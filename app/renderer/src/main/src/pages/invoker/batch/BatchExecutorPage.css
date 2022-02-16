@@ -16,6 +16,9 @@
     width: 100%;
     height: 100%;
 }
+.exec-result-body.ant-tabs-top > .ant-tabs-nav{
+    margin: 0 0 6px 0;
+}
 
 .history-list-task-opt {
     height: 40px;
