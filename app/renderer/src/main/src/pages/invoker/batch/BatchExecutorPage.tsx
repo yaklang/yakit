@@ -590,6 +590,9 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
     }, [])
     const [allTasks, setAllTasks] = useState<BatchTask[]>([]);
 
+    const [activeKey, setActiveKey] = useState<string>('executing')
+    const [checked,setChecked] = useState<boolean>(false)
+
     useEffect(() => {
         const update = () => {
             const result: BatchTask[] = [];
@@ -685,7 +688,17 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
     }, [props.token])
 
     return <div style={{height: "100%", overflow: "auto"}}>
-        <Tabs className="exec-result-body">
+        <Tabs 
+            className="exec-result-body"
+            onChange={setActiveKey}
+            activeKey={activeKey}
+            tabBarExtraContent={{
+                right: activeKey !== "executing" && <div style={{width: 120}}>
+                    <span style={{display: "inline-block", height: 22,marginRight: 5}}>展示命中项</span>
+                    <Switch checked={checked} onChange={checked => setChecked(checked)}></Switch>
+                </div>
+            }}
+        >
             <Tabs.TabPane tab={"执行中的任务"} key={"executing"}>
                 <List<BatchTask>
                     style={{height: '100%', overflow: "auto"}}
@@ -721,7 +734,7 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
                 />
             </Tabs.TabPane>
             <Tabs.TabPane tab={`历史任务列表[${allTasks.length}]`} key={"results"} forceRender={true}>
-                <BatchTaskViewer tasks={allTasks}/>
+                <BatchTaskViewer tasks={allTasks} checked={checked}/>
             </Tabs.TabPane>
         </Tabs>
     </div>
@@ -763,11 +776,11 @@ const Timer: React.FC<TimerProp> = React.memo((props) => {
 
 interface BatchTaskViewerProp {
     tasks: BatchTask[]
+    checked: boolean
 }
 
 const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
     const [tasks, setTasks, getTasks] = useGetState<BatchTask[]>([]);
-    const [checked,setChecked] = useState<boolean>(false)
 
     const containerRef = useRef();
     const listRef = useRef();
@@ -918,10 +931,10 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
     }
 
     useEffect(()=>{
-        if(!checked) setTasks(props.tasks)
+        if(!props.checked) setTasks(props.tasks)
     }, [props.tasks])
     useEffect(()=>{
-        if(checked){
+        if(props.checked){
             const filterTasks: BatchTask[] = getTasks()
                 .filter(item => item.Results.length !== 0)
                 .filter(item => 
@@ -935,15 +948,9 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
         }else{
             setTasks(props.tasks)
         }
-    }, [checked])
+    }, [props.checked])
 
-    return <div style={{width: "100%", height: "100%",display: "flex", flexFlow: "column"}}>
-        <div style={{height: 30, width: "100%", padding: "0 0 4px 5px"}}>
-            <span style={{display: "inline-block", height: 22,marginRight: 5}}>展示命中项</span>
-            <Switch checked={checked} onChange={checked => setChecked(checked)}></Switch>
-        </div>
-        <div style={{flex: 1, overflow: "hidden"}}>
-            <AutoCard bodyStyle={{padding: 0, overflow: "hidden"}} style={{height: "100%"}}>
+    return <AutoCard bodyStyle={{padding: 0, overflow: "hidden"}} style={{height: "100%"}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
@@ -985,7 +992,5 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
                     })}
                 </div>
             </div>
-            </AutoCard>
-        </div>
-    </div>
+        </AutoCard>
 });
