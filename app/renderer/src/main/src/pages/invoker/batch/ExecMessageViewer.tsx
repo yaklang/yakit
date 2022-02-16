@@ -90,8 +90,8 @@ export const ExecResultsViewer: React.FC<ExecResultsViewerProp> = (props) => {
             />}
             {progressBars.map(i => i.node)}
             <Timeline pending={true}>
-                {(logs || []).sort().map(e => {
-                    return <Timeline.Item color={LogLevelToCode(e.level)}>
+                {(logs || []).sort().map((e, index) => {
+                    return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
                         <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}/>
                     </Timeline.Item>
                 })}

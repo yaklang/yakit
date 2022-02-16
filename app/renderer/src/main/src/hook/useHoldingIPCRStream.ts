@@ -19,7 +19,7 @@ interface InfoState {
     featureMessageState: ExecResultLog[]
 }
 
-interface CacheStatusCardProps {
+export interface CacheStatusCardProps {
     Id: string
     Data: string
     Timestamp: number
