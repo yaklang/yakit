@@ -462,7 +462,7 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
             <InputItem 
                 style={{marginBottom: 0}}
                 width={'80%'}
-                textareaRow={1} 
+                autoSize={{minRows: 1, maxRows: 6}}
                 textarea={true} 
                 value={target.target} 
                 label={"输入目标"}
@@ -693,8 +693,8 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
             onChange={setActiveKey}
             activeKey={activeKey}
             tabBarExtraContent={{
-                right: activeKey !== "executing" && <div style={{width: 120}}>
-                    <span style={{display: "inline-block", height: 22,marginRight: 5}}>展示命中项</span>
+                right: activeKey !== "executing" && <div style={{width: 140}}>
+                    <span style={{display: "inline-block", height: 22,marginRight: 5}}>只展示命中项</span>
                     <Switch checked={checked} onChange={checked => setChecked(checked)}></Switch>
                 </div>
             }}
