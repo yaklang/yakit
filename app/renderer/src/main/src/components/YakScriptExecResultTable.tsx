@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Form, List, Row, Space, Tag} from "antd";
+import {Button, Card, List, Space, Tag} from "antd";
 import {
     ExecResult,
     genDefaultPagination,
@@ -16,6 +16,7 @@ import {ExecResultLog} from "../pages/invoker/batch/ExecMessageViewer";
 import {ReloadOutlined} from "@ant-design/icons";
 import {showByCursorContainer} from "../utils/showByCursor";
 import {divider} from "@uiw/react-md-editor";
+import { AutoCard } from "./AutoCard";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -74,7 +75,7 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
         update(1)
     }, [params.YakScriptName])
 
-    return <Space style={{width: "100%"}} direction={"vertical"}>
+    // return <Space style={{width: "100%"}} direction={"vertical"}>
         {/*{props.YakScriptName ? undefined : <Form onSubmitCapture={e => {*/}
         {/*    e.preventDefault()*/}
 
@@ -92,8 +93,8 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
         {/*        <Button type="primary" htmlType="submit"> 搜索插件结果 </Button>*/}
         {/*    </Form.Item>*/}
         {/*</Form>}*/}
-        <Card
-            bodyStyle={{padding: 0}} size={"small"} bordered={false}
+    return <AutoCard
+            bodyStyle={{padding: 0, overflow: "hidden"}} size={"small"} bordered={false}
             title={props.YakScriptName ? <>
                 <Space>
                     <span>插件结果：</span>
@@ -103,7 +104,7 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
                 </Space>
             </> : undefined}
         >
-            <div style={{width: "100%", display: "flex", marginBottom: 20}}>
+            <div style={{width: "100%",height: "100%", display: "flex", marginBottom: 20}}>
                 {props.YakScriptName ? undefined : <Card
                     size={"small"} bordered={true}
                     title={<Space>
@@ -168,6 +169,7 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
                     </List>
                 </Card>}
                 <List<ExecResult>
+                    style={{overflow: "auto", padding: "5px 3px"}}
                     loading={loading}
                     pagination={{
                         size: "small",
@@ -217,7 +219,6 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
 
                 </List>
             </div>
-
-        </Card>
-    </Space>
+        </AutoCard>
+    {/* </Space> */}
 };

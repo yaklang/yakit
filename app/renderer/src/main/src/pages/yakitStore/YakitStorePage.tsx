@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Card, Col, Empty, Form, Input, List, Popconfirm, Popover, Row, Space, Tabs, Tag, Tooltip} from "antd"
+import {Button, Card, Col, Empty, Form, Input, List, Popover, Row, Space, Tag, Tooltip} from "antd"
 import {
     DownloadOutlined,
     PlusOutlined,
@@ -55,7 +55,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     }, [script])
 
     return (
-        <div style={{height: "100%", display: "flex", flex: "row"}}>
+        <div style={{height: "100%", display: "flex", flexDirection: "row"}}>
             <div style={{width: 470}}>
                 <AutoCard
                     bodyStyle={{padding: 0, overflow: "auto"}}
@@ -242,7 +242,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             </div>
             <div style={{flex: 1}}>
                 {script ? (
-                    <Card
+                    <AutoCard
                         loading={loading}
                         title={
                             <Space>
@@ -253,7 +253,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         size={"small"}
                     >
                         <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)}/>
-                    </Card>
+                    </AutoCard>
                 ) : (
                     <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
                 )}
