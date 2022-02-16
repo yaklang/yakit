@@ -15,7 +15,8 @@ import {
     Spin,
     Table,
     Tag,
-    Typography
+    Typography,
+    Empty
 } from "antd"
 import {DownCircleTwoTone, UpCircleTwoTone} from "@ant-design/icons"
 import {InputInteger} from "../../../utils/inputUtil"
@@ -387,6 +388,12 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                         style={{textAlign: "center"}}
                         onSubmitCapture={(e) => {
                             e.preventDefault()
+
+                            if(tasks.length === 0){
+                                Modal.error({title: "模块还未加载，请点击右上角配置进行插件仓库更新"})
+                                return
+                            }
+
                             if (!params.Target) {
                                 Modal.error({title: "检测目标不能为空"})
                                 return
@@ -480,7 +487,13 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
             </Row>
             <Divider style={{margin: "10px 0"}}/>
             <div ref={listRef} className='bug-test-list'>
-                <div ref={containerRef} style={{height: listHeight, overflow: "auto"}}>
+                {
+                    tasks.length === 0 ?
+                    (<div>
+                        <Empty style={{marginTop: 75}} description={"模块还未加载，请点击右上角配置进行插件仓库更新"}></Empty>
+                    </div>)
+                    :
+                    (<div ref={containerRef} style={{height: listHeight, overflow: "auto"}}>
                     <div ref={wrapperRef}>
                         {list.map((ele) => (
                             <div className='list-item' key={ele.data.Id}>
@@ -550,7 +563,8 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                             </div>
                         ))}
                     </div>
-                </div>
+                    </div>)
+                }
             </div>
         </div>
     )
