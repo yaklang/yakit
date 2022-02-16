@@ -462,7 +462,7 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
             <InputItem 
                 style={{marginBottom: 0}}
                 width={'80%'}
-                autoSize={{minRows: 1, maxRows: 6}}
+                textareaRow={1}
                 textarea={true} 
                 value={target.target} 
                 label={"输入目标"}
