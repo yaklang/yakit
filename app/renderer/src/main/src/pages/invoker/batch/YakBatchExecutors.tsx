@@ -490,7 +490,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                 {
                     tasks.length === 0 ?
                     (<div>
-                        <Empty description={"模块还未加载，请点击右上角配置进行插件仓库更新"}></Empty>
+                        <Empty style={{marginTop: 75}} description={"模块还未加载，请点击右上角配置进行插件仓库更新"}></Empty>
                     </div>)
                     :
                     (<div ref={containerRef} style={{height: listHeight, overflow: "auto"}}>
