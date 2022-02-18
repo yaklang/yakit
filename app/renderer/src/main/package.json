@@ -60,7 +60,7 @@
   "scripts": {
     "electron-render": "cross-env BROWSER=none react-app-rewired --openssl-legacy-provider start",
     "start": "react-app-rewired start",
-    "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+    "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired --openssl-legacy-provider build",
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject"
   },

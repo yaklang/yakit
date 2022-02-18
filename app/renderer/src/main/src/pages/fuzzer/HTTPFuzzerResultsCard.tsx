@@ -22,7 +22,7 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
         setTimeout(() => setLoading(false), 500)
     }, [])
 
-    return <Card
+    return <AutoCard
         size={"small"} style={{height: "100%"}}
         className={"flex-card"}
         title={<Space>
@@ -35,9 +35,9 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
             />
         </Space>}
         extra={props.extra}
-        bodyStyle={{padding: 0, width: "100%"}}
+        bodyStyle={{padding: 0, width: "100%", overflow: "hidden"}}
     >
-        <div style={{flex: 1}}>
+        <div style={{flex: 1, height: "100%"}}>
             {loading && <AutoCard loading={true}/>}
             {(showSuccess && !loading) && <FuzzerResponseTableEx
                 onSendToWebFuzzer={props.onSendToWebFuzzer}
@@ -55,5 +55,5 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
                 content={props.failedResponses}
             />}
         </div>
-    </Card>
+    </AutoCard>
 };
