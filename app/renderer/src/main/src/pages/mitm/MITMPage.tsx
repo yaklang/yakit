@@ -29,7 +29,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
 import {SelectOne} from "../../utils/inputUtil";
 import {MITMPluginOperator} from "./MITMPluginOperator";
-import {useGetState, useLatest, useMemoizedFn, useMouse} from "ahooks";
+import {useGetState, useHistoryTravel, useLatest, useMemoizedFn, useMouse} from "ahooks";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import {useHotkeys} from "react-hotkeys-hook";
 import * as monaco from 'monaco-editor';
