@@ -84,7 +84,8 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
             })
     })
     const cancelScript = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-ExecutePacketYakScript")
+        ipcRenderer
+            .invoke("cancel-ExecutePacketYakScript", token)
     })
 
     useEffect(() => {
