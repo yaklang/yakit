@@ -354,6 +354,8 @@ export interface HTTPFlowTableProp {
     tableHeight?: number
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
+
+    sendToPlugin?: (request: Uint8Array | string, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -1069,6 +1071,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                         rowData.Request
                                                     ).toString("utf8")
                                                 )
+                                            }
+                                        }
+                                    },
+                                    {
+                                        title:'发送到插件社区',
+                                        onClick:()=>{
+                                            if (props.sendToPlugin) {
+                                                ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: rowData.Hash}).then((i: HTTPFlow) => {
+                                                   if(props.sendToPlugin) props.sendToPlugin(i.Request, i.IsHTTPS, i.Response)
+                                                }).catch((e: any) => {
+                                                    failed(`Query Response failed: ${e}`)
+                                                })
                                             }
                                         }
                                     },

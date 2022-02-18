@@ -373,6 +373,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
             },
             () => setTimeout(() => setPluginLoading(false), 300),
             10,
+            undefined,
             keyword
         )
     })

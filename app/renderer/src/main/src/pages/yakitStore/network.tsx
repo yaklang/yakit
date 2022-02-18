@@ -9,6 +9,7 @@ export const queryYakScriptList = (
     onResult: (i: YakScript[], total?: number) => any,
     onFinally?: () => any,
     limit?: number,
+    page?: number,
     keyword?: string,
     extraParam?: QueryYakScriptRequest
 ) => {
@@ -16,7 +17,7 @@ export const queryYakScriptList = (
         limit = 200
     }
     ipcRenderer.invoke("QueryYakScript", {
-        Type: pluginType, Pagination: genDefaultPagination(limit),
+        Type: pluginType, Pagination: genDefaultPagination(limit, page),
         Keyword: keyword, ...(extraParam || {})
     } as QueryYakScriptRequest).then((rsp: QueryYakScriptsResponse) => {
         onResult(rsp.Data, rsp.Total)

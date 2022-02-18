@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import {Col, Input, Popover, Row, Space, Spin, Tabs} from "antd";
+import {Button, Col, Input, Popover, Row, Select, Space, Spin, Tabs} from "antd";
 import {MITMPage} from "../mitm/MITMPage";
 import {HTTPFuzzerPage} from "../fuzzer/HTTPFuzzerPage";
 import {randomString} from "../../utils/randomUtil";
@@ -9,6 +9,8 @@ import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTabl
 import {HTTPHistory} from "../../components/HTTPHistory";
 import "../main.css";
 import { useMemoizedFn } from "ahooks";
+import { showDrawer } from "../../utils/showModal";
+import { HackerPlugin } from "./HackerPlugin";
 
 export interface HTTPHackerProp {
 
@@ -56,6 +58,13 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         setActiveTag(newFuzzerId)
         // setCurrentRequest({isHttps, request})
         setTimeout(() => setLoading(false), 300)
+    })
+
+    const sendToPlugin = useMemoizedFn((request: Uint8Array | string, isHTTPS: boolean, response?: Uint8Array) => {
+        let m = showDrawer({
+            width: "80%",
+            content: <HackerPlugin request={request} isHTTPS={isHTTPS} response={response}></HackerPlugin>
+        })
     })
 
     const changeVerboseForFuzzer = (key: string, verbose: string) => {
@@ -116,12 +125,12 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         >
             <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
                 <div style={{height: "100%"}}>
-                    <MITMPage onSendToWebFuzzer={sendToFuzzer}/>
+                    <MITMPage onSendToWebFuzzer={sendToFuzzer} sendToPlugin={sendToPlugin}/>
                 </div>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false} forceRender={true}>
                 <div style={{height: "100%"}}>
-                    <HTTPHistory sendToWebFuzzer={sendToFuzzer}/>
+                    <HTTPHistory sendToWebFuzzer={sendToFuzzer} sendToPlugin={sendToPlugin}/>
                 </div>
             </Tabs.TabPane>
             <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>

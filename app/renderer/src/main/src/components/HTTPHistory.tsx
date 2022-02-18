@@ -8,6 +8,7 @@ import {VerticalResize} from "../components/VerticalResize";
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
     sendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    sendToPlugin?: (request: Uint8Array | string, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {
@@ -40,6 +41,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     setSelectedHTTPFlow(i)
                 }}
                 paginationPosition={"topRight"}
+                sendToPlugin={props.sendToPlugin}
             />
         </div>
         {selected && <div style={{height: "67%"}}>
