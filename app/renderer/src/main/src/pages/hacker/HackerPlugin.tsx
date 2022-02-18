@@ -16,7 +16,7 @@ const {ipcRenderer} = window.require("electron")
 const {Option} = Select
 
 export interface HackerPluginProps {
-    request: Uint8Array | string
+    request: Uint8Array
     response?: Uint8Array
 
     isHTTPS: boolean
@@ -24,7 +24,7 @@ export interface HackerPluginProps {
 export interface ExecutePacketYakScriptProp {
     ScriptName: string
     IsHttps: boolean
-    Request: Uint8Array | string
+    Request: Uint8Array
     Response?: Uint8Array
 }
 

@@ -60,7 +60,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         setTimeout(() => setLoading(false), 300)
     })
 
-    const sendToPlugin = useMemoizedFn((request: Uint8Array | string, isHTTPS: boolean, response?: Uint8Array) => {
+    const sendToPlugin = useMemoizedFn((request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
         let m = showDrawer({
             width: "80%",
             content: <HackerPlugin request={request} isHTTPS={isHTTPS} response={response}></HackerPlugin>

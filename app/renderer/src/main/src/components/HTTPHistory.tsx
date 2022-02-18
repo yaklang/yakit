@@ -8,7 +8,7 @@ import {VerticalResize} from "../components/VerticalResize";
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
     sendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    sendToPlugin?: (request: Uint8Array | string, isHTTPS: boolean, response?: Uint8Array) => any
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {

@@ -355,7 +355,7 @@ export interface HTTPFlowTableProp {
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
 
-    sendToPlugin?: (request: Uint8Array | string, isHTTPS: boolean, response?: Uint8Array) => any
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -1075,7 +1075,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         }
                                     },
                                     {
-                                        title:'发送到插件社区',
+                                        title:'发送到 Packet检查',
                                         onClick:()=>{
                                             if (props.sendToPlugin) {
                                                 ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: rowData.Hash}).then((i: HTTPFlow) => {

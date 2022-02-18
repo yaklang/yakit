@@ -42,7 +42,7 @@ const {ipcRenderer} = window.require("electron");
 
 export interface MITMPageProp {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    sendToPlugin?: (request: Uint8Array | string, isHTTPS: boolean, response?: Uint8Array) => any
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export interface MITMResponse extends MITMFilterSchema {
@@ -476,7 +476,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
 
     const execPlugin = useMemoizedFn((value: string) => {
-        if( props.sendToPlugin) props.sendToPlugin(value, currentPacketInfo.isHttp)
+        if( props.sendToPlugin) props.sendToPlugin(currentPacketInfo.currentPacket, currentPacketInfo.isHttp)
     })
 
     const shiftAutoForwardHotkey = useHotkeys('ctrl+t', () => {
@@ -831,7 +831,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                           },
                                                                           {
                                                                             id: "send-to-plugin",
-                                                                            label: "发送到 社区插件",
+                                                                            label: "发送到 Packet检查",
                                                                             keybindings: [
                                                                                 monaco.KeyMod.WinCtrl |
                                                                                     monaco.KeyCode.KEY_E
