@@ -58,7 +58,7 @@
     "cross-env": "7.0.3"
   },
   "scripts": {
-    "electron-render": "cross-env BROWSER=none react-app-rewired --openssl-legacy-provider start",
+    "electron-render": "cross-env BROWSER=none react-app-rewired start",
     "start": "react-app-rewired start",
     "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
     "test": "react-app-rewired test",

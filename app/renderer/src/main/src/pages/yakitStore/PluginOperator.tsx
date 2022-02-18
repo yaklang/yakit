@@ -25,6 +25,7 @@ export interface YakScriptOperatorProp {
     fromMenu?: boolean
 
     setTrigger?: () => void
+    setScript?: (item: any) => any
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -176,6 +177,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                         setTimeout(() => props.setTrigger!(), 300)
                                     }}
                                     updateGroups={updateGroups}
+                                    setScript={props.setScript}
                                 />
                             }
                         />
@@ -340,6 +342,8 @@ interface PluginManagementProps {
     groups?: string[]
     updateGroups?: () => any
     style?: React.CSSProperties
+
+    setScript?: (item: any) => any
 }
 
 export const PluginManagement: React.FC<PluginManagementProps> = React.memo<PluginManagementProps>((props) => {
@@ -472,9 +476,13 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                 })
             }}>导出插件</Button>
             <Popconfirm
-                title={"确定要删除该插件？删除之后不可恢复"}
+                title={"确定要删除该插件?如果添加左侧菜单栏也会同步删除，且不可恢复"}
                 onConfirm={() => {
-                    ipcRenderer.invoke("delete-yak-script", script.Id)
+                    ipcRenderer.invoke("delete-yak-script", script.Id).then(
+                        ()=>{
+                            ipcRenderer.invoke("change-main-menu")
+                            if(props.setScript) props.setScript(undefined)
+                        })
                     update()
                     // setLoading(true)
                     // setTimeout(() => setTrigger(!trigger), 300)
