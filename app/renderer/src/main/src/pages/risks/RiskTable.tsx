@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Space, Table, Tag, Form} from "antd"
+import {Button, Space, Table, Tag, Form, Typography} from "antd"
 import {Risk} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useMemoizedFn} from "ahooks"
@@ -19,6 +19,7 @@ export interface QueryRisksParams extends QueryGeneralRequest {
 }
 
 const {ipcRenderer} = window.require("electron")
+const {Paragraph} = Typography
 
 export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const [response, setResponse] = useState<QueryGeneralResponse<Risk>>({
@@ -97,7 +98,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             columns={[
                 {
                     title: "标题",
-                    render: (i: Risk) => i?.TitleVerbose || i.Title,
+                    render: (i: Risk) => <Paragraph style={{maxWidth: 500}} ellipsis={{tooltip: true}}>{i?.TitleVerbose || i.Title}</Paragraph>,
+                    width: 500,
                     filterIcon: (filtered) => {
                         return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
                     },

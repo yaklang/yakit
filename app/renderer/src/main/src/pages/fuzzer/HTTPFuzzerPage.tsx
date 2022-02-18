@@ -681,7 +681,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 </Row>
             )}
             <Divider style={{marginTop: 12, marginBottom: 4}} />
-            <ResizeBox firstNode={<HTTPPacketEditor
+            <ResizeBox
+                style={{overflow: "hidden"}}
+                firstNode={<HTTPPacketEditor
                         system={props.system}
                         simpleMode={viewMode === "result"}
                         refreshTrigger={refreshTrigger}

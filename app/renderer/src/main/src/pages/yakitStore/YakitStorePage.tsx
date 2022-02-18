@@ -252,7 +252,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         bordered={false}
                         size={"small"}
                     >
-                        <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)}/>
+                        <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)} setScript={setScript}/>
                     </AutoCard>
                 ) : (
                     <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
