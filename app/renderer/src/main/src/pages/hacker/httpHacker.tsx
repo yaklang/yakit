@@ -38,6 +38,13 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         ipcRenderer.invoke('fetch-system-name').then((res)=>{setSystem(res)})
     },[])
 
+    const sendToPlugin = useMemoizedFn((request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
+        let m = showDrawer({
+            width: "80%",
+            content: <HackerPlugin request={request} isHTTPS={isHTTPS} response={response}></HackerPlugin>
+        })
+    })
+
     const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
         const counter = fuzzerCounter + 1
         setFuzzerCounter(counter)
@@ -51,6 +58,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 request={request}
                 system={system}
                 onSendToWebFuzzer={sendToFuzzer}
+                sendToPlugin={sendToPlugin}
             />
         }])
 
@@ -58,13 +66,6 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
         setActiveTag(newFuzzerId)
         // setCurrentRequest({isHttps, request})
         setTimeout(() => setLoading(false), 300)
-    })
-
-    const sendToPlugin = useMemoizedFn((request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
-        let m = showDrawer({
-            width: "80%",
-            content: <HackerPlugin request={request} isHTTPS={isHTTPS} response={response}></HackerPlugin>
-        })
     })
 
     const changeVerboseForFuzzer = (key: string, verbose: string) => {

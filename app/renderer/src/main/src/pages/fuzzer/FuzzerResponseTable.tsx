@@ -14,6 +14,7 @@ export interface FuzzerResponseTableProp {
     setRequest: (s: string | any) => any
     success?: boolean
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 const {Text} = Typography;
@@ -173,7 +174,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                         <Button size={"small"} type={"primary"} onClick={() => {
                             const res = content.filter(i => i.UUID === v);
                             if ((res || []).length > 0 && props.onSendToWebFuzzer) {
-                                analyzeFuzzerResponse(res[0], props.onSendToWebFuzzer)
+                                analyzeFuzzerResponse(res[0], props.onSendToWebFuzzer, props.sendToPlugin)
                             }
                         }}>请求详情</Button>
                     </Space>
