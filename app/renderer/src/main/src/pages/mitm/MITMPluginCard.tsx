@@ -25,6 +25,8 @@ export interface MITMPluginCardProp {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
     onExit?: () => any
     autoUpdate?: boolean
+
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -64,6 +66,7 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                         source={""}
                         autoUpdate={props.autoUpdate}
                         onSendToWebFuzzer={props.onSendToWebFuzzer}
+                        sendToPlugin={props.sendToPlugin}
                     />
                 </div>
             {/* </Tabs.TabPane>

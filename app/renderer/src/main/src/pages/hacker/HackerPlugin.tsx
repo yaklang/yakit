@@ -95,7 +95,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
     return (
         <div className='mitm-exec-plugin'>
             <div className='exec-plugin-input'>
-                <span className='input-title'>社区插件</span>
+                <span className='input-title'>数据包扫描</span>
                 <Select
                     className='input-style'
                     loading={loading}

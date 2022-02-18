@@ -328,7 +328,8 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
 export const onExpandHTTPFlow = (
     flow: HTTPFlow | undefined,
     onSendToFuzzer?: SendToFuzzerFunc,
-    onClosed?: () => any
+    onClosed?: () => any,
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 ) => {
     if (!flow) {
         return <Empty>找不到该请求详情</Empty>
@@ -341,6 +342,7 @@ export const onExpandHTTPFlow = (
                 sendToWebFuzzer={(isHttps, request) => {
                     if (onSendToFuzzer) onSendToFuzzer(new Buffer(request), isHttps)
                 }}
+                sendToPlugin={sendToPlugin}
                 onClose={onClosed}
             />
         </div>
@@ -1075,7 +1077,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         }
                                     },
                                     {
-                                        title:'发送到 Packet检查',
+                                        title:'发送到 数据包扫描',
                                         onClick:()=>{
                                             if (props.sendToPlugin) {
                                                 ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: rowData.Hash}).then((i: HTTPFlow) => {

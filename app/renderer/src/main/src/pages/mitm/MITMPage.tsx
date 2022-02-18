@@ -724,6 +724,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                 ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
                                                             }}
                                                             onSendToWebFuzzer={props.onSendToWebFuzzer}
+                                                            sendToPlugin={props.sendToPlugin}
                                                         />
                                                     ) : (
                                                         <HTTPPacketEditor
@@ -831,7 +832,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                           },
                                                                           {
                                                                             id: "send-to-plugin",
-                                                                            label: "发送到 Packet检查",
+                                                                            label: "发送到 数据包扫描",
                                                                             keybindings: [
                                                                                 monaco.KeyMod.WinCtrl |
                                                                                     monaco.KeyCode.KEY_E
