@@ -1,3 +1,5 @@
+*~
+*.un~
 .idea/
 .idea/*
 .DS_Store
