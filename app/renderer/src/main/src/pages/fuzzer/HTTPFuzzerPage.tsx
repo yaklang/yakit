@@ -41,7 +41,7 @@ import { ResizeBox } from "../../components/ResizeBox"
 
 const {ipcRenderer} = window.require("electron")
 
-export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (isHttps: boolean, request: string) => any) => {
+export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (isHttps: boolean, request: string) => any, sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any) => {
     let m = showDrawer({
         width: "90%",
         content: (
@@ -50,6 +50,10 @@ export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (isHttps: b
                     response={i}
                     sendToWebFuzzer={(isHttps, request) => {
                         setRequest(isHttps,request)
+                        m.destroy()
+                    }}
+                    sendToPlugin={(request, isHTTPS, response) => {
+                        if(sendToPlugin) sendToPlugin(request, isHTTPS, response)
                         m.destroy()
                     }}
                     onClosed={() => {
@@ -66,6 +70,7 @@ export interface HTTPFuzzerPageProp {
     request?: string
     system?: string
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 const {Text} = Typography
@@ -772,6 +777,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             {(content || []).length > 0 ? (
                                 <HTTPFuzzerResultsCard
                                     onSendToWebFuzzer={props.onSendToWebFuzzer}
+                                    sendToPlugin={props.sendToPlugin}
                                     setRequest={(r) => {
                                         setRequest(r)
                                         refreshRequest()

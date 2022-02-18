@@ -19,6 +19,7 @@ export interface HTTPFlowMiniTableProp {
     filter: YakQueryHTTPFlowRequest
     onTotal: (total: number) => any
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
@@ -93,7 +94,15 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                                     props.onSendToWebFuzzer(isHttps, new Buffer(req).toString())
                                                     m.destroy()
                                                 }
-                                            }),
+                                            },
+                                            ()=>{},
+                                            (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
+                                                if(props.sendToPlugin){
+                                                    props.sendToPlugin(request, isHTTPS, response)
+                                                    m.destroy()
+                                                }
+                                            }
+                                            ),
                                     })
                                 }}
                             >详情</Button>
@@ -156,7 +165,15 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                                 m.destroy()
                                             }
 
-                                        })
+                                        },
+                                        ()=>{},
+                                        (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
+                                            if(props.sendToPlugin){
+                                                props.sendToPlugin(request, isHTTPS, response)
+                                                m.destroy()
+                                            }
+                                        }
+                                        )
                                     })
                                 }}
                             >详情</Button>

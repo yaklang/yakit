@@ -35,9 +35,9 @@ export interface QueryGeneralRequest {
     Pagination: PaginationSchema
 }
 
-export const genDefaultPagination = (limit?: number) => {
+export const genDefaultPagination = (limit?: number, page?: number) => {
     return {
-        Limit: limit || 10, Page: 1,
+        Limit: limit || 10, Page: page || 1,
         OrderBy: "updated_at", Order: "desc",
     } as PaginationSchema
 }

@@ -55,7 +55,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
         return <Spin tip={"正在分析详细参数"}/>
     }
 
-    return <HTTPFlowDetail hash={hash || ""} onClose={rsp.onClosed} sendToWebFuzzer={rsp.sendToWebFuzzer}/>
+    return <HTTPFlowDetail hash={hash || ""} onClose={rsp.onClosed} sendToWebFuzzer={rsp.sendToWebFuzzer} sendToPlugin={rsp.sendToPlugin}/>
 }
 
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
@@ -68,6 +68,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             label: '发送到Fuzzer',
             contextMenuGroupId: 'send-fuzzer-info',
             run: () => (props as any).sendToWebFuzzer((flow as any).IsHTTPS, (flow as any).Request)
+        },
+        {
+            id: 'send-to-plugin',
+            label: '发送到数据包扫描',
+            contextMenuGroupId: 'send-fuzzer-info',
+            run: () => (props as any).sendToPlugin((flow as any).Request, (flow as any).IsHTTPS, (flow as any)?.Response || undefined)
         }
     ]
 

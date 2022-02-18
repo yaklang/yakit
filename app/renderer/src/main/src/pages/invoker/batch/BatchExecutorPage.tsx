@@ -149,7 +149,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
                 setTotal(total || 0)
                 setScripts(data)
             }, () => setTimeout(() => setLoading(false), 300),
-            limit, keyword,
+            limit, undefined, keyword,
             (pluginType === "yak" ? {
                 IsBatch: true
             } : {

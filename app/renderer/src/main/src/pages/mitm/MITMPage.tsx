@@ -42,6 +42,7 @@ const {ipcRenderer} = window.require("electron");
 
 export interface MITMPageProp {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export interface MITMResponse extends MITMFilterSchema {
@@ -96,10 +97,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [currentPacketInfo, setCurrentPacketInfo] = useState<{
         currentPacket: Uint8Array,
         currentPacketId: number,
-    }>({currentPacketId: 0, currentPacket: new Buffer([])});
-    const {currentPacket, currentPacketId} = currentPacketInfo;
+        isHttp: boolean
+    }>({currentPacketId: 0, currentPacket: new Buffer([]), isHttp: true});
+    const {currentPacket, currentPacketId, isHttp} = currentPacketInfo;
     const clearCurrentPacket = () => {
-        setCurrentPacketInfo({currentPacketId: 0, currentPacket: new Buffer([])})
+        setCurrentPacketInfo({currentPacketId: 0, currentPacket: new Buffer([]), isHttp: true})
     }
     const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]));
 
@@ -315,7 +317,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
         if (msg.forResponse) {
             if (!msg.response || !msg.responseId) {
-                // console.info(msg)
                 failed("BUG: MITM 错误，未能获取到正确的 Response 或 Response ID")
                 return
             }
@@ -327,7 +328,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             } else {
                 setForResponse(true)
                 setStatus("hijacked")
-                setCurrentPacketInfo({currentPacket: msg.response, currentPacketId: msg.responseId})
+                setCurrentPacketInfo({currentPacket: msg.response, currentPacketId: msg.responseId, isHttp: msg.isHttps})
                 // setCurrentPacket(new Buffer(msg.response).toString("utf8"))
                 // setCurrentPacketId(msg.responseId || 0);
             }
@@ -344,7 +345,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     setForResponse(false)
                     // setCurrentPacket(msg.request)
                     // setCurrentPacketId(msg.id)
-                    setCurrentPacketInfo({currentPacket: msg.request, currentPacketId: msg.id})
+                    setCurrentPacketInfo({currentPacket: msg.request, currentPacketId: msg.id,isHttp: msg.isHttps})
                     setUrlInfo(msg.url)
                     ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
                         setIpInfo(res)
@@ -472,6 +473,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         if (currentPacket && currentPacketId) {
             forward()
         }
+    })
+
+    const execPlugin = useMemoizedFn((value: string) => {
+        if( props.sendToPlugin) props.sendToPlugin(currentPacketInfo.currentPacket, currentPacketInfo.isHttp)
     })
 
     const shiftAutoForwardHotkey = useHotkeys('ctrl+t', () => {
@@ -719,6 +724,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                 ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
                                                             }}
                                                             onSendToWebFuzzer={props.onSendToWebFuzzer}
+                                                            sendToPlugin={props.sendToPlugin}
                                                         />
                                                     ) : (
                                                         <HTTPPacketEditor
@@ -818,12 +824,24 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                               run: function (StandaloneEditor: any) {
                                                                                   props.onSendToWebFuzzer &&
                                                                                       props.onSendToWebFuzzer(
-                                                                                          true,
+                                                                                          isHttp,
                                                                                           StandaloneEditor.getModel().getValue()
                                                                                       )
                                                                               },
                                                                               contextMenuGroupId: "Actions"
                                                                           },
+                                                                          {
+                                                                            id: "send-to-plugin",
+                                                                            label: "发送到 数据包扫描",
+                                                                            keybindings: [
+                                                                                monaco.KeyMod.WinCtrl |
+                                                                                    monaco.KeyCode.KEY_E
+                                                                            ],
+                                                                            run: function (StandaloneEditor: any) {
+                                                                                execPlugin(StandaloneEditor.getModel().getValue())
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        },
                                                                           {
                                                                               id: "forward-response",
                                                                               label: "放行该 HTTP Request",

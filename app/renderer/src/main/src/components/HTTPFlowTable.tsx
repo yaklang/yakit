@@ -328,7 +328,8 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
 export const onExpandHTTPFlow = (
     flow: HTTPFlow | undefined,
     onSendToFuzzer?: SendToFuzzerFunc,
-    onClosed?: () => any
+    onClosed?: () => any,
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 ) => {
     if (!flow) {
         return <Empty>找不到该请求详情</Empty>
@@ -341,6 +342,7 @@ export const onExpandHTTPFlow = (
                 sendToWebFuzzer={(isHttps, request) => {
                     if (onSendToFuzzer) onSendToFuzzer(new Buffer(request), isHttps)
                 }}
+                sendToPlugin={sendToPlugin}
                 onClose={onClosed}
             />
         </div>
@@ -354,6 +356,8 @@ export interface HTTPFlowTableProp {
     tableHeight?: number
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
+
+    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -1069,6 +1073,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                         rowData.Request
                                                     ).toString("utf8")
                                                 )
+                                            }
+                                        }
+                                    },
+                                    {
+                                        title:'发送到 数据包扫描',
+                                        onClick:()=>{
+                                            if (props.sendToPlugin) {
+                                                ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: rowData.Hash}).then((i: HTTPFlow) => {
+                                                   if(props.sendToPlugin) props.sendToPlugin(i.Request, i.IsHTTPS, i.Response)
+                                                }).catch((e: any) => {
+                                                    failed(`Query Response failed: ${e}`)
+                                                })
                                             }
                                         }
                                     },
