@@ -934,6 +934,9 @@ message FuzzerResponse {
 
   // payloads
   repeated string Payloads = 34;
+
+  double BodySimilarity = 35;
+  double HeaderSimilarity = 36;
 }
 
 message Paging {

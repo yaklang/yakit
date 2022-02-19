@@ -101,7 +101,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
     const {content, setRequest} = props;
     const [tableHeight, setTableHeight] = useState(0);
     const pipeline = useTablePipeline({
-        components: antd, primaryKey: (raw: FuzzerResponse)=>{
+        components: antd, primaryKey: (raw: FuzzerResponse) => {
             return raw.UUID
         }
     }).input({
@@ -119,25 +119,47 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                 }
             },
             {
-                name: "time", code: "Timestamp", features: {
-                    sortable: sortAsNumber,
-                },
-                render: v => <Tag >{`${formatTimestamp(v)}`}</Tag>, width: 165,
-            },
-            {
                 name: "StatusCode", code: "StatusCode", features: {
                     sortable: sortAsNumber,
                 },
                 render: v => <Tag color={StatusCodeToColor(v)}>{`${v}`}</Tag>, width: 100,
             },
             {
-                name: "响应包大小",
+                name: "响应大小",
                 code: "BodyLength",
                 render: v => <div
                     style={{
                         overflow: "auto",
                     }}>
                     <Tag>{`${v}`}</Tag>
+                </div>,
+                features: {
+                    sortable: sortAsNumber,
+                },
+                width: 100,
+            },
+            {
+                name: "响应相似度",
+                code: "BodySimilarity",
+                render: v => <div
+                    style={{
+                        overflow: "auto",
+                    }}>
+                    <Tag>{parseFloat(`${v}`).toFixed(3)}</Tag>
+                </div>,
+                features: {
+                    sortable: sortAsNumber,
+                },
+                width: 100,
+            },
+            {
+                name: "HTTP头相似度",
+                code: "HeaderSimilarity",
+                render: v => <div
+                    style={{
+                        overflow: "auto",
+                    }}>
+                    <Tag>{parseFloat(`${v}`).toFixed(3)}</Tag>
                 </div>,
                 features: {
                     sortable: sortAsNumber,
@@ -167,6 +189,12 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                 render: (value: any, row: any, rowIndex: number) => {
                     return value
                 }, width: 300,
+            },
+            {
+                name: "time", code: "Timestamp", features: {
+                    sortable: sortAsNumber,
+                },
+                render: v => <Tag>{`${formatTimestamp(v)}`}</Tag>, width: 165,
             },
             {
                 name: "操作", code: "UUID", render: (v) => {

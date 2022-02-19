@@ -37,7 +37,7 @@ import {
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
-import { ResizeBox } from "../../components/ResizeBox"
+import {ResizeBox} from "../../components/ResizeBox"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -49,11 +49,11 @@ export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (isHttps: b
                 <FuzzerResponseToHTTPFlowDetail
                     response={i}
                     sendToWebFuzzer={(isHttps, request) => {
-                        setRequest(isHttps,request)
+                        setRequest(isHttps, request)
                         m.destroy()
                     }}
                     sendToPlugin={(request, isHTTPS, response) => {
-                        if(sendToPlugin) sendToPlugin(request, isHTTPS, response)
+                        if (sendToPlugin) sendToPlugin(request, isHTTPS, response)
                         m.destroy()
                     }}
                     onClosed={() => {
@@ -80,7 +80,7 @@ export interface FuzzerResponse {
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: {Header: string; Value: string}[]
+    Headers: { Header: string; Value: string }[]
     ResponseRaw: Uint8Array
     RequestRaw: Uint8Array
     BodyLength: number
@@ -94,6 +94,9 @@ export interface FuzzerResponse {
 
     IsHttps?: boolean
     Count?: number
+
+    HeaderSimilarity?: number
+    BodySimilarity?: number
 }
 
 const defaultPostTemplate = `POST / HTTP/1.1
@@ -234,7 +237,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 RequestRaw: data.RequestRaw,
                 Payloads: data.Payloads,
                 isHttps: data.IsHTTPS,
-                Count: count
+                Count: count,
+                BodySimilarity: data.BodySimilarity,
+                HeaderSimilarity: data.HeaderSimilarity,
             } as FuzzerResponse)
             count++
             // setContent([...buffer])
@@ -266,8 +271,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         search === ""
             ? content || []
             : (content || []).filter((i) => {
-                  return Buffer.from(i.ResponseRaw).toString().includes(search)
-              })
+                return Buffer.from(i.ResponseRaw).toString().includes(search)
+            })
     const successResults = filtredResponses.filter((i) => i.Ok)
     const failedResults = filtredResponses.filter((i) => !i.Ok)
 
@@ -318,14 +323,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <Button
                             size={"small"}
                             type={"link"}
-                            icon={<ColumnWidthOutlined />}
+                            icon={<ColumnWidthOutlined/>}
                             onClick={() => {
                                 setViewMode("result")
                             }}
                         />
                     ) : (
                         <Space>
-                            {loading && <Spin size={"small"} spinning={loading} />}
+                            {loading && <Spin size={"small"} spinning={loading}/>}
                             {onlyOneResponse ? (
                                 <Space>
                                     {content[0].IsHttps && <Tag>{content[0].IsHttps ? "https" : ""}</Tag>}
@@ -334,13 +339,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <Button
                                             size={"small"}
                                             onClick={() => {
-                                                analyzeFuzzerResponse(rsp, (bool,r) => {
+                                                analyzeFuzzerResponse(rsp, (bool, r) => {
                                                     setRequest(r)
                                                     refreshRequest()
                                                 })
                                             }}
                                             type={"primary"}
-                                            icon={<ProfileOutlined />}
+                                            icon={<ProfileOutlined/>}
                                         >
                                             详情
                                         </Button>
@@ -351,7 +356,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 setContent([])
                                             }}
                                             danger={true}
-                                            icon={<DeleteOutlined />}
+                                            icon={<DeleteOutlined/>}
                                         ></Button>
                                     </Space>
                                 </Space>
@@ -379,7 +384,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <Button
                                 size={"small"}
                                 type={viewMode === "result" ? "primary" : "link"}
-                                icon={<ColumnWidthOutlined />}
+                                icon={<ColumnWidthOutlined/>}
                                 onClick={() => {
                                     if (viewMode === "result") {
                                         setViewMode("split")
@@ -432,14 +437,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     withdrawRequest()
                                 }}
                                 type={"link"}
-                                icon={<LeftOutlined />}
+                                icon={<LeftOutlined/>}
                             />
                             <Button
                                 onClick={() => {
                                     forwardRequest()
                                 }}
                                 type={"link"}
-                                icon={<RightOutlined />}
+                                icon={<RightOutlined/>}
                             />
                             {history.length > 1 && (
                                 <Dropdown
@@ -463,7 +468,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     }}
                                 >
                                     <Button size={"small"} type={"link"} onClick={(e) => e.preventDefault()}>
-                                        History <DownOutlined />
+                                        History <DownOutlined/>
                                     </Button>
                                 </Dropdown>
                             )}
@@ -505,7 +510,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )}
                         {loading && (
                             <Space>
-                                <Spin size={"small"} />
+                                <Spin size={"small"}/>
                                 <div style={{color: "#3a8be3"}}>sending packets</div>
                             </Space>
                         )}
@@ -685,91 +690,92 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     </Col>
                 </Row>
             )}
-            <Divider style={{marginTop: 12, marginBottom: 4}} />
+            <Divider style={{marginTop: 12, marginBottom: 4}}/>
             <ResizeBox
                 style={{overflow: "hidden"}}
                 firstNode={<HTTPPacketEditor
-                        system={props.system}
-                        simpleMode={viewMode === "result"}
-                        refreshTrigger={refreshTrigger}
-                        hideSearch={true}
-                        bordered={true}
-                        originValue={new Buffer(request)}
-                        actions={[
-                            {
-                                id: "packet-from-url",
-                                label: "URL转数据包",
-                                contextMenuGroupId: "urlPacket",
-                                run: () => {
-                                    setUrlPacketShow(true)
-                                }
+                    system={props.system}
+                    simpleMode={viewMode === "result"}
+                    refreshTrigger={refreshTrigger}
+                    hideSearch={true}
+                    bordered={true}
+                    originValue={new Buffer(request)}
+                    actions={[
+                        {
+                            id: "packet-from-url",
+                            label: "URL转数据包",
+                            contextMenuGroupId: "urlPacket",
+                            run: () => {
+                                setUrlPacketShow(true)
                             }
-                        ]}
-                        onEditor={setReqEditor}
-                        onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
-                        extra={
-                            <Space>
-                                <Popover
-                                    trigger={"click"}
-                                    title={"从 URL 加载数据包"}
-                                    content={
-                                        <div style={{width: 400}}>
-                                            <Form
-                                                layout={"vertical"}
-                                                onSubmitCapture={(e) => {
-                                                    e.preventDefault()
-
-                                                    ipcRenderer
-                                                        .invoke("Codec", {
-                                                            Type: "packet-from-url",
-                                                            Text: targetUrl
-                                                        })
-                                                        .then((e) => {
-                                                            if (e?.Result) {
-                                                                setRequest(e.Result)
-                                                                refreshRequest()
-                                                            }
-                                                        })
-                                                        .finally(() => {})
-                                                }}
-                                                size={"small"}
-                                            >
-                                                <InputItem
-                                                    label={"从 URL 构造请求"}
-                                                    value={targetUrl}
-                                                    setValue={setTargetUrl}
-                                                    extraFormItemProps={{style: {marginBottom: 8}}}
-                                                ></InputItem>
-                                                <Form.Item style={{marginBottom: 8}}>
-                                                    <Button type={"primary"} htmlType={"submit"}>
-                                                        构造请求
-                                                    </Button>
-                                                </Form.Item>
-                                            </Form>
-                                        </div>
-                                    }
-                                >
-                                    <Button size={"small"} type={"primary"}>
-                                        URL
-                                    </Button>
-                                </Popover>
-
-                                <Button
-                                    size={"small"}
-                                    type={viewMode === "request" ? "primary" : "link"}
-                                    icon={<ColumnWidthOutlined />}
-                                    onClick={() => {
-                                        if (viewMode === "request") {
-                                            setViewMode("split")
-                                        } else {
-                                            setViewMode("request")
-                                        }
-                                    }}
-                                />
-                            </Space>
                         }
-                    />} 
-                    secondNode={<AutoSpin spinning={false}>
+                    ]}
+                    onEditor={setReqEditor}
+                    onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
+                    extra={
+                        <Space>
+                            <Popover
+                                trigger={"click"}
+                                title={"从 URL 加载数据包"}
+                                content={
+                                    <div style={{width: 400}}>
+                                        <Form
+                                            layout={"vertical"}
+                                            onSubmitCapture={(e) => {
+                                                e.preventDefault()
+
+                                                ipcRenderer
+                                                    .invoke("Codec", {
+                                                        Type: "packet-from-url",
+                                                        Text: targetUrl
+                                                    })
+                                                    .then((e) => {
+                                                        if (e?.Result) {
+                                                            setRequest(e.Result)
+                                                            refreshRequest()
+                                                        }
+                                                    })
+                                                    .finally(() => {
+                                                    })
+                                            }}
+                                            size={"small"}
+                                        >
+                                            <InputItem
+                                                label={"从 URL 构造请求"}
+                                                value={targetUrl}
+                                                setValue={setTargetUrl}
+                                                extraFormItemProps={{style: {marginBottom: 8}}}
+                                            ></InputItem>
+                                            <Form.Item style={{marginBottom: 8}}>
+                                                <Button type={"primary"} htmlType={"submit"}>
+                                                    构造请求
+                                                </Button>
+                                            </Form.Item>
+                                        </Form>
+                                    </div>
+                                }
+                            >
+                                <Button size={"small"} type={"primary"}>
+                                    URL
+                                </Button>
+                            </Popover>
+
+                            <Button
+                                size={"small"}
+                                type={viewMode === "request" ? "primary" : "link"}
+                                icon={<ColumnWidthOutlined/>}
+                                onClick={() => {
+                                    if (viewMode === "request") {
+                                        setViewMode("split")
+                                    } else {
+                                        setViewMode("request")
+                                    }
+                                }}
+                            />
+                        </Space>
+                    }
+                />}
+                secondNode={<AutoSpin spinning={false}>
                     {onlyOneResponse ? (
                         <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
                     ) : (
@@ -786,7 +792,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <Button
                                             size={"small"}
                                             type={viewMode === "result" ? "primary" : "link"}
-                                            icon={<ColumnWidthOutlined />}
+                                            icon={<ColumnWidthOutlined/>}
                                             onClick={() => {
                                                 if (viewMode === "result") {
                                                     setViewMode("split")
@@ -977,7 +983,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     setUrlPacketShow(false)
                                 }
                             })
-                            .finally(() => {})
+                            .finally(() => {
+                            })
                     }}
                     size={"small"}
                 >
