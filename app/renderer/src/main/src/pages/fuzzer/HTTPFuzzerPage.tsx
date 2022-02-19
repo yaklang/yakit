@@ -38,6 +38,8 @@ import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
+import {useMemoizedFn} from "ahooks";
+import {getValue, saveValue} from "../../utils/kv";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -105,6 +107,8 @@ Host: www.example.com
 
 {"key": "value"}`
 
+const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
+
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
     const [isHttps, setIsHttps] = useState(props.isHttps || false)
@@ -137,20 +141,31 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [urlPacketShow, setUrlPacketShow] = useState<boolean>(false)
 
-    const withdrawRequest = () => {
+    const withdrawRequest = useMemoizedFn(() => {
         const targetIndex = history.indexOf(request) - 1
         if (targetIndex >= 0) {
             setRequest(history[targetIndex])
             setCurrentHistoryIndex(targetIndex)
         }
-    }
-    const forwardRequest = () => {
+    })
+    const forwardRequest = useMemoizedFn(() => {
         const targetIndex = history.indexOf(request) + 1
         if (targetIndex < history.length) {
             setCurrentHistoryIndex(targetIndex)
             setRequest(history[targetIndex])
         }
-    }
+    })
+
+    useEffect(() => {
+        // 缓存全局参数
+        getValue(WEB_FUZZ_PROXY).then(e => {
+            if (!e) {
+                return
+            }
+            setProxy(`${e}`)
+        })
+
+    }, [])
 
     useEffect(() => {
         if (currentHistoryIndex === undefined) {
@@ -167,7 +182,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [props.isHttps, props.request])
 
-    const submitToHTTPFuzzer = () => {
+    const submitToHTTPFuzzer = useMemoizedFn(() => {
+        if (proxy) {
+            saveValue(WEB_FUZZ_PROXY, proxy)
+        }
         setLoading(true)
         if (history.includes(request)) {
             history.splice(history.indexOf(request), 1)
@@ -188,11 +206,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             },
             fuzzToken
         )
-    }
+    })
 
-    const cancelCurrentHTTPFuzzer = () => {
+    const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", fuzzToken)
-    }
+    })
 
     useEffect(() => {
         const token = randomString(60)
@@ -276,19 +294,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const successResults = filtredResponses.filter((i) => i.Ok)
     const failedResults = filtredResponses.filter((i) => !i.Ok)
 
-    const getLeftSpan = () => {
-        switch (viewMode) {
-            case "request":
-                return 18
-            case "result":
-                return 6
-            case "split":
-            default:
-                return 12
-        }
-    }
-
-    const responseViewer = (rsp: FuzzerResponse) => {
+    const responseViewer = useMemoizedFn((rsp: FuzzerResponse) => {
         return (
             <HTTPPacketEditor
                 system={props.system}
@@ -398,7 +404,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
             />
         )
-    }
+    })
 
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
