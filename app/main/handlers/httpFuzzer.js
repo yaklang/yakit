@@ -78,4 +78,36 @@ module.exports = (win, getClient) => {
     ipcMain.handle("RedirectRequest", async (e, params) => {
         return await asyncRedirectRequest(params)
     })
+
+    // asyncQueryHistoryHTTPFuzzerTask wrapper
+    const asyncQueryHistoryHTTPFuzzerTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHistoryHTTPFuzzerTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHistoryHTTPFuzzerTask", async (e, params) => {
+        return await asyncQueryHistoryHTTPFuzzerTask(params)
+    })
+
+    // asyncGetHistoryHTTPFuzzerTask wrapper
+    const asyncGetHistoryHTTPFuzzerTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetHistoryHTTPFuzzerTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetHistoryHTTPFuzzerTask", async (e, params) => {
+        return await asyncGetHistoryHTTPFuzzerTask(params)
+    })
 }

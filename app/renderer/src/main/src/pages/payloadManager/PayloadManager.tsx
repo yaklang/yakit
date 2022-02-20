@@ -15,7 +15,8 @@ const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
 const {Option} = Select
 
-export interface PayloadManagerPageProp {}
+export interface PayloadManagerPageProp {
+}
 
 export interface Payload {
     Content: string
@@ -39,6 +40,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
         Pagination: {Page: 1, Limit: 20, Order: "desc", OrderBy: "updated_at"}
     })
     const [selectedRows, setSelectedRows] = useState<Payload[]>([])
+    const [loading, setLoading] = useState(false)
     const rowSelection = {
         selectedRowKeys: selectedRows.map((item) => item.Id),
         onChange: (selectedRowKeys, selectedRows) => setSelectedRows(selectedRows),
@@ -49,7 +51,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
     const updateGroup = () => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
-            .then((data: {Groups: string[]}) => {
+            .then((data: { Groups: string[] }) => {
                 setGroups(data.Groups || [])
             })
             .catch((e: any) => {
@@ -113,7 +115,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                 <Col span={8}>
                     <AutoCard
                         title={"选择 / 查看已有字典"}
-                        size={"small"}
+                        size={"small"} loading={loading}
                         bordered={false}
                         bodyStyle={{overflow: "auto"}}
                         extra={
@@ -128,6 +130,12 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                                     content: (
                                                         <>
                                                             <CreatePayloadGroup
+                                                                onLoading={() => {
+                                                                    setLoading(true)
+                                                                }}
+                                                                onLoadingFinished={() => {
+                                                                    setTimeout(() => setLoading(false), 300)
+                                                                }}
                                                                 Group={""}
                                                                 onFinished={(e) => {
                                                                     info("创建/修改 Payload 字典/组成功")
@@ -208,7 +216,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                             >
                                                 <Button
                                                     danger={true}
-                                                    icon={<DeleteOutlined />}
+                                                    icon={<DeleteOutlined/>}
                                                     type={selected === element ? "primary" : undefined}
                                                 ></Button>
                                             </Popconfirm>
@@ -321,6 +329,8 @@ export interface CreatePayloadGroupProp {
     Group?: string
     onFinished?: (group: string) => any
     onFinally?: () => any
+    onLoading?: () => any
+    onLoadingFinished?: () => any
 }
 
 export interface SavePayloadParams {
@@ -341,7 +351,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     const updateGroup = () => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
-            .then((data: {Groups: string[]}) => {
+            .then((data: { Groups: string[] }) => {
                 setGroups(data.Groups || [])
             })
             .catch((e: any) => {
@@ -359,6 +369,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
+                    props.onLoading && props.onLoading()
                     ipcRenderer
                         .invoke("SavePayload", params)
                         .then(() => {
@@ -367,7 +378,10 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         .catch((e: any) => {
                             failed("创建 Payload 失败 / 字典")
                         })
-                        .finally(props.onFinally)
+                        .finally(() => {
+                            props.onFinally && props.onFinally()
+                            props.onLoadingFinished && props.onLoadingFinished()
+                        })
                 }}
                 wrapperCol={{span: 14}}
                 labelCol={{span: 6}}
@@ -396,7 +410,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                 /> */}
                 <Form.Item label={"字典内容"}>
                     <div style={{height: 300}}>
-                        <YakEditor setValue={(Content) => setParams({...params, Content})} value={params.Content} />
+                        <YakEditor setValue={(Content) => setParams({...params, Content})} value={params.Content}/>
                     </div>
                 </Form.Item>
                 <Form.Item colon={false} label={" "}>
@@ -421,7 +435,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     const updateGroup = () => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
-            .then((data: {Groups: string[]}) => {
+            .then((data: { Groups: string[] }) => {
                 setGroups(data.Groups || [])
             })
             .catch((e: any) => {

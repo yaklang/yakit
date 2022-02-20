@@ -32,7 +32,8 @@ import {
     ProfileOutlined,
     LeftOutlined,
     RightOutlined,
-    DownOutlined
+    DownOutlined,
+    HistoryOutlined,
 } from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed} from "../../utils/notification"
@@ -40,6 +41,7 @@ import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
 import {useMemoizedFn} from "ahooks";
 import {getValue, saveValue} from "../../utils/kv";
+import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -109,6 +111,12 @@ Host: www.example.com
 
 const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 
+interface HistoryHTTPFuzzerTask {
+    Request: string
+    Proxy: string
+    IsHTTPS: boolean
+}
+
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
     const [isHttps, setIsHttps] = useState(props.isHttps || false)
@@ -120,6 +128,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [actualHost, setActualHost] = useState("")
     const [advancedConfig, setAdvancedConfig] = useState(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
+    const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>();
 
     // state
     const [loading, setLoading] = useState(false)
@@ -156,6 +165,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     })
 
+    // 从历史记录中恢复
+    useEffect(() => {
+        if (!historyTask) {
+            return
+        }
+
+        setRequest(historyTask.Request)
+        setIsHttps(historyTask.IsHTTPS)
+        setProxy(historyTask.Proxy)
+        refreshRequest()
+    }, [historyTask])
+
     useEffect(() => {
         // 缓存全局参数
         getValue(WEB_FUZZ_PROXY).then(e => {
@@ -182,10 +203,25 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [props.isHttps, props.request])
 
+    const loadHistory = useMemoizedFn((id: number) => {
+        setLoading(true)
+        setHistory([])
+        ipcRenderer.invoke(
+            "HTTPFuzzer",
+            {HistoryWebFuzzerId: id}, fuzzToken
+        ).then(() => {
+            ipcRenderer.invoke("GetHistoryHTTPFuzzerTask", {Id: id}).then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+                console.info(data)
+                setHistoryTask(data.OriginRequest)
+            })
+        })
+    })
+
     const submitToHTTPFuzzer = useMemoizedFn(() => {
-        if (proxy) {
-            saveValue(WEB_FUZZ_PROXY, proxy)
-        }
+        // 清楚历史任务的标记
+        setHistoryTask(undefined);
+
+        saveValue(WEB_FUZZ_PROXY, proxy)
         setLoading(true)
         if (history.includes(request)) {
             history.splice(history.indexOf(request), 1)
@@ -765,19 +801,35 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     URL
                                 </Button>
                             </Popover>
+                            <Popover
+                                trigger={"click"}
+                                placement={"bottom"}
+                                destroyTooltipOnHide={true}
+                                content={
+                                    <div style={{width: 400}}>
+                                        <HTTPFuzzerHistorySelector onSelect={e => {
+                                            loadHistory(e)
+                                        }}/>
+                                    </div>
+                                }
+                            >
+                                <Button size={"small"} type={"primary"} icon={<HistoryOutlined/>}>
+                                    历史
+                                </Button>
+                            </Popover>
 
-                            <Button
-                                size={"small"}
-                                type={viewMode === "request" ? "primary" : "link"}
-                                icon={<ColumnWidthOutlined/>}
-                                onClick={() => {
-                                    if (viewMode === "request") {
-                                        setViewMode("split")
-                                    } else {
-                                        setViewMode("request")
-                                    }
-                                }}
-                            />
+                            {/*<Button*/}
+                            {/*    size={"small"}*/}
+                            {/*    type={viewMode === "request" ? "primary" : "link"}*/}
+                            {/*    icon={<ColumnWidthOutlined/>}*/}
+                            {/*    onClick={() => {*/}
+                            {/*        if (viewMode === "request") {*/}
+                            {/*            setViewMode("split")*/}
+                            {/*        } else {*/}
+                            {/*            setViewMode("request")*/}
+                            {/*        }*/}
+                            {/*    }}*/}
+                            {/*/>*/}
                         </Space>
                     }
                 />}
@@ -822,150 +874,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             )}
                         </>
                     )}
-                </AutoSpin>}></ResizeBox>
-            {/* <Row style={{flex: "1"}} gutter={5}>
-                <Col span={getLeftSpan()}>
-                    <HTTPPacketEditor
-                        system={props.system}
-                        simpleMode={viewMode === "result"}
-                        refreshTrigger={refreshTrigger}
-                        hideSearch={true}
-                        bordered={true}
-                        originValue={new Buffer(request)}
-                        actions={[
-                            {
-                                id: "packet-from-url",
-                                label: "URL转数据包",
-                                contextMenuGroupId: "urlPacket",
-                                run: () => {
-                                    setUrlPacketShow(true)
-                                }
-                            }
-                        ]}
-                        onEditor={setReqEditor}
-                        onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
-                        extra={
-                            <Space>
-                                <Popover
-                                    trigger={"click"}
-                                    title={"从 URL 加载数据包"}
-                                    content={
-                                        <div style={{width: 400}}>
-                                            <Form
-                                                layout={"vertical"}
-                                                onSubmitCapture={(e) => {
-                                                    e.preventDefault()
-
-                                                    ipcRenderer
-                                                        .invoke("Codec", {
-                                                            Type: "packet-from-url",
-                                                            Text: targetUrl
-                                                        })
-                                                        .then((e) => {
-                                                            if (e?.Result) {
-                                                                setRequest(e.Result)
-                                                                refreshRequest()
-                                                            }
-                                                        })
-                                                        .finally(() => {})
-                                                }}
-                                                size={"small"}
-                                            >
-                                                <InputItem
-                                                    label={"从 URL 构造请求"}
-                                                    value={targetUrl}
-                                                    setValue={setTargetUrl}
-                                                    extraFormItemProps={{style: {marginBottom: 8}}}
-                                                ></InputItem>
-                                                <Form.Item style={{marginBottom: 8}}>
-                                                    <Button type={"primary"} htmlType={"submit"}>
-                                                        构造请求
-                                                    </Button>
-                                                </Form.Item>
-                                            </Form>
-                                        </div>
-                                    }
-                                >
-                                    <Button size={"small"} type={"primary"}>
-                                        URL
-                                    </Button>
-                                </Popover>
-
-                                <Button
-                                    size={"small"}
-                                    type={viewMode === "request" ? "primary" : "link"}
-                                    icon={<ColumnWidthOutlined />}
-                                    onClick={() => {
-                                        if (viewMode === "request") {
-                                            setViewMode("split")
-                                        } else {
-                                            setViewMode("request")
-                                        }
-                                    }}
-                                />
-                            </Space>
-                        }
-                    />
-                </Col>
-                <Col span={24 - getLeftSpan()}>
-                    <AutoSpin spinning={false}>
-                        {onlyOneResponse ? (
-                            <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
-                        ) : (
-                            <>
-                                {(content || []).length > 0 ? (
-                                    <HTTPFuzzerResultsCard
-                                        onSendToWebFuzzer={props.onSendToWebFuzzer}
-                                        setRequest={(r) => {
-                                            setRequest(r)
-                                            refreshRequest()
-                                        }}
-                                        extra={
-                                            <Button
-                                                size={"small"}
-                                                type={viewMode === "result" ? "primary" : "link"}
-                                                icon={<ColumnWidthOutlined />}
-                                                onClick={() => {
-                                                    if (viewMode === "result") {
-                                                        setViewMode("split")
-                                                    } else {
-                                                        setViewMode("result")
-                                                    }
-                                                }}
-                                            />
-                                        }
-                                        failedResponses={failedResults}
-                                        successResponses={successResults}
-                                    />
-                                ) : (
-                                    <Result
-                                        status={"info"}
-                                        title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                        subTitle={
-                                            "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
-                                        }
-                                    />
-                                )}
-                            </>
-                        )}
-                    </AutoSpin>
-                </Col>
-            </Row> */}
-            {/*<LinerResizeCols*/}
-            {/*    style={{flex: "1"}}*/}
-            {/*    leftNode={*/}
-            {/*        <HTTPPacketEditor*/}
-            {/*            refreshTrigger={refreshTrigger}*/}
-            {/*            hideSearch={true} bordered={true}*/}
-            {/*            originValue={new Buffer(request)}*/}
-            {/*            onEditor={setReqEditor}*/}
-            {/*            onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}*/}
-            {/*        />*/}
-            {/*    }*/}
-            {/*    rightNode={*/}
-            {/*        */}
-            {/*    }*/}
-            {/*/>*/}
+                </AutoSpin>}/>
             <Modal
                 visible={urlPacketShow}
                 title='从 URL 加载数据包'

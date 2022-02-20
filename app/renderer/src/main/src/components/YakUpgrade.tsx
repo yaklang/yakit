@@ -201,15 +201,15 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                             content: <Space direction={"vertical"}>
                                 <Space>
                                     Windows(x64) 下载：
-                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV}/yak_windows_amd64.exe</div>
+                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_windows_amd64.exe</div>
                                 </Space>
                                 <Space>
                                     MacOS(intel/m1) 下载：
-                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV}/yak_darwin_amd64</div>
+                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_darwin_amd64</div>
                                 </Space>
                                 <Space>
                                     Linux(x64) 下载：
-                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV}/yak_linux_amd64</div>
+                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_linux_amd64</div>
                                 </Space>
                                 <Alert message={<div>
                                     手动下载完成后 Windows 用户可以把引擎放在 %HOME%/yakit-projects/yak-engine/yak.exe 即可识别

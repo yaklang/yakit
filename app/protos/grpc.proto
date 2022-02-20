@@ -118,6 +118,8 @@ service Yak {
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
 
   // Fuzzer
+  rpc GetHistoryHTTPFuzzerTask(GetHistoryHTTPFuzzerTaskRequest) returns (HistoryHTTPFuzzerTaskDetail);
+  rpc QueryHistoryHTTPFuzzerTask(Empty) returns (HistoryHTTPFuzzerTasks);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
   rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
   rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
@@ -203,6 +205,28 @@ service Yak {
   // DNSLog
   rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
   rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+}
+
+message GetHistoryHTTPFuzzerTaskRequest {
+  int32 Id = 1;
+}
+
+
+message HistoryHTTPFuzzerTaskDetail {
+  HistoryHTTPFuzzerTask BasicInfo = 1;
+  FuzzerRequest OriginRequest = 2;
+}
+
+message HistoryHTTPFuzzerTask {
+  int32 Id = 1;
+  int64 CreatedAt = 2;
+  int32 HTTPFlowTotal = 3;
+  int32 HTTPFlowSuccessCount = 4;
+  int32 HTTPFlowFailedCount = 5;
+}
+
+message HistoryHTTPFuzzerTasks {
+  repeated HistoryHTTPFuzzerTask Tasks = 1;
 }
 
 message ExecutePacketYakScriptParams {
@@ -887,6 +911,9 @@ message FuzzerRequest {
   bool NoFollowRedirect = 9;
   bool NoFollowMetaRedirect = 10;
   bool FollowJSRedirect = 11;
+
+  // 如果从历史加载，就用这个！
+  int32 HistoryWebFuzzerId = 12;
 }
 
 message RedirectRequestParams {
