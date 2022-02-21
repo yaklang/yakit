@@ -108,6 +108,7 @@ service Yak {
   rpc UnIgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
   rpc ExecutePacketYakScript(ExecutePacketYakScriptParams) returns (stream ExecResult);
+  rpc ExecuteBatchPacketYakScript(ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -234,6 +235,18 @@ message ExecutePacketYakScriptParams {
   bool IsHttps = 2;
   bytes Request = 3;
   bytes Response = 4;
+}
+
+message ExecuteBatchPacketYakScriptParams {
+  repeated string ScriptName = 1;
+  bool IsHttps = 2;
+  bytes Request = 3;
+  bytes Response = 4;
+
+  // 并发
+  int32 Concurrent = 5;
+  // 设置单个超时时间
+  double PerTaskTimeout = 6;
 }
 
 message YakDNSLogBridgeAddr {
