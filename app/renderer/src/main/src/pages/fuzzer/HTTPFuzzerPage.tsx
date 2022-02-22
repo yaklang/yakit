@@ -34,6 +34,7 @@ import {
     RightOutlined,
     DownOutlined,
     HistoryOutlined,
+    DownloadOutlined
 } from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed} from "../../utils/notification"
@@ -42,31 +43,41 @@ import {ResizeBox} from "../../components/ResizeBox"
 import {useMemoizedFn} from "ahooks";
 import {getValue, saveValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
+import debounce from "lodash/debounce"
 
 const {ipcRenderer} = window.require("electron")
 
-export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (isHttps: boolean, request: string) => any, sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any) => {
-    let m = showDrawer({
-        width: "90%",
-        content: (
-            <>
-                <FuzzerResponseToHTTPFlowDetail
-                    response={i}
-                    sendToWebFuzzer={(isHttps, request) => {
-                        setRequest(isHttps, request)
-                        m.destroy()
-                    }}
-                    sendToPlugin={(request, isHTTPS, response) => {
-                        if (sendToPlugin) sendToPlugin(request, isHTTPS, response)
-                        m.destroy()
-                    }}
-                    onClosed={() => {
-                        m.destroy()
-                    }}
-                />
-            </>
-        )
-    })
+export const analyzeFuzzerResponse = 
+    (
+        i: FuzzerResponse, 
+        setRequest: (isHttps: boolean, request: string) => any, 
+        sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any, 
+        index?: number, 
+        data?: FuzzerResponse[]
+        ) => {
+            let m = showDrawer({
+                width: "90%",
+                content: (
+                    <>
+                        <FuzzerResponseToHTTPFlowDetail
+                            response={i}
+                            sendToWebFuzzer={(isHttps, request) => {
+                                setRequest(isHttps, request)
+                                m.destroy()
+                            }}
+                            sendToPlugin={(request, isHTTPS, response) => {
+                                if (sendToPlugin) sendToPlugin(request, isHTTPS, response)
+                                m.destroy()
+                            }}
+                            onClosed={() => {
+                                m.destroy()
+                            }}
+                            index={index}
+                            data={data}
+                        />
+                    </>
+                )
+            })
 }
 
 export interface HTTPFuzzerPageProp {
@@ -149,6 +160,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number>()
 
     const [urlPacketShow, setUrlPacketShow] = useState<boolean>(false)
+
+    // filter
+    const [keyword, setKeyword] = useState<string>("")
+    const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
 
     const withdrawRequest = useMemoizedFn(() => {
         const targetIndex = history.indexOf(request) - 1
@@ -268,12 +283,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (buffer.length <= 0) {
                 return
             }
-            setContent([...buffer])
+            if(JSON.stringify(buffer) !== JSON.stringify(content)) setContent([...buffer])
         }
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
             // console.info(data.Payloads)
-            buffer.push({
+            buffer.push({ 
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
                 Reason: data.Reason,
@@ -318,6 +333,35 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
+
+    const searchContent = debounce(
+        useMemoizedFn(
+            (keyword: string) => {
+                const filters = content.filter(item => {
+                    return Buffer.from(item.ResponseRaw).toString("utf8").indexOf(keyword) > -1
+                })
+                setFilterContent(filters)
+            }
+        ),
+        500
+    )
+
+    useEffect(() => {
+        if(!!keyword){
+            searchContent(keyword)
+        }else{
+            setFilterContent([])
+        }
+    }, [keyword])
+
+    useEffect(() => {
+        if(keyword && content.length !== 0){
+            const filters = content.filter(item => {
+                return Buffer.from(item.ResponseRaw).toString("utf8").indexOf(keyword) > -1
+            })
+            setFilterContent(filters)
+        }
+    }, [content])
 
     const onlyOneResponse = !loading && (content || []).length === 1
 
@@ -847,21 +891,31 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         refreshRequest()
                                     }}
                                     extra={
-                                        <Button
-                                            size={"small"}
-                                            type={viewMode === "result" ? "primary" : "link"}
-                                            icon={<ColumnWidthOutlined/>}
-                                            onClick={() => {
-                                                if (viewMode === "result") {
-                                                    setViewMode("split")
-                                                } else {
-                                                    setViewMode("result")
-                                                }
-                                            }}
-                                        />
+                                        <div>
+                                            <Input
+                                                value={keyword}
+                                                style={{maxWidth: 200}}
+                                                allowClear
+                                                onChange={e => setKeyword(e.target.value)}
+                                                addonAfter={
+                                                        <DownloadOutlined />
+                                                }></Input>
+                                            <Button
+                                                size={"small"}
+                                                type={viewMode === "result" ? "primary" : "link"}
+                                                icon={<ColumnWidthOutlined/>}
+                                                onClick={() => {
+                                                    if (viewMode === "result") {
+                                                        setViewMode("split")
+                                                    } else {
+                                                        setViewMode("result")
+                                                    }
+                                                }}
+                                            />
+                                        </div>
                                     }
                                     failedResponses={failedResults}
-                                    successResponses={successResults}
+                                    successResponses={filterContent.length !==0 ? filterContent : keyword ? [] : successResults}
                                 />
                             ) : (
                                 <Result

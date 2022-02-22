@@ -1,5 +1,9 @@
 import React, {useEffect, useState} from "react";
-import {Card, Col, Collapse, Descriptions, PageHeader, Row, Space, Spin, Tabs, Tag, Typography} from "antd";
+import {Button, Card, Col, Collapse, Descriptions, PageHeader, Row, Space, Spin, Tabs, Tag, Tooltip, Typography} from "antd";
+import {
+    LeftOutlined,
+    RightOutlined,
+} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable";
 import {HTTPPacketEditor, YakEditor} from "../utils/editors";
 import {failed} from "../utils/notification";
@@ -18,6 +22,11 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     noHeader?: boolean
     onClose?: () => any
     defaultHeight?: number
+
+    //查看前/后一个请求内容
+    isFront?: boolean
+    isBehind?: boolean
+    fetchRequest?: (kind: number) => any
 }
 
 const {Text} = Typography;
@@ -25,12 +34,21 @@ const {Text} = Typography;
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
     response: FuzzerResponse
     onClosed?: () => any
+    index?: number
+    data?: FuzzerResponse[]
 }
 
 export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDetail) => {
+    const [response, setResponse] = useState<FuzzerResponse>()
+    const [index, setIndex] = useState<number>()
     const [hash, setHash] = useState<string>();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>();
+
+    useEffect(() => {
+        setResponse(rsp.response)
+        setIndex(rsp.index)
+    }, [rsp.response])
 
     useEffect(() => {
         const flag = randomString(30);
@@ -43,19 +61,40 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
             failed("分析参数失败：" + data)
         })
 
-        ipcRenderer.invoke("analyze-fuzzer-response", rsp.response, flag)
+        ipcRenderer.invoke("analyze-fuzzer-response", response, flag)
 
         return () => {
             ipcRenderer.removeAllListeners(flag)
             ipcRenderer.removeAllListeners(`ERROR:${flag}`)
         }
-    }, [rsp.response])
+    }, [response])
+
+    const fetchInfo = (kind: number) => {
+        if(index === undefined || !rsp.data || rsp.data.length === 0) return
+        
+        if(kind === 1){
+            setResponse(rsp.data[index - 1])
+            setIndex(index - 1)
+        }
+        if(kind === 2){
+            setResponse(rsp.data[index + 1])
+            setIndex(index + 1)
+        }
+    }
 
     if (loading) {
         return <Spin tip={"正在分析详细参数"}/>
     }
 
-    return <HTTPFlowDetail hash={hash || ""} onClose={rsp.onClosed} sendToWebFuzzer={rsp.sendToWebFuzzer} sendToPlugin={rsp.sendToPlugin}/>
+    return <HTTPFlowDetail
+        hash={hash || ""}
+        onClose={rsp.onClosed}
+        sendToWebFuzzer={rsp.sendToWebFuzzer}
+        sendToPlugin={rsp.sendToPlugin}
+        isFront={index === undefined ? undefined : index === 0}
+        isBehind={index === undefined ? undefined : index === (rsp?.data || []).length - 1}
+        fetchRequest={fetchInfo}
+    />
 }
 
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
@@ -101,24 +140,38 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     return <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
         {flow ? <>
-            {props.noHeader ? undefined : <PageHeader title={`请求详情`} subTitle={props.hash}/>}
+            {props.noHeader ? undefined : <PageHeader title={`请求详情`} subTitle={props.hash} 
+                extra={
+                    props.fetchRequest ?
+                    <Space>
+                        <Tooltip title={"上一个请求"}>
+                            <Button type="link" disabled={!!props.isFront} icon={<LeftOutlined />} onClick={() => {props?.fetchRequest!(1)}}></Button>
+                        </Tooltip>
+                        <Tooltip title={"下一个请求"}>
+                            <Button type="link" disabled={!!props.isBehind} icon={<RightOutlined />} onClick={() => {props?.fetchRequest!(2)}}></Button>
+                        </Tooltip>
+                    </Space>
+                    :
+                    <></>
+                    }/>
+                }
             <Space direction={"vertical"} style={{width: "100%"}}>
                 <Descriptions column={4} bordered={true} size={"small"}>
-                    <Descriptions.Item span={1} label={"HTTP 方法"}><Tag color={"geekblue"}><Text
+                    <Descriptions.Item key={"method"} span={1} label={"HTTP 方法"}><Tag color={"geekblue"}><Text
                         style={{maxWidth: 500}}>{flow.Method}</Text></Tag></Descriptions.Item>
-                    <Descriptions.Item span={3} label={"请求 URL"}>
+                    <Descriptions.Item key={"url"} span={3} label={"请求 URL"}>
                         <Text style={{maxWidth: 500}} copyable={true}>{flow.Url}</Text>
                     </Descriptions.Item>
-                    <Descriptions.Item span={1} label={"HTTPS"}><Tag color={"geekblue"}>
+                    <Descriptions.Item key={"https"} span={1} label={"HTTPS"}><Tag color={"geekblue"}>
                         <div
                             style={{maxWidth: 500}}>{flow.IsHTTPS ? "True" : "False"}</div>
                     </Tag></Descriptions.Item>
-                    <Descriptions.Item span={1} label={"StatusCode"}><Tag
+                    <Descriptions.Item key={"status"} span={1} label={"StatusCode"}><Tag
                         color={"geekblue"}>{flow.StatusCode}</Tag></Descriptions.Item>
-                    <Descriptions.Item span={1} label={"Body大小"}><Tag color={"geekblue"}>
+                    <Descriptions.Item key={"size"} span={1} label={"Body大小"}><Tag color={"geekblue"}>
                         <div style={{maxWidth: 500}}>{flow.BodySizeVerbose}</div>
                     </Tag></Descriptions.Item>
-                    <Descriptions.Item span={1} label={"Content-Type"}><Tag color={"geekblue"}>
+                    <Descriptions.Item key={"type"} span={1} label={"Content-Type"}><Tag color={"geekblue"}>
                         <div style={{maxWidth: 500}}>{flow.ContentType}</div>
                     </Tag></Descriptions.Item>
                 </Descriptions>
@@ -188,7 +241,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     {(flow?.RequestHeader || []).sort((i, e) => {
                                         return i.Header.localeCompare(e.Header)
                                     }).map(i => {
-                                        return <Descriptions.Item label={<Text style={{width: 240}}>
+                                        return <Descriptions.Item key={i.Header} label={<Text style={{width: 240}}>
                                             <Tag>{i.Header}</Tag>
                                         </Text>}>
                                             <Text
@@ -208,7 +261,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     {(flow?.ResponseHeader || []).sort((i, e) => {
                                         return i.Header.localeCompare(e.Header)
                                     }).map(i => {
-                                        return <Descriptions.Item label={<Text style={{width: 240}}>
+                                        return <Descriptions.Item key={i.Header} label={<Text style={{width: 240}}>
                                             <Tag>{i.Header}</Tag>
                                         </Text>}>
                                             <Text
