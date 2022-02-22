@@ -60,7 +60,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 setParams({...params, Content: MITMPluginTemplate})
                 return
             case "packet-hack":
-                setParams({...params, Content: PacketHackPluginTemplate})
+                setParams({
+                    ...params, Content: PacketHackPluginTemplate, Params: [
+                        {Field: "request", TypeVerbose: "http-packet", Required: true} as YakScriptParam,
+                        {Field: "response", TypeVerbose: "http-packet", Required: false} as YakScriptParam,
+                        {Field: "isHttps", TypeVerbose: "bool",} as YakScriptParam,
+                    ]
+                })
                 return
             case "codec":
                 setParams({...params, Content: CodecPluginTemplate})
@@ -327,6 +333,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 data={[
                     {text: "字符串 / string", value: "string"},
                     {text: "布尔值 / boolean", value: "boolean"},
+                    {text: "HTTP 数据包 / yak", value: "http-packet"},
                     {text: "Yak 代码块 / yak", value: "yak"},
                     {text: "文本块 / text", value: "text"},
                     {text: "整数（大于零） / uint", value: "uint"},

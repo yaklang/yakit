@@ -20,7 +20,7 @@ import {QuestionOutlined} from "@ant-design/icons";
 import {YakExecutorParam} from "./YakExecutorParams";
 import {showModal} from "../../utils/showModal";
 import {useMemoizedFn} from "ahooks";
-import {YakCodeEditor} from "../../utils/editors";
+import {HTTPPacketEditor, YakCodeEditor, YakEditor, YakHTTPPacketViewer} from "../../utils/editors";
 
 const {Title} = Typography;
 
@@ -424,10 +424,20 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
                 required={props.required}
                 disabled={!!props.disabled}
             />
+        case "http-packet":
+            return <div style={{height: 300, width: "100%"}}>
+                <HTTPPacketEditor
+                    noHeader={true} noHex={true}
+                    originValue={new Buffer((props?.value || "") as string)}
+                    onChange={i => {
+                        props.setValue(i.toString())
+                    }}
+                />
+            </div>
         case "yak":
             return <div style={{height: 300, width: "100%"}}>
                 <YakCodeEditor
-                    originValue={new Buffer(props.value as string)}
+                    originValue={new Buffer((props.value || "") as string)}
                     onChange={i => {
                         props.setValue(i.toString())
                     }}

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
-import {YakScript} from "../invoker/schema";
+import {YakScript, YakScriptParam} from "../invoker/schema";
 import {Button, Collapse, Divider, PageHeader, Popconfirm, Space} from "antd";
 import {XTerm} from "xterm-for-react";
 import {randomString} from "../../utils/randomUtil";
@@ -9,6 +9,7 @@ import {xtermClear} from "../../utils/xtermUtils";
 import {PluginResultUI} from "./viewers/base";
 
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream";
+import {useMemoizedFn} from "ahooks";
 
 export interface PluginExecutorProp {
     script: YakScript
@@ -25,12 +26,26 @@ const {ipcRenderer} = window.require("electron");
 
 const {Panel} = Collapse;
 
+const getParamsByScript = (script: YakScript) => {
+    switch (script.Type) {
+        case "packet-hack":
+            return [
+                {Field: "request", TypeVerbose: "http-packet", Required: true} as YakScriptParam,
+                {Field: "response", TypeVerbose: "http-packet", Required: false} as YakScriptParam,
+                {Field: "isHttps", TypeVerbose: "bool",} as YakScriptParam,
+            ] as YakScriptParam[];
+        default:
+            return script.Params;
+    }
+}
+
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const {script, settingShow, settingNode} = props;
 
     const [token, setToken] = useState(randomString(40));
     const [loading, setLoading] = useState(false);
     const [activePanels, setActivePanels] = useState<string[]>(["params"]);
+    const [lastParams, setLastParams] = useState<YakExecutorParam[]>([]);
 
     const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
         script.ScriptName,
@@ -47,6 +62,20 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         }
     }, [loading])
 
+    const executeByParams = useMemoizedFn((p: YakExecutorParam[]) => {
+        setLoading(true)
+        console.info(p)
+        setTimeout(() => {
+            setActivePanels(["console"])
+            ipcRenderer.invoke("exec-yak-script", {
+                Params: p,
+                YakScriptId: props.script.Id,
+            }, token).then(() => {
+                setLastParams([...p])
+            })
+        }, 300);
+    })
+
     return <div>
         {props.primaryParamsOnly ? <>
             <PageHeader
@@ -57,18 +86,9 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 {!!settingShow && settingNode}
                 <YakScriptParamsSetter
                     {...script}
-                    params={[]}
+                    params={lastParams}
                     loading={loading}
-                    onParamsConfirm={(p: YakExecutorParam[]) => {
-                        setLoading(true)
-                        setTimeout(() => {
-                            setActivePanels(["console"])
-                            ipcRenderer.invoke("exec-yak-script", {
-                                Params: p,
-                                YakScriptId: props.script.Id,
-                            }, token)
-                        }, 300);
-                    }}
+                    onParamsConfirm={executeByParams}
                     onClearData={() => {
                         xtermClear(xtermRef)
                         reset()
@@ -83,7 +103,8 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             </PageHeader>
             <Divider/>
             <PluginResultUI
-                script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate} feature={infoState.featureMessageState}
+                script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate}
+                feature={infoState.featureMessageState}
                 statusCards={infoState.statusState} onXtermRef={setXtermRef}
             />
         </> : <Collapse
@@ -131,18 +152,9 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 </>}>
                 <YakScriptParamsSetter
                     {...script}
-                    params={[]}
+                    params={lastParams}
                     loading={loading}
-                    onParamsConfirm={(p: YakExecutorParam[]) => {
-                        setLoading(true)
-                        setTimeout(() => {
-                            setActivePanels(["console"])
-                            ipcRenderer.invoke("exec-yak-script", {
-                                Params: p,
-                                YakScriptId: props.script.Id,
-                            }, token)
-                        }, 300);
-                    }}
+                    onParamsConfirm={executeByParams}
                     onClearData={() => {
                         xtermClear(xtermRef)
                         reset()
@@ -161,7 +173,8 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                     <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
                 </div>
                 <PluginResultUI
-                    script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate} feature={infoState.featureMessageState}
+                    script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate}
+                    feature={infoState.featureMessageState}
                     statusCards={infoState.statusState}
                 />
             </Panel>
