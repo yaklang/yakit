@@ -25,14 +25,21 @@ import {MITMPluginCardProp} from "./MITMPluginCard";
 import {CopyableField, SelectOne} from "../../utils/inputUtil";
 import {EditorProps, YakCodeEditor} from "../../utils/editors";
 import {YakScript, YakScriptHooks} from "../invoker/schema";
-import {useMap} from "ahooks";
+import {useMap, useMemoizedFn} from "ahooks";
 import {failed} from "../../utils/notification";
-import {PoweroffOutlined, ThunderboltFilled, UserOutlined, QuestionCircleOutlined} from "@ant-design/icons";
+import {
+    PoweroffOutlined,
+    ThunderboltFilled,
+    UserOutlined,
+    QuestionCircleOutlined,
+    ReloadOutlined
+} from "@ant-design/icons";
 import {AutoCard} from "../../components/AutoCard";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import moment from "moment";
 import {formatDate} from "../../utils/timeUtil";
 import {MITMPluginTemplateShort} from "../invoker/data/MITMPluginTamplate";
+import {getValue, saveValue} from "../../utils/kv";
 
 const defaultScript = MITMPluginTemplateShort;
 
@@ -48,6 +55,8 @@ export interface MITMPluginOperatorProps extends MITMPluginCardProp {
     status: StatusCardProps[]
 }
 
+const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
+
 export const MITMPluginOperator = React.memo((props: MITMPluginOperatorProps) => {
     const [initialed, setInitialed] = useState(false);
     const {status} = props;
@@ -55,6 +64,19 @@ export const MITMPluginOperator = React.memo((props: MITMPluginOperatorProps) =>
     // const [userDefined, setUserDefined] = useState(false);
     const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>());
     const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all");
+    const [refreshTrigger, setRefreshTrigger] = useState(false);
+    const refresh = useMemoizedFn(()=>{
+        setRefreshTrigger(!refreshTrigger)
+    })
+
+    useEffect(()=>{
+        getValue(MITM_HOTPATCH_CODE).then(e => {
+            if (!e) {
+                return
+            }
+            setScript(`${e}`)
+        })
+    }, [])
 
     const userDefined = mode === "hot-patch";
 
@@ -120,12 +142,26 @@ export const MITMPluginOperator = React.memo((props: MITMPluginOperatorProps) =>
                                     setValue={setMode}
                                 />
                             </Form>
+                            {mode === "hot-patch" && <Popconfirm
+                                title={"确认重置热加载代码？"}
+                                onConfirm={() => {
+                                    setScript(defaultScript)
+                                    refresh()
+                                }}
+                            >
+                                <Button
+                                    type={"link"} icon={<ReloadOutlined/>} size={"small"}
+                                />
+                            </Popconfirm>}
                         </Space>} size={"small"}
                         extra={<>
                             <Space>
                                 {userDefined && <Button
                                     size={"small"} type={"primary"}
                                     onClick={() => {
+                                        if (!!script) {
+                                            saveValue(MITM_HOTPATCH_CODE, script)
+                                        }
                                         props.onSubmitScriptContent && props.onSubmitScriptContent(script)
                                     }}
                                 >加载当前代码</Button>}
@@ -149,6 +185,7 @@ export const MITMPluginOperator = React.memo((props: MITMPluginOperatorProps) =>
                         {mode === "hot-patch" && <>
                             {/* 用户热加载代码 */}
                             <YakCodeEditor
+                                refreshTrigger={refreshTrigger}
                                 noHeader={true} noPacketModifier={true}
                                 originValue={Buffer.from(script || "")}
                                 onChange={e => setScript(e.toString())}
