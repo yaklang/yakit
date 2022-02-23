@@ -34,3 +34,29 @@
     margin-bottom: 8px;
     padding-left: 5px;
 }
+
+.extend-info-body {
+    display: flex;
+}
+
+.extend-info-body .left-body {
+    width: 230px;
+}
+.extend-info-body .left-body .add-btn{
+    height: 30px;
+    margin-bottom: 5;
+}
+.extend-info-body .left-body .poc-list{
+    width: 230px;
+    max-height: 515px;
+    overflow: auto;
+}
+.extend-info-body .left-body .poc-list .list-opt{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.extend-info-body .right-body {
+    width: 330;
+}
