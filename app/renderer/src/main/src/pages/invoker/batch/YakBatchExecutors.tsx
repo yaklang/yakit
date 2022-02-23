@@ -174,7 +174,10 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
         }
     })
     const savePocKind = useMemoizedFn(() => {
-        if (!editInfo && !pocParams.key && !pocParams.title) setVisible(false)
+        if (!editInfo && !pocParams.key && !pocParams.title) {
+            setVisible(false)
+            return
+        }
         if (!pocParams.key || !pocParams.title) {
             failed("请填写标题和关键词后再次点击")
             return
