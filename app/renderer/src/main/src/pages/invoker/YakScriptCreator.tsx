@@ -12,6 +12,7 @@ import {FullscreenOutlined, FullscreenExitOutlined} from "@ant-design/icons"
 import {MITMPluginTemplate} from "./data/MITMPluginTamplate";
 import {PacketHackPluginTemplate} from "./data/PacketHackPluginTemplate";
 import {CodecPluginTemplate} from "./data/CodecPluginTemplate";
+import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate";
 
 export interface YakScriptCreatorFormProp {
     onCreated?: (i: YakScript) => any
@@ -59,6 +60,27 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             case "mitm":
                 setParams({...params, Content: MITMPluginTemplate})
                 return
+            case "port-scan":
+                setParams(
+                    {
+                        ...params, Content: PortScanPluginTemplate, Params: [
+                            {
+                                Field: "target",
+                                FieldVerbose: "扫描的目标",
+                                TypeVerbose: "string",
+                                Required: true
+                            } as YakScriptParam,
+                            {
+                                Field: "ports",
+                                FieldVerbose: "端口",
+                                TypeVerbose: "string",
+                                Required: false,
+                                DefaultValue: "80"
+                            } as YakScriptParam,
+                        ]
+                    },
+                )
+                return
             case "packet-hack":
                 setParams({
                     ...params, Content: PacketHackPluginTemplate, Params: [
@@ -72,7 +94,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 setParams({...params, Content: CodecPluginTemplate})
                 return
             default:
-                setParams({...params, Content: ""})
+                setParams({...params, Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n"})
                 return
         }
     }, [params.Type])
@@ -100,6 +122,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 {value: "yak", text: "Yak 原生模块"},
                 {value: "mitm", text: "MITM 模块"},
                 {value: "packet-hack", text: "Packet 检查"},
+                {value: "port-scan", text: "端口扫描插件"},
                 {value: "codec", text: "Codec 模块"},
                 {value: "nuclei", text: "nuclei Yaml模块"},
             ]} setValue={Type => setParams({...params, Type})} value={params.Type}
