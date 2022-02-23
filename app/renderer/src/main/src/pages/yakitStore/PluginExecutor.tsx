@@ -26,19 +26,6 @@ const {ipcRenderer} = window.require("electron");
 
 const {Panel} = Collapse;
 
-const getParamsByScript = (script: YakScript) => {
-    switch (script.Type) {
-        case "packet-hack":
-            return [
-                {Field: "request", TypeVerbose: "http-packet", Required: true} as YakScriptParam,
-                {Field: "response", TypeVerbose: "http-packet", Required: false} as YakScriptParam,
-                {Field: "isHttps", TypeVerbose: "bool",} as YakScriptParam,
-            ] as YakScriptParam[];
-        default:
-            return script.Params;
-    }
-}
-
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     const {script, settingShow, settingNode} = props;
 
