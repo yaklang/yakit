@@ -18,7 +18,7 @@ import {
     Empty,
     List
 } from "antd"
-import {DownCircleTwoTone, UpCircleTwoTone} from "@ant-design/icons"
+import {DownCircleTwoTone, UpCircleTwoTone, EditOutlined, DeleteOutlined} from "@ant-design/icons"
 import {InputInteger} from "../../../utils/inputUtil"
 import {YakScriptManagerPage, YakScriptOperator} from "../YakScriptManager"
 import {randomString} from "../../../utils/randomUtil"
@@ -328,7 +328,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                 width={625}
                 visible={visible}
                 maskClosable={false}
-                okText='确定'
+                okText={editInfo?'修改':'新增'}
                 cancelText='取消'
                 onCancel={() => {
                     setVisible(false)
@@ -338,9 +338,11 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
             >
                 <div className='extend-info-body'>
                     <div className='left-body'>
-                        <Button className='add-btn' type='link' onClick={clearModal}>
-                            新增POC类型
-                        </Button>
+                        <div style={{textAlign: "left"}}>
+                            <Button className='add-btn' type='link' onClick={clearModal}>
+                                新增
+                            </Button>
+                        </div>
                         <List
                             className='poc-list'
                             size='small'
@@ -354,20 +356,18 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                         </Text>
                                         <div>
                                             <Button
-                                                style={{padding: "4px 0", marginRight: 5}}
+                                                style={{padding: "4px 0"}}
                                                 type='link'
+                                                icon={<EditOutlined />}
                                                 onClick={() => editPocKind(item)}
-                                            >
-                                                编辑
-                                            </Button>
+                                            />
                                             <Button
                                                 style={{padding: "4px 0"}}
                                                 type='link'
                                                 danger
+                                                icon={<DeleteOutlined />}
                                                 onClick={() => delPocKind(index)}
-                                            >
-                                                删除
-                                            </Button>
+                                            />
                                         </div>
                                     </div>
                                 </List.Item>

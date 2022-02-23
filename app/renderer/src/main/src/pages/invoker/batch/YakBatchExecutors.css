@@ -44,11 +44,12 @@
 }
 .extend-info-body .left-body .add-btn{
     height: 30px;
-    margin-bottom: 5;
+    margin-bottom: 10px;
+    padding: 4px 0;
 }
 .extend-info-body .left-body .poc-list{
     width: 230px;
-    max-height: 515px;
+    max-height: 510px;
     overflow: auto;
 }
 .extend-info-body .left-body .poc-list .list-opt{
