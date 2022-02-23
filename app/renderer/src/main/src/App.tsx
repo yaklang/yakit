@@ -5,6 +5,9 @@ import {Form, Modal, notification, Spin, Tabs, Typography} from "antd";
 import {yakEcho} from "./utils/yakEcho";
 import {failed, info, success} from "./utils/notification";
 import {AutoSpin} from "./components/AutoSpin";
+import {getValue} from "./utils/kv";
+import {useMemoizedFn} from "ahooks";
+import {LoginPage} from "./protected/LoginPage";
 
 
 // import Main from "./pages/MainOperator";
@@ -59,6 +62,10 @@ export const UserProtocol = () => <>
 </>
 
 function App() {
+    const [autoLogin, setAutoLogin] = useState(false);
+    const [loginUser, setLoginUser] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
+
     const [connected, setConnected] = useState(false);
     const [loading, setLoading] = useState(false);
     const [tlsGRPC, setTlsGRPC] = useState(false);
@@ -68,6 +75,25 @@ function App() {
     // 用户协议相关内容
     const [agreed, setAgreed] = useState(false);
     const [readingSeconds, setReadingSeconds] = useState<number>(1);
+
+    useEffect(() => {
+        // 审查一下自动登陆模式
+        getValue("AUTO_LOGIN").then(e => {
+            setAutoLogin(!!e)
+            getValue("LOGIN_USER").then(e => {
+                if (!e) {
+                    return
+                }
+                setLoginUser(`${e}`)
+            })
+            getValue("LOGIN_PASS").then(e => {
+                if (!e) {
+                    return
+                }
+                setLoginPassword(`${e}`)
+            })
+        })
+    }, [])
 
     useEffect(() => {
         setLoading(true)
@@ -160,7 +186,7 @@ function App() {
         }
     }, [])
 
-    const userProtocol = () => <Modal
+    const userProtocol = useMemoizedFn(() => <Modal
         title={"用户协议"} visible={true} width={"75%"}
         onCancel={() => {
             Modal.info({title: "不同意使用协议将无法使用"})
@@ -174,7 +200,8 @@ function App() {
         okText={readingSeconds > 0 ? `我已认真阅读本协议(${readingSeconds}s)` : "我已认真阅读本协议，认同协议内容"}
     >
         {UserProtocol()}
-    </Modal>;
+    </Modal>);
+
     if (!agreed) {
         return userProtocol()
     }
@@ -189,16 +216,22 @@ function App() {
         <Suspense fallback={<div style={{width: "100%", marginTop: 200, textAlign: "center"}}>
             <AutoSpin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."}/>
         </div>}>
-            <YakEnvironment
-                setMode={setMode}
-                onConnected={() => {
+            {autoLogin ? <>
+                <LoginPage password={loginPassword} username={loginUser} onConnected={(port, host) => {
                     testYak()
-                }}
-                onTlsGRPC={e => {
-                    setTlsGRPC(e)
-                }}
-                onAddrChanged={setAddr}
-            />
+                }}/>
+            </> : <>
+                <YakEnvironment
+                    setMode={setMode}
+                    onConnected={() => {
+                        testYak()
+                    }}
+                    onTlsGRPC={e => {
+                        setTlsGRPC(e)
+                    }}
+                    onAddrChanged={setAddr}
+                />
+            </>}
         </Suspense>
 }
 

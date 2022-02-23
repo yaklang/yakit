@@ -80,7 +80,6 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
 
     const login = (newHost?: string, newPort?: number) => {
         setLocalLoading(true)
-        // info("正在连接 ... Yak 核心引擎")
         let params = {
             host: newHost || host,
             port: newPort || port,
@@ -101,7 +100,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                 setLocalLoading(false)
             }, 200);
         })
-    }
+    };
 
     if (!connected) {
         return <Spin

@@ -160,7 +160,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                                 loading={i.port <= 0}
                                                                 onClick={() => {
                                                                     props.onConnected && props.onConnected(
-                                                                        i.port, "localhost")
+                                                                        i.port, "127.0.0.1")
                                                                 }}
                                                             >连接引擎</Button>
                                                             <Popconfirm

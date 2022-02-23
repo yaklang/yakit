@@ -4,12 +4,12 @@ module.exports = (win, callback, getClient) => {
     ipcMain.handle("connect-yak", async (e, {
         host, port, password, caPem,
     }) => {
-        callback(`${host}:${port}`, password, caPem)
+        callback(`${host}:${port}`, password || "", caPem || "")
     })
     ipcMain.handle("echo-yak", async (e, txt) => {
         let client = getClient();
         try {
-            client.Echo({text: txt}, (err, result) => {
+            client.Echo({text: txt || ""}, (err, result) => {
                 if (err) {
                     switch (err.code) {
                         case 2:
@@ -36,5 +36,6 @@ module.exports = (win, callback, getClient) => {
         } catch (e) {
             throw Error(`call yak echo failed: ${e}`)
         }
+        return txt
     })
 }
