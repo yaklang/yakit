@@ -22,6 +22,7 @@ import {AutoCard} from "../../components/AutoCard"
 
 import "./YakitStorePage.css"
 import {getValue, saveValue} from "../../utils/kv";
+import {useMemoizedFn} from "ahooks";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -35,9 +36,13 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [ignored, setIgnored] = useState(false)
     const [history, setHistory] = useState(false)
 
+    const refresh = useMemoizedFn(() => {
+        setTrigger(!trigger)
+    })
+
     const [loading, setLoading] = useState(false)
     const [localPluginDir, setLocalPluginDir] = useState("");
-    const [pluginType, setPluginType] = useState<"yak" | "mitm" | "nuclei" | "codec" | "packet-hack">("yak");
+    const [pluginType, setPluginType] = useState<"yak" | "mitm" | "nuclei" | "codec" | "packet-hack" | "port-scan" >("yak");
 
     useEffect(() => {
         getValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH).then(e => {
@@ -69,8 +74,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 data={[
                                     {text: "YAK 插件", value: "yak"},
                                     {text: "MITM 插件", value: "mitm"},
-                                    {text: "CODEC插件", value: "codec"},
                                     {text: "数据包扫描", value: "packet-hack"},
+                                    {text: "端口扫描插件", value: "port-scan"},
+                                    {text: "CODEC插件", value: "codec"},
                                     {text: "YAML POC", value: "nuclei"},
                                 ]}
                                 value={pluginType} setValue={setPluginType}
@@ -145,7 +151,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         content: (
                                             <>
                                                 <div style={{width: 600}}>
-                                                    <LoadYakitPluginForm/>
+                                                    <LoadYakitPluginForm onFinished={refresh}/>
                                                 </div>
                                             </>
                                         )
@@ -252,7 +258,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         bordered={false}
                         size={"small"}
                     >
-                        <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)} setScript={setScript}/>
+                        <PluginOperator yakScriptId={script.Id} setTrigger={() => setTrigger(!trigger)}
+                                        setScript={setScript}/>
                     </AutoCard>
                 ) : (
                     <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
@@ -557,7 +564,7 @@ yakit.Output("导入插件成功")
 const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY";
 const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH";
 
-export const LoadYakitPluginForm = React.memo(() => {
+export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => {
     const [gitUrl, setGitUrl] = useState("")
     const [proxy, setProxy] = useState("")
     const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local">("official")
@@ -583,6 +590,10 @@ export const LoadYakitPluginForm = React.memo(() => {
                 setProxy(`${e}`)
             }
         })
+
+        return () => {
+            p.onFinished()
+        }
     }, [])
 
     return (
