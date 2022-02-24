@@ -37,13 +37,12 @@ import {
     DownloadOutlined
 } from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
-import {failed} from "../../utils/notification"
+import {failed, success} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
 import {useMemoizedFn} from "ahooks";
 import {getValue, saveValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
-import debounce from "lodash/debounce"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -164,6 +163,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // filter
     const [keyword, setKeyword] = useState<string>("")
     const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
+    const [timer, setTimer] = useState<any>()
 
     const withdrawRequest = useMemoizedFn(() => {
         const targetIndex = history.indexOf(request) - 1
@@ -226,7 +226,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             {HistoryWebFuzzerId: id}, fuzzToken
         ).then(() => {
             ipcRenderer.invoke("GetHistoryHTTPFuzzerTask", {Id: id}).then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
-                console.info(data)
                 setHistoryTask(data.OriginRequest)
             })
         })
@@ -287,7 +286,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
-            // console.info(data.Payloads)
+
             buffer.push({ 
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
@@ -334,17 +333,58 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
-    const searchContent = debounce(
-        useMemoizedFn(
-            (keyword: string) => {
-                const filters = content.filter(item => {
-                    return Buffer.from(item.ResponseRaw).toString("utf8").indexOf(keyword) > -1
-                })
-                setFilterContent(filters)
+    const searchContent = (keyword: string) => {
+        if (timer) {
+            clearTimeout(timer)
+            setTimer(null)
+        }
+        setTimer(
+            setTimeout(() => {
+                try {
+                    const filters = content.filter((item) => {
+                        return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
+                    })
+                    setFilterContent(filters)
+                } catch (error) {}
+            }, 500)
+        )
+    }
+
+    const downloadContent = useMemoizedFn(()=>{
+        if(!keyword){
+            failed('请先输入需要搜索的关键词')
+            return
+        }
+
+        const strs = []
+        const reg = new RegExp(keyword)
+        for(let info of filterContent){
+            let str = Buffer.from(info.ResponseRaw).toString('utf8')
+            let temp:any
+            while((temp = reg.exec(str)) !== null){
+                // @ts-ignore
+                if(temp[1]){
+                    // @ts-ignore
+                    strs.push(temp[1])
+                    str = str.substring(temp['index'] + 1)
+                    reg.lastIndex = 0
+                }
             }
-        ),
-        500
-    )
+        }
+
+        ipcRenderer.invoke("show-save-dialog", 'fuzzer列表命中内容.txt').then((res) => {
+            if (res.canceled) return
+
+            ipcRenderer
+                .invoke("write-file", {
+                    route: res.filePath,
+                    data: strs.join('\n\r')
+                })
+                .then(() => {
+                    success('下载完成')
+                })
+        })
+    })
 
     useEffect(() => {
         if(!!keyword){
@@ -357,7 +397,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         if(keyword && content.length !== 0){
             const filters = content.filter(item => {
-                return Buffer.from(item.ResponseRaw).toString("utf8").indexOf(keyword) > -1
+                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword,'g'))
             })
             setFilterContent(filters)
         }
@@ -896,9 +936,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 value={keyword}
                                                 style={{maxWidth: 200}}
                                                 allowClear
+                                                placeholder="输入字符串或正则表达式"
                                                 onChange={e => setKeyword(e.target.value)}
                                                 addonAfter={
-                                                        <DownloadOutlined />
+                                                        <DownloadOutlined style={{cursor: "pointer"}} onClick={downloadContent} />
                                                 }></Input>
                                             <Button
                                                 size={"small"}
