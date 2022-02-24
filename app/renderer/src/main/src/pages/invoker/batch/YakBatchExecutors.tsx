@@ -13,32 +13,34 @@ import {
     Row,
     Space,
     Spin,
-    Table,
     Tag,
     Typography,
-    Empty
+    Empty,
+    List
 } from "antd"
-import {DownCircleTwoTone, UpCircleTwoTone} from "@ant-design/icons"
+import {DownCircleTwoTone, UpCircleTwoTone, EditOutlined, DeleteOutlined} from "@ant-design/icons"
 import {InputInteger} from "../../../utils/inputUtil"
 import {YakScriptManagerPage, YakScriptOperator} from "../YakScriptManager"
 import {randomString} from "../../../utils/randomUtil"
 import {ExecResult, YakScript} from "../schema"
-import {info} from "../../../utils/notification"
+import {failed, info} from "../../../utils/notification"
 import {ExecResultsViewer} from "./ExecMessageViewer"
 import {showModal} from "../../../utils/showModal"
 import {YakEditor} from "../../../utils/editors"
 import cloneDeep from "lodash/cloneDeep"
 import {TabBarMenu, MenuInfoProps} from "../../../components/TabBarMenu"
+import {useMemoizedFn, useUpdate, useVirtualList} from "ahooks"
+import {ExecBatchYakScriptParams, ExecBatchYakScriptResult, ExecBatchYakScriptTask} from "./YakBatchExecutorLegacy"
+import {AutoSpin} from "../../../components/AutoSpin"
+import debounce from "lodash/debounce"
+import {queryYakScriptList} from "../../yakitStore/network"
 
-import ".//YakBatchExecutors.css"
-import {useUpdate, useVirtualList} from "ahooks"
-import {ExecBatchYakScriptParams, ExecBatchYakScriptResult, ExecBatchYakScriptTask} from "./YakBatchExecutorLegacy";
+import "./YakBatchExecutors.css"
 
 const {ipcRenderer} = window.require("electron")
-
+const CustomBugList = "custom-bug-list"
 const {Item} = Menu
 const {TabPane} = Tabs
-
 const {Text} = Typography
 
 interface BugInfoProps {
@@ -89,6 +91,15 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
     const [listCount, setListCount] = useState<number>(2)
     const [collapsed, setCollapsed] = useState<boolean>(false)
     const [menuHeight, setMenuHeight] = useState<number>(400)
+    // 自定义POC种类
+    const [loading, setLoading] = useState<boolean>(false)
+    const [extendList, setExtendList] = useState<BugInfoProps[]>([])
+    // 编辑自定义POC种类弹框
+    const [visible, setVisible] = useState<boolean>(false)
+    const [pocParams, setPocParams] = useState<BugInfoProps>({key: "", title: ""})
+    const [pocList, setPocList] = useState<{total: number; data: string[]}>({total: 0, data: []})
+    const [listLoading, setListLoading] = useState<boolean>(false)
+    const [editInfo, setEditInfo] = useState<BugInfoProps>()
 
     const clearTab = (id: any, key: any) => {
         const kind = `${id}`.split("-")[0]
@@ -129,90 +140,293 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
         }
     }, [])
 
-    return (
-        <Tabs
-            className={"bug-test-executor"}
-            type='editable-card'
-            hideAdd={true}
-            size='small'
-            renderTabBar={(props, TabBarDefault) => {
-                return TabBarMenu(props, TabBarDefault, MenuList, clearTab)
-            }}
-            tabBarExtraContent={{
-                left: (
-                    <div style={{margin: "0 5px", fontSize: 20}}>
-                        <Popover
-                            placement='bottomLeft'
-                            trigger='click'
-                            visible={!collapsed}
-                            content={
-                                <div style={{height: menuHeight}}>
-                                    <Menu
-                                        style={{height: "100%", overflow: "hidden auto"}}
-                                        mode='inline'
-                                        selectedKeys={[]}
-                                        onClick={({key}) => {
-                                            const title = BugList.filter((item) => item.key === key)[0].title
-                                            const tabInfo: BugInfoProps = {
-                                                key: `${key}-${listCount}`,
-                                                title: `${title}-${listCount}`
-                                            }
-                                            setCurrentTabKey(tabInfo.key)
-                                            setTabList(tabList.concat([tabInfo]))
-                                            setListCount(listCount + 1)
-                                        }}
-                                    >
-                                        {BugList.map((item, index) => (
-                                            <Item key={item.key} title={item.title}>
-                                                {item.title}
-                                            </Item>
-                                        ))}
-                                    </Menu>
-                                </div>
-                            }
-                            onVisibleChange={(value) => setCollapsed(!value)}
-                        >
-                            {collapsed ? (
-                                <UpCircleTwoTone
-                                    onClick={() => {
-                                        setCollapsed(false)
-                                    }}
-                                />
-                            ) : (
-                                <DownCircleTwoTone
-                                    onClick={() => {
-                                        setCollapsed(true)
-                                    }}
-                                />
-                            )}
-                        </Popover>
-                    </div>
+    const searchPoc = debounce(
+        useMemoizedFn((keyword?: string, page?: number) => {
+            setListLoading(true)
+            if (keyword) {
+                queryYakScriptList(
+                    "nuclei",
+                    (i: YakScript[], total) => {
+                        setPocList({total: total || 0, data: i.map((info) => info.ScriptName)})
+                    },
+                    () => setTimeout(() => setListLoading(false), 300),
+                    10,
+                    page || 1,
+                    keyword
                 )
-            }}
-            activeKey={currentTabKey}
-            onChange={setCurrentTabKey}
-            onEdit={(key: any, event: string) => {
-                switch (event) {
-                    case "remove":
-                        const tabs = cloneDeep(tabList)
-                        for (let index in tabs)
-                            if (tabs[index].key === key) {
-                                tabs.splice(index, 1)
-                                if (tabs.length !== 0) setCurrentTabKey(tabs[0].key)
-                                setTabList(tabs)
-                                return
-                            }
+            } else {
+                setPocList({total: 0, data: []})
+            }
+        }),
+        500
+    )
+    const editPocKind = useMemoizedFn((info: BugInfoProps) => {
+        setEditInfo(info)
+        setPocParams({key: info.key, title: info.title})
+        searchPoc(info.key)
+    })
+    const delPocKind = useMemoizedFn((index: number) => {
+        if (extendList.length !== 0) {
+            const arr = cloneDeep(extendList)
+            arr.splice(index, 1)
+            setExtendList(arr)
+            saveExtendList(arr)
+        }
+    })
+    const savePocKind = useMemoizedFn(() => {
+        if (!editInfo && !pocParams.key && !pocParams.title) {
+            setVisible(false)
+            return
+        }
+        if (!pocParams.key || !pocParams.title) {
+            failed("请填写标题和关键词后再次点击")
+            return
+        }
+
+        let arr = cloneDeep(extendList)
+        if (editInfo) {
+            for (let i of arr) {
+                if (i.key === editInfo.key && i.title === editInfo.title) {
+                    i.key = pocParams.key
+                    i.title = pocParams.title
                 }
-            }}
-        >
-            {tabList.map((item, index) => {
-                return (
-                    <TabPane tab={item.title} key={item.key}>
-                        <BugTestExecutor keyword={item.key} verbose={item.title}></BugTestExecutor>
-                    </TabPane>
-                )
-            })}
-        </Tabs>
+            }
+        }
+        if (!editInfo) arr = arr.concat([pocParams])
+
+        setExtendList(arr)
+        saveExtendList(arr)
+        setVisible(false)
+        clearModal()
+    })
+    const clearModal = useMemoizedFn(() => {
+        setPocParams({key: "", title: ""})
+        setEditInfo(undefined)
+        setPocList({total: 0, data: []})
+    })
+
+    const saveExtendList = useMemoizedFn((arr) => {
+        ipcRenderer.invoke("set-value", CustomBugList, JSON.stringify(arr))
+    })
+    useEffect(() => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("get-value", CustomBugList)
+            .then((res: any) => {
+                setExtendList(res ? JSON.parse(res) : [])
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
+    }, [])
+
+    return (
+        <div style={{width: "100%", height: "100%"}}>
+            <Tabs
+                className={"bug-test-executor"}
+                type='editable-card'
+                hideAdd={true}
+                size='small'
+                renderTabBar={(props, TabBarDefault) => {
+                    return TabBarMenu(props, TabBarDefault, MenuList, clearTab)
+                }}
+                tabBarExtraContent={{
+                    left: (
+                        <div style={{margin: "0 5px", fontSize: 20}}>
+                            <Popover
+                                placement='bottomLeft'
+                                trigger='click'
+                                visible={!collapsed}
+                                content={
+                                    <div style={{height: menuHeight}}>
+                                        <div style={{height: menuHeight - 30}}>
+                                            <AutoSpin spinning={loading}>
+                                                <Menu
+                                                    style={{height: "100%", overflow: "hidden auto"}}
+                                                    mode='inline'
+                                                    selectedKeys={[]}
+                                                    onClick={({key}) => {
+                                                        const title = BugList.concat(extendList).filter(
+                                                            (item) => item.key === key
+                                                        )[0].title
+                                                        const tabInfo: BugInfoProps = {
+                                                            key: `${key}-${listCount}`,
+                                                            title: `${title}-${listCount}`
+                                                        }
+                                                        setCurrentTabKey(tabInfo.key)
+                                                        setTabList(tabList.concat([tabInfo]))
+                                                        setListCount(listCount + 1)
+                                                    }}
+                                                >
+                                                    {BugList.concat(extendList).map((item, index) => (
+                                                        <Item key={item.key} title={item.title}>
+                                                            {item.title}
+                                                        </Item>
+                                                    ))}
+                                                </Menu>
+                                            </AutoSpin>
+                                        </div>
+                                        <div style={{textAlign: "center"}}>
+                                            <Button
+                                                style={{height: 30}}
+                                                type='link'
+                                                onClick={() => {
+                                                    setVisible(true)
+                                                }}
+                                            >
+                                                配置自定义类型
+                                            </Button>
+                                        </div>
+                                    </div>
+                                }
+                                onVisibleChange={(value) => setCollapsed(!value)}
+                            >
+                                {collapsed ? (
+                                    <UpCircleTwoTone
+                                        onClick={() => {
+                                            setCollapsed(false)
+                                        }}
+                                    />
+                                ) : (
+                                    <DownCircleTwoTone
+                                        onClick={() => {
+                                            setCollapsed(true)
+                                        }}
+                                    />
+                                )}
+                            </Popover>
+                        </div>
+                    )
+                }}
+                activeKey={currentTabKey}
+                onChange={setCurrentTabKey}
+                onEdit={(key: any, event: string) => {
+                    switch (event) {
+                        case "remove":
+                            const tabs = cloneDeep(tabList)
+                            for (let index in tabs)
+                                if (tabs[index].key === key) {
+                                    tabs.splice(index, 1)
+                                    if (tabs.length !== 0) setCurrentTabKey(tabs[0].key)
+                                    setTabList(tabs)
+                                    return
+                                }
+                    }
+                }}
+            >
+                {tabList.map((item, index) => {
+                    return (
+                        <TabPane tab={item.title} key={item.key}>
+                            <BugTestExecutor keyword={item.key} verbose={item.title}></BugTestExecutor>
+                        </TabPane>
+                    )
+                })}
+            </Tabs>
+            <Modal
+                title='自定义POC种类'
+                width={625}
+                visible={visible}
+                maskClosable={false}
+                okText={editInfo?'修改':'新增'}
+                cancelText='取消'
+                onCancel={() => {
+                    setVisible(false)
+                    clearModal()
+                }}
+                onOk={savePocKind}
+            >
+                <div className='extend-info-body'>
+                    <div className='left-body'>
+                        <div style={{textAlign: "left"}}>
+                            <Button className='add-btn' type='link' onClick={clearModal}>
+                                新增
+                            </Button>
+                        </div>
+                        <List
+                            className='poc-list'
+                            size='small'
+                            dataSource={extendList}
+                            rowKey={(row) => row.key}
+                            renderItem={(item, index) => (
+                                <List.Item style={{padding: 0}}>
+                                    <div className='list-opt'>
+                                        <Text style={{lineHeight: "32px", maxWidth: 165}} ellipsis={{tooltip: true}}>
+                                            {item.title}
+                                        </Text>
+                                        <div>
+                                            <Button
+                                                style={{padding: "4px 0"}}
+                                                type='link'
+                                                icon={<EditOutlined />}
+                                                onClick={() => editPocKind(item)}
+                                            />
+                                            <Button
+                                                style={{padding: "4px 0"}}
+                                                type='link'
+                                                danger
+                                                icon={<DeleteOutlined />}
+                                                onClick={() => delPocKind(index)}
+                                            />
+                                        </div>
+                                    </div>
+                                </List.Item>
+                            )}
+                        />
+                    </div>
+                    <Divider type='vertical' style={{height: "auto"}} />
+                    <div className='right-body'>
+                        <Form labelCol={{span: 6}}>
+                            <Form.Item label='标题'>
+                                <Input
+                                    placeholder='POC列表展示内容'
+                                    value={pocParams.title}
+                                    allowClear
+                                    onChange={(e) => setPocParams({...pocParams, title: e.target.value})}
+                                />
+                            </Form.Item>
+                            <Form.Item label='关键词'>
+                                <Input
+                                    placeholder='YAML POC标题的关键词'
+                                    value={pocParams.key}
+                                    allowClear
+                                    onChange={(e) => {
+                                        setPocParams({...pocParams, key: e.target.value})
+                                        searchPoc(e.target.value)
+                                    }}
+                                />
+                            </Form.Item>
+                            <Form.Item style={{marginBottom: 0}}>
+                                <List
+                                    size='small'
+                                    loading={listLoading}
+                                    dataSource={pocList.data}
+                                    pagination={
+                                        pocList.total === 0
+                                            ? false
+                                            : {
+                                                  size: "small",
+                                                  total: pocList.total,
+                                                  showTotal: (total) => <span>{`共${total}个`}</span>,
+                                                  showSizeChanger: false,
+                                                  onChange: (page) => searchPoc(pocParams.key, page)
+                                              }
+                                    }
+                                    rowKey={(row) => row}
+                                    renderItem={(item) => (
+                                        <List.Item>
+                                            <Text style={{maxWidth: 290}} ellipsis={{tooltip: true}}>
+                                                {item}
+                                            </Text>
+                                        </List.Item>
+                                    )}
+                                ></List>
+                            </Form.Item>
+                        </Form>
+                    </div>
+                </div>
+            </Modal>
+        </div>
     )
 }
 
@@ -241,7 +455,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
         DisableNucleiWorkflow: true,
         ExcludedYakScript: [
             "[fingerprinthub-web-fingerprints]: FingerprintHub Technology Fingerprint",
-            "[tech-detect]: Wappalyzer Technology Detection",
+            "[tech-detect]: Wappalyzer Technology Detection"
         ],
         TotalTimeoutSeconds: 180,
         Type: "nuclei"
@@ -389,7 +603,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                         onSubmitCapture={(e) => {
                             e.preventDefault()
 
-                            if(tasks.length === 0){
+                            if (tasks.length === 0) {
                                 Modal.error({title: "模块还未加载，请点击右上角配置进行插件仓库更新"})
                                 return
                             }
@@ -485,86 +699,89 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                     </Form>
                 </Col>
             </Row>
-            <Divider style={{margin: "10px 0"}}/>
+            <Divider style={{margin: "10px 0"}} />
             <div ref={listRef} className='bug-test-list'>
-                {
-                    tasks.length === 0 ?
-                    (<div>
-                        <Empty style={{marginTop: 75}} description={"模块还未加载，请点击右上角配置进行插件仓库更新"}></Empty>
-                    </div>)
-                    :
-                    (<div ref={containerRef} style={{height: listHeight, overflow: "auto"}}>
-                    <div ref={wrapperRef}>
-                        {list.map((ele) => (
-                            <div className='list-item' key={ele.data.Id}>
-                                <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 260}}>
-                                    {ele.data.Id}
-                                </Text>
-                                <Divider type='vertical'/>
-                                <div style={{width: 120, textAlign: "center"}}>
-                                    {StatusToVerboseTag(ele.data.Status)}
-                                </div>
-                                <Divider type='vertical'/>
-                                <div>
-                                    <ExecResultsViewer results={ele.data.Results} oneLine={true}/>
-                                </div>
-                                <Divider type='vertical'/>
-                                <div style={{flexGrow: 1, textAlign: "right"}}>
-                                    <Space>
-                                        <Button
-                                            type={"primary"}
-                                            size={"small"}
-                                            onClick={(e) => {
-                                                if (!ele.data.PoC) {
-                                                    Modal.error({title: "没有模块信息"})
-                                                    return
-                                                }
-                                                showModal({
-                                                    title: `单体模块测试: ${ele.data.PoC.ScriptName}`,
-                                                    width: "75%",
-                                                    content: (
-                                                        <>
-                                                            <YakScriptOperator script={ele.data.PoC}/>
-                                                        </>
-                                                    )
-                                                })
-                                            }}
-                                        >
-                                            复测
-                                        </Button>
-                                        <Button
-                                            size={"small"} style={{marginRight: 8}}
-                                            onClick={(e) => {
-                                                if (!ele.data.PoC) {
-                                                    Modal.error({title: "没有模块信息"})
-                                                    return
-                                                }
-                                                showModal({
-                                                    title: `源码: ${ele.data.PoC.ScriptName}`,
-                                                    width: "75%",
-                                                    content: (
-                                                        <>
-                                                            <div style={{height: 400}}>
-                                                                <YakEditor
-                                                                    readOnly={true}
-                                                                    type={"yaml"}
-                                                                    value={ele.data.PoC.Content}
-                                                                />
-                                                            </div>
-                                                        </>
-                                                    )
-                                                })
-                                            }}
-                                        >
-                                            源码
-                                        </Button>
-                                    </Space>
-                                </div>
-                            </div>
-                        ))}
+                {tasks.length === 0 ? (
+                    <div>
+                        <Empty
+                            style={{marginTop: 75}}
+                            description={"模块还未加载，请点击右上角配置进行插件仓库更新"}
+                        ></Empty>
                     </div>
-                    </div>)
-                }
+                ) : (
+                    <div ref={containerRef} style={{height: listHeight, overflow: "auto"}}>
+                        <div ref={wrapperRef}>
+                            {list.map((ele) => (
+                                <div className='list-item' key={ele.data.Id}>
+                                    <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 260}}>
+                                        {ele.data.Id}
+                                    </Text>
+                                    <Divider type='vertical' />
+                                    <div style={{width: 120, textAlign: "center"}}>
+                                        {StatusToVerboseTag(ele.data.Status)}
+                                    </div>
+                                    <Divider type='vertical' />
+                                    <div>
+                                        <ExecResultsViewer results={ele.data.Results} oneLine={true} />
+                                    </div>
+                                    <Divider type='vertical' />
+                                    <div style={{flexGrow: 1, textAlign: "right"}}>
+                                        <Space>
+                                            <Button
+                                                type={"primary"}
+                                                size={"small"}
+                                                onClick={(e) => {
+                                                    if (!ele.data.PoC) {
+                                                        Modal.error({title: "没有模块信息"})
+                                                        return
+                                                    }
+                                                    showModal({
+                                                        title: `单体模块测试: ${ele.data.PoC.ScriptName}`,
+                                                        width: "75%",
+                                                        content: (
+                                                            <>
+                                                                <YakScriptOperator script={ele.data.PoC} />
+                                                            </>
+                                                        )
+                                                    })
+                                                }}
+                                            >
+                                                复测
+                                            </Button>
+                                            <Button
+                                                size={"small"}
+                                                style={{marginRight: 8}}
+                                                onClick={(e) => {
+                                                    if (!ele.data.PoC) {
+                                                        Modal.error({title: "没有模块信息"})
+                                                        return
+                                                    }
+                                                    showModal({
+                                                        title: `源码: ${ele.data.PoC.ScriptName}`,
+                                                        width: "75%",
+                                                        content: (
+                                                            <>
+                                                                <div style={{height: 400}}>
+                                                                    <YakEditor
+                                                                        readOnly={true}
+                                                                        type={"yaml"}
+                                                                        value={ele.data.PoC.Content}
+                                                                    />
+                                                                </div>
+                                                            </>
+                                                        )
+                                                    })
+                                                }}
+                                            >
+                                                源码
+                                            </Button>
+                                        </Space>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
