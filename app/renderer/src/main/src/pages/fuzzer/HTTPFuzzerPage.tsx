@@ -368,8 +368,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     strs.push(temp[1])
                     str = str.substring(temp['index'] + 1)
                     reg.lastIndex = 0
+                }else{
+                    break
                 }
             }
+        }
+
+        if(strs.length === 0){
+            failed('未捕获到关键词信息')
+            return
         }
 
         ipcRenderer.invoke("show-save-dialog", 'fuzzer列表命中内容.txt').then((res) => {
