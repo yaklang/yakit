@@ -941,7 +941,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 addonAfter={
                                                         <DownloadOutlined style={{cursor: "pointer"}} onClick={downloadContent} />
                                                 }></Input>
-                                            <Button
+                                            {/* <Button
                                                 size={"small"}
                                                 type={viewMode === "result" ? "primary" : "link"}
                                                 icon={<ColumnWidthOutlined/>}
@@ -952,7 +952,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         setViewMode("result")
                                                     }
                                                 }}
-                                            />
+                                            /> */}
                                         </div>
                                     }
                                     failedResponses={failedResults}

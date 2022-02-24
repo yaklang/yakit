@@ -199,12 +199,12 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
             {
                 name: "操作", code: "UUID", render: (v, row, index) => {
                     return <Space direction={"vertical"}>
-                        <Button size={"small"} type={"primary"} onClick={() => {
+                        <Button size={"small"} type={"link"} onClick={() => {
                             const res = content.filter(i => i.UUID === v);
                             if ((res || []).length > 0 && props.onSendToWebFuzzer) {
                                 analyzeFuzzerResponse(res[0], props.onSendToWebFuzzer, props.sendToPlugin, index, content)
                             }
-                        }}>请求详情</Button>
+                        }}>详情</Button>
                     </Space>
                 }, width: 100, lock: true,
             }
