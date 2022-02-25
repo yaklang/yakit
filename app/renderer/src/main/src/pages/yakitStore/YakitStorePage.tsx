@@ -390,7 +390,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                             <Row>
                                 <Col span={24}>
                                     <CopyableField
-                                        style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
+                                        style={{width: 430, color: "#5f5f5f", marginBottom: 5}}
                                         text={i.Help || "No Description about it."}
                                         noCopy={true}
                                     />
@@ -418,38 +418,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                     <Space size={2}>
                                         <CopyableField noCopy={true} text={formatDate(i.CreatedAt)}/>
                                         {gitUrlIcon(i.FromGit, true)}
-                                        {/* <Button
-                                            size={"small"}
-                                            type={"link"}
-                                            style={{
-                                                paddingLeft: 0,
-                                                paddingRight: 0,
-                                                marginLeft: 0,
-                                                marginRight: 0
-                                            }}
-                                            onClick={() => {
-                                                const modal = showModal({
-                                                    title: `插件管理: ${i.ScriptName}`,
-                                                    content: (
-                                                        <>
-                                                            <PluginManagement
-                                                                script={i}
-                                                                vertical={true}
-                                                                update={() => {
-                                                                    setLoading(true)
-                                                                    modal.destroy()
-                                                                    setTimeout(() => {
-                                                                        setTrigger(!trigger)
-                                                                    }, 300)
-                                                                }}
-                                                            />
-                                                        </>
-                                                    )
-                                                })
-                                            }}
-                                        >
-                                            <SettingOutlined />
-                                        </Button> */}
                                     </Space>
                                 </Col>
                             </Row>
