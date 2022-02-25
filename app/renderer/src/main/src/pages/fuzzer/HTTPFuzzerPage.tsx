@@ -34,9 +34,10 @@ import {
     RightOutlined,
     DownOutlined,
     HistoryOutlined,
+    DownloadOutlined
 } from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
-import {failed} from "../../utils/notification"
+import {failed, success} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
 import {useMemoizedFn} from "ahooks";
@@ -45,28 +46,37 @@ import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 
 const {ipcRenderer} = window.require("electron")
 
-export const analyzeFuzzerResponse = (i: FuzzerResponse, setRequest: (isHttps: boolean, request: string) => any, sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any) => {
-    let m = showDrawer({
-        width: "90%",
-        content: (
-            <>
-                <FuzzerResponseToHTTPFlowDetail
-                    response={i}
-                    sendToWebFuzzer={(isHttps, request) => {
-                        setRequest(isHttps, request)
-                        m.destroy()
-                    }}
-                    sendToPlugin={(request, isHTTPS, response) => {
-                        if (sendToPlugin) sendToPlugin(request, isHTTPS, response)
-                        m.destroy()
-                    }}
-                    onClosed={() => {
-                        m.destroy()
-                    }}
-                />
-            </>
-        )
-    })
+export const analyzeFuzzerResponse = 
+    (
+        i: FuzzerResponse, 
+        setRequest: (isHttps: boolean, request: string) => any, 
+        sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any, 
+        index?: number, 
+        data?: FuzzerResponse[]
+        ) => {
+            let m = showDrawer({
+                width: "90%",
+                content: (
+                    <>
+                        <FuzzerResponseToHTTPFlowDetail
+                            response={i}
+                            sendToWebFuzzer={(isHttps, request) => {
+                                setRequest(isHttps, request)
+                                m.destroy()
+                            }}
+                            sendToPlugin={(request, isHTTPS, response) => {
+                                if (sendToPlugin) sendToPlugin(request, isHTTPS, response)
+                                m.destroy()
+                            }}
+                            onClosed={() => {
+                                m.destroy()
+                            }}
+                            index={index}
+                            data={data}
+                        />
+                    </>
+                )
+            })
 }
 
 export interface HTTPFuzzerPageProp {
@@ -150,6 +160,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [urlPacketShow, setUrlPacketShow] = useState<boolean>(false)
 
+    // filter
+    const [keyword, setKeyword] = useState<string>("")
+    const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
+    const [timer, setTimer] = useState<any>()
+
     const withdrawRequest = useMemoizedFn(() => {
         const targetIndex = history.indexOf(request) - 1
         if (targetIndex >= 0) {
@@ -211,7 +226,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             {HistoryWebFuzzerId: id}, fuzzToken
         ).then(() => {
             ipcRenderer.invoke("GetHistoryHTTPFuzzerTask", {Id: id}).then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
-                console.info(data)
                 setHistoryTask(data.OriginRequest)
             })
         })
@@ -268,12 +282,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (buffer.length <= 0) {
                 return
             }
-            setContent([...buffer])
+            if(JSON.stringify(buffer) !== JSON.stringify(content)) setContent([...buffer])
         }
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
-            // console.info(data.Payloads)
-            buffer.push({
+
+            buffer.push({ 
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
                 Reason: data.Reason,
@@ -318,6 +332,83 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
+
+    const searchContent = (keyword: string) => {
+        if (timer) {
+            clearTimeout(timer)
+            setTimer(null)
+        }
+        setTimer(
+            setTimeout(() => {
+                try {
+                    const filters = content.filter((item) => {
+                        return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
+                    })
+                    setFilterContent(filters)
+                } catch (error) {}
+            }, 500)
+        )
+    }
+
+    const downloadContent = useMemoizedFn(()=>{
+        if(!keyword){
+            failed('请先输入需要搜索的关键词')
+            return
+        }
+
+        const strs = []
+        const reg = new RegExp(keyword)
+        for(let info of filterContent){
+            let str = Buffer.from(info.ResponseRaw).toString('utf8')
+            let temp:any
+            while((temp = reg.exec(str)) !== null){
+                // @ts-ignore
+                if(temp[1]){
+                    // @ts-ignore
+                    strs.push(temp[1])
+                    str = str.substring(temp['index'] + 1)
+                    reg.lastIndex = 0
+                }else{
+                    break
+                }
+            }
+        }
+
+        if(strs.length === 0){
+            failed('未捕获到关键词信息')
+            return
+        }
+
+        ipcRenderer.invoke("show-save-dialog", 'fuzzer列表命中内容.txt').then((res) => {
+            if (res.canceled) return
+
+            ipcRenderer
+                .invoke("write-file", {
+                    route: res.filePath,
+                    data: strs.join('\n\r')
+                })
+                .then(() => {
+                    success('下载完成')
+                })
+        })
+    })
+
+    useEffect(() => {
+        if(!!keyword){
+            searchContent(keyword)
+        }else{
+            setFilterContent([])
+        }
+    }, [keyword])
+
+    useEffect(() => {
+        if(keyword && content.length !== 0){
+            const filters = content.filter(item => {
+                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword,'g'))
+            })
+            setFilterContent(filters)
+        }
+    }, [content])
 
     const onlyOneResponse = !loading && (content || []).length === 1
 
@@ -847,21 +938,32 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         refreshRequest()
                                     }}
                                     extra={
-                                        <Button
-                                            size={"small"}
-                                            type={viewMode === "result" ? "primary" : "link"}
-                                            icon={<ColumnWidthOutlined/>}
-                                            onClick={() => {
-                                                if (viewMode === "result") {
-                                                    setViewMode("split")
-                                                } else {
-                                                    setViewMode("result")
-                                                }
-                                            }}
-                                        />
+                                        <div>
+                                            <Input
+                                                value={keyword}
+                                                style={{maxWidth: 200}}
+                                                allowClear
+                                                placeholder="输入字符串或正则表达式"
+                                                onChange={e => setKeyword(e.target.value)}
+                                                addonAfter={
+                                                        <DownloadOutlined style={{cursor: "pointer"}} onClick={downloadContent} />
+                                                }></Input>
+                                            {/* <Button
+                                                size={"small"}
+                                                type={viewMode === "result" ? "primary" : "link"}
+                                                icon={<ColumnWidthOutlined/>}
+                                                onClick={() => {
+                                                    if (viewMode === "result") {
+                                                        setViewMode("split")
+                                                    } else {
+                                                        setViewMode("result")
+                                                    }
+                                                }}
+                                            /> */}
+                                        </div>
                                     }
                                     failedResponses={failedResults}
-                                    successResponses={successResults}
+                                    successResponses={filterContent.length !==0 ? filterContent : keyword ? [] : successResults}
                                 />
                             ) : (
                                 <Result
