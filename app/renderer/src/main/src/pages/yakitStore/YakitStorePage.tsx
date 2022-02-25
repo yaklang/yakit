@@ -246,7 +246,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     {/*</Tabs>*/}
                 </AutoCard>
             </div>
-            <div style={{flex: 1}}>
+            <div style={{flex: 1, overflowX: "hidden"}}>
                 {script ? (
                     <AutoCard
                         loading={loading}
