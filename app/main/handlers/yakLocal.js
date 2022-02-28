@@ -4,6 +4,8 @@ const process = require("process");
 const psList = require("./libs/ps-yak-process");
 const _sudoPrompt = require("sudo-prompt");
 const fs = require("fs");
+const os = require("os");
+const path = require("path");
 
 const isWindows = process.platform === "win32";
 
@@ -259,6 +261,63 @@ module.exports = {
             // } else {
             //     return fs.existsSync(getWindowsInstallPath())
             // }
+        })
+
+        ipcMain.handle("is-windows", e => {
+            return isWindows
+        })
+
+        ipcMain.handle("check-local-database", async (e) => {
+            return await new Promise(((resolve, reject) => {
+                if (isWindows) {
+                    resolve("")
+                    return
+                }
+                try {
+                    const info = fs.statSync(path.join(os.homedir(), "yakit-projects/default-yakit.db"));
+                    if ((info.mode & 0o222) > 0) {
+                        resolve("")
+                    } else {
+                        resolve("not allow to write")
+                    }
+                } catch (e) {
+                    reject(e)
+                }
+            }))
+        })
+
+
+        ipcMain.handle("fix-local-database", async (e) => {
+            return await new Promise(((resolve, reject) => {
+                if (isWindows) {
+                    resolve(true)
+                    return
+                }
+                const databaseFile = path.join(os.homedir(), "yakit-projects/default-yakit.db")
+
+                try {
+                    fs.chmodSync(databaseFile, 0o644);
+                    resolve(true)
+                } catch (e) {
+                    try {
+                        sudoExec(`chown -R ${os.userInfo().username} ${databaseFile}`, {name: `Fix Owner`}, () => {
+                        })
+                    } catch (e) {
+
+                    }
+                    try {
+                        sudoExec(
+                            `chmod 0666 ${databaseFile}`,
+                            {name: `Fix Write Permission`},
+                            () => {
+                            }
+                        )
+                        resolve(true)
+                    } catch (e) {
+                        reject(e)
+                    }
+                }
+            }))
         })
     },
 }
