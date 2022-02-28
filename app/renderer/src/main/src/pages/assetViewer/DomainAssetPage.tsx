@@ -36,7 +36,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
     const [loading, setLoading] = useState(false);
     const {Data, Total, Pagination} = response;
 
-    const update = (page?: number, limit?: number,) => {
+    const update = useMemoizedFn((page?: number, limit?: number,) => {
         const newParams = {
             ...params,
         }
@@ -51,7 +51,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         }).finally(() => {
             setTimeout(() => setLoading(false), 200)
         })
-    }
+    })
 
     const delDomain = useMemoizedFn((host?: string) => {
         const params = !!host ? {DomainKeyword: host} : {DeleteAll: true}
