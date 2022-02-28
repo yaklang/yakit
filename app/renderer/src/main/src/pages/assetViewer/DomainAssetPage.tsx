@@ -83,20 +83,22 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             }
         }}
         title={e => {
-            return <Space>
-                <div>域名资产</div>
-                <Button
-                    type={"link"} onClick={() => update(1)}
-                    size={"small"} icon={<ReloadOutlined/>}
-                />
+            return <div style={{display: "flex", justifyContent: "space-between"}}>
+                <Space>
+                    <div>域名资产</div>
+                    <Button
+                        type={"link"} onClick={() => update(1)}
+                        size={"small"} icon={<ReloadOutlined/>}
+                    />
+                </Space>
                 <Popconfirm title="确定删除所有域名资产吗? 不可恢复" onConfirm={e => delDomain()}>
                     <Button
                         type="link"
                         danger
                         size="small"
-                    >清空全部</Button>
+                    >删除全部</Button>
                 </Popconfirm>
-            </Space>
+            </div>
         }}
         size={"small"} bordered={true}
         dataSource={Data}
