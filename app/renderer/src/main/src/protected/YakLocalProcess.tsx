@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {CopyableField, SelectOne} from "../utils/inputUtil";
-import {Button, Card, Col, Form, List, Modal, Popconfirm, Row, Space, Tag} from "antd";
+import {CopyableField} from "../utils/inputUtil";
+import {Button, Card, Col, Form, List, Popconfirm, Row, Space, Tag} from "antd";
 import ReactJson from "react-json-view";
-import {failed, info, success} from "../utils/notification";
+import {failed, info} from "../utils/notification";
 import {showModal} from "../utils/showModal";
 import {YakUpgrade} from "../components/YakUpgrade";
-import {useMemoizedFn, useThrottle, useThrottleFn} from "ahooks";
-import {AutoSpin} from "../components/AutoSpin";
+import {useMemoizedFn} from "ahooks";
+import {ToolOutlined} from "@ant-design/icons";
 
 export interface YakLocalProcessProp {
     onConnected?: (port: number, host: string) => any
@@ -28,6 +28,19 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
     const [installed, setInstalled] = useState(false);
     const [psIng, setPsIng] = useState(false);
     const [notified, setNotified] = useState(false);
+
+    // 检查是不是 windows
+    const [isWindows, setIsWindows] = useState(false);
+    const notWindows = !isWindows;
+
+    // 检查默认数据库是不是又问题？
+    const [databaseError, setDatabaseError] = useState("");
+
+    let databaseErrorVerbose = databaseError;
+    switch (databaseError) {
+        case "not allow to write":
+            databaseErrorVerbose = "数据库无权限写入"
+    }
 
     const update = useMemoizedFn(() => {
         let noProcess = true;
@@ -60,6 +73,14 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                 setShouldAutoStart(true)
             }
             setPsIng(false)
+        })
+
+        ipcRenderer.invoke("is-windows").then((i: boolean) => {
+            setIsWindows(i)
+        })
+
+        ipcRenderer.invoke("check-local-database").then(e => {
+            setDatabaseError(e)
         })
     })
 
@@ -107,6 +128,8 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
         })
     }
 
+    const databaseMeetError = notWindows && installed && databaseError !== "";
+
     return <>
         <Form.Item label={" "} colon={false}>
             <div style={{width: "100%"}}>
@@ -117,17 +140,39 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                             title={<Space>
                                 <div>本地 Yak 进程管理</div>
                                 {!installed && <Tag color={"red"}>引擎未安装</Tag>}
+                                {notWindows && installed && databaseError !== "" &&
+                                <Space size={0}>
+                                    <Tag color={"red"}>{databaseErrorVerbose} </Tag>
+                                    <Popconfirm
+                                        title={"尝试修复数据库写权限（可能要求 ROOT 权限）"}
+                                        onConfirm={e => {
+                                            ipcRenderer.invoke("fix-local-database").then(e => {
+                                                info("修复成功")
+                                            }).catch(e => {
+                                                failed(`修复数据库权限错误：${e}`)
+                                            })
+                                        }}
+                                    >
+                                        <Button type={"link"} size={"small"}
+                                                icon={<>
+                                                    <ToolOutlined/>
+                                                </>}/>
+                                    </Popconfirm>
+                                </Space>}
                             </Space>}
                             size={"small"}
                             extra={
                                 process.length > 0 && <Space>
                                     <Button size={"small"} onClick={() => {
                                         startYakGRPCServer(false)
-                                    }}>普通权限启动</Button>
+                                    }} disabled={databaseMeetError}>普通权限启动</Button>
                                     <Popconfirm title={"以管理员权限启动"} onConfirm={() => {
                                         startYakGRPCServer(true)
-                                    }}>
-                                        <Button size={"small"} type={"primary"}>管理员(sudo)启动</Button>
+                                    }} disabled={databaseMeetError}>
+                                        <Button
+                                            size={"small"} type={"primary"}
+                                            disabled={databaseMeetError}
+                                        >管理员(sudo)启动</Button>
                                     </Popconfirm>
                                 </Space>
                             }
@@ -200,11 +245,11 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                             </List> : <Space>
                                 <Button onClick={() => {
                                     startYakGRPCServer(false)
-                                }}>普通权限启动</Button>
+                                }} disabled={databaseMeetError}>普通权限启动</Button>
                                 <Popconfirm title={"以管理员权限启动，解锁全部 yak 引擎功能"} onConfirm={() => {
                                     startYakGRPCServer(true)
-                                }}>
-                                    <Button type={"primary"}>管理员(sudo)启动</Button>
+                                }} disabled={databaseMeetError}>
+                                    <Button disabled={databaseMeetError} type={"primary"}>管理员(sudo)启动</Button>
                                 </Popconfirm>
                             </Space>}
                         </Card>
