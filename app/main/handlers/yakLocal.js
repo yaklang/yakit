@@ -281,7 +281,12 @@ module.exports = {
                         resolve("not allow to write")
                     }
                 } catch (e) {
-                    reject(e)
+                    if (`${e}`.includes("no such file or directory")) {
+                        // 这个问题就不管了。。。
+                        resolve("")
+                    } else {
+                        reject(e)
+                    }
                 }
             }))
         })
