@@ -557,7 +557,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                             isBubbing={true}
                             help={
                                 <div>
-                                    可将TXT文件拖入框内或<span style={{color: "rgb(25,143,255)"}}>点击此处</span>
+                                    可将TXT、CSV文件拖入框内或<span style={{color: "rgb(25,143,255)"}}>点击此处</span>
                                     上传 (<span style={{color: "red"}}>单文件过大的请用下方字典路径上传</span>)
                                 </div>
                             }
@@ -599,7 +599,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                             isBubbing={true}
                             help={
                                 <div>
-                                    可将TXT文件拖入框内或<span style={{color: "rgb(25,143,255)"}}>点击此处</span>
+                                    可将TXT、CSV文件拖入框内或<span style={{color: "rgb(25,143,255)"}}>点击此处</span>
                                     上传
                                 </div>
                             }
