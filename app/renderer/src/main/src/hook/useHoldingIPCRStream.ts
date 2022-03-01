@@ -189,6 +189,7 @@ export default function useHoldingIPCRStream(
 
     const reset = () => {
         messages.current = []
+        featureMessages.current = []
         processKVPair.current = new Map<string, number>()
         statusKVPair.current = new Map<string, CacheStatusCardProps>()
         setInfoState({ messageSate: [], processState: [], statusState: [], featureMessageState: [] })

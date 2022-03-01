@@ -25,7 +25,7 @@ export const BasicTable: React.FC<BasicTableProp> = (props) => {
 
     return <div style={{width: "100%"}}>
         <BaseTable
-            {...pipeline.getProps()} style={{width: "100%", height: 600, overflow: "auto"}}
+            {...pipeline.getProps()} style={{width: "100%", overflow: "auto"}}
         />
     </div>
 };

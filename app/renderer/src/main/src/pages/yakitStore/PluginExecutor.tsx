@@ -63,7 +63,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         }, 300);
     })
 
-    return <div>
+    return <div style={{height: "100%", display: "flex", flexFlow: "column"}}>
         {props.primaryParamsOnly ? <>
             <PageHeader
                 title={script.ScriptName} style={{marginBottom: 0, paddingBottom: 0}}
