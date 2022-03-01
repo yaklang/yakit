@@ -549,7 +549,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     >
                         <InputItem
                             label={"字典内容"}
-                            required={true}
+                            required={(params.FileName || []).length ===0 ? true : false}
                             setValue={(Content) => setParams({...params, Content})}
                             value={params.Content}
                             textarea={true}
@@ -585,7 +585,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     >
                         <InputItem
                             label={"字典路径"}
-                            required={true}
+                            required={!params.Content ? true : false}
                             setValue={(Content) => {
                                 setParams({
                                     ...params,
