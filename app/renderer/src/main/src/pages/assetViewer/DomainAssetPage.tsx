@@ -1,8 +1,10 @@
 import React, {useEffect, useState} from "react";
-import {Button, Space, Table, Tag} from "antd";
+import {Button, Popconfirm, Space, Table, Tag, Typography} from "antd";
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema";
 import {failed} from "../../utils/notification";
-import {ReloadOutlined} from "@ant-design/icons";
+import {ReloadOutlined, SearchOutlined} from "@ant-design/icons";
+import { TableFilterDropdownString } from "../risks/RiskTable";
+import { useMemoizedFn } from "ahooks";
 
 export interface Domain {
     ID?: number
@@ -17,11 +19,10 @@ export interface QueryDomainsRequest extends QueryGeneralRequest {
     Title?: string
 }
 
-export interface DomainAssetPageProps {
-
-}
+export interface DomainAssetPageProps {}
 
 const {ipcRenderer} = window.require("electron");
+const {Text} = Typography
 
 export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAssetPageProps) => {
     const [params, setParams] = useState<QueryDomainsRequest>({
@@ -35,7 +36,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
     const [loading, setLoading] = useState(false);
     const {Data, Total, Pagination} = response;
 
-    const update = (page?: number, limit?: number,) => {
+    const update = useMemoizedFn((page?: number, limit?: number,) => {
         const newParams = {
             ...params,
         }
@@ -50,7 +51,22 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         }).finally(() => {
             setTimeout(() => setLoading(false), 200)
         })
-    }
+    })
+
+    const delDomain = useMemoizedFn((host?: string) => {
+        const params = !!host ? {DomainKeyword: host} : {DeleteAll: true}
+
+        setLoading(true)
+        ipcRenderer
+            .invoke("DeleteDomains", params)
+            .then(() => {
+                update(1)
+            })
+            .catch((e) => {
+                failed(`DelDomain failed: ${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
 
     useEffect(() => {
         update(1, 20)
@@ -59,7 +75,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
     return <Table<Domain>
         loading={loading}
         pagination={{
-            size: "small",
+            size: "small", current: +Pagination.Page,
             pageSize: Pagination?.Limit || 10, showSizeChanger: true,
             total: Total, showTotal: (i) => <Tag>共{i}条历史记录</Tag>,
             onChange: (page: number, limit?: number) => {
@@ -67,21 +83,112 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             }
         }}
         title={e => {
-            return <Space>
-                <div>域名资产</div>
-                <Button
-                    type={"link"} onClick={() => update(1)}
-                    size={"small"} icon={<ReloadOutlined/>}
-                />
-            </Space>
+            return <div style={{display: "flex", justifyContent: "space-between"}}>
+                <Space>
+                    <div>域名资产</div>
+                    <Button
+                        type={"link"} onClick={() => update(1)}
+                        size={"small"} icon={<ReloadOutlined/>}
+                    />
+                </Space>
+                <Popconfirm title="确定删除所有域名资产吗? 不可恢复" onConfirm={e => delDomain()}>
+                    <Button
+                        type="link"
+                        danger
+                        size="small"
+                    >删除全部</Button>
+                </Popconfirm>
+            </div>
         }}
         size={"small"} bordered={true}
         dataSource={Data}
-        rowKey={e => `${e.ID}`}
+        rowKey={e => `${e.ID}`} 
         columns={[
-            {title: "域名", dataIndex: "DomainName"},
-            {title: "IP", dataIndex: "IPAddr"},
-            {title: "HTMLTitle", dataIndex: "HTTPTitle"},
+            {
+                title: "域名",
+                render: (i: Domain) => <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>{i.DomainName}</Text>,
+                filterIcon: (filtered) => {
+                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                },
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return (
+                        params &&
+                        setParams && (
+                            <TableFilterDropdownString
+                                label={"搜索关键字"}
+                                params={params}
+                                setParams={setParams}
+                                filterName={"DomainKeyword"}
+                                confirm={confirm}
+                                setSelectedKeys={setSelectedKeys}
+                                update={update}
+                            />
+                        )
+                    )
+                }
+            },
+            {
+                title: "IP",
+                dataIndex: "IPAddr",
+                width: 160,
+                filterIcon: (filtered) => {
+                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                },
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return (
+                        params &&
+                        setParams && (
+                            <TableFilterDropdownString
+                                label={"搜索IP"}
+                                params={params}
+                                setParams={setParams}
+                                filterName={"Network"}
+                                confirm={confirm}
+                                setSelectedKeys={setSelectedKeys}
+                                update={update}
+                            />
+                        )
+                    )
+                }
+            },
+            {
+                title: "HTMLTitle",
+                dataIndex: "HTTPTitle",
+                filterIcon: (filtered) => {
+                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                },
+                filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                    return (
+                        params &&
+                        setParams && (
+                            <TableFilterDropdownString
+                                label={"搜索关键字"}
+                                params={params}
+                                setParams={setParams}
+                                filterName={"Title"}
+                                confirm={confirm}
+                                setSelectedKeys={setSelectedKeys}
+                                update={update}
+                            />
+                        )
+                    )
+                }
+            },
+            {
+                title: "操作",
+                render: (i: Domain) => (
+                    <Space>
+                        <Button
+                            size="small"
+                            type={"link"}
+                            danger
+                            onClick={() => delDomain(i.DomainName)}
+                        >
+                            删除
+                        </Button>
+                    </Space>
+                )
+            }
         ]}
     >
 

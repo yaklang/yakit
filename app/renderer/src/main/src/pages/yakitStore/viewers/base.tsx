@@ -105,7 +105,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
     }).splice(0, 25);
 
-    return <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column"}}>
+    return <div style={{width: "100%", flex: 1, display: "flex", flexDirection: "column", overflowY: "auto"}}>
         {statusCards.length > 0 && <div style={{marginTop: 8, marginBottom: 8}}>
             <Row gutter={8}>
                 {statusCards.map((card, cardIndex) => {
@@ -211,7 +211,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
                 <WebsiteTreeViewer {...props.params}/>
             </div>
         case "fixed-table":
-            return <div>
+            return <div style={{height: "100%", display: "flex", flexFlow: "column", overflowY: "auto"}}>
                 <BasicTable
                     columns={(props.params["columns"] || []) as string[]}
                     data={(props.execResultsLog || []).filter(i => i.level === "feature-table-data").map(i => {

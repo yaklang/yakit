@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {CopyableField} from "../utils/inputUtil";
-import {Button, Card, Col, Form, List, Popconfirm, Row, Space, Tag} from "antd";
+import {Button, Card, Col, Form, List, Popconfirm, Row, Space, Tag, Tooltip} from "antd";
 import ReactJson from "react-json-view";
 import {failed, info} from "../utils/notification";
 import {showModal} from "../utils/showModal";
@@ -36,10 +36,17 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
     // 检查默认数据库是不是又问题？
     const [databaseError, setDatabaseError] = useState("");
 
-    let databaseErrorVerbose = databaseError;
+    let databaseErrorVerbose: React.ReactNode = databaseError;
     switch (databaseError) {
         case "not allow to write":
             databaseErrorVerbose = "数据库无权限写入"
+            break
+        case "no such file or directory":
+            databaseErrorVerbose = <div>
+                <Tooltip title={"直接启动引擎即可"}>
+                    无本地数据库
+                </Tooltip>
+            </div>
     }
 
     const update = useMemoizedFn(() => {
@@ -142,7 +149,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                 {!installed && <Tag color={"red"}>引擎未安装</Tag>}
                                 {notWindows && installed && databaseError !== "" &&
                                 <Space size={0}>
-                                    <Tag color={"red"}>{databaseErrorVerbose} </Tag>
+                                    <Tag color={"red"}>{databaseErrorVerbose}</Tag>
                                     <Popconfirm
                                         title={"尝试修复数据库写权限（可能要求 ROOT 权限）"}
                                         onConfirm={e => {
