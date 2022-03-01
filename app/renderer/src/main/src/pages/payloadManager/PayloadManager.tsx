@@ -427,7 +427,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
 }
 
 // 可上传文件类型
-const FileType = ["text/plain", "text/csv"]
+const FileType = ["text/plain", "text/csv", "application/vnd.ms-excel"]
 
 export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     const [params, setParams] = useState<SavePayloadParams>({
@@ -463,7 +463,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         for (let item of routes.current) {
             await ipcRenderer.invoke("fetch-file-content", item.path).then((res: string) => {
                 let info = res
-                if (item.type === "text/csv") {
+                if (item.type === "text/csv" || item.type ==="application/vnd.ms-excel") {
                     const strs: string[] = res
                         .split("\n")
                         .map((item) => item.split(","))
@@ -529,7 +529,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     </Form.Item>
                     <Upload.Dragger
                         className='targets-upload-dragger'
-                        accept={"text/plain,text/csv"}
+                        accept={FileType.join(",")}
                         multiple={true}
                         maxCount={1}
                         showUploadList={false}
@@ -565,7 +565,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     </Upload.Dragger>
                     <Upload.Dragger
                         className='targets-upload-dragger'
-                        accept={"text/plain,text/csv"}
+                        accept={FileType.join(",")}
                         multiple={true}
                         maxCount={1}
                         showUploadList={false}
