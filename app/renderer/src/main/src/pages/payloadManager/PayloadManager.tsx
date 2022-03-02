@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Spin, Typography, Select} from "antd"
+import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Typography, Select} from "antd"
 import {DeleteOutlined} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
@@ -533,6 +533,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         multiple={true}
                         maxCount={1}
                         showUploadList={false}
+                        disabled={(params.FileName || []).length === 0 ? false : true}
                         beforeUpload={(f: any) => {
                             if (!FileType.includes(f.type)) {
                                 failed(`${f.name}非txt或csv文件，请上传txt、csv格式文件！`)
@@ -549,7 +550,8 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     >
                         <InputItem
                             label={"字典内容"}
-                            required={(params.FileName || []).length ===0 ? true : false}
+                            disable={(params.FileName || []).length === 0 ? false : true}
+                            required={(params.FileName || []).length === 0 ? true : false}
                             setValue={(Content) => setParams({...params, Content})}
                             value={params.Content}
                             textarea={true}
@@ -569,6 +571,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         multiple={true}
                         maxCount={1}
                         showUploadList={false}
+                        disabled={!params.Content ? false : true}
                         beforeUpload={(f: any) => {
                             if (!FileType.includes(f.type)) {
                                 failed(`${f.name}非txt或csv文件，请上传txt、csv格式文件！`)
@@ -585,6 +588,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     >
                         <InputItem
                             label={"字典路径"}
+                            disable={!params.Content ? false : true}
                             required={!params.Content ? true : false}
                             setValue={(Content) => {
                                 setParams({
