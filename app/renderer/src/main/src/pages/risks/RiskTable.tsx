@@ -176,6 +176,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     render: (i: Risk) => (
                         <Space>
                             <Button
+                                size="small"
                                 type={"link"}
                                 onClick={() => {
                                     showModal({
@@ -192,6 +193,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                 详情
                             </Button>
                             <Button
+                                size="small"
                                 type={"link"}
                                 danger
                                 onClick={() => delRisk(i.Hash)}
@@ -209,7 +211,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                 current: +page,
                 pageSize: limit,
                 showSizeChanger: true,
-                total,
+                total: total,
                 showTotal: (total) => <Tag>Total:{total}</Tag>,
                 pageSizeOptions: ["5", "10", "20"]
             }}
