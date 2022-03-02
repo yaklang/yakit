@@ -10,6 +10,7 @@ import {showModal} from "../../utils/showModal"
 import {AutoCard} from "../../components/AutoCard"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import {SelectItem} from "../../utils/SelectItem"
+import { xtermClear } from "../../utils/xtermUtils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -55,7 +56,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
 
     const [loading, setLoading] = useState(false)
 
-    const [infoState, {reset, setXtermRef}] = useHoldingIPCRStream("brute", "StartBrute", taskToken, () => {
+    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream("brute", "StartBrute", taskToken, () => {
         setTimeout(() => setLoading(false), 300)
     })
 
@@ -170,6 +171,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
 
                                 info.Targets = info.Targets.split(",").join("\n")
 
+                                xtermClear(xtermRef)
                                 reset()
                                 setLoading(true)
 
