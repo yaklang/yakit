@@ -676,6 +676,9 @@ message PortScanRequest {
 
   // 上传扫描目标为文件
   string TargetsFile = 10;
+
+  // 设置上传的文件
+  repeated string ScriptNames = 11;
 }
 
 message DeletePortsRequest {
