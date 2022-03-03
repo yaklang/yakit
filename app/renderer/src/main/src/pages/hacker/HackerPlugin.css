@@ -2,26 +2,25 @@
     width: 100%;
     height: 100%;
     display: flex;
-    flex-flow: column;
+    flex-flow: row;
 }
 
-.mitm-exec-plugin .exec-plugin-input {
-    height: 50px;
+.mitm-exec-plugin .left-body {
+    width: 400px;
+    height: 100%;
+}
+
+.mitm-exec-plugin .left-body .list-opt{
+    height: 40px;
+    line-height: 40px;
     display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.mitm-exec-plugin .exec-plugin-input .input-title{
-    height: 30px;
-    padding-top: 4px;
-    display: inline-block;
-}
-.mitm-exec-plugin .exec-plugin-input .input-style{
-    margin: 0 10px;
-    width: 60%;
+    border: 1px solid #f0f0f0;
+    margin-bottom: 5px;
+    padding: 0 5px;
 }
 
-.mitm-exec-plugin .exec-plugin-info{
+.mitm-exec-plugin .right-body {
     flex: 1;
     overflow: auto;
+    padding-left: 10px;
 }

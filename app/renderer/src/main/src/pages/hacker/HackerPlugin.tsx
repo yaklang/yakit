@@ -139,17 +139,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
 
     const renderListItem = useMemoizedFn((info: YakScript) => {
         return (
-            <div
-                key={info.ScriptName}
-                style={{
-                    height: 40,
-                    lineHeight: "40px",
-                    display: "flex",
-                    border: "1px solid #f0f0f0",
-                    marginBottom: 5,
-                    padding: "0 5px"
-                }}
-            >
+            <div key={info.ScriptName} className='list-opt'>
                 <Checkbox
                     checked={selected.includes(info.ScriptName)}
                     onChange={(r) => {
@@ -189,8 +179,8 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
     })
 
     return (
-        <div style={{width: "100%", height: "100%", display: "flex", flexFlow: "row"}}>
-            <div style={{width: 400, height: "100%"}}>
+        <div className='mitm-exec-plugin'>
+            <div className='left-body'>
                 <AutoCard
                     size='small'
                     bordered={false}
@@ -317,7 +307,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                 </AutoCard>
             </div>
 
-            <div style={{flex: 1, overflow: "auto", paddingLeft: 10}}>
+            <div className='right-body'>
                 <AutoCard
                     size='small'
                     bordered={false}
