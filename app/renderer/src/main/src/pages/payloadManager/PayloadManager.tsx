@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react"
-import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Spin, Typography, Select} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Typography, Select} from "antd"
 import {DeleteOutlined} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
@@ -10,6 +10,8 @@ import {CopyToClipboard} from "react-copy-to-clipboard"
 import {AutoCard} from "../../components/AutoCard"
 
 import "./PayloadManager.css"
+import { useMemoizedFn } from "ahooks"
+import { AutoSpin } from "../../components/AutoSpin"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -338,6 +340,7 @@ export interface SavePayloadParams {
     Content: string
     IsFile: boolean
     Proxy?: string
+    FileName?: string[]
 }
 
 export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
@@ -423,14 +426,21 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     )
 }
 
+// 可上传文件类型
+const FileType = ["text/plain", "text/csv", "application/vnd.ms-excel"]
+
 export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     const [params, setParams] = useState<SavePayloadParams>({
         Group: "",
         Content: "",
-        IsFile: false
+        IsFile: false,
+        FileName: []
     })
     const [uploadLoading, setUploadLoading] = useState(false)
     const [groups, setGroups] = useState<string[]>([])
+    // 防抖
+    const routes = useRef<{path: string, type: string}[]>([])
+    const timer = useRef<any>()
 
     const updateGroup = () => {
         ipcRenderer
@@ -447,67 +457,101 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         updateGroup()
     }, [])
 
+    const fetchContent = useMemoizedFn(async () => {
+        setUploadLoading(true)
+        let content: string = ''
+        for (let item of routes.current) {
+            await ipcRenderer.invoke("fetch-file-content", item.path).then((res: string) => {
+                let info = res
+                if (item.type === "text/csv" || item.type ==="application/vnd.ms-excel") {
+                    const strs: string[] = res
+                        .split("\n")
+                        .map((item) => item.split(","))
+                        .reduce((a, b) => a.concat(b))
+                    const arr: string[] = []
+                    for (let str of strs) if (str.replace(/\s+/g, "")) arr.push(str)
+                    info = arr.join("\n")
+                }
+                content = content ? content + '\n' + info : info
+            })
+        }
+
+        setParams({...params, Content: params.Content ? params.Content + '\n' + content : content})
+        routes.current = []
+        timer.current = null
+        setTimeout(() => setUploadLoading(false), 100)
+    })
+    const fetchRoute = useMemoizedFn(() => {
+        setUploadLoading(true)
+        const arr: string[] = routes.current.map(item => item.path)
+
+        setParams({...params, IsFile: true, FileName: params.FileName?.length !== 0 ? params.FileName?.concat(arr) : arr})
+        routes.current = []
+        timer.current = null
+        setTimeout(() => setUploadLoading(false), 100)
+    })
+
     return (
         <div>
-            <Form
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-
-                    ipcRenderer
-                        .invoke("SavePayload", params)
-                        .then(() => {
-                            props.onFinished && props.onFinished(params.Group)
-                        })
-                        .catch((e: any) => {
-                            failed("创建 Payload 失败 / 字典")
-                        })
-                        .finally(props.onFinally)
-                }}
-                wrapperCol={{span: 14}}
-                labelCol={{span: 6}}
-            >
-                <Form.Item label={"字典名/组"} required>
-                    <Select
-                        mode='tags'
-                        allowClear
-                        removeIcon={""}
-                        value={params.Group ? [params.Group] : []}
-                        onChange={(value) => {
-                            const str = value.length === 0 ? "" : value.pop() || ""
-                            setParams({...params, Group: str})
+            <AutoSpin spinning={uploadLoading}>
+                <Form
+                    onSubmitCapture={(e) => {
+                        e.preventDefault()
+    
+                        ipcRenderer
+                            .invoke("SavePayload", params)
+                            .then(() => {
+                                props.onFinished && props.onFinished(params.Group)
+                            })
+                            .catch((e: any) => {
+                                failed("创建 Payload 失败 / 字典")
+                            })
+                            .finally(props.onFinally)
+                    }}
+                    wrapperCol={{span: 14}}
+                    labelCol={{span: 6}}
+                >
+                    <Form.Item label={"字典名/组"} required>
+                        <Select
+                            mode='tags'
+                            allowClear
+                            removeIcon={""}
+                            value={params.Group ? [params.Group] : []}
+                            onChange={(value) => {
+                                const str = value.length === 0 ? "" : value.pop() || ""
+                                setParams({...params, Group: str})
+                            }}
+                        >
+                            {groups.map((item) => {
+                                return <Option value={item} key={item}>{item}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Upload.Dragger
+                        className='targets-upload-dragger'
+                        accept={FileType.join(",")}
+                        multiple={true}
+                        maxCount={1}
+                        showUploadList={false}
+                        disabled={(params.FileName || []).length === 0 ? false : true}
+                        beforeUpload={(f: any) => {
+                            if (!FileType.includes(f.type)) {
+                                failed(`${f.name}非txt或csv文件，请上传txt、csv格式文件！`)
+                                return false
+                            }
+                            routes.current.push({path: f.path, type: f.type})
+                            if(timer){
+                                clearTimeout(timer.current)
+                                timer.current = null
+                            }
+                            timer.current = setTimeout(() => fetchContent(), 100)
+                            return false
                         }}
                     >
-                        {groups.map((item) => {
-                            return <Option value={item} key={item}>{item}</Option>
-                        })}
-                    </Select>
-                </Form.Item>
-                <Upload.Dragger
-                    className='targets-upload-dragger'
-                    accept={"text/plain"}
-                    multiple={false}
-                    maxCount={1}
-                    showUploadList={false}
-                    beforeUpload={(f) => {
-                        if (f.type !== "text/plain") {
-                            failed(`${f.name}非txt文件，请上传txt格式文件！`)
-                            return false
-                        }
-
-                        setUploadLoading(true)
-                        ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
-                            setParams({...params, Content: params.Content ? params.Content + "\n" + res : res})
-                            setTimeout(() => {
-                                setUploadLoading(false)
-                            }, 100)
-                        })
-                        return false
-                    }}
-                >
-                    <Spin spinning={uploadLoading}>
                         <InputItem
                             label={"字典内容"}
-                            required={true}
+                            disable={(params.FileName || []).length === 0 ? false : true}
+                            required={(params.FileName || []).length === 0 ? true : false}
                             setValue={(Content) => setParams({...params, Content})}
                             value={params.Content}
                             textarea={true}
@@ -515,19 +559,63 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                             isBubbing={true}
                             help={
                                 <div>
-                                    可将TXT文件拖入框内或<span style={{color: "rgb(25,143,255)"}}>点击此处</span>
+                                    可将TXT、CSV文件拖入框内或<span style={{color: "rgb(25,143,255)"}}>点击此处</span>
+                                    上传 (<span style={{color: "red"}}>单文件过大的请用下方字典路径上传</span>)
+                                </div>
+                            }
+                        />
+                    </Upload.Dragger>
+                    <Upload.Dragger
+                        className='targets-upload-dragger'
+                        accept={FileType.join(",")}
+                        multiple={true}
+                        maxCount={1}
+                        showUploadList={false}
+                        disabled={!params.Content ? false : true}
+                        beforeUpload={(f: any) => {
+                            if (!FileType.includes(f.type)) {
+                                failed(`${f.name}非txt或csv文件，请上传txt、csv格式文件！`)
+                                return false
+                            }
+                            routes.current.push({path: f.path, type: f.type})
+                            if(timer){
+                                clearTimeout(timer.current)
+                                timer.current = null
+                            }
+                            timer.current = setTimeout(() => fetchRoute(), 100)
+                            return false
+                        }}
+                    >
+                        <InputItem
+                            label={"字典路径"}
+                            disable={!params.Content ? false : true}
+                            required={!params.Content ? true : false}
+                            setValue={(Content) => {
+                                setParams({
+                                    ...params,
+                                    FileName: Content ? Content.split("\n") : [],
+                                    IsFile: Content ? true : false
+                                })
+                            }}
+                            value={params.FileName?.join('\n')}
+                            textarea={true}
+                            autoSize={{minRows: 1, maxRows: 5}}
+                            isBubbing={true}
+                            help={
+                                <div>
+                                    可将TXT、CSV文件拖入框内或<span style={{color: "rgb(25,143,255)"}}>点击此处</span>
                                     上传
                                 </div>
                             }
                         />
-                    </Spin>
-                </Upload.Dragger>
-                <Form.Item colon={false} label={" "}>
-                    <Button type='primary' htmlType='submit'>
-                        创建新的字典
-                    </Button>
-                </Form.Item>
-            </Form>
+                    </Upload.Dragger>
+                    <Form.Item colon={false} label={" "}>
+                        <Button type='primary' htmlType='submit'>
+                            创建新的字典
+                        </Button>
+                    </Form.Item>
+                </Form>
+            </AutoSpin>
         </div>
     )
 }

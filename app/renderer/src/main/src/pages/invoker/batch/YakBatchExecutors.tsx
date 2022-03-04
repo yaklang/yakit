@@ -604,7 +604,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                             e.preventDefault()
 
                             if (tasks.length === 0) {
-                                Modal.error({title: "模块还未加载，请点击右上角配置进行插件仓库更新"})
+                                Modal.error({title: "模块还未加载，请点击右上角配置进行YAML POC更新"})
                                 return
                             }
 

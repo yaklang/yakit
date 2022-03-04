@@ -294,7 +294,7 @@ export const AutoUpdateYakModuleButton: React.FC<AutoUpdateYakModuleButtonProp> 
         }}
     >
         <Button {...props} type={"link"}>
-            更新 Yakit 插件仓库
+            更新 YAML POC
         </Button>
     </Popconfirm>
 };
