@@ -2,6 +2,8 @@ import React, {useEffect, useState, useRef} from "react"
 import {ResizeLine} from "./ResizeLine"
 
 import "./ResizeBox.css"
+import ReactResizeDetector from "react-resize-detector";
+import {useMemoizedFn} from "ahooks";
 
 export interface ResizeBoxProps {
     isVer?: boolean
@@ -18,9 +20,10 @@ export interface ResizeBoxProps {
     lineStyle?: React.CSSProperties
 
     onChangeSize?: () => void
+    layoutTrigger?: any
 }
 
-export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
+export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
     const {
         isVer = false,
         firstRatio = "50%",
@@ -40,7 +43,15 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
     const lineRef = useRef(null)
     const maskRef = useRef(null)
 
-    const moveSize = (size: number) => {
+    const getBodySize = useMemoizedFn(() => {
+        if (!bodyRef || !bodyRef.current) {
+            return undefined
+        }
+        const body = bodyRef.current as unknown as HTMLDivElement
+        return isVer ? body.clientHeight : body.clientWidth
+    })
+
+    const moveSize = useMemoizedFn((size: number) => {
         if (!firstRef || !firstRef.current) return
         if (!secondRef || !secondRef.current) return
         const first = firstRef.current as unknown as HTMLDivElement
@@ -57,9 +68,9 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
         }
 
         if (onChangeSize) onChangeSize()
-    }
+    })
 
-    const bodyResize = () => {
+    const bodyResize = useMemoizedFn(() => {
         if (!bodyRef || !bodyRef.current) return
         if (!firstRef || !firstRef.current) return
         if (!secondRef || !secondRef.current) return
@@ -69,7 +80,6 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
         const bodySize = isVer ? body.clientHeight : body.clientWidth
         const firstSize = isVer ? first.clientHeight : first.clientWidth
         const secondSize = isVer ? second.clientHeight : second.clientWidth
-
         if (isVer) {
             first.style.height = `${(bodySize * firstSize) / (firstSize + secondSize)}px`
             second.style.height = `${(bodySize * secondSize) / (firstSize + secondSize)}px`
@@ -77,16 +87,18 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
             first.style.width = `${(bodySize * firstSize) / (firstSize + secondSize)}px`
             second.style.width = `${(bodySize * secondSize) / (firstSize + secondSize)}px`
         }
-    }
+    })
 
-    const moveStart = () => {
+    const moveStart = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "block"
-    }
-    const moveEnd = () => {
+            ;
+        (maskRef.current as unknown as HTMLDivElement).style.display = "block"
+    })
+    const moveEnd = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "none"
-    }
+            ;
+        (maskRef.current as unknown as HTMLDivElement).style.display = "none"
+    })
 
     useEffect(() => {
         let timer: any = null
@@ -97,6 +109,14 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
             }, 50)
         }
     }, [])
+
+    useEffect(() => {
+        bodyResize()
+    }, [props.layoutTrigger])
+
+    // useEffect(() => {
+    //     console.info("RESIZE BODY SIZE: ", bodySize)
+    // }, [bodySize])
 
     return (
         <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className='resize-box'>
@@ -114,12 +134,12 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
                 ref={lineRef}
                 style={{
                     ...lineStyle,
-                    width: `${isVer ? "100%" : "4px"}`,
-                    height: `${isVer ? "4px" : "100%"}`,
+                    width: `${isVer ? "100%" : "6px"}`,
+                    height: `${isVer ? "6px" : "100%"}`,
                     cursor: `${isVer ? "row-resize" : "col-resize"}`
                 }}
                 className='resize-split-line'
-            ></div>
+            />
             <div
                 ref={secondRef}
                 style={{
@@ -130,7 +150,6 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
             >
                 {secondNode}
             </div>
-
             <ResizeLine
                 isVer={isVer}
                 bodyRef={bodyRef}
@@ -140,9 +159,8 @@ export const ResizeBox: React.FC<ResizeBoxProps> = (props) => {
                 onStart={moveStart}
                 onEnd={moveEnd}
                 onChangeSize={moveSize}
-            ></ResizeLine>
-
-            <div ref={maskRef} className='mask-body'></div>
+            />
+            <div ref={maskRef} className='mask-body'/>
         </div>
     )
-}
+});

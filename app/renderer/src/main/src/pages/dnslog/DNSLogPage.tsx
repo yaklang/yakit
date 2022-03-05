@@ -63,7 +63,6 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
         const id = setInterval(() => {
             ipcRenderer.invoke("QueryDNSLogByToken", {Token: token}).then((rsp: { Events: DNSLogEvent[] }) => {
-                console.info(rsp)
                 setRecords(rsp.Events.filter(i => {
                     if (onlyARecord) {
                         return i.DNSType === "A"

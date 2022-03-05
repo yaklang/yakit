@@ -16,7 +16,7 @@ import {
     Typography,
     Dropdown,
     Menu,
-    Popover
+    Popover, Checkbox
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -46,38 +46,38 @@ import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 
 const {ipcRenderer} = window.require("electron")
 
-export const analyzeFuzzerResponse = 
+export const analyzeFuzzerResponse =
     (
-        i: FuzzerResponse, 
-        setRequest: (isHttps: boolean, request: string) => any, 
-        sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any, 
-        index?: number, 
+        i: FuzzerResponse,
+        setRequest: (isHttps: boolean, request: string) => any,
+        sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any,
+        index?: number,
         data?: FuzzerResponse[]
-        ) => {
-            let m = showDrawer({
-                width: "90%",
-                content: (
-                    <>
-                        <FuzzerResponseToHTTPFlowDetail
-                            response={i}
-                            sendToWebFuzzer={(isHttps, request) => {
-                                setRequest(isHttps, request)
-                                m.destroy()
-                            }}
-                            sendToPlugin={(request, isHTTPS, response) => {
-                                if (sendToPlugin) sendToPlugin(request, isHTTPS, response)
-                                m.destroy()
-                            }}
-                            onClosed={() => {
-                                m.destroy()
-                            }}
-                            index={index}
-                            data={data}
-                        />
-                    </>
-                )
-            })
-}
+    ) => {
+        let m = showDrawer({
+            width: "90%",
+            content: (
+                <>
+                    <FuzzerResponseToHTTPFlowDetail
+                        response={i}
+                        sendToWebFuzzer={(isHttps, request) => {
+                            setRequest(isHttps, request)
+                            m.destroy()
+                        }}
+                        sendToPlugin={(request, isHTTPS, response) => {
+                            if (sendToPlugin) sendToPlugin(request, isHTTPS, response)
+                            m.destroy()
+                        }}
+                        onClosed={() => {
+                            m.destroy()
+                        }}
+                        index={index}
+                        data={data}
+                    />
+                </>
+            )
+        })
+    }
 
 export interface HTTPFuzzerPageProp {
     isHttps?: boolean
@@ -282,12 +282,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (buffer.length <= 0) {
                 return
             }
-            if(JSON.stringify(buffer) !== JSON.stringify(content)) setContent([...buffer])
+            if (JSON.stringify(buffer) !== JSON.stringify(content)) setContent([...buffer])
         }
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
 
-            buffer.push({ 
+            buffer.push({
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
                 Reason: data.Reason,
@@ -345,36 +345,37 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
-                } catch (error) {}
+                } catch (error) {
+                }
             }, 500)
         )
     }
 
-    const downloadContent = useMemoizedFn(()=>{
-        if(!keyword){
+    const downloadContent = useMemoizedFn(() => {
+        if (!keyword) {
             failed('请先输入需要搜索的关键词')
             return
         }
 
         const strs = []
         const reg = new RegExp(keyword)
-        for(let info of filterContent){
+        for (let info of filterContent) {
             let str = Buffer.from(info.ResponseRaw).toString('utf8')
-            let temp:any
-            while((temp = reg.exec(str)) !== null){
+            let temp: any
+            while ((temp = reg.exec(str)) !== null) {
                 // @ts-ignore
-                if(temp[1]){
+                if (temp[1]) {
                     // @ts-ignore
                     strs.push(temp[1])
                     str = str.substring(temp['index'] + 1)
                     reg.lastIndex = 0
-                }else{
+                } else {
                     break
                 }
             }
         }
 
-        if(strs.length === 0){
+        if (strs.length === 0) {
             failed('未捕获到关键词信息')
             return
         }
@@ -394,17 +395,17 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     useEffect(() => {
-        if(!!keyword){
+        if (!!keyword) {
             searchContent(keyword)
-        }else{
+        } else {
             setFilterContent([])
         }
     }, [keyword])
 
     useEffect(() => {
-        if(keyword && content.length !== 0){
+        if (keyword && content.length !== 0) {
             const filters = content.filter(item => {
-                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword,'g'))
+                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, 'g'))
             })
             setFilterContent(filters)
         }
@@ -490,7 +491,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             }}
                                             danger={true}
                                             icon={<DeleteOutlined/>}
-                                        ></Button>
+                                        />
                                     </Space>
                                 </Space>
                             ) : (
@@ -606,6 +607,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </Dropdown>
                             )}
                         </Space>
+                        <Checkbox value={isHttps} onChange={()=>setIsHttps(!isHttps)}>强制 HTTPS</Checkbox>
                         <SwitchItem
                             label={"高级配置"}
                             formItemStyle={{marginBottom: 0}}
@@ -647,7 +649,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <div style={{color: "#3a8be3"}}>sending packets</div>
                             </Space>
                         )}
-                        {isHttps && <Tag>强制 HTTPS</Tag>}
                         {proxy && <Tag>代理：{proxy}</Tag>}
                         {/*<Popover*/}
                         {/*    trigger={"click"}*/}
@@ -946,7 +947,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 placeholder="输入字符串或正则表达式"
                                                 onChange={e => setKeyword(e.target.value)}
                                                 addonAfter={
-                                                        <DownloadOutlined style={{cursor: "pointer"}} onClick={downloadContent} />
+                                                    <DownloadOutlined style={{cursor: "pointer"}}
+                                                                      onClick={downloadContent}/>
                                                 }></Input>
                                             {/* <Button
                                                 size={"small"}
@@ -963,7 +965,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         </div>
                                     }
                                     failedResponses={failedResults}
-                                    successResponses={filterContent.length !==0 ? filterContent : keyword ? [] : successResults}
+                                    successResponses={filterContent.length !== 0 ? filterContent : keyword ? [] : successResults}
                                 />
                             ) : (
                                 <Result

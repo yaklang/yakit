@@ -30,30 +30,28 @@ export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
     }
 
     return (
-        <div>
-            <Table
-                {...(restTable as TableProps)}
-                className='reszie-table'
-                sortColumn={sortColumn}
-                sortType={sortType}
-                onSortColumn={handleSortColumn}
-                bordered={true}
-                cellBordered={true}
-                rowHeight={props.rowHeight || 40}
-            >
-                {cols.map((item) => {
-                    const {headRender, cellRender, ...restCol} = item
-                    return (
-                        <Column key={item.dataKey} {...(restCol as ColumnProps)}>
-                            <HeaderCell>{item.headRender()}</HeaderCell>
-                            <CellRender
-                                dataKey={item.dataKey}
-                                render={item.cellRender}
-                            ></CellRender>
-                        </Column>
-                    )
-                })}
-            </Table>
-        </div>
+        <Table
+            {...(restTable as TableProps)}
+            className='reszie-table'
+            sortColumn={sortColumn}
+            sortType={sortType}
+            onSortColumn={handleSortColumn}
+            bordered={true}
+            cellBordered={true}
+            rowHeight={props.rowHeight || 42}
+        >
+            {cols.map((item) => {
+                const {headRender, cellRender, ...restCol} = item
+                return (
+                    <Column key={item.dataKey} {...(restCol as ColumnProps)}>
+                        <HeaderCell>{item.headRender()}</HeaderCell>
+                        <CellRender
+                            dataKey={item.dataKey}
+                            render={item.cellRender}
+                        />
+                    </Column>
+                )
+            })}
+        </Table>
     )
 }

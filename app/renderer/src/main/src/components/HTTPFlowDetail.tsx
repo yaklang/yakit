@@ -1,8 +1,23 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Collapse, Descriptions, PageHeader, Row, Space, Spin, Tabs, Tag, Tooltip, Typography} from "antd";
+import {
+    Button,
+    Card,
+    Col,
+    Collapse,
+    Descriptions,
+    PageHeader,
+    Row, Skeleton,
+    Space,
+    Spin,
+    Tabs,
+    Tag,
+    Tooltip,
+    Typography
+} from "antd";
 import {
     LeftOutlined,
     RightOutlined,
+    PlusCircleOutlined,
 } from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable";
 import {HTTPPacketEditor, YakEditor} from "../utils/editors";
@@ -12,6 +27,8 @@ import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
 import {randomString} from "../utils/randomUtil";
 import {HTTPPacketFuzzable} from "./HTTPHistory";
 import {AutoSpin} from "./AutoSpin";
+import {ResizeBox} from "./ResizeBox";
+import ReactResizeDetector from "react-resize-detector";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -70,13 +87,13 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     }, [response])
 
     const fetchInfo = (kind: number) => {
-        if(index === undefined || !rsp.data || rsp.data.length === 0) return
-        
-        if(kind === 1){
+        if (index === undefined || !rsp.data || rsp.data.length === 0) return
+
+        if (kind === 1) {
             setResponse(rsp.data[index - 1])
             setIndex(index - 1)
         }
-        if(kind === 2){
+        if (kind === 2) {
             setResponse(rsp.data[index + 1])
             setIndex(index + 1)
         }
@@ -140,21 +157,27 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     return <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
         {flow ? <>
-            {props.noHeader ? undefined : <PageHeader title={`请求详情`} subTitle={props.hash} 
-                extra={
-                    props.fetchRequest ?
-                    <Space>
-                        <Tooltip title={"上一个请求"}>
-                            <Button type="link" disabled={!!props.isFront} icon={<LeftOutlined />} onClick={() => {props?.fetchRequest!(1)}}></Button>
-                        </Tooltip>
-                        <Tooltip title={"下一个请求"}>
-                            <Button type="link" disabled={!!props.isBehind} icon={<RightOutlined />} onClick={() => {props?.fetchRequest!(2)}}></Button>
-                        </Tooltip>
-                    </Space>
-                    :
-                    <></>
-                    }/>
-                }
+            {props.noHeader ? undefined : <PageHeader title={`请求详情`} subTitle={props.hash}
+                                                      extra={
+                                                          props.fetchRequest ?
+                                                              <Space>
+                                                                  <Tooltip title={"上一个请求"}>
+                                                                      <Button type="link" disabled={!!props.isFront}
+                                                                              icon={<LeftOutlined/>} onClick={() => {
+                                                                          props?.fetchRequest!(1)
+                                                                      }}></Button>
+                                                                  </Tooltip>
+                                                                  <Tooltip title={"下一个请求"}>
+                                                                      <Button type="link" disabled={!!props.isBehind}
+                                                                              icon={<RightOutlined/>} onClick={() => {
+                                                                          props?.fetchRequest!(2)
+                                                                      }}></Button>
+                                                                  </Tooltip>
+                                                              </Space>
+                                                              :
+                                                              <></>
+                                                      }/>
+            }
             <Space direction={"vertical"} style={{width: "100%"}}>
                 <Descriptions column={4} bordered={true} size={"small"}>
                     <Descriptions.Item key={"method"} span={1} label={"HTTP 方法"}><Tag color={"geekblue"}><Text
@@ -286,39 +309,48 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
     useEffect(() => {
         if (!props.hash) {
+            setFlow(undefined)
             return
         }
 
+        setFlow(undefined)
         setLoading(true)
         ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
             setFlow(i)
         }).catch((e: any) => {
             failed(`Query HTTPFlow failed: ${e}`)
         }).finally(() => {
-            setTimeout(() => setLoading(false), 200)
+            setTimeout(() => setLoading(false), 400)
         })
     }, [props.hash])
 
     if (!flow) {
-        return <></>
+        return <>
+            <Spin tip={"选中 HTTP History Record 查看详情"} indicator={<PlusCircleOutlined/>}>
+                <Col span={12} style={{padding: 20}}>
+                    <Skeleton/>
+                </Col>
+            </Spin>
+        </>
     }
 
-    return <Row gutter={8} style={{height: "100%"}}>
-
-        <Col span={12}>
-            <AutoSpin spinning={loading}>
-                <HTTPPacketEditor
-                    originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}
-                    defaultHeight={props.defaultHeight} defaultHttps={props.defaultHttps}
-                />
-            </AutoSpin>
-
-        </Col>
-        <Col span={12}>
-            <AutoSpin spinning={loading}>
-                <HTTPPacketEditor originValue={flow.Response} readOnly={true} defaultHeight={props.defaultHeight}/>
-            </AutoSpin>
-        </Col>
-    </Row>
-
+    return <>
+        {/*<ReactResizeDetector onResize={(h, w) => {*/}
+        {/*    console.info(h, w)*/}
+        {/*}}/>*/}
+        <ResizeBox
+            firstNode={<HTTPPacketEditor
+                originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}
+                defaultHeight={props.defaultHeight} defaultHttps={props.defaultHttps} hideSearch={true}
+            />}
+            firstMinSize={300}
+            secondNode={<HTTPPacketEditor
+                originValue={flow.Response}
+                readOnly={true} defaultHeight={props.defaultHeight}
+                hideSearch={true}
+            />}
+            secondMinSize={300}
+        >
+        </ResizeBox>
+    </>
 }

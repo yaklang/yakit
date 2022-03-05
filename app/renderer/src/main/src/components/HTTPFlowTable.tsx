@@ -13,10 +13,10 @@ import {
     Space,
     Switch,
     Tag,
-    Popover
+    Popover, Tooltip
 } from "antd"
-import { YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
-import { showByCursorMenu } from "../utils/showByCursor"
+import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
+import {showByCursorMenu} from "../utils/showByCursor"
 import {showDrawer} from "../utils/showModal"
 import {PaginationSchema} from "../pages/invoker/schema"
 import {CheckOutlined, ReloadOutlined, SearchOutlined, CopyOutlined} from "@ant-design/icons"
@@ -32,9 +32,11 @@ import Highlighter from "react-highlight-words"
 
 import {CopyToClipboard} from "react-copy-to-clipboard"
 import {TableResizableColumn} from "./TableResizableColumn"
-import { formatTimestamp } from "../utils/timeUtil"
+import {formatTime, formatTimestamp} from "../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook";
-import {useGetState} from "ahooks";
+import {useGetState, useMemoizedFn} from "ahooks";
+import {AutoCard} from "./AutoCard";
+import ReactResizeDetector from "react-resize-detector";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -413,9 +415,9 @@ export interface YakQueryHTTPFlowResponse {
     Pagination: PaginationSchema
 }
 
-interface CompateData{
-    content:string
-    language:string
+interface CompateData {
+    content: string
+    language: string
 }
 
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
@@ -434,9 +436,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [loading, setLoading] = useState(true)
     const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
 
-    const [compareLeft,setCompareLeft] = useState<CompateData>({content:'',language:'http'})
-    const [compareRight,setCompareRight] = useState<CompateData>({content:'',language:'http'})
-    const [compareState,setCompareState] =useState(0)
+    const [compareLeft, setCompareLeft] = useState<CompateData>({content: '', language: 'http'})
+    const [compareRight, setCompareRight] = useState<CompateData>({content: '', language: 'http'})
+    const [compareState, setCompareState] = useState(0)
+    const [tableContentHeight, setTableContentHeight] = useState<number>(0);
 
     const ref = useHotkeys('ctrl+r', e => {
         const selected = getSelected()
@@ -447,23 +450,24 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     // 向主页发送对比数据
     useEffect(() => {
-        if(compareLeft.content){
-            const params={info:compareLeft,type:1}
-            setCompareState(compareState===0?1:0)
-            
-            ipcRenderer.invoke("add-data-compare", params)
-        } 
-    }, [ compareLeft ])
-    useEffect(() => {
-        if(compareRight.content){
-            const params={info:compareRight,type:2}
-            setCompareState(compareState===0?2:0)
-            
+        if (compareLeft.content) {
+            const params = {info: compareLeft, type: 1}
+            setCompareState(compareState === 0 ? 1 : 0)
+
             ipcRenderer.invoke("add-data-compare", params)
         }
-    }, [ compareRight ])
+    }, [compareLeft])
 
-    const update = (
+    useEffect(() => {
+        if (compareRight.content) {
+            const params = {info: compareRight, type: 2}
+            setCompareState(compareState === 0 ? 2 : 0)
+
+            ipcRenderer.invoke("add-data-compare", params)
+        }
+    }, [compareRight])
+
+    const update = useMemoizedFn((
         page?: number,
         limit?: number,
         order?: string,
@@ -492,8 +496,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                const list=rsp.Data.map((item,index)=>{
-                    item.Id=(rsp.Pagination.Page-1)*rsp.Pagination.Limit+index+1
+                const list = rsp.Data.map((item, index) => {
+                    item.Id = (rsp.Pagination.Page - 1) * rsp.Pagination.Limit + index + 1
                     return item
                 })
                 setData(list)
@@ -506,9 +510,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             .finally(() => {
                 setLoading(false)
             })
-    }
+    })
 
-    const sortFilter = (column: string, type: any) => {
+    const sortFilter = useMemoizedFn((column: string, type: any) => {
         const keyRelation: any = {
             UpdatedAt: "updated_at",
             BodyLength: "body_length",
@@ -520,7 +524,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         } else {
             update(1, 20)
         }
-    }
+    })
 
     useEffect(() => {
         props.onSelected && props.onSelected(selected)
@@ -538,7 +542,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     }, [autoReload])
 
     return (
-        <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "auto"}}>
+        // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
+        <div ref={ref as Ref<any>} tabIndex={-1}
+             style={{width: "100%", height: "100%", overflow: "hidden"}}
+        >
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!width || !height) {
+                        return
+                    }
+                    setTableContentHeight(height - 38)
+                }}
+                handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}/>
             {!props.noHeader && (
                 <PageHeader
                     title={"HTTP History"}
@@ -583,7 +598,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     info("正在删除...如自动刷新失败请手动刷新")
                                     setTimeout(() => {
                                         update(1)
-                                        if(props.onSelected) props.onSelected(undefined)
+                                        if (props.onSelected) props.onSelected(undefined)
                                     }, 400)
                                 }}
                             >
@@ -594,7 +609,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 />
             )}
             <Row style={{margin: "5px 0 5px 5px"}}>
-                <Col span={16}>
+                <Col span={12}>
                     <Space>
                         <span>HTTP History</span>
                         <Button
@@ -629,12 +644,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     ipcRenderer.invoke("delete-http-flows-all")
                                     setLoading(true)
                                     info("正在删除...如自动刷新失败请手动刷新")
-                                    setCompareLeft({content:'',language:'http'})
-                                    setCompareRight({content:'',language:'http'})
+                                    setCompareLeft({content: '', language: 'http'})
+                                    setCompareRight({content: '', language: 'http'})
                                     setCompareState(0)
                                     setTimeout(() => {
                                         update(1)
-                                        if(props.onSelected) props.onSelected(undefined)
+                                        if (props.onSelected) props.onSelected(undefined)
                                         setTimeout(() => {
                                             setAutoReload(true)
                                         }, 1000)
@@ -648,7 +663,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         )}
                     </Space>
                 </Col>
-                <Col span={8} style={{textAlign: "right"}}>
+                <Col span={12} style={{textAlign: "right"}}>
                     <Pagination
                         // simple={true}
                         size={"small"}
@@ -720,11 +735,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 )
                             },
                             cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return (
-                                    <Tag color={"geekblue"} style={{marginRight: 20}}>
-                                        {rowData[dataKey]}
-                                    </Tag>
-                                )
+                                // return (
+                                //     <Tag color={"geekblue"} style={{marginRight: 20}}>
+                                //         {rowData[dataKey]}
+                                //     </Tag>
+                                // )
+                                return <div>{rowData[dataKey]}</div>
                             }
                         },
                         {
@@ -776,9 +792,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             },
                             cellRender: ({rowData, dataKey, ...props}: any) => {
                                 return (
-                                    <Tag color={StatusCodeToColor(rowData[dataKey])}>
+                                    <div style={{color: StatusCodeToColor(rowData[dataKey])}}>
                                         {rowData[dataKey]}
-                                    </Tag>
+                                    </div>
                                 )
                             }
                         },
@@ -833,22 +849,22 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                 />
                                             )}
                                         </div>
-                                        <CopyToClipboard
-                                            text={`${rowData.Url}`}
-                                            onCopy={(text, ok) => {
-                                                if (ok) success("已复制到粘贴板")
-                                            }}
-                                        >
-                                            <Button type={"link"} size={"small"}>
-                                                <CopyOutlined
-                                                    style={{
-                                                        paddingLeft: 5,
-                                                        paddingTop: 5,
-                                                        cursor: "pointer"
-                                                    }}
-                                                />
-                                            </Button>
-                                        </CopyToClipboard>
+                                        {/*<CopyToClipboard*/}
+                                        {/*    text={`${rowData.Url}`}*/}
+                                        {/*    onCopy={(text, ok) => {*/}
+                                        {/*        if (ok) success("已复制到粘贴板")*/}
+                                        {/*    }}*/}
+                                        {/*>*/}
+                                        {/*    <Button type={"link"} size={"small"}>*/}
+                                        {/*        <CopyOutlined*/}
+                                        {/*            style={{*/}
+                                        {/*                paddingLeft: 5,*/}
+                                        {/*                paddingTop: 5,*/}
+                                        {/*                cursor: "pointer"*/}
+                                        {/*            }}*/}
+                                        {/*        />*/}
+                                        {/*    </Button>*/}
+                                        {/*</CopyToClipboard>*/}
                                     </div>
                                 )
                             },
@@ -867,7 +883,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         },
                         {
                             dataKey: "IPAddress",
-                            width: 120, resizable: true,
+                            width: 140, resizable: true,
                             headRender: () => {
                                 return "IP"
                             },
@@ -915,11 +931,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             cellRender: ({rowData, dataKey, ...props}: any) => {
                                 return (
                                     <div style={{width: 100}}>
-                                        <Tag>
+                                        {/* 1M 以上的话，是红色*/}
+                                        <div style={{color: rowData.BodyLength > 1000000 ? "red" : undefined}}>
                                             {rowData.BodySizeVerbose
                                                 ? rowData.BodySizeVerbose
                                                 : rowData.BodyLength}
-                                        </Tag>
+                                        </div>
                                     </div>
                                 )
                             }
@@ -1002,9 +1019,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 }
                                 return (
                                     <div>
-                                        <Tag>
-                                            {contentTypeFixed}
-                                        </Tag>
+                                        {contentTypeFixed}
                                     </div>
                                 )
                             }
@@ -1012,12 +1027,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         {
                             dataKey: "UpdatedAt",
                             sortable: true,
-                            width: 160,
+                            width: 110,
                             headRender: () => {
                                 return "请求时间"
                             },
                             cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return <Tag>{formatTimestamp(rowData[dataKey])}</Tag>
+                                return <Tooltip
+                                    title={formatTimestamp(rowData[dataKey])}
+                                >
+                                    {formatTime(rowData[dataKey])}
+                                </Tooltip>
                             }
                         },
                         {
@@ -1054,7 +1073,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         }
                     ]}
                     data={data}
-                    autoHeight={true}
+                    autoHeight={tableContentHeight <= 0}
+                    height={tableContentHeight}
                     sortFilter={sortFilter}
                     rowClassName={(rowData: any) => {
                         return rowData ? (rowData.Hash === selected?.Hash ? "selected" : "") : ""
@@ -1062,10 +1082,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     onRowContextMenu={(rowData: any, event: React.MouseEvent) => {
                         showByCursorMenu(
                             {
-                                content:[
+                                content: [
                                     {
-                                        title:'发送到 Web Fuzzer',
-                                        onClick:()=>{
+                                        title: '发送到 Web Fuzzer',
+                                        onClick: () => {
                                             if (props.onSendToWebFuzzer) {
                                                 props.onSendToWebFuzzer(
                                                     rowData.IsHTTPS,
@@ -1077,11 +1097,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         }
                                     },
                                     {
-                                        title:'发送到 数据包扫描',
-                                        onClick:()=>{
+                                        title: '发送到 数据包扫描',
+                                        onClick: () => {
                                             if (props.sendToPlugin) {
                                                 ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: rowData.Hash}).then((i: HTTPFlow) => {
-                                                   if(props.sendToPlugin) props.sendToPlugin(i.Request, i.IsHTTPS, i.Response)
+                                                    if (props.sendToPlugin) props.sendToPlugin(i.Request, i.IsHTTPS, i.Response)
                                                 }).catch((e: any) => {
                                                     failed(`Query Response failed: ${e}`)
                                                 })
@@ -1089,24 +1109,24 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         }
                                     },
                                     {
-                                        title:'发送到对比器左侧',
-                                        onClick:()=>{
+                                        title: '发送到对比器左侧',
+                                        onClick: () => {
                                             setCompareLeft({
-                                                content:new Buffer(rowData.Request).toString("utf8"),
-                                                language:'http'
+                                                content: new Buffer(rowData.Request).toString("utf8"),
+                                                language: 'http'
                                             })
                                         },
-                                        disabled: [false,true,false][compareState]
+                                        disabled: [false, true, false][compareState]
                                     },
                                     {
-                                        title:'发送到对比器右侧',
-                                        onClick:()=>{
+                                        title: '发送到对比器右侧',
+                                        onClick: () => {
                                             setCompareRight({
-                                                content:new Buffer(rowData.Request).toString("utf8"),
-                                                language:'http'
+                                                content: new Buffer(rowData.Request).toString("utf8"),
+                                                language: 'http'
                                             })
                                         },
-                                        disabled: [false,false,true][compareState]
+                                        disabled: [false, false, true][compareState]
                                     }
                                 ]
                             },
@@ -1124,5 +1144,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 />
             )}
         </div>
+        // </AutoCard>
     )
 }
