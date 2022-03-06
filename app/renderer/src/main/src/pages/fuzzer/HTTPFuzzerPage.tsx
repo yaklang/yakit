@@ -20,7 +20,7 @@ import {
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {fuzzerTemplates} from "./fuzzerTemplates"
+import {fuzzerTemplates, monacoEditorReplace, monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
 import {InputFloat, InputInteger, InputItem, ManyMultiSelectForString, OneLine, SwitchItem} from "../../utils/inputUtil"
 import {fixEncoding} from "../../utils/convertor"
@@ -43,6 +43,7 @@ import {ResizeBox} from "../../components/ResizeBox"
 import {useMemoizedFn} from "ahooks";
 import {getValue, saveValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
+import {PayloadManagerPage} from "../payloadManager/PayloadManager";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -125,6 +126,19 @@ interface HistoryHTTPFuzzerTask {
     Request: string
     Proxy: string
     IsHTTPS: boolean
+}
+
+export const showDictsAndSelect = (res: (i: string) => any) => {
+    const m = showModal({
+        title: "选择想要插入的字典",
+        width: 1200,
+        content: <div style={{width: 1100, height: 500, overflow: "hidden"}}>
+            <PayloadManagerPage readOnly={true} selectorHandle={e => {
+                res(e)
+                m.destroy()
+            }}/>
+        </div>
+    })
 }
 
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
@@ -607,7 +621,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </Dropdown>
                             )}
                         </Space>
-                        <Checkbox value={isHttps} onChange={()=>setIsHttps(!isHttps)}>强制 HTTPS</Checkbox>
+                        <Checkbox value={isHttps} onChange={() => setIsHttps(!isHttps)}>强制 HTTPS</Checkbox>
                         <SwitchItem
                             label={"高级配置"}
                             formItemStyle={{marginBottom: 0}}
@@ -838,11 +852,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {
                             id: "packet-from-url",
                             label: "URL转数据包",
-                            contextMenuGroupId: "urlPacket",
+                            contextMenuGroupId: "1_urlPacket",
                             run: () => {
                                 setUrlPacketShow(true)
                             }
-                        }
+                        },
+                        {
+                            id: "insert-intruder-tag",
+                            label: "插入模糊测试字典标签",
+                            contextMenuGroupId: "1_urlPacket",
+                            run: (editor) => {
+                                showDictsAndSelect(i => {
+                                    monacoEditorWrite(editor, i, editor.getSelection())
+                                })
+                            }
+                        },
                     ]}
                     onEditor={setReqEditor}
                     onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
@@ -909,19 +933,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     历史
                                 </Button>
                             </Popover>
-
-                            {/*<Button*/}
-                            {/*    size={"small"}*/}
-                            {/*    type={viewMode === "request" ? "primary" : "link"}*/}
-                            {/*    icon={<ColumnWidthOutlined/>}*/}
-                            {/*    onClick={() => {*/}
-                            {/*        if (viewMode === "request") {*/}
-                            {/*            setViewMode("split")*/}
-                            {/*        } else {*/}
-                            {/*            setViewMode("request")*/}
-                            {/*        }*/}
-                            {/*    }}*/}
-                            {/*/>*/}
                         </Space>
                     }
                 />}

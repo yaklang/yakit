@@ -225,7 +225,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     // lang
     language?: "html" | "http" | "yak" | any
 
-    system?:string
+    system?: string
 }
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
@@ -419,10 +419,10 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     setValue={setStrValue}
                     fontSize={fontSize}
                     actions={[
+                        ...(props.actions || []),
                         ...MonacoEditorCodecActions,
                         ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
                         ...(props.noPacketModifier ? [] : MonacoEditorFullCodecActions),
-                        ...(props.actions || []),
                     ]}
                     editorDidMount={editor => {
                         setMonacoEditor(editor)
@@ -431,7 +431,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     {...props.extraEditorProps}
                 />}
                 {mode === "hex" && !empty && <HexEditor
-                    className={props.system==='Windows_NT' ? 'hex-editor-style' : ''}
+                    className={props.system === 'Windows_NT' ? 'hex-editor-style' : ''}
                     showAscii={true}
                     data={hexValue}
                     showRowLabels={true}

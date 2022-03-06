@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Typography, Select} from "antd"
-import {DeleteOutlined} from "@ant-design/icons"
+import {DeleteOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {showModal} from "../../utils/showModal"
@@ -10,14 +10,16 @@ import {CopyToClipboard} from "react-copy-to-clipboard"
 import {AutoCard} from "../../components/AutoCard"
 
 import "./PayloadManager.css"
-import { useMemoizedFn } from "ahooks"
-import { AutoSpin } from "../../components/AutoSpin"
+import {useMemoizedFn} from "ahooks"
+import {AutoSpin} from "../../components/AutoSpin"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
 const {Option} = Select
 
 export interface PayloadManagerPageProp {
+    readOnly?: boolean
+    selectorHandle?: (i: string) => any
 }
 
 export interface Payload {
@@ -30,6 +32,10 @@ export interface Payload {
 export interface QueryPayloadParams extends QueryGeneralRequest {
     Group: string
     Keyword: string
+}
+
+function fuzzTag(i: string) {
+    return `{{x(${i})}}`
 }
 
 export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
@@ -121,7 +127,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                         bordered={false}
                         bodyStyle={{overflow: "auto"}}
                         extra={
-                            <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()}>
+                            !props.readOnly && <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()}>
                                 <Form.Item style={{marginBottom: 0}} label={" "} colon={false}>
                                     <Button.Group>
                                         <Button
@@ -196,8 +202,14 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                             >
                                                 字典分组名：{element}
                                             </Button>
-
-                                            <Popconfirm
+                                            {props.selectorHandle && <Popconfirm title={"确定要使用该字典？"}
+                                                                                 onConfirm={() => {
+                                                                                     props.selectorHandle && props.selectorHandle(fuzzTag(element))
+                                                                                 }}
+                                            >
+                                                <Button type={"primary"} icon={<ThunderboltFilled/>}/>
+                                            </Popconfirm>}
+                                            {!props.readOnly && <Popconfirm
                                                 title={"确定删除该字典吗？"}
                                                 onConfirm={(e) => {
                                                     ipcRenderer
@@ -220,13 +232,13 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                                     danger={true}
                                                     icon={<DeleteOutlined/>}
                                                     type={selected === element ? "primary" : undefined}
-                                                ></Button>
-                                            </Popconfirm>
+                                                />
+                                            </Popconfirm>}
                                         </Button.Group>
                                     </List.Item>
                                 )
                             }}
-                        ></List>
+                        />
                     </AutoCard>
                 </Col>
                 <Col span={16}>
@@ -234,7 +246,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                         title={
                             <>
                                 <span>字典内容</span>
-                                {selectedRows.length > 0 && (
+                                {selectedRows.length > 0 && !props.readOnly && (
                                     <Button size='small' type='link' danger onClick={() => delDictContent()}>
                                         批量删除
                                     </Button>
@@ -245,42 +257,60 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                         bordered={false}
                         bodyStyle={{overflow: "auto", padding: 0}}
                         extra={
-                            <Form
-                                size={"small"}
-                                onSubmitCapture={(e) => {
-                                    e.preventDefault()
+                            props.readOnly ?
+                                (
+                                    !!props.selectorHandle ? <Button size={"small"} type={"primary"} onClick={() => {
+                                        props.selectorHandle && props.selectorHandle(`{{x(${selected})}}`)
+                                    }}>
+                                        选择该Fuzz标签
+                                    </Button> : <CopyToClipboard
+                                        text={`{{x(${selected})}}`}
+                                        onCopy={(text, ok) => {
+                                            if (ok) success("已复制到粘贴板")
+                                        }}
+                                    >
+                                        <Button size={"small"}>复制Fuzz标签</Button>
+                                    </CopyToClipboard>
+                                ) : <Form
+                                    size={"small"}
+                                    onSubmitCapture={(e) => {
+                                        e.preventDefault()
 
-                                    updateDict(1, 20)
-                                }}
-                                layout={"inline"}
-                                style={{marginBottom: 0}}
-                            >
-                                <Form.Item style={{marginBottom: 0}}>
-                                    {selected && <Tag color={"geekblue"}>{selected}</Tag>}
-                                </Form.Item>
-                                <InputItem
-                                    label={"搜索"}
+                                        updateDict(1, 20)
+                                    }}
+                                    layout={"inline"}
                                     style={{marginBottom: 0}}
-                                    setValue={(Keyword) => setParams({...params, Keyword})}
-                                    value={params.Keyword}
-                                />
-                                <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                                    <Button.Group>
-                                        <Button type='primary' htmlType='submit'>
-                                            {" "}
-                                            Search{" "}
-                                        </Button>
-                                        <CopyToClipboard
-                                            text={`{{x(${selected})}}`}
-                                            onCopy={(text, ok) => {
-                                                if (ok) success("已复制到粘贴板")
-                                            }}
-                                        >
-                                            <Button>复制Fuzz标签</Button>
-                                        </CopyToClipboard>
-                                    </Button.Group>
-                                </Form.Item>
-                            </Form>
+                                >
+                                    <Form.Item style={{marginBottom: 0}}>
+                                        {selected && <Tag color={"geekblue"}>{selected}</Tag>}
+                                    </Form.Item>
+                                    <InputItem
+                                        label={"搜索"}
+                                        style={{marginBottom: 0}}
+                                        setValue={(Keyword) => setParams({...params, Keyword})}
+                                        value={params.Keyword}
+                                    />
+                                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                                        <Button.Group>
+                                            <Button type='primary' htmlType='submit'>
+                                                {" "}
+                                                Search{" "}
+                                            </Button>
+                                            {!!props.selectorHandle ? <Button type={"primary"} onClick={() => {
+                                                props.selectorHandle && props.selectorHandle(`{{x(${selected})}}`)
+                                            }}>
+                                                选择该Fuzz标签
+                                            </Button> : <CopyToClipboard
+                                                text={`{{x(${selected})}}`}
+                                                onCopy={(text, ok) => {
+                                                    if (ok) success("已复制到粘贴板")
+                                                }}
+                                            >
+                                                <Button>复制Fuzz标签</Button>
+                                            </CopyToClipboard>}
+                                        </Button.Group>
+                                    </Form.Item>
+                                </Form>
                         }
                     >
                         <Table<Payload>
@@ -439,7 +469,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     const [uploadLoading, setUploadLoading] = useState(false)
     const [groups, setGroups] = useState<string[]>([])
     // 防抖
-    const routes = useRef<{path: string, type: string}[]>([])
+    const routes = useRef<{ path: string, type: string }[]>([])
     const timer = useRef<any>()
 
     const updateGroup = () => {
@@ -463,7 +493,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         for (let item of routes.current) {
             await ipcRenderer.invoke("fetch-file-content", item.path).then((res: string) => {
                 let info = res
-                if (item.type === "text/csv" || item.type ==="application/vnd.ms-excel") {
+                if (item.type === "text/csv" || item.type === "application/vnd.ms-excel") {
                     const strs: string[] = res
                         .split("\n")
                         .map((item) => item.split(","))
@@ -485,7 +515,11 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         setUploadLoading(true)
         const arr: string[] = routes.current.map(item => item.path)
 
-        setParams({...params, IsFile: true, FileName: params.FileName?.length !== 0 ? params.FileName?.concat(arr) : arr})
+        setParams({
+            ...params,
+            IsFile: true,
+            FileName: params.FileName?.length !== 0 ? params.FileName?.concat(arr) : arr
+        })
         routes.current = []
         timer.current = null
         setTimeout(() => setUploadLoading(false), 100)
@@ -497,7 +531,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                 <Form
                     onSubmitCapture={(e) => {
                         e.preventDefault()
-    
+
                         ipcRenderer
                             .invoke("SavePayload", params)
                             .then(() => {
@@ -540,7 +574,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                                 return false
                             }
                             routes.current.push({path: f.path, type: f.type})
-                            if(timer){
+                            if (timer) {
                                 clearTimeout(timer.current)
                                 timer.current = null
                             }
@@ -578,7 +612,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                                 return false
                             }
                             routes.current.push({path: f.path, type: f.type})
-                            if(timer){
+                            if (timer) {
                                 clearTimeout(timer.current)
                                 timer.current = null
                             }

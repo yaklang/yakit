@@ -42,7 +42,7 @@ export interface FuzzOperatorParam {
     optional?: string
 }
 
-export const monacoEditorWrite = (editor: IMonacoEditor | IMonacoCodeEditor, text: string, range?: IRange) => {
+export const monacoEditorWrite = (editor: IMonacoEditor | IMonacoCodeEditor, text: string, range?: IRange | null) => {
     if (editor) {
         if (range) {
             editor.executeEdits(editor.getValue(), [
