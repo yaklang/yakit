@@ -3,6 +3,7 @@
     height: 100%;
     display: flex;
     position: relative;
+    overflow: hidden;
 }
 .resize-box .resize-split-line:hover {
     border: 2px solid rgb(0, 174, 255);
