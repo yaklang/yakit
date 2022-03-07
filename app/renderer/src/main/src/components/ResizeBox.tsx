@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from "react"
 import {ResizeLine} from "./ResizeLine"
 import {useMemoizedFn} from "ahooks"
+import ReactResizeDetector from "react-resize-detector"
 
 import "./ResizeBox.css"
 
@@ -41,7 +42,6 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
     const secondRef = useRef(null)
     const lineRef = useRef(null)
     const maskRef = useRef(null)
-    const timer = useRef<any>(null)
 
     const moveSize = useMemoizedFn((size: number) => {
         if (!firstRef || !firstRef.current) return
@@ -62,14 +62,14 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
         if (onChangeSize) onChangeSize()
     })
 
-    const bodyResize = () => {
+    const bodyResize = (bodysize?: number) => {
         if (!bodyRef || !bodyRef.current) return
         if (!firstRef || !firstRef.current) return
         if (!secondRef || !secondRef.current) return
         const body = bodyRef.current as unknown as HTMLDivElement
         const first = firstRef.current as unknown as HTMLDivElement
         const second = secondRef.current as unknown as HTMLDivElement
-        const bodySize = isVer ? body.clientHeight : body.clientWidth
+        const bodySize = bodysize || (isVer ? body.clientHeight : body.clientWidth)
         const firstSize = isVer ? first.clientHeight : first.clientWidth
         const secondSize = isVer ? second.clientHeight : second.clientWidth
         if (bodySize) {
@@ -93,17 +93,21 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
     })
 
     useEffect(() => {
-        window.onresize = () => {
-            if (timer.current) {
-                clearTimeout(timer.current)
-                timer.current = null
-            }
-            timer.current = setTimeout(() => bodyResize(), 50)
-        }
+        bodyResize()
     }, [])
 
     return (
         <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className='resize-box'>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!width || !height) return
+                    bodyResize(isVer ? height : width)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
             <div
                 ref={firstRef}
                 style={{
