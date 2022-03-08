@@ -326,11 +326,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
     if (!flow) {
         return <>
-            <Spin tip={"选中 HTTP History Record 查看详情"} indicator={<PlusCircleOutlined/>}>
+            <AutoSpin tip={"选中 HTTP History Record 查看详情"} indicator={<PlusCircleOutlined/>}>
                 <Col span={12} style={{padding: 20}}>
                     <Skeleton/>
                 </Col>
-            </Spin>
+            </AutoSpin>
         </>
     }
 
