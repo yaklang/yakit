@@ -25,6 +25,7 @@ import {YakScriptParamsSetter} from "./YakScriptParamsSetter";
 import {InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil";
 import {startExecuteYakScript} from "./ExecYakScript";
 import {YakBatchExecutorLegacy} from "./batch/YakBatchExecutorLegacy";
+import cloneDeep from "lodash/cloneDeep"
 
 export interface YakScriptManagerPageProp {
     type?: "yak" | "nuclei" | string
@@ -279,10 +280,19 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
 
 export interface YakScriptOperatorProp {
     script: YakScript
+    target?: string
 }
 
 export const YakScriptOperator: React.FC<YakScriptOperatorProp> = (props) => {
-    const {script} = props;
+    const {script, target} = props;
+    let defaultScript:YakScript  = cloneDeep(script)
+    defaultScript.Params = defaultScript.Params.map(item =>{
+        if(item.Field === "target"){
+            item.DefaultValue = target || ""
+            return item
+        }
+        return item
+    })
 
     return <Card title={<Space>
         <Text>{script.ScriptName}</Text>
@@ -315,7 +325,7 @@ export const YakScriptOperator: React.FC<YakScriptOperatorProp> = (props) => {
         <Divider/>
         <YakScriptParamsSetter
             submitVerbose={"执行该脚本"}
-            {...script}
+            {...defaultScript}
             params={[]}
             onParamsConfirm={r => {
                 startExecuteYakScript(script, r)
