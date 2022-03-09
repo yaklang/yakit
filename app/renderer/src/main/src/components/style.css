@@ -1,5 +1,5 @@
 .selected {
-    background-color: rgba(78, 164, 255, 0.4);
+    background-color: rgba(78, 164, 255, 0.4) !important;
 }
 
 .httpFlowTable .ant-table .ant-table-tbody > tr:hover > td {
