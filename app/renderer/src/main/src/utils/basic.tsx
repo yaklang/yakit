@@ -6,7 +6,7 @@ import {
     ButtonProps,
     Card,
     Divider,
-    Form, Modal,
+    Form, Modal, notification,
     Popconfirm, Popover,
     Space,
     Spin,
@@ -114,6 +114,12 @@ export const ReversePlatformStatus = React.memo(() => {
         }</Tag>
     </Popover>
 })
+
+export const callCopyToClipboard = (str: string) => {
+    ipcRenderer.invoke("copy-clipboard", str).then(() => {
+        info( "Copy Finished")
+    })
+}
 
 export const YakVersion: React.FC<YakVersionProp> = (props) => {
     const [version, setVersion] = useState<string>("dev")
