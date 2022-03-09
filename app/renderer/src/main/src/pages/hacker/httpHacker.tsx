@@ -11,6 +11,7 @@ import "../main.css";
 import { useMemoizedFn } from "ahooks";
 import { showDrawer } from "../../utils/showModal";
 import { HackerPlugin } from "./HackerPlugin";
+import ReactDOM from "react-dom"
 
 export interface HTTPHackerProp {
 
@@ -125,6 +126,16 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
             addIcon={<div style={{cursor: 'pointer', padding: '0 5px', color: 'rgb(25,143,255'}}>
                 <PlusOutlined/>创建 Web Fuzzer
             </div>}
+            onTabClick={(key, e) => {
+                const divExisted = document.getElementById("yakit-cursor-menu")
+                if(divExisted){
+                    const div: HTMLDivElement = divExisted as HTMLDivElement
+                    const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                    if (unmountResult && div.parentNode) {
+                        div.parentNode.removeChild(div)
+                    }
+                }
+            }}
         >
             <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
                 <div style={{height: "100%"}}>
