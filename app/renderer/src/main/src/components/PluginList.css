@@ -1,0 +1,12 @@
+.plugin-list-body {
+    width: 100%;
+    height: 100%;
+}
+.plugin-list-body .list-opt {
+    height: 40px;
+    line-height: 40px;
+    display: flex;
+    border: 1px solid #f0f0f0;
+    margin-bottom: 5px;
+    padding: 0 5px;
+}

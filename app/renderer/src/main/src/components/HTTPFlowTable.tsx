@@ -1135,10 +1135,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         )
                     }}
                     onRowClick={(rowDate: any) => {
-                        if (rowDate.Hash === selected?.Hash) {
-                            setSelected(undefined)
-                        } else {
+                        if (rowDate.Hash !== selected?.Hash) {
                             setSelected(rowDate)
+                        } else {
+                            // setSelected(undefined)
                         }
                     }}
                 />

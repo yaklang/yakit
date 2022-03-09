@@ -1,9 +1,37 @@
-/* 隐藏上传拖拽框的虚线边框样式 */
-.targets-upload-dragger.ant-upload.ant-upload-drag{
+/* 隐藏上传拖拽框的虚线边框样式(全局多处使用该样式类，修改时需谨慎) */
+.targets-upload-dragger.ant-upload.ant-upload-drag {
     background-color: #fff;
     border: 0;
 }
-
-.targets-upload-dragger.ant-upload.ant-upload-drag .ant-upload{
+.targets-upload-dragger.ant-upload.ant-upload-drag .ant-upload {
     padding: 6px 0;
+}
+
+.scan-port-tabs {
+    width: 100%;
+    height: 100%;
+}
+.scan-port-tabs .ant-tabs-tab {
+    padding: 5px 0;
+}
+
+.scan-port-tabs .scan-port-body {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: row;
+}
+
+.scan-port-tabs .scan-port-body .right-container {
+    flex: 1;
+    padding-left: 10px;
+    overflow-x: hidden;
+    display: flex;
+    flex-flow: column;
+}
+.scan-port-tabs .scan-port-body .right-container .form-item-margin {
+    margin-bottom: 0;
+}
+.scan-port-tabs .scan-port-body .right-container .form-submit-style {
+    margin: 0 0 4px 7px;
 }
