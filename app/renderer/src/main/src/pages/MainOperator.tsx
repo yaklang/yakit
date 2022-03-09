@@ -597,6 +597,7 @@ const Main: React.FC<MainProp> = (props) => {
                             {pageCache.length > 0 ? (
                                 <Tabs
                                     style={{display: "flex", flex: "1"}}
+                                    tabBarStyle={{marginBottom: 8}}
                                     className='main-content-tabs'
                                     activeKey={currentTabKey}
                                     onChange={setCurrentTabKey}
