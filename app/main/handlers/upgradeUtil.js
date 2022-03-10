@@ -433,7 +433,7 @@ module.exports = {
 
         // 打开指定路径文件
         ipcMain.handle("open-specified-file", async (e, path) => {
-            return shell.openPath(path)
+            return shell.showItemInFolder(path)
         })
     },
 }

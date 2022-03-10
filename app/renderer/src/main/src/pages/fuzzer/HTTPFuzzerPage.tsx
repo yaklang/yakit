@@ -409,10 +409,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 })
                 .then(() => {
                     success('下载完成')
-                    const flags = res.filePath.indexOf("/") > -1 ? "/" : "\\"
-                    const paths = res.filePath.split(flags)
-                    paths.pop()
-                    ipcRenderer.invoke("open-specified-file", paths.join(flags))
+                    ipcRenderer.invoke("open-specified-file", res.filePath)
                 })
         })
     })
