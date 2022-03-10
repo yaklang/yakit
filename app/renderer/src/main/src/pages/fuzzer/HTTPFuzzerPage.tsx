@@ -372,23 +372,28 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         const strs = []
-        const reg = new RegExp(keyword)
-        for (let info of filterContent) {
-            let str = Buffer.from(info.ResponseRaw).toString('utf8')
-            let temp: any
-            while ((temp = reg.exec(str)) !== null) {
-                // @ts-ignore
-                if (temp[1]) {
+        try {
+            const reg = new RegExp(keyword)
+            for (let info of filterContent) {
+                let str = Buffer.from(info.ResponseRaw).toString('utf8')
+                let temp: any
+                while ((temp = reg.exec(str)) !== null) {
                     // @ts-ignore
-                    strs.push(temp[1])
-                    str = str.substring(temp['index'] + 1)
-                    reg.lastIndex = 0
-                } else {
-                    break
+                    if (temp[1]) {
+                        // @ts-ignore
+                        strs.push(temp[1])
+                        str = str.substring(temp['index'] + 1)
+                        reg.lastIndex = 0
+                    } else {
+                        break
+                    }
                 }
             }
+        } catch (error) {
+            failed("正则有问题，请检查后重新输入")
+            return
         }
-
+        
         if (strs.length === 0) {
             failed('未捕获到关键词信息')
             return
@@ -404,6 +409,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 })
                 .then(() => {
                     success('下载完成')
+                    const flags = res.filePath.indexOf("/") > -1 ? "/" : "\\"
+                    const paths = res.filePath.split(flags)
+                    paths.pop()
+                    ipcRenderer.invoke("open-specified-file", paths.join(flags))
                 })
         })
     })

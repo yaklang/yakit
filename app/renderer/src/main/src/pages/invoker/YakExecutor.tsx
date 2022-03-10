@@ -86,6 +86,7 @@ interface CustomMenuProps {
 }
 
 export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
+    const [codePath, setCodePath] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
     const [fileList, setFileList] = useState<tabCodeProps[]>([])
     const [tabList, setTabList] = useState<tabCodeProps[]>([])
@@ -246,7 +247,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 data: info.code
             })
         } else {
-            ipcRenderer.invoke("show-save-dialog", info.tab).then((res) => {
+            ipcRenderer.invoke("show-save-dialog", `${codePath}${codePath ? '/' : ''}${info.tab}`).then((res) => {
                 if (res.canceled) return
 
                 const path = res.filePath
@@ -489,6 +490,19 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         }
         addFile(file)
     }
+
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-code-path")
+            .then((path: string) => {
+                ipcRenderer.invoke("is-exists-file", path)
+                    .then(() => {
+                        setCodePath("")
+                    })
+                    .catch(() => {
+                        setCodePath(path)
+                    })
+            })
+    }, [])
 
     useEffect(() => {
         if (tabList.length === 0) setFullScreen(false)

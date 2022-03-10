@@ -13,6 +13,7 @@ const secretDir = path.join(homeDir, "auth");
 
 const basicDir = path.join(homeDir, "base");
 const yakEngineDir = path.join(homeDir, "yak-engine")
+const codeDir = path.join(homeDir, "code");
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
 const basicKvPath = path.join(basicDir, "yakit-local.json")
@@ -23,6 +24,7 @@ const initMkbaseDir = async () => {
             fs.mkdirSync(secretDir, {recursive: true})
             fs.mkdirSync(basicDir, {recursive: true})
             fs.mkdirSync(yakEngineDir, {recursive: true})
+            fs.mkdirSync(codeDir, {recursive: true})
             resolve()
         } catch (e) {
             reject(e)
@@ -422,6 +424,16 @@ module.exports = {
         }
         ipcMain.handle("get-value", async (e, key) => {
             return await asyncGetValueByKey(key)
+        })
+
+        // 获取yak code文件根目录路径
+        ipcMain.handle("fetch-code-path", () => {
+            return codeDir
+        });
+
+        // 打开指定路径文件
+        ipcMain.handle("open-specified-file", async (e, path) => {
+            return shell.openPath(path)
         })
     },
 }
