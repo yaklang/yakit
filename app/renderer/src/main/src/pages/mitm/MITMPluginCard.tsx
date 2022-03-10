@@ -25,8 +25,6 @@ export interface MITMPluginCardProp {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
     onExit?: () => any
     autoUpdate?: boolean
-
-    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -58,15 +56,13 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                 <div style={{height: "100%", overflow: "hidden"}}>
                     <HTTPFlowMiniTable
                         simple={true}
-                        onTotal={setTotal} // onSendToWebFuzzer={props.onSendToWebFuzzer}
+                        onTotal={setTotal}
                         filter={{
                             SearchURL: "",
                             Pagination: {...genDefaultPagination(), Page: 1, Limit: 20}
                         }}
                         source={""}
                         autoUpdate={props.autoUpdate}
-                        onSendToWebFuzzer={props.onSendToWebFuzzer}
-                        sendToPlugin={props.sendToPlugin}
                     />
                 </div>
             {/* </Tabs.TabPane>

@@ -106,8 +106,6 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     return <HTTPFlowDetail
         hash={hash || ""}
         onClose={rsp.onClosed}
-        sendToWebFuzzer={rsp.sendToWebFuzzer}
-        sendToPlugin={rsp.sendToPlugin}
         isFront={index === undefined ? undefined : index === 0}
         isBehind={index === undefined ? undefined : index === (rsp?.data || []).length - 1}
         fetchRequest={fetchInfo}
@@ -123,13 +121,16 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             id: 'send-fuzzer-info',
             label: '发送到Fuzzer',
             contextMenuGroupId: 'send-fuzzer-info',
-            run: () => (props as any).sendToWebFuzzer((flow as any).IsHTTPS, (flow as any).Request)
+            run: () => {
+                 ipcRenderer.invoke("send-to-fuzzer", {isHttps: flow?.IsHTTPS, request: Buffer.from(flow?.Request || []).toString("utf8")})
+            }
         },
         {
             id: 'send-to-plugin',
             label: '发送到数据包扫描',
             contextMenuGroupId: 'send-fuzzer-info',
-            run: () => (props as any).sendToPlugin((flow as any).Request, (flow as any).IsHTTPS, (flow as any)?.Response || undefined)
+            run: () => ipcRenderer.invoke("send-to-packet-hack", {request: flow?.Request, ishttps: flow?.IsHTTPS, response: flow?.Response})
+            
         }
     ]
 
@@ -201,27 +202,18 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 <div style={{width: "100%", overflow: "auto"}}>
                     {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? <Tabs>
                         {flow.GetParams.length > 0 && <Tabs.TabPane key={"get"} tab={"GET 参数"}>
-                            <FuzzableParamList data={flow.GetParams} sendToWebFuzzer={(isHttps, request) => {
-                                if (props.sendToWebFuzzer) {
-                                    props.sendToWebFuzzer(isHttps, request)
-                                    if (props.onClose) props.onClose();
-                                }
+                            <FuzzableParamList data={flow.GetParams} sendToWebFuzzer={() => {
+                                if (props.onClose) props.onClose()
                             }}/>
                         </Tabs.TabPane>}
                         {flow.PostParams.length > 0 && <Tabs.TabPane key={"post"} tab={"POST 参数"}>
-                            <FuzzableParamList data={flow.PostParams} sendToWebFuzzer={(isHttps, request) => {
-                                if (props.sendToWebFuzzer) {
-                                    props.sendToWebFuzzer(isHttps, request);
-                                    if (props.onClose) props.onClose();
-                                }
+                            <FuzzableParamList data={flow.PostParams} sendToWebFuzzer={() => {
+                                if (props.onClose) props.onClose()
                             }}/>
                         </Tabs.TabPane>}
                         {flow.CookieParams.length > 0 && <Tabs.TabPane key={"cookie"} tab={"Cookie 参数"}>
-                            <FuzzableParamList data={flow.CookieParams} sendToWebFuzzer={(isHttps, request) => {
-                                if (props.sendToWebFuzzer) {
-                                    props.sendToWebFuzzer(isHttps, request)
-                                    if (props.onClose) props.onClose();
-                                }
+                            <FuzzableParamList data={flow.CookieParams} sendToWebFuzzer={() => {
+                                if (props.onClose) props.onClose()
                             }}/>
                         </Tabs.TabPane>}
                     </Tabs> : ""}
@@ -340,7 +332,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         {/*}}/>*/}
         <ResizeBox
             firstNode={<HTTPPacketEditor
-                originValue={flow.Request} readOnly={true} sendToWebFuzzer={props.sendToWebFuzzer}
+                originValue={flow.Request} readOnly={true} sendToWebFuzzer={!!props.sendToWebFuzzer}
                 defaultHeight={props.defaultHeight} defaultHttps={props.defaultHttps} hideSearch={true}
             />}
             firstMinSize={300}

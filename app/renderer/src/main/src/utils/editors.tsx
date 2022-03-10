@@ -22,6 +22,8 @@ import ReactResizeDetector from "react-resize-detector";
 
 import './editors.css'
 
+const {ipcRenderer} = window.require("electron")
+
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor;
 
 export type IMonacoEditor = monacoEditor.editor.IStandaloneCodeEditor;
@@ -360,7 +362,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     type={"primary"}
                     icon={<ThunderboltFilled/>}
                     onClick={() => {
-                        if (props.sendToWebFuzzer) props.sendToWebFuzzer(props.defaultHttps || false, strValue);
+                        ipcRenderer.invoke("send-to-fuzzer", {isHttps: props.defaultHttps || false, request: strValue})
                     }}
                 >FUZZ</Button>}
                 {!props.disableFullscreen && !props.simpleMode && <Button

@@ -49,6 +49,7 @@ import {PerformanceDisplay} from "../components/PerformanceDisplay"
 import "./main.css"
 import {useHotkeys} from "react-hotkeys-hook";
 import {execTest} from "./invoker/ExecutePacketYakScript";
+import { useMemoizedFn } from "ahooks"
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -117,10 +118,16 @@ const Main: React.FC<MainProp> = (props) => {
     const [currentTabKey, setCurrentTabKey] = useState("")
     const [tabLoading, setTabLoading] = useState(false)
 
+    // 系统类型
+    const [system,setSystem]=useState<string>("")
+    //获取系统类型
+    useEffect(()=>{
+        ipcRenderer.invoke('fetch-system-name').then((res)=>{setSystem(res)})
+    },[])
+
     const closeCacheByRoute = (r: Route) => {
         setPageCache(pageCache.filter((i) => `${i.route}` !== `${r}`))
     }
-
     const closeAllCache = () => {
         Modal.confirm({
             title: "确定要关闭所有 Tabs？",
@@ -130,7 +137,6 @@ const Main: React.FC<MainProp> = (props) => {
             }
         })
     }
-
     const closeOtherCache = (id: string) => {
         Modal.confirm({
             title: "确定要除此之外所有 Tabs？",
@@ -152,7 +158,6 @@ const Main: React.FC<MainProp> = (props) => {
         const targets = pageCache.filter((i) => i.id === id)
         return targets.length > 0 ? pageCache.indexOf(targets[0]) : -1
     }
-
     const updateCacheVerbose = (id: string, verbose: string) => {
         const index = getCacheIndex(id)
         if (index < 0) {
@@ -303,7 +308,7 @@ const Main: React.FC<MainProp> = (props) => {
             appendCache(
                 newTabId,
                 `${verboseNameRaw}[${pageCache.length + 1}]`,
-                ContentByRoute(Route.DataCompare),
+                ContentByRoute(Route.DataCompare, undefined, {system: system}),
                 Route.DataCompare as Route,
             );
 
@@ -322,13 +327,34 @@ const Main: React.FC<MainProp> = (props) => {
         }
     }, [pageCache])
 
+    const addFuzzer = useMemoizedFn((res: any) => {
+        const {isHttps, request} = res || {}
+
+        if(request){
+            const newTabId = `${Route.HTTPFuzzer}-[${randomString(49)}]`
+            const verboseNameRaw = routeKeyToLabel.get(Route.HTTPFuzzer) || `${Route.HTTPFuzzer}`
+            appendCache(
+                newTabId,
+                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                ContentByRoute(Route.HTTPFuzzer, undefined, {
+                    isHttps: isHttps || false,
+                    request: request || "",
+                    system: system
+                }),
+                Route.HTTPFuzzer as Route
+            )
+        }
+    })
+
     useEffect(() => {
         ipcRenderer.on("fetch-new-main-menu", (e) => {
             updateMenuItems()
         })
+        ipcRenderer.on("fetch-send-to-fuzzer", (e, res: any) => addFuzzer(res))
 
         return () => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
+            ipcRenderer.removeAllListeners("fetch-send-to-fuzzer")
         }
     }, [])
 

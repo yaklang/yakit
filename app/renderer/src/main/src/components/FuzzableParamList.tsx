@@ -3,10 +3,12 @@ import {Button, Typography, Space, Table, Tag, Popconfirm} from "antd";
 import {FuzzableParams} from "./HTTPFlowTable";
 import {HTTPPacketFuzzable} from "./HTTPHistory";
 
+const {ipcRenderer} = window.require("electron")
 const {Text} = Typography;
 
 export interface FuzzableParamListProp extends HTTPPacketFuzzable {
     data: FuzzableParams[]
+    sendToWebFuzzer?: () => any
 }
 
 export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
@@ -28,10 +30,12 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
             {
                 title: "操作", render: (i: FuzzableParams) => <Space>
                     <Popconfirm title={"测试该参数将会暂时进入 Web Fuzzer"}
-                                onConfirm={e => {
-                                    if (props.sendToWebFuzzer) {
-                                        props.sendToWebFuzzer(i.IsHTTPS, new Buffer(i.AutoTemplate).toString("utf8"))
-                                    }
+                                onConfirm={(e) => {
+                                    ipcRenderer.invoke("send-to-fuzzer", {
+                                        isHttps: i.IsHTTPS,
+                                        request: new Buffer(i.AutoTemplate).toString("utf8")
+                                    })
+                                    if (props.sendToWebFuzzer) props.sendToWebFuzzer()
                                 }}
                     >
                         <Button

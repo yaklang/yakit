@@ -19,7 +19,6 @@ export interface HTTPFlowMiniTableProp {
     filter: YakQueryHTTPFlowRequest
     onTotal: (total: number) => any
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
@@ -73,15 +72,6 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                 code: "Hash", name: "操作", render: (i: any) => {
                     return <>
                         <Space>
-                            {false && props.onSendToWebFuzzer && <Button
-                                type={"link"} size={"small"}
-                                onClick={() => {
-                                    const req = findHTTPFlowById(i);
-                                    if (props.onSendToWebFuzzer && req) {
-                                        props.onSendToWebFuzzer(req.IsHTTPS, new Buffer(req.Request).toString())
-                                    }
-                                }}
-                            >发送到Fuzzer</Button>}
                             <Button
                                 type={"link"} size={"small"}
                                 onClick={() => {
@@ -89,19 +79,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                         width: "80%",
                                         content: onExpandHTTPFlow(
                                             findHTTPFlowById(i),
-                                            (req: Uint8Array, isHttps: boolean) => {
-                                                if (props.onSendToWebFuzzer) {
-                                                    props.onSendToWebFuzzer(isHttps, new Buffer(req).toString())
-                                                    m.destroy()
-                                                }
-                                            },
-                                            ()=>{},
-                                            (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
-                                                if(props.sendToPlugin){
-                                                    props.sendToPlugin(request, isHTTPS, response)
-                                                    m.destroy()
-                                                }
-                                            }
+                                            ()=>{}
                                             ),
                                     })
                                 }}
@@ -109,7 +87,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                         </Space>
                     </>
                 },
-                width: props.onSendToWebFuzzer ? 150 : 80, lock: true,
+                width: 80, lock: true,
             }
         ] : [
             {
@@ -149,8 +127,8 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                 type={"link"} size={"small"}
                                 onClick={() => {
                                     const req = findHTTPFlowById(i);
-                                    if (props.onSendToWebFuzzer && req) {
-                                        props.onSendToWebFuzzer(req.IsHTTPS, new Buffer(req.Request).toString())
+                                    if (req) {
+                                        ipcRenderer.invoke("send-to-fuzzer", {isHttps: req.IsHTTPS, request: new Buffer(req.Request).toString()})
                                     }
                                 }}
                             >发送到Fuzzer</Button>}
@@ -159,20 +137,9 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                 onClick={() => {
                                     let m = showDrawer({
                                         width: "80%",
-                                        content: onExpandHTTPFlow(findHTTPFlowById(i), (req: Uint8Array, isHttps: boolean) => {
-                                            if (props.onSendToWebFuzzer) {
-                                                props.onSendToWebFuzzer(isHttps, new Buffer(req).toString())
-                                                m.destroy()
-                                            }
-
-                                        },
-                                        ()=>{},
-                                        (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
-                                            if(props.sendToPlugin){
-                                                props.sendToPlugin(request, isHTTPS, response)
-                                                m.destroy()
-                                            }
-                                        }
+                                        content: onExpandHTTPFlow(
+                                            findHTTPFlowById(i), 
+                                            ()=>{}
                                         )
                                     })
                                 }}

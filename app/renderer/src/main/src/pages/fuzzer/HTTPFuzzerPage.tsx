@@ -20,7 +20,7 @@ import {
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {fuzzerTemplates, monacoEditorReplace, monacoEditorWrite} from "./fuzzerTemplates"
+import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
 import {InputFloat, InputInteger, InputItem, ManyMultiSelectForString, OneLine, SwitchItem} from "../../utils/inputUtil"
 import {fixEncoding} from "../../utils/convertor"
@@ -44,6 +44,7 @@ import {useMemoizedFn} from "ahooks";
 import {getValue, saveValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 import {PayloadManagerPage} from "../payloadManager/PayloadManager";
+import { HackerPlugin } from "../hacker/HackerPlugin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -51,7 +52,6 @@ export const analyzeFuzzerResponse =
     (
         i: FuzzerResponse,
         setRequest: (isHttps: boolean, request: string) => any,
-        sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any,
         index?: number,
         data?: FuzzerResponse[]
     ) => {
@@ -61,14 +61,6 @@ export const analyzeFuzzerResponse =
                 <>
                     <FuzzerResponseToHTTPFlowDetail
                         response={i}
-                        sendToWebFuzzer={(isHttps, request) => {
-                            setRequest(isHttps, request)
-                            m.destroy()
-                        }}
-                        sendToPlugin={(request, isHTTPS, response) => {
-                            if (sendToPlugin) sendToPlugin(request, isHTTPS, response)
-                            m.destroy()
-                        }}
                         onClosed={() => {
                             m.destroy()
                         }}
@@ -84,8 +76,6 @@ export interface HTTPFuzzerPageProp {
     isHttps?: boolean
     request?: string
     system?: string
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 const {Text} = Typography
@@ -192,6 +182,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setCurrentHistoryIndex(targetIndex)
             setRequest(history[targetIndex])
         }
+    })
+
+    const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
+        ipcRenderer.invoke("send-to-fuzzer", {isHttps: isHttps, request: request})
+    })
+    const sendToPlugin = useMemoizedFn((request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
+        let m = showDrawer({
+            width: "80%",
+            content: <HackerPlugin request={request} isHTTPS={isHTTPS} response={response}></HackerPlugin>
+        })
     })
 
     // 从历史记录中恢复
@@ -487,10 +487,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <Button
                                             size={"small"}
                                             onClick={() => {
-                                                analyzeFuzzerResponse(rsp, (bool, r) => {
-                                                    setRequest(r)
-                                                    refreshRequest()
-                                                })
+                                                analyzeFuzzerResponse(
+                                                    rsp,
+                                                    (bool, r) => {
+                                                        // setRequest(r)
+                                                        // refreshRequest()
+                                                    }
+                                                )
                                             }}
                                             type={"primary"}
                                             icon={<ProfileOutlined/>}
@@ -943,8 +946,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <>
                             {(content || []).length > 0 ? (
                                 <HTTPFuzzerResultsCard
-                                    onSendToWebFuzzer={props.onSendToWebFuzzer}
-                                    sendToPlugin={props.sendToPlugin}
+                                    onSendToWebFuzzer={sendToFuzzer}
+                                    sendToPlugin={sendToPlugin}
                                     setRequest={(r) => {
                                         setRequest(r)
                                         refreshRequest()
