@@ -8,6 +8,7 @@ import {HTTPHistory} from "../../components/HTTPHistory"
 import {useMemoizedFn} from "ahooks"
 import {showDrawer} from "../../utils/showModal"
 import {HackerPlugin} from "./HackerPlugin"
+import ReactDOM from "react-dom"
 
 import "../main.css"
 
@@ -48,6 +49,16 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 type={"editable-card"}
                 tabBarGutter={2}
                 hideAdd={true}
+                onTabClick={(key, e) => {
+                    const divExisted = document.getElementById("yakit-cursor-menu")
+                    if(divExisted){
+                        const div: HTMLDivElement = divExisted as HTMLDivElement
+                        const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                        if (unmountResult && div.parentNode) {
+                            div.parentNode.removeChild(div)
+                        }
+                    }
+                }}
             >
                 <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
                     <div style={{height: "100%"}}>

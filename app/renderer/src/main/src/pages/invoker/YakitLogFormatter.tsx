@@ -13,6 +13,8 @@ import {CodeViewer} from "../../utils/codeViewer";
 import {YakEditor} from "../../utils/editors";
 import {AutoCard} from "../../components/AutoCard";
 import MDEditor from "@uiw/react-md-editor";
+import {openABSFile} from "../../utils/openWebsite";
+import {callCopyToClipboard} from "../../utils/basic";
 
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
@@ -37,8 +39,58 @@ export interface YakitLogFormatterProp {
     onlyTime?: boolean
 }
 
+
 export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
     switch (props.level) {
+        case "file":
+            try {
+                const obj = JSON.parse(props.data) as {
+                    title: string,
+                    description: string,
+                    path: string,
+                    is_dir: boolean,
+                    is_existed: boolean,
+                    file_size: string,
+                    dir: string,
+                };
+                return <div>
+                    <AutoCard
+                        size={"small"}
+                        title={`${obj.title}`}
+                        extra={<Space>
+                            <Button size={"small"} onClick={() => {
+                                callCopyToClipboard(obj.path)
+                            }}>复制文件名</Button>
+                            <Button
+                                type={"primary"}
+                                size={"small"}
+                                disabled={!obj.is_existed}
+                                onClick={() => {
+                                    openABSFile(obj.dir)
+                                }}
+                            >打开文件位置</Button>
+                        </Space>}
+                    >
+                        <Space direction={"vertical"}>
+                            {obj.description && <div>
+                                {obj.description}
+                            </div>}
+                            <Space>
+                                {!obj.is_existed && <Tag color={"red"}>未创建成功</Tag>}
+                                {obj.is_dir ? <Tag color={"orange"}>文件夹</Tag> : <Tag>非文件夹</Tag>}
+                                {obj.file_size && <Tag color={"geekblue"}>{obj.file_size}</Tag>}
+                            </Space>
+                            <div>{obj.path}</div>
+                        </Space>
+                    </AutoCard>
+                </div>
+            } catch (e) {
+                return <div style={{height: 150}}>
+                    <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
+                        <YakEditor readOnly={true} type={"http"} value={props.data}/>
+                    </AutoCard>
+                </div>
+            }
         case "json":
             try {
                 const obj = JSON.parse(props.data);
@@ -57,7 +109,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                 </Space>
             }
         case "markdown":
-            return <MDEditor.Markdown source={props.data} />
+            return <MDEditor.Markdown source={props.data}/>
         case "text":
             return <div style={{height: 300}}>
                 <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>

@@ -16,7 +16,8 @@ import {
     Tag,
     Typography,
     Empty,
-    List
+    List,
+    Switch
 } from "antd"
 import {DownCircleTwoTone, UpCircleTwoTone, EditOutlined, DeleteOutlined} from "@ant-design/icons"
 import {InputInteger} from "../../../utils/inputUtil"
@@ -24,12 +25,12 @@ import {YakScriptManagerPage, YakScriptOperator} from "../YakScriptManager"
 import {randomString} from "../../../utils/randomUtil"
 import {ExecResult, YakScript} from "../schema"
 import {failed, info} from "../../../utils/notification"
-import {ExecResultsViewer} from "./ExecMessageViewer"
+import {ExecResultLog, ExecResultMessage, ExecResultsViewer} from "./ExecMessageViewer"
 import {showModal} from "../../../utils/showModal"
 import {YakEditor} from "../../../utils/editors"
 import cloneDeep from "lodash/cloneDeep"
 import {TabBarMenu, MenuInfoProps} from "../../../components/TabBarMenu"
-import {useMemoizedFn, useUpdate, useVirtualList} from "ahooks"
+import {useGetState, useMemoizedFn, useUpdate, useVirtualList} from "ahooks"
 import {ExecBatchYakScriptParams, ExecBatchYakScriptResult, ExecBatchYakScriptTask} from "./YakBatchExecutorLegacy"
 import {AutoSpin} from "../../../components/AutoSpin"
 import debounce from "lodash/debounce"
@@ -322,7 +323,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                 width={625}
                 visible={visible}
                 maskClosable={false}
-                okText={editInfo?'修改':'新增'}
+                okText={editInfo ? "修改" : "新增"}
                 cancelText='取消'
                 onCancel={() => {
                     setVisible(false)
@@ -455,18 +456,28 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
         Type: "nuclei"
     })
     const [totalLoading, setTotalLoading] = useState(true)
-    const [tasks, setTasks] = useState<ExecBatchYakScriptTask[]>([])
+    const [tasks, setTasks, getTasks] = useGetState<ExecBatchYakScriptTask[]>([])
+    const [filterTasks, setFilterTasks, getFilterTasks] = useGetState<ExecBatchYakScriptTask[]>([])
     const [error, setError] = useState("")
     const [token, setToken] = useState("")
     const [executing, setExecuting] = useState(false)
+    const [checked, setChecked] = useState<boolean>(false)
 
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
     const listRef = useRef(null)
+    const filterContainerRef = useRef(null)
+    const filterWrapperRef = useRef(null)
 
-    const [list] = useVirtualList(tasks, {
+    const [list] = useVirtualList(getTasks(), {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
+        itemHeight: 50,
+        overscan: 5
+    })
+    const [filterList] = useVirtualList(getFilterTasks(), {
+        containerTarget: filterContainerRef,
+        wrapperTarget: filterWrapperRef,
         itemHeight: 50,
         overscan: 5
     })
@@ -579,6 +590,63 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
         }
     }, [props.keyword])
 
+    // 转换task内的result数据
+    const convertTask = (task: ExecBatchYakScriptTask) => {
+        // @ts-ignore
+        const results: ExecResult[] = task.Results.filter((item) => !!item.Result).map((item) => item.Result)
+
+        const messages: ExecResultMessage[] = []
+        for (let item of results) {
+            if (!item.IsMessage) continue
+
+            try {
+                const raw = item.Message
+                const obj: ExecResultMessage = JSON.parse(Buffer.from(raw).toString("utf8"))
+                messages.push(obj)
+            } catch (e) {
+                console.error(e)
+            }
+        }
+
+        return messages
+    }
+
+    useEffect(() => {
+        if (checked) {
+            const filters: ExecBatchYakScriptTask[] = getTasks()
+                .filter((item) => item.Results.length !== 0)
+                .filter(
+                    (item) =>
+                        (
+                            convertTask(item)
+                                .filter((e) => e.type === "log")
+                                .map((i) => i.content)
+                                .sort((a: any, b: any) => a.timestamp - b.timestamp) as ExecResultLog[]
+                        ).filter((i) => ["json", "success"].includes((i?.level || "").toLowerCase())).length > 0
+                )
+            setFilterTasks(filters)
+        } else {
+            setFilterTasks([])
+        }
+    }, [checked])
+
+    useEffect(() => {
+        if (tasks) {
+            const filters: ExecBatchYakScriptTask[] = getTasks()
+                .filter((item) => item.Results.length !== 0)
+                .filter(
+                    (item) =>
+                        (
+                            convertTask(item)
+                                .filter((e) => e.type === "log")
+                                .map((i) => i.content)
+                                .sort((a: any, b: any) => a.timestamp - b.timestamp) as ExecResultLog[]
+                        ).filter((i) => ["json", "success"].includes((i?.level || "").toLowerCase())).length > 0
+                )
+            if (JSON.stringify(filterTasks) !== JSON.stringify(filters)) setFilterTasks(filters)
+        }
+    }, [tasks])
+
     if (totalLoading) {
         return (
             <div style={{textAlign: "center", width: "100%", marginTop: 100}}>
@@ -615,6 +683,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                             }
                             ipcRenderer.invoke("exec-batch-yak-script", params, token)
                             setExecuting(true)
+                            setChecked(false)
                         }}
                     >
                         <Space direction={"vertical"}>
@@ -692,6 +761,12 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                         </Space>
                     </Form>
                 </Col>
+                <Col span={3} style={{position: "relative"}}>
+                    <div style={{width: 140, position: "absolute", right: 2, bottom: 2}}>
+                        <span style={{display: "inline-block", height: 22, marginRight: 5}}>只展示命中项</span>
+                        <Switch checked={checked} onChange={(checked) => setChecked(checked)}></Switch>
+                    </div>
+                </Col>
             </Row>
             <Divider style={{margin: "10px 0"}} />
             <div ref={listRef} className='bug-test-list'>
@@ -701,6 +776,79 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                             style={{marginTop: 75}}
                             description={"模块还未加载，请点击右上角配置进行插件仓库更新"}
                         ></Empty>
+                    </div>
+                ) : checked ? (
+                    <div ref={filterContainerRef} style={{height: listHeight, overflow: "auto"}}>
+                        <div ref={filterWrapperRef}>
+                            {filterList.map((ele) => (
+                                <div className='list-item' key={ele.data.Id}>
+                                    <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 260}}>
+                                        {ele.data.Id}
+                                    </Text>
+                                    <Divider type='vertical' />
+                                    <div style={{width: 120, textAlign: "center"}}>
+                                        {StatusToVerboseTag(ele.data.Status)}
+                                    </div>
+                                    <Divider type='vertical' />
+                                    <div>
+                                        <ExecResultsViewer results={ele.data.Results} oneLine={true} />
+                                    </div>
+                                    <Divider type='vertical' />
+                                    <div style={{flexGrow: 1, textAlign: "right"}}>
+                                        <Space>
+                                            <Button
+                                                type={"primary"}
+                                                size={"small"}
+                                                onClick={(e) => {
+                                                    if (!ele.data.PoC) {
+                                                        Modal.error({title: "没有模块信息"})
+                                                        return
+                                                    }
+                                                    showModal({
+                                                        title: `单体模块测试: ${ele.data.PoC.ScriptName}`,
+                                                        width: "75%",
+                                                        content: (
+                                                            <>
+                                                                <YakScriptOperator script={ele.data.PoC} target={params.Target} />
+                                                            </>
+                                                        )
+                                                    })
+                                                }}
+                                            >
+                                                复测
+                                            </Button>
+                                            <Button
+                                                size={"small"}
+                                                style={{marginRight: 8}}
+                                                onClick={(e) => {
+                                                    if (!ele.data.PoC) {
+                                                        Modal.error({title: "没有模块信息"})
+                                                        return
+                                                    }
+                                                    showModal({
+                                                        title: `源码: ${ele.data.PoC.ScriptName}`,
+                                                        width: "75%",
+                                                        content: (
+                                                            <>
+                                                                <div style={{height: 400}}>
+                                                                    <YakEditor
+                                                                        readOnly={true}
+                                                                        type={"yaml"}
+                                                                        value={ele.data.PoC.Content}
+                                                                    />
+                                                                </div>
+                                                            </>
+                                                        )
+                                                    })
+                                                }}
+                                            >
+                                                源码
+                                            </Button>
+                                        </Space>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 ) : (
                     <div ref={containerRef} style={{height: listHeight, overflow: "auto"}}>
@@ -734,7 +882,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                                         width: "75%",
                                                         content: (
                                                             <>
-                                                                <YakScriptOperator script={ele.data.PoC} />
+                                                                <YakScriptOperator script={ele.data.PoC} target={params.Target} />
                                                             </>
                                                         )
                                                     })

@@ -50,6 +50,7 @@ import "./main.css"
 import {useHotkeys} from "react-hotkeys-hook";
 import {execTest} from "./invoker/ExecutePacketYakScript";
 import { useMemoizedFn } from "ahooks"
+import ReactDOM from "react-dom"
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -622,6 +623,7 @@ const Main: React.FC<MainProp> = (props) => {
                             {pageCache.length > 0 ? (
                                 <Tabs
                                     style={{display: "flex", flex: "1"}}
+                                    tabBarStyle={{marginBottom: 8}}
                                     className='main-content-tabs'
                                     activeKey={currentTabKey}
                                     onChange={setCurrentTabKey}
@@ -643,6 +645,16 @@ const Main: React.FC<MainProp> = (props) => {
                                                     info("请从左边菜单连选择需要新建的 Tab 窗口")
                                                 }
                                                 return
+                                        }
+                                    }}
+                                    onTabClick={(key, e) => {
+                                        const divExisted = document.getElementById("yakit-cursor-menu")
+                                        if(divExisted){
+                                            const div: HTMLDivElement = divExisted as HTMLDivElement
+                                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                                            if (unmountResult && div.parentNode) {
+                                                div.parentNode.removeChild(div)
+                                            }
                                         }
                                     }}
                                 >

@@ -32,6 +32,7 @@ export default function useHoldingIPCRStream(
     token: string,
     onEnd?: () => any,
     onListened?: () => any,
+    dataFilter?: (obj: ExecResultMessage, content: ExecResultLog) => boolean
 ) {
     const [infoState, setInfoState] = useState<InfoState>({
         messageSate: [],
@@ -151,6 +152,9 @@ export default function useHoldingIPCRStream(
                         } catch (e) {}
                         return
                     }
+
+                    // 第三方数据过滤方法
+                    if(dataFilter) if(dataFilter(obj, logData)) return
 
                     messages.current.unshift(obj)
 
