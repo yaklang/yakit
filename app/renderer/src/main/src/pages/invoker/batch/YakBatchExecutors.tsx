@@ -133,12 +133,6 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                 setMenuHeight(window.innerHeight - 350 >= 200 ? window.innerHeight - 350 : 200)
             }, 100)
         }
-        ipcRenderer.on("bug-test-hidden", (e: any, flag: any) => {
-            setCollapsed(true)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("bug-test-hidden")
-        }
     }, [])
 
     const searchPoc = debounce(

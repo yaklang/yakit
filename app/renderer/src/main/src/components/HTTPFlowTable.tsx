@@ -327,39 +327,24 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
     )
 }
 
-export const onExpandHTTPFlow = (
-    flow: HTTPFlow | undefined,
-    onSendToFuzzer?: SendToFuzzerFunc,
-    onClosed?: () => any,
-    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
-) => {
+export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => any) => {
     if (!flow) {
         return <Empty>找不到该请求详情</Empty>
     }
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail
-                hash={flow.Hash}
-                sendToWebFuzzer={(isHttps, request) => {
-                    if (onSendToFuzzer) onSendToFuzzer(new Buffer(request), isHttps)
-                }}
-                sendToPlugin={sendToPlugin}
-                onClose={onClosed}
-            />
+            <HTTPFlowDetail hash={flow.Hash} onClose={onClosed} />
         </div>
     )
 }
 
 export interface HTTPFlowTableProp {
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
     onSelected?: (i?: HTTPFlow) => any
     noHeader?: boolean
     tableHeight?: number
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
-
-    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -443,8 +428,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     const ref = useHotkeys('ctrl+r', e => {
         const selected = getSelected()
-        if (selected && props.onSendToWebFuzzer) {
-            props.onSendToWebFuzzer(selected?.IsHTTPS, new Buffer(selected.Request).toString())
+        if (selected) {
+            ipcRenderer.invoke("send-to-fuzzer", {
+                isHttps: selected?.IsHTTPS,
+                request: new Buffer(selected.Request).toString()
+            })
         }
     })
 
@@ -1053,15 +1041,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                 width: "80%",
                                                 content: onExpandHTTPFlow(
                                                     rowData,
-                                                    (req: Uint8Array, isHttps: boolean) => {
-                                                        if (props.onSendToWebFuzzer) {
-                                                            props.onSendToWebFuzzer(
-                                                                isHttps,
-                                                                new Buffer(req).toString()
-                                                            )
-                                                            m.destroy()
-                                                        }
-                                                    }
+                                                    () => m.destroy()
                                                 )
                                             })
                                         }}
@@ -1086,26 +1066,27 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     {
                                         title: '发送到 Web Fuzzer',
                                         onClick: () => {
-                                            if (props.onSendToWebFuzzer) {
-                                                props.onSendToWebFuzzer(
-                                                    rowData.IsHTTPS,
-                                                    new Buffer(
-                                                        rowData.Request
-                                                    ).toString("utf8")
-                                                )
-                                            }
+                                            ipcRenderer.invoke("send-to-fuzzer", {
+                                                isHttps: rowData.IsHTTPS,
+                                                request: new Buffer(rowData.Request).toString("utf8")
+                                            })
                                         }
                                     },
                                     {
                                         title: '发送到 数据包扫描',
                                         onClick: () => {
-                                            if (props.sendToPlugin) {
-                                                ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: rowData.Hash}).then((i: HTTPFlow) => {
-                                                    if (props.sendToPlugin) props.sendToPlugin(i.Request, i.IsHTTPS, i.Response)
-                                                }).catch((e: any) => {
+                                            ipcRenderer
+                                                .invoke("GetHTTPFlowByHash", {Hash: rowData.Hash})
+                                                .then((i: HTTPFlow) => {
+                                                    ipcRenderer.invoke("send-to-packet-hack", {
+                                                        request: i.Request,
+                                                        ishttps: i.IsHTTPS,
+                                                        response: i.Response
+                                                    })
+                                                })
+                                                .catch((e: any) => {
                                                     failed(`Query Response failed: ${e}`)
                                                 })
-                                            }
                                         }
                                     },
                                     {

@@ -33,17 +33,13 @@ import {useGetState, useHistoryTravel, useLatest, useMemoizedFn, useMouse} from 
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import {useHotkeys} from "react-hotkeys-hook";
 import * as monaco from 'monaco-editor';
-import {scanPacket} from "../../utils/scanPacket";
 import CopyToClipboard from "react-copy-to-clipboard";
 
 const {Text} = Typography;
 const {Item} = Form;
 const {ipcRenderer} = window.require("electron");
 
-export interface MITMPageProp {
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
-}
+export interface MITMPageProp {}
 
 export interface MITMResponse extends MITMFilterSchema {
     isHttps: boolean,
@@ -475,8 +471,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         }
     })
 
+    const execFuzzer = useMemoizedFn((value: string) => {
+        ipcRenderer.invoke("send-to-fuzzer", {isHttps: currentPacketInfo.isHttp, request: value})
+    })
     const execPlugin = useMemoizedFn((value: string) => {
-        if( props.sendToPlugin) props.sendToPlugin(currentPacketInfo.currentPacket, currentPacketInfo.isHttp)
+        ipcRenderer.invoke("send-to-packet-hack", {
+            request: currentPacketInfo.currentPacket,
+            ishttps: currentPacketInfo.isHttp
+        })
     })
 
     const shiftAutoForwardHotkey = useHotkeys('ctrl+t', () => {
@@ -549,7 +551,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                     info(`加载 MITM 插件[${id}]`)
                                     ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
                                 }}
-                                onSendToWebFuzzer={props.onSendToWebFuzzer}
                             />
                         </div> : <Row gutter={14} style={{height: "100%"}}>
                             <Col span={haveSideCar ? 24 : 24}
@@ -723,8 +724,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                 info(`加载 MITM 插件[${id}]`)
                                                                 ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
                                                             }}
-                                                            onSendToWebFuzzer={props.onSendToWebFuzzer}
-                                                            sendToPlugin={props.sendToPlugin}
                                                         />
                                                     ) : (
                                                         <HTTPPacketEditor
@@ -822,11 +821,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                                       monaco.KeyCode.KEY_R
                                                                               ],
                                                                               run: function (StandaloneEditor: any) {
-                                                                                  props.onSendToWebFuzzer &&
-                                                                                      props.onSendToWebFuzzer(
-                                                                                          isHttp,
-                                                                                          StandaloneEditor.getModel().getValue()
-                                                                                      )
+                                                                                execFuzzer(StandaloneEditor.getModel().getValue())
                                                                               },
                                                                               contextMenuGroupId: "Actions"
                                                                           },
@@ -893,22 +888,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                     {/*</Spin>*/}
                                 </div>
                             </Col>
-                            {/* {haveSideCar && <Col span={9} style={{height: "100%"}}>
-                                <div style={{height: "100%"}}>
-                                    <MITMPluginCard
-                                        autoUpdate={!passiveMode}
-                                        messages={logs} // hooks={mitmHooks}
-                                        onSubmitScriptContent={e => {
-                                            ipcRenderer.invoke("mitm-exec-script-content", e)
-                                        }}
-                                        onSubmitYakScriptId={(id: number, params: YakExecutorParam[]) => {
-                                            info(`加载 MITM 插件[${id}]`)
-                                            ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
-                                        }}
-                                        onSendToWebFuzzer={props.onSendToWebFuzzer}
-                                    />
-                                </div>
-                            </Col>} */}
                         </Row>}
                     </div>
                 default:

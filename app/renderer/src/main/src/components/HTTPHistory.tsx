@@ -7,8 +7,7 @@ import {AutoCard} from "./AutoCard"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
-    sendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
+    sendToWebFuzzer?: boolean | (() => any) | ((isHttps: boolean, request: string) => any)
 }
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {}
@@ -24,12 +23,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         noHeader={true}
                         // tableHeight={200}
                         // tableHeight={selected ? 164 : undefined}
-                        onSendToWebFuzzer={props.sendToWebFuzzer}
-                        onSelected={(i) => {
-                            setSelectedHTTPFlow(i)
-                        }}
+                        onSelected={(i) => setSelectedHTTPFlow(i)}
                         paginationPosition={"topRight"}
-                        sendToPlugin={props.sendToPlugin}
                     />
                 }
                 firstMinSize={160}
@@ -41,7 +36,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             noHeader={true}
                             hash={selected?.Hash || ""}
                             defaultHttps={selected?.IsHTTPS}
-                            sendToWebFuzzer={props.sendToWebFuzzer}
+                            sendToWebFuzzer={true}
                             // defaultHeight={detailHeight}
                         />
                     </div>

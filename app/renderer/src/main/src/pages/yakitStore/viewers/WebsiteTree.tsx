@@ -16,7 +16,6 @@ export interface WebsiteTreeViewerProp {
     pageMode?: boolean
     targets?: string
     interval_seconds?: number
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
 
     // 树在垂直方向上节点过多时可外部设置最大高度值
     maxHeight?: number
@@ -258,7 +257,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                     >
                         <HTTPFlowMiniTable
                             onTotal={setTotal}
-                            onSendToWebFuzzer={props.onSendToWebFuzzer}
                             filter={{
                                 SearchURL: selected,
                                 Pagination: {

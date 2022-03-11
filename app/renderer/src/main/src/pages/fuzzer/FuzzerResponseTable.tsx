@@ -202,7 +202,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = (props) 
                         <Button size={"small"} type={"link"} onClick={() => {
                             const res = content.filter(i => i.UUID === v);
                             if ((res || []).length > 0 && props.onSendToWebFuzzer) {
-                                analyzeFuzzerResponse(res[0], props.onSendToWebFuzzer, props.sendToPlugin, index, content)
+                                analyzeFuzzerResponse(res[0], props.onSendToWebFuzzer, index, content)
                             }
                         }}>详情</Button>
                     </Space>
