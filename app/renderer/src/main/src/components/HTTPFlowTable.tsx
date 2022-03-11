@@ -1039,7 +1039,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         onClick={(e) => {
                                             let m = showDrawer({
                                                 width: "80%",
-                                                content: onExpandHTTPFlow(rowData)
+                                                content: onExpandHTTPFlow(
+                                                    rowData,
+                                                    () => m.destroy()
+                                                )
                                             })
                                         }}
                                     >

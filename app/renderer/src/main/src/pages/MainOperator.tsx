@@ -344,6 +344,7 @@ const Main: React.FC<MainProp> = (props) => {
                 }),
                 Route.HTTPFuzzer as Route
             )
+            setCurrentTabKey(newTabId)
         }
     })
 

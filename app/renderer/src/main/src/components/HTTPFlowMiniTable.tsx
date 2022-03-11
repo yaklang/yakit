@@ -79,7 +79,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                         width: "80%",
                                         content: onExpandHTTPFlow(
                                             findHTTPFlowById(i),
-                                            ()=>{}
+                                            () => m.destroy()
                                             ),
                                     })
                                 }}
@@ -139,7 +139,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                         width: "80%",
                                         content: onExpandHTTPFlow(
                                             findHTTPFlowById(i), 
-                                            ()=>{}
+                                            () => m.destroy()
                                         )
                                     })
                                 }}
