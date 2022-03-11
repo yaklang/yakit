@@ -275,7 +275,7 @@ module.exports = {
                 }
                 try {
                     const info = fs.statSync(path.join(os.homedir(), "yakit-projects/default-yakit.db"));
-                    if ((info.mode & 0o222) > 0) {
+                    if ((info.mode & 0o200) > 0) {
                         resolve("")
                     } else {
                         resolve("not allow to write")
