@@ -679,6 +679,9 @@ message PortScanRequest {
 
   // 设置上传的文件
   repeated string ScriptNames = 11;
+
+  // TCPProxy
+  repeated string Proxy = 12;
 }
 
 message DeletePortsRequest {
