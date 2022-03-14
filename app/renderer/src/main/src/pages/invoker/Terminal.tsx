@@ -9,6 +9,7 @@ import {Terminal as ITerminal} from "xterm";
 import {randomString} from "../../utils/randomUtil";
 import {failed} from "../../utils/notification";
 import {useMemoizedFn} from "ahooks";
+import { CVXterm } from "../../components/CVXterm";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -56,9 +57,9 @@ export const Terminal = React.memo(() => {
         ipcRenderer.invoke("write-terminal", token, data)
     })
 
-    return <AutoCard bodyStyle={{padding: 0}}>
-        <div style={{width: "100%"}}>
-            <XTerm
+    return <AutoCard bodyStyle={{padding: 0, overflow: "hidden"}}>
+        <div style={{width: "100%", height: "100%"}}>
+            <CVXterm 
                 ref={xtermRef}
                 options={{
                     convertEol: true
@@ -78,7 +79,30 @@ export const Terminal = React.memo(() => {
                     }
 
                 }}
+                isWrite
+                write={write}
             />
+            {/* <XTerm
+                ref={xtermRef}
+                options={{
+                    convertEol: true
+                }}
+                onKey={(event) => {
+                    try {
+                        if (term) {
+                            const code = event.key.charCodeAt(0)
+                            if (code === 13) {
+                                write("\n")
+                                return
+                            }
+                            write(event.key)
+                        }
+                    } catch (e) {
+                        failed(`write key failed: ${e}`)
+                    }
+
+                }}
+            /> */}
         </div>
     </AutoCard>
 })

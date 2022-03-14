@@ -123,10 +123,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     }, [])
 
     useEffect(() => {
-        if (xtermRef) xtermFit(xtermRef, 128, 10)
-    })
-
-    useEffect(() => {
         if (!xtermRef) {
             return
         }
@@ -368,14 +364,14 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 </Button>
                                             </div>
 
-                                            <div style={{width: "100%", overflow: "auto"}}>
+                                            <div style={{width: "100%", height: 178, overflow: "hidden"}}>
                                                 <CVXterm 
                                                     ref={xtermRef} 
                                                     options={{
                                                         convertEol: true,
                                                         disableStdin: true
                                                     }}
-                                                    onResize={(r) => xtermFit(xtermRef, r.cols, 10)}/>
+                                                />
                                                 {/* <XTerm
                                                     ref={xtermRef}
                                                     options={{

@@ -12,6 +12,7 @@ import {BasicTable} from "./BasicTable";
 import {XTerm} from "xterm-for-react";
 import {formatDate} from "../../../utils/timeUtil";
 import { xtermFit } from "../../../utils/xtermUtils";
+import { CVXterm } from "../../../components/CVXterm";
 
 
 export interface StatusCardProps {
@@ -138,9 +139,9 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             activeKey={active}
             onChange={activeKey => {
                 setActive(activeKey)
-                setTimeout(() => {
-                    if (xtermRef) xtermFit(xtermRef, 50, 18)
-                }, 50);
+                // setTimeout(() => {
+                //     if (xtermRef) xtermFit(xtermRef, 50, 18)
+                // }, 50);
             }}
         >
             {(finalFeatures || []).map((i, index) => {
@@ -176,12 +177,16 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 </>}
             </Tabs.TabPane>
             {props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
-                <div style={{width: "100%", height: "100%"}}>
-                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
+                <div style={{width: "100%", height: "100%", overflow: "hidden"}}>
+                    <CVXterm 
+                        ref={xtermRef} 
+                        options={{convertEol: true}}
+                    />
+                    {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
                         onResize={(r) => {
                             xtermFit(xtermRef, 50, 18)
                         }}
-                    />
+                    /> */}
                 </div>
             </Tabs.TabPane>}
         </Tabs>
