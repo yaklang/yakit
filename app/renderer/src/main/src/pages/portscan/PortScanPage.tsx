@@ -19,6 +19,7 @@ import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 
 import "./PortScanPage.css"
+import { CVXterm } from "../../components/CVXterm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -368,14 +369,21 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             </div>
 
                                             <div style={{width: "100%", overflow: "auto"}}>
-                                                <XTerm
+                                                <CVXterm 
+                                                    ref={xtermRef} 
+                                                    options={{
+                                                        convertEol: true,
+                                                        disableStdin: true
+                                                    }}
+                                                    onResize={(r) => xtermFit(xtermRef, r.cols, 10)}/>
+                                                {/* <XTerm
                                                     ref={xtermRef}
                                                     options={{
                                                         convertEol: true,
                                                         disableStdin: true
                                                     }}
                                                     onResize={(r) => xtermFit(xtermRef, r.cols, 10)}
-                                                />
+                                                /> */}
                                             </div>
 
                                             <Spin spinning={resettingData}>
