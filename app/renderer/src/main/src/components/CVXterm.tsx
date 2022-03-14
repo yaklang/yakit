@@ -16,7 +16,7 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
     const timer = useRef<any>(null)
 
     useImperativeHandle(ref, () => ({
-        xtermRef
+        ...xtermRef.current
     }))
 
     const write = (s: string) => {
