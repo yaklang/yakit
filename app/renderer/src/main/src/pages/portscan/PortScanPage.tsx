@@ -22,7 +22,8 @@ import "./PortScanPage.css"
 
 const {ipcRenderer} = window.require("electron")
 
-export interface PortScanPageProp {}
+export interface PortScanPageProp {
+}
 
 export interface PortScanParams {
     Targets: string
@@ -38,7 +39,7 @@ export interface PortScanParams {
     ScriptNames: string[]
 }
 
-const ScanKind: {[key: string]: string} = {
+const ScanKind: { [key: string]: string } = {
     syn: "SYN",
     fingerprint: "指纹",
     all: "SYN+指纹"
@@ -80,12 +81,14 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         "scan-port",
         "PortScan",
         token,
-        () => {},
-        () => {},
+        () => {
+        },
+        () => {
+        },
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
-    const search = useMemoizedFn((params?: {limit: number; keyword: string}) => {
+    const search = useMemoizedFn((params?: { limit: number; keyword: string }) => {
         const {limit, keyword} = params || {}
 
         setPluginLoading(true)
@@ -294,7 +297,10 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             }}
                                         >
                                             <Checkbox value={"top100"}>常见100端口</Checkbox>
+                                            <Checkbox value={"topweb"}>常见 Web 端口</Checkbox>
                                             <Checkbox value={"top1000+"}>常见一两千</Checkbox>
+                                            <Checkbox value={"topdb"}>常见数据库与 MQ</Checkbox>
+                                            <Checkbox value={"topudp"}>常见 UDP 端口</Checkbox>
                                         </Checkbox.Group>
                                     </Form.Item>
 
@@ -335,7 +341,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     </Form.Item>
                                 </Form>
                             </div>
-                            <Divider style={{margin: "5px 0"}} />
+                            <Divider style={{margin: "5px 0"}}/>
                             <div style={{flex: 1, overflow: "hidden"}}>
                                 <Tabs className='scan-port-tabs' tabBarStyle={{marginBottom: 5}}>
                                     <Tabs.TabPane tab={"扫描端口列表"} key={"scanPort"} forceRender>
@@ -381,7 +387,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             <Spin spinning={resettingData}>
                                                 <Row style={{marginTop: 6}} gutter={6}>
                                                     <Col span={24}>
-                                                        <OpenPortTableViewer data={openPorts} />
+                                                        <OpenPortTableViewer data={openPorts}/>
                                                     </Col>
                                                     {/*<Col span={8}>*/}
                                                     {/*    <ClosedPortTableViewer data={closedPorts}/>*/}
@@ -431,6 +437,7 @@ interface ScanPortFormProp {
     defaultParams: PortScanParams
     setParams: (p: PortScanParams) => any
 }
+
 const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
 
