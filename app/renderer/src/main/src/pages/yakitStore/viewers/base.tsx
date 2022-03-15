@@ -142,67 +142,65 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         {progressBars.length > 0 && <div style={{marginTop: 4, marginBottom: 8}}>
             {progressBars.map(i => i.node)}
         </div>}
-        <div style={{flex: 1}}>
-            <Tabs
-                style={{minHeight: 360}}
-                className={"main-content-tabs"}
-                size={"small"}
-                activeKey={active}
-                onChange={activeKey => {
-                    setActive(activeKey)
-                    // setTimeout(() => {
-                    //     if (xtermRef) xtermFit(xtermRef, 50, 18)
-                    // }, 50);
-                }}
-            >
-                {(finalFeatures || []).map((i, index) => {
-                    return <Tabs.TabPane
-                        tab={YakitFeatureTabName(i.feature, i.params)}
-                        key={`feature-${index}`}>
-                        <YakitFeatureRender
-                            params={i.params} feature={i.feature}
-                            execResultsLog={feature || []}
-                        />
-                    </Tabs.TabPane>
-                })}
-                <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
-                    {<>
-                        {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
-                        <Card
-                            size={"small"} hoverable={true} bordered={true} title={<Space>
-                            <div>
-                                任务额外日志与结果
-                            </div>
-                            {(timelineItemProps || []).length > 0 ? formatDate(timelineItemProps[0].timestamp) : ""}
-                        </Space>}
-                            style={{marginBottom: 20, marginRight: 2}}
-                        >
-                            <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                                {timelineItemProps.map((e, index) => {
-                                    return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
-                                        <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}
-                                                           onlyTime={true}/>
-                                    </Timeline.Item>
-                                })}
-                            </Timeline>
-                        </Card>
-                    </>}
+        <Tabs
+            style={{flex: 1}}
+            className={"main-content-tabs"}
+            size={"small"}
+            activeKey={active}
+            onChange={activeKey => {
+                setActive(activeKey)
+                setTimeout(() => {
+                    if (xtermRef) xtermFit(xtermRef, 50, 18)
+                }, 50);
+            }}
+        >
+            {(finalFeatures || []).map((i, index) => {
+                return <Tabs.TabPane
+                    tab={YakitFeatureTabName(i.feature, i.params)}
+                    key={`feature-${index}`}>
+                    <YakitFeatureRender
+                        params={i.params} feature={i.feature}
+                        execResultsLog={feature || []}
+                    />
                 </Tabs.TabPane>
-                {!props.debugMode && props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
-                    <div style={{width: "100%", height: "100%", maxHeight: 400, overflow: "hidden"}}>
-                        <CVXterm 
-                            ref={xtermRef} 
-                            options={{convertEol: true}}
-                        />
-                        {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
-                            onResize={(r) => {
-                                xtermFit(xtermRef, 50, 18)
-                            }}
-                        /> */}
-                    </div>
-                </Tabs.TabPane>}
-            </Tabs>
-        </div>
+            })}
+            <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
+                {<>
+                    {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
+                    <Card
+                        size={"small"} hoverable={true} bordered={true} title={<Space>
+                        <div>
+                            任务额外日志与结果
+                        </div>
+                        {(timelineItemProps || []).length > 0 ? formatDate(timelineItemProps[0].timestamp) : ""}
+                    </Space>}
+                        style={{marginBottom: 20, marginRight: 2}}
+                    >
+                        <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
+                            {timelineItemProps.map((e, index) => {
+                                return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
+                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} 
+                                    onlyTime={true}/>
+                                </Timeline.Item>
+                            })}
+                        </Timeline>
+                    </Card>
+                </>}
+            </Tabs.TabPane>
+            {!props.debugMode && props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
+                <div style={{width: "100%", height: "100%"}}>
+                    {/* <CVXterm 
+                        ref={xtermRef} 
+                        options={{convertEol: true}}
+                    /> */}
+                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
+                        onResize={(r) => {
+                            xtermFit(xtermRef, 50, 18)
+                        }}
+                    />
+                </div>
+            </Tabs.TabPane>}
+        </Tabs>
     </div>
 });
 
