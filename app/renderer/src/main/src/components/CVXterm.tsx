@@ -32,7 +32,7 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
     }
 
     return (
-        <div style={{width: "100%", height: "100%", maxHeight: maxHeight}}>
+        <div style={{width: "100%", height: "100%", maxHeight: maxHeight, overflow: "auto"}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
