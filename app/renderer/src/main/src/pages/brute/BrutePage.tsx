@@ -111,7 +111,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     }, [])
 
     return (
-        <div style={{width: "100%", height: "100%", display: "flex", flexFlow: "row", overflow: "hidden"}}>
+        <div style={{width: "100%", height: "100%", display: "flex", flexFlow: "row"}}>
             <div style={{height: "100%", width: 200}}>
                 <Card
                     loading={typeLoading}
@@ -145,7 +145,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     </Checkbox.Group>
                 </Card>
             </div>
-            <div style={{flex: 1, overflow: "hidden"}}>
+            <div style={{flex: 1}}>
                 <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
                     <Row style={{marginBottom: 30, marginTop: 35}}>
                     <Col span={3}/>

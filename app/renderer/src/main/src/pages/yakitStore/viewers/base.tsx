@@ -168,7 +168,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             onChange={activeKey => {
                 setActive(activeKey)
                 setTimeout(() => {
-                    if (xtermRef) xtermFit(xtermRef, 50, 18)
+                    if (xtermRef && props.debugMode) xtermFit(xtermRef, 50, 18)
                 }, 50);
             }}
         >
@@ -207,11 +207,11 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             </Tabs.TabPane>
             {!props.debugMode && props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
                 <div style={{width: "100%", height: "100%"}}>
-                    {/* <CVXterm 
+                    <CVXterm 
                         ref={xtermRef} 
                         options={{convertEol: true}}
-                    /> */}
-                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
+                    />
+                    {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
                         onResize={(r) => {
                             xtermFit(xtermRef, 50, 18)
                         }}
@@ -231,7 +231,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                             }
                             return true
                         }}
-                    />
+                    /> */}
                 </div>
             </Tabs.TabPane>}
         </Tabs>

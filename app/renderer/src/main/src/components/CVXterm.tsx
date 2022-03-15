@@ -9,10 +9,11 @@ const {ipcRenderer} = window.require("electron")
 export interface CVXtermProps extends IProps {
     isWrite?: boolean
     write?: (s: string) => any
+    maxHeight?: number
 }
 
 export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
-    const {isWrite = false, write: rewrite, ...rest} = props
+    const {isWrite = false, write: rewrite, maxHeight = 400, ...rest} = props
 
     const [loading, setLoading] = useState<boolean>(false)
     const xtermRef = useRef<any>(null)
@@ -31,7 +32,7 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
     }
 
     return (
-        <div style={{width: "100%", height: "100%"}}>
+        <div style={{width: "100%", height: "100%", maxHeight: maxHeight}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
