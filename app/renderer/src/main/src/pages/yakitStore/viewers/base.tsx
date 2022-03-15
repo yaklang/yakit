@@ -14,6 +14,7 @@ import {formatDate} from "../../../utils/timeUtil";
 import { xtermFit } from "../../../utils/xtermUtils";
 import { CVXterm } from "../../../components/CVXterm";
 
+const {ipcRenderer} = window.require("electron");
 
 export interface StatusCardProps {
     Id: string
@@ -67,6 +68,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
     const {loading, results, feature, progress, script, statusCards} = props;
     const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0");
     const xtermRef = useRef(null)
+    const timer = useRef<any>(null)
 
     useEffect(() => {
         if (!xtermRef) {
@@ -114,6 +116,22 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                        onResize={(r) => {
                            xtermFit(xtermRef, 50, 18)
                        }}
+                       customKeyEventHandler={(e) => {
+                        if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
+                            const str = xtermRef?.current ? (xtermRef.current as any).terminal.getSelection() : ""
+    
+                            if (timer.current) {
+                                clearTimeout(timer.current)
+                                timer.current = null
+                            }
+                            timer.current = setTimeout(() => {
+                                ipcRenderer.invoke("copy-clipboard", str).finally(() => {
+                                    timer.current = null
+                                })
+                            }, 300)
+                        }
+                        return true
+                    }}
                 />
             </div>
         </>}
@@ -196,6 +214,22 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
                         onResize={(r) => {
                             xtermFit(xtermRef, 50, 18)
+                        }}
+                        customKeyEventHandler={(e) => {
+                            if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
+                                const str = xtermRef?.current ? (xtermRef.current as any).terminal.getSelection() : ""
+        
+                                if (timer.current) {
+                                    clearTimeout(timer.current)
+                                    timer.current = null
+                                }
+                                timer.current = setTimeout(() => {
+                                    ipcRenderer.invoke("copy-clipboard", str).finally(() => {
+                                        timer.current = null
+                                    })
+                                }, 300)
+                            }
+                            return true
                         }}
                     />
                 </div>
