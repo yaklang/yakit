@@ -15,6 +15,7 @@ const {ipcRenderer} = window.require("electron");
 export interface YakScriptRunnerProp {
     script: YakScript
     params: YakExecutorParam[]
+    debugMode?: boolean
 }
 
 export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
@@ -42,7 +43,7 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
 
     return <Space direction={"vertical"} style={{width: "100%"}}>
         <PluginResultUI
-            script={props.script}
+            script={props.script} debugMode={props.debugMode}
             results={infoState.messageSate} statusCards={infoState.statusState}
             progress={infoState.processState} feature={infoState.featureMessageState}
             loading={!finished} onXtermRef={ref => setXtermRef(ref)}

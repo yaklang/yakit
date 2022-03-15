@@ -39,6 +39,7 @@ export interface PluginResultUIProp {
     defaultConsole?: boolean
 
     onXtermRef?: (ref: any) => any
+    debugMode?: boolean
 }
 
 const idToColor = (id: string) => {
@@ -107,6 +108,15 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
     }).splice(0, 25);
 
     return <div style={{width: "100%", flex: 1, display: "flex", flexDirection: "column", overflowY: "auto"}}>
+        {props.debugMode && props.onXtermRef && <>
+            <div style={{width: "100%", height: 240}}>
+                <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
+                       onResize={(r) => {
+                           xtermFit(xtermRef, 50, 18)
+                       }}
+                />
+            </div>
+        </>}
         {statusCards.length > 0 && <div style={{marginTop: 8, marginBottom: 8}}>
             <Row gutter={8}>
                 {statusCards.map((card, cardIndex) => {
@@ -162,21 +172,22 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         <div>
                             任务额外日志与结果
                         </div>
-                        {(timelineItemProps||[]).length > 0 ? formatDate(timelineItemProps[0].timestamp) : ""}
+                        {(timelineItemProps || []).length > 0 ? formatDate(timelineItemProps[0].timestamp) : ""}
                     </Space>}
                         style={{marginBottom: 20, marginRight: 2}}
                     >
                         <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
                             {timelineItemProps.map((e, index) => {
                                 return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
-                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} onlyTime={true}/>
+                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}
+                                                       onlyTime={true}/>
                                 </Timeline.Item>
                             })}
                         </Timeline>
                     </Card>
                 </>}
             </Tabs.TabPane>
-            {props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
+            {!props.debugMode && props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
                 <div style={{width: "100%", height: "100%", overflow: "hidden"}}>
                     <CVXterm 
                         ref={xtermRef} 
@@ -228,11 +239,11 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
                         }
 
                     }).filter(i => {
-                        try{
+                        try {
                             if ((i?.table_name || "") === (props.params?.table_name || "")) {
                                 return true
                             }
-                        }catch (e) {
+                        } catch (e) {
                             return false
                         }
                         return false

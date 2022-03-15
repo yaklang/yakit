@@ -284,7 +284,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                     showModal({
                                         title: "立即执行", width: 1000,
                                         content: <>
-                                            <YakScriptRunner script={data} params={[]}/>
+                                            <YakScriptRunner debugMode={true} script={data} params={[]}/>
                                         </>
                                     })
                                 } else {
@@ -297,7 +297,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                                 showModal({
                                                     title: "立即执行", width: 1000,
                                                     content: <>
-                                                        <YakScriptRunner script={data} params={params}/>
+                                                        <YakScriptRunner debugMode={true} script={data}
+                                                                         params={params}/>
                                                     </>
                                                 })
                                             }}/>
@@ -439,7 +440,7 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
                                 showModal({
                                     title: "立即执行", width: 1000,
                                     content: <>
-                                        <YakScriptRunner script={data} params={[]}/>
+                                        <YakScriptRunner debugMode={true} script={data} params={[]}/>
                                     </>
                                 })
                             } else {
@@ -452,7 +453,7 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
                                             showModal({
                                                 title: "立即执行", width: 1000,
                                                 content: <>
-                                                    <YakScriptRunner script={data} params={params}/>
+                                                    <YakScriptRunner debugMode={true} script={data} params={params}/>
                                                 </>
                                             })
                                         }}/>
