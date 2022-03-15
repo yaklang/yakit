@@ -111,7 +111,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
     }, [])
 
     return (
-        <div style={{height: "100%", backgroundColor: "#fff", width: "100%", display: "flex"}}>
+        <div style={{width: "100%", height: "100%", display: "flex", flexFlow: "row", overflow: "hidden"}}>
             <div style={{height: "100%", width: 200}}>
                 <Card
                     loading={typeLoading}
@@ -145,8 +145,9 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     </Checkbox.Group>
                 </Card>
             </div>
-            <div style={{flex: 1, width: "100%", display: "flex", flexDirection: "column"}}>
-                <Row style={{marginBottom: 30, marginTop: 35}}>
+            <div style={{flex: 1, overflow: "hidden"}}>
+                <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
+                    <Row style={{marginBottom: 30, marginTop: 35}}>
                     <Col span={3}/>
                     <Col span={17}>
                         <Form
@@ -344,23 +345,24 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                             </Space>
                         </Form>
                     </Col>
-                </Row>
-                {/*<Row style={{marginBottom: 8}}>*/}
-                {/*    <Col span={24}>*/}
-                {/*        */}
-                {/*    </Col>*/}
-                {/*</Row>*/}
-                <AutoCard style={{flex: 1, overflow: "auto"}} bodyStyle={{padding: 10}}>
-                    <PluginResultUI
-                        // script={script}
-                        loading={loading}
-                        progress={infoState.processState}
-                        results={infoState.messageSate}
-                        feature={infoState.featureMessageState}
-                        statusCards={infoState.statusState}
-                        onXtermRef={setXtermRef}
-                    />
-                </AutoCard>
+                    </Row>
+                    {/*<Row style={{marginBottom: 8}}>*/}
+                    {/*    <Col span={24}>*/}
+                    {/*        */}
+                    {/*    </Col>*/}
+                    {/*</Row>*/}
+                    <AutoCard bodyStyle={{padding: 10}}>
+                        <PluginResultUI
+                            // script={script}
+                            loading={loading}
+                            progress={infoState.processState}
+                            results={infoState.messageSate}
+                            feature={infoState.featureMessageState}
+                            statusCards={infoState.statusState}
+                            onXtermRef={setXtermRef}
+                        />
+                    </AutoCard>
+                </div>
             </div>
         </div>
     )
