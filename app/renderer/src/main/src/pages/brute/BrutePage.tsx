@@ -351,17 +351,19 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     {/*        */}
                     {/*    </Col>*/}
                     {/*</Row>*/}
-                    <AutoCard bodyStyle={{padding: 10}}>
-                        <PluginResultUI
-                            // script={script}
-                            loading={loading}
-                            progress={infoState.processState}
-                            results={infoState.messageSate}
-                            feature={infoState.featureMessageState}
-                            statusCards={infoState.statusState}
-                            onXtermRef={setXtermRef}
-                        />
-                    </AutoCard>
+                    <div style={{flex: 1, overflow: "hidden"}}>
+                        <AutoCard bodyStyle={{padding: 10,overflow: "hidden"}}>
+                            <PluginResultUI
+                                // script={script}
+                                loading={loading}
+                                progress={infoState.processState}
+                                results={infoState.messageSate}
+                                feature={infoState.featureMessageState}
+                                statusCards={infoState.statusState}
+                                onXtermRef={setXtermRef}
+                            />
+                        </AutoCard>
+                    </div>
                 </div>
             </div>
         </div>

@@ -109,7 +109,8 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
     }).splice(0, 25);
 
-    return <div style={{width: "100%", flex: 1, display: "flex", flexDirection: "column", overflowY: "auto"}}>
+    return <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
+        {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
         {props.debugMode && props.onXtermRef && <>
             <div style={{width: "100%", height: 240}}>
                 <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
@@ -235,6 +236,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 </div>
             </Tabs.TabPane>}
         </Tabs>
+        {/* </div> */}
     </div>
 });
 

@@ -36,7 +36,7 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
-                    const row = Math.floor(height / 17)
+                    const row = Math.floor(height / 18.5)
                     const col = Math.floor(width / 10)
                     if (xtermRef) xtermFit(xtermRef, col, row)
                 }}
