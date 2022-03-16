@@ -435,12 +435,6 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         })}
                     </Select>
                 </Form.Item>
-                {/* <InputItem
-                    label={"字典名/组"}
-                    setValue={(Group) => setParams({...params, Group})}
-                    value={params.Group}
-                    required={true}
-                /> */}
                 <Form.Item label={"字典内容"}>
                     <div style={{height: 300}}>
                         <YakEditor setValue={(Content) => setParams({...params, Content})} value={params.Content}/>
@@ -532,15 +526,19 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     onSubmitCapture={(e) => {
                         e.preventDefault()
 
+                        setUploadLoading(true)
                         ipcRenderer
                             .invoke("SavePayload", params)
                             .then(() => {
-                                props.onFinished && props.onFinished(params.Group)
+                                setTimeout(() => {
+                                    setUploadLoading(false)
+                                    props.onFinished && props.onFinished(params.Group)
+                                }, 300)
                             })
                             .catch((e: any) => {
+                                setTimeout(() => setUploadLoading(false), 100)
                                 failed("创建 Payload 失败 / 字典")
                             })
-                            .finally(props.onFinally)
                     }}
                     wrapperCol={{span: 14}}
                     labelCol={{span: 6}}
