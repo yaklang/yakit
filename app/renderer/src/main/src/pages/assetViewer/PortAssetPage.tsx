@@ -10,6 +10,8 @@ import {SearchOutlined, ReloadOutlined} from "@ant-design/icons";
 import {SorterResult} from "antd/lib/table/interface";
 import {YakEditor} from "../../utils/editors";
 import {openExternalWebsite} from "../../utils/openWebsite";
+import {startExecYakCode} from "../../utils/basic";
+import {OutputAsset} from "./outputAssetYakCode";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -37,6 +39,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         },
     });
     const [loading, setLoading] = useState(false);
+    const [outputByNetwork, setOutputByNetwork] = useState("");
 
     const update = (current?: number, pageSize?: number, order?: string, orderBy?: string) => {
         setLoading(true)
@@ -73,12 +76,41 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     </Space>
                 </Col>
                 <Col span={12} style={{textAlign: "right"}}>
-                    <Popover
-                        title={"选择性删除端口"}
-                        content={<PortDeleteForm onFinished={() => update(1)}/>}
-                    >
-                        <Button size={"small"} danger={true}>删除端口</Button>
-                    </Popover>
+                    <Space>
+                        <Popover title={"输入想要导出的端口的网段（支持C段等 CIDR 格式，逗号分隔）"}
+                                 trigger={["click"]}
+                                 content={<div>
+                                     <Form layout={"inline"} size={"small"} onSubmitCapture={e => {
+                                         e.preventDefault()
+
+                                         startExecYakCode("Output Ports", {
+                                             Script: OutputAsset.outputPortByNetwork, Params: [
+                                                 {Key: "network", Value: outputByNetwork}
+                                             ]
+                                         })
+                                     }}>
+                                         <InputItem
+                                             label={"网段"} value={outputByNetwork}
+                                             setValue={setOutputByNetwork}
+                                         />
+                                         <Form.Item colon={false} label={" "}>
+                                             <Button size={"small"} type="primary" htmlType="submit"> 导出 </Button>
+                                         </Form.Item>
+                                     </Form>
+                                 </div>}
+                        >
+                            <Button
+                                type={"primary"}
+                                size={"small"}
+                            >导出端口</Button>
+                        </Popover>
+                        <Popover
+                            title={"选择性删除端口"}
+                            content={<PortDeleteForm onFinished={() => update(1)}/>}
+                        >
+                            <Button size={"small"} danger={true}>删除端口</Button>
+                        </Popover>
+                    </Space>
                 </Col>
             </Row>
         }}

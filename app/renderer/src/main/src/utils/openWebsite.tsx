@@ -10,6 +10,10 @@ export const openABSFile = (u: string) => {
     ipcRenderer.invoke("shell-open-abs-file", u)
 }
 
+export const openABSFileLocated = (u: string) => {
+    ipcRenderer.invoke("open-specified-file", u)
+}
+
 export interface ExternalUrlProp {
     url: string
     title?: React.ReactNode

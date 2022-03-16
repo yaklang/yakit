@@ -1,10 +1,14 @@
 import React, {useEffect, useState} from "react";
-import {Button, Popconfirm, Space, Table, Tag, Typography} from "antd";
+import {Button, Form, Popconfirm, Popover, Space, Table, Tag, Typography} from "antd";
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema";
 import {failed} from "../../utils/notification";
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons";
-import { TableFilterDropdownString } from "../risks/RiskTable";
-import { useMemoizedFn } from "ahooks";
+import {TableFilterDropdownString} from "../risks/RiskTable";
+import {useMemoizedFn} from "ahooks";
+import {showModal} from "../../utils/showModal";
+import {InputItem} from "../../utils/inputUtil";
+import {startExecYakCode} from "../../utils/basic";
+import {OutputAsset} from "./outputAssetYakCode";
 
 export interface Domain {
     ID?: number
@@ -19,7 +23,8 @@ export interface QueryDomainsRequest extends QueryGeneralRequest {
     Title?: string
 }
 
-export interface DomainAssetPageProps {}
+export interface DomainAssetPageProps {
+}
 
 const {ipcRenderer} = window.require("electron");
 const {Text} = Typography
@@ -35,6 +40,8 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
     });
     const [loading, setLoading] = useState(false);
     const {Data, Total, Pagination} = response;
+    const [outputDomainKeyword, setOutputDomainKeyword] = useState("*");
+
 
     const update = useMemoizedFn((page?: number, limit?: number,) => {
         const newParams = {
@@ -91,24 +98,53 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                         size={"small"} icon={<ReloadOutlined/>}
                     />
                 </Space>
-                <Popconfirm title="确定删除所有域名资产吗? 不可恢复" onConfirm={e => delDomain()}>
-                    <Button
-                        type="link"
-                        danger
-                        size="small"
-                    >删除全部</Button>
-                </Popconfirm>
+                <Space>
+                    <Popover title={"输入想要导出的域名关键字"}
+                             trigger={["click"]}
+                             content={<div>
+                                 <Form layout={"inline"} size={"small"} onSubmitCapture={e => {
+                                     e.preventDefault()
+
+                                     startExecYakCode("Output Domains", {
+                                         Script: OutputAsset.outputDomainByKeyword, Params: [
+                                             {Key: "keyword", Value: outputDomainKeyword}
+                                         ]
+                                     })
+                                 }}>
+                                     <InputItem
+                                         label={"域名关键字"} value={outputDomainKeyword}
+                                         setValue={setOutputDomainKeyword}
+                                     />
+                                     <Form.Item colon={false} label={" "}>
+                                         <Button size={"small"} type="primary" htmlType="submit"> 导出 </Button>
+                                     </Form.Item>
+                                 </Form>
+                             </div>}
+                    >
+                        <Button
+                            type={"primary"}
+                            size={"small"}
+                        >导出域名</Button>
+                    </Popover>
+                    <Popconfirm title="确定删除所有域名资产吗? 不可恢复" onConfirm={e => delDomain()}>
+                        <Button
+                            type="link"
+                            danger
+                            size="small"
+                        >删除全部</Button>
+                    </Popconfirm>
+                </Space>
             </div>
         }}
         size={"small"} bordered={true}
         dataSource={Data}
-        rowKey={e => `${e.ID}`} 
+        rowKey={e => `${e.ID}`}
         columns={[
             {
                 title: "域名",
                 render: (i: Domain) => <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>{i.DomainName}</Text>,
                 filterIcon: (filtered) => {
-                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                 },
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return (
@@ -132,7 +168,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 dataIndex: "IPAddr",
                 width: 160,
                 filterIcon: (filtered) => {
-                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                 },
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return (
@@ -155,7 +191,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 title: "HTMLTitle",
                 dataIndex: "HTTPTitle",
                 filterIcon: (filtered) => {
-                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                    return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                 },
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return (
