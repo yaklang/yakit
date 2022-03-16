@@ -90,7 +90,8 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             </PageHeader>
             <Divider/>
             <PluginResultUI
-                script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate}
+                script={script} loading={loading} progress={infoState.processState} results={infoState.messageState}
+                featureType={infoState.featureTypeState}
                 feature={infoState.featureMessageState}
                 statusCards={infoState.statusState} onXtermRef={setXtermRef}
             />
@@ -155,12 +156,13 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             </Panel>
             <Panel key={"console"} showArrow={false} header={<>
                 插件执行结果
-            </>} collapsible={infoState.messageSate.length <= 0 ? 'disabled' : undefined}>
+            </>} collapsible={infoState.messageState.length <= 0 ? 'disabled' : undefined}>
                 <div style={{width: "100%", overflowY: "auto"}}>
                     <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
                 </div>
                 <PluginResultUI
-                    script={script} loading={loading} progress={infoState.processState} results={infoState.messageSate}
+                    script={script} loading={loading} progress={infoState.processState} results={infoState.messageState}
+                    featureType={infoState.featureTypeState}
                     feature={infoState.featureMessageState}
                     statusCards={infoState.statusState}
                 />

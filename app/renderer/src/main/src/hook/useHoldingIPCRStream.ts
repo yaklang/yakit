@@ -13,10 +13,11 @@ import { useGetState } from "ahooks"
 const { ipcRenderer } = window.require("electron")
 
 interface InfoState {
-    messageSate: ExecResultLog[]
+    messageState: ExecResultLog[]
     processState: ExecResultProgress[]
     statusState: StatusCardInfoProps[]
     featureMessageState: ExecResultLog[]
+    featureTypeState: ExecResultLog[]
 }
 
 export interface CacheStatusCardProps {
@@ -35,15 +36,17 @@ export default function useHoldingIPCRStream(
     dataFilter?: (obj: ExecResultMessage, content: ExecResultLog) => boolean
 ) {
     const [infoState, setInfoState] = useState<InfoState>({
-        messageSate: [],
+        messageState: [],
         processState: [],
         statusState: [],
-        featureMessageState: []
+        featureMessageState: [],
+        featureTypeState: []
     })
     const [xtermRef, setXtermRef, getXtermRef] = useGetState<any>(null)
 
     let messages = useRef<ExecResultMessage[]>([])
     let featureMessages = useRef<ExecResultMessage[]>([])
+    let featureTypes = useRef<ExecResultMessage[]>([])
     let processKVPair = useRef<Map<string, number>>(new Map<string, number>())
     let statusKVPair = useRef<Map<string, CacheStatusCardProps>>(
         new Map<string, CacheStatusCardProps>()
@@ -56,6 +59,10 @@ export default function useHoldingIPCRStream(
                 .map((i) => i.content as ExecResultLog)
 
             let featureResults = featureMessages.current
+                .filter((i) => i.type === "log")
+                .map((i) => i.content as ExecResultLog).filter((i) => i.data !== 'null')
+
+            let featureTypeResults = featureTypes.current
                 .filter((i) => i.type === "log")
                 .map((i) => i.content as ExecResultLog).filter((i) => i.data !== 'null')
 
@@ -88,17 +95,19 @@ export default function useHoldingIPCRStream(
             if (
                 JSON.stringify(infoState) !==
                 JSON.stringify({
-                    messageSate: results,
+                    messageState: results,
                     featureMessageState: featureResults,
                     processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
-                    statusState: Object.values(cacheStatusKVPair)
+                    statusState: Object.values(cacheStatusKVPair),
+                    featureTypeState: featureTypeResults
                 })
             ) {
                 setInfoState({
-                    messageSate: results,
+                    messageState: results,
                     featureMessageState: featureResults,
                     processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
-                    statusState: Object.values(cacheStatusKVPair)
+                    statusState: Object.values(cacheStatusKVPair),
+                    featureTypeState: featureTypeResults
                 })
             }
         }
@@ -125,8 +134,9 @@ export default function useHoldingIPCRStream(
                         return
                     }
 
-                    // 处理 log feature-status-card-data
                     const logData = obj.content as ExecResultLog
+
+                    // 处理 log feature-status-card-data
                     if (obj.type === "log" && logData.level === "feature-status-card-data") {
                         try {
                             const obj = JSON.parse(logData.data)
@@ -142,6 +152,13 @@ export default function useHoldingIPCRStream(
                                 Timestamp: timestamp,
                                 Tags: Array.isArray(tags) ? tags : []
                             })
+                        } catch (e) {}
+                        return
+                    }
+
+                    if (obj.type === "log" && logData.level === "json-feature") {
+                        try {
+                            featureTypes.current.unshift(obj)
                         } catch (e) {}
                         return
                     }
@@ -194,9 +211,10 @@ export default function useHoldingIPCRStream(
     const reset = () => {
         messages.current = []
         featureMessages.current = []
+        featureTypes.current = []
         processKVPair.current = new Map<string, number>()
         statusKVPair.current = new Map<string, CacheStatusCardProps>()
-        setInfoState({ messageSate: [], processState: [], statusState: [], featureMessageState: [] })
+        setInfoState({ messageState: [], processState: [], statusState: [], featureMessageState: [], featureTypeState: [] })
     }
 
     return [infoState, { reset, setXtermRef }, xtermRef] as const

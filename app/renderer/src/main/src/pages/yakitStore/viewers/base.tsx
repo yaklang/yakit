@@ -31,6 +31,7 @@ export type ExecResultStatusCard = StatusCardProps
 export interface PluginResultUIProp {
     loading: boolean
     results: ExecResultLog[]
+    featureType: ExecResultLog[]
     feature?: ExecResultLog[]
     progress: ExecResultProgress[]
     statusCards: StatusCardInfoProps[]
@@ -63,7 +64,7 @@ const idToColor = (id: string) => {
 }
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
-    const {loading, results, feature, progress, script, statusCards} = props;
+    const {loading, results, featureType = [], feature = [], progress, script, statusCards} = props;
     const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0");
     const xtermRef = useRef(null)
 
@@ -84,7 +85,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
     })
     // progressBars = progressBars.sort((a, b) => a.id.localeCompare(b.id));
 
-    const features: { feature: string, params: any, key: string }[] = results.filter(i => {
+    const features: { feature: string, params: any, key: string }[] = featureType.filter(i => {
         return i.level === "json-feature"
     }).map(i => {
         try {
