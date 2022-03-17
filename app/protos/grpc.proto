@@ -933,6 +933,9 @@ message FuzzerRequest {
 
   // 如果从历史加载，就用这个！
   int32 HistoryWebFuzzerId = 12;
+
+  // 如果不想自动修复 Content-Length
+  bool NoFixContentLength = 13;
 }
 
 message RedirectRequestParams {

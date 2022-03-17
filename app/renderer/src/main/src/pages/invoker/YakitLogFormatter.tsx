@@ -13,7 +13,7 @@ import {CodeViewer} from "../../utils/codeViewer";
 import {YakEditor} from "../../utils/editors";
 import {AutoCard} from "../../components/AutoCard";
 import MDEditor from "@uiw/react-md-editor";
-import {openABSFile} from "../../utils/openWebsite";
+import {openABSFile, openABSFileLocated} from "../../utils/openWebsite";
 import {callCopyToClipboard} from "../../utils/basic";
 
 export interface YakitLogViewersProp {
@@ -66,7 +66,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                                 size={"small"}
                                 disabled={!obj.is_existed}
                                 onClick={() => {
-                                    openABSFile(obj.dir)
+                                    openABSFileLocated(obj.path)
                                 }}
                             >打开文件位置</Button>
                         </Space>}

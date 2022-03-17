@@ -16,7 +16,7 @@ import {
     Typography,
     Dropdown,
     Menu,
-    Popover, Checkbox
+    Popover, Checkbox, Tooltip
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -34,7 +34,7 @@ import {
     RightOutlined,
     DownOutlined,
     HistoryOutlined,
-    DownloadOutlined
+    DownloadOutlined, QuestionCircleOutlined
 } from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed, success} from "../../utils/notification"
@@ -44,7 +44,7 @@ import {useMemoizedFn} from "ahooks";
 import {getValue, saveValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 import {PayloadManagerPage} from "../payloadManager/PayloadManager";
-import { HackerPlugin } from "../hacker/HackerPlugin"
+import {HackerPlugin} from "../hacker/HackerPlugin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -134,6 +134,7 @@ export const showDictsAndSelect = (res: (i: string) => any) => {
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
     const [isHttps, setIsHttps] = useState(props.isHttps || false)
+    const [noFixContentLength, setNoFixContentLength] = useState(false)
     const [request, setRequest] = useState(props.request || defaultPostTemplate)
     const [concurrent, setConcurrent] = useState(20)
     const [forceFuzz, setForceFuzz] = useState(true)
@@ -265,6 +266,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 IsHTTPS: isHttps,
                 Concurrent: concurrent,
                 PerRequestTimeoutSeconds: timeout,
+                NoFixContentLength: noFixContentLength,
                 Proxy: proxy,
                 ActualAddr: actualHost
             },
@@ -393,7 +395,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             failed("正则有问题，请检查后重新输入")
             return
         }
-        
+
         if (strs.length === 0) {
             failed('未捕获到关键词信息')
             return
@@ -649,6 +651,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 Response: new Buffer(content[0].ResponseRaw).toString("utf8"),
                                                 IsHttps: isHttps,
                                                 PerRequestTimeoutSeconds: timeout,
+                                                NoFixContentLength: noFixContentLength,
                                                 Proxy: proxy
                                             })
                                             .then((rsp: FuzzerResponse) => {
@@ -792,6 +795,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 }}
                                                 size={"small"}
                                                 value={isHttps}
+                                                formItemStyle={{marginBottom: 4}}
+                                            />
+                                        </Col>
+                                        <Col span={12} xl={8}>
+                                            <SwitchItem
+                                                label={<OneLine width={70}>
+                                                    <Tooltip title={"不修复 Content-Length: 常用发送多个数据包"}>
+                                                        不修复长度
+                                                    </Tooltip>
+                                                </OneLine>}
+                                                setValue={(e) => {
+                                                    setNoFixContentLength(e)
+                                                }}
+                                                size={"small"}
+                                                value={noFixContentLength}
                                                 formItemStyle={{marginBottom: 4}}
                                             />
                                         </Col>
