@@ -29,8 +29,8 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
         title={<Space>
             Responses
             <SelectOne size={"small"} label={" "} colon={false} data={[
-                {value: true, text: "成功请求"},
-                {value: false, text: "失败请求"},
+                {value: true, text: `成功[${(props.successResponses || []).length}]个`},
+                {value: false, text: `失败[${(props.failedResponses || []).length}]个`},
             ]} value={showSuccess} setValue={setShowSuccess}
                        formItemStyle={{marginBottom: 0}}
             />
