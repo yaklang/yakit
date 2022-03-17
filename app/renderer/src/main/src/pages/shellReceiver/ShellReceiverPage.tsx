@@ -1,9 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {Button, Modal, notification, PageHeader, Popconfirm, Space, Spin, Tabs, Tag} from "antd";
+import {Modal, PageHeader, Space, Tabs} from "antd";
 import {showModal} from "../../utils/showModal";
 import {CreateShellReceiverForm} from "./CreateShellReceiver";
 import {failed, info, success} from "../../utils/notification";
 import {ShellItem} from "./ShellItem";
+import { AutoSpin } from "../../components/AutoSpin";
+
+import "./ShellReceiverPage.css"
 
 export interface ShellReceiverPageProp {
 
@@ -97,35 +100,55 @@ export const ShellReceiverPage: React.FC<ShellReceiverPageProp> = (props) => {
         }
     }, [])
 
-    return <>
-        <PageHeader title={"Reverse Shell Receiver"} subTitle={<Space>
-            {/*<Button type={"primary"}>开启端口并监听</Button>*/}
-            <div>反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互。</div>
-        </Space>}>
+    return <div style={{width: "100%", height: "100%", display: "flex", flexFlow: "column"}}>
+        <PageHeader
+            title={"Reverse Shell Receiver"}
+            subTitle={
+                <Space>
+                    {/*<Button type={"primary"}>开启端口并监听</Button>*/}
+                    <div>反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互。</div>
+                </Space>
+            }
+        ></PageHeader>
 
-        </PageHeader>
-        <Spin spinning={loading || updatingAddrs}>
-            <Tabs type={"editable-card"} onEdit={(key, action) => {
-                if (action === "add") {
-                    createForm()
-                } else if (action === "remove") {
-                    removeListenPort(`${key}`)
-                }
-            }}>
-                {(addrs || []).length > 0 ? addrs.map(e => {
-                    return <Tabs.TabPane key={e} tab={`${e}`} closable={false}>
-                        <ShellItem addr={e} removeListenPort={removeListenPort}/>
-                    </Tabs.TabPane>
-                }) : <Tabs.TabPane closable={false} key={"empty"} tab={"开始监听端口"}>
-                    <CreateShellReceiverForm
-                        title={"开始监听：在服务器上开启一个端口"}
-                        onCheck={addr => {
-                            return true
-                        }} onCreated={(addr) => {
-                        startListenPort(addr);
-                    }}/>
-                </Tabs.TabPane>}
-            </Tabs>
-        </Spin>
-    </>
+        <div style={{flex: 1,overflowY: "hidden"}}>
+            <AutoSpin spinning={loading || updatingAddrs}>
+                <Tabs
+                    className="tabs-container"
+                    tabBarStyle={{marginBottom: 8}}
+                    type={"editable-card"}
+                    onEdit={(key, action) => {
+                        if (action === "add") {
+                            createForm()
+                        } else if (action === "remove") {
+                            removeListenPort(`${key}`)
+                        }
+                    }}
+                >
+                    {(addrs || []).length > 0 ? (
+                        addrs.map((e) => {
+                            return (
+                                <Tabs.TabPane key={e} tab={`${e}`} closable={false}>
+                                    <ShellItem addr={e} removeListenPort={removeListenPort} />
+                                </Tabs.TabPane>
+                            )
+                        })
+                    ) : (
+                        <Tabs.TabPane closable={false} key={"empty"} tab={"开始监听端口"}>
+                            <CreateShellReceiverForm
+                                title={"开始监听：在服务器上开启一个端口"}
+                                onCheck={(addr) => {
+                                    return true
+                                }}
+                                onCreated={(addr) => {
+                                    startListenPort(addr)
+                                }}
+                            />
+                        </Tabs.TabPane>
+                    )}
+                </Tabs>
+            </AutoSpin>
+        </div>
+        
+    </div>
 };

@@ -10,6 +10,7 @@ import {PluginResultUI} from "./viewers/base";
 
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream";
 import {useMemoizedFn} from "ahooks";
+import { CVXterm } from "../../components/CVXterm";
 
 export interface PluginExecutorProp {
     script: YakScript
@@ -157,8 +158,12 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             <Panel key={"console"} showArrow={false} header={<>
                 插件执行结果
             </>} collapsible={infoState.messageState.length <= 0 ? 'disabled' : undefined}>
-                <div style={{width: "100%", overflowY: "auto"}}>
-                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/>
+                <div style={{width: "100%",height: 103, overflowY: "hidden"}}>
+                    <CVXterm 
+                        ref={xtermRef} 
+                        options={{convertEol: true}} 
+                    />
+                    {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 6}}/> */}
                 </div>
                 <PluginResultUI
                     script={script} loading={loading} progress={infoState.processState} results={infoState.messageState}
