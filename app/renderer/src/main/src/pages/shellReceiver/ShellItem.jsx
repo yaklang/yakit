@@ -1,8 +1,9 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Button, PageHeader, Popconfirm, Space, Spin, Switch, Tag} from "antd";
 import {XTerm} from "xterm-for-react";
-import {YakEditor} from "../../utils/editors";
 import {useGetState, useMemoizedFn} from "ahooks";
+import { AutoSpin } from "../../components/AutoSpin";
+import { CVXterm } from "../../components/CVXterm";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -54,7 +55,7 @@ export const ShellItem = (props) => {
     }, [])
 
     return (
-        <div>
+        <div style={{width: "100%", height: "100%", display: "flex", flexFlow: "column"}}>
             <PageHeader
                 title={<Space>
                     {"正在监听端口: " + addr}
@@ -89,50 +90,60 @@ export const ShellItem = (props) => {
                     </Space>
                 }
             />
-            <Spin spinning={!haveConnIn} tip={"正在等待 TCP 连接连入..."}>
-                <XTerm
-                    ref={xtermRef}
-                    options={{
-                        convertEol: true
-                    }}
-                    onKey={({key, event}) => {
-                        if (!copyLoading) {
-                            const code = key.charCodeAt(0)
-                            if (code === 127 && xtermRef?.current) {
-                                //Backspace
-                                xtermRef.current.terminal.write("\x1b[D \x1b[D")
-                            }
+            <div style={{flex: 1, overflowY: "hidden"}}>
+                <AutoSpin spinning={!haveConnIn} tip={"正在等待 TCP 连接连入..."}>
+                    <CVXterm
+                        ref={xtermRef}
+                        options={{
+                            convertEol: true
+                        }}
+                        isWrite={getEchoBack()}
+                        write={write}
+                    />
+                    {/* <XTerm
+                        ref={xtermRef}
+                        options={{
+                            convertEol: true
+                        }}
+                        onKey={({key, event}) => {
+                            if (!copyLoading) {
+                                const code = key.charCodeAt(0)
+                                if (code === 127 && xtermRef?.current) {
+                                    //Backspace
+                                    xtermRef.current.terminal.write("\x1b[D \x1b[D")
+                                }
 
-                            write(key)
-                        }
-                    }}
-                    customKeyEventHandler={(e) => {
-                        if (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) {
-                            setCopyLoading(true)
-                            if (timeRef.current) return
-                            timeRef.current = setTimeout(() => {
-                                navigator.clipboard.readText().then((res) => {
-                                    write(res)
-                                    timeRef.current = null
-                                    setCopyLoading(false)
-                                })
-                            }, 200)
-                        }
-                        if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
-                            const str = xtermRef.current.terminal.getSelection()
-                            setCopyLoading(true)
-                            if (timeRef.current) return
-                            timeRef.current = setTimeout(() => {
-                                ipcRenderer.invoke("copy-clipboard", str).finally(() => {
-                                    timeRef.current = null
-                                    setCopyLoading(false)
-                                })
-                            }, 300)
-                        }
-                        return true
-                    }}
-                />
-            </Spin>
+                                write(key)
+                            }
+                        }}
+                        customKeyEventHandler={(e) => {
+                            if (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) {
+                                setCopyLoading(true)
+                                if (timeRef.current) return
+                                timeRef.current = setTimeout(() => {
+                                    navigator.clipboard.readText().then((res) => {
+                                        write(res)
+                                        timeRef.current = null
+                                        setCopyLoading(false)
+                                    })
+                                }, 200)
+                            }
+                            if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
+                                const str = xtermRef.current.terminal.getSelection()
+                                setCopyLoading(true)
+                                if (timeRef.current) return
+                                timeRef.current = setTimeout(() => {
+                                    ipcRenderer.invoke("copy-clipboard", str).finally(() => {
+                                        timeRef.current = null
+                                        setCopyLoading(false)
+                                    })
+                                }, 300)
+                            }
+                            return true
+                        }}
+                    /> */}
+                </AutoSpin>
+            </div>
         </div>
     )
 }

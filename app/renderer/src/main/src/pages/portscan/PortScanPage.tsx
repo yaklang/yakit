@@ -19,6 +19,7 @@ import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 
 import "./PortScanPage.css"
+import { CVXterm } from "../../components/CVXterm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -123,10 +124,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     useEffect(() => {
         search()
     }, [])
-
-    useEffect(() => {
-        if (xtermRef) xtermFit(xtermRef, 128, 10)
-    })
 
     useEffect(() => {
         if (!xtermRef) {
@@ -373,15 +370,22 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 </Button>
                                             </div>
 
-                                            <div style={{width: "100%", overflow: "auto"}}>
-                                                <XTerm
+                                            <div style={{width: "100%", height: 178, overflow: "hidden"}}>
+                                                <CVXterm 
+                                                    ref={xtermRef} 
+                                                    options={{
+                                                        convertEol: true,
+                                                        disableStdin: true
+                                                    }}
+                                                />
+                                                {/* <XTerm
                                                     ref={xtermRef}
                                                     options={{
                                                         convertEol: true,
                                                         disableStdin: true
                                                     }}
                                                     onResize={(r) => xtermFit(xtermRef, r.cols, 10)}
-                                                />
+                                                /> */}
                                             </div>
 
                                             <Spin spinning={resettingData}>

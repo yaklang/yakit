@@ -20,15 +20,14 @@ import {showDrawer} from "../../utils/showModal"
 import {failed, info} from "../../utils/notification"
 import {ExecResult} from "./schema"
 import {SelectOne} from "../../utils/inputUtil"
-import {XTerm} from "xterm-for-react"
-import {writeExecResultXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils"
+import {writeExecResultXTerm, xtermClear} from "../../utils/xtermUtils"
 import {AutoCard} from "../../components/AutoCard"
 import {AutoSpin} from "../../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
 import {Terminal} from "./Terminal"
 import {useMemoizedFn} from "ahooks"
 import {ResizeBox} from "../../components/ResizeBox"
-import ReactResizeDetector from "react-resize-detector"
+import { CVXterm } from "../../components/CVXterm"
 
 import "./YakExecutor.css"
 
@@ -474,20 +473,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         }
     }
 
-    const xtermResize = useMemoizedFn(() => {
-        if (!xtermAsideRef || !xtermAsideRef.current) return
-        const aside = xtermAsideRef.current as unknown as HTMLDivElement
-        if (xtermRef) {
-            xtermFit(xtermRef, 100, Math.floor(aside.clientHeight / 18))
-        }
-    })
-
     const openFileLayout = (file: any) => {
-        if (tabList.length === 0) {
-            setTimeout(() => {
-                xtermResize()
-            }, 200)
-        }
         addFile(file)
     }
 
@@ -507,10 +493,6 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     useEffect(() => {
         if (tabList.length === 0) setFullScreen(false)
     }, [tabList])
-
-    useEffect(() => {
-        if (xtermRef) xtermResize()
-    })
 
     useEffect(() => {
         if (!xtermRef) {
@@ -801,19 +783,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                             key={"output"}
                                         >
                                             <div style={{width: "100%", height: "100%"}}>
-                                                <ReactResizeDetector
-                                                    onResize={(width, height) => {
-                                                        if (!width || !height) return
-                                                        if (xtermRef) {
-                                                            xtermFit(xtermRef, 100, Math.floor(height / 18))
-                                                        }
-                                                    }}
-                                                    handleWidth={true}
-                                                    handleHeight={true}
-                                                    refreshMode={"debounce"}
-                                                    refreshRate={50}
-                                                />
-                                                <XTerm
+                                                <CVXterm
                                                     ref={xtermRef}
                                                     options={{
                                                         convertEol: true,
@@ -847,9 +817,6 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                             brightWhite: "#fcf4dc"
                                                         }
                                                     }}
-                                                    onResize={(r) => {
-                                                        xtermFit(xtermRef, r.cols, r.rows)
-                                                    }}
                                                 />
                                             </div>
                                         </TabPane>
@@ -867,7 +834,6 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                 </div>
                             }
                             secondRatio='30%'
-                            onChangeSize={() => xtermResize()}
                         />
                     )}
                     {tabList.length === 0 && (

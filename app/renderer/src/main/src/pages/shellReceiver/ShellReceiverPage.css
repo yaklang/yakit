@@ -1,0 +1,10 @@
+.tabs-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+}
+.tabs-container .ant-tabs-content-holder {
+    flex-grow: 1;
+    overflow-y: hidden;
+}

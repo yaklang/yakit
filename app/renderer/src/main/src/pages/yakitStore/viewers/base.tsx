@@ -11,8 +11,10 @@ import {WebsiteTreeViewer} from "./WebsiteTree";
 import {BasicTable} from "./BasicTable";
 import {XTerm} from "xterm-for-react";
 import {formatDate} from "../../../utils/timeUtil";
-import {xtermFit} from "../../../utils/xtermUtils";
+import { xtermFit } from "../../../utils/xtermUtils";
+import { CVXterm } from "../../../components/CVXterm";
 
+const {ipcRenderer} = window.require("electron");
 
 export interface StatusCardProps {
     Id: string
@@ -66,6 +68,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
     const {loading, results, feature, progress, script, statusCards} = props;
     const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0");
     const xtermRef = useRef(null)
+    const timer = useRef<any>(null)
 
     useEffect(() => {
         if (!xtermRef) {
@@ -106,13 +109,30 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
     }).splice(0, 25);
 
-    return <div style={{width: "100%", flex: 1, display: "flex", flexDirection: "column", overflowY: "auto"}}>
+    return <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
+        {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
         {props.debugMode && props.onXtermRef && <>
             <div style={{width: "100%", height: 240}}>
                 <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
                        onResize={(r) => {
                            xtermFit(xtermRef, 50, 18)
                        }}
+                       customKeyEventHandler={(e) => {
+                        if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
+                            const str = xtermRef?.current ? (xtermRef.current as any).terminal.getSelection() : ""
+    
+                            if (timer.current) {
+                                clearTimeout(timer.current)
+                                timer.current = null
+                            }
+                            timer.current = setTimeout(() => {
+                                ipcRenderer.invoke("copy-clipboard", str).finally(() => {
+                                    timer.current = null
+                                })
+                            }, 300)
+                        }
+                        return true
+                    }}
                 />
             </div>
         </>}
@@ -149,7 +169,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             onChange={activeKey => {
                 setActive(activeKey)
                 setTimeout(() => {
-                    if (xtermRef) xtermFit(xtermRef, 50, 18)
+                    if (xtermRef && props.debugMode) xtermFit(xtermRef, 50, 18)
                 }, 50);
             }}
         >
@@ -178,8 +198,8 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
                             {timelineItemProps.map((e, index) => {
                                 return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
-                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}
-                                                       onlyTime={true}/>
+                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} 
+                                    onlyTime={true}/>
                                 </Timeline.Item>
                             })}
                         </Timeline>
@@ -188,14 +208,35 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             </Tabs.TabPane>
             {!props.debugMode && props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
                 <div style={{width: "100%", height: "100%"}}>
-                    <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
-                           onResize={(r) => {
-                               xtermFit(xtermRef, 50, 18)
-                           }}
+                    <CVXterm 
+                        ref={xtermRef} 
+                        options={{convertEol: true}}
                     />
+                    {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
+                        onResize={(r) => {
+                            xtermFit(xtermRef, 50, 18)
+                        }}
+                        customKeyEventHandler={(e) => {
+                            if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
+                                const str = xtermRef?.current ? (xtermRef.current as any).terminal.getSelection() : ""
+        
+                                if (timer.current) {
+                                    clearTimeout(timer.current)
+                                    timer.current = null
+                                }
+                                timer.current = setTimeout(() => {
+                                    ipcRenderer.invoke("copy-clipboard", str).finally(() => {
+                                        timer.current = null
+                                    })
+                                }, 300)
+                            }
+                            return true
+                        }}
+                    /> */}
                 </div>
             </Tabs.TabPane>}
         </Tabs>
+        {/* </div> */}
     </div>
 });
 

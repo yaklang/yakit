@@ -41,14 +41,14 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
         return () => reset()
     },[])
 
-    return <Space direction={"vertical"} style={{width: "100%"}}>
+    return <div style={{width: "100%", height: "100%"}}>
         <PluginResultUI
             script={props.script} debugMode={props.debugMode}
             results={infoState.messageSate} statusCards={infoState.statusState}
             progress={infoState.processState} feature={infoState.featureMessageState}
             loading={!finished} onXtermRef={ref => setXtermRef(ref)}
         />
-    </Space>
+    </div>
 };
 
 export const startExecuteYakScript = (script: YakScript, params: YakExecutorParam[]) => {
