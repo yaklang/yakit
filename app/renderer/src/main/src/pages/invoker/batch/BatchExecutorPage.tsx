@@ -832,6 +832,7 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
 
         const messages: ExecResultMessage[] = []
         const featureMessages: ExecResultMessage[] = []
+        const featureTypes: ExecResultMessage[] = []
         const processKVPair: Map<string, number> = new Map<string, number>()
         const statusKVPair: Map<string, CacheStatusCardProps> = new Map<string, CacheStatusCardProps>()
 
@@ -870,6 +871,13 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
                     return
                 }
 
+                if (item.type === "log" && logData.level === "json-feature") {
+                    try {
+                        featureTypes.unshift(item)
+                    } catch (e) {}
+                    return
+                }
+
                 if (item.type === "log" && logData.level === "feature-table-data") {
                     try {
                         featureMessages.unshift(item)
@@ -889,6 +897,11 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
         let results = messages.filter((i) => i.type === "log").map((i) => i.content as ExecResultLog)
 
         let featureResults = featureMessages
+            .filter((i) => i.type === "log")
+            .map((i) => i.content as ExecResultLog)
+            .filter((i) => i.data !== "null")
+
+        let featureType = featureTypes
             .filter((i) => i.type === "log")
             .map((i) => i.content as ExecResultLog)
             .filter((i) => i.data !== "null")
@@ -923,6 +936,7 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
                 loading={false}
                 progress={processes.sort((a, b) => a.id.localeCompare(b.id))}
                 results={results}
+                featureType={featureType}
                 feature={featureResults}
                 statusCards={Object.values(cacheStatusKVPair)}
                 onXtermRef={setXtermRef}

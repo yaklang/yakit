@@ -405,7 +405,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             <PluginResultUI
                                                 loading={loading}
                                                 progress={infoState.processState}
-                                                results={infoState.messageSate}
+                                                results={infoState.messageState}
+                                                featureType={infoState.featureTypeState}
                                                 feature={infoState.featureMessageState}
                                                 statusCards={infoState.statusState}
                                             />

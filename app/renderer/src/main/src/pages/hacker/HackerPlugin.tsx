@@ -320,8 +320,9 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                     bodyStyle={{padding: 0, paddingLeft: 5}}
                 >
                     <PluginResultUI
-                        results={infoState.messageSate}
+                        results={infoState.messageState}
                         progress={infoState.processState}
+                        featureType={infoState.featureTypeState}
                         feature={infoState.featureMessageState}
                         statusCards={infoState.statusState}
                         loading={loading}

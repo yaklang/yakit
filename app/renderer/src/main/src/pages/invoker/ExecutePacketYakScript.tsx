@@ -36,8 +36,9 @@ export const ExecutePacketYakScript: React.FC<ExecutePacketYakScriptProp> = (pro
     return (
         <AutoCard title={"execute-packet-yak-script"}>
             <PluginResultUI
-                results={infoState.messageSate}
+                results={infoState.messageState}
                 progress={infoState.processState}
+                featureType={infoState.featureTypeState}
                 feature={infoState.featureMessageState}
                 statusCards={infoState.statusState}
                 loading={loading} onXtermRef={setXtermRef}

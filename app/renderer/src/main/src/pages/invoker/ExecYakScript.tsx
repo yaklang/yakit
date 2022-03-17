@@ -44,7 +44,8 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     return <div style={{width: "100%", height: "100%"}}>
         <PluginResultUI
             script={props.script} debugMode={props.debugMode}
-            results={infoState.messageSate} statusCards={infoState.statusState}
+            results={infoState.messageState} statusCards={infoState.statusState}
+            featureType={infoState.featureTypeState}
             progress={infoState.processState} feature={infoState.featureMessageState}
             loading={!finished} onXtermRef={ref => setXtermRef(ref)}
         />
