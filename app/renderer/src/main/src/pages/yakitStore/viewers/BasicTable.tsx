@@ -17,7 +17,12 @@ export const BasicTable: React.FC<BasicTableProp> = (props) => {
     }).input({
         dataSource: props.data,
         columns: props.columns.map(i => {
-            return {code: i, name: i, width: 150} as any
+            return {
+                code: i,
+                name: i,
+                width: 150,
+                render: (value: any) => <div style={{wordBreak: "break-word"}}>{value}</div>
+            } as any
         }),
     }).primaryKey("uuid").use(features.columnResize({
         minSize: 60,
