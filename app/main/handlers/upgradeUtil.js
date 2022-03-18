@@ -168,6 +168,9 @@ module.exports = {
     initial: async () => {
         return await initMkbaseDir();
     },
+    kvpairs,
+    getKVPair,
+    setKVPair,
     register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
             let {name, host, port, tls, caPem, password} = params;

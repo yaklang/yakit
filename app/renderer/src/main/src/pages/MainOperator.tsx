@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {
     Button,
     Col,
@@ -15,7 +15,8 @@ import {
     Tag,
     Spin,
     Dropdown,
-    Typography
+    Typography,
+    Checkbox
 } from "antd"
 import {ContentByRoute, MenuDataProps, NoScrollRoutes, Route, RouteMenuData} from "../routes/routeSpec"
 import {
@@ -26,8 +27,8 @@ import {
     MenuUnfoldOutlined,
     ReloadOutlined,
     PoweroffOutlined,
-    DownOutlined,
     SettingOutlined,
+    ExclamationCircleOutlined,
 } from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
@@ -51,6 +52,8 @@ import {useHotkeys} from "react-hotkeys-hook";
 import {execTest} from "./invoker/ExecutePacketYakScript";
 import { useMemoizedFn } from "ahooks"
 import ReactDOM from "react-dom"
+import debounce from "lodash/debounce"
+import { AutoSpin } from "../components/AutoSpin"
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -63,6 +66,9 @@ const MenuItem = Menu.Item
 
 const {Header, Footer, Content, Sider} = Layout
 const {Text} = Typography
+
+const FuzzerCache = "fuzzer-list-cache"
+const WindowsCloseFlag = "windows-close-flag" 
 
 interface MenuItemGroup {
     Group: string
@@ -80,6 +86,19 @@ interface PageCache {
     verbose: string
     node: React.ReactNode | any
     route: Route
+    time?: string
+}
+
+export interface fuzzerInfoProp {
+    time: string
+
+    isHttps?: boolean
+    forceFuzz?: boolean
+    concurrent?: number
+    proxy?: string
+    actualHost?: string
+    timeout?: number
+    request?: string
 }
 
 const singletonRoute = [
@@ -119,6 +138,90 @@ const Main: React.FC<MainProp> = (props) => {
     const [currentTabKey, setCurrentTabKey] = useState("")
     const [tabLoading, setTabLoading] = useState(false)
 
+    // yakit页面关闭是否二次确认提示
+    const [winCloseFlag, setWinCloseFlag] = useState<boolean>(true)
+    const [winCloseShow, setWinCloseShow] = useState<boolean>(false)
+    useEffect(() => {
+        ipcRenderer
+            .invoke("get-value", WindowsCloseFlag)
+            .then((flag: any) => {
+                setWinCloseFlag(flag === undefined ? true : flag)
+            })
+    }, [])
+
+    // 打开的fuzzer页数据列表
+    const fuzzerList = useRef<Map<string, fuzzerInfoProp>>(new Map<string, fuzzerInfoProp>())
+    // fuzzer页数据列表相关操作
+    const saveFuzzerList = debounce(() => {
+        const historys: fuzzerInfoProp[] = []
+        fuzzerList.current.forEach((value) => {
+            historys.push(value)
+        })
+        historys.sort((a, b) => +a.time - +b.time)
+        const filters = historys.filter(item => (item.request || "").length < 1000000 && (item.request || "").length > 0)
+        ipcRenderer.invoke("set-value", FuzzerCache, JSON.stringify(filters.slice(-5)))
+    }, 500)
+    const fetchFuzzerList = useMemoizedFn(() => {
+        setLoading(true)
+        fuzzerList.current.clear()
+        ipcRenderer
+            .invoke("get-value", FuzzerCache)
+            .then((res: any) => {
+                const cache = JSON.parse(res)
+                let index = 0 
+                for(let item of cache){
+                    const time = new Date().getTime().toString()
+                    fuzzerList.current.set(time,{...item, time: time})
+                    const newTabId = `${Route.HTTPFuzzer}-[${randomString(49)}]`
+                    const verboseNameRaw = routeKeyToLabel.get(Route.HTTPFuzzer) || `${Route.HTTPFuzzer}`
+                    appendCache(
+                        newTabId,
+                        `${verboseNameRaw}[${pageCache.length + 1 + index}]`,
+                        ContentByRoute(Route.HTTPFuzzer, undefined, {
+                            isHttps: item.isHttps || false,
+                            request: item.request || "",
+                            fuzzerParams: item,
+                            system: system,
+                            order: time
+                        }),
+                        Route.HTTPFuzzer as Route,
+                        time
+                    )
+                    setCurrentTabKey(newTabId)
+                    index += 1
+                }
+            })
+            .catch(() => failed("fetch fuzzer cache failed"))
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const addFuzzerList = (key: string, request?: string, isHttps?: boolean) => {
+        fuzzerList.current.set(key, {request, isHttps, time: key})
+    }
+    const delFuzzerList = (type: number, key?: string) => {
+        if(type === 1) fuzzerList.current.clear()
+        if(type === 2 && key) if(fuzzerList.current.has(key)) fuzzerList.current.delete(key)
+        if(type === 3 && key){
+            const info = fuzzerList.current.get(key)
+            if(info){
+                fuzzerList.current.clear()
+                fuzzerList.current.set(key, info)
+            }
+        }
+        saveFuzzerList()
+    }
+    const updateFuzzerList = (key: string, param: fuzzerInfoProp) => {
+         fuzzerList.current.set(key, param)
+         saveFuzzerList()
+    }
+    useEffect(() => {
+        ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => updateFuzzerList(res.key, JSON.parse(res.param)))
+        // 开发环境不展示fuzzer缓存
+        ipcRenderer.invoke("is-dev").then((flag) => {
+            if(!flag)fetchFuzzerList()
+        })
+        return () => ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
+    }, [])
+
     // 系统类型
     const [system,setSystem]=useState<string>("")
     //获取系统类型
@@ -127,6 +230,7 @@ const Main: React.FC<MainProp> = (props) => {
     },[])
 
     const closeCacheByRoute = (r: Route) => {
+        if(r === Route.HTTPFuzzer) delFuzzerList(1)
         setPageCache(pageCache.filter((i) => `${i.route}` !== `${r}`))
     }
     const closeAllCache = () => {
@@ -134,6 +238,7 @@ const Main: React.FC<MainProp> = (props) => {
             title: "确定要关闭所有 Tabs？",
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
+                delFuzzerList(1)
                 setPageCache([])
             }
         })
@@ -143,7 +248,9 @@ const Main: React.FC<MainProp> = (props) => {
             title: "确定要除此之外所有 Tabs？",
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
-                setPageCache(pageCache.filter((i) => i.id === id))
+                const arr = pageCache.filter((i) => i.id === id)
+                delFuzzerList(3, arr[0].time)
+                setPageCache(arr)
             }
         })
     }
@@ -151,9 +258,9 @@ const Main: React.FC<MainProp> = (props) => {
     const removeCache = (id: string) => {
         setPageCache(pageCache.filter((i) => i.id !== id))
     }
-    const appendCache = (id: string, verbose: string, node: any, route: Route) => {
-        setPageCache([...pageCache, {id, verbose, node, route}])
-    }
+    const appendCache = useMemoizedFn((id: string, verbose: string, node: any, route: Route, time?: string) => {
+        setPageCache([...pageCache, {id, verbose, node, route, time}])
+    })
 
     const getCacheIndex = (id: string) => {
         const targets = pageCache.filter((i) => i.id === id)
@@ -332,6 +439,7 @@ const Main: React.FC<MainProp> = (props) => {
         const {isHttps, request} = res || {}
 
         if(request){
+            const time = new Date().getTime().toString()
             const newTabId = `${Route.HTTPFuzzer}-[${randomString(49)}]`
             const verboseNameRaw = routeKeyToLabel.get(Route.HTTPFuzzer) || `${Route.HTTPFuzzer}`
             appendCache(
@@ -340,10 +448,13 @@ const Main: React.FC<MainProp> = (props) => {
                 ContentByRoute(Route.HTTPFuzzer, undefined, {
                     isHttps: isHttps || false,
                     request: request || "",
-                    system: system
+                    system: system,
+                    order: time
                 }),
-                Route.HTTPFuzzer as Route
+                Route.HTTPFuzzer as Route,
+                time
             )
+            addFuzzerList(time, request|| "", isHttps || false)
             setCurrentTabKey(newTabId)
         }
     })
@@ -427,6 +538,7 @@ const Main: React.FC<MainProp> = (props) => {
 
     return (
         <Layout style={{width: "100%", height: "100vh"}}>
+            <AutoSpin spinning={loading}>
             <Header
                 style={{
                     paddingLeft: 0,
@@ -487,8 +599,11 @@ const Main: React.FC<MainProp> = (props) => {
                                 </Button>
                             </Dropdown>
                             <Button type={"link"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
-                                success("退出当前 Yak 服务器成功")
-                                setEngineStatus("error")
+                                if(winCloseFlag) setWinCloseShow(true)
+                                else{
+                                    success("退出当前 Yak 服务器成功")
+                                    setEngineStatus("error")
+                                }
                             }}/>
                         </Space>
                     </Col>
@@ -528,10 +643,19 @@ const Main: React.FC<MainProp> = (props) => {
                                             if (singletonRoute.includes(e.key as Route) && routeExistedCount(e.key as Route) > 0) {
                                                 setCurrentTabByRoute(e.key as Route)
                                             } else {
-                                                const newTabId = `${e.key}-[${randomString(49)}]`
-                                                const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`
-                                                appendCache(newTabId, `${verboseNameRaw}[${pageCache.length + 1}]`, ContentByRoute(e.key), e.key as Route)
-                                                setCurrentTabKey(newTabId)
+                                                if(e.key === Route.HTTPFuzzer){
+                                                    const time = new Date().getTime().toString()
+                                                    const newTabId = `${e.key}-[${randomString(49)}]`
+                                                    const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`
+                                                    appendCache(newTabId, `${verboseNameRaw}[${pageCache.length + 1}]`, ContentByRoute(e.key, undefined, {system: system, order: time}), e.key as Route, time)
+                                                    addFuzzerList(time)
+                                                    setCurrentTabKey(newTabId)
+                                                }else{
+                                                    const newTabId = `${e.key}-[${randomString(49)}]`
+                                                    const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`
+                                                    appendCache(newTabId, `${verboseNameRaw}[${pageCache.length + 1}]`, ContentByRoute(e.key), e.key as Route)
+                                                    setCurrentTabKey(newTabId)
+                                                }
                                             }
 
                                             // 增加加载状态
@@ -637,7 +761,8 @@ const Main: React.FC<MainProp> = (props) => {
                                     onEdit={(key: any, event: string) => {
                                         switch (event) {
                                             case "remove":
-                                                // hooked by tabs closeIcon
+                                                const arr = pageCache.filter((i) => i.id === key)
+                                                delFuzzerList(2, arr[0].time)
                                                 return
                                             case "add":
                                                 if (collapsed) {
@@ -724,6 +849,39 @@ const Main: React.FC<MainProp> = (props) => {
                     </Content>
                 </Layout>
             </Content>
+            </AutoSpin>
+            <Modal
+                visible={winCloseShow}
+                onCancel={() => setWinCloseShow(false)}
+                footer={[
+                    <Button key='link' onClick={() => setWinCloseShow(false)}>
+                        取消
+                    </Button>,
+                    <Button key='back' type='primary' onClick={() => {
+                        success("退出当前 Yak 服务器成功")
+                        setEngineStatus("error")
+                    }}>
+                        退出
+                    </Button>
+                ]}
+            >
+                <div style={{height: 40}}>
+                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
+                    <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
+                </div>
+                <p style={{fontSize: 15, marginLeft: 37}}>是否要退出yakit操作界面，一旦退出，界面内打开内容除fuzzer页外都会销毁</p>
+                <div style={{marginLeft: 37}}>
+                    <Checkbox 
+                        defaultChecked={!winCloseFlag} 
+                        value={!winCloseFlag} 
+                        onChange={() => {
+                            setWinCloseFlag(!winCloseFlag)
+                            ipcRenderer.invoke("set-value", WindowsCloseFlag, false)
+                        }}
+                    ></Checkbox>
+                    <span style={{marginLeft: 8}}>不再出现该提示信息</span>
+                </div>
+            </Modal>
         </Layout>
     )
 };
