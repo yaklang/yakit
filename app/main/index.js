@@ -70,6 +70,11 @@ const createWindow = () => {
             app.exit();
         }
     })
+    
+    // 阻止内部react页面的链接点击跳转
+    win.webContents.on('will-navigate', (e, url) => {
+        e.preventDefault()
+    })
 }
 
 app.whenReady().then(() => {
