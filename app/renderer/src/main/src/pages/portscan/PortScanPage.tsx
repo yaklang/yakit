@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Checkbox, Col, Divider, Form, Input, Row, Space, Spin, Tabs, Tag, Upload} from "antd"
-import {InputInteger, InputItem, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
 import {ExecResult, YakScript} from "../invoker/schema"
 import {failed, info} from "../../utils/notification"
@@ -19,7 +19,7 @@ import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 
 import "./PortScanPage.css"
-import { CVXterm } from "../../components/CVXterm"
+import {CVXterm} from "../../components/CVXterm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -38,6 +38,10 @@ export interface PortScanParams {
     SaveClosedPorts: boolean
     TargetsFile?: string
     ScriptNames: string[]
+    Proxy: string[]
+    ProbeTimeout: number
+    ProbeMax: number
+    EnableCClassScan: boolean
 }
 
 const ScanKind: { [key: string]: string } = {
@@ -62,7 +66,11 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         Proto: ["tcp"],
         SaveClosedPorts: false,
         SaveToDB: true,
-        ScriptNames: []
+        Proxy: [],
+        ProbeTimeout: 5,
+        ScriptNames: [],
+        ProbeMax: 3,
+        EnableCClassScan: false,
     })
     const [loading, setLoading] = useState(false)
     const [token, setToken] = useState(randomString(40))
@@ -314,6 +322,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         <Space>
                                             <Tag>扫描模式:{ScanKind[params.Mode]}</Tag>
                                             <Tag>并发:{params.Concurrent}</Tag>
+                                            {params.EnableCClassScan && <Tag>自动扫C段</Tag>}
                                             <Button
                                                 type='link'
                                                 size='small'
@@ -349,30 +358,30 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 ) : (
                                                     <Tag>闲置中...</Tag>
                                                 )}
-                                                <Button
-                                                    disabled={resettingData || loading}
-                                                    size={"small"}
-                                                    onClick={(e) => {
-                                                        xtermClear(xtermRef)
-                                                        openPort.current = []
-                                                        closedPort.current = []
-                                                        reset()
-                                                        setResettingData(true)
-                                                        setResetTrigger(!resetTrigger)
-                                                        setTimeout(() => {
-                                                            setResettingData(false)
-                                                        }, 1200)
-                                                    }}
-                                                    type={"link"}
-                                                    danger={true}
-                                                >
-                                                    清空缓存结果
-                                                </Button>
+                                                {/*<Button*/}
+                                                {/*    disabled={resettingData || loading}*/}
+                                                {/*    size={"small"}*/}
+                                                {/*    onClick={(e) => {*/}
+                                                {/*        xtermClear(xtermRef)*/}
+                                                {/*        openPort.current = []*/}
+                                                {/*        closedPort.current = []*/}
+                                                {/*        reset()*/}
+                                                {/*        setResettingData(true)*/}
+                                                {/*        setResetTrigger(!resetTrigger)*/}
+                                                {/*        setTimeout(() => {*/}
+                                                {/*            setResettingData(false)*/}
+                                                {/*        }, 1200)*/}
+                                                {/*    }}*/}
+                                                {/*    type={"link"}*/}
+                                                {/*    danger={true}*/}
+                                                {/*>*/}
+                                                {/*    清空缓存结果*/}
+                                                {/*</Button>*/}
                                             </div>
 
                                             <div style={{width: "100%", height: 178, overflow: "hidden"}}>
-                                                <CVXterm 
-                                                    ref={xtermRef} 
+                                                <CVXterm
+                                                    ref={xtermRef}
                                                     options={{
                                                         convertEol: true,
                                                         disableStdin: true
@@ -468,6 +477,34 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 setValue={(Mode) => setParams({...params, Mode})}
                 value={params.Mode}
             />
+            <SelectOne
+                label={"扫描协议"}
+                data={[
+                    {text: "TCP", value: "tcp"},
+                    {text: "UDP", value: "udp"},
+                ]}
+                setValue={i => setParams({...params, Proto: [i]})}
+                value={(params.Proto || []).length > 0 ? params.Proto[0] : "tcp"}
+            >
+
+            </SelectOne>
+            <SwitchItem label={"自动扫相关C段"} help={"可以把域名 /IP 转化为 C 段目标，直接进行扫描"}
+                        value={params.EnableCClassScan}
+                        setValue={EnableCClassScan => setParams({...params, EnableCClassScan})}
+            />
+            {params.Mode != "syn" && params.Active && <SelectOne
+                label={"服务指纹级别"}
+                help={"级别越高探测的详细程度越多，主动发包越多，时间越长"}
+                data={[
+                    {value: 1, text: "基础"},
+                    {value: 3, text: "适中"},
+                    {value: 7, text: "详细"},
+                    {value: 100, text: "全部"},
+                ]}
+                value={params.ProbeMax} setValue={ProbeMax => setParams({...params, ProbeMax})}
+            >
+
+            </SelectOne>}
             <InputInteger
                 label={"并发"}
                 help={"最多同时扫描200个端口"}
@@ -481,6 +518,24 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 help={"允许指纹探测主动发包"}
                 setValue={(Active) => setParams({...params, Active})}
                 value={params.Active}
+            />
+            <InputInteger
+                label={"主动发包超时时间"}
+                help={"某些指纹的检测需要检查目标针对某一个探针请求的响应，需要主动发包"}
+                value={params.ProbeTimeout} setValue={ProbeTimeout => setParams({...params, ProbeTimeout})}
+            />
+            <ManyMultiSelectForString
+                label={"TCP 代理"}
+                help={"支持 HTTP/Sock4/Sock4a/Socks5 协议，例如 http://127.0.0.1:7890  socks5://127.0.0.1:7890"}
+                data={[
+                    "http://127.0.0.1:7890", "http://127.0.0.1:8082",
+                    "socks5://127.0.0.1:8082", "http://127.0.0.1:8083",
+                ].map(i => {
+                    return {value: i, label: i}
+                })}
+                value={(params.Proxy || []).join(",")}
+                mode={"tags"}
+                setValue={e => setParams({...params, Proxy: (e || "").split(",").filter(i => !!i)})}
             />
             <SwitchItem
                 label={"扫描结果入库"}

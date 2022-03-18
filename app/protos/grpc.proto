@@ -682,6 +682,15 @@ message PortScanRequest {
 
   // TCPProxy
   repeated string Proxy = 12;
+
+  // 设置单次探测超时时间
+  double ProbeTimeout = 13;
+
+  // ProbeMax 设置指纹探测条数
+  int32 ProbeMax = 14;
+
+  // 启用 C 段扫描
+  bool EnableCClassScan = 15;
 }
 
 message DeletePortsRequest {

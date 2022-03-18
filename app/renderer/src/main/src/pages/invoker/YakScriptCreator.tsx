@@ -93,6 +93,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             case "codec":
                 setParams({...params, Content: CodecPluginTemplate})
                 return
+            case "nuclei":
+                setParams({...params, Content: "# Add your nuclei formatted PoC!"})
+                return
             default:
                 setParams({...params, Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n"})
                 return
