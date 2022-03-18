@@ -28,6 +28,11 @@ const createWindow = () => {
     if (isDev) {
         win.webContents.openDevTools({mode: 'detach'});
     }
+
+    // 阻止内部react页面的链接点击跳转
+    win.webContents.on('will-navigate', (e, url) => {
+        e.preventDefault()
+    })
 }
 
 app.whenReady().then(() => {
