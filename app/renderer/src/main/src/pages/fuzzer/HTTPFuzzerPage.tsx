@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {
     Button,
     Card,
@@ -45,6 +45,7 @@ import {getValue, saveValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 import {PayloadManagerPage} from "../payloadManager/PayloadManager";
 import {HackerPlugin} from "../hacker/HackerPlugin"
+import { fuzzerInfoProp } from "../MainOperator"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -76,6 +77,8 @@ export interface HTTPFuzzerPageProp {
     isHttps?: boolean
     request?: string
     system?: string
+    order?: string
+    fuzzerParams?: fuzzerInfoProp
 }
 
 const {Text} = Typography
@@ -133,14 +136,14 @@ export const showDictsAndSelect = (res: (i: string) => any) => {
 
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
-    const [isHttps, setIsHttps] = useState(props.isHttps || false)
+    const [isHttps, setIsHttps] = useState<boolean>(props.fuzzerParams?.isHttps || props.isHttps || false)
     const [noFixContentLength, setNoFixContentLength] = useState(false)
-    const [request, setRequest] = useState(props.request || defaultPostTemplate)
-    const [concurrent, setConcurrent] = useState(20)
-    const [forceFuzz, setForceFuzz] = useState(true)
-    const [timeout, setParamTimeout] = useState(5.0)
-    const [proxy, setProxy] = useState("")
-    const [actualHost, setActualHost] = useState("")
+    const [request, setRequest] = useState(props.fuzzerParams?.request || props.request || defaultPostTemplate)
+    const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
+    const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
+    const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 5.0)
+    const [proxy, setProxy] = useState(props.fuzzerParams?.proxy || "")
+    const [actualHost, setActualHost] = useState(props.fuzzerParams?.actualHost || "")
     const [advancedConfig, setAdvancedConfig] = useState(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>();
@@ -169,6 +172,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [keyword, setKeyword] = useState<string>("")
     const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
     const [timer, setTimer] = useState<any>()
+
+    // 定时器
+    const sendTimer = useRef<any>(null)
 
     const withdrawRequest = useMemoizedFn(() => {
         const targetIndex = history.indexOf(request) - 1
@@ -337,7 +343,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         const updateDataId = setInterval(() => {
             updateData()
-        }, 1000)
+        }, 200)
 
         return () => {
             ipcRenderer.invoke("cancel-HTTPFuzzer", token)
@@ -443,6 +449,29 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     const successResults = filtredResponses.filter((i) => i.Ok)
     const failedResults = filtredResponses.filter((i) => !i.Ok)
+
+    const sendFuzzerSettingInfo = useMemoizedFn(() => {
+        const info: fuzzerInfoProp ={
+            time: new Date().getTime().toString(),
+            isHttps: isHttps,
+            forceFuzz: forceFuzz,
+            concurrent: concurrent,
+            proxy: proxy,
+            actualHost:actualHost,
+            timeout: timeout,
+            request: request
+        }
+        if(sendTimer.current){
+            clearTimeout(sendTimer.current)
+            sendTimer.current = null
+        }
+        sendTimer.current = setTimeout(() => {
+            ipcRenderer.invoke('send-fuzzer-setting-data', {key: props.order || "", param: JSON.stringify(info)})
+        }, 1000);
+    })
+    useEffect(() => {
+        sendFuzzerSettingInfo()
+    }, [isHttps, forceFuzz, concurrent, proxy, actualHost, timeout, request])
 
     const responseViewer = useMemoizedFn((rsp: FuzzerResponse) => {
         return (
@@ -582,6 +611,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onClick={() => {
                                     setContent([])
                                     setRedirectedResponse(undefined)
+                                    sendFuzzerSettingInfo()
                                     submitToHTTPFuzzer()
                                 }}
                                 // size={"small"}
@@ -632,7 +662,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </Dropdown>
                             )}
                         </Space>
-                        <Checkbox value={isHttps} onChange={() => setIsHttps(!isHttps)}>强制 HTTPS</Checkbox>
+                        <Checkbox defaultChecked={isHttps} value={isHttps} onChange={() => setIsHttps(!isHttps)}>强制 HTTPS</Checkbox>
                         <SwitchItem
                             label={"高级配置"}
                             formItemStyle={{marginBottom: 0}}

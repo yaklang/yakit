@@ -34,6 +34,7 @@ import {RiskPage} from "../pages/risks/RiskPage";
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage";
 import {BatchExecutorPage} from "../pages/invoker/batch/BatchExecutorPage";
 import { HTTPFuzzerPage } from "../pages/fuzzer/HTTPFuzzerPage";
+import { fuzzerInfoProp } from "../pages/MainOperator";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -180,6 +181,8 @@ interface ComponentParams {
     isHttps?: boolean
     request?: string
     system?: string
+    order?: string
+    fuzzerParams?: fuzzerInfoProp
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -217,7 +220,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                 <HTTPHacker/>
             </Suspense>
         case Route.HTTPFuzzer:
-            return <HTTPFuzzerPage isHttps={params?.isHttps} request={params?.request} system={params?.system}/>
+            return <HTTPFuzzerPage isHttps={params?.isHttps} request={params?.request} system={params?.system} order={params?.order} fuzzerParams={params?.fuzzerParams} />
         case Route.Codec:
             return <CodecPage/>
         case Route.ModManager:
