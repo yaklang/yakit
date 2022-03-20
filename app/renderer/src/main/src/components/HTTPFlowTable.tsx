@@ -37,6 +37,7 @@ import {useHotkeys} from "react-hotkeys-hook";
 import {useGetState, useMemoizedFn} from "ahooks";
 import {AutoCard} from "./AutoCard";
 import ReactResizeDetector from "react-resize-detector";
+import {callCopyToClipboard} from "../utils/basic";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1088,6 +1089,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                     failed(`Query Response failed: ${e}`)
                                                 })
                                         }
+                                    },
+                                    {
+                                        title: '复制 URL',
+                                        onClick: () => {
+                                            callCopyToClipboard(rowData.Url)
+                                        },
                                     },
                                     {
                                         title: '发送到对比器左侧',
