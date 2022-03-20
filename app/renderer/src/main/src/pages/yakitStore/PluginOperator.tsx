@@ -355,31 +355,6 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
 
     return (
         <Space style={{...style}} direction={props.vertical ? "vertical" : "horizontal"}>
-            {/* <Button
-                type={"link"}
-                onClick={(e) => {
-                    let m = showDrawer({
-                        title: `修改插件: ${script?.ScriptName}`,
-                        width: "100%",
-                        content: (
-                            <>
-                                <YakScriptCreatorForm
-                                    modified={script}
-                                    onChanged={(i) => update()}
-                                    onCreated={() => {
-                                        m.destroy()
-                                    }}
-                                />
-                            </>
-                        ),
-                        keyboard: false
-                    })
-                }}
-                icon={<EditOutlined />}
-                size={"small"}
-            >
-                修改插件
-            </Button> */}
             <Popover
                 title={`添加到左侧菜单栏中[${script?.Id}]`}
                 content={<>{script && <AddToMenuActionForm script={script} updateGroups={updateGroups}/>}</>}

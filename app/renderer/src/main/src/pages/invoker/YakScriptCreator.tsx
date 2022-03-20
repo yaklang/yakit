@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Form, List, Popconfirm, Space, Tag} from "antd";
+import {Button, Card, Checkbox, Form, List, Popconfirm, Space, Tag, Tooltip} from "antd";
 import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {YakScript, YakScriptParam} from "./schema";
 import {HTTPPacketEditor, YakCodeEditor, YakEditor} from "../../utils/editors";
-import {PlusOutlined} from "@ant-design/icons";
+import {PlusOutlined, QuestionCircleOutlined} from "@ant-design/icons";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {failed, info} from "../../utils/notification";
 import {putValueToParams, YakScriptParamsSetter} from "./YakScriptParamsSetter";
@@ -31,7 +31,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         Id: 0,
         Params: [],
         ScriptName: "",
-        Type: "yak"
+        Type: "yak",
+        IsGeneralModule: false,
     });
     const [paramsLoading, setParamsLoading] = useState(false);
     const [modified, setModified] = useState<YakScript | undefined>(props.modified);
@@ -230,33 +231,45 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 </List>
             </Form.Item> : ""}
             <Form.Item label={"源码"} help={<>
-                <Button icon={<FullscreenOutlined/>}
-                        onClick={() => {
-                            setFullscreen(true)
-                            let m = showDrawer({
-                                title: "Edit Code",
-                                width: "100%",
-                                closable: false,
-                                keyboard: false,
-                                content: <>
-                                    <YakScriptLargeEditor
-                                        script={params}
-                                        onExit={(data) => {
-                                            m.destroy()
-                                            setFullscreen(false)
-                                            ipcRenderer.invoke("QueryYakScript", {})
-                                        }}
-                                        onUpdate={(data: YakScript) => {
-                                            props.onChanged && props.onChanged(data)
-                                            setParams({...data})
-                                        }}
-                                    />
-                                </>
-                            })
-                        }}
-                        type={"link"} style={{
-                    marginBottom: 12, marginTop: 6
-                }}>大屏模式</Button>
+                <Space>
+                    <Button icon={<FullscreenOutlined/>}
+                            onClick={() => {
+                                setFullscreen(true)
+                                let m = showDrawer({
+                                    title: "Edit Code",
+                                    width: "100%",
+                                    closable: false,
+                                    keyboard: false,
+                                    content: <>
+                                        <YakScriptLargeEditor
+                                            script={params}
+                                            onExit={(data) => {
+                                                m.destroy()
+                                                setFullscreen(false)
+                                                ipcRenderer.invoke("QueryYakScript", {})
+                                            }}
+                                            onUpdate={(data: YakScript) => {
+                                                props.onChanged && props.onChanged(data)
+                                                setParams({...data})
+                                            }}
+                                        />
+                                    </>
+                                })
+                            }}
+                            type={"link"} style={{
+                        marginBottom: 12, marginTop: 6
+                    }}>大屏模式</Button>
+                    <Checkbox name={"默认启动"} style={{
+                        marginBottom: 12, marginTop: 6
+                    }} checked={params.IsGeneralModule}
+                              onChange={() => setParams({...params, IsGeneralModule: !params.IsGeneralModule})}>
+                        默认启动 <Tooltip
+                        title={"设置默认启动后，将在恰当时候启动启动该插件，同时将会自动增加到【明显】位置"}
+                    >
+                        <Button type={"link"} icon={<QuestionCircleOutlined/>}/>
+                    </Tooltip>
+                    </Checkbox>
+                </Space>
             </>}>
                 {!fullscreen && <div style={{height: 400}}>
                     <YakEditor

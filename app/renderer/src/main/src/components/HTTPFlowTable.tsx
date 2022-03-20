@@ -1034,9 +1034,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             headRender: () => "操作",
                             cellRender: ({rowData}: any) => {
                                 return (
-                                    <Button
-                                        size={"small"}
-                                        type={"link"}
+                                    <a
                                         onClick={(e) => {
                                             let m = showDrawer({
                                                 width: "80%",
@@ -1048,7 +1046,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         }}
                                     >
                                         详情
-                                    </Button>
+                                    </a>
                                 )
                             }
                         }
