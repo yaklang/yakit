@@ -354,9 +354,14 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 size: "small",
                 pageSize: response.Pagination.Limit || 10,
                 total: response.Total,
+                showSizeChanger: true,
+                defaultPageSize: 10,
                 showTotal: (i) => <Tag>Total:{i}</Tag>,
                 onChange: (page, size) => {
                     update(page, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
+                },
+                onShowSizeChange: (current, size) => {
+                    update(1, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
                 }
             }}
             renderItem={(i: YakScript) => {
