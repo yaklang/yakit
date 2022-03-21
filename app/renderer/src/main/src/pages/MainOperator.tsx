@@ -54,6 +54,7 @@ import { useMemoizedFn } from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import { AutoSpin } from "../components/AutoSpin"
+import cloneDeep from "lodash/cloneDeep"
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -485,6 +486,40 @@ const Main: React.FC<MainProp> = (props) => {
             routeKeyToLabel.set(pluginKey(value), value.Verbose)
         })
     })
+
+    const documentKeyDown = useMemoizedFn((e: any) => {
+        // ctrl + w 关闭tab页面
+        if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault()
+            if(pageCache.length === 0) return
+
+            setLoading(true)
+            const tabInfo = pageCache.filter((i) => i.id === currentTabKey)[0]
+            if (pageCache.length === 1) {
+                setPageCache([])
+                setCurrentTabKey("")
+            } else {
+                const tabs = cloneDeep(pageCache)
+                for (let index in pageCache) {
+                    if (pageCache[index].id === tabInfo.id) {
+                        tabs.splice(index, 1)
+                        setCurrentTabKey(
+                            pageCache[+index === pageCache.length - 1 ? +index - 1 : +index + 1].id
+                        )
+                        setPageCache(tabs)
+                        break
+                    }
+                }
+            }
+
+            delFuzzerList(2, tabInfo.time)
+            setTimeout(() => setLoading(false), 300);
+            return
+        }
+    })
+    useEffect(() => {
+        document.onkeydown = documentKeyDown
+    }, [])
 
     const tabBarMenu = (id: any, route: string) => {
         return (
