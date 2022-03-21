@@ -7,9 +7,9 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
 import "./monacoSpec/html"
-import {Button, Card, Form, Input, Popover, Space, Spin, Tag} from "antd";
+import {Button, Card, Form, Input, Popover, Space, Spin, Tag, Tooltip} from "antd";
 import {SelectOne} from "./inputUtil";
-import {FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons";
+import {FullscreenOutlined, SettingOutlined, ThunderboltFilled, EnterOutlined} from "@ant-design/icons";
 import {showDrawer} from "./showModal";
 import {
     MonacoEditorActions,
@@ -21,6 +21,7 @@ import {HTTPPacketFuzzable} from "../components/HTTPHistory";
 import ReactResizeDetector from "react-resize-detector";
 
 import './editors.css'
+import {useMemoizedFn} from "ahooks";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -234,7 +235,7 @@ export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     return <HTTPPacketEditor noHeader={true} {...props} noPacketModifier={true} language={"yak"}/>
 }
 
-export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
+export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props) => {
     const isResponse = (new Buffer(props.originValue.subarray(0, 5)).toString("utf8")).startsWith("HTTP/")
     const [mode, setMode] = useState("text");
     const [strValue, setStrValue] = useState(new Buffer(props.originValue).toString('utf8'));
@@ -242,8 +243,29 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
     const [searchValue, setSearchValue] = useState("");
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
     const [fontSize, setFontSize] = useState(12);
-
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
+    const [noWordwrap, setNoWordwrap] = useState(false);
+
+    const highlightActive = useMemoizedFn((search: string, regexp?: boolean) => {
+        if (!monacoEditor) {
+            return
+        }
+        // @ts-ignore
+        let range = monacoEditor?.getModel().findMatches(search, false, !!regexp, false, null, false)
+        if (range && range.length > 0) {
+            const decs = monacoEditor.deltaDecorations(highlightDecorations, range.map(i => {
+                return {
+                    id: `highlight[${searchValue}]`,
+                    range: i.range,
+                    options: {
+                        isWholeLine: false,
+                        inlineClassName: 'monacoInlineHighlight'
+                    }
+                } as any
+            }))
+            setHighlightDecorations(decs)
+        }
+    })
 
     /*如何实现 monaco editor 高亮？*/
     // https://microsoft.github.io/monaco-editor/playground.html#interacting-with-the-editor-line-and-inline-decorations
@@ -333,29 +355,12 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                         setSearchValue(e.target.value)
                     }} enterButton={true}
                     onSearch={e => {
-                        if (!monacoEditor) {
-                            return
-                        }
-                        // @ts-ignore
-                        let range = monacoEditor?.getModel().findMatches(searchValue, false, false, false, null, false)
-                        if (range && range.length > 0) {
-                            const decs = monacoEditor.deltaDecorations(highlightDecorations, range.map(i => {
-                                return {
-                                    id: `highlight[${searchValue}]`,
-                                    range: i.range,
-                                    options: {
-                                        isWholeLine: false,
-                                        inlineClassName: 'monacoInlineHighlight'
-                                    }
-                                } as any
-                            }))
-                            setHighlightDecorations(decs)
-                        }
+                        highlightActive(searchValue)
                     }}
                 />}
             </Space>}
             bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column"}}
-            extra={!props.noHeader && <>
+            extra={!props.noHeader && <Space size={2}>
                 {props.extra}
                 {props.sendToWebFuzzer && <Button
                     size={"small"}
@@ -365,23 +370,16 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                         ipcRenderer.invoke("send-to-fuzzer", {isHttps: props.defaultHttps || false, request: strValue})
                     }}
                 >FUZZ</Button>}
-                {!props.disableFullscreen && !props.simpleMode && <Button
-                    size={"small"}
-                    type={"link"}
-                    icon={<FullscreenOutlined/>}
-                    onClick={() => {
-                        showDrawer({
-                            title: "全屏", width: "100%",
-                            content: <div style={{height: "100%", width: "100%"}}>
-                                <HTTPPacketEditor
-                                    {...props} disableFullscreen={true}
-                                    defaultHeight={670}
-
-                                />
-                            </div>
-                        })
-                    }}
-                />}
+                <Tooltip title={"不自动换行"}>
+                    <Button
+                        size={"small"}
+                        type={noWordwrap ? "link" : "primary"}
+                        icon={<EnterOutlined/>}
+                        onClick={() => {
+                            setNoWordwrap(!noWordwrap)
+                        }}
+                    />
+                </Tooltip>
                 {!props.simpleMode && <Popover
                     title={"配置编辑器"}
                     content={<>
@@ -402,6 +400,25 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                                     {text: "大", value: 20},
                                 ]} value={fontSize} setValue={setFontSize}
                             />
+                            <Form.Item label={"全屏"}>
+                                <Button
+                                    size={"small"}
+                                    type={"link"}
+                                    icon={<FullscreenOutlined/>}
+                                    onClick={() => {
+                                        showDrawer({
+                                            title: "全屏", width: "100%",
+                                            content: <div style={{height: "100%", width: "100%"}}>
+                                                <HTTPPacketEditor
+                                                    {...props} disableFullscreen={true}
+                                                    defaultHeight={670}
+
+                                                />
+                                            </div>
+                                        })
+                                    }}
+                                />
+                            </Form.Item>
                         </Form>
                     </>}
                 >
@@ -410,7 +427,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                         type={"link"} size={"small"}
                     />
                 </Popover>}
-            </>}
+            </Space>}
         >
             <div style={{flex: 1}}>
                 {empty && props.emptyOr}
@@ -418,7 +435,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
                     loading={props.loading}
                     type={props.language || (isResponse ? "html" : "http")}
                     value={strValue} readOnly={props.readOnly}
-                    setValue={setStrValue}
+                    setValue={setStrValue} noWordWrap={noWordwrap}
                     fontSize={fontSize}
                     actions={[
                         ...(props.actions || []),
@@ -444,4 +461,4 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = (props) => {
             </div>
         </Card>
     </div>
-};
+});

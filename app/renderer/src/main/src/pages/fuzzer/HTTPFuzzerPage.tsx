@@ -45,7 +45,7 @@ import {getValue, saveValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 import {PayloadManagerPage} from "../payloadManager/PayloadManager";
 import {HackerPlugin} from "../hacker/HackerPlugin"
-import { fuzzerInfoProp } from "../MainOperator"
+import {fuzzerInfoProp} from "../MainOperator"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -156,7 +156,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [search, setSearch] = useState("")
     const [targetUrl, setTargetUrl] = useState("")
 
-    const [viewMode, setViewMode] = useState<"split" | "request" | "result">("split")
     const [refreshTrigger, setRefreshTrigger] = useState(false)
     const refreshRequest = () => {
         setRefreshTrigger(!refreshTrigger)
@@ -451,17 +450,17 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const failedResults = filtredResponses.filter((i) => !i.Ok)
 
     const sendFuzzerSettingInfo = useMemoizedFn(() => {
-        const info: fuzzerInfoProp ={
+        const info: fuzzerInfoProp = {
             time: new Date().getTime().toString(),
             isHttps: isHttps,
             forceFuzz: forceFuzz,
             concurrent: concurrent,
             proxy: proxy,
-            actualHost:actualHost,
+            actualHost: actualHost,
             timeout: timeout,
             request: request
         }
-        if(sendTimer.current){
+        if (sendTimer.current) {
             clearTimeout(sendTimer.current)
             sendTimer.current = null
         }
@@ -477,7 +476,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         return (
             <HTTPPacketEditor
                 system={props.system}
-                simpleMode={viewMode === "request"}
                 originValue={rsp.ResponseRaw}
                 bordered={true}
                 hideSearch={true}
@@ -504,16 +502,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
                 readOnly={true}
                 extra={
-                    viewMode === "request" ? (
-                        <Button
-                            size={"small"}
-                            type={"link"}
-                            icon={<ColumnWidthOutlined/>}
-                            onClick={() => {
-                                setViewMode("result")
-                            }}
-                        />
-                    ) : (
+                    (
                         <Space>
                             {loading && <Spin size={"small"} spinning={loading}/>}
                             {onlyOneResponse ? (
@@ -569,18 +558,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     </Button>
                                 </Space>
                             )}
-                            <Button
-                                size={"small"}
-                                type={viewMode === "result" ? "primary" : "link"}
-                                icon={<ColumnWidthOutlined/>}
-                                onClick={() => {
-                                    if (viewMode === "result") {
-                                        setViewMode("split")
-                                    } else {
-                                        setViewMode("result")
-                                    }
-                                }}
-                            />
+
                         </Space>
                     )
                 }
@@ -662,7 +640,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </Dropdown>
                             )}
                         </Space>
-                        <Checkbox defaultChecked={isHttps} value={isHttps} onChange={() => setIsHttps(!isHttps)}>强制 HTTPS</Checkbox>
+                        <Checkbox defaultChecked={isHttps} value={isHttps} onChange={() => setIsHttps(!isHttps)}>强制
+                            HTTPS</Checkbox>
                         <SwitchItem
                             label={"高级配置"}
                             formItemStyle={{marginBottom: 0}}
@@ -897,10 +876,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             )}
             <Divider style={{marginTop: 12, marginBottom: 4}}/>
             <ResizeBox
+                firstMinSize={350} secondMinSize={360}
                 style={{overflow: "hidden"}}
                 firstNode={<HTTPPacketEditor
                     system={props.system}
-                    simpleMode={viewMode === "result"}
                     refreshTrigger={refreshTrigger}
                     hideSearch={true}
                     bordered={true}

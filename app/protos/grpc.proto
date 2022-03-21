@@ -1060,6 +1060,9 @@ message HTTPFlow {
   string IPAddress = 25;
 
   string HtmlTitle = 26;
+
+  string Tags = 27;
+  bool NoFixContentLength = 28;
 }
 
 message FuzzableParam {

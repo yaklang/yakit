@@ -87,6 +87,72 @@ hijackHTTPRequest = func(isHttps, url, req, forward, drop) {
 hijackHTTPRequest = func(isHttps, url, req, forward /*func(modifiedRequest []byte)*/, drop /*func()*/) {
 
 }
+
+# hijackSaveHTTPFlow 是 Yakit 开放的 MITM 存储过程的 Hook 函数
+# 这个函数允许用户在 HTTP 数据包存入数据库前进行过滤或者修改，增加字段，染色等
+# 类似 hijackHTTPRequest
+#    1. hijackSaveHTTPFlow 也采用了 JS Promise 的回调处理方案，用户可以在这个方法体内进行修改，修改完通过 modify(flow) 来进行保存
+#    2. 如果用户不想保存数据包，使用 drop() 即可
+# 
+/**
+案例:
+
+hijackSaveHTTPFlow = func(flow, modify, drop) {
+    if str.Contains(flow.Url, "/admin/") {
+        flow.Red()   # 设置颜色
+        modify(flow) # 保存
+    }
+}
+*/
+
+hijackSaveHTTPFlow = func(flow /* *yakit.HTTPFlow */, modify /* func(modified *yakit.HTTPFlow) */, drop/* func() */) {
+    // responseBytes, _ = codec.StrconvUnquote(flow.Response)
+    // if str.MatchAnyOfRegexp(responseBytes, "/admin/", "accessKey") { flow.Red(); modify(flow) }
+}
+
+/* 定义速查
+
+*yakit.HTTPFlow 定义：
+type palm/common/yakgrpc/yakit.(HTTPFlow) struct {
+  Fields(可用字段):
+      Model: gorm.Model
+      Hash: string
+      IsHTTPS: bool
+      Url: string
+      Path: string
+      Method: string
+      BodyLength: int64
+      ContentType: string
+      StatusCode: int64
+      SourceType: string
+      Request: string                   # 需要通过 codec.StrconvUnquote 解码
+      Response: string                  # 需要通过 codec.StrconvUnquote 解码
+      GetParamsTotal: int
+      PostParamsTotal: int
+      CookieParamsTotal: int
+      IPAddress: string
+      RemoteAddr: string
+      IPInteger: int
+      Tags: string
+  StructMethods(结构方法/函数):
+  PtrStructMethods(指针结构方法/函数):
+      func AddTag(v1: string)
+      func BeforeSave() return(error)
+      func Blue()                                           # 蓝色
+      func CalcHash() return(string)                         
+      func ColorSharp(v1: string)
+      func Cyan()                                           # 天蓝色
+      func Green()                                          # 绿色
+      func Grey()                                           # 灰色
+      func Orange()                                         # 橙色
+      func Purple()                                         # 紫色
+      func Red()                                            # 红色
+      func RemoteColor()
+      func ToGRPCModel() return(*ypb.HTTPFlow, error)
+      func ToGRPCModelFull() return(*ypb.HTTPFlow, error)
+      func Yellow()                                         # 黄色
+}
+*/
 `
 
 export const MITMPluginTemplateShort = `# mirrorHTTPFlow 会镜像所有的流量到这里，包括 .js / .css / .jpg 这类一般会被劫持程序过滤的请求
@@ -137,4 +203,70 @@ hijackHTTPRequest = func(isHttps, url, req, forward, drop) {
 hijackHTTPRequest = func(isHttps, url, req, forward /*func(modifiedRequest []byte)*/, drop /*func()*/) {
 
 }
+
+# hijackSaveHTTPFlow 是 Yakit 开放的 MITM 存储过程的 Hook 函数
+# 这个函数允许用户在 HTTP 数据包存入数据库前进行过滤或者修改，增加字段，染色等
+# 类似 hijackHTTPRequest
+#    1. hijackSaveHTTPFlow 也采用了 JS Promise 的回调处理方案，用户可以在这个方法体内进行修改，修改完通过 modify(flow) 来进行保存
+#    2. 如果用户不想保存数据包，使用 drop() 即可
+# 
+/**
+案例:
+
+hijackSaveHTTPFlow = func(flow, modify, drop) {
+    if str.Contains(flow.Url, "/admin/") {
+        flow.Red()   # 设置颜色
+        modify(flow) # 保存
+    }
+}
+*/
+
+hijackSaveHTTPFlow = func(flow /* *yakit.HTTPFlow */, modify /* func(modified *yakit.HTTPFlow) */, drop/* func() */) {
+    // responseBytes, _ = codec.StrconvUnquote(flow.Response)
+    // if str.MatchAnyOfRegexp(responseBytes, "/admin/", "accessKey") { flow.Red(); modify(flow) }
+}
+
+/* 定义速查
+
+*yakit.HTTPFlow 定义：
+type palm/common/yakgrpc/yakit.(HTTPFlow) struct {
+  Fields(可用字段):
+      Model: gorm.Model
+      Hash: string
+      IsHTTPS: bool
+      Url: string
+      Path: string
+      Method: string
+      BodyLength: int64
+      ContentType: string
+      StatusCode: int64
+      SourceType: string
+      Request: string                   # 需要通过 codec.StrconvUnquote 解码
+      Response: string                  # 需要通过 codec.StrconvUnquote 解码
+      GetParamsTotal: int
+      PostParamsTotal: int
+      CookieParamsTotal: int
+      IPAddress: string
+      RemoteAddr: string
+      IPInteger: int
+      Tags: string
+  StructMethods(结构方法/函数):
+  PtrStructMethods(指针结构方法/函数):
+      func AddTag(v1: string)
+      func BeforeSave() return(error)
+      func Blue()                                           # 蓝色
+      func CalcHash() return(string)                         
+      func ColorSharp(v1: string)
+      func Cyan()                                           # 天蓝色
+      func Green()                                          # 绿色
+      func Grey()                                           # 灰色
+      func Orange()                                         # 橙色
+      func Purple()                                         # 紫色
+      func Red()                                            # 红色
+      func RemoteColor()
+      func ToGRPCModel() return(*ypb.HTTPFlow, error)
+      func ToGRPCModelFull() return(*ypb.HTTPFlow, error)
+      func Yellow()                                         # 黄色
+}
+*/
 `
