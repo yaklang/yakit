@@ -1,14 +1,26 @@
-.selected {
-    background-color: rgba(78, 164, 255, 0.4) !important;
-}
-
-.httpFlowTable .ant-table .ant-table-tbody > tr:hover > td {
-    background: unset;
-}
-
 .resize-ellipsis {
     width: 95%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* 消除三方组件自带的悬浮样式 */
+.httpFlowTable.reszie-table.rs-table-hover .rs-table-row:hover {
+    background: none;
+}
+.httpFlowTable.reszie-table.rs-table-hover .rs-table-row:hover .rs-table-cell-group {
+    background: none;
+}
+.httpFlowTable.reszie-table.rs-table-hover .rs-table-row:hover .rs-table-cell {
+    background: none;
+}
+/* 消除三方组件单元格自带样式 */
+.httpFlowTable.reszie-table .rs-table-row .rs-table-cell {
+    background: unset;
+}
+/* 自定义悬浮样式 */
+.httpFlowTable.reszie-table.rs-table-hover .rs-table-row #http-flow-row:hover {
+    border: 3px solid transparent;
+    box-shadow: 0 1px 2px -2px rgb(0 0 0 / 16%), 0 3px 6px 0 rgb(0 0 0 / 12%), 0 5px 12px 4px rgb(0 0 0 / 9%);
 }

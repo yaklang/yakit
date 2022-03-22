@@ -4,7 +4,3 @@
 .reszie-table .ant-space.ant-space-horizontal.ant-space-align-center .ant-space-item {
     width: 100%;
 }
-
-.reszie-table .selected .rs-table-cell {
-    background-color: rgba(78, 164, 255, 0.3) !important;
-}
