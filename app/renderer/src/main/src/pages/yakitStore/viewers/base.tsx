@@ -13,6 +13,7 @@ import {XTerm} from "xterm-for-react";
 import {formatDate} from "../../../utils/timeUtil";
 import { xtermFit } from "../../../utils/xtermUtils";
 import { CVXterm } from "../../../components/CVXterm";
+import { AutoCard } from "../../../components/AutoCard";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -187,7 +188,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
                 {<>
                     {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
-                    <Card
+                    <AutoCard
                         size={"small"} hoverable={true} bordered={true} title={<Space>
                         <div>
                             任务额外日志与结果
@@ -195,6 +196,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         {(timelineItemProps || []).length > 0 ? formatDate(timelineItemProps[0].timestamp) : ""}
                     </Space>}
                         style={{marginBottom: 20, marginRight: 2}}
+                        bodyStyle={{overflowY: "auto"}}
                     >
                         <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
                             {timelineItemProps.map((e, index) => {
@@ -204,7 +206,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                 </Timeline.Item>
                             })}
                         </Timeline>
-                    </Card>
+                    </AutoCard>
                 </>}
             </Tabs.TabPane>
             {!props.debugMode && props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
