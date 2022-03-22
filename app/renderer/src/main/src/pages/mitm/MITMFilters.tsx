@@ -1,8 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {Button, Form, Spin} from "antd";
+import {Button, Form, Space, Spin} from "antd";
 import {ManyMultiSelectForString} from "../../utils/inputUtil";
+import { useMemoizedFn } from "ahooks";
+import { success } from "../../utils/notification";
 
 const {ipcRenderer} = window.require("electron");
+
+const DefaultMitmFilter = "default-mitm-filter"
 
 export interface MITMFiltersProp {
     filter?: MITMFilterSchema
@@ -17,7 +21,6 @@ export interface MITMFilterSchema {
     excludeMethod?: string[]
 }
 
-
 export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
     const [params, setParams] = useState<MITMFilterSchema>(props.filter || {});
     const [loading, setLoading] = useState(false);
@@ -25,6 +28,18 @@ export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
     useEffect(() => {
         setParams(props.filter || {})
     }, [props.filter])
+
+    const saveDefaultFilter = useMemoizedFn(() => {
+        setLoading(true)
+
+        if(JSON.stringify(params) === "{}") return
+        ipcRenderer.invoke("set-value", DefaultMitmFilter, params)
+        success("保存默认模板值成功")
+        
+        ipcRenderer.invoke("mitm-filter", {
+            updateFilter: true, ...params
+        }).finally(() => setLoading(false))
+    })
 
     return <Spin spinning={loading}>
         <Form onSubmitCapture={e => {
@@ -83,7 +98,10 @@ export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
                 mode={"tags"}
             />
             <Form.Item colon={false} label={" "}>
-                <Button type="primary" htmlType="submit"> 确认修改 MITM 过滤器 </Button>
+                <Space>
+                    <Button type="primary" htmlType="submit"> 确认修改 </Button>
+                    <Button type="primary" onClick={saveDefaultFilter}> 确认修改并保存为模板 </Button>
+                </Space>
             </Form.Item>
         </Form>
     </Spin>
