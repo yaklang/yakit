@@ -97,8 +97,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
-    const search = useMemoizedFn((params?: { limit: number; keyword: string }) => {
-        const {limit, keyword} = params || {}
+    const search = useMemoizedFn((searchParams?: { limit: number; keyword: string }) => {
+        const {limit, keyword} = searchParams || {}
 
         setPluginLoading(true)
         queryYakScriptList(
@@ -106,6 +106,10 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
             (data, total) => {
                 setTotal(total || 0)
                 setScripts(data)
+                setParams({
+                    ...params,
+                    ScriptNames: (data || []).filter(i => i.IsGeneralModule).map(i => i.ScriptName)
+                })
             },
             () => setTimeout(() => setPluginLoading(false), 300),
             limit || 200,

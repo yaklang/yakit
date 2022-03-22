@@ -50,10 +50,10 @@ import {PerformanceDisplay} from "../components/PerformanceDisplay"
 import "./main.css"
 import {useHotkeys} from "react-hotkeys-hook";
 import {execTest} from "./invoker/ExecutePacketYakScript";
-import { useMemoizedFn } from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
-import { AutoSpin } from "../components/AutoSpin"
+import {AutoSpin} from "../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
 
 export interface MainProp {
@@ -69,7 +69,7 @@ const {Header, Footer, Content, Sider} = Layout
 const {Text} = Typography
 
 const FuzzerCache = "fuzzer-list-cache"
-const WindowsCloseFlag = "windows-close-flag" 
+const WindowsCloseFlag = "windows-close-flag"
 
 interface MenuItemGroup {
     Group: string
@@ -169,10 +169,10 @@ const Main: React.FC<MainProp> = (props) => {
             .invoke("get-value", FuzzerCache)
             .then((res: any) => {
                 const cache = JSON.parse(res)
-                let index = 0 
-                for(let item of cache){
+                let index = 0
+                for (let item of cache) {
                     const time = new Date().getTime().toString()
-                    fuzzerList.current.set(time,{...item, time: time})
+                    fuzzerList.current.set(time, {...item, time: time})
                     const newTabId = `${Route.HTTPFuzzer}-[${randomString(49)}]`
                     const verboseNameRaw = routeKeyToLabel.get(Route.HTTPFuzzer) || `${Route.HTTPFuzzer}`
                     appendCache(
@@ -199,11 +199,11 @@ const Main: React.FC<MainProp> = (props) => {
         fuzzerList.current.set(key, {request, isHttps, time: key})
     }
     const delFuzzerList = (type: number, key?: string) => {
-        if(type === 1) fuzzerList.current.clear()
-        if(type === 2 && key) if(fuzzerList.current.has(key)) fuzzerList.current.delete(key)
-        if(type === 3 && key){
+        if (type === 1) fuzzerList.current.clear()
+        if (type === 2 && key) if (fuzzerList.current.has(key)) fuzzerList.current.delete(key)
+        if (type === 3 && key) {
             const info = fuzzerList.current.get(key)
-            if(info){
+            if (info) {
                 fuzzerList.current.clear()
                 fuzzerList.current.set(key, info)
             }
@@ -211,27 +211,29 @@ const Main: React.FC<MainProp> = (props) => {
         saveFuzzerList()
     }
     const updateFuzzerList = (key: string, param: fuzzerInfoProp) => {
-         fuzzerList.current.set(key, param)
-         saveFuzzerList()
+        fuzzerList.current.set(key, param)
+        saveFuzzerList()
     }
     useEffect(() => {
         ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => updateFuzzerList(res.key, JSON.parse(res.param)))
         // 开发环境不展示fuzzer缓存
         ipcRenderer.invoke("is-dev").then((flag) => {
-            if(!flag)fetchFuzzerList()
+            if (!flag) fetchFuzzerList()
         })
         return () => ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
     }, [])
 
     // 系统类型
-    const [system,setSystem]=useState<string>("")
+    const [system, setSystem] = useState<string>("")
     //获取系统类型
-    useEffect(()=>{
-        ipcRenderer.invoke('fetch-system-name').then((res)=>{setSystem(res)})
-    },[])
+    useEffect(() => {
+        ipcRenderer.invoke('fetch-system-name').then((res) => {
+            setSystem(res)
+        })
+    }, [])
 
     const closeCacheByRoute = (r: Route) => {
-        if(r === Route.HTTPFuzzer) delFuzzerList(1)
+        if (r === Route.HTTPFuzzer) delFuzzerList(1)
         setPageCache(pageCache.filter((i) => `${i.route}` !== `${r}`))
     }
     const closeAllCache = () => {
@@ -439,7 +441,7 @@ const Main: React.FC<MainProp> = (props) => {
     const addFuzzer = useMemoizedFn((res: any) => {
         const {isHttps, request} = res || {}
 
-        if(request){
+        if (request) {
             const time = new Date().getTime().toString()
             const newTabId = `${Route.HTTPFuzzer}-[${randomString(49)}]`
             const verboseNameRaw = routeKeyToLabel.get(Route.HTTPFuzzer) || `${Route.HTTPFuzzer}`
@@ -455,7 +457,7 @@ const Main: React.FC<MainProp> = (props) => {
                 Route.HTTPFuzzer as Route,
                 time
             )
-            addFuzzerList(time, request|| "", isHttps || false)
+            addFuzzerList(time, request || "", isHttps || false)
             setCurrentTabKey(newTabId)
         }
     })
@@ -491,7 +493,7 @@ const Main: React.FC<MainProp> = (props) => {
         // ctrl + w 关闭tab页面
         if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
-            if(pageCache.length === 0) return
+            if (pageCache.length === 0) return
 
             setLoading(true)
             const tabInfo = pageCache.filter((i) => i.id === currentTabKey)[0]
@@ -574,316 +576,322 @@ const Main: React.FC<MainProp> = (props) => {
     return (
         <Layout style={{width: "100%", height: "100vh"}}>
             <AutoSpin spinning={loading}>
-            <Header
-                style={{
-                    paddingLeft: 0,
-                    paddingRight: 0,
-                    backgroundColor: "#fff",
-                    height: 60,
-                    minHeight: 60
-                }}
-            >
-                <Row>
-                    <Col span={8}>
-                        <Space>
-                            <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}}/>
-                            </div>
-                            <Divider type={"vertical"}/>
-                            <YakVersion/>
-                            <YakitVersion/>
-                            {!hideMenu && (
+                <Header
+                    style={{
+                        paddingLeft: 0,
+                        paddingRight: 0,
+                        backgroundColor: "#fff",
+                        height: 60,
+                        minHeight: 60
+                    }}
+                >
+                    <Row>
+                        <Col span={8}>
+                            <Space>
+                                <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
+                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}}/>
+                                </div>
+                                <Divider type={"vertical"}/>
+                                <YakVersion/>
+                                <YakitVersion/>
+                                {!hideMenu && (
+                                    <Button
+                                        style={{marginLeft: 4, color: "#207ee8"}}
+                                        type={"ghost"}
+                                        ghost={true}
+                                        onClick={(e) => {
+                                            setCollapsed(!collapsed)
+                                        }}
+                                        icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                                    />
+                                )}
                                 <Button
                                     style={{marginLeft: 4, color: "#207ee8"}}
                                     type={"ghost"}
                                     ghost={true}
                                     onClick={(e) => {
-                                        setCollapsed(!collapsed)
+                                        updateMenuItems()
                                     }}
-                                    icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                                    icon={<ReloadOutlined/>}
                                 />
-                            )}
-                            <Button
-                                style={{marginLeft: 4, color: "#207ee8"}}
-                                type={"ghost"}
-                                ghost={true}
-                                onClick={(e) => {
-                                    updateMenuItems()
-                                }}
-                                icon={<ReloadOutlined/>}
-                            />
-                        </Space>
-                    </Col>
-                    <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                        <PerformanceDisplay/>
-                        <Space>
-                            {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
-                            {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
-                            {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                            <ReversePlatformStatus/>
-                            <Dropdown forceRender={true} overlay={<Menu>
-                                <Menu.Item key={"update"}>
-                                    <AutoUpdateYakModuleButton/>
-                                </Menu.Item>
-                                <Menu.Item key={"reverse-global"}>
-                                    <ConfigGlobalReverseButton/>
-                                </Menu.Item>
-                            </Menu>} trigger={["click"]}>
-                                <Button icon={<SettingOutlined/>}>
-                                    配置
-                                </Button>
-                            </Dropdown>
-                            <Button type={"link"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
-                                if(winCloseFlag) setWinCloseShow(true)
-                                else{
-                                    success("退出当前 Yak 服务器成功")
-                                    setEngineStatus("error")
-                                }
-                            }}/>
-                        </Space>
-                    </Col>
-                </Row>
-            </Header>
-            <Content
-                style={{
-                    margin: 12,
-                    backgroundColor: "#fff",
-                    overflow: "auto"
-                }}
-            >
-                <Layout style={{height: "100%", overflow: "hidden"}}>
-                    {!hideMenu && (
-                        <Sider
-                            style={{backgroundColor: "#fff", overflow: "auto"}}
-                            collapsed={collapsed}
-                            // onCollapse={r => {
-                            //     setCollapsed(r)
-                            // }}
-                        >
-                            <Spin spinning={loading}>
-                                <Space
-                                    direction={"vertical"}
-                                    style={{
-                                        width: "100%"
-                                    }}
-                                >
-                                    <Menu
-                                        theme={"light"}
-                                        style={{}}
-                                        selectedKeys={[]}
-                                        onSelect={(e) => {
-                                            if (e.key === "ignore") return
-
-
-                                            if (singletonRoute.includes(e.key as Route) && routeExistedCount(e.key as Route) > 0) {
-                                                setCurrentTabByRoute(e.key as Route)
-                                            } else {
-                                                if(e.key === Route.HTTPFuzzer){
-                                                    const time = new Date().getTime().toString()
-                                                    const newTabId = `${e.key}-[${randomString(49)}]`
-                                                    const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`
-                                                    appendCache(newTabId, `${verboseNameRaw}[${pageCache.length + 1}]`, ContentByRoute(e.key, undefined, {system: system, order: time}), e.key as Route, time)
-                                                    addFuzzerList(time)
-                                                    setCurrentTabKey(newTabId)
-                                                }else{
-                                                    const newTabId = `${e.key}-[${randomString(49)}]`
-                                                    const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`
-                                                    appendCache(newTabId, `${verboseNameRaw}[${pageCache.length + 1}]`, ContentByRoute(e.key), e.key as Route)
-                                                    setCurrentTabKey(newTabId)
-                                                }
-                                            }
-
-                                            // 增加加载状态
-                                            setTabLoading(true)
-                                            setTimeout(() => {
-                                                setTabLoading(false)
-                                            }, 300)
-
-                                            setRoute(e.key)
+                            </Space>
+                        </Col>
+                        <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
+                            <PerformanceDisplay/>
+                            <Space>
+                                {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
+                                {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
+                                {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
+                                <ReversePlatformStatus/>
+                                <Dropdown forceRender={true} overlay={<Menu>
+                                    <Menu.Item key={"update"}>
+                                        <AutoUpdateYakModuleButton/>
+                                    </Menu.Item>
+                                    <Menu.Item key={"reverse-global"}>
+                                        <ConfigGlobalReverseButton/>
+                                    </Menu.Item>
+                                </Menu>} trigger={["click"]}>
+                                    <Button icon={<SettingOutlined/>}>
+                                        配置
+                                    </Button>
+                                </Dropdown>
+                                <Button type={"link"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
+                                    if (winCloseFlag) setWinCloseShow(true)
+                                    else {
+                                        success("退出当前 Yak 服务器成功")
+                                        setEngineStatus("error")
+                                    }
+                                }}/>
+                            </Space>
+                        </Col>
+                    </Row>
+                </Header>
+                <Content
+                    style={{
+                        margin: 12,
+                        backgroundColor: "#fff",
+                        overflow: "auto"
+                    }}
+                >
+                    <Layout style={{height: "100%", overflow: "hidden"}}>
+                        {!hideMenu && (
+                            <Sider
+                                style={{backgroundColor: "#fff", overflow: "auto"}}
+                                collapsed={collapsed}
+                                // onCollapse={r => {
+                                //     setCollapsed(r)
+                                // }}
+                            >
+                                <Spin spinning={loading}>
+                                    <Space
+                                        direction={"vertical"}
+                                        style={{
+                                            width: "100%"
                                         }}
-                                        mode={"inline"}
                                     >
-                                        {menuItems.map((i) => {
-                                            if (i.Group === "UserDefined") {
-                                                i.Group = "社区插件"
-                                            }
-                                            return (
-                                                <Menu.SubMenu icon={<EllipsisOutlined/>} key={i.Group} title={i.Group}>
-                                                    {i.Items.map((item) => {
-                                                        return (
-                                                            <MenuItem icon={<EllipsisOutlined/>}
-                                                                      key={`plugin:${item.Group}:${item.YakScriptId}`}>
-                                                                <Text ellipsis={{tooltip: true}}>{item.Verbose}</Text>
-                                                            </MenuItem>
-                                                        )
-                                                    })}
-                                                </Menu.SubMenu>
-                                            )
-                                        })}
-                                        {(RouteMenuData || []).map((i) => {
-                                            if (i.subMenuData) {
-                                                if (i.key === `${Route.GeneralModule}`) {
-                                                    const extraMenus = extraGeneralModule.map((i) => {
-                                                        return {
-                                                            icon: <EllipsisOutlined/>,
-                                                            key: `plugin:${i.Id}`,
-                                                            label: i.GeneralModuleVerbose
-                                                        } as unknown as MenuDataProps
-                                                    })
-                                                    i.subMenuData.push(...extraMenus)
-                                                    let subMenuMap = new Map<string, MenuDataProps>()
-                                                    i.subMenuData.forEach((e) => {
-                                                        subMenuMap.set(e.key as string, e)
-                                                    })
-                                                    i.subMenuData = []
-                                                    subMenuMap.forEach((v) => i.subMenuData?.push(v))
-                                                    i.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
+                                        <Menu
+                                            theme={"light"}
+                                            style={{}}
+                                            selectedKeys={[]}
+                                            onSelect={(e) => {
+                                                if (e.key === "ignore") return
+
+
+                                                if (singletonRoute.includes(e.key as Route) && routeExistedCount(e.key as Route) > 0) {
+                                                    setCurrentTabByRoute(e.key as Route)
+                                                } else {
+                                                    if (e.key === Route.HTTPFuzzer) {
+                                                        const time = new Date().getTime().toString()
+                                                        const newTabId = `${e.key}-[${randomString(49)}]`
+                                                        const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`
+                                                        appendCache(newTabId, `${verboseNameRaw}[${pageCache.length + 1}]`, ContentByRoute(e.key, undefined, {
+                                                            system: system,
+                                                            order: time
+                                                        }), e.key as Route, time)
+                                                        addFuzzerList(time)
+                                                        setCurrentTabKey(newTabId)
+                                                    } else {
+                                                        const newTabId = `${e.key}-[${randomString(49)}]`
+                                                        const verboseNameRaw = routeKeyToLabel.get(e.key) || `${e.key}`
+                                                        appendCache(newTabId, `${verboseNameRaw}[${pageCache.length + 1}]`, ContentByRoute(e.key), e.key as Route)
+                                                        setCurrentTabKey(newTabId)
+                                                    }
                                                 }
-                                                i.subMenuData.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0))
+
+                                                // 增加加载状态
+                                                setTabLoading(true)
+                                                setTimeout(() => {
+                                                    setTabLoading(false)
+                                                }, 300)
+
+                                                setRoute(e.key)
+                                            }}
+                                            mode={"inline"}
+                                        >
+                                            {menuItems.map((i) => {
+                                                if (i.Group === "UserDefined") {
+                                                    i.Group = "社区插件"
+                                                }
                                                 return (
-                                                    <Menu.SubMenu icon={i.icon} key={i.key} title={i.label}>
-                                                        {(i.subMenuData || []).map((subMenu) => {
+                                                    <Menu.SubMenu icon={<EllipsisOutlined/>} key={i.Group}
+                                                                  title={i.Group}>
+                                                        {i.Items.map((item) => {
                                                             return (
-                                                                <MenuItem icon={subMenu.icon} key={subMenu.key}
-                                                                          disabled={subMenu.disabled}>
-                                                                    <Text ellipsis={{tooltip: true}}>{subMenu.label}</Text>
+                                                                <MenuItem icon={<EllipsisOutlined/>}
+                                                                          key={`plugin:${item.Group}:${item.YakScriptId}`}>
+                                                                    <Text
+                                                                        ellipsis={{tooltip: true}}>{item.Verbose}</Text>
                                                                 </MenuItem>
                                                             )
                                                         })}
                                                     </Menu.SubMenu>
                                                 )
-                                            }
-                                            return (
-                                                <MenuItem icon={i.icon} key={i.key} disabled={i.disabled}>
-                                                    {i.label}
-                                                </MenuItem>
-                                            )
-                                        })}
-                                    </Menu>
-                                </Space>
-                            </Spin>
-                        </Sider>
-                    )}
-                    <Content style={{
-                        overflow: "hidden",
-                        backgroundColor: "#fff",
-                        marginLeft: 12,
-                        height: "100%",
-                        display: "flex",
-                        flexFlow: "column"
-                    }}>
-                        <div style={{
-                            padding: 12,
-                            paddingTop: 8,
+                                            })}
+                                            {(RouteMenuData || []).map((i) => {
+                                                if (i.subMenuData) {
+                                                    if (i.key === `${Route.GeneralModule}`) {
+                                                        const extraMenus = extraGeneralModule.map((i) => {
+                                                            return {
+                                                                icon: <EllipsisOutlined/>,
+                                                                key: `plugin:${i.Id}`,
+                                                                label: i.ScriptName,
+                                                            } as unknown as MenuDataProps
+                                                        })
+                                                        i.subMenuData.push(...extraMenus)
+                                                        let subMenuMap = new Map<string, MenuDataProps>()
+                                                        i.subMenuData.forEach((e) => {
+                                                            subMenuMap.set(e.key as string, e)
+                                                        })
+                                                        i.subMenuData = []
+                                                        subMenuMap.forEach((v) => i.subMenuData?.push(v))
+                                                        i.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
+                                                    }
+                                                    i.subMenuData.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0))
+                                                    return (
+                                                        <Menu.SubMenu icon={i.icon} key={i.key} title={i.label}>
+                                                            {(i.subMenuData || []).map((subMenu) => {
+                                                                return (
+                                                                    <MenuItem icon={subMenu.icon} key={subMenu.key}
+                                                                              disabled={subMenu.disabled}>
+                                                                        <Text
+                                                                            ellipsis={{tooltip: true}}>{subMenu.label}</Text>
+                                                                    </MenuItem>
+                                                                )
+                                                            })}
+                                                        </Menu.SubMenu>
+                                                    )
+                                                }
+                                                return (
+                                                    <MenuItem icon={i.icon} key={i.key} disabled={i.disabled}>
+                                                        {i.label}
+                                                    </MenuItem>
+                                                )
+                                            })}
+                                        </Menu>
+                                    </Space>
+                                </Spin>
+                            </Sider>
+                        )}
+                        <Content style={{
                             overflow: "hidden",
-                            flex: "1",
+                            backgroundColor: "#fff",
+                            marginLeft: 12,
+                            height: "100%",
                             display: "flex",
                             flexFlow: "column"
                         }}>
-                            {pageCache.length > 0 ? (
-                                <Tabs
-                                    style={{display: "flex", flex: "1"}}
-                                    tabBarStyle={{marginBottom: 8}}
-                                    className='main-content-tabs'
-                                    activeKey={currentTabKey}
-                                    onChange={setCurrentTabKey}
-                                    size={"small"}
-                                    type={"editable-card"}
-                                    renderTabBar={(props, TabBarDefault) => {
-                                        return bars(props, TabBarDefault)
-                                    }}
-                                    hideAdd={true}
-                                    onEdit={(key: any, event: string) => {
-                                        switch (event) {
-                                            case "remove":
-                                                const arr = pageCache.filter((i) => i.id === key)
-                                                delFuzzerList(2, arr[0].time)
-                                                return
-                                            case "add":
-                                                if (collapsed) {
-                                                    setCollapsed(false)
-                                                } else {
-                                                    info("请从左边菜单连选择需要新建的 Tab 窗口")
-                                                }
-                                                return
-                                        }
-                                    }}
-                                    onTabClick={(key, e) => {
-                                        const divExisted = document.getElementById("yakit-cursor-menu")
-                                        if(divExisted){
-                                            const div: HTMLDivElement = divExisted as HTMLDivElement
-                                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                                            if (unmountResult && div.parentNode) {
-                                                div.parentNode.removeChild(div)
+                            <div style={{
+                                padding: 12,
+                                paddingTop: 8,
+                                overflow: "hidden",
+                                flex: "1",
+                                display: "flex",
+                                flexFlow: "column"
+                            }}>
+                                {pageCache.length > 0 ? (
+                                    <Tabs
+                                        style={{display: "flex", flex: "1"}}
+                                        tabBarStyle={{marginBottom: 8}}
+                                        className='main-content-tabs'
+                                        activeKey={currentTabKey}
+                                        onChange={setCurrentTabKey}
+                                        size={"small"}
+                                        type={"editable-card"}
+                                        renderTabBar={(props, TabBarDefault) => {
+                                            return bars(props, TabBarDefault)
+                                        }}
+                                        hideAdd={true}
+                                        onEdit={(key: any, event: string) => {
+                                            switch (event) {
+                                                case "remove":
+                                                    const arr = pageCache.filter((i) => i.id === key)
+                                                    delFuzzerList(2, arr[0].time)
+                                                    return
+                                                case "add":
+                                                    if (collapsed) {
+                                                        setCollapsed(false)
+                                                    } else {
+                                                        info("请从左边菜单连选择需要新建的 Tab 窗口")
+                                                    }
+                                                    return
                                             }
-                                        }
-                                    }}
-                                >
-                                    {pageCache.map((i) => {
-                                        return (
-                                            <Tabs.TabPane
-                                                forceRender={true}
-                                                key={i.id}
-                                                tab={i.verbose}
-                                                closeIcon={
-                                                    <Space>
-                                                        <Popover
-                                                            trigger={"click"}
-                                                            title={"修改名称"}
-                                                            content={
-                                                                <>
-                                                                    <Input
-                                                                        size={"small"}
-                                                                        defaultValue={i.verbose}
-                                                                        onBlur={(e) => {
-                                                                            updateCacheVerbose(i.id, e.target.value)
-                                                                        }}
-                                                                    />
-                                                                </>
-                                                            }
-                                                        >
-                                                            <EditOutlined className='main-container-cion'/>
-                                                        </Popover>
-                                                        <CloseOutlined
-                                                            className='main-container-cion'
-                                                            onClick={() => {
-                                                                setTabLoading(true)
-                                                                const key = i.id
-                                                                const targetIndex = getCacheIndex(key)
-                                                                if (targetIndex > 0 && pageCache[targetIndex - 1]) {
-                                                                    const targetCache = pageCache[targetIndex - 1]
-                                                                    setCurrentTabKey(targetCache.id)
-                                                                }
-                                                                removeCache(key)
-                                                                setTimeout(() => setTabLoading(false), 300)
-                                                            }}
-                                                        />
-                                                    </Space>
+                                        }}
+                                        onTabClick={(key, e) => {
+                                            const divExisted = document.getElementById("yakit-cursor-menu")
+                                            if (divExisted) {
+                                                const div: HTMLDivElement = divExisted as HTMLDivElement
+                                                const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                                                if (unmountResult && div.parentNode) {
+                                                    div.parentNode.removeChild(div)
                                                 }
-                                            >
-                                                {/*<Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >*/}
-                                                <div
-                                                    style={{
-                                                        overflowY: NoScrollRoutes.includes(i.route) ? "hidden" : "auto",
-                                                        overflowX: "hidden",
-                                                        height: "100%",
-                                                        maxHeight: "100%"
-                                                    }}
+                                            }
+                                        }}
+                                    >
+                                        {pageCache.map((i) => {
+                                            return (
+                                                <Tabs.TabPane
+                                                    forceRender={true}
+                                                    key={i.id}
+                                                    tab={i.verbose}
+                                                    closeIcon={
+                                                        <Space>
+                                                            <Popover
+                                                                trigger={"click"}
+                                                                title={"修改名称"}
+                                                                content={
+                                                                    <>
+                                                                        <Input
+                                                                            size={"small"}
+                                                                            defaultValue={i.verbose}
+                                                                            onBlur={(e) => {
+                                                                                updateCacheVerbose(i.id, e.target.value)
+                                                                            }}
+                                                                        />
+                                                                    </>
+                                                                }
+                                                            >
+                                                                <EditOutlined className='main-container-cion'/>
+                                                            </Popover>
+                                                            <CloseOutlined
+                                                                className='main-container-cion'
+                                                                onClick={() => {
+                                                                    setTabLoading(true)
+                                                                    const key = i.id
+                                                                    const targetIndex = getCacheIndex(key)
+                                                                    if (targetIndex > 0 && pageCache[targetIndex - 1]) {
+                                                                        const targetCache = pageCache[targetIndex - 1]
+                                                                        setCurrentTabKey(targetCache.id)
+                                                                    }
+                                                                    removeCache(key)
+                                                                    setTimeout(() => setTabLoading(false), 300)
+                                                                }}
+                                                            />
+                                                        </Space>
+                                                    }
                                                 >
-                                                    {i.node}
-                                                </div>
-                                                {/*</Spin>*/}
-                                            </Tabs.TabPane>
-                                        )
-                                    })}
-                                </Tabs>
-                            ) : (
-                                <></>
-                            )}
-                        </div>
-                    </Content>
-                </Layout>
-            </Content>
+                                                    {/*<Spin spinning={tabLoading} wrapperClassName={'main-panel-spin'} >*/}
+                                                    <div
+                                                        style={{
+                                                            overflowY: NoScrollRoutes.includes(i.route) ? "hidden" : "auto",
+                                                            overflowX: "hidden",
+                                                            height: "100%",
+                                                            maxHeight: "100%"
+                                                        }}
+                                                    >
+                                                        {i.node}
+                                                    </div>
+                                                    {/*</Spin>*/}
+                                                </Tabs.TabPane>
+                                            )
+                                        })}
+                                    </Tabs>
+                                ) : (
+                                    <></>
+                                )}
+                            </div>
+                        </Content>
+                    </Layout>
+                </Content>
             </AutoSpin>
             <Modal
                 visible={winCloseShow}
@@ -901,14 +909,14 @@ const Main: React.FC<MainProp> = (props) => {
                 ]}
             >
                 <div style={{height: 40}}>
-                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
+                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
                     <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
                 </div>
                 <p style={{fontSize: 15, marginLeft: 37}}>是否要退出yakit操作界面，一旦退出，界面内打开内容除fuzzer页外都会销毁</p>
                 <div style={{marginLeft: 37}}>
-                    <Checkbox 
-                        defaultChecked={!winCloseFlag} 
-                        value={!winCloseFlag} 
+                    <Checkbox
+                        defaultChecked={!winCloseFlag}
+                        value={!winCloseFlag}
                         onChange={() => {
                             setWinCloseFlag(!winCloseFlag)
                             ipcRenderer.invoke("set-value", WindowsCloseFlag, false)
