@@ -593,7 +593,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
     // 转换task内的result数据
     const convertTask = (task: ExecBatchYakScriptTask) => {
         // @ts-ignore
-        const results: ExecResult[] = task.Results.filter((item) => !!item.Result).map((item) => item.Result)
+        const results: ExecResult[] = task.Results
 
         const messages: ExecResultMessage[] = []
         for (let item of results) {
