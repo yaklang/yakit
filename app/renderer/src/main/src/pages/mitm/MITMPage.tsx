@@ -39,6 +39,8 @@ const {Text} = Typography;
 const {Item} = Form;
 const {ipcRenderer} = window.require("electron");
 
+const DefaultMitmFilter = "default-mitm-filter"
+
 export interface MITMPageProp {}
 
 export interface MITMResponse extends MITMFilterSchema {
@@ -119,7 +121,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
 
     // filter 过滤器
-    const [mitmFilter, setMITMFilter] = useState<MITMFilterSchema>({});
+    const [mitmFilter, setMITMFilter] = useState<MITMFilterSchema>();
 
     // mouse
     const mouseState = useMouse();
@@ -212,13 +214,31 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             }, 300)
         });
         ipcRenderer.on("client-mitm-filter", (e, msg) => {
-            setMITMFilter({
-                includeSuffix: msg.includeSuffix,
-                excludeMethod: msg.excludeMethod,
-                excludeSuffix: msg.excludeSuffix,
-                includeHostname: msg.includeHostname,
-                excludeHostname: msg.excludeHostname,
-            })
+            ipcRenderer
+                .invoke("get-value", DefaultMitmFilter)
+                .then((res: any) => {
+                    if(res){
+                        const filter ={
+                            includeSuffix: res.includeSuffix,
+                            excludeMethod: res.excludeMethod,
+                            excludeSuffix: res.excludeSuffix,
+                            includeHostname: res.includeHostname,
+                            excludeHostname: res.excludeHostname
+                        }
+                        setMITMFilter(filter)
+                        ipcRenderer.invoke("mitm-filter", {
+                            updateFilter: true, ...filter
+                        })
+                    }else{
+                        setMITMFilter({
+                            includeSuffix: msg.includeSuffix,
+                            excludeMethod: msg.excludeMethod,
+                            excludeSuffix: msg.excludeSuffix,
+                            includeHostname: msg.includeHostname,
+                            excludeHostname: msg.excludeHostname,
+                        }) 
+                    }
+                })
         })
 
         const updateLogs = () => {
@@ -644,7 +664,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         ]}
                                                         value={autoForward}
                                                         formItemStyle={{marginBottom: 0}}
-                                                        setValue={handleAutoForward}
+                                                        setValue={(e) => {
+                                                            ipcRenderer.invoke("mitm-filter", {updateFilter: true, ...mitmFilter})
+                                                            handleAutoForward(e)
+                                                        }}
                                                     />
                                                     {/*<div>*/}
                                                     {/*    <span>自动放行：</span>*/}
