@@ -1090,7 +1090,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash ? 
                                         "rgba(78, 164, 255, 0.4)" :
                                         rowData.Tags.indexOf("YAKIT_COLOR") > -1 ?
-                                            TableRowColor(rowData.Tags.split('_').pop()):
+                                            TableRowColor(rowData.Tags.split('_').pop().toUpperCase()):
                                             ""
                                     if (node) {
                                         if(color) node.style.setProperty("background-color", color, "important")
