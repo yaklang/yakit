@@ -51,7 +51,7 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
             <Row gutter={8}>
                 <Col span={prefixNode ? 4 : 0}>{prefixNode}</Col>
 
-                <Col span={24 - ((prefixNode ? 1 : 0) + (suffixNode ? 1 : 0)) * 4}>
+                <Col span={24 - (prefixNode ? 1 : 0) * 6 - (suffixNode ? 1 : 0) * 6}>
                     <Dragger
                         {...restDragger}
                         className={`file-upload-dragger ${DraggerClassName || ""}`}
