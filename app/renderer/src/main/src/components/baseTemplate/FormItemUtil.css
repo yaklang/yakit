@@ -1,0 +1,8 @@
+/* 隐藏上传拖拽框的虚线边框样式(全局多处使用该样式类，修改时需谨慎) */
+.file-upload-dragger.ant-upload.ant-upload-drag {
+    background-color: #fff;
+    border: 0;
+}
+.file-upload-dragger.ant-upload.ant-upload-drag .ant-upload {
+    padding: 0;
+}
