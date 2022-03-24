@@ -1,7 +1,7 @@
 const {app, BrowserWindow, dialog, nativeImage} = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
-const { kvpairs, getKVPair, setKVPair } = require("./handlers/upgradeUtil");
+const { extrakvpairs, getExtraKVPair, setExtraKVPair } = require("./handlers/upgradeUtil");
 const {registerIPC, clearing} = require("./ipc");
 
 // 性能优化：https://juejin.cn/post/6844904029231775758
@@ -9,8 +9,8 @@ const {registerIPC, clearing} = require("./ipc");
 let flag = true // 是否展示关闭二次确认弹窗的标志位
 let win;
 const createWindow = () => {
-    getKVPair((err) => {
-        if(!err) flag = kvpairs.get('windows-close-flag') === undefined ? true : kvpairs.get('windows-close-flag')
+    getExtraKVPair((err) => {
+        if(!err) flag = extrakvpairs.get('windows-close-flag') === undefined ? true : extrakvpairs.get('windows-close-flag')
     })
 
     win = new BrowserWindow({
@@ -51,7 +51,7 @@ const createWindow = () => {
                 checkboxChecked: false,
                 noLink: true
             }).then((res) => {
-                setKVPair('windows-close-flag', !res.checkboxChecked)
+                setExtraKVPair('windows-close-flag', !res.checkboxChecked)
                 if(res.response === 0){
                   e.preventDefault()
                   win.minimize();
