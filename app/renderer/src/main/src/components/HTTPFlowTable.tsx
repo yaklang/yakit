@@ -1,4 +1,4 @@
-import React, {Ref, useEffect, useState} from "react"
+import React, {ReactNode, Ref, useEffect, useState} from "react"
 import {
     Button,
     Col,
@@ -74,6 +74,8 @@ export interface HTTPFlow {
     GetParams: FuzzableParams[]
     PostParams: FuzzableParams[]
     CookieParams: FuzzableParams[]
+
+    Tags?: string
 }
 
 export interface FuzzableParams {
@@ -395,6 +397,30 @@ export const LogLevelToCode = (level: string) => {
     }
 }
 
+// 通过关键词输出渲染颜色
+const TableRowColor = (key: string) => {
+    switch (key) {
+        case "RED":
+            return "#ffccc7"
+        case "GREEN":
+            return "#d9f7be"
+        case "BLUE":
+            return "#d6e4ff"
+        case "YELLOW":
+            return "#ffffb8"
+        case "ORANGE":
+            return "#ffe7ba"
+        case "PURPLE":
+            return "#efdbff"
+        case "CYAN":
+            return "#b5f5ec"
+        case "GREY":
+            return "#d9d9d9"
+    }
+    if(key.indexOf('#') > -1) return key
+    else return `#${key}`
+}
+
 export interface YakQueryHTTPFlowResponse {
     Data: HTTPFlow[]
     Total: number
@@ -672,11 +698,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     />
                 </Col>
             </Row>
-            {(
-                <TableResizableColumn
-                    className={"httpFlowTable"}
-                    loading={loading}
-                    columns={[
+            <TableResizableColumn
+                className={"httpFlowTable"}
+                loading={loading}
+                columns={[
                         {
                             dataKey: "Id",
                             width: 80,
@@ -729,7 +754,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 //         {rowData[dataKey]}
                                 //     </Tag>
                                 // )
-                                return <div>{rowData[dataKey]}</div>
+                                return rowData[dataKey]
                             }
                         },
                         {
@@ -867,7 +892,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 return "Html Title"
                             },
                             cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return rowData[dataKey] ? <>{rowData[dataKey]}</> : ""
+                                return rowData[dataKey] ? rowData[dataKey] : ""
                             }
                         },
                         {
@@ -877,7 +902,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 return "IP"
                             },
                             cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return rowData[dataKey] ? <>{rowData[dataKey]}</> : ""
+                                return rowData[dataKey] ?rowData[dataKey] : ""
                             }
                         },
                         {
@@ -1050,15 +1075,36 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 )
                             }
                         }
-                    ]}
-                    data={data}
-                    autoHeight={tableContentHeight <= 0}
-                    height={tableContentHeight}
-                    sortFilter={sortFilter}
-                    rowClassName={(rowData: any) => {
-                        return rowData ? (rowData.Hash === selected?.Hash ? "selected" : "") : ""
-                    }}
-                    onRowContextMenu={(rowData: any, event: React.MouseEvent) => {
+                ]}
+                data={data}
+                autoHeight={tableContentHeight <= 0}
+                height={tableContentHeight}
+                sortFilter={sortFilter}
+                renderRow={(children: ReactNode, rowData: any) => {
+                    if (rowData)
+                        return (
+                            <div
+                                id='http-flow-row'
+                                ref={(node) => {
+                                    const color = 
+                                        rowData.Hash === selected?.Hash ? 
+                                        "rgba(78, 164, 255, 0.4)" :
+                                        rowData.Tags.indexOf("YAKIT_COLOR") > -1 ?
+                                            TableRowColor(rowData.Tags.split('_').pop().toUpperCase()):
+                                            ""
+                                    if (node) {
+                                        if(color) node.style.setProperty("background-color", color, "important")
+                                        else node.style.setProperty("background-color", "#ffffff")
+                                    }
+                                }}
+                                style={{height: "100%"}}
+                            >
+                                {children}
+                            </div>
+                        )
+                    return children
+                }}
+                onRowContextMenu={(rowData: any, event: React.MouseEvent) => {
                         showByCursorMenu(
                             {
                                 content: [
@@ -1119,16 +1165,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             event.clientX,
                             event.clientY
                         )
-                    }}
-                    onRowClick={(rowDate: any) => {
-                        if (rowDate.Hash !== selected?.Hash) {
-                            setSelected(rowDate)
-                        } else {
-                            // setSelected(undefined)
-                        }
-                    }}
-                />
-            )}
+                }}
+                onRowClick={(rowDate: any) => {
+                    if (rowDate.Hash !== selected?.Hash) {
+                        setSelected(rowDate)
+                    } else {
+                        // setSelected(undefined)
+                    }
+                }}
+            />
         </div>
         // </AutoCard>
     )
