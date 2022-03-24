@@ -431,20 +431,27 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                     </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"端口资产管理"} key={"port"}>
-                    <Row gutter={12}>
+                    <div style={{height: "100%", overflowY: "auto", padding: "0 6px"}}>
+                        <PortAssetTable
+                            onClicked={(i) => {
+                                setPort(i)
+                            }}
+                        />
+                    </div>
+                    {/* <Row gutter={12}>
                         <Col span={24}>
                             <PortAssetTable
                                 onClicked={(i) => {
                                     setPort(i)
                                 }}
                             />
-                        </Col>
+                        </Col> */}
                         {/* <Col span={8}>
                         {port ? <PortAssetDescription port={port}/> : <Empty>
                             点击端口列表查看内容
                         </Empty>}
                     </Col> */}
-                    </Row>
+                    {/* </Row> */}
                 </Tabs.TabPane>
             </Tabs>
         </div>
