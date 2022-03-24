@@ -216,12 +216,13 @@ export const YakitVersion: React.FC<YakVersionProp> = (props) => {
                     content: <>
                         如果你现在不是很忙
                         <br/>
-                        我们推荐您进入 <Button
+                        {/* 我们推荐您进入 <Button
                         type={"primary"}
                         onClick={() => {
                             openExternalWebsite("https://github.com/yaklang/yakit/releases")
                         }}
-                    >Yakit Github 发布界面</Button> 下载最新版并升级！
+                    >Yakit Github 发布界面</Button> 下载最新版并升级！ */}
+                        我们推荐您点击右上角退出到启用页升级最新版
                     </>
                 })
             }}>
