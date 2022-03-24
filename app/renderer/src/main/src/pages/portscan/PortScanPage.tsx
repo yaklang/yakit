@@ -1,11 +1,10 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Checkbox, Col, Divider, Form, Input, Row, Space, Spin, Tabs, Tag, Upload} from "antd"
-import {InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {Button, Checkbox, Col, Divider, Form, Input, Row, Space, Spin, Tabs, Tag} from "antd"
+import {InputInteger, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
 import {ExecResult, YakScript} from "../invoker/schema"
 import {failed, info} from "../../utils/notification"
-import {XTerm} from "xterm-for-react"
-import {writeExecResultXTerm, xtermClear, xtermFit} from "../../utils/xtermUtils"
+import {writeExecResultXTerm, xtermClear} from "../../utils/xtermUtils"
 import {OpenPortTableViewer} from "./PortTable"
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema"
 import {PortAssetTable} from "../assetViewer/PortAssetPage"
@@ -17,9 +16,10 @@ import {PluginList} from "../../components/PluginList"
 import {showModal} from "../../utils/showModal"
 import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
+import {CVXterm} from "../../components/CVXterm"
+import { ContentUploadTextArea } from "../../components/functionTemplate/ContentUploadTextArea"
 
 import "./PortScanPage.css"
-import {CVXterm} from "../../components/CVXterm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -228,70 +228,54 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         ipcRenderer.invoke("PortScan", params, token)
                                     }}
                                 >
-                                    <Upload.Dragger
-                                        className='targets-upload-dragger'
-                                        accept={"text/plain"}
-                                        multiple={false}
-                                        maxCount={1}
-                                        showUploadList={false}
-                                        beforeUpload={(f) => {
-                                            if (f.type !== "text/plain") {
-                                                failed(`${f.name}非txt文件，请上传txt格式文件！`)
+                                    <Spin spinning={uploadLoading}>
+                                        <ContentUploadTextArea
+                                            beforeUpload={(f) => {
+                                                if (f.type !== "text/plain") {
+                                                    failed(`${f.name}非txt文件，请上传txt格式文件！`)
+                                                    return false
+                                                }
+    
+                                                setUploadLoading(true)
+                                                ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
+                                                    setParams({...params, Targets: res})
+                                                    setTimeout(() => setUploadLoading(false), 100)
+                                                })
                                                 return false
+                                            }}
+                                            item={{
+                                                style: {textAlign: "left"},
+                                                label: "扫描目标"
+                                            }}
+                                            textarea={{
+                                                isBubbing: true,
+                                                setValue: (Targets) => setParams({...params, Targets}),
+                                                value: params.Targets,
+                                                rows: 1,
+                                                placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割"
+                                            }}
+                                            suffixNode={
+                                                loading ? (
+                                                    <Button
+                                                        className="form-submit-style"
+                                                        type='primary'
+                                                        danger
+                                                        onClick={(e) => ipcRenderer.invoke("cancel-PortScan", token)}
+                                                    >
+                                                        停止扫描
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        className="form-submit-style"
+                                                        type='primary'
+                                                        htmlType='submit'
+                                                    >
+                                                        开始扫描
+                                                    </Button>
+                                                )
                                             }
-
-                                            setUploadLoading(true)
-                                            ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
-                                                setParams({...params, Targets: res})
-                                                setTimeout(() => setUploadLoading(false), 100)
-                                            })
-                                            return false
-                                        }}
-                                    >
-                                        <Spin spinning={uploadLoading}>
-                                            <InputItem
-                                                style={{textAlign: "left"}}
-                                                width={"75%"}
-                                                label={"扫描目标"}
-                                                setValue={(Targets) => setParams({...params, Targets})}
-                                                value={params.Targets}
-                                                textarea={true}
-                                                textareaRow={1}
-                                                isBubbing={true}
-                                                placeholder='域名/主机/IP/IP段均可，逗号分隔或按行分割'
-                                                help={
-                                                    <div>
-                                                        可将TXT文件拖入框内或
-                                                        <span style={{color: "rgb(25,143,255)"}}>点击此处</span>上传
-                                                    </div>
-                                                }
-                                                suffixNode={
-                                                    loading ? (
-                                                        <Button
-                                                            className='form-submit-style'
-                                                            type='primary'
-                                                            danger
-                                                            onClick={(e) => {
-                                                                ipcRenderer.invoke("cancel-PortScan", token)
-                                                                e.stopPropagation()
-                                                            }}
-                                                        >
-                                                            停止扫描
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            className='form-submit-style'
-                                                            type='primary'
-                                                            htmlType='submit'
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
-                                                            开始扫描
-                                                        </Button>
-                                                    )
-                                                }
-                                            />
-                                        </Spin>
-                                    </Upload.Dragger>
+                                        ></ContentUploadTextArea>
+                                    </Spin>
 
                                     <Form.Item label='预设端口' colon={false} className='form-item-margin'>
                                         <Checkbox.Group
