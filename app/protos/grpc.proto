@@ -808,6 +808,8 @@ message YakScriptParam {
 
   bool Required = 6;
   string Group = 7;
+
+  string ExtraSetting = 8;
 }
 
 message YakScript {
