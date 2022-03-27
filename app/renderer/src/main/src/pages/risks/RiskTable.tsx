@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Space, Table, Tag, Form, Typography} from "antd"
+import {Button, Space, Table, Tag, Form, Typography, Divider} from "antd"
 import {Risk} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useMemoizedFn} from "ahooks"
@@ -8,18 +8,56 @@ import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {failed} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
 import ReactJson from "react-json-view"
-import {InputItem} from "../../utils/inputUtil"
+import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
 
-export interface RiskTableProp {}
+export interface RiskTableProp {
+}
 
 export interface QueryRisksParams extends QueryGeneralRequest {
     Search?: string
     RiskType?: string
     Network?: string
+    Severity?: string
 }
 
 const {ipcRenderer} = window.require("electron")
 const {Paragraph} = Typography
+
+export interface Fields {
+    Values: FieldName[]
+}
+
+export interface FieldName {
+    Total: number
+    Name: string
+    Verbose: string
+}
+
+export interface FieldNameSelectItem {
+    Total: number
+    Names: string[]
+    Verbose: string
+}
+
+const mergeFieldNames = (f: Fields) => {
+    let m = new Map<string, FieldNameSelectItem>();
+    (f.Values || []).forEach(v => {
+        let i = m.get(v.Verbose);
+        if (!i) {
+            m.set(v.Verbose, {Total: v.Total, Verbose: v.Verbose, Names: [v.Name]})
+            return
+        } else {
+            i.Total += v.Total
+            i.Names.push(v.Name)
+            i.Names.sort()
+        }
+    })
+    let items: FieldNameSelectItem[] = []
+    m.forEach(value => {
+        items.push(value)
+    })
+    return items
+}
 
 export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const [response, setResponse] = useState<QueryGeneralResponse<Risk>>({
@@ -33,6 +71,17 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const page = response.Pagination.Page
     const limit = response.Pagination.Limit
     const [loading, setLoading] = useState(false)
+    const [types, setTypes] = useState<FieldNameSelectItem[]>([]);
+    const [severities, setSeverities] = useState<FieldNameSelectItem[]>([]);
+
+    const updateRiskAndLevel = useMemoizedFn(() => {
+        ipcRenderer.invoke("QueryAvailableRiskType", {}).then((f: Fields) => {
+            setTypes(mergeFieldNames(f))
+        })
+        ipcRenderer.invoke("QueryAvailableRiskLevel", {}).then((i: Fields) => {
+            setSeverities(mergeFieldNames(i))
+        })
+    })
 
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
@@ -49,6 +98,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                 })
                 .then((r: QueryGeneralResponse<any>) => {
                     setResponse(r)
+                    updateRiskAndLevel()
                 })
                 .catch((e) => {
                     failed(`QueryRisks failed: ${e}`)
@@ -88,8 +138,33 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             onClick={() => {
                                 update()
                             }}
-                            icon={<ReloadOutlined />}
+                            icon={<ReloadOutlined/>}
                         />
+                        <Divider type={"vertical"}/>
+                        <Form onSubmitCapture={e => {
+                            e.preventDefault()
+                            update()
+                        }} layout={"inline"} size={"small"}>
+                            {types.length > 0 && <ManyMultiSelectForString
+                                label={"漏洞/风险类型"} value={params.RiskType || ""}
+                                formItemStyle={{minWidth: 280}}
+                                setValue={RiskType => setParams({...params, RiskType})} defaultSep={"|"}
+                                data={types.map(i => {
+                                    return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
+                                })}
+                            />}
+                            {types.length > 0 && <ManyMultiSelectForString
+                                label={"漏洞级别"} value={params.Severity || ""} defaultSep={"|"}
+                                formItemStyle={{minWidth: 240}}
+                                setValue={Severity => setParams({...params, Severity})}
+                                data={severities.map(i => {
+                                    return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
+                                })}
+                            />}
+                            <Form.Item colon={false}>
+                                <Button type="primary" htmlType="submit"> 搜索 </Button>
+                            </Form.Item>
+                        </Form>
                     </Space>
                 )
             }}
@@ -98,10 +173,11 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             columns={[
                 {
                     title: "标题",
-                    render: (i: Risk) => <Paragraph style={{maxWidth: 500}} ellipsis={{tooltip: true}}>{i?.TitleVerbose || i.Title}</Paragraph>,
+                    render: (i: Risk) => <Paragraph style={{maxWidth: 500, marginBottom: 0}}
+                                                    ellipsis={{tooltip: true}}>{i?.TitleVerbose || i.Title}</Paragraph>,
                     width: 500,
                     filterIcon: (filtered) => {
-                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                     },
                     filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                         return (
@@ -124,7 +200,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     title: "类型",
                     render: (i: Risk) => i?.RiskTypeVerbose || i.RiskType,
                     filterIcon: (filtered) => {
-                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                     },
                     filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                         return (
@@ -147,7 +223,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     title: "IP",
                     render: (i: Risk) => i?.IP || "-",
                     filterIcon: (filtered) => {
-                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                     },
                     filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                         return (
@@ -184,7 +260,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                         title: "详情",
                                         content: (
                                             <div style={{overflow: "auto"}}>
-                                                <ReactJson src={i} />
+                                                <ReactJson src={i}/>
                                             </div>
                                         )
                                     })
@@ -227,7 +303,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                         return
                 }
             }}
-        ></Table>
+        />
     )
 }
 

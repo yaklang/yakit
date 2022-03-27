@@ -12,19 +12,12 @@ import ReactJson from "react-json-view";
 import {SelectOne} from "../../utils/inputUtil";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import "../main.css";
+import {MITMPluginOperatorProps} from "./MITMPluginOperator";
+import {MITMPluginListProp} from "./MITMPluginList";
 
 
-export interface MITMPluginCardProp {
-    proxy?: string
-    downloadCertNode?: React.ReactNode
-    setFilterNode?: React.ReactNode
-    // hooks: YakScriptHooks[]
-    messages: ExecResultLog[]
-    onSubmitScriptContent?: (script: string) => any
-    onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    onExit?: () => any
-    autoUpdate?: boolean
+export interface MITMPluginCardProp extends MITMPluginListProp {
+
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -45,27 +38,19 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
     }, [])
 
     return <div style={{height: "100%"}}>
-        {/* <Tabs
-            className={"httphacker-tabs"}
-            size={"small"} type={"card"} activeKey={tab} onChange={setTab}
-            style={{
-                paddingTop: 4
-            }}
-        >
-            <Tabs.TabPane key={"history"} tab={"历史请求"}> */}
-                <div style={{height: "100%", overflow: "hidden"}}>
-                    <HTTPFlowMiniTable
-                        simple={true}
-                        onTotal={setTotal}
-                        filter={{
-                            SearchURL: "",
-                            Pagination: {...genDefaultPagination(), Page: 1, Limit: 20}
-                        }}
-                        source={""}
-                        autoUpdate={props.autoUpdate}
-                    />
-                </div>
-            {/* </Tabs.TabPane>
+        <div style={{height: "100%", overflow: "hidden"}}>
+            <HTTPFlowMiniTable
+                simple={true}
+                onTotal={setTotal}
+                filter={{
+                    SearchURL: "",
+                    Pagination: {...genDefaultPagination(), Page: 1, Limit: 20}
+                }}
+                source={""}
+                autoUpdate={true}
+            />
+        </div>
+        {/* </Tabs.TabPane>
         </Tabs> */}
     </div>
 };

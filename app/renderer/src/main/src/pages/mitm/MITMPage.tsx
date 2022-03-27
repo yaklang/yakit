@@ -34,6 +34,10 @@ import {StatusCardProps} from "../yakitStore/viewers/base";
 import {useHotkeys} from "react-hotkeys-hook";
 import * as monaco from 'monaco-editor';
 import CopyToClipboard from "react-copy-to-clipboard";
+import {AutoCard} from "../../components/AutoCard";
+import {ResizeBox} from "../../components/ResizeBox";
+import {MITMPluginLogViewer} from "./MITMPluginLogViewer";
+import {MITMPluginList, MITMPluginListProp} from "./MITMPluginList";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -41,7 +45,8 @@ const {ipcRenderer} = window.require("electron");
 
 const DefaultMitmFilter = "default-mitm-filter"
 
-export interface MITMPageProp {}
+export interface MITMPageProp {
+}
 
 export interface MITMResponse extends MITMFilterSchema {
     isHttps: boolean,
@@ -83,8 +88,6 @@ const enableMITMPluginMode = () => {
 
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [status, setStatus] = useState<"idle" | "hijacked" | "hijacking">("idle");
-    const [passiveMode, setPassiveMode] = useState(false);
-
     const [error, setError] = useState("");
     const [host, setHost] = useState("127.0.0.1");
     const [port, setPort] = useState(8083);
@@ -104,7 +107,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]));
 
     // 自动转发 与 劫持响应的自动设置
-    const [autoForward, setAutoForward, getAutoForward] = useGetState(true);
+    const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log");
+    const isManual = autoForward === "manual";
+
     const [hijackAllResponse, setHijackAllResponse] = useState(false); // 劫持所有请求
     const [allowHijackCurrentResponse, setAllowHijackCurrentResponse] = useState(false); // 仅劫持一个请求
     const [initialed, setInitialed] = useState(false);
@@ -217,8 +222,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             ipcRenderer
                 .invoke("get-value", DefaultMitmFilter)
                 .then((res: any) => {
-                    if(res){
-                        const filter ={
+                    if (res) {
+                        const filter = {
                             includeSuffix: res.includeSuffix,
                             excludeMethod: res.excludeMethod,
                             excludeSuffix: res.excludeSuffix,
@@ -229,14 +234,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         ipcRenderer.invoke("mitm-filter", {
                             updateFilter: true, ...filter
                         })
-                    }else{
+                    } else {
                         setMITMFilter({
                             includeSuffix: msg.includeSuffix,
                             excludeMethod: msg.excludeMethod,
                             excludeSuffix: msg.excludeSuffix,
                             includeHostname: msg.includeHostname,
                             excludeHostname: msg.excludeHostname,
-                        }) 
+                        })
                     }
                 })
         })
@@ -290,8 +295,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     }, [autoForward])
 
     useEffect(() => {
-        ipcRenderer.invoke("mitm-auto-forward", autoForward).finally(() => {
-            console.info(`设置服务端自动转发：${autoForward}`)
+        ipcRenderer.invoke("mitm-auto-forward", !isManual).finally(() => {
+            console.info(`设置服务端自动转发：${!isManual}`)
         })
     }, [autoForward])
 
@@ -322,21 +327,21 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
         // passive 模式是 mitm 插件模式
         //    在这个模式下，应该直接转发，不应该操作数据包
-        if (passiveMode) {
-            if (msg.forResponse) {
-                forwardResponse(msg.responseId || 0)
-            } else {
-                forwardRequest(msg.id || 0)
-            }
-            return
-        }
+        // if (passiveMode) {
+        //     if (msg.forResponse) {
+        //         forwardResponse(msg.responseId || 0)
+        //     } else {
+        //         forwardRequest(msg.id || 0)
+        //     }
+        //     return
+        // }
 
         if (msg.forResponse) {
             if (!msg.response || !msg.responseId) {
                 failed("BUG: MITM 错误，未能获取到正确的 Response 或 Response ID")
                 return
             }
-            if (autoForward) {
+            if (!isManual) {
                 forwardResponse(msg.responseId || 0)
                 if (!!currentPacket) {
                     clearCurrentPacket()
@@ -344,13 +349,17 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             } else {
                 setForResponse(true)
                 setStatus("hijacked")
-                setCurrentPacketInfo({currentPacket: msg.response, currentPacketId: msg.responseId, isHttp: msg.isHttps})
+                setCurrentPacketInfo({
+                    currentPacket: msg.response,
+                    currentPacketId: msg.responseId,
+                    isHttp: msg.isHttps
+                })
                 // setCurrentPacket(new Buffer(msg.response).toString("utf8"))
                 // setCurrentPacketId(msg.responseId || 0);
             }
         } else {
             if (msg.request) {
-                if (autoForward) {
+                if (!isManual) {
                     forwardRequest(msg.id)
                     if (!!currentPacket) {
                         clearCurrentPacket()
@@ -361,7 +370,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     setForResponse(false)
                     // setCurrentPacket(msg.request)
                     // setCurrentPacketId(msg.id)
-                    setCurrentPacketInfo({currentPacket: msg.request, currentPacketId: msg.id,isHttp: msg.isHttps})
+                    setCurrentPacketInfo({currentPacket: msg.request, currentPacketId: msg.id, isHttp: msg.isHttps})
                     setUrlInfo(msg.url)
                     ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
                         setIpInfo(res)
@@ -418,7 +427,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             notification["error"]({message: `停止中间人劫持失败：${e}`})
         }).finally(() => setTimeout(() => {
             setLoading(false)
-            setPassiveMode(false)
         }, 300))
     })
 
@@ -478,8 +486,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         >设置过滤器</Button>
     })
 
-    const handleAutoForward = useMemoizedFn((e: boolean) => {
-        if (e) {
+    const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
+        if (!isManual) {
             info("切换为劫持自动放行模式（仅记录）")
             setHijackAllResponse(false)
         } else {
@@ -502,7 +510,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
 
     const shiftAutoForwardHotkey = useHotkeys('ctrl+t', () => {
-        handleAutoForward(!autoForward)
+        handleAutoForward(isManual ? "manual" : "log")
     }, [autoForward])
 
     if (!initialed) {
@@ -520,6 +528,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             onSubmitCapture={e => {
                                 e.preventDefault()
                                 start()
+
+                                enableMITMPluginMode().then(() => {
+                                    info("被动扫描插件模式已启动")
+                                })
                             }}
                             layout={"horizontal"} labelCol={{span: 7}}
                             wrapperCol={{span: 13}}
@@ -536,17 +548,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             <Item label={" "} colon={false}>
                                 <Space>
                                     <Button type={"primary"} htmlType={"submit"}>
-                                        手动劫持模式
-                                    </Button>
-                                    <Button onClick={() => {
-                                        start()
-                                        setPassiveMode(true)
-                                        setAutoForward(true)
-                                        enableMITMPluginMode().then(() => {
-                                            info("被动扫描插件模式已启动")
-                                        })
-                                    }}>
-                                        被动扫描模式
+                                        劫持启动
                                     </Button>
                                 </Space>
                             </Item>
@@ -556,23 +558,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 case "hijacked":
                     return <div id={"mitm-hijacking-container"} ref={shiftAutoForwardHotkey as Ref<any>} tabIndex={-1}
                                 style={{marginLeft: 12, marginRight: 12, height: "100%"}}>
-                        {passiveMode ? <div id={"mitm-plugin-operator-container"} style={{height: "100%"}}>
-                            <MITMPluginOperator
-                                proxy={`http://${host}:${port}`}
-                                downloadCertNode={downloadCert()} setFilterNode={setFilter()}
-                                onExit={() => {
-                                    stop()
-                                }}
-                                messages={logs} status={statusCards}
-                                onSubmitScriptContent={e => {
-                                    ipcRenderer.invoke("mitm-exec-script-content", e)
-                                }}
-                                onSubmitYakScriptId={(id: number, params: YakExecutorParam[]) => {
-                                    info(`加载 MITM 插件[${id}]`)
-                                    ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
-                                }}
-                            />
-                        </div> : <Row gutter={14} style={{height: "100%"}}>
+                        <Row gutter={14} style={{height: "100%"}}>
                             <Col span={haveSideCar ? 24 : 24}
                                  style={{display: "flex", flexDirection: "column", height: "100%"}}>
                                 <PageHeader
@@ -646,7 +632,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         <Col span={12}>
                                             <div style={{width: "100%", textAlign: "right"}}>
                                                 <Space>
-                                                    {!autoForward && <div>
+                                                    {isManual && <div>
                                                         <span style={{marginRight: 4}}>劫持响应:</span>
                                                         <Checkbox checked={hijackAllResponse} onClick={e => {
                                                             if (!hijackAllResponse) {
@@ -659,8 +645,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                     </div>}
                                                     <SelectOne
                                                         data={[
-                                                            {text: "手动劫持", value: false},
-                                                            {text: "自动放行", value: true},
+                                                            {text: "手动劫持", value: "manual"},
+                                                            {text: "自动放行", value: "log"},
+                                                            {text: "被动日志", value: "passive"},
                                                         ]}
                                                         value={autoForward}
                                                         formItemStyle={{marginBottom: 0}}
@@ -669,14 +656,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                             handleAutoForward(e)
                                                         }}
                                                     />
-                                                    {/*<div>*/}
-                                                    {/*    <span>自动放行：</span>*/}
-                                                    {/*    <Switch*/}
-                                                    {/*        checked={autoForward}*/}
-                                                    {/*        onChange={e => {*/}
-                                                    {/*        }}*/}
-                                                    {/*    />*/}
-                                                    {/*</div>*/}
                                                 </Space>
                                             </div>
                                         </Col>
@@ -686,16 +665,19 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                             <div style={{
                                                 width: "100%", textAlign: "left", height: '100%',
                                                 display: 'flex'
-                                            }}>{autoForward ?
+                                            }}>
+                                                {!isManual &&
                                                 <Text style={{alignSelf: 'center'}}>
-                                                    {`目标：自动放行中...`}</Text> :
+                                                    {`目标：自动放行中...`}</Text>}
+
+                                                {autoForward === "manual" &&
                                                 <>
                                                     <Text title={urlInfo} ellipsis={true} style={{
                                                         alignSelf: 'center',
                                                         maxWidth: 300
                                                     }}>{status === 'hijacking' ? '目标：监听中...' : `目标：${urlInfo}`}</Text>
                                                     {ipInfo && status !== 'hijacking' &&
-                                                        <Tag
+                                                    <Tag
                                                         color='green'
                                                         title={ipInfo}
                                                         style={{
@@ -704,7 +686,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                             maxWidth: 140,
                                                             cursor: "pointer"
                                                         }}
-                                                        > 
+                                                    >
                                                         {`${ipInfo}`}
                                                         <CopyToClipboard
                                                             text={`${ipInfo}`}
@@ -712,12 +694,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                 if (ok) success("已复制到粘贴板")
                                                             }}
                                                         >
-                                                            <CopyOutlined style={{marginLeft: 5}} />
+                                                            <CopyOutlined style={{marginLeft: 5}}/>
                                                         </CopyToClipboard>
-                                                        </Tag>
+                                                    </Tag>
                                                     }
                                                 </>
-                                            }
+                                                }
                                             </div>
                                         </Col>
                                         <Col span={12}>
@@ -733,10 +715,36 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                 <div style={{flex: 1, overflowY: 'hidden'}}>
                                     {/*<Spin wrapperClassName={"mitm-loading-spin"} spinning={status === "hijacking"}>*/}
                                     <div style={{height: "100%"}}>
-                                    {autoForward ? (
+                                        <ResizeBox
+                                            isVer={false}
+                                            firstNode={(
+                                                <MITMPluginList
+                                                    proxy={`http://${host}:${port}`}
+                                                    downloadCertNode={downloadCert}
+                                                    setFilterNode={setFilter}
+                                                    onExit={() => {
+                                                        stop()
+                                                    }}
+                                                    onSubmitScriptContent={e => {
+                                                        ipcRenderer.invoke("mitm-exec-script-content", e)
+                                                    }}
+                                                    onSubmitYakScriptId={(id: number, params: YakExecutorParam[]) => {
+                                                        info(`加载 MITM 插件[${id}]`)
+                                                        ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
+                                                    }}
+                                                />
+                                                // <MITMPluginOperator />
+                                            )}
+                                            firstMinSize={340}
+                                            secondMinSize={340}
+                                            firstRatio={"340px"}
+                                            secondNode={(
+                                                <AutoCard
+                                                    style={{margin: 0, padding: 0}}
+                                                    bodyStyle={{margin: 0, padding: 0}}
+                                                >
+                                                    {autoForward === "log" && (
                                                         <MITMPluginCard
-                                                            autoUpdate={!passiveMode}
-                                                            messages={logs} // hooks={mitmHooks}
                                                             onSubmitScriptContent={(e) => {
                                                                 ipcRenderer.invoke("mitm-exec-script-content", e)
                                                             }}
@@ -748,7 +756,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                 ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
                                                             }}
                                                         />
-                                                    ) : (
+                                                    )}
+                                                    {autoForward === "manual" && (
                                                         <HTTPPacketEditor
                                                             originValue={currentPacket}
                                                             noHeader={true}
@@ -769,149 +778,143 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                 // },
                                                                 ...(forResponse
                                                                     ? [
-                                                                          {
-                                                                              id: "trigger-auto-hijacked",
-                                                                              label: "切换自动/手动劫持模式",
-                                                                              keybindings: [
-                                                                                  monaco.KeyMod.WinCtrl |
-                                                                                      monaco.KeyCode.KEY_T
-                                                                              ],
-                                                                              run: () => {
-                                                                                  handleAutoForward(!getAutoForward())
-                                                                              },
-                                                                              contextMenuGroupId: "Actions"
-                                                                          },
-                                                                          {
-                                                                              id: "forward-response",
-                                                                              label: "放行该 HTTP Response",
-                                                                              /*
-                                                * 	keybindings: [
-    monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10,
-    // chord
-    monaco.KeyMod.chord(
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM
-    )
-],
-                                                * */
-                                                                              // keybindings: [
-                                                                              //     monaco.KeyMod.WinCtrl | monaco.KeyCode.KEY_F,
-                                                                              // ],
-                                                                              run: function () {
-                                                                                  forward()
-                                                                                  // hijacking()
-                                                                                  // forwardResponse(getCurrentId()).finally(() => {
-                                                                                  //     setTimeout(() => setLoading(false), 300)
-                                                                                  // })
-                                                                              },
-                                                                              contextMenuGroupId: "Actions"
-                                                                          },
-                                                                          {
-                                                                              id: "drop-response",
-                                                                              label: "丢弃该 HTTP Response",
-                                                                              run: function () {
-                                                                                  hijacking()
-                                                                                  dropResponse(getCurrentId()).finally(
-                                                                                      () => {
-                                                                                          setTimeout(
-                                                                                              () => setLoading(false),
-                                                                                              300
-                                                                                          )
-                                                                                      }
-                                                                                  )
-                                                                              },
-                                                                              contextMenuGroupId: "Actions"
-                                                                          }
-                                                                      ]
+                                                                        {
+                                                                            id: "trigger-auto-hijacked",
+                                                                            label: "切换自动/手动劫持模式",
+                                                                            keybindings: [
+                                                                                monaco.KeyMod.WinCtrl |
+                                                                                monaco.KeyCode.KEY_T
+                                                                            ],
+                                                                            run: () => {
+                                                                                handleAutoForward(getAutoForward() === "manual" ? "log" : "manual")
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        },
+                                                                        {
+                                                                            id: "forward-response",
+                                                                            label: "放行该 HTTP Response",
+                                                                            run: function () {
+                                                                                forward()
+                                                                                // hijacking()
+                                                                                // forwardResponse(getCurrentId()).finally(() => {
+                                                                                //     setTimeout(() => setLoading(false), 300)
+                                                                                // })
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        },
+                                                                        {
+                                                                            id: "drop-response",
+                                                                            label: "丢弃该 HTTP Response",
+                                                                            run: function () {
+                                                                                hijacking()
+                                                                                dropResponse(getCurrentId()).finally(
+                                                                                    () => {
+                                                                                        setTimeout(
+                                                                                            () => setLoading(false),
+                                                                                            300
+                                                                                        )
+                                                                                    }
+                                                                                )
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        }
+                                                                    ]
                                                                     : [
-                                                                          {
-                                                                              id: "trigger-auto-hijacked",
-                                                                              label: "切换自动/手动劫持模式",
-                                                                              keybindings: [
-                                                                                  monaco.KeyMod.WinCtrl |
-                                                                                      monaco.KeyCode.KEY_T
-                                                                              ],
-                                                                              run: () => {
-                                                                                  handleAutoForward(!getAutoForward())
-                                                                              },
-                                                                              contextMenuGroupId: "Actions"
-                                                                          },
-                                                                          {
-                                                                              id: "send-to-fuzzer",
-                                                                              label: "发送到 Web Fuzzer",
-                                                                              keybindings: [
-                                                                                  monaco.KeyMod.WinCtrl |
-                                                                                      monaco.KeyCode.KEY_R
-                                                                              ],
-                                                                              run: function (StandaloneEditor: any) {
+                                                                        {
+                                                                            id: "trigger-auto-hijacked",
+                                                                            label: "切换自动/手动劫持模式",
+                                                                            keybindings: [
+                                                                                monaco.KeyMod.WinCtrl |
+                                                                                monaco.KeyCode.KEY_T
+                                                                            ],
+                                                                            run: () => {
+                                                                                handleAutoForward(getAutoForward() === "manual" ? "log" : "manual")
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        },
+                                                                        {
+                                                                            id: "send-to-fuzzer",
+                                                                            label: "发送到 Web Fuzzer",
+                                                                            keybindings: [
+                                                                                monaco.KeyMod.WinCtrl |
+                                                                                monaco.KeyCode.KEY_R
+                                                                            ],
+                                                                            run: function (StandaloneEditor: any) {
                                                                                 execFuzzer(StandaloneEditor.getModel().getValue())
-                                                                              },
-                                                                              contextMenuGroupId: "Actions"
-                                                                          },
-                                                                          {
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        },
+                                                                        {
                                                                             id: "send-to-plugin",
                                                                             label: "发送到 数据包扫描",
                                                                             keybindings: [
                                                                                 monaco.KeyMod.WinCtrl |
-                                                                                    monaco.KeyCode.KEY_E
+                                                                                monaco.KeyCode.KEY_E
                                                                             ],
                                                                             run: function (StandaloneEditor: any) {
                                                                                 execPlugin(StandaloneEditor.getModel().getValue())
                                                                             },
                                                                             contextMenuGroupId: "Actions"
                                                                         },
-                                                                          {
-                                                                              id: "forward-response",
-                                                                              label: "放行该 HTTP Request",
-                                                                              keybindings: [
-                                                                                  monaco.KeyMod.WinCtrl |
-                                                                                      monaco.KeyCode.KEY_F
-                                                                              ],
-                                                                              run: function () {
-                                                                                  forward()
-                                                                                  // hijacking()
-                                                                                  // forwardRequest(getCurrentId()).finally(() => {
-                                                                                  //     setTimeout(() => setLoading(false), 300)
-                                                                                  // })
-                                                                              },
-                                                                              contextMenuGroupId: "Actions"
-                                                                          },
-                                                                          {
-                                                                              id: "drop-response",
-                                                                              label: "丢弃该 HTTP Request",
-                                                                              run: function () {
-                                                                                  hijacking()
-                                                                                  dropRequest(getCurrentId()).finally(
-                                                                                      () => {
-                                                                                          setTimeout(
-                                                                                              () => setLoading(false),
-                                                                                              300
-                                                                                          )
-                                                                                      }
-                                                                                  )
-                                                                              },
-                                                                              contextMenuGroupId: "Actions"
-                                                                          },
-                                                                          {
-                                                                              id: "hijack-current-response",
-                                                                              label: "劫持该 Request 对应的响应",
-                                                                              run: function () {
-                                                                                  allowHijackedResponseByRequest(
-                                                                                      getCurrentId()
-                                                                                  )
-                                                                              },
-                                                                              contextMenuGroupId: "Actions"
-                                                                          }
-                                                                      ])
+                                                                        {
+                                                                            id: "forward-response",
+                                                                            label: "放行该 HTTP Request",
+                                                                            keybindings: [
+                                                                                monaco.KeyMod.WinCtrl |
+                                                                                monaco.KeyCode.KEY_F
+                                                                            ],
+                                                                            run: function () {
+                                                                                forward()
+                                                                                // hijacking()
+                                                                                // forwardRequest(getCurrentId()).finally(() => {
+                                                                                //     setTimeout(() => setLoading(false), 300)
+                                                                                // })
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        },
+                                                                        {
+                                                                            id: "drop-response",
+                                                                            label: "丢弃该 HTTP Request",
+                                                                            run: function () {
+                                                                                hijacking()
+                                                                                dropRequest(getCurrentId()).finally(
+                                                                                    () => {
+                                                                                        setTimeout(
+                                                                                            () => setLoading(false),
+                                                                                            300
+                                                                                        )
+                                                                                    }
+                                                                                )
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        },
+                                                                        {
+                                                                            id: "hijack-current-response",
+                                                                            label: "劫持该 Request 对应的响应",
+                                                                            run: function () {
+                                                                                allowHijackedResponseByRequest(
+                                                                                    getCurrentId()
+                                                                                )
+                                                                            },
+                                                                            contextMenuGroupId: "Actions"
+                                                                        }
+                                                                    ])
                                                             ]}
                                                         />
                                                     )}
-                                        
+                                                    {autoForward === "passive" && (
+                                                        <MITMPluginLogViewer
+                                                            messages={logs} status={statusCards}
+                                                        />
+                                                    )}
+                                                </AutoCard>
+                                            )}
+                                        />
                                     </div>
                                     {/*</Spin>*/}
                                 </div>
                             </Col>
-                        </Row>}
+                        </Row>
                     </div>
                 default:
                     return <div/>
