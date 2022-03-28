@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react";
-import {YakScript, YakScriptParam} from "./schema";
+import React, {useEffect, useRef, useState} from "react";
+import {YakScriptParam} from "./schema";
 import {
     Button,
     Card,
@@ -10,23 +10,23 @@ import {
     Switch,
     Tooltip,
     Typography,
-    Spin,
-    Row,
-    Col,
-    Modal,
-    Popover
+    Popover,
+    Spin
 } from "antd";
 import {QuestionOutlined} from "@ant-design/icons";
 import {YakExecutorParam} from "./YakExecutorParams";
-import {showModal} from "../../utils/showModal";
 import {useMemoizedFn} from "ahooks";
-import {HTTPPacketEditor, YakCodeEditor, YakEditor, YakHTTPPacketViewer} from "../../utils/editors";
+import {HTTPPacketEditor, YakCodeEditor} from "../../utils/editors";
+import cloneDeep from "lodash/cloneDeep"
+import { ContentUploadInput } from "../../components/functionTemplate/ContentUploadTextArea";
+import { failed } from "../../utils/notification";
+import { ItemSelects } from "../../components/baseTemplate/FormItemUtil";
 
+const {ipcRenderer} = window.require("electron")
 const {Title} = Typography;
 
 export interface YakScriptParamsSetterProps {
     Params: YakScriptParam[]
-    params: YakExecutorParam[]
     onParamsConfirm: (params: YakExecutorParam[]) => any
     onCanceled?: () => any
     onClearData?: () => any
@@ -71,44 +71,48 @@ export const removeRepeatedParams = (params: YakExecutorParam[]): YakExecutorPar
 }
 
 export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (props) => {
+    // 新参数组件标记数组
+    const newParamCom: string[] = ["upload-path", "select"]
     const [originParams, setOriginParams] = useState<YakScriptParam[]>(props.Params || []);
     const [groupStates, setGroupStates] = useState<{ group: string, hidden: boolean }[]>([]);
 
+    // 参数组数据流
+    const [extraGroup,setExtraGroup] = useState<string[]>([])
+    const [requiredParams,setRequiredParams] = useState<YakScriptParam[]>([])
+    const groupToParams = useRef<Map<string, YakScriptParam[]>>(new Map<string, YakScriptParam[]>())
+
+    // 控制局部组件的加载状态
+    const [templateLoading, setTemplateLoading] = useState<boolean>(false)
+    // 上传组件多选时定时器和临时数据暂存点
+    const timerToData = useRef<{time: any, data: string}>({time: undefined, data: ""})
+
     useEffect(() => {
-        setOriginParams(props.Params)
+        if((props.Params||[]).length===0) return
+        setOriginParams(cloneDeep(props.Params))
     }, [props.Params])
 
     useEffect(() => {
-        if ((props.params || []).length > 0) {
-            originParams.forEach(e => {
-                for (let i = 0; i < props.params.length; i++) {
-                    const {Key, Value} = props.params[i];
-                    if (e.Field === Key) {
-                        e.Value = Value
-                        break
-                    }
-                }
-            })
-            setOriginParams([...originParams])
-        }
-    }, [props.params])
+        const groupToParam = new Map<string, YakScriptParam[]>();
+        const extraGroup: string[] = [];
+        for(let item of originParams){
+            const group = item.Required ? "required" : (item.Group || "default");
+            if (group !== "required" && !extraGroup.includes(group)) {
+                extraGroup.push(group)
+            }
 
-    const groupToParams = new Map<string, YakScriptParam[]>();
-    const extraGroup: string[] = [];
-    originParams.forEach((k) => {
-        const group = k.Required ? "required" : (k.Group || "default");
-        if (group !== "required" && !extraGroup.includes(group)) {
-            extraGroup.push(group)
+            let params: YakScriptParam[] | undefined = groupToParam.get(group)
+            if (params === undefined) {
+                groupToParam.set(group, [])
+                params = groupToParam.get(group)
+            }
+            if (params) params.push(item)
         }
+        const requiredParam: YakScriptParam[] = groupToParam.get("required") || [];
 
-        let params: YakScriptParam[] | undefined = groupToParams.get(group)
-        if (params === undefined) {
-            groupToParams.set(group, [])
-            params = groupToParams.get(group)
-        }
-        if (params) params.push(k)
-    })
-    const requiredParams: YakScriptParam[] = groupToParams.get("required") || [];
+        groupToParams.current = groupToParam
+        setRequiredParams(requiredParam)
+        setExtraGroup(extraGroup)
+    }, [originParams])
 
     const yakScriptParamToNode = (i: YakScriptParam, required: boolean, key: string, disabled: boolean, formItemStyle?: React.CSSProperties) => {
         return <Form.Item
@@ -143,6 +147,145 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         </Form.Item>
     }
 
+    const yakScriptParamToNewNode = (
+        i: YakScriptParam,
+        required: boolean,
+        key: string,
+        disabled: boolean,
+        formItemStyle?: React.CSSProperties
+    ) => {
+        let extraSetting: any = undefined
+        try {
+             extraSetting = JSON.parse(i.ExtraSetting || "{}")
+        } catch (error) {
+            failed("获取参数配置数据错误，请重新打开该页面")
+        }
+
+        if (i.TypeVerbose === "upload-path") {
+            return (
+                <Spin key={key} spinning={templateLoading}>
+                    <ContentUploadInput
+                        type={extraSetting.isTextArea ? "textarea" : "input"}
+                        beforeUpload={(f: any) => {
+                            if(!timerToData.current.time) setTemplateLoading(true)
+                            if(timerToData.current.time){
+                                clearTimeout(timerToData.current.time)
+                                timerToData.current.time = null
+                            }
+
+                            timerToData.current.data = timerToData.current.data ? `${timerToData.current.data},${f.path}` : f.path
+                            timerToData.current.time = setTimeout(() => {
+                                for (let item of originParams) {
+                                    if (item.Field === i.Field) {
+                                        item.Value = item.Value ? `${item.Value},${timerToData.current.data}` : timerToData.current.data
+                                        break
+                                    }
+                                }
+                                setOriginParams([...originParams])
+                                timerToData.current = {time: undefined, data: ""}
+                                setTimeout(() => setTemplateLoading(false), 50)
+                            }, 100);
+                            
+                            return false
+                        }}
+                        dragger={{
+                            directory: true,
+                            accept: "",
+                            multiple: true,
+                            disabled: disabled || templateLoading
+                        }}
+                        item={{
+                            style: {marginBottom: 8, ...formItemStyle},
+                            labelCol: {span: 6},
+                            label: (
+                                <Space size={2}>
+                                    <>{i.FieldVerbose ? `${i.FieldVerbose}` : `${i.Field}`}</>
+                                    {i.Help && (
+                                        <Tooltip title={i.Help}>
+                                            <Button icon={<QuestionOutlined />} type={"link"} size={"small"} />
+                                        </Tooltip>
+                                    )}
+                                </Space>
+                            ),
+                            required: required
+                        }}
+                        input={{
+                            isBubbing: true,
+                            setValue: (value) => {
+                                for (let item of originParams) {
+                                    if (item.Field === i.Field) {
+                                        item.Value = value
+                                        break
+                                    }
+                                }
+                                setOriginParams([...originParams])
+                            },
+                            value: i.Value,
+                            placeholder: "获取文件路径，支持多选文件，文件夹，路径以逗号分隔",
+                            disabled: disabled
+                        }}
+                        textarea={{
+                            isBubbing: true,
+                            setValue: (value) => {
+                                for (let item of originParams) {
+                                    if (item.Field === i.Field) {
+                                        item.Value = value
+                                        break
+                                    }
+                                }
+                                setOriginParams([...originParams])
+                            },
+                            rows: 1,
+                            value: i.Value,
+                            placeholder: "获取文件路径，支持多选文件，文件夹，路径以逗号分隔",
+                            disabled: disabled
+                        }}
+                    ></ContentUploadInput>
+                </Spin>
+            )
+        }
+
+        if (i.TypeVerbose === "select") {
+            return (
+                <ItemSelects 
+                    key={key}
+                    item={{
+                        style: {marginBottom: 8, ...formItemStyle},
+                        labelCol: {span: 6},
+                        label: (
+                            <Space size={2}>
+                                <>{i.FieldVerbose ? `${i.FieldVerbose}` : `${i.Field}`}</>
+                                {i.Help && (
+                                    <Tooltip title={i.Help}>
+                                        <Button icon={<QuestionOutlined />} type={"link"} size={"small"} />
+                                    </Tooltip>
+                                )}
+                            </Space>
+                        ),
+                        required: required
+                    }}
+                    select={{
+                        data: extraSetting.data || [],
+                        optText: "key",
+                        setValue: (value) => {
+                            for (let item of originParams) {
+                                if (item.Field === i.Field) {
+                                    item.Value = value
+                                    break
+                                }
+                            }
+                            setOriginParams([...originParams])
+                        },
+                        mode: !!extraSetting.double ? 'multiple' : undefined,
+                        maxTagCount: !!extraSetting.double ? 'responsive' : undefined,
+                        disabled: disabled
+                    }}
+                ></ItemSelects>
+            )
+        }
+        return <div style={{height: 0}}></div>
+    }
+
     const setHideGroup = (group: string, hidden: boolean) => {
         let newGroups: { group: string, hidden: boolean }[] = [
             ...groupStates.filter(i => i.group !== group),
@@ -152,9 +295,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     };
 
     const submit = () => {
-        if (props.onClearData) {
-            props.onClearData()
-        }
+        if (props.onClearData) props.onClearData()
 
         let params = originParams.filter(i => {
             // 处理 Bool 的情况
@@ -181,9 +322,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     }
 
     const isGroupHidden = useMemoizedFn((group: string, defaultValue: boolean) => {
-        if (group === "default") {
-            return false
-        }
+        if (group === "default") return false
 
         let res = defaultValue;
         groupStates.filter(i => i.group === group).forEach(i => {
@@ -210,12 +349,15 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     {/*        />*/}
                     {/*    </Space>*/}
                     {/*</Title>*/}
-                    {!isGroupHidden("default", !defaultExpand) && <>
-                        {(groupToParams.get("default") || []).map((i: YakScriptParam, index) => yakScriptParamToNode(i, false, `defaultParamsGroup-${index}`, !!props.loading))}
+                    {!isGroupHidden(extraGroup[0] || "default", !defaultExpand) && <>
+                        {(groupToParams.current.get(extraGroup[0] || "default") || []).map((i: YakScriptParam, index) => {
+                            if(newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, false, `defaultParamsGroup-${index}`, !!props.loading)
+                            else return yakScriptParamToNode(i, false, `defaultParamsGroup-${index}`, !!props.loading)
+                        })}
                     </>}
                 </> : <>
                     {extraGroup.map((i, index) => {
-                        if ((groupToParams.get(i) || []).length <= 0) {
+                        if ((groupToParams.current.get(i) || []).length <= 0) {
                             return <></>
                         }
                         return <div key={`${index}`}>
@@ -227,14 +369,15 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                     <Switch
                                         size={"small"}
                                         checked={!isGroupHidden(i, !defaultExpand)}
-                                        onChange={(res) => {
-                                            setHideGroup(i, !res)
-                                        }}
+                                        onChange={(res) => setHideGroup(i, !res)}
                                     />
                                 </Space>
                             </Title>
                             {!isGroupHidden(i, !defaultExpand) && <>
-                                {(groupToParams.get(i) || []).map((i: YakScriptParam, index) => yakScriptParamToNode(i, false, `paramsGroup-${index}`, !!props.loading))}
+                                {(groupToParams.current.get(i) || []).map((i: YakScriptParam, index) => {
+                                    if(newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, false, `paramsGroup-${index}`, !!props.loading)
+                                    else return yakScriptParamToNode(i, false, `paramsGroup-${index}`, !!props.loading)
+                                })}
                             </>}
                         </div>
                     })}
@@ -244,82 +387,113 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     }
 
     if (props.primaryParamsOnly) {
-        return <Form onSubmitCapture={e => {
-            e.preventDefault()
-
-            submit()
-        }} {...{labelCol: {span: 7}, wrapperCol: {span: 15}}}>
-            {requiredParams.length > 0 ? <>
-                <div style={{marginTop: 0}}>
-                    {requiredParams.map((i, index) => yakScriptParamToNode(
-                        i, true, `params-${index}`, !!props.loading,
-                    ))}
-                </div>
-                <Form.Item label={" "} colon={false}
-                           style={{width: "100%", textAlign: "right"}} labelCol={{span: 6}}
-                >
-                    <Space>
-                        {!props.hideClearButton && <Button type={"link"} size={"small"} danger={true} onClick={() => {
-                            if (props.onClearData) {
-                                props.onClearData()
-                            }
-                        }}>清除缓存</Button>}
-                        {groupToParams.size > 0 && (
-                            groupToParams.size === 1 && ((groupToParams.get("default") || []).length <= 0) ? "" :
-                                <Popover title={"设置额外参数"} trigger={"click"}
-                                         content={<div style={{width: 700}}>
-                                             {renderExtraParams(true)}
-                                         </div>}
-                                >
-                                    <Button size={"small"} type={"link"}>额外参数</Button>
-                                </Popover>
-                        )}
-                        {props.loading ?
-                            <Button
-                                style={{width: 120}} danger={true}
-                                onClick={() => {
-                                    if (props.onCanceled) {
-                                        props.onCanceled()
-                                    }
-                                }}
-                                type={"primary"}>{props.cancelVerbose ? props.cancelVerbose : "停止任务"}</Button>
-                            : <Button
-                                style={{width: 120}} htmlType={"submit"}
-                                type={"primary"}
-                            >{props.submitVerbose ? props.submitVerbose : "启动任务"}</Button>
-                        }
-                    </Space>
-                </Form.Item>
-            </> : <>
-                <Form.Item
-                    style={{width: "100%", textAlign: "right"}}
-                >
-                    <Space>
-                        {props.loading ?
-                            <Button
-                                style={{width: 200}} danger={true}
-                                onClick={() => {
-                                    if (props.onCanceled) {
-                                        props.onCanceled()
-                                    }
-                                }}
-                                type={"primary"}>停止任务</Button>
-                            : <Button
-                                style={{width: 200}} htmlType={"submit"}
-                                type={"primary"}
-                            >启动任务</Button>
-                        }
-                        {groupToParams.size > 0 && <Popover title={"设置额外参数"} trigger={"click"}
-                                                            content={<div style={{width: 700}}>
-                                                                {renderExtraParams(true)}
-                                                            </div>}
+        return (
+            <Form
+                onSubmitCapture={(e) => {
+                    e.preventDefault()
+                    console.log(originParams)
+                    // submit()
+                }}
+                {...{labelCol: {span: 7}, wrapperCol: {span: 15}}}
+            >
+                {requiredParams.length > 0 ? (
+                    <>
+                        <div style={{marginTop: 0}}>
+                            {requiredParams.map((i, index) => {
+                                if(newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, true, `params-${index}`, !!props.loading)
+                                else return yakScriptParamToNode(i, true, `params-${index}`, !!props.loading)
+                            })}
+                        </div>
+                        <Form.Item
+                            label={" "}
+                            colon={false}
+                            style={{width: "100%", textAlign: "right"}}
+                            labelCol={{span: 6}}
                         >
-                            <Button size={"small"} type={"link"}>额外参数</Button>
-                        </Popover>}
-                    </Space>
-                </Form.Item>
-            </>}
-        </Form>
+                            <Space>
+                                {!props.hideClearButton && (
+                                    <Button
+                                        type={"link"}
+                                        size={"small"}
+                                        danger={true}
+                                        onClick={() => {
+                                            if (props.onClearData) props.onClearData()
+                                        }}
+                                    >
+                                        清除缓存
+                                    </Button>
+                                )}
+                                {groupToParams.current.size > 0 &&
+                                    (groupToParams.current.size === 1 &&
+                                    (groupToParams.current.get("default") || []).length <= 0 ? (
+                                        ""
+                                    ) : (
+                                        <Popover
+                                            title={"设置额外参数"}
+                                            trigger={"click"}
+                                            content={<div style={{width: 700}}>{renderExtraParams(true)}</div>}
+                                        >
+                                            <Button size={"small"} type={"link"}>
+                                                额外参数
+                                            </Button>
+                                        </Popover>
+                                ))}
+                                {props.loading ? (
+                                    <Button
+                                        style={{width: 120}}
+                                        danger={true}
+                                        onClick={() => {
+                                            if (props.onCanceled) props.onCanceled()
+                                        }}
+                                        type={"primary"}
+                                    >
+                                        {props.cancelVerbose ? props.cancelVerbose : "停止任务"}
+                                    </Button>
+                                ) : (
+                                    <Button style={{width: 120}} htmlType={"submit"} type={"primary"}>
+                                        {props.submitVerbose ? props.submitVerbose : "启动任务"}
+                                    </Button>
+                                )}
+                            </Space>
+                        </Form.Item>
+                    </>
+                ) : (
+                    <>
+                        <Form.Item style={{width: "100%", textAlign: "right"}}>
+                            <Space>
+                                {props.loading ? (
+                                    <Button
+                                        style={{width: 200}}
+                                        danger={true}
+                                        onClick={() => {
+                                            if (props.onCanceled) props.onCanceled()
+                                        }}
+                                        type={"primary"}
+                                    >
+                                        停止任务
+                                    </Button>
+                                ) : (
+                                    <Button style={{width: 200}} htmlType={"submit"} type={"primary"}>
+                                        启动任务
+                                    </Button>
+                                )}
+                                {groupToParams.current.size > 0 && (
+                                    <Popover
+                                        title={"设置额外参数"}
+                                        trigger={"click"}
+                                        content={<div style={{width: 700}}>{renderExtraParams(true)}</div>}
+                                    >
+                                        <Button size={"small"} type={"link"}>
+                                            额外参数
+                                        </Button>
+                                    </Popover>
+                                )}
+                            </Space>
+                        </Form.Item>
+                    </>
+                )}
+            </Form>
+        )
     }
 
     return <div style={{
@@ -338,32 +512,31 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     layout: "vertical",
                 })}
             >
-                {props.primaryParamsOnly ? <>
-
-                </> : <>
-                    {/* 设置基础必须的参数，剩下其他参数不一定是必须的*/}
-                    {requiredParams.length > 0 && <>
-                        <Title level={5} style={{fontSize: 14}}>
-                            <Space>
-                            <span>
-                            必要参数
-                            </span>
-                                <Tooltip title={'执行该脚本不可或缺的参数 / Necessary Params'}>
-                                    <Button icon={<QuestionOutlined/>} type={"link"} size={"small"}/>
-                                </Tooltip>
-                            </Space>
-                        </Title>
-                        {requiredParams.map((i, index) => yakScriptParamToNode(i, true, `params-${index}`, !!props.loading))}
-                    </>}
-                    {renderExtraParams()}
-                    {originParams.length <= 0 && <Form.Item label={" "} colon={false}>
-                        <h2>本模块无需设置额外参数</h2>
-                    </Form.Item>}
-                    <Form.Item colon={false} label={" "}>
-                        <Button type="primary" loading={!!props.loading}
-                                htmlType="submit"> {props.submitVerbose ? props.submitVerbose : "提交已设置的参数"} </Button>
-                    </Form.Item>
+                {/* 设置基础必须的参数，剩下其他参数不一定是必须的*/}
+                {requiredParams.length > 0 && <>
+                    <Title level={5} style={{fontSize: 14}}>
+                        <Space>
+                        <span>
+                        必要参数
+                        </span>
+                            <Tooltip title={'执行该脚本不可或缺的参数 / Necessary Params'}>
+                                <Button icon={<QuestionOutlined/>} type={"link"} size={"small"}/>
+                            </Tooltip>
+                        </Space>
+                    </Title>
+                    {requiredParams.map((i, index) => {
+                        if(newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, true, `params-${index}`, !!props.loading)
+                        else return yakScriptParamToNode(i, true, `params-${index}`, !!props.loading)
+                    })}
                 </>}
+                {renderExtraParams()}
+                {originParams.length <= 0 && <Form.Item label={" "} colon={false}>
+                    <h2>本模块无需设置额外参数</h2>
+                </Form.Item>}
+                <Form.Item colon={false} label={" "}>
+                    <Button type="primary" loading={!!props.loading}
+                            htmlType="submit"> {props.submitVerbose ? props.submitVerbose : "提交已设置的参数"} </Button>
+                </Form.Item>
             </Form>
         </Card>
     </div>

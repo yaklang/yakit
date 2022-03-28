@@ -326,7 +326,6 @@ export const YakScriptOperator: React.FC<YakScriptOperatorProp> = (props) => {
         <YakScriptParamsSetter
             submitVerbose={"执行该脚本"}
             {...defaultScript}
-            params={[]}
             onParamsConfirm={r => {
                 startExecuteYakScript(script, r)
             }}

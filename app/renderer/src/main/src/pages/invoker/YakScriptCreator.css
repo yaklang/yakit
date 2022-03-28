@@ -1,0 +1,11 @@
+.form-item-required-title{
+    color: red;
+}
+
+.creator-form-item-margin{
+    margin-bottom: 5px;
+}
+.select-type-opt .opt-hint-title{
+    text-align: right;
+    padding-right: 5px;
+}

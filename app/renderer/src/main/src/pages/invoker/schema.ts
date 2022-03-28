@@ -74,6 +74,7 @@ export interface YakScriptParam {
     Value?: string | any
     Required?: boolean
     Group?: string
+    ExtraSetting?: string
 }
 
 export interface YakScriptHooks {
