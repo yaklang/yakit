@@ -27,7 +27,7 @@ import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
-import {SelectOne} from "../../utils/inputUtil";
+import {CopyableField, SelectOne} from "../../utils/inputUtil";
 import {MITMPluginOperator} from "./MITMPluginOperator";
 import {useGetState, useHistoryTravel, useLatest, useMemoizedFn, useMouse} from "ahooks";
 import {StatusCardProps} from "../yakitStore/viewers/base";
@@ -451,16 +451,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     showModal({
                         title: "下载 SSL/TLS 证书以调试 HTTPS",
                         content: <div>
-                            点击复制以下命令在命令行中一键下载证书
-                            <br/>
-                            <Text copyable={true}>{text}</Text>
-                            <br/>
-                            <br/>
-                            <p style={{color: "red"}}>
-                                如果遇到问题，可以在浏览器中设置代理:{addr} 后 <br/>
-                                访问 http://download-mitm-cert.yaklang.io
-                                以自动下载证书
-                            </p>
+                            <Space direction={"vertical"}>
+                                <div>浏览器直接访问 {addr} 即可自动下载</div>
+                                <br/>
+                                <CopyableField text={`wget ${addr} -O mitm-server.crt`}/>
+                            </Space>
+
                         </div>
                     })
                 }}
