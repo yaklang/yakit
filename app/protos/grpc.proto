@@ -202,10 +202,41 @@ service Yak {
   rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
   rpc QueryRisk(QueryRiskRequest) returns (Risk);
   rpc DeleteRisk(QueryRiskRequest) returns (Empty);
+  rpc QueryAvailableRiskType(Empty) returns (Fields);
+  rpc QueryAvailableRiskLevel(Empty) returns (Fields);
 
   // DNSLog
   rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
   rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+  rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
+}
+
+message FieldName {
+  string Name = 1;
+  string Verbose = 2;
+  int32 Total = 3;
+}
+
+message Fields {
+  repeated FieldName Values = 1;
+}
+
+message QueryICMPTriggerRequest {
+  int32 Length = 1;
+}
+
+message QueryICMPTriggerResponse {
+  repeated ICMPTriggerNotification Notification = 1;
+}
+
+message ICMPTriggerNotification {
+  int32 Size = 1;
+  int32 CurrentRemoteAddr = 2;
+  repeated string Histories = 3;
+  int32 CurrentRemoteCachedConnectionCount = 4;
+  int32 SizedCachedHistoryConnectionCount = 5;
+  int64 TriggerTimestamp = 7;
+  int64 Timestamp = 8;
 }
 
 message GetHistoryHTTPFuzzerTaskRequest {
@@ -341,6 +372,7 @@ message QueryRisksRequest {
   string RiskType = 5;
   string Token = 6;
   bool WaitingVerified = 7;
+  string Severity = 8;
 }
 
 message QueryRisksResponse {
