@@ -510,7 +510,6 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                             label={"是否以文本域展示"}
                             setValue={(value) => setExtraSetting({...extraSetting, isTextArea: value})}
                             value={!!extraSetting.isTextArea}
-                            help={"多选状态时，用户选中数据保存格式为数组类型"}
                         />
                     </div>
                 )

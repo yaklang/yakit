@@ -203,6 +203,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         }
                     }
                     setOriginParams([...originParams])
+                    form.setFieldsValue({originParams: {...originParams}})
                     timerToData.current = {time: undefined, data: ""}
                     setTimeout(() => setTemplateLoading(false), 50)
                 }, 100);
