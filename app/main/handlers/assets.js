@@ -128,4 +128,36 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteRisk", async (e, params) => {
         return await asyncDeleteRisk(params)
     })
+
+    // asyncQueryAvailableRiskType wrapper
+    const asyncQueryAvailableRiskType = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAvailableRiskType(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryAvailableRiskType", async (e, params) => {
+        return await asyncQueryAvailableRiskType(params)
+    })
+
+    // asyncQueryAvailableRiskLevel wrapper
+    const asyncQueryAvailableRiskLevel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAvailableRiskLevel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryAvailableRiskLevel", async (e, params) => {
+        return await asyncQueryAvailableRiskLevel(params)
+    })
 };
