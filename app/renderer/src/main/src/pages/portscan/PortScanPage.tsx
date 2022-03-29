@@ -17,7 +17,7 @@ import {showModal} from "../../utils/showModal"
 import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import {CVXterm} from "../../components/CVXterm"
-import { ContentUploadTextArea } from "../../components/functionTemplate/ContentUploadTextArea"
+import { ContentUploadInput } from "../../components/functionTemplate/ContentUploadTextArea"
 
 import "./PortScanPage.css"
 
@@ -229,7 +229,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     }}
                                 >
                                     <Spin spinning={uploadLoading}>
-                                        <ContentUploadTextArea
+                                        <ContentUploadInput
+                                            type="textarea"
                                             beforeUpload={(f) => {
                                                 if (f.type !== "text/plain") {
                                                     failed(`${f.name}非txt文件，请上传txt格式文件！`)
@@ -245,7 +246,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             }}
                                             item={{
                                                 style: {textAlign: "left"},
-                                                label: "扫描目标"
+                                                label: "扫描目标",
                                             }}
                                             textarea={{
                                                 isBubbing: true,
@@ -274,7 +275,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                     </Button>
                                                 )
                                             }
-                                        ></ContentUploadTextArea>
+                                        ></ContentUploadInput>
                                     </Spin>
 
                                     <Form.Item label='预设端口' colon={false} className='form-item-margin'>

@@ -89,6 +89,10 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             )
     }
 
+    useEffect(() => {
+        update()
+    }, [props.yakScriptId])
+
     const defaultContent = () => {
         return (
             <Tabs className="plugin-store-info" style={{height: "100%"}} type={"card"} defaultValue={"runner"} tabPosition={"right"}>
@@ -164,7 +168,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     </Space>
                                 )
                             }
-                            primaryParamsOnly={true}
                             script={script}
                             size={props.size}
                             settingShow={settingShow}
@@ -244,24 +247,10 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         const key = module.GeneralModuleKey
 
         switch (key) {
-            // case "basic-crawler":
-            //     return (
-            //         <BasicCrawlerModule
-            //             pluginInfo={module}
-            //             fromMenu={!!props.fromMenu}
-            //             trigger={trigger}
-            //             update={update}
-            //             updateGroups={updateGroups}
-            //         />
-            //     )
             default:
                 return defaultContent()
         }
     }
-
-    useEffect(() => {
-        update()
-    }, [props.yakScriptId])
 
     return <div style={{marginLeft: 16, height: "100%"}}>{!!script && !!props.fromMenu ? showContent(script) : defaultContent()}</div>
 }
