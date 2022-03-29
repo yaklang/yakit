@@ -8,6 +8,8 @@ import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import moment from "moment";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 
+import "./MITMPluginLogViewer.css"
+
 export interface MITMPluginLogViewerProp {
     messages: ExecResultLog[]
     status: StatusCardProps[]
@@ -23,10 +25,14 @@ export const MITMPluginLogViewer: React.FC<MITMPluginLogViewerProp> = React.memo
             <Tag color={"geekblue"}>{formatDate(currentTimestamp)}</Tag>
         </Space>}
         size={"small"}
-        bodyStyle={{overflowY: "auto"}}
+        bodyStyle={{overflowY: "hidden"}}
     >
-        <StatusCardViewer status={status}/>
-        <Divider style={{marginTop: 8}}/>
-        <YakitLogViewers data={props.messages} onlyTime={true}/>
+        <div className="passive-log-container">
+            <StatusCardViewer status={status}/>
+            <Divider style={{marginTop: 8}}/>
+            <div className="log-timeline">
+                <YakitLogViewers data={props.messages} onlyTime={true}/>
+            </div>
+        </div>
     </AutoCard>
 });
