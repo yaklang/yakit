@@ -43,7 +43,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                     ),
                     ...item
                 }}
-                input={{...input, required: !!item?.required}}
+                input={{...input}}
                 {...restProps}
             ></ItemDraggerInput>
         )
@@ -74,7 +74,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                     ),
                     ...item
                 }}
-                textarea={{...textarea, required: !!item?.required}}
+                textarea={{...textarea}}
                 {...restProps}
             ></ItemDraggerTextArea>
         )

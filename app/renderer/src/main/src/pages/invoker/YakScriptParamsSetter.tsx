@@ -11,7 +11,9 @@ import {
     Tooltip,
     Typography,
     Popover,
-    Spin
+    Spin,
+    Upload,
+    Divider
 } from "antd";
 import {QuestionOutlined} from "@ant-design/icons";
 import {YakExecutorParam} from "./YakExecutorParams";
@@ -22,7 +24,6 @@ import { ContentUploadInput } from "../../components/functionTemplate/ContentUpl
 import { failed } from "../../utils/notification";
 import { ItemSelects } from "../../components/baseTemplate/FormItemUtil";
 
-const {ipcRenderer} = window.require("electron")
 const {Title} = Typography;
 
 export interface YakScriptParamsSetterProps {
@@ -85,12 +86,14 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     const [templateLoading, setTemplateLoading] = useState<boolean>(false)
     // 上传组件多选时定时器和临时数据暂存点
     const timerToData = useRef<{time: any, data: string}>({time: undefined, data: ""})
-
+    // antd的Form表单验证，此变量非常重要，复制Form验证功能必须
     const [form] = Form.useForm()
 
     useEffect(() => {
         if((props.Params||[]).length===0) return
         setOriginParams(cloneDeep(props.Params))
+        form.resetFields()
+        form.setFieldsValue({originParams: {}})
     }, [props.Params])
 
     useEffect(() => {
@@ -117,6 +120,13 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     }, [originParams])
 
     const yakScriptParamToNode = (i: YakScriptParam, required: boolean, key: string, disabled: boolean, formItemStyle?: React.CSSProperties) => {
+        let index = 0
+        for(let id in originParams){
+            if(originParams[id].Field === i.Field){
+                index = +id
+                break
+        }}
+
         return <Form.Item
             labelCol={{span: 6}}
             key={key}
@@ -129,21 +139,27 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
             </Space>}
             // help={i.Help || undefined}
             required={required}
+            name={["originParams", `${index}`, "Value"]}
+            rules={[{
+                validator: async (rule, value) => {
+                    if(i.TypeVerbose === "boolean") return
+                    else if(i.TypeVerbose === "float"){
+                        if(value === undefined || value === null) throw new Error('该参数为必填项!')
+                    }else{
+                        if(required && (value || []).length === 0) throw new Error('该参数为必填项!')
+                    }
+            }}]}
         >
             <TypeVerboseToInput
-                required={required}
                 TypeVerbose={i.TypeVerbose}
                 value={i.Value || i.DefaultValue}
                 placeholder={i.DefaultValue}
                 defaultValue={i.DefaultValue}
                 disabled={disabled}
                 setValue={value => {
-                    originParams.forEach(e => {
-                        if (e.Field === i.Field) {
-                            e.Value = value
-                        }
-                    });
+                    originParams[index].Value = value
                     setOriginParams([...originParams])
+                    form.setFieldsValue({originParams: {...originParams}})
                 }}
             />
         </Form.Item>
@@ -171,34 +187,35 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         }
 
         if (i.TypeVerbose === "upload-path") {
+            const before = (f: any) => {
+                if(!timerToData.current.time) setTemplateLoading(true)
+                if(timerToData.current.time){
+                    clearTimeout(timerToData.current.time)
+                    timerToData.current.time = null
+                }
+                
+                timerToData.current.data = timerToData.current.data ? `${timerToData.current.data},${f.path}` : f.path
+                timerToData.current.time = setTimeout(() => {
+                    for (let item of originParams) {
+                        if (item.Field === i.Field) {
+                            item.Value = item.Value ? `${item.Value},${timerToData.current.data}` : timerToData.current.data
+                            break
+                        }
+                    }
+                    setOriginParams([...originParams])
+                    timerToData.current = {time: undefined, data: ""}
+                    setTimeout(() => setTemplateLoading(false), 50)
+                }, 100);
+                
+                return false
+            }
+
             return (
                 <Spin key={key} spinning={templateLoading}>
                     <ContentUploadInput
                         type={extraSetting.isTextArea ? "textarea" : "input"}
-                        beforeUpload={(f: any) => {
-                            if(!timerToData.current.time) setTemplateLoading(true)
-                            if(timerToData.current.time){
-                                clearTimeout(timerToData.current.time)
-                                timerToData.current.time = null
-                            }
-
-                            timerToData.current.data = timerToData.current.data ? `${timerToData.current.data},${f.path}` : f.path
-                            timerToData.current.time = setTimeout(() => {
-                                for (let item of originParams) {
-                                    if (item.Field === i.Field) {
-                                        item.Value = item.Value ? `${item.Value},${timerToData.current.data}` : timerToData.current.data
-                                        break
-                                    }
-                                }
-                                setOriginParams([...originParams])
-                                timerToData.current = {time: undefined, data: ""}
-                                setTimeout(() => setTemplateLoading(false), 50)
-                            }, 100);
-                            
-                            return false
-                        }}
+                        beforeUpload={(f: any) => before(f)}
                         dragger={{
-                            directory: true,
                             accept: "",
                             multiple: true,
                             disabled: disabled || templateLoading
@@ -216,18 +233,49 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                     )}
                                 </Space>
                             ),
-                            required: required
+                            required: required,
+                            help: (
+                                <div className='content-upload-input-help'>
+                                    点击此处
+                                    <Upload
+                                        accept={"text/plain"}
+                                        multiple={true}
+                                        maxCount={1}
+                                        showUploadList={false}
+                                        beforeUpload={(f) => {
+                                            before(f)
+                                            return false
+                                        }}
+                                    >
+                                        <span className='help-hint-title'>上传文件</span>
+                                    </Upload>
+                                    <Divider style={{margin: "0 5px"}} type="vertical" />
+                                    <Upload
+                                        directory
+                                        multiple={false}
+                                        maxCount={1}
+                                        showUploadList={false}
+                                        beforeUpload={(f) => {
+                                            before(f)
+                                            return false
+                                        }}
+                                    >
+                                        <span className='help-hint-title'>上传文件夹</span>
+                                    </Upload>
+                                </div>
+                            ),
+                            name: ["originParams", `${index}`, "Value"],
+                            rules: [{
+                                validator: async (rule, value) => {
+                                    if(required && (value || []).length === 0) throw new Error('该参数为必填项!')
+                            }}],
                         }}
                         input={{
                             isBubbing: true,
                             setValue: (value) => {
-                                for (let item of originParams) {
-                                    if (item.Field === i.Field) {
-                                        item.Value = value
-                                        break
-                                    }
-                                }
+                                originParams[index].Value = value
                                 setOriginParams([...originParams])
+                                form.setFieldsValue({originParams: {...originParams}})
                             },
                             value: i.Value,
                             placeholder: "获取文件路径，支持多选文件，文件夹，路径以逗号分隔",
@@ -236,13 +284,9 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         textarea={{
                             isBubbing: true,
                             setValue: (value) => {
-                                for (let item of originParams) {
-                                    if (item.Field === i.Field) {
-                                        item.Value = value
-                                        break
-                                    }
-                                }
+                                originParams[index].Value = value
                                 setOriginParams([...originParams])
+                                form.setFieldsValue({originParams: {...originParams}})
                             },
                             rows: 1,
                             value: i.Value,
@@ -275,7 +319,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         required: required,
                         rules: [{
                             validator: async (rule, value) => {
-                                if((value || []).length === 0) throw new Error('该参数为必填项!')
+                                if(required && (value || []).length === 0) throw new Error('该参数为必填项!')
                         }}],
                     }}
                     select={{
@@ -565,7 +609,7 @@ export interface TypeVerboseToInputProp {
     defaultValue?: string
     setValue: (s: string | boolean | number) => any
     data?: { value: any, label: string }[]
-    required?: boolean
+    baseRequired?: boolean
     disabled?: boolean
 }
 
@@ -578,7 +622,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "int":
         case "integer":
             return <InputNumber
-                required={props.required}
+                required={!!props.baseRequired}
                 value={props.value as number} onChange={e => props.setValue(e)}
                 step={1}
                 disabled={!!props.disabled}
@@ -586,7 +630,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "uint":
             return <InputNumber
                 step={1} min={1}
-                required={props.required}
+                required={!!props.baseRequired}
                 value={props.value as number} onChange={e => props.setValue(e)}
                 disabled={!!props.disabled}
             />
@@ -595,7 +639,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "float64":
         case "double":
             return <InputNumber
-                required={props.required}
+                required={!!props.baseRequired}
                 value={props.value as number} onChange={e => props.setValue(e)}
                 step={0.1}
                 disabled={!!props.disabled}
@@ -610,7 +654,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
                 onChange={e => {
                     props.setValue(e.target.value)
                 }} placeholder={props.placeholder}
-                required={props.required}
+                required={!!props.baseRequired}
                 disabled={!!props.disabled}
             />
         case "http-packet":
@@ -640,7 +684,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
                 onChange={e => {
                     props.setValue(e.target.value)
                 }} placeholder={props.placeholder}
-                required={props.required}
+                required={!!props.baseRequired}
                 disabled={!!props.disabled}
             />
     }
