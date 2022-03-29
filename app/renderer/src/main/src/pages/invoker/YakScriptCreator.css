@@ -5,7 +5,17 @@
 .creator-form-item-margin{
     margin-bottom: 5px;
 }
+
+.select-type-opt{
+    padding-left: 15px;
+}
 .select-type-opt .opt-hint-title{
     text-align: right;
     padding-right: 5px;
+}
+.select-type-opt .opt-hint-input{
+    width: 180px;
+}
+.select-type-opt .opt-hint-input + .opt-hint-title{
+    margin-left: 10px;
 }

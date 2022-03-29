@@ -441,38 +441,34 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
 
     const selectOptSetting = (item: {key: string; value: string}, index: number) => {
         return (
-            <Row key={index} className="select-type-opt">
-                <Col span={4} className="opt-hint-title">
+            <div key={index} className="select-type-opt">
+                <span className="opt-hint-title">
                     选项名称
-                </Col>
-                <Col span={7}>
-                    <Input
-                        size='small'
-                        value={item.key}
-                        onChange={(e) => updateExtraSetting("select", "update", "key", e.target.value, index)}
-                    />
-                </Col>
-                <Col span={4} className="opt-hint-title">
+                </span>
+                <Input
+                    className="opt-hint-input"
+                    size='small'
+                    value={item.key}
+                    onChange={(e) => updateExtraSetting("select", "update", "key", e.target.value, index)}
+                />
+                <span className="opt-hint-title">
                     <span className="form-item-required-title">*</span>选项值
-                </Col>
-                <Col span={7}>
-                    <Input
-                        required
-                        size='small'
-                        value={item.value}
-                        placeholder="必填项"
-                        onChange={(e) => updateExtraSetting("select", "update", "value", e.target.value, index)}
-                    />
-                </Col>
-                <Col span={2}>
-                    <Button
-                        type='link'
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => updateExtraSetting("select", "del", "", "", index)}
-                    ></Button>
-                </Col>
-            </Row>
+                </span>
+                <Input
+                    className="opt-hint-input"
+                    required
+                    size='small'
+                    value={item.value}
+                    placeholder="必填项"
+                    onChange={(e) => updateExtraSetting("select", "update", "value", e.target.value, index)}
+                />
+                <Button
+                    type='link'
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => updateExtraSetting("select", "del", "", "", index)}
+                ></Button>
+            </div>
         )
     }
 
