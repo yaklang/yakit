@@ -86,6 +86,8 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     // 上传组件多选时定时器和临时数据暂存点
     const timerToData = useRef<{time: any, data: string}>({time: undefined, data: ""})
 
+    const [form] = Form.useForm()
+
     useEffect(() => {
         if((props.Params||[]).length===0) return
         setOriginParams(cloneDeep(props.Params))
@@ -154,6 +156,13 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         disabled: boolean,
         formItemStyle?: React.CSSProperties
     ) => {
+        let index = 0
+        for(let id in originParams){
+            if(originParams[id].Field === i.Field){
+                index = +id
+                break
+        }}
+
         let extraSetting: any = undefined
         try {
              extraSetting = JSON.parse(i.ExtraSetting || "{}")
@@ -262,19 +271,22 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                 )}
                             </Space>
                         ),
-                        required: required
+                        name: ["originParams", `${index}`, "Value"],
+                        required: required,
+                        rules: [{
+                            validator: async (rule, value) => {
+                                if((value || []).length === 0) throw new Error('该参数为必填项!')
+                        }}],
                     }}
                     select={{
+                        allowClear: true,
                         data: extraSetting.data || [],
                         optText: "key",
+                        value: i.Value,
                         setValue: (value) => {
-                            for (let item of originParams) {
-                                if (item.Field === i.Field) {
-                                    item.Value = value
-                                    break
-                                }
-                            }
+                            originParams[index].Value = value
                             setOriginParams([...originParams])
+                            form.setFieldsValue({originParams: {...originParams}})
                         },
                         mode: !!extraSetting.double ? 'multiple' : undefined,
                         maxTagCount: !!extraSetting.double ? 'responsive' : undefined,
@@ -389,11 +401,15 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     if (props.primaryParamsOnly) {
         return (
             <Form
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-                    console.log(originParams)
-                    // submit()
+                form={form}
+                onFinish={(value) => {
+                    form.validateFields()
+		            .then(values => submit())
                 }}
+                // onSubmitCapture={(e) => {
+                //     e.preventDefault()
+                //     // submit()
+                // }}
                 {...{labelCol: {span: 7}, wrapperCol: {span: 15}}}
             >
                 {requiredParams.length > 0 ? (

@@ -120,6 +120,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     info("创建 / 保存 Yak 脚本成功")
                     props.onCreated && props.onCreated(params)
                     props.onChanged && props.onChanged(data)
+                    setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100);
                 }).catch((e: any) => {
                     failed(`保存 Yak 模块失败: ${e}`)
                 })
@@ -135,7 +136,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     {value: "codec", text: "Codec 模块"},
                     {value: "nuclei", text: "nuclei Yaml模块"},
                 ]} 
-                setValue={Type => setParams({...params, Type})} value={params.Type}
+                setValue={Type => {
+                    if(["packet-hack","codec","nuclei"].includes(Type)) setParams({...params, Type, IsGeneralModule: false})
+                    else setParams({...params, Type})
+                }} value={params.Type}
             />
             <InputItem
                 label={"Yak 模块名"} required={true}
@@ -261,16 +265,16 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             type={"link"} style={{
                         marginBottom: 12, marginTop: 6
                     }}>大屏模式</Button>
-                    <Checkbox name={"默认启动"} style={{
+                    {!["packet-hack","codec","nuclei"].includes(params.Type) && <Checkbox name={"默认启动"} style={{
                         marginBottom: 12, marginTop: 6
                     }} checked={params.IsGeneralModule}
                               onChange={() => setParams({...params, IsGeneralModule: !params.IsGeneralModule})}>
                         默认启动 <Tooltip
-                        title={"设置默认启动后，将在恰当时候启动启动该插件，同时将会自动增加到【明显】位置"}
+                        title={"设置默认启动后，将在恰当时候启动该插件(Yak插件不会自动启动，但会自动增加在左侧基础安全工具菜单栏)"}
                     >
                         <Button type={"link"} icon={<QuestionCircleOutlined/>}/>
                     </Tooltip>
-                    </Checkbox>
+                    </Checkbox>}
                 </Space>
             </>}>
                 {!fullscreen && <div style={{height: 400}}>
