@@ -729,6 +729,8 @@ const Main: React.FC<MainProp> = (props) => {
                                             })}
                                             {(RouteMenuData || []).map((i) => {
                                                 if (i.subMenuData) {
+                                                    let subMenus = cloneDeep(i.subMenuData)
+
                                                     if (i.key === `${Route.GeneralModule}`) {
                                                         const extraMenus = extraGeneralModule.map((i) => {
                                                             return {
@@ -737,19 +739,19 @@ const Main: React.FC<MainProp> = (props) => {
                                                                 label: i.ScriptName,
                                                             } as unknown as MenuDataProps
                                                         })
-                                                        i.subMenuData.push(...extraMenus)
+                                                        subMenus.push(...extraMenus)
                                                         let subMenuMap = new Map<string, MenuDataProps>()
-                                                        i.subMenuData.forEach((e) => {
+                                                        subMenus.forEach((e) => {
                                                             subMenuMap.set(e.key as string, e)
                                                         })
-                                                        i.subMenuData = []
-                                                        subMenuMap.forEach((v) => i.subMenuData?.push(v))
-                                                        i.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
+                                                        subMenus = []
+                                                        subMenuMap.forEach((v) => subMenus?.push(v))
+                                                        subMenus.sort((a, b) => a.label.localeCompare(b.label))
                                                     }
-                                                    i.subMenuData.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0))
+                                                    subMenus.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0))
                                                     return (
                                                         <Menu.SubMenu icon={i.icon} key={i.key} title={i.label}>
-                                                            {(i.subMenuData || []).map((subMenu) => {
+                                                            {(subMenus || []).map((subMenu) => {
                                                                 return (
                                                                     <MenuItem icon={subMenu.icon} key={subMenu.key}
                                                                               disabled={subMenu.disabled}>

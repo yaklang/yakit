@@ -1,18 +1,22 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, Checkbox, Form, List, Popconfirm, Space, Tag, Tooltip} from "antd";
+import {Button, Checkbox, Col, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip} from "antd";
 import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {YakScript, YakScriptParam} from "./schema";
-import {HTTPPacketEditor, YakCodeEditor, YakEditor} from "../../utils/editors";
+import {YakCodeEditor, YakEditor} from "../../utils/editors";
 import {PlusOutlined, QuestionCircleOutlined} from "@ant-design/icons";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {failed, info} from "../../utils/notification";
-import {putValueToParams, YakScriptParamsSetter} from "./YakScriptParamsSetter";
+import {YakScriptParamsSetter} from "./YakScriptParamsSetter";
 import {YakScriptRunner} from "./ExecYakScript";
-import {FullscreenOutlined, FullscreenExitOutlined} from "@ant-design/icons"
+import {FullscreenOutlined, DeleteOutlined} from "@ant-design/icons"
 import {MITMPluginTemplate} from "./data/MITMPluginTamplate";
 import {PacketHackPluginTemplate} from "./data/PacketHackPluginTemplate";
 import {CodecPluginTemplate} from "./data/CodecPluginTemplate";
 import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate";
+import { useMemoizedFn } from "ahooks";
+import cloneDeep from "lodash/cloneDeep"
+
+import "./YakScriptCreator.css"
 
 export interface YakScriptCreatorFormProp {
     onCreated?: (i: YakScript) => any
@@ -116,20 +120,26 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     info("创建 / 保存 Yak 脚本成功")
                     props.onCreated && props.onCreated(params)
                     props.onChanged && props.onChanged(data)
+                    setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100);
                 }).catch((e: any) => {
                     failed(`保存 Yak 模块失败: ${e}`)
                 })
             }}
             labelCol={{span: 5}} wrapperCol={{span: 14}}
         >
-            <SelectOne disabled={!!modified} label={"模块类型"} data={[
-                {value: "yak", text: "Yak 原生模块"},
-                {value: "mitm", text: "MITM 模块"},
-                {value: "packet-hack", text: "Packet 检查"},
-                {value: "port-scan", text: "端口扫描插件"},
-                {value: "codec", text: "Codec 模块"},
-                {value: "nuclei", text: "nuclei Yaml模块"},
-            ]} setValue={Type => setParams({...params, Type})} value={params.Type}
+            <SelectOne disabled={!!modified} label={"模块类型"} 
+                data={[
+                    {value: "yak", text: "Yak 原生模块"},
+                    {value: "mitm", text: "MITM 模块"},
+                    {value: "packet-hack", text: "Packet 检查"},
+                    {value: "port-scan", text: "端口扫描插件"},
+                    {value: "codec", text: "Codec 模块"},
+                    {value: "nuclei", text: "nuclei Yaml模块"},
+                ]} 
+                setValue={Type => {
+                    if(["packet-hack","codec","nuclei"].includes(Type)) setParams({...params, Type, IsGeneralModule: false})
+                    else setParams({...params, Type})
+                }} value={params.Type}
             />
             <InputItem
                 label={"Yak 模块名"} required={true}
@@ -157,18 +167,17 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 width: "60%",
                                 content: <>
                                     <CreateYakScriptParamForm onCreated={param => {
-                                        let existed = -1;
-                                        (params.Params || []).forEach((e, index) => {
-                                            if (e.Field === param.Field) existed = index;
-                                        });
-                                        if (existed >= 0) {
-                                            info(`参数 [${param.Field}]${param.FieldVerbose ? `(${param.FieldVerbose})` : ""} 已经存在，已覆盖旧参数`)
-                                            const currentParams = params.Params.splice(existed, 1)
-                                            currentParams.push(param);
-                                            setParams({...params, Params: [...currentParams]})
-                                        } else {
-                                            setParams({...params, Params: [...params.Params, param]})
-                                        }
+                                        let flag = false
+                                        const paramArr = (params.Params || []).map(item => {
+                                            if(item.Field === param.Field){
+                                                flag = true
+                                                info(`参数 [${param.Field}]${param.FieldVerbose ? `(${param.FieldVerbose})` : ""} 已经存在，已覆盖旧参数`)
+                                                return param
+                                            }
+                                            return item
+                                        })
+                                        if(!flag) paramArr.push(param)
+                                        setParams({...params, Params: [...paramArr]})
                                         m.destroy()
                                     }}/>
                                 </>
@@ -182,10 +191,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     renderItem={p => {
                         return <List.Item key={p.Field}>
                             <Space size={1}>
-                                {p.Required && <div
-                                    style={{
-                                        marginBottom: 0, color: "red"
-                                    }}>*</div>}
+                                {p.Required && <div className="form-item-required-title">*</div>}
                                 参数名：
                             </Space>
                             <Tag
@@ -259,16 +265,16 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             type={"link"} style={{
                         marginBottom: 12, marginTop: 6
                     }}>大屏模式</Button>
-                    <Checkbox name={"默认启动"} style={{
+                    {!["packet-hack","codec","nuclei"].includes(params.Type) && <Checkbox name={"默认启动"} style={{
                         marginBottom: 12, marginTop: 6
                     }} checked={params.IsGeneralModule}
                               onChange={() => setParams({...params, IsGeneralModule: !params.IsGeneralModule})}>
                         默认启动 <Tooltip
-                        title={"设置默认启动后，将在恰当时候启动启动该插件，同时将会自动增加到【明显】位置"}
+                        title={"设置默认启动后，将在恰当时候启动该插件(Yak插件不会自动启动，但会自动增加在左侧基础安全工具菜单栏)"}
                     >
                         <Button type={"link"} icon={<QuestionCircleOutlined/>}/>
                     </Tooltip>
-                    </Checkbox>
+                    </Checkbox>}
                 </Space>
             </>}>
                 {!fullscreen && <div style={{height: 400}}>
@@ -308,7 +314,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                         title: "确认想要执行的参数",
                                         width: "70%",
                                         content: <>
-                                            <YakScriptParamsSetter params={[]} {...data} onParamsConfirm={params => {
+                                            <YakScriptParamsSetter {...data} onParamsConfirm={params => {
                                                 m.destroy()
                                                 showModal({
                                                     title: "立即执行", width: 1000,
@@ -340,20 +346,181 @@ export interface CreateYakScriptParamFormProp {
 }
 
 export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = (props) => {
-    const [params, setParams] = useState<YakScriptParam>(props.modifiedParam || {
-        DefaultValue: "",
-        Field: "",
-        FieldVerbose: "",
-        Help: "",
-        TypeVerbose: ""
-    });
+    const [params, setParams] = useState<YakScriptParam>(
+        props.modifiedParam || {
+            DefaultValue: "",
+            Field: "",
+            FieldVerbose: "",
+            Help: "",
+            TypeVerbose: ""
+        }
+    )
+    const [extraSetting, setExtraSetting] = useState<{[key: string]: any}>(
+        props.modifiedParam?.ExtraSetting ? JSON.parse(props.modifiedParam.ExtraSetting) : {}
+    )
+    // 选择类型时的转换
+    const typeChange = useMemoizedFn((type: string) => {
+        switch (type) {
+            case "select":
+                setExtraSetting({
+                    double: false,
+                    data: []
+                })
+                break
+            case "upload-path":
+                setExtraSetting({isTextArea: false})
+                break
+            default:
+                setExtraSetting({})
+                break
+        }
+        setParams({...params, TypeVerbose: type})
+    })
+    // 提交参数信息的验证
+    const verify = useMemoizedFn(() => {
+        const type = params.TypeVerbose
+        switch (type) {
+            case "select":
+                if(extraSetting.data.length === 0){
+                    failed("下拉框类型时，请最少添加一个选项数据")
+                    return false
+                }
+                return true
+            default:
+                return true
+        }
+    })
+    // 提交参数信息的转换
+    const convert = useMemoizedFn(() => {
+        const type = params.TypeVerbose
+        const setting: YakScriptParam = cloneDeep(params)
+        const extra = cloneDeep(extraSetting)
+        const extraStr = JSON.stringify(extraSetting)
+        
+        switch (type) {
+            case "select":
+                const dataObj= {}
+                extra.data.map(item => {
+                    if(item.value in dataObj && item.key) dataObj[item.value] = item.key
+                    if(!(item.value in dataObj)) dataObj[item.value] = item.key
+                })
+
+                const data: any = []
+                for(let item in dataObj) data.push({key: dataObj[item], value: item})
+                extra.data = data
+                setting.ExtraSetting = JSON.stringify(extra)
+
+                return setting
+            case "upload-path":
+                extra.isTextArea = setting.Required ? extra.isTextArea : false
+                setting.ExtraSetting = JSON.stringify(extra)
+                return setting
+            default:
+                setting.ExtraSetting = extraStr === "{}" ? undefined : extraStr
+                return setting
+        }
+    })
+
+    const updateExtraSetting = useMemoizedFn((type: string, kind: string, key: string, value: any, index?: number) => {
+        const extra = cloneDeep(extraSetting)
+        switch (type) {
+            case "select":
+                if(Array.isArray(extra.data) && kind === "update" && index !== undefined){
+                    extra.data[index][key] = value
+                    setExtraSetting({...extra})
+                }
+                if(Array.isArray(extra.data) && kind === "del" && index !== undefined){
+                    extra.data.splice(index, 1)
+                    setExtraSetting({...extra})
+                }
+                return
+            default:
+                return
+        }
+    })
+
+    const selectOptSetting = (item: {key: string; value: string}, index: number) => {
+        return (
+            <div key={index} className="select-type-opt">
+                <span className="opt-hint-title">
+                    选项名称
+                </span>
+                <Input
+                    className="opt-hint-input"
+                    size='small'
+                    value={item.key}
+                    onChange={(e) => updateExtraSetting("select", "update", "key", e.target.value, index)}
+                />
+                <span className="opt-hint-title">
+                    <span className="form-item-required-title">*</span>选项值
+                </span>
+                <Input
+                    className="opt-hint-input"
+                    required
+                    size='small'
+                    value={item.value}
+                    placeholder="必填项"
+                    onChange={(e) => updateExtraSetting("select", "update", "value", e.target.value, index)}
+                />
+                <Button
+                    type='link'
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => updateExtraSetting("select", "del", "", "", index)}
+                ></Button>
+            </div>
+        )
+    }
+
+    const extraSettingComponent = useMemoizedFn((type: string) => {
+        switch (type) {
+            case "select":
+                return (
+                    <div>
+                        <SwitchItem
+                            label={"是否支持多选"}
+                            setValue={(value) => setExtraSetting({...extraSetting, double: value})}
+                            value={!!extraSetting.double}
+                            help={"多选状态时，用户选中数据保存格式为数组类型"}
+                        />
+                        <Form.Item label='下拉框选项数据' className="creator-form-item-margin">
+                            <Button type='link' onClick={() => {
+                                (extraSetting.data || []).push({key: "", value: ""})
+                                setExtraSetting({...extraSetting})
+                            }}>
+                            新增选项 <PlusOutlined />
+                            </Button>
+                        </Form.Item>
+                        <Form.Item label={" "} colon={false} className="creator-form-item-margin">
+                            {(extraSetting.data || []).map((item, index) => selectOptSetting(item, index))}
+                        </Form.Item>
+                    </div>
+                )
+            case "upload-path":
+                if(!params.Required) {
+                    return <></>
+                }
+                return (
+                    <div>
+                        <SwitchItem
+                            label={"是否以文本域展示"}
+                            setValue={(value) => setExtraSetting({...extraSetting, isTextArea: value})}
+                            value={!!extraSetting.isTextArea}
+                        />
+                    </div>
+                )
+            default:
+                break
+        }
+    })
 
     return <>
         <Form
             onSubmitCapture={e => {
                 e.preventDefault()
 
-                props.onCreated(params)
+                if(!verify()) return false
+                props.onCreated(convert())
             }}
             labelCol={{span: 5}} wrapperCol={{span: 14}}
         >
@@ -378,13 +545,18 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                     {text: "文本块 / text", value: "text"},
                     {text: "整数（大于零） / uint", value: "uint"},
                     {text: "浮点数 / float", value: "float"},
+                    {text: "上传文件路径 / uploadPath", value: "upload-path"},
+                    {text: "下拉框 / select", value: "select"},
                 ]}
-                setValue={TypeVerbose => setParams({...params, TypeVerbose})} value={params.TypeVerbose}
+                setValue={TypeVerbose => typeChange(TypeVerbose)} value={params.TypeVerbose}
             />
-            <InputItem
+            {!["upload-path", "select"].includes(params.TypeVerbose) && <InputItem
                 label={"默认值"} placeholder={"该参数的默认值"}
                 setValue={DefaultValue => setParams({...params, DefaultValue})} value={params.DefaultValue}
-            />
+            />}
+
+            {extraSettingComponent(params.TypeVerbose)}
+
             <InputItem
                 label={"参数帮助信息"}
                 setValue={Help => setParams({...params, Help})} value={params.Help}
@@ -464,7 +636,7 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
                                     title: "确认想要执行的参数",
                                     width: "70%",
                                     content: <>
-                                        <YakScriptParamsSetter params={[]} {...data} onParamsConfirm={params => {
+                                        <YakScriptParamsSetter {...data} onParamsConfirm={params => {
                                             m.destroy()
                                             showModal({
                                                 title: "立即执行", width: 1000,
