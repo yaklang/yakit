@@ -450,7 +450,6 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             <YakScriptParamsSetter
                                 primaryParamsOnly={true} styleSize={"small"}
                                 Params={(codecType?.params || [])}
-                                params={[]}
                                 onParamsConfirm={finalParams => {
                                     setParams([...finalParams])
                                     codec(codecType?.key || "", finalParams, codecType?.isYakScript)

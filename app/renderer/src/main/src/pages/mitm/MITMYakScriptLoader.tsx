@@ -47,7 +47,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                             content: <>
                                 <YakScriptParamsSetter
                                     {...script}
-                                    params={[]}
                                     onParamsConfirm={(p: YakExecutorParam[]) => {
                                         clearMITMPluginCache()
                                         onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
