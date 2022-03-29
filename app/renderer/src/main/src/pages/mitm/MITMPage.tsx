@@ -737,7 +737,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                             secondNode={(
                                                 <AutoCard
                                                     style={{margin: 0, padding: 0}}
-                                                    bodyStyle={{margin: 0, padding: 0}}
+                                                    bodyStyle={{margin: 0, padding: 0, overflowY: "hidden"}}
                                                 >
                                                     {autoForward === "log" && (
                                                         <MITMPluginCard
