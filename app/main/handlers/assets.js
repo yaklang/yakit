@@ -160,4 +160,36 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryAvailableRiskLevel", async (e, params) => {
         return await asyncQueryAvailableRiskLevel(params)
     })
+
+    // asyncQueryRiskTableStats wrapper
+    const asyncQueryRiskTableStats = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryRiskTableStats(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryRiskTableStats", async (e, params) => {
+        return await asyncQueryRiskTableStats(params)
+    })
+
+    // asyncResetRiskTableStats wrapper
+    const asyncResetRiskTableStats = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ResetRiskTableStats(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ResetRiskTableStats", async (e, params) => {
+        return await asyncResetRiskTableStats(params)
+    })
 };

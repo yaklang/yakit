@@ -31,6 +31,7 @@ export interface FieldName {
     Total: number
     Name: string
     Verbose: string
+    Delta: number
 }
 
 export interface FieldNameSelectItem {

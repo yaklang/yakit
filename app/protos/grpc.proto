@@ -86,6 +86,7 @@ service Yak {
 
   // 中间人劫持
   rpc MITM(stream MITMRequest) returns (stream MITMResponse);
+  rpc DownloadMITMCert(Empty) returns (MITMCert);
 
   // 开启端口
   rpc OpenPort(stream Input) returns (stream Output);
@@ -204,6 +205,8 @@ service Yak {
   rpc DeleteRisk(QueryRiskRequest) returns (Empty);
   rpc QueryAvailableRiskType(Empty) returns (Fields);
   rpc QueryAvailableRiskLevel(Empty) returns (Fields);
+  rpc QueryRiskTableStats(Empty) returns (RiskTableStats);
+  rpc ResetRiskTableStats(Empty) returns (Empty);
 
   // DNSLog
   rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
@@ -211,10 +214,26 @@ service Yak {
   rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
 }
 
+message RiskTableStats {
+  // 最近一次更新的漏洞信息
+  int64 LatestCreatedAtTimestamp = 1;
+
+  Fields RiskTypeStats = 2;
+  Fields RiskLevelStats = 3;
+}
+
+message MITMCert {
+  bytes CaCerts = 1;
+  string LocalFile = 2;
+}
+
 message FieldName {
   string Name = 1;
   string Verbose = 2;
   int32 Total = 3;
+
+  // 比上一次的增量/变化量
+  int32 Delta = 4;
 }
 
 message Fields {

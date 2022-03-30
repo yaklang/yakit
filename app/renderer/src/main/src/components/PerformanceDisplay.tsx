@@ -6,7 +6,7 @@ const { ipcRenderer } = window.require("electron")
 
 const { Text } = Typography
 
-export const PerformanceDisplay: React.FC = () => {
+export const PerformanceDisplay: React.FC = React.memo(() => {
     // cpu和内存可视图数据
     const [cpu, setCpu] = useState<number[]>([])
 
@@ -39,4 +39,4 @@ export const PerformanceDisplay: React.FC = () => {
             </div>
         </div>
     )
-}
+})

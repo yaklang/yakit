@@ -278,4 +278,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("fetch-url-ip", async (e, params) => {
         return await asyncFetchHostIp(params)
     })
+
+    // asyncDownloadMITMCert wrapper
+    const asyncDownloadMITMCert = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadMITMCert(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DownloadMITMCert", async (e, params) => {
+        return await asyncDownloadMITMCert(params)
+    })
 }

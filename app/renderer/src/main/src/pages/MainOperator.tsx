@@ -55,6 +55,8 @@ import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import {AutoSpin} from "../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
+import {Fields} from "./risks/RiskTable";
+import {RiskStatsTag} from "../utils/RiskStatsTag";
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -116,6 +118,11 @@ const singletonRoute = [
     Route.PoC, Route.DNSLog, Route.BatchExecutorPage,
 ]
 
+interface RiskStats {
+    RiskTypeStats: Fields
+    RiskLevelStats: Fields
+}
+
 const Main: React.FC<MainProp> = (props) => {
     const [route, setRoute] = useState<any>(Route.HTTPHacker)
     const [collapsed, setCollapsed] = useState(false)
@@ -134,6 +141,10 @@ const Main: React.FC<MainProp> = (props) => {
     ])
     const [extraGeneralModule, setExtraGeneralModule] = useState<YakScript[]>([])
     const [notification, setNotification] = useState("")
+    const [riskStats, setRiskStats] = useState<RiskStats>({
+        RiskLevelStats: {Values: []}, RiskTypeStats: {Values: []}
+    });
+    const [riskDelta, setRiskDelta] = useState(0);
 
     // 多开 tab 页面
     const [currentTabKey, setCurrentTabKey] = useState("")
@@ -221,6 +232,33 @@ const Main: React.FC<MainProp> = (props) => {
             if (!flag) fetchFuzzerList()
         })
         return () => ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
+    }, [])
+
+    // 设置统计增量小红点
+    useEffect(() => {
+        if (!riskStats || !riskStats?.RiskLevelStats || !riskStats?.RiskTypeStats) {
+            return
+        }
+
+        let count = 0;
+        riskStats.RiskTypeStats.Values.forEach(i => {
+            if (i.Delta > 0) {
+                count += i.Delta
+            }
+        })
+        setRiskDelta(count)
+    }, [riskStats])
+
+    const updateRiskStats = useMemoizedFn(() => {
+        ipcRenderer.invoke("QueryRiskTableStats", {}).then(data => {
+            setRiskStats(data)
+        })
+    })
+
+    useEffect(() => {
+        updateRiskStats()
+        let id = setInterval(updateRiskStats, 5000)
+        return () => clearInterval(id)
     }, [])
 
     // 系统类型
@@ -618,6 +656,7 @@ const Main: React.FC<MainProp> = (props) => {
                         </Col>
                         <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
                             <PerformanceDisplay/>
+                            {riskDelta > 0 && <RiskStatsTag delta={riskDelta} onUpdate={updateRiskStats}/>}
                             <Space>
                                 {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}

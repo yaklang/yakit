@@ -99,7 +99,7 @@ export const ReversePlatformStatus = React.memo(() => {
         <Tag
             onClick={() => {
                 showDrawer({
-                    title: "Risk 表 (包含反连)",
+                    title: "Vulnerabilities && Risks",
                     width: "70%",
                     content: <>
                         <RiskTable/>
@@ -117,7 +117,7 @@ export const ReversePlatformStatus = React.memo(() => {
 
 export const callCopyToClipboard = (str: string) => {
     ipcRenderer.invoke("copy-clipboard", str).then(() => {
-        info( "Copy Finished")
+        info("Copy Finished")
     })
 }
 
