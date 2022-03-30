@@ -1,5 +1,6 @@
 import React, {Ref, useEffect, useState} from "react";
 import {
+    Alert,
     Button,
     Checkbox,
     Col,
@@ -18,7 +19,7 @@ import {
 } from "antd";
 import {failed, info, success} from "../../utils/notification";
 import {CheckOutlined, PoweroffOutlined, ReloadOutlined, CopyOutlined} from "@ant-design/icons";
-import {HTTPPacketEditor} from "../../utils/editors";
+import {HTTPPacketEditor, YakEditor} from "../../utils/editors";
 import {MITMFilters, MITMFilterSchema} from "./MITMFilters";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {MITMPluginCard} from "./MITMPluginCard";
@@ -38,6 +39,7 @@ import {AutoCard} from "../../components/AutoCard";
 import {ResizeBox} from "../../components/ResizeBox";
 import {MITMPluginLogViewer} from "./MITMPluginLogViewer";
 import {MITMPluginList, MITMPluginListProp} from "./MITMPluginList";
+import {openABSFileLocated} from "../../utils/openWebsite";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -86,6 +88,11 @@ const enableMITMPluginMode = () => {
     return ipcRenderer.invoke("mitm-enable-plugin-mode")
 }
 
+interface CaCertData {
+    CaCerts: Uint8Array
+    LocalFile: string
+}
+
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [status, setStatus] = useState<"idle" | "hijacked" | "hijacking">("idle");
     const [error, setError] = useState("");
@@ -93,6 +100,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [port, setPort] = useState(8083);
     const [downstreamProxy, setDownstreamProxy] = useState<string>();
     const [loading, setLoading] = useState(false);
+    const [caCerts, setCaCerts] = useState<CaCertData>({
+        CaCerts: new Buffer(""), LocalFile: "",
+    });
 
     // 存储修改前和修改后的包！
     const [currentPacketInfo, setCurrentPacketInfo] = useState<{
@@ -312,8 +322,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         }
     }, [currentPacketId])
 
-    const addr = `http://${host}:${port}`;
+    useEffect(() => {
+        ipcRenderer.invoke("DownloadMITMCert", {}).then((data: CaCertData) => {
+            setCaCerts(data)
+        })
+    }, [])
 
+    const addr = `http://${host}:${port}`;
 
     // 自动转发劫持，进行的操作
     const forwardHandler = useMemoizedFn((e: any, msg: MITMResponse) => {
@@ -449,14 +464,24 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 onClick={() => {
                     const text = `wget -e use_proxy=yes -e http_proxy=${addr} http://download-mitm-cert.yaklang.io -O yakit-mitm-cert.pem`
                     showModal({
-                        title: "下载 SSL/TLS 证书以调试 HTTPS",
+                        title: "下载 SSL/TLS 证书以劫持 HTTPS",
+                        width: "50%",
                         content: <div>
-                            <Space direction={"vertical"}>
-                                <div>浏览器直接访问 {addr} 即可自动下载</div>
-                                <br/>
-                                <CopyableField text={`wget ${addr} -O mitm-server.crt`}/>
-                            </Space>
-
+                            <AutoCard extra={<Button
+                                type={"link"}
+                                onClick={() => {
+                                    alert("no implemented")
+                                    // openABSFileLocated(caCerts.LocalFile)
+                                }}
+                            >
+                                下载到本地并打开
+                            </Button>} size={"small"} bodyStyle={{padding: 0}}>
+                                <div style={{height: 360}}>
+                                    <YakEditor bytes={true}
+                                               valueBytes={caCerts.CaCerts}
+                                    />
+                                </div>
+                            </AutoCard>
                         </div>
                     })
                 }}
