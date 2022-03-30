@@ -221,6 +221,15 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     }
                 },
                 {
+                    title: "等级",
+                    render: (i: Risk) => {
+                        const filter = severities.filter(item => item.Names[0] === i.Severity)
+                        const color: string = {high: "title-red", info: "title-gray", low: "title-orange"}[filter[0]?.Names[0] || ""] || ""
+                        return <span className={color}>{filter.length === 0 ? "-" : filter[0].Verbose}</span>
+                    },
+                    width: 90
+                },
+                {
                     title: "IP",
                     render: (i: Risk) => i?.IP || "-",
                     filterIcon: (filtered) => {
