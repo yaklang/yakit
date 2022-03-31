@@ -191,7 +191,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
-        ipcRenderer.invoke("send-to-fuzzer", {isHttps: isHttps, request: request})
+        ipcRenderer.invoke("send-to-tab", {
+            type: "fuzzer",
+            data:{isHttps: isHttps, request: request}
+        })
     })
     const sendToPlugin = useMemoizedFn((request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
         let m = showDrawer({

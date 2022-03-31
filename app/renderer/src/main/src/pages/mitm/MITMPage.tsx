@@ -39,7 +39,7 @@ import {AutoCard} from "../../components/AutoCard";
 import {ResizeBox} from "../../components/ResizeBox";
 import {MITMPluginLogViewer} from "./MITMPluginLogViewer";
 import {MITMPluginList, MITMPluginListProp} from "./MITMPluginList";
-import {openABSFileLocated} from "../../utils/openWebsite";
+import {openABSFileLocated, saveABSFileToOpen} from "../../utils/openWebsite";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -470,7 +470,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             <AutoCard extra={<Button
                                 type={"link"}
                                 onClick={() => {
-                                    alert("no implemented")
+                                    saveABSFileToOpen("yakit证书.crt.pem", caCerts.CaCerts)
                                     // openABSFileLocated(caCerts.LocalFile)
                                 }}
                             >
@@ -521,7 +521,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
 
     const execFuzzer = useMemoizedFn((value: string) => {
-        ipcRenderer.invoke("send-to-fuzzer", {isHttps: currentPacketInfo.isHttp, request: value})
+        ipcRenderer.invoke("send-to-tab", {
+            type: "fuzzer",
+            data:{isHttps: currentPacketInfo.isHttp, request: value}
+        })
     })
     const execPlugin = useMemoizedFn((value: string) => {
         ipcRenderer.invoke("send-to-packet-hack", {

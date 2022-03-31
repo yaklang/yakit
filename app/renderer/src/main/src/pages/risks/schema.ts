@@ -20,4 +20,6 @@ export interface Risk {
     Id: number
     CreatedAt: number
     UpdatedAt?: number
+
+    Severity?: string
 }

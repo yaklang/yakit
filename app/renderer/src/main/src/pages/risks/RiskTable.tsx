@@ -10,6 +10,8 @@ import {showModal} from "../../utils/showModal"
 import ReactJson from "react-json-view"
 import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
 
+import "./RiskTable.css"
+
 export interface RiskTableProp {
 }
 
@@ -59,6 +61,15 @@ const mergeFieldNames = (f: Fields) => {
     })
     return items
 }
+
+const TitleColor = [
+    {key: ["trace", "debug", "note"], value: "title-debug", name: "调试信息"},
+    {key: ["info", "fingerprint", "infof", "default"], value: "title-info", name: "信息/指纹"},
+    {key: ["low"], value: "title-low", name: "低危"},
+    {key: ["middle", "warn", "warning"], value: "title-middle", name: "中危"},
+    {key: ["high"], value: "title-high", name: "高危"},
+    {key: ["fatal", "critical", "panic"], value: "title-fatal", name: "严重"},
+]
 
 export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const [response, setResponse] = useState<QueryGeneralResponse<Risk>>({
@@ -219,6 +230,14 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             )
                         )
                     }
+                },
+                {
+                    title: "等级",
+                    render: (i: Risk) => {
+                        const title = TitleColor.filter(item => item.key.includes(i.Severity || ""))[0]
+                        return <span className={title.value}>{title ? title.name : i.Severity || "-"}</span>
+                    },
+                    width: 90
                 },
                 {
                     title: "IP",

@@ -367,7 +367,10 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     type={"primary"}
                     icon={<ThunderboltFilled/>}
                     onClick={() => {
-                        ipcRenderer.invoke("send-to-fuzzer", {isHttps: props.defaultHttps || false, request: strValue})
+                        ipcRenderer.invoke("send-to-tab", {
+                            type: "fuzzer",
+                            data:{isHttps: props.defaultHttps || false, request: strValue}
+                        })
                     }}
                 >FUZZ</Button>}
                 <Tooltip title={"不自动换行"}>

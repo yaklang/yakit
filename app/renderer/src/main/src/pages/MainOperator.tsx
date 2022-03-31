@@ -49,7 +49,6 @@ import {PerformanceDisplay} from "../components/PerformanceDisplay"
 
 import "./main.css"
 import {useHotkeys} from "react-hotkeys-hook";
-import {execTest} from "./invoker/ExecutePacketYakScript";
 import {useMemoizedFn} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
@@ -130,6 +129,7 @@ const Main: React.FC<MainProp> = (props) => {
     const [status, setStatus] = useState<{ addr: string; isTLS: boolean }>()
     const [hideMenu, setHideMenu] = useState(false)
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([])
+    const [routeMenuData, setRouteMenuData] = useState<MenuDataProps[]>(RouteMenuData)
     const [loading, setLoading] = useState(false)
     const [pageCache, setPageCache] = useState<PageCache[]>([
         {
@@ -139,7 +139,6 @@ const Main: React.FC<MainProp> = (props) => {
             verbose: "MITM"
         }
     ])
-    const [extraGeneralModule, setExtraGeneralModule] = useState<YakScript[]>([])
     const [notification, setNotification] = useState("")
     const [riskStats, setRiskStats] = useState<RiskStats>({
         RiskLevelStats: {Values: []}, RiskTypeStats: {Values: []}
@@ -353,7 +352,30 @@ const Main: React.FC<MainProp> = (props) => {
                 Type: "yak"
             } as QueryYakScriptRequest)
             .then((data: QueryYakScriptsResponse) => {
-                setExtraGeneralModule(data.Data)
+                const tabList: MenuDataProps[] = cloneDeep(RouteMenuData)
+                for(let item of tabList){
+                    if(item.subMenuData){
+                        if(item.key === Route.GeneralModule){
+                            const extraMenus: MenuDataProps[] = data.Data.map((i) => {
+                                return {
+                                    icon: <EllipsisOutlined/>,
+                                    key: `plugin:${i.Id}`,
+                                    label: i.ScriptName,
+                                } as unknown as MenuDataProps
+                            })
+    
+                            item.subMenuData.push(...extraMenus)
+                            let subMenuMap = new Map<string, MenuDataProps>()
+                            item.subMenuData.forEach((e) => subMenuMap.set(e.key as string, e))
+                            item.subMenuData = []
+                            subMenuMap.forEach((v) => item.subMenuData?.push(v))
+                            item.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
+                        }else{
+                            item.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
+                        }
+                    }
+                }
+                setRouteMenuData(tabList)
             })
     }
 
@@ -504,17 +526,20 @@ const Main: React.FC<MainProp> = (props) => {
         ipcRenderer.on("fetch-new-main-menu", (e) => {
             updateMenuItems()
         })
-        ipcRenderer.on("fetch-send-to-fuzzer", (e, res: any) => addFuzzer(res))
+        ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
+            const {type, data = {}} = res
+            if(type === "fuzzer") addFuzzer(data)
+        })
 
         return () => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
-            ipcRenderer.removeAllListeners("fetch-send-to-fuzzer")
+            ipcRenderer.removeAllListeners("fetch-send-to-tab")
         }
     }, [])
 
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;
     const routeKeyToLabel = new Map<string, string>();
-    RouteMenuData.forEach(k => {
+    routeMenuData.forEach(k => {
         (k.subMenuData || []).forEach(subKey => {
             routeKeyToLabel.set(`${subKey.key}`, subKey.label)
         })
@@ -766,31 +791,11 @@ const Main: React.FC<MainProp> = (props) => {
                                                     </Menu.SubMenu>
                                                 )
                                             })}
-                                            {(RouteMenuData || []).map((i) => {
+                                            {(routeMenuData || []).map((i) => {
                                                 if (i.subMenuData) {
-                                                    let subMenus = cloneDeep(i.subMenuData)
-
-                                                    if (i.key === `${Route.GeneralModule}`) {
-                                                        const extraMenus = extraGeneralModule.map((i) => {
-                                                            return {
-                                                                icon: <EllipsisOutlined/>,
-                                                                key: `plugin:${i.Id}`,
-                                                                label: i.ScriptName,
-                                                            } as unknown as MenuDataProps
-                                                        })
-                                                        subMenus.push(...extraMenus)
-                                                        let subMenuMap = new Map<string, MenuDataProps>()
-                                                        subMenus.forEach((e) => {
-                                                            subMenuMap.set(e.key as string, e)
-                                                        })
-                                                        subMenus = []
-                                                        subMenuMap.forEach((v) => subMenus?.push(v))
-                                                        subMenus.sort((a, b) => a.label.localeCompare(b.label))
-                                                    }
-                                                    subMenus.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0))
                                                     return (
                                                         <Menu.SubMenu icon={i.icon} key={i.key} title={i.label}>
-                                                            {(subMenus || []).map((subMenu) => {
+                                                            {(i.subMenuData || []).map((subMenu) => {
                                                                 return (
                                                                     <MenuItem icon={subMenu.icon} key={subMenu.key}
                                                                               disabled={subMenu.disabled}>
