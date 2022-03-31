@@ -86,7 +86,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
 
     return <AutoCard
         bordered={false}
-        bodyStyle={{padding: 0}}
+        bodyStyle={{padding: 0, overflowY: "auto"}}
         loading={!initialed}
         title={<Space>
             <Form size={"small"} onSubmitCapture={e => e.preventDefault()}>
@@ -179,6 +179,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
                     {hooksItem.map(i => {
                         return <>
                             <MITMYakScriptLoader
+                                key={i.name}
                                 onSendToPatch={code => {
                                     setScript(code)
                                     setMode("hot-patch")
