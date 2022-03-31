@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from "react";
-import {Button, Card, List, Space, Tag} from "antd";
+import {Button, Card, List, Popconfirm, Space, Tag} from "antd";
 import {formatTimestamp} from "../../utils/timeUtil";
-import {ReloadOutlined} from "@ant-design/icons";
+import {ReloadOutlined, DeleteOutlined} from "@ant-design/icons";
 import {useMemoizedFn} from "ahooks";
+import {info} from "../../utils/notification";
 
 export interface HTTPFuzzerHistorySelectorProp {
     onSelect: (i: number) => any
@@ -23,6 +24,14 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     const [tasks, setTasks] = useState<HTTPFuzzerTask[]>([]);
     const [loading, setLoading] = useState(false);
 
+    const deleteAll = useMemoizedFn(()=>{
+        setLoading(true)
+        ipcRenderer.invoke("DeleteHistoryHTTPFuzzerTask", {}).then(()=>{
+            info("Delete History")
+            reload()
+        }).finally(()=>setTimeout(()=>setLoading(false), 300))
+    })
+
     const reload = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer.invoke("QueryHistoryHTTPFuzzerTask", {}).then((data: { Tasks: HTTPFuzzerTask[] }) => {
@@ -38,6 +47,13 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
         <Button type={"link"} size={"small"} icon={<ReloadOutlined/>} onClick={e => {
             reload()
         }}/>
+        <Popconfirm title={"确定删除吗？"} onConfirm={()=>{
+            deleteAll()
+        }}>
+            <Button type={"link"} size={"small"} danger={true}
+                    icon={<DeleteOutlined />}
+            />
+        </Popconfirm>
     </Space>}>
         <List<HTTPFuzzerTask>
             loading={loading}

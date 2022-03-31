@@ -192,4 +192,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("ResetRiskTableStats", async (e, params) => {
         return await asyncResetRiskTableStats(params)
     })
+
+    // asyncDeleteHistoryHTTPFuzzerTask wrapper
+    const asyncDeleteHistoryHTTPFuzzerTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteHistoryHTTPFuzzerTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteHistoryHTTPFuzzerTask", async (e, params) => {
+        return await asyncDeleteHistoryHTTPFuzzerTask(params)
+    })
 };
