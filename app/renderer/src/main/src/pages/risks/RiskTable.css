@@ -1,0 +1,21 @@
+.title-debug{
+    color: #000000;
+}
+.title-info{
+    color: #8c8c8c;
+}
+.title-low{
+    color: #ffa940;
+}
+.title-middle{
+    color: #ff7a45;
+}
+.title-high{
+    color: #f5222d;
+}
+.title-fatal{
+    color: #a8071a;
+}
+.title-default{
+    color: #000000;
+}

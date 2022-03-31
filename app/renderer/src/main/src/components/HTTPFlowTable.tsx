@@ -456,9 +456,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const ref = useHotkeys('ctrl+r', e => {
         const selected = getSelected()
         if (selected) {
-            ipcRenderer.invoke("send-to-fuzzer", {
-                isHttps: selected?.IsHTTPS,
-                request: new Buffer(selected.Request).toString()
+            ipcRenderer.invoke("send-to-tab", {
+                type: "fuzzer",
+                data:{
+                    isHttps: selected?.IsHTTPS,
+                    request: new Buffer(selected.Request).toString()
+                }
             })
         }
     })
@@ -1111,9 +1114,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     {
                                         title: '发送到 Web Fuzzer',
                                         onClick: () => {
-                                            ipcRenderer.invoke("send-to-fuzzer", {
-                                                isHttps: rowData.IsHTTPS,
-                                                request: new Buffer(rowData.Request).toString("utf8")
+                                            ipcRenderer.invoke("send-to-tab", {
+                                                type: "fuzzer",
+                                                data:{
+                                                    isHttps: rowData.IsHTTPS,
+                                                    request: new Buffer(rowData.Request).toString("utf8")
+                                                }
                                             })
                                         }
                                     },

@@ -1,4 +1,5 @@
 import React from "react";
+import { success } from "./notification";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -12,6 +13,22 @@ export const openABSFile = (u: string) => {
 
 export const openABSFileLocated = (u: string) => {
     ipcRenderer.invoke("open-specified-file", u)
+}
+
+export const saveABSFileToOpen = (name: string, data?: Uint8Array | string) => {
+    const isArr = Array.isArray(data)
+    ipcRenderer.invoke("show-save-dialog", name).then((res) => {
+        if (res.canceled) return
+        ipcRenderer
+            .invoke("write-file", {
+                route: res.filePath,
+                data: isArr ? new Buffer((data || []) as Uint8Array).toString() : data || ""
+            })
+            .then(() => {
+                success('下载完成')
+                ipcRenderer.invoke("open-specified-file", res.filePath)
+            })
+    })
 }
 
 export interface ExternalUrlProp {

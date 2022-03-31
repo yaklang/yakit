@@ -128,7 +128,13 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                 onClick={() => {
                                     const req = findHTTPFlowById(i);
                                     if (req) {
-                                        ipcRenderer.invoke("send-to-fuzzer", {isHttps: req.IsHTTPS, request: new Buffer(req.Request).toString()})
+                                        ipcRenderer.invoke("send-to-tab", {
+                                            type: "fuzzer",
+                                            data:{
+                                                isHttps: req.IsHTTPS, 
+                                                request: new Buffer(req.Request).toString()
+                                            }
+                                        })
                                     }
                                 }}
                             >发送到Fuzzer</Button>}

@@ -122,8 +122,14 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             label: '发送到Fuzzer',
             contextMenuGroupId: 'send-fuzzer-info',
             run: () => {
-                 ipcRenderer.invoke("send-to-fuzzer", {isHttps: flow?.IsHTTPS, request: Buffer.from(flow?.Request || []).toString("utf8")})
-                 if (props.onClose) props.onClose()
+                ipcRenderer.invoke("send-to-tab", {
+                    type: "fuzzer",
+                    data:{
+                        isHttps: flow?.IsHTTPS, 
+                        request: Buffer.from(flow?.Request || []).toString("utf8")
+                    }
+                })
+                if (props.onClose) props.onClose()
             }
         },
         {

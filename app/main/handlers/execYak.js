@@ -79,7 +79,7 @@ module.exports = (win, getClient) => {
     const asyncSaveFileDialog = async (params) => {
         return new Promise((resolve, reject) => {
             dialog
-                .showSaveDialog({
+                .showSaveDialog(win, {
                     title: "保存文件",
                     defaultPath: params,
                 })
