@@ -40,14 +40,3 @@
 .main-container-cion:hover{
     color: #1890ff;
 }
-
-/* 全局公共内容颜色类 */
-.title-red{
-    color: #f5222d;
-}
-.title-orange{
-    color: #fa8c16;
-}
-.title-gray{
-    color: #8c8c8c;
-}
