@@ -6,9 +6,9 @@ module.exports = (win, getClient) => {
   ipcMain.handle("change-main-menu", async (e) => {
     win.webContents.send("fetch-new-main-menu");
   });
-  // 远程打开一个fuzzer工具页面 / open a fuzzer tool page remotely
-  ipcMain.handle("send-to-fuzzer", async (e, params) => {
-    win.webContents.send("fetch-send-to-fuzzer", params);
+  // 远程打开一个工具页面 / open a tool page remotely
+  ipcMain.handle("send-to-tab", async (e, params) => {
+    win.webContents.send("fetch-send-to-tab", params);
   });
   // 请求包通过通信打开一个数据包插件执行弹窗
   ipcMain.handle("send-to-packet-hack", async (e, params) => {

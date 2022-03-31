@@ -521,7 +521,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
 
     const execFuzzer = useMemoizedFn((value: string) => {
-        ipcRenderer.invoke("send-to-fuzzer", {isHttps: currentPacketInfo.isHttp, request: value})
+        ipcRenderer.invoke("send-to-tab", {
+            type: "fuzzer",
+            data:{isHttps: currentPacketInfo.isHttp, request: value}
+        })
     })
     const execPlugin = useMemoizedFn((value: string) => {
         ipcRenderer.invoke("send-to-packet-hack", {

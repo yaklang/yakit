@@ -31,9 +31,12 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                 title: "操作", render: (i: FuzzableParams) => <Space>
                     <Popconfirm title={"测试该参数将会暂时进入 Web Fuzzer"}
                                 onConfirm={(e) => {
-                                    ipcRenderer.invoke("send-to-fuzzer", {
-                                        isHttps: i.IsHTTPS,
-                                        request: new Buffer(i.AutoTemplate).toString("utf8")
+                                    ipcRenderer.invoke("send-to-tab", {
+                                        type: "fuzzer",
+                                        data:{
+                                            isHttps: i.IsHTTPS,
+                                            request: new Buffer(i.AutoTemplate).toString("utf8")
+                                        }
                                     })
                                     if (props.sendToWebFuzzer) props.sendToWebFuzzer()
                                 }}
