@@ -43,6 +43,7 @@ export interface StartBruteParams {
 }
 
 export interface BrutePageProp {
+    sendTarget?: string
 }
 
 export const BrutePage: React.FC<BrutePageProp> = (props) => {
@@ -74,7 +75,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
         Prefix: "",
         TargetFile: "",
         TargetTaskConcurrent: 1,
-        Targets: "",
+        Targets: props.sendTarget ? JSON.parse(props.sendTarget || "[]").join(",") : "",
         Type: "",
         UsernameFile: "",
         Usernames: [],

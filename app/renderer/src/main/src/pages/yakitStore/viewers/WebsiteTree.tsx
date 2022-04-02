@@ -6,9 +6,12 @@ import {
     WebsiteForest
 } from "../../../components/WebsiteTree"
 import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable"
-import {genDefaultPagination} from "../../invoker/schema"
+import {genDefaultPagination, QueryGeneralResponse} from "../../invoker/schema"
 import {ReloadOutlined, SearchOutlined, DeleteOutlined} from "@ant-design/icons"
 import {InputItem, SwitchItem} from "../../../utils/inputUtil"
+import { showByContextMenu } from "../../../components/functionTemplate/showByContext"
+import { HTTPFlow } from "../../../components/HTTPFlowTable"
+import { failed } from "../../../utils/notification"
 
 import "./WebsiteTreeStyle.css"
 
@@ -63,6 +66,11 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
             .then((res) => {
                 refresh()
             })
+    }
+
+    const fetchUrl = (data: AntDTreeData | any, arr: string[]) => {
+        arr.unshift(data.title.indexOf("/") < 0 && !!data?.parent?.title ? `/${data.title}` : data.title)
+        if(data?.parent?.title) fetchUrl(data?.parent, arr)
     }
 
     // 构建 table
@@ -229,6 +237,37 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     }}
                                     autoExpandParent={true}
                                     defaultExpandAll={true}
+                                    onRightClick={({event, node}) => {
+                                        showByContextMenu(
+                                            {
+                                                data: [
+                                                    {key:'bug-test',title:"发送到漏洞检测"},
+                                                    {key:'scan-port',title:"发送到端口扫描"},
+                                                    {key:'brute',title:"发送到爆破"}
+                                                ],
+                                                onClick: ({key}) => {
+                                                    let str: string[] = []
+                                                    fetchUrl(node, str)
+                                                    const param = {
+                                                        SearchURL: str,
+                                                        Pagination: {
+                                                            ...genDefaultPagination(20),
+                                                            Page: 1,
+                                                            Limit: 101
+                                                    }}
+                                                    ipcRenderer.invoke("QueryHTTPFlows", param).then((data: QueryGeneralResponse<HTTPFlow>) => {
+                                                        if(data.Total > 100){
+                                                            failed("该节点下的URL数量超过100个，请缩小范围后再重新操作")
+                                                            return
+                                                        }
+                                                        ipcRenderer.invoke("send-to-tab", {
+                                                            type: key,
+                                                            data:{URL: JSON.stringify(data.Data.map(item => item.Url))}
+                                                        })
+                                                    })
+                                                }
+                                            }
+                                    )}}
                                 />
                             </div>
                         </Card>

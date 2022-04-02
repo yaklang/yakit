@@ -62,7 +62,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     }
                 }}
             />
-            <div style={{marginRight: 6}}>
+            <div style={{marginRight: 6, maxWidth: p.maxWidth || 260}}>
                 {!!i.ScriptName ? i.ScriptName : `{hot-patched}`}
             </div>
             {script.Help && <Tooltip title={script.Help}>
@@ -107,6 +107,7 @@ export const StatusCardViewer = React.memo((p: { status: StatusCardProps[] }) =>
 export interface MITMYakScriptLoaderProps {
     script: YakScript
     hooks: Map<string, boolean>
+    maxWidth?: number
     onSendToPatch?: (code: string) => any
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
 }

@@ -24,6 +24,7 @@ import "./PortScanPage.css"
 const {ipcRenderer} = window.require("electron")
 
 export interface PortScanPageProp {
+    sendTarget?: string
 }
 
 export interface PortScanParams {
@@ -59,7 +60,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [params, setParams] = useState<PortScanParams>({
         Ports: "22,443,445,80,8000-8004,3306,3389,5432,8080-8084,7000-7005",
         Mode: "fingerprint",
-        Targets: "",
+        Targets: props.sendTarget ? JSON.parse(props.sendTarget || "[]").join(",") : "",
         Active: true,
         Concurrent: 50,
         FingerprintMode: "all",

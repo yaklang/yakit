@@ -161,9 +161,10 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
 
                 }}
                 Keyword={""}
-                onYakScriptRender={(i: YakScript) => {
+                onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                     return <MITMYakScriptLoader
                         script={i} hooks={hooks}
+                        maxWidth={maxWidth}
                         onSendToPatch={code => {
                             setScript(code)
                             setMode("hot-patch")

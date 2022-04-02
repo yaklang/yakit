@@ -19,6 +19,7 @@ import {YakScriptCreatorForm} from "../invoker/YakScriptCreator"
 import {startExecuteYakScript} from "../invoker/ExecYakScript"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {AutoCard} from "../../components/AutoCard"
+import ReactResizeDetector from "react-resize-detector"
 
 import "./YakitStorePage.css"
 import {getValue, saveValue} from "../../utils/kv";
@@ -277,7 +278,7 @@ export interface YakModuleListProp {
     trigger?: boolean
     isIgnored?: boolean
     isHistory?: boolean
-    onYakScriptRender?: (i: YakScript) => any
+    onYakScriptRender?: (i: YakScript, maxWidth?: number) => any
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -300,6 +301,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         Total: 0
     })
     const [trigger, setTrigger] = useState(false)
+    const [maxWidth, setMaxWidth] = useState<number>(260)
 
     const update = (
         page?: number,
@@ -345,92 +347,103 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     }, [props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, trigger])
 
     return (
-        <List<YakScript>
-            loading={loading}
-            style={{width: "100%", height: 200, marginBottom: 16}}
-            dataSource={response.Data}
-            split={false}
-            pagination={{
-                size: "small",
-                pageSize: response.Pagination.Limit || 10,
-                total: response.Total,
-                showSizeChanger: true,
-                defaultPageSize: 10,
-                showTotal: (i) => <Tag>Total:{i}</Tag>,
-                onChange: (page, size) => {
-                    update(page, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
-                },
-                onShowSizeChange: (current, size) => {
-                    update(1, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
-                }
-            }}
-            renderItem={(i: YakScript) => {
-                let isAnonymous = false
-                if (i.Author === "" || i.Author === "anonymous") {
-                    isAnonymous = true
-                }
-
-                if (props.onYakScriptRender) {
-                    return props.onYakScriptRender(i)
-                }
-
-                return (
-                    <List.Item style={{marginLeft: 0}} key={i.Id}>
-                        <Card
-                            size={"small"}
-                            bordered={true}
-                            hoverable={true}
-                            title={
-                                <Space>
-                                    <div>{i.ScriptName}</div>
-                                    {gitUrlIcon(i.FromGit)}
-                                </Space>
-                            }
-                            style={{
-                                width: "100%",
-                                backgroundColor: props.currentId === i.Id ? "rgba(79,188,255,0.26)" : "#fff"
-                            }}
-                            onClick={() => props.onClicked(i)}
-                        >
-                            <Row>
-                                <Col span={24}>
-                                    <CopyableField
-                                        style={{width: 430, color: "#5f5f5f", marginBottom: 5}}
-                                        text={i.Help || "No Description about it."}
-                                        noCopy={true}
-                                    />
-                                </Col>
-                            </Row>
-                            <Row style={{marginBottom: 4}}>
-                                {i.Tags && (
+        <div>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!width || !height) return
+                    setMaxWidth(width - 126)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+            <List<YakScript>
+                loading={loading}
+                style={{width: "100%", height: 200, marginBottom: 16}}
+                dataSource={response.Data}
+                split={false}
+                pagination={{
+                    size: "small",
+                    pageSize: response.Pagination.Limit || 10,
+                    total: response.Total,
+                    showSizeChanger: true,
+                    defaultPageSize: 10,
+                    showTotal: (i) => <Tag>Total:{i}</Tag>,
+                    onChange: (page, size) => {
+                        update(page, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
+                    },
+                    onShowSizeChange: (current, size) => {
+                        update(1, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
+                    }
+                }}
+                renderItem={(i: YakScript) => {
+                    let isAnonymous = false
+                    if (i.Author === "" || i.Author === "anonymous") {
+                        isAnonymous = true
+                    }
+    
+                    if (props.onYakScriptRender) {
+                        return props.onYakScriptRender(i, maxWidth)
+                    }
+    
+                    return (
+                        <List.Item style={{marginLeft: 0}} key={i.Id}>
+                            <Card
+                                size={"small"}
+                                bordered={true}
+                                hoverable={true}
+                                title={
+                                    <Space>
+                                        <div>{i.ScriptName}</div>
+                                        {gitUrlIcon(i.FromGit)}
+                                    </Space>
+                                }
+                                style={{
+                                    width: "100%",
+                                    backgroundColor: props.currentId === i.Id ? "rgba(79,188,255,0.26)" : "#fff"
+                                }}
+                                onClick={() => props.onClicked(i)}
+                            >
+                                <Row>
                                     <Col span={24}>
-                                        <div style={{width: "100%", textAlign: "right", color: "#888888"}}>
-                                            {/*{(i.Tags.split(",")).map(word => {*/}
-                                            {/*    return <Tag>{word}</Tag>*/}
-                                            {/*})}*/}
-                                            TAG:{i.Tags}
-                                        </div>
+                                        <CopyableField
+                                            style={{width: 430, color: "#5f5f5f", marginBottom: 5}}
+                                            text={i.Help || "No Description about it."}
+                                            noCopy={true}
+                                        />
                                     </Col>
-                                )}
-                            </Row>
-                            <Row>
-                                <Col span={12}>
-                                    <Space style={{width: "100%"}}>
-                                        <Tag color={isAnonymous ? "gray" : "geekblue"}>{i.Author || "anonymous"}</Tag>
-                                    </Space>
-                                </Col>
-                                <Col span={12} style={{textAlign: "right"}}>
-                                    <Space size={2}>
-                                        <CopyableField noCopy={true} text={formatDate(i.CreatedAt)}/>
-                                        {gitUrlIcon(i.FromGit, true)}
-                                    </Space>
-                                </Col>
-                            </Row>
-                        </Card>
-                    </List.Item>
-                )
-            }}
-        />
+                                </Row>
+                                <Row style={{marginBottom: 4}}>
+                                    {i.Tags && (
+                                        <Col span={24}>
+                                            <div style={{width: "100%", textAlign: "right", color: "#888888"}}>
+                                                {/*{(i.Tags.split(",")).map(word => {*/}
+                                                {/*    return <Tag>{word}</Tag>*/}
+                                                {/*})}*/}
+                                                TAG:{i.Tags}
+                                            </div>
+                                        </Col>
+                                    )}
+                                </Row>
+                                <Row>
+                                    <Col span={12}>
+                                        <Space style={{width: "100%"}}>
+                                            <Tag color={isAnonymous ? "gray" : "geekblue"}>{i.Author || "anonymous"}</Tag>
+                                        </Space>
+                                    </Col>
+                                    <Col span={12} style={{textAlign: "right"}}>
+                                        <Space size={2}>
+                                            <CopyableField noCopy={true} text={formatDate(i.CreatedAt)}/>
+                                            {gitUrlIcon(i.FromGit, true)}
+                                        </Space>
+                                    </Col>
+                                </Row>
+                            </Card>
+                        </List.Item>
+                )}}
+            />
+        </div>
     )
 }
 

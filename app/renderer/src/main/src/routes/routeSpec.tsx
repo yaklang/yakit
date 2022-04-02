@@ -183,6 +183,10 @@ interface ComponentParams {
     system?: string
     order?: string
     fuzzerParams?: fuzzerInfoProp
+    // Route.Mod_ScanPort 参数
+    scanportParams?: string
+    // Route.Mod_Brute 参数
+    bruteParams?: string
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -228,9 +232,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.PayloadManager:
             return <PayloadManagerPage/>
         case Route.Mod_ScanPort:
-            return <PortScanPage/>
+            return <PortScanPage sendTarget={params?.scanportParams} />
         case Route.Mod_Brute:
-            return <BrutePage/>
+            return <BrutePage sendTarget={params?.bruteParams} />
         case Route.DataCompare:
             return <DataCompare/>
         case Route.DB_HTTPHistory:

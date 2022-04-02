@@ -35,21 +35,22 @@ import {ExecBatchYakScriptParams, ExecBatchYakScriptResult, ExecBatchYakScriptTa
 import {AutoSpin} from "../../../components/AutoSpin"
 import debounce from "lodash/debounce"
 import {queryYakScriptList} from "../../yakitStore/network"
+import { ContentUploadInput } from "../../../components/functionTemplate/ContentUploadTextArea"
 
 import "./YakBatchExecutors.css"
 
 const {ipcRenderer} = window.require("electron")
-const CustomBugList = "custom-bug-list"
+export const CustomBugList = "custom-bug-list"
 const {Item} = Menu
 const {TabPane} = Tabs
 const {Text} = Typography
 
-interface BugInfoProps {
+export interface BugInfoProps {
     key: string
     title: string
+    sendTarget?: string
 }
-
-const BugList: BugInfoProps[] = [
+export const BugList: BugInfoProps[] = [
     {key: "struts", title: "Struts"},
     {key: "thinkphp", title: "ThinkPHP"},
     {key: "tomcat,Tomcat", title: "Tomcat"},
@@ -79,6 +80,7 @@ const MenuList: MenuInfoProps[] = [
 export interface YakBatchExecutorsProp {
     keyword: string
     verbose?: string
+    sendTarget?: string
 }
 
 export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
@@ -133,6 +135,24 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                 setMenuHeight(window.innerHeight - 350 >= 200 ? window.innerHeight - 350 : 200)
             }, 100)
         }
+    }, [])
+
+    const addTab = useMemoizedFn((res: any) => {
+        const {type = [], data = ""} = res
+
+        setTabList(tabList.concat(type.map((item, index) => {
+            item.key = `${item.key}-${listCount + index}`
+            item.title = `${item.title}-${listCount + index}`
+            item.sendTarget = data
+            return item
+        })))
+        setListCount(listCount + type.length)
+        setCurrentTabKey(`${type[type.length - 1].key}`)
+    })
+
+    useEffect(() => {
+        ipcRenderer.on("fetch-send-to-bug-test", (e, res: any) => addTab(res))
+        return () => ipcRenderer.removeAllListeners("fetch-send-to-bug-test")
     }, [])
 
     const searchPoc = debounce(
@@ -313,7 +333,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                 {tabList.map((item, index) => {
                     return (
                         <TabPane tab={item.title} key={item.key}>
-                            <BugTestExecutor keyword={item.key} verbose={item.title}></BugTestExecutor>
+                            <BugTestExecutor keyword={item.key} verbose={item.title} sendTarget={item?.sendTarget}></BugTestExecutor>
                         </TabPane>
                     )
                 })}
@@ -446,7 +466,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
         Concurrent: 5,
         Keyword: props.keyword.split("-")[0],
         Limit: 10000,
-        Target: "",
+        Target: props.sendTarget ? JSON.parse(props.sendTarget).join(",") : "",
         DisableNucleiWorkflow: true,
         ExcludedYakScript: [
             "[fingerprinthub-web-fingerprints]: FingerprintHub Technology Fingerprint",
@@ -462,6 +482,8 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
     const [token, setToken] = useState("")
     const [executing, setExecuting] = useState(false)
     const [checked, setChecked] = useState<boolean>(false)
+
+    const [uploadLoading, setUploadLoading] = useState(false)
 
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
@@ -522,7 +544,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
         const token = randomString(40)
         setToken(token)
         setTasks([])
-        setParams({...params, Keyword: props.keyword.split("-")[0], Target: ""})
+        setParams({...params, Keyword: props.keyword.split("-")[0]})
         const tempTasks = new Map<string, ExecBatchYakScriptTask>()
         const updateTasks = () => {
             let items: ExecBatchYakScriptTask[] = []
@@ -686,35 +708,53 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                             setChecked(false)
                         }}
                     >
-                        <Space direction={"vertical"}>
-                            <Space>
-                                <span>输入想要检测的目标：</span>
-                                <Form.Item style={{marginBottom: 0}}>
-                                    <Input
-                                        style={{width: 600, marginRight: 10}}
-                                        value={params.Target}
-                                        onChange={(e) => {
-                                            setParams({...params, Target: e.target.value})
+                        <Space style={{width: "80%"}} direction={"vertical"}>
+                            <Spin spinning={uploadLoading}>
+                                <ContentUploadInput
+                                    type="textarea"
+                                    beforeUpload={(f) => {
+                                        if (f.type !== "text/plain") {
+                                            failed(`${f.name}非txt文件，请上传txt格式文件！`)
+                                            return false
+                                        }
+
+                                            setUploadLoading(true)
+                                            ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
+                                                setParams({...params, Target: res})
+                                                setTimeout(() => setUploadLoading(false), 100)
+                                            })
+                                            return false
                                         }}
-                                        placeholder='可接受输入为：URL / IP / 域名 / 主机:端口'
-                                    />
-                                    {!executing ? (
-                                        <Button style={{width: 120}} type='primary' htmlType='submit'>
-                                            开始检测
-                                        </Button>
-                                    ) : (
-                                        <Popconfirm
-                                            title={"确定要停止该漏洞检测？"}
-                                            onConfirm={(e) => ipcRenderer.invoke("cancel-exec-batch-yak-script", token)}
-                                        >
-                                            <Button style={{width: 120}} danger={true}>
-                                                强制停止
-                                            </Button>
-                                        </Popconfirm>
-                                    )}
-                                </Form.Item>
-                            </Space>
-                            <div style={{width: "100%", textAlign: "left", paddingLeft: 148}}>
+                                        item={{
+                                            style: {textAlign: "left"},
+                                            label: "检测的目标",
+                                        }}
+                                        textarea={{
+                                            isBubbing: true,
+                                            setValue: (Target) => setParams({...params, Target}),
+                                            value: params.Target,
+                                            rows: 1,
+                                            placeholder: "可接受输入为：URL / IP / 域名 / 主机:端口，逗号分隔"
+                                        }}
+                                        suffixNode={
+                                            executing ? (
+                                                <Popconfirm
+                                                    title={"确定要停止该漏洞检测？"}
+                                                    onConfirm={(e) => ipcRenderer.invoke("cancel-exec-batch-yak-script", token)}
+                                                >
+                                                    <Button type='primary' danger>
+                                                        强制停止
+                                                    </Button>
+                                                </Popconfirm>
+                                            ) : (
+                                                <Button type='primary' htmlType='submit'>
+                                                    开始检测
+                                                </Button>
+                                            )
+                                        }
+                                ></ContentUploadInput>
+                            </Spin>
+                            <div style={{width: "100%", textAlign: "left", paddingLeft: 84}}>
                                 <Space>
                                     <Tag>并发/线程: {params.Concurrent}</Tag>
                                     <Tag>总超时: {params.TotalTimeoutSeconds} sec</Tag>

@@ -1,9 +1,11 @@
-import React, {useState} from "react";
-import {Button, Form, Modal, Table, Tag} from "antd";
+import React, {useEffect, useState} from "react";
+import {Button, Col, Row, Table, Tag} from "antd";
 import {YakitPort} from "../../components/yakitLogSchema";
 import {CopyableField, InputItem} from "../../utils/inputUtil";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {failed} from "../../utils/notification";
+import { DropdownMenu } from "../../components/baseTemplate/DropdownMenu";
+import { LineMenunIcon } from "../../assets/icons";
 
 export interface PortTableProp {
     data: YakitPort[]
@@ -13,11 +15,45 @@ export interface PortTableProp {
 const {ipcRenderer} = window.require("electron");
 
 export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
+    const [checkedURL, setCheckedURL] = useState<string[]>([])
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+
+    useEffect(() => {
+        if(props.data.length === 0){
+            setSelectedRowKeys([])
+            setCheckedURL([])
+        }
+    }, [props.data])
+
     return <Table<YakitPort>
         size={"small"} bordered={true}
         rowKey={(row)=>row.host}
         title={e => {
-            return <>开放端口 / Open Ports</>
+            return <Row>
+                <Col span={12}>开放端口 / Open Ports</Col>
+                <Col span={12} style={{textAlign: "right"}}>
+                <DropdownMenu 
+                    menu={{data: [
+                        {key:'bug-test',title:"发送到漏洞检测"},
+                        {key:'brute',title:"发送到爆破"}
+                    ]}}
+                    dropdown={{placement: "bottomRight"}}
+                    onClick={(key) => {
+                        if(checkedURL.length === 0){
+                            failed("请最少选择一个选项再进行操作")
+                            return
+                        }
+                        
+                        ipcRenderer.invoke("send-to-tab", {
+                            type: key,
+                            data:{URL: JSON.stringify(checkedURL)}
+                        })
+                    }}
+                >
+                    <Button type="link" style={{height: 16}} icon={<LineMenunIcon />}></Button>
+                </DropdownMenu>
+                </Col>
+            </Row>
         }}
         dataSource={props.data}
         scroll={{x: "auto"}}
@@ -44,6 +80,18 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
         pagination={{
             size: "small", pageSize: 12, pageSizeOptions: ["12", "15", "30", "50"],
             showSizeChanger: true,
+        }}
+        rowSelection={{
+            onChange: (selectedRowKeys, selectedRows) => {
+                setSelectedRowKeys(selectedRowKeys as string[])
+                setCheckedURL(selectedRows.map(item => `${item.host}:${item.port}`))
+            },
+            selectedRowKeys
+        }}
+        // @ts-ignore*/
+        onChange={(paging: any, _: any) => {
+            setSelectedRowKeys([])
+            setCheckedURL([])
         }}
     >
 
