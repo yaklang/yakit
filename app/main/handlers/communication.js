@@ -22,6 +22,10 @@ module.exports = (win, getClient) => {
   ipcMain.handle("send-fuzzer-setting-data", async (e, params) => {
     win.webContents.send("fetch-fuzzer-setting-data", params);
   });
+  // 发送插件信息到YakRunning页面
+  ipcMain.handle("send-to-yak-running", async (e, params) => {
+    win.webContents.send("fetch-send-to-yak-running", params);
+  });
 
 
   // 本地环境(打包/开发)

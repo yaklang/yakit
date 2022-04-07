@@ -439,6 +439,12 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                     </>
                 })
             }}>导出插件</Button>
+            <Button size={"small"} onClick={() => {
+                ipcRenderer.invoke("send-to-tab", {
+                    type: "plugin-store",
+                    data: {name: script.ScriptName, code: script.Content}
+                })
+            }}>本地调试</Button>
             <Popconfirm
                 title={"确定要删除该插件?如果添加左侧菜单栏也会同步删除，且不可恢复"}
                 onConfirm={() => {

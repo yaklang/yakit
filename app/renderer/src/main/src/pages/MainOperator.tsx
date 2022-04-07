@@ -592,6 +592,32 @@ const Main: React.FC<MainProp> = (props) => {
         }
     })
 
+    const addYakRunning = useMemoizedFn((res: any) => {
+        const {name = "", code = ""} = res || {}
+        const filter = pageCache.filter(item => item.route === Route.YakScript)
+
+        if(!name || !code) return false
+
+        if((filter || []).length === 0){
+            const newTabId = `${Route.YakScript}-[${randomString(49)}]`
+            const verboseNameRaw = routeKeyToLabel.get(Route.YakScript) || `${Route.YakScript}`
+            appendCache(
+                newTabId,
+                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                ContentByRoute(Route.YakScript),
+                Route.YakScript as Route
+            )
+            setCurrentTabKey(newTabId)
+            setTimeout(() => {
+                ipcRenderer.invoke("send-to-yak-running", {name, code})
+
+            }, 300);
+        }else{
+            ipcRenderer.invoke("send-to-yak-running", {name, code})
+            setCurrentTabKey((filter || [])[0]?.id || "")
+        }
+    })
+
     useEffect(() => {
         ipcRenderer.on("fetch-new-main-menu", (e) => {
             updateMenuItems()
@@ -603,6 +629,7 @@ const Main: React.FC<MainProp> = (props) => {
             if(type === "scan-port") addScanPort(data)
             if(type === "brute") addBrute(data)
             if(type === "bug-test") addBugTest(1, data)
+            if(type === "plugin-store") addYakRunning(data)
         })
 
         return () => {
