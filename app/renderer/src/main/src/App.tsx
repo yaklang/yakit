@@ -6,6 +6,34 @@ import {yakEcho} from "./utils/yakEcho";
 import {failed, info, success} from "./utils/notification";
 import {AutoSpin} from "./components/AutoSpin";
 
+const InterceptKeyword = [
+    "KeyA",
+    "KeyB",
+    "KeyC",
+    "KeyD",
+    "KeyE",
+    "KeyF",
+    "KeyG",
+    "KeyH",
+    "KeyI",
+    "KeyJ",
+    "KeyK",
+    "KeyL",
+    "KeyM",
+    "KeyN",
+    "KeyO",
+    "KeyP",
+    "KeyQ",
+    "KeyR",
+    "KeyS",
+    "KeyT",
+    "KeyU",
+    "KeyV",
+    "KeyW",
+    "KeyX",
+    "KeyY",
+    "KeyZ",
+]
 
 // import Main from "./pages/MainOperator";
 const Main = lazy(() => import("./pages/MainOperator"));
@@ -136,27 +164,21 @@ function App() {
     }, [])
 
     useEffect(() => {
-        let originEvent = document.onkeydown;
-        document.onkeydown = (ev) => {
+        let originEvent = window.onkeydown;
+        window.onkeydown = (ev) => {
             let code = ev.code
 
             // 屏蔽当前事件
-            if ((ev.metaKey || ev.ctrlKey) && code === 'KeyR') {
+            if ((ev.metaKey || ev.ctrlKey) && InterceptKeyword.includes(code)) {
                 return false
             }
-
-            // 屏蔽关闭事件
-            if ((ev.metaKey || ev.ctrlKey) && code === 'KeyW') {
-                return false
-            }
-
 
             // @ts-ignore
             originEvent && originEvent(ev)
             return
         }
         return () => {
-            document.onkeydown = originEvent
+            window.onkeydown = originEvent
         }
     }, [])
 

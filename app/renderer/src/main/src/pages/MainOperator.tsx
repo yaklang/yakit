@@ -253,7 +253,7 @@ const Main: React.FC<MainProp> = (props) => {
     const updateRiskStats = useMemoizedFn(() => {
         ipcRenderer.invoke("QueryRiskTableStats", {}).then(data => {
             setRiskStats(data)
-        })
+        }).catch(() => {})
     })
 
     useEffect(() => {
