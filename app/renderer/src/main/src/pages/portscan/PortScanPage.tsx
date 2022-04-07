@@ -3,7 +3,7 @@ import {Button, Checkbox, Col, Divider, Form, Input, Row, Space, Spin, Tabs, Tag
 import {InputInteger, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
 import {ExecResult, YakScript} from "../invoker/schema"
-import {failed, info} from "../../utils/notification"
+import {failed, info, success} from "../../utils/notification"
 import {writeExecResultXTerm, xtermClear} from "../../utils/xtermUtils"
 import {OpenPortTableViewer} from "./PortTable"
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema"
@@ -22,6 +22,7 @@ import { ContentUploadInput } from "../../components/functionTemplate/ContentUpl
 import "./PortScanPage.css"
 
 const {ipcRenderer} = window.require("electron")
+const ScanPortTemplate = "scan-port-template"
 
 export interface PortScanPageProp {
     sendTarget?: string
@@ -83,6 +84,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [port, setPort] = useState<PortAsset>()
 
     const [uploadLoading, setUploadLoading] = useState(false)
+    const [templatePort, setTemplatePort] = useState<string>()
 
     const openPort = useRef<YakitPort[]>([])
     const closedPort = useRef<YakitPort[]>([])
@@ -136,6 +138,24 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 
     useEffect(() => {
         search()
+    }, [])
+
+    useEffect(() => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("get-value", ScanPortTemplate)
+            .then((value: any) => {
+                if(value){
+                    setTemplatePort(value || "")
+                    setTimeout(() => {
+                        setParams({...params, Ports: value || ""})
+                    }, 300)
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => setLoading(false), 100)
+            })
     }, [])
 
     useEffect(() => {
@@ -284,6 +304,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             onChange={(value) => {
                                                 let res: string = (value || [])
                                                     .map((i) => {
+                                                        if(i === "template") return templatePort
                                                         // @ts-ignore
                                                         return PresetPorts[i] || ""
                                                     })
@@ -296,6 +317,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             <Checkbox value={"top1000+"}>常见一两千</Checkbox>
                                             <Checkbox value={"topdb"}>常见数据库与 MQ</Checkbox>
                                             <Checkbox value={"topudp"}>常见 UDP 端口</Checkbox>
+                                            {templatePort && <Checkbox value={"template"}>默认模板</Checkbox>}
                                         </Checkbox.Group>
                                     </Form.Item>
 
@@ -306,6 +328,16 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             value={params.Ports}
                                             onChange={(e) => setParams({...params, Ports: e.target.value})}
                                         ></Input.TextArea>
+                                        <Button style={{marginBottom: 4}} className="link-button-bfc" type="link" onClick={() => {
+                                            if(!params.Ports){
+                                                failed("请输入端口后再保存")
+                                                return
+                                            }
+                                            ipcRenderer.invoke("set-value", ScanPortTemplate, params.Ports).then(() => {
+                                                setTemplatePort(params.Ports)
+                                                success("保存成功")
+                                            })
+                                        }}>保存为模板</Button>
                                     </Form.Item>
 
                                     <Form.Item label=' ' colon={false} className='form-item-margin'>

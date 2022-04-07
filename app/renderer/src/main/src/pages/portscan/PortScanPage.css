@@ -35,3 +35,8 @@
 .scan-port-tabs .scan-port-body .right-container .form-submit-style {
     margin: 0 0 4px 7px;
 }
+
+.link-button-bfc{
+    padding: 4px 0;
+    margin-left: 15px;
+}
