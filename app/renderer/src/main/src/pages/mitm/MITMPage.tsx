@@ -883,6 +883,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                                 monaco.KeyCode.KEY_E
                                                                             ],
                                                                             run: function (StandaloneEditor: any) {
+                                                                                if(!StandaloneEditor.getModel().getValue()) return
                                                                                 execPlugin(StandaloneEditor.getModel().getValue())
                                                                             },
                                                                             contextMenuGroupId: "Actions"
