@@ -141,6 +141,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // mouse
     const mouseState = useMouse();
 
+    // 操作系统类型
+    const [system, setSystem] = useState<string>()
+
+    useEffect(() => {
+        ipcRenderer.invoke('fetch-system-name').then((res) => setSystem(res))
+    }, [])
+
     // 用于接受后端传回的信息
     useEffect(() => {
         setInitialed(false)
@@ -806,7 +813,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "trigger-auto-hijacked",
                                                                             label: "切换自动/手动劫持模式",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.WinCtrl |
+                                                                                (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
                                                                             ],
                                                                             run: () => {
@@ -848,7 +855,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "trigger-auto-hijacked",
                                                                             label: "切换自动/手动劫持模式",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.WinCtrl |
+                                                                                (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
                                                                             ],
                                                                             run: () => {
@@ -860,7 +867,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "send-to-fuzzer",
                                                                             label: "发送到 Web Fuzzer",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.WinCtrl |
+                                                                                (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_R
                                                                             ],
                                                                             run: function (StandaloneEditor: any) {
@@ -872,7 +879,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "send-to-plugin",
                                                                             label: "发送到 数据包扫描",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.WinCtrl |
+                                                                                (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_E
                                                                             ],
                                                                             run: function (StandaloneEditor: any) {
@@ -884,7 +891,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "forward-response",
                                                                             label: "放行该 HTTP Request",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.WinCtrl |
+                                                                                (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_F
                                                                             ],
                                                                             run: function () {
