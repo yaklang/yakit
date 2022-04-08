@@ -43,7 +43,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
 
     const [loading, setLoading] = useState(false)
     const [localPluginDir, setLocalPluginDir] = useState("");
-    const [pluginType, setPluginType] = useState<"yak" | "mitm" | "nuclei" | "codec" | "packet-hack" | "port-scan" >("yak");
+    const [pluginType, setPluginType] = useState<"yak" | "mitm" | "nuclei" | "codec" | "packet-hack" | "port-scan">("yak");
 
     useEffect(() => {
         getValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH).then(e => {
@@ -147,11 +147,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 icon={<DownloadOutlined/>}
                                 onClick={() => {
                                     showModal({
-                                        width: 700,
+                                        width: 800,
                                         title: "导入插件方式",
                                         content: (
                                             <>
-                                                <div style={{width: 600}}>
+                                                <div style={{width: 800}}>
                                                     <LoadYakitPluginForm onFinished={refresh}/>
                                                 </div>
                                             </>
@@ -382,11 +382,11 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     if (i.Author === "" || i.Author === "anonymous") {
                         isAnonymous = true
                     }
-    
+
                     if (props.onYakScriptRender) {
                         return props.onYakScriptRender(i, maxWidth)
                     }
-    
+
                     return (
                         <List.Item style={{marginLeft: 0}} key={i.Id}>
                             <Card
@@ -429,7 +429,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                 <Row>
                                     <Col span={12}>
                                         <Space style={{width: "100%"}}>
-                                            <Tag color={isAnonymous ? "gray" : "geekblue"}>{i.Author || "anonymous"}</Tag>
+                                            <Tag
+                                                color={isAnonymous ? "gray" : "geekblue"}>{i.Author || "anonymous"}</Tag>
                                         </Space>
                                     </Col>
                                     <Col span={12} style={{textAlign: "right"}}>
@@ -441,7 +442,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                 </Row>
                             </Card>
                         </List.Item>
-                )}}
+                    )
+                }}
             />
         </div>
     )
@@ -513,6 +515,21 @@ if err != nil {
 yakit.Output("更新本地仓库成功")
 `
 
+const loadNucleiPoCFromLocal = `yakit.AutoInitYakit();
+
+loglevel("info");
+
+localPath = cli.String("local-path");
+
+yakit.Info("Load Local Nuclei Templates Repository: %v", localPath)
+err = nuclei.UpdateDatabase(localPath)
+if err != nil {
+    yakit.Error("Update Failed: %v", err)
+    return
+}
+yakit.Info("Update Nuclei PoC Finished")
+`
+
 const loadYakitPluginCode = `yakit.AutoInitYakit()
 log.setLevel("info")
 
@@ -549,17 +566,27 @@ yakit.Output("导入插件成功")
 
 const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY";
 const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH";
+const YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH";
 
 export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => {
     const [gitUrl, setGitUrl] = useState("")
     const [proxy, setProxy] = useState("")
-    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local">("official")
+    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei">("official")
     const [localPath, setLocalPath] = useState("");
+    const [localNucleiPath, setLocalNucleiPath] = useState("");
 
     useEffect(() => {
         getValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH).then(e => {
             if (e) {
                 setLocalPath(e)
+            }
+        })
+    }, [])
+
+    useEffect(() => {
+        getValue(YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH).then(e => {
+            if (e) {
+                setLocalNucleiPath(e)
             }
         })
     }, [])
@@ -597,6 +624,10 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                     saveValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH, localPath)
                 }
 
+                if (localNucleiPath !== "") {
+                    saveValue(YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH, localNucleiPath)
+                }
+
                 if (["official", "giturl"].includes(loadMode)) {
                     const params: YakExecutorParam[] = [{Key: "giturl", Value: gitUrl}]
                     if (proxy.trim() !== "") {
@@ -606,10 +637,21 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                         Script: loadYakitPluginCode,
                         Params: params
                     })
-                } else {
+                }
+
+                if (loadMode === "local") {
                     startExecYakCode("导入 Yak 插件（本地）", {
                         Script: loadLocalYakitPluginCode,
                         Params: [{Key: "local-path", Value: localPath}]
+                    })
+                }
+
+                if (loadMode === "local-nuclei") {
+                    startExecYakCode("从 Nuclei Template Git 本地仓库更新", {
+                        Script: loadNucleiPoCFromLocal,
+                        Params: [
+                            {Key: "local-path", Value: localNucleiPath}
+                        ],
                     })
                 }
             }}
@@ -621,6 +663,7 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                     {text: "使用官方源", value: "official"},
                     {text: "第三方仓库源", value: "giturl"},
                     {text: "本地仓库", value: "local"},
+                    {text: "本地 Nuclei PoC", value: "local-nuclei"},
                 ]}
                 value={loadMode}
                 setValue={setLoadMode}
@@ -638,6 +681,9 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
             </>}
             {loadMode === "local" && <>
                 <InputItem label={"本地仓库地址"} value={localPath} setValue={setLocalPath}/>
+            </>}
+            {loadMode === "local-nuclei" && <>
+                <InputItem label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath}/>
             </>}
             <Form.Item colon={false} label={" "}>
                 <Button type='primary' htmlType='submit'>
