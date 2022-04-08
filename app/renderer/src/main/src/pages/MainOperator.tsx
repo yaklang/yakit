@@ -45,9 +45,6 @@ import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "./invoker/schema"
 import {PerformanceDisplay} from "../components/PerformanceDisplay"
-
-
-import "./main.css"
 import {useHotkeys} from "react-hotkeys-hook";
 import {useMemoizedFn} from "ahooks"
 import ReactDOM from "react-dom"
@@ -56,6 +53,11 @@ import {AutoSpin} from "../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
 import {Fields} from "./risks/RiskTable";
 import {RiskStatsTag} from "../utils/RiskStatsTag";
+import { ItemSelects } from "../components/baseTemplate/FormItemUtil"
+import { BugInfoProps, BugList, CustomBugList } from "./invoker/batch/YakBatchExecutors"
+import { coordinate } from "./globalVariable"
+
+import "./main.css"
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -251,7 +253,7 @@ const Main: React.FC<MainProp> = (props) => {
     const updateRiskStats = useMemoizedFn(() => {
         ipcRenderer.invoke("QueryRiskTableStats", {}).then(data => {
             setRiskStats(data)
-        })
+        }).catch(() => {})
     })
 
     useEffect(() => {
@@ -378,14 +380,6 @@ const Main: React.FC<MainProp> = (props) => {
                 setRouteMenuData(tabList)
             })
     }
-
-    useEffect(() => {
-        const key = currentTabKey.split("-")[0]
-        const hasBug = pageCache.filter((item) => item.id.split("-")[0] === "poc").length === 1
-        if (key !== "poc" && hasBug) {
-            ipcRenderer.invoke("main-bug-test", false)
-        }
-    }, [currentTabKey])
 
     useEffect(() => {
         if (engineStatus === "error") {
@@ -522,18 +516,144 @@ const Main: React.FC<MainProp> = (props) => {
         }
     })
 
+    const addScanPort = useMemoizedFn((res: any) => {
+        const {URL = ""} = res || {}
+
+        if (URL) {
+            const newTabId = `${Route.Mod_ScanPort}-[${randomString(49)}]`
+            const verboseNameRaw = routeKeyToLabel.get(Route.Mod_ScanPort) || `${Route.Mod_ScanPort}`
+            appendCache(
+                newTabId,
+                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                ContentByRoute(Route.Mod_ScanPort, undefined, {scanportParams: URL}),
+                Route.Mod_ScanPort as Route,
+            )
+            setCurrentTabKey(newTabId)
+        }
+    })
+
+    const addBrute = useMemoizedFn((res: any) => {
+        const {URL = ""} = res || {}
+
+        if (URL) {
+            const newTabId = `${Route.Mod_Brute}-[${randomString(49)}]`
+            const verboseNameRaw = routeKeyToLabel.get(Route.Mod_Brute) || `${Route.Mod_Brute}`
+            appendCache(
+                newTabId,
+                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                ContentByRoute(Route.Mod_Brute, undefined, {bruteParams: URL}),
+                Route.Mod_Brute as Route
+            )
+            setCurrentTabKey(newTabId)
+        }
+    })
+
+    // 发送到专项漏洞检测modal-show变量
+    const [bugTestShow, setBugTestShow] = useState<boolean>(false)
+    const [bugList, setBugList] = useState<BugInfoProps[]>([])
+    const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
+    const [bugUrl, setBugUrl] = useState<string>("")
+    const addBugTest = useMemoizedFn((type: number, res?: any) => {
+        const {URL = ""} = res || {}
+
+        if (type === 1 && URL) {
+            setBugUrl(URL)
+            ipcRenderer.invoke("get-value", CustomBugList)
+            .then((res: any) => {
+                setBugList(res ? JSON.parse(res) : [])
+                setBugTestShow(true)
+            })
+            .catch(() => {}) 
+        }
+        if(type === 2){
+            const filter = pageCache.filter(item => item.route === Route.PoC)
+            if(filter.length === 0){
+                const newTabId = `${Route.PoC}-[${randomString(49)}]`
+                const verboseNameRaw = routeKeyToLabel.get(Route.PoC) || `${Route.PoC}`
+                appendCache(
+                    newTabId,
+                    `${verboseNameRaw}[${pageCache.length + 1}]`,
+                    ContentByRoute(Route.PoC),
+                    Route.PoC as Route
+                )
+                setCurrentTabKey(newTabId)
+                setTimeout(() => {
+                    ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
+                    setBugTestValue([])
+                    setBugUrl("")
+                }, 300);
+            }else{
+                ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
+                setCurrentTabKey((filter || [])[0]?.id || "")
+                setBugTestValue([])
+                setBugUrl("")
+            }
+            
+        }
+    })
+
+    const addYakRunning = useMemoizedFn((res: any) => {
+        const {name = "", code = ""} = res || {}
+        const filter = pageCache.filter(item => item.route === Route.YakScript)
+
+        if(!name || !code) return false
+
+        if((filter || []).length === 0){
+            const newTabId = `${Route.YakScript}-[${randomString(49)}]`
+            const verboseNameRaw = routeKeyToLabel.get(Route.YakScript) || `${Route.YakScript}`
+            appendCache(
+                newTabId,
+                `${verboseNameRaw}[${pageCache.length + 1}]`,
+                ContentByRoute(Route.YakScript),
+                Route.YakScript as Route
+            )
+            setCurrentTabKey(newTabId)
+            setTimeout(() => {
+                ipcRenderer.invoke("send-to-yak-running", {name, code})
+
+            }, 300);
+        }else{
+            ipcRenderer.invoke("send-to-yak-running", {name, code})
+            setCurrentTabKey((filter || [])[0]?.id || "")
+        }
+    })
+
     useEffect(() => {
         ipcRenderer.on("fetch-new-main-menu", (e) => {
             updateMenuItems()
         })
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
             const {type, data = {}} = res
+
             if(type === "fuzzer") addFuzzer(data)
+            if(type === "scan-port") addScanPort(data)
+            if(type === "brute") addBrute(data)
+            if(type === "bug-test") addBugTest(1, data)
+            if(type === "plugin-store") addYakRunning(data)
         })
 
         return () => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
             ipcRenderer.removeAllListeners("fetch-send-to-tab")
+        }
+    }, [])
+
+    const coordinateTimer = useRef<any>(null)
+    useEffect(() => {
+        document.onmousemove=(e)=>{
+            const {screenX,screenY,clientX,clientY,pageX,pageY} = e
+            if(coordinateTimer.current){
+                clearTimeout(coordinateTimer.current)
+                coordinateTimer.current = null
+            }
+            coordinateTimer.current = setTimeout(() => {
+                coordinate.screenX = screenX
+                coordinate.screenY = screenY
+                coordinate.clientX = clientX
+                coordinate.clientY = clientY
+                coordinate.pageX = pageX
+                coordinate.pageY = pageY
+            }, 50);
         }
     }, [])
 
@@ -970,6 +1090,37 @@ const Main: React.FC<MainProp> = (props) => {
                     ></Checkbox>
                     <span style={{marginLeft: 8}}>不再出现该提示信息</span>
                 </div>
+            </Modal>
+            <Modal
+                visible={bugTestShow}
+                onCancel={() => setBugTestShow(false)}
+                footer={[
+                    <Button key='link' onClick={() => setBugTestShow(false)}>
+                        取消
+                    </Button>,
+                    <Button key='back' type='primary' onClick={() => {
+                        if((bugTestValue || []).length === 0) return failed("请选择类型后再次提交")
+                        addBugTest(2)
+                        setBugTestShow(false)
+                    }}>
+                        确定
+                    </Button>
+                ]}
+            >
+                <ItemSelects
+                    item={{
+                        label: "专项漏洞类型",
+                        style: {marginTop: 20}
+                    }}
+                    select={{
+                        allowClear: true,
+                        data: BugList.concat(bugList) || [],
+                        optText: "title",
+                        optValue: "key",
+                        value: (bugTestValue || [])[0]?.key,
+                        onChange: (value, option: any) => setBugTestValue(value ? [{key: option?.key, title: option?.title}] : [])
+                    }}
+                ></ItemSelects>
             </Modal>
         </Layout>
     )

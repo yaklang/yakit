@@ -12,6 +12,8 @@ import {YakEditor} from "../../utils/editors";
 import {openExternalWebsite} from "../../utils/openWebsite";
 import {startExecYakCode} from "../../utils/basic";
 import {OutputAsset} from "./outputAssetYakCode";
+import { DropdownMenu } from "../../components/baseTemplate/DropdownMenu";
+import { LineMenunIcon } from "../../assets/icons";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -40,6 +42,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     });
     const [loading, setLoading] = useState(false);
     const [outputByNetwork, setOutputByNetwork] = useState("");
+    const [checkedURL, setCheckedURL] = useState<string[]>([])
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
     const update = (current?: number, pageSize?: number, order?: string, orderBy?: string) => {
         setLoading(true)
@@ -71,6 +75,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         icon={<ReloadOutlined/>} size={"small"} type={"link"}
                         onClick={() => {
                             update(1)
+                            setSelectedRowKeys([])
+                            setCheckedURL([])
                         }}
                     />
                     </Space>
@@ -106,10 +112,35 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         </Popover>
                         <Popover
                             title={"选择性删除端口"}
-                            content={<PortDeleteForm onFinished={() => update(1)}/>}
+                            content={<PortDeleteForm onFinished={() => {
+                                update(1)
+                                setSelectedRowKeys([])
+                                setCheckedURL([])
+                            }}/>}
                         >
                             <Button size={"small"} danger={true}>删除端口</Button>
                         </Popover>
+                        <DropdownMenu 
+                            menu={{data: [
+                                {key:'bug-test',title:"发送到漏洞检测"},
+                                {key:'scan-port',title:"发送到端口扫描"},
+                                {key:'brute',title:"发送到爆破"}
+                            ]}}
+                            dropdown={{placement: "bottomRight"}}
+                            onClick={(key) => {
+                                if(checkedURL.length === 0){
+                                    failed("请最少选择一个选项再进行操作")
+                                    return
+                                }
+
+                                ipcRenderer.invoke("send-to-tab", {
+                                    type: key,
+                                    data:{URL: JSON.stringify(checkedURL)}
+                                })
+                            }}
+                        >
+                            <Button type="link" icon={<LineMenunIcon />}></Button>
+                        </DropdownMenu>
                     </Space>
                 </Col>
             </Row>
@@ -250,10 +281,18 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 update(paging.current, paging.pageSize, sorter.order, `${sorter.columnKey}`)
             } else {
                 update(paging.current, paging.pageSize)
+                setSelectedRowKeys([])
+                setCheckedURL([])
             }
         }}
+        rowSelection={{
+            onChange: (selectedRowKeys, selectedRows) => {
+                setSelectedRowKeys(selectedRowKeys as string[])
+                setCheckedURL(selectedRows.map(item => `${item.Host}:${item.Port}`))
+            },
+            selectedRowKeys
+        }}
     >
-
     </Table>
 };
 

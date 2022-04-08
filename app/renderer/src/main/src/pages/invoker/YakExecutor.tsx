@@ -115,6 +115,25 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     // trigger for updating
     const [triggerForUpdatingHistory, setTriggerForUpdatingHistory] = useState<any>(0)
 
+    const addFileTab = useMemoizedFn((res: any) => {
+        const {name, code} = res
+
+        const tab: tabCodeProps = {
+            tab: `${name}.yak`,
+            code: code,
+            suffix: "yak",
+            isFile: false
+        }
+        setActiveTab(`${tabList.length}`)
+        setTabList(tabList.concat([tab]))
+        setUnTitleCount(unTitleCount + 1)
+    })
+
+    useEffect(() => {
+        ipcRenderer.on("fetch-send-to-yak-running", (e, res: any) => addFileTab(res))
+        return () => ipcRenderer.removeAllListeners("fetch-send-to-yak-running")
+    }, [])
+
     // 自动保存
     const autoSave = useMemoizedFn(() => {
         for (let tabInfo of tabList) {

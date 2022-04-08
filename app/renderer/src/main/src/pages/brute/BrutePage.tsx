@@ -1,16 +1,16 @@
 import React, {useEffect, useState} from "react"
-import {Button, Card, Checkbox, Col, Form, Input, Row, Space, Tag, Upload} from "antd"
-import {ReloadOutlined, UploadOutlined} from "@ant-design/icons"
+import {Button, Card, Checkbox, Col, Form, Row, Space, Spin, Tag} from "antd"
+import {ReloadOutlined} from "@ant-design/icons"
 import {InputInteger, InputItem, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
 import {PluginResultUI} from "../yakitStore/viewers/base"
 import {warn, failed} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
-
 import {AutoCard} from "../../components/AutoCard"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import {SelectItem} from "../../utils/SelectItem"
 import { xtermClear } from "../../utils/xtermUtils"
+import { ContentUploadInput } from "../../components/functionTemplate/ContentUploadTextArea"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -43,18 +43,18 @@ export interface StartBruteParams {
 }
 
 export interface BrutePageProp {
+    sendTarget?: string
 }
 
 export const BrutePage: React.FC<BrutePageProp> = (props) => {
     const [typeLoading, setTypeLoading] = useState(false)
     const [availableTypes, setAvailableTypes] = useState<string[]>([])
     const [selectedType, setSelectedType] = useState<string[]>([])
-    const [targetTextRow, setTargetTextRow] = useState(false)
-    const [allowTargetFileUpload, setAllowTargetFileUpload] = useState(false)
     const [advanced, setAdvanced] = useState(false)
     const [taskToken, setTaskToken] = useState(randomString(40))
-
+    
     const [loading, setLoading] = useState(false)
+    const [uploadLoading, setUploadLoading] = useState(false)
 
     const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream("brute", "StartBrute", taskToken, () => {
         setTimeout(() => setLoading(false), 300)
@@ -74,7 +74,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
         Prefix: "",
         TargetFile: "",
         TargetTaskConcurrent: 1,
-        Targets: "",
+        Targets: props.sendTarget ? JSON.parse(props.sendTarget || "[]").join(",") : "",
         Type: "",
         UsernameFile: "",
         Usernames: [],
@@ -183,85 +183,50 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                             style={{width: "100%", textAlign: "center", alignItems: "center"}}
                         >
                             <Space direction={"vertical"} style={{width: "100%"}} size={4}>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "row",
-                                        alignItems: "center"
-                                    }}
-                                >
-                                    <span style={{marginRight: 8}}>输入目标: </span>
-                                    <Form.Item required={true} style={{marginBottom: 0, flex: "1 1 0px"}}>
-                                        {targetTextRow ? (
-                                            <Input.TextArea/>
-                                        ) : (
-                                            <Row
-                                                style={{
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    flexDirection: "row"
-                                                }}
-                                            >
-                                                <Input
-                                                    style={{marginRight: 8, height: 42, flex: 1}}
-                                                    value={params.Targets}
-                                                    allowClear={true}
-                                                    placeholder={
-                                                        "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割"
-                                                    }
-                                                    suffix={
-                                                        <UploadOutlined
-                                                            style={{
-                                                                cursor: "pointer",
-                                                                color: "#1890ff"
-                                                            }}
-                                                            onClick={(e) => {
-                                                                showModal({
-                                                                    title: "批量添加爆破目标",
-                                                                    width: "50%",
-                                                                    content: (
-                                                                        <>
-                                                                            <UploadTarget
-                                                                                defaultParams={params}
-                                                                                setParams={setParams}
-                                                                            />
-                                                                        </>
-                                                                    )
-                                                                })
-                                                            }}
-                                                        />
-                                                    }
-                                                    onChange={(e) => {
-                                                        setParams({
-                                                            ...params,
-                                                            Targets: e.target.value
-                                                        })
-                                                    }}
-                                                />
-                                                {loading ? (
-                                                    <Button
-                                                        style={{height: 42, width: 180}}
-                                                        type={"primary"}
-                                                        onClick={() => {
-                                                            ipcRenderer.invoke("cancel-StartBrute", taskToken)
-                                                        }}
-                                                        danger={true}
-                                                    >
-                                                        立即停止任务
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        style={{height: 42, width: 180}}
-                                                        type={"primary"}
-                                                        htmlType={"submit"}
-                                                    >
-                                                        开始检测
-                                                    </Button>
-                                                )}
-                                            </Row>
-                                        )}
-                                    </Form.Item>
-                                </div>
+                                <Spin spinning={uploadLoading}>
+                                    <ContentUploadInput
+                                        type="textarea"
+                                        beforeUpload={(f) => {
+                                            if (f.type !== "text/plain") {
+                                                failed(`${f.name}非txt文件，请上传txt格式文件！`)
+                                                return false
+                                            }
+
+                                            setUploadLoading(true)
+                                            ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
+                                                setParams({...params, Targets: res})
+                                                setTimeout(() => setUploadLoading(false), 100)
+                                            })
+                                            return false
+                                        }}
+                                        item={{
+                                            style: {textAlign: "left"},
+                                            label: "输入目标:",
+                                        }}
+                                        textarea={{
+                                            isBubbing: true,
+                                            setValue: (Targets) => setParams({...params, Targets}),
+                                            value: params.Targets,
+                                            rows: 1,
+                                            placeholder: "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割"
+                                        }}
+                                        suffixNode={
+                                            loading ? (
+                                                <Button
+                                                    type='primary'
+                                                    danger
+                                                    onClick={(e) => ipcRenderer.invoke("cancel-StartBrute", taskToken)}
+                                                >
+                                                    立即停止任务
+                                                </Button>
+                                            ) : (
+                                                <Button type='primary' htmlType='submit'>
+                                                    开始检测
+                                                </Button>
+                                            )
+                                        }
+                                    ></ContentUploadInput>
+                                </Spin>
                                 <div style={{textAlign: "left", width: "100%", marginLeft: 68}}>
                                     <Space>
                                         <Tag>目标并发:{params.Concurrent}</Tag>
@@ -554,64 +519,5 @@ const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                 min={params.DelayMin}
             />
         </Form>
-    )
-}
-
-interface UploadTargetProps {
-    defaultParams: StartBruteParams
-    setParams: (p: StartBruteParams) => any
-}
-
-const UploadTarget: React.FC<UploadTargetProps> = (props) => {
-    const [targets, setTargets] = useState<string>(props.defaultParams.Targets.split(",").join("\n"))
-
-    useEffect(() => {
-        if (!targets) {
-            return
-        }
-
-        const str = targets.split("\n").join(",")
-        props.setParams({
-            ...props.defaultParams,
-            Targets: str.endsWith(",") ? str.substring(0, str.length - 1) : str
-        })
-    }, [targets])
-
-    return (
-        <Upload.Dragger
-            className='targets-upload-dragger'
-            accept={"text/plain"}
-            multiple={false}
-            maxCount={1}
-            showUploadList={false}
-            beforeUpload={(f) => {
-                if (f.type !== "text/plain") {
-                    failed(`${f.name}非txt文件，请上传txt格式文件！`)
-                    return false
-                }
-
-                ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
-                    setTargets(res)
-                })
-                return false
-            }}
-        >
-            <InputItem
-                label={"扫描目标"}
-                setValue={(value) => setTargets(value)}
-                value={targets}
-                textarea={true}
-                textareaRow={9}
-                isBubbing={true}
-                help={
-                    <div>
-                        域名(:端口)/IP(:端口)/IP段均可，请按行分割
-                        <br/>
-                        可将TXT文件拖入框内或
-                        <span style={{color: "rgb(25,143,255)"}}>点击此处</span>上传
-                    </div>
-                }
-            />
-        </Upload.Dragger>
     )
 }

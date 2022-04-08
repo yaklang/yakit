@@ -9,6 +9,8 @@ import {showModal} from "../../utils/showModal";
 import {InputItem} from "../../utils/inputUtil";
 import {startExecYakCode} from "../../utils/basic";
 import {OutputAsset} from "./outputAssetYakCode";
+import { DropdownMenu } from "../../components/baseTemplate/DropdownMenu";
+import { LineMenunIcon } from "../../assets/icons";
 
 export interface Domain {
     ID?: number
@@ -42,6 +44,8 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
     const {Data, Total, Pagination} = response;
     const [outputDomainKeyword, setOutputDomainKeyword] = useState("*");
 
+    const [checkedURL, setCheckedURL] = useState<string[]>([])
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
     const update = useMemoizedFn((page?: number, limit?: number,) => {
         const newParams = {
@@ -94,7 +98,11 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 <Space>
                     <div>域名资产</div>
                     <Button
-                        type={"link"} onClick={() => update(1)}
+                        type={"link"} onClick={() => {
+                            update(1)
+                            setSelectedRowKeys([])
+                            setCheckedURL([])
+                        }}
                         size={"small"} icon={<ReloadOutlined/>}
                     />
                 </Space>
@@ -126,19 +134,51 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                             size={"small"}
                         >导出域名</Button>
                     </Popover>
-                    <Popconfirm title="确定删除所有域名资产吗? 不可恢复" onConfirm={e => delDomain()}>
+                    <Popconfirm title="确定删除所有域名资产吗? 不可恢复" onConfirm={e => {
+                        delDomain()
+                        setSelectedRowKeys([])
+                        setCheckedURL([])
+                    }}>
                         <Button
                             type="link"
                             danger
                             size="small"
                         >删除全部</Button>
                     </Popconfirm>
+                    <DropdownMenu 
+                            menu={{data: [
+                                {key:'bug-test',title:"发送到漏洞检测"},
+                                {key:'scan-port',title:"发送到端口扫描"},
+                                {key:'brute',title:"发送到爆破"}
+                            ]}}
+                            dropdown={{placement: "bottomRight"}}
+                            onClick={(key) => {
+                                if(checkedURL.length === 0){
+                                    failed("请最少选择一个选项再进行操作")
+                                    return
+                                }
+
+                                ipcRenderer.invoke("send-to-tab", {
+                                    type: key,
+                                    data:{URL: JSON.stringify(checkedURL)}
+                                })
+                            }}
+                        >
+                            <Button type="link" icon={<LineMenunIcon />}></Button>
+                        </DropdownMenu>
                 </Space>
             </div>
         }}
         size={"small"} bordered={true}
         dataSource={Data}
         rowKey={e => `${e.ID}`}
+        rowSelection={{
+            onChange: (selectedRowKeys, selectedRows) => {
+                setSelectedRowKeys(selectedRowKeys as string[])
+                setCheckedURL(selectedRows.map(item => item.DomainName))
+            },
+            selectedRowKeys
+        }}
         columns={[
             {
                 title: "域名",
@@ -218,7 +258,11 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                             size="small"
                             type={"link"}
                             danger
-                            onClick={() => delDomain(i.DomainName)}
+                            onClick={() => {
+                                delDomain(i.DomainName)
+                                setSelectedRowKeys([])
+                                setCheckedURL([])
+                            }}
                         >
                             删除
                         </Button>
