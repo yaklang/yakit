@@ -59,7 +59,7 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
                     }
                 }}
                 customKeyEventHandler={(e) => {
-                    if (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) {
+                    if (e.code === "KeyV" && (e.ctrlKey || e.metaKey)) {
                         setLoading(true)
 
                         if (timer.current) {
@@ -74,8 +74,9 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
                             })
                         }, 200)
                     }
-                    if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
+                    if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
                         const str = xtermRef.current.terminal.getSelection()
+                        if(!str) return true
                         setLoading(true)
 
                         if (timer.current) {
