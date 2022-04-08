@@ -811,7 +811,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                     ? [
                                                                         {
                                                                             id: "trigger-auto-hijacked",
-                                                                            label: "切换自动/手动劫持模式",
+                                                                            label: "切换为自动劫持模式",
                                                                             keybindings: [
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
