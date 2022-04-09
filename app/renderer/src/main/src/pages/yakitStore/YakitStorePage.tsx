@@ -531,37 +531,89 @@ yakit.Info("Update Nuclei PoC Finished")
 `
 
 const loadYakitPluginCode = `yakit.AutoInitYakit()
-log.setLevel("info")
+loglevel("info")
 
 gitUrl = cli.String("giturl")
+nucleiGitUrl = cli.String("nuclei-templates-giturl")
 proxy = cli.String("proxy")
 
-yakit.Info("检查导入插件参数")
-if gitUrl == "" {
-    yakit.Error("插件仓库为空")
+yakit.Info("Checking Plugins Resources ...")
+if gitUrl == "" && nucleiGitUrl == "" {
+    yakit.Error("Empty Plugin Storage")
     die("empty giturl")
 }
-yakit.Info("准备导入 yak 插件：%v", gitUrl)
+yakit.Info("preparing for loading yak plugins：%v", gitUrl)
+yakit.Info("preparing for loading nuclei-templates pocs：%v", nucleiGitUrl)
 
+wg = sync.NewWaitGroup()
+wg.Add(2)
 
-if proxy != "" {
-    yakit.Info("使用代理: %v", proxy)
-    log.Info("proxy: %v", proxy)
-    err := yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl, proxy)
+go func{
+    defer wg.Done()
+    defer func{
+        err = recover()
+        if err != nil {
+            yakit.Error("error: %v", err)
+        }
+    }
+    
+    yakit.Info("Start to load Yak Plugin!")
+    
+    if proxy != "" {
+        yakit.Info("proxy: %v", proxy)
+        log.Info("proxy: %v", proxy)
+        err := yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl, proxy)
+        if err != nil {
+            yakit.Error("load URL[%v] failed: %v", gitUrl, err)
+            die(err)
+        }
+    } else{
+        yakit.Info("No Proxy")
+        err = yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl)
+        if err != nil {
+            yakit.Error("load URL[%v] failed: %v", gitUrl, err)
+            die(err)
+        }
+    }
+}
+
+go func {
+    defer wg.Done()
+    defer func{
+        err = recover()
+        if err != nil {
+            yakit.Error("error: %v", err)
+        }
+    }
+    
+    if nucleiGitUrl == "" {
+        yakit.Info("no nuclei git url input")
+        return
+    }
+    
+    yakit.Info("Start to load Yaml PoC!")
+    proxies = make([]string)
+    if proxy != "" {
+        proxies = append(proxies, proxy)
+    }
+    
+    path, err = nuclei.PullDatabase(nucleiGitUrl, proxies...)
     if err != nil {
-        yakit.Error("加载远程 URL 失败：%v", err)
+        yakit.Error("pull nuclei templates failed: %s", err)
         die(err)
     }
-} else{
-    yakit.Info("未使用代理")
-    err = yakit.UpdateYakitStoreFromGit(context.Background(), gitUrl)
+    
+    err = nuclei.UpdateDatabase(path)
     if err != nil {
-        yakit.Error("加载远程 URL 失败：%v", err)
+        yakit.Error("update database from %v failed: %v", path, dir)
         die(err)
     }
 }
 
-yakit.Output("导入插件成功")
+
+yakit.Output("Waiting for loading...")
+wg.Wait()
+yakit.Output("Update Finished...")
 `
 
 const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY";
@@ -570,6 +622,7 @@ const YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_NUCLE
 
 export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => {
     const [gitUrl, setGitUrl] = useState("")
+    const [nucleiGitUrl, setNucleiGitUrl] = useState("https://github.com/projectdiscovery/nuclei-templates")
     const [proxy, setProxy] = useState("")
     const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei">("official")
     const [localPath, setLocalPath] = useState("");
@@ -629,7 +682,10 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                 }
 
                 if (["official", "giturl"].includes(loadMode)) {
-                    const params: YakExecutorParam[] = [{Key: "giturl", Value: gitUrl}]
+                    const params: YakExecutorParam[] = [
+                        {Key: "giturl", Value: gitUrl},
+                        {Key: "nuclei-templates-giturl", Value: nucleiGitUrl},
+                    ]
                     if (proxy.trim() !== "") {
                         params.push({Value: proxy.trim(), Key: "proxy"})
                     }
@@ -663,7 +719,7 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                     {text: "使用官方源", value: "official"},
                     {text: "第三方仓库源", value: "giturl"},
                     {text: "本地仓库", value: "local"},
-                    {text: "本地 Nuclei PoC", value: "local-nuclei"},
+                    {text: "本地 Yaml PoC", value: "local-nuclei"},
                 ]}
                 value={loadMode}
                 setValue={setLoadMode}
@@ -672,10 +728,18 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                 <InputItem
                     disable={loadMode === "official"}
                     required={true}
-                    label={"Git 仓库"}
+                    label={"Git URL"}
                     value={gitUrl}
                     setValue={setGitUrl}
                     help={"例如 https://github.com/yaklang/yakit-store"}
+                />
+                <InputItem
+                    required={true}
+                    disable={loadMode === "official"}
+                    label={"Yaml PoC URL"}
+                    value={nucleiGitUrl}
+                    setValue={setNucleiGitUrl}
+                    help={"nuclei templates 默认插件源"}
                 />
                 <InputItem label={"代理"} value={proxy} setValue={setProxy} help={"访问中国大陆无法访问的代码仓库"}/>
             </>}

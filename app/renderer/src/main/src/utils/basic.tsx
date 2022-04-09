@@ -32,6 +32,7 @@ import useHoldingIPCRStream from "../hook/useHoldingIPCRStream";
 import {randomString} from "./randomUtil";
 import {PluginResultUI} from "../pages/yakitStore/viewers/base";
 import {AutoCard} from "../components/AutoCard";
+import {LoadYakitPluginForm} from "../pages/yakitStore/YakitStorePage";
 
 export interface YakVersionProp {
 
@@ -290,20 +291,19 @@ export interface AutoUpdateYakModuleButtonProp extends ButtonProps {
 }
 
 export const AutoUpdateYakModuleButton: React.FC<AutoUpdateYakModuleButtonProp> = (props) => {
-    return <Popconfirm
-        title={"一键更新将更新 yakit-store 中的内容与更新 nuclei templates 到本地"}
-        onConfirm={e => {
-            showModal({
-                title: "自动更新 Yak 模块", content: <>
-                    <AutoUpdateYakModuleViewer/>
-                </>, width: "60%",
-            })
-        }}
-    >
-        <Button {...props} type={"link"}>
-            更新 YAML POC
-        </Button>
-    </Popconfirm>
+    return <Button {...props} type={"link"} onClick={() => {
+        showModal({
+            title: "更新插件源",
+            width: 800,
+            content: <div style={{width: 800}}>
+                <LoadYakitPluginForm onFinished={() => {
+                    info("更新进程执行完毕")
+                }}/>
+            </div>
+        })
+    }}>
+        更新 Yakit 插件库
+    </Button>
 };
 
 const {Text} = Typography;

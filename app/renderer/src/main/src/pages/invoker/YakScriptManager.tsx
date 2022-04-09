@@ -240,7 +240,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
             extra={[
                 isMainPage ? <Popconfirm
                     title={<>
-                        确定要加载本地 nuclei poc 吗？<br/>
+                        确定要加载本地 yaml(nuclei) poc 吗？<br/>
                         可通过 <Text mark={true} copyable={true}>yak update-nuclei-poc</Text> 一键更新已知 PoC
                     </>}
                     onConfirm={() => {
