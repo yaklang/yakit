@@ -28,7 +28,7 @@ import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
-import {CopyableField, SelectOne} from "../../utils/inputUtil";
+import {CopyableField, SelectOne, SwitchItem} from "../../utils/inputUtil";
 import {MITMPluginOperator} from "./MITMPluginOperator";
 import {useGetState, useHistoryTravel, useLatest, useMemoizedFn, useMouse} from "ahooks";
 import {StatusCardProps} from "../yakitStore/viewers/base";
@@ -40,6 +40,8 @@ import {ResizeBox} from "../../components/ResizeBox";
 import {MITMPluginLogViewer} from "./MITMPluginLogViewer";
 import {MITMPluginList, MITMPluginListProp} from "./MITMPluginList";
 import {openABSFileLocated, saveABSFileToOpen} from "../../utils/openWebsite";
+import {getValue, saveValue} from "../../utils/kv";
+import {PluginList} from "../../components/PluginList";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -93,6 +95,8 @@ interface CaCertData {
     LocalFile: string
 }
 
+const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL_PLUGIN";
+
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [status, setStatus] = useState<"idle" | "hijacked" | "hijacking">("idle");
     const [error, setError] = useState("");
@@ -103,6 +107,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [caCerts, setCaCerts] = useState<CaCertData>({
         CaCerts: new Buffer(""), LocalFile: "",
     });
+    const [enableInitialPlugin, setEnableInitialPlugin] = useState(false);
 
     // 存储修改前和修改后的包！
     const [currentPacketInfo, setCurrentPacketInfo] = useState<{
@@ -146,6 +151,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     useEffect(() => {
         ipcRenderer.invoke('fetch-system-name').then((res) => setSystem(res))
+    }, [])
+
+    useEffect(() => {
+        // 设置 MITM 初始启动插件选项
+        getValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then(a => {
+            setEnableInitialPlugin(!!a)
+        })
     }, [])
 
     // 用于接受后端传回的信息
@@ -530,7 +542,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const execFuzzer = useMemoizedFn((value: string) => {
         ipcRenderer.invoke("send-to-tab", {
             type: "fuzzer",
-            data:{isHttps: currentPacketInfo.isHttp, request: value}
+            data: {isHttps: currentPacketInfo.isHttp, request: value}
         })
     })
     const execPlugin = useMemoizedFn((value: string) => {
@@ -576,6 +588,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网"}>
                                 <Input value={downstreamProxy} onChange={e => setDownstreamProxy(e.target.value)}/>
                             </Item>
+                            {false && <SwitchItem label={"启动 MITM 插件"} setValue={e => {
+                                setEnableInitialPlugin(e)
+                                if (e) {
+                                    saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "true")
+                                } else {
+                                    saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "")
+                                }
+                            }} value={enableInitialPlugin}/>}
+                            {enableInitialPlugin && <Item label={" "} colon={false}>
+                            </Item>}
                             <Item label={" "} colon={false}>
                                 <Space>
                                     <Button type={"primary"} htmlType={"submit"}>
@@ -883,7 +905,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                                 monaco.KeyCode.KEY_E
                                                                             ],
                                                                             run: function (StandaloneEditor: any) {
-                                                                                if(!StandaloneEditor.getModel().getValue()) return
+                                                                                if (!StandaloneEditor.getModel().getValue()) return
                                                                                 execPlugin(StandaloneEditor.getModel().getValue())
                                                                             },
                                                                             contextMenuGroupId: "Actions"

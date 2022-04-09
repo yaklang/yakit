@@ -55,9 +55,10 @@ const ScanKindKeys: string[] = Object.keys(ScanKind)
 
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [scripts, setScripts, getScripts] = useGetState<YakScript[]>([])
+    const [loading, setLoading] = useState(false)
     const [total, setTotal] = useState(0)
-    const [pluginLoading, setPluginLoading] = useState<boolean>(false)
 
+    const [pluginLoading, setPluginLoading] = useState<boolean>(false)
     const [params, setParams] = useState<PortScanParams>({
         Ports: "22,443,445,80,8000-8004,3306,3389,5432,8080-8084,7000-7005",
         Mode: "fingerprint",
@@ -74,7 +75,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         ProbeMax: 3,
         EnableCClassScan: false,
     })
-    const [loading, setLoading] = useState(false)
     const [token, setToken] = useState(randomString(40))
     const [resettingData, setResettingData] = useState(false)
     const xtermRef = useRef(null)
