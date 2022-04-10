@@ -588,14 +588,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网"}>
                                 <Input value={downstreamProxy} onChange={e => setDownstreamProxy(e.target.value)}/>
                             </Item>
-                            {false && <SwitchItem label={"启动 MITM 插件"} setValue={e => {
+                            <SwitchItem label={"启动 MITM 插件"} setValue={e => {
                                 setEnableInitialPlugin(e)
                                 if (e) {
                                     saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "true")
                                 } else {
                                     saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "")
                                 }
-                            }} value={enableInitialPlugin}/>}
+                            }} value={enableInitialPlugin}/>
                             {enableInitialPlugin && <Item label={" "} colon={false}>
                             </Item>}
                             <Item label={" "} colon={false}>

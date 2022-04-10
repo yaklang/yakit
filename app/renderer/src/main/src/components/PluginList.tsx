@@ -6,7 +6,7 @@ import {AutoCard, AutoCardProps} from "./AutoCard"
 import ReactResizeDetector from "react-resize-detector"
 import {useMemoizedFn, useVirtualList} from "ahooks"
 import {showModal} from "../utils/showModal"
-import {InputInteger, InputItem} from "../utils/inputUtil"
+import {InputInteger, InputItem, OneLine} from "../utils/inputUtil"
 
 import "./PluginList.css"
 
@@ -21,11 +21,58 @@ export interface PluginListProp extends AutoCardProps {
     allSelectScript: (flag: boolean) => any
     selectScript: (info: YakScript) => any
     unSelectScript: (info: YakScript) => any
-    search: (params: {limit: number; keyword: string}) => any
+    search: (params: { limit: number; keyword: string }) => any
     extra?: React.ReactNode
 }
 
-export const PluginList: React.FC<PluginListProp> = (props) => {
+interface YakScriptCheckboxProp {
+    info: YakScript
+    vlistWidth: string | number | any
+    selected: string[]
+    selectScript: (i: YakScript) => any
+    unSelectScript: (i: YakScript) => any
+}
+
+const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) => {
+    const {info, selected, vlistWidth, selectScript, unSelectScript,} = props;
+
+    return <div key={info.ScriptName} className='list-opt'>
+        <Checkbox
+            checked={selected.includes(info.ScriptName)}
+            onChange={(r) => {
+                if (r.target.checked) selectScript(info)
+                else unSelectScript(info)
+            }}
+        >
+            <OneLine width={vlistWidth} overflow={"hidden"}>
+                <div>
+                    {info.ScriptName}
+                </div>
+            </OneLine>
+        </Checkbox>
+        <div style={{flex: 1, textAlign: "right"}}>
+            {info.Help && (
+                <a
+                    onClick={() => {
+                        showModal({
+                            width: "40%",
+                            title: "Help",
+                            content: <>{info.Help}</>
+                        })
+                    }}
+                    href={"#"} style={{marginLeft: 2, marginRight: 2}}
+                ><QuestionCircleOutlined/></a>
+            )}
+            {info.Author && (
+                <Tooltip title={info.Author}>
+                    <a href={"#"} style={{marginRight: 2, marginLeft: 2}}><UserOutlined/></a>
+                </Tooltip>
+            )}
+        </div>
+    </div>
+});
+
+export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
     const {
         loading,
         lists,
@@ -69,47 +116,6 @@ export const PluginList: React.FC<PluginListProp> = (props) => {
         setChecked(checkedFlag)
     }, [selected, lists])
 
-    const renderListItem = useMemoizedFn((info: YakScript) => {
-        return (
-            <div key={info.ScriptName} className='list-opt'>
-                <Checkbox
-                    checked={selected.includes(info.ScriptName)}
-                    onChange={(r) => {
-                        if (r.target.checked) selectScript(info)
-                        else unSelectScript(info)
-                    }}
-                >
-                    <Space>
-                        <Text style={{maxWidth: vlistWidth}} ellipsis={{tooltip: true}}>
-                            {info.ScriptName}
-                        </Text>
-                        {info.Help && (
-                            <Button
-                                size={"small"}
-                                type={"link"}
-                                onClick={() => {
-                                    showModal({
-                                        width: "40%",
-                                        title: "Help",
-                                        content: <>{info.Help}</>
-                                    })
-                                }}
-                                icon={<QuestionCircleOutlined />}
-                            />
-                        )}
-                    </Space>
-                </Checkbox>
-                <div style={{flex: 1, textAlign: "right"}}>
-                    {info.Author && (
-                        <Tooltip title={info.Author}>
-                            <Button size={"small"} type={"link"} icon={<UserOutlined />} />
-                        </Tooltip>
-                    )}
-                </div>
-            </div>
-        )
-    })
-
     return (
         <div className='plugin-list-body'>
             <AutoCard
@@ -145,7 +151,7 @@ export const PluginList: React.FC<PluginListProp> = (props) => {
                                 </div>
                             }
                         >
-                            <Button size={"small"} icon={<SettingOutlined />} type={"link"} />
+                            <Button size={"small"} icon={<SettingOutlined/>} type={"link"}/>
                         </Popover>
                         <Popover
                             title={"搜索插件关键字"}
@@ -177,7 +183,7 @@ export const PluginList: React.FC<PluginListProp> = (props) => {
                                 </div>
                             }
                         >
-                            <Button size={"small"} type={!!keyword ? "primary" : "link"} icon={<SearchOutlined />} />
+                            <Button size={"small"} type={!!keyword ? "primary" : "link"} icon={<SearchOutlined/>}/>
                         </Popover>
                         <Checkbox
                             indeterminate={indeterminate}
@@ -204,9 +210,12 @@ export const PluginList: React.FC<PluginListProp> = (props) => {
                     refreshRate={50}
                 />
                 <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto"}}>
-                    <div ref={wrapperRef as any}>{list.map((i) => renderListItem(i.data))}</div>
+                    <div ref={wrapperRef as any}>{list.map((i) => <YakScriptCheckbox
+                        info={i.data} selectScript={selectScript} unSelectScript={unSelectScript}
+                        vlistWidth={vlistWidth} selected={selected}
+                    />)}</div>
                 </div>
             </AutoCard>
         </div>
     )
-}
+})

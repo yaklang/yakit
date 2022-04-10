@@ -1,18 +1,19 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {QueryYakScriptRequest, YakScript} from "../pages/invoker/schema";
 import {PluginList} from "./PluginList";
 import {useGetState, useMemoizedFn} from "ahooks";
 import {queryYakScriptList} from "../pages/yakitStore/network";
 
 export interface SimplePluginListProp {
-    filter?: QueryYakScriptRequest
+    pluginTypes?: string
+    initialSelected?: string[]
+    onSelected?: (names: string[]) => any
 }
 
 export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
     const [scripts, setScripts, getScripts] = useGetState<YakScript[]>([])
-    const [loading, setLoading] = useState(false)
     const [total, setTotal] = useState(0)
-    const [params, setParams] = useState<{ ScriptNames: string[] }>({ScriptNames: []})
+    const [params, setParams] = useState<{ ScriptNames: string[] }>({ScriptNames: props.initialSelected || []})
     const [pluginLoading, setPluginLoading] = useState<boolean>(false)
 
     const allSelectYakScript = useMemoizedFn((flag: boolean) => {
@@ -31,13 +32,19 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
         setParams({...params, ScriptNames: params.ScriptNames.filter((i) => i !== y.ScriptName)})
     })
 
+    useEffect(() => {
+        if (props.onSelected) {
+            props.onSelected(params.ScriptNames)
+        }
+    }, [params.ScriptNames])
+
 
     const search = useMemoizedFn((searchParams?: { limit: number; keyword: string }) => {
         const {limit, keyword} = searchParams || {}
 
         setPluginLoading(true)
         queryYakScriptList(
-            "port-scan",
+            props.pluginTypes ? props.pluginTypes : "",
             (data, total) => {
                 setTotal(total || 0)
                 setScripts(data)
@@ -53,8 +60,12 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
         )
     })
 
+    useEffect(() => {
+        search()
+    }, [])
+
     return <PluginList
-        loading={loading}
+        loading={pluginLoading}
         lists={scripts}
         getLists={getScripts}
         total={total}
@@ -68,5 +79,5 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
             padding: "0 4px",
             overflow: "hidden"
         }}
-    ></PluginList>
+    />
 };

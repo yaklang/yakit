@@ -40,7 +40,8 @@ export const OneLine: React.FC<OneLineProp> = (props) => {
         whiteSpace: "nowrap",
         width: props.width,
         overflow: props.overflow || "auto",
-        maxWidth: props.maxWidth
+        maxWidth: props.maxWidth,
+        textOverflow: "ellipsis"// props.overflow === "hidden" ? "ellipsis" : undefined
     }}>
         {props.children}
     </div>

@@ -17,9 +17,10 @@ import {showModal} from "../../utils/showModal"
 import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import {CVXterm} from "../../components/CVXterm"
-import { ContentUploadInput } from "../../components/functionTemplate/ContentUploadTextArea"
+import {ContentUploadInput} from "../../components/functionTemplate/ContentUploadTextArea"
 
 import "./PortScanPage.css"
+import {SimplePluginList} from "../../components/SimplePluginList";
 
 const {ipcRenderer} = window.require("electron")
 const ScanPortTemplate = "scan-port-template"
@@ -54,11 +55,7 @@ const ScanKind: { [key: string]: string } = {
 const ScanKindKeys: string[] = Object.keys(ScanKind)
 
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
-    const [scripts, setScripts, getScripts] = useGetState<YakScript[]>([])
     const [loading, setLoading] = useState(false)
-    const [total, setTotal] = useState(0)
-
-    const [pluginLoading, setPluginLoading] = useState<boolean>(false)
     const [params, setParams] = useState<PortScanParams>({
         Ports: "22,443,445,80,8000-8004,3306,3389,5432,8080-8084,7000-7005",
         Mode: "fingerprint",
@@ -85,7 +82,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 
     const [uploadLoading, setUploadLoading] = useState(false)
     const [templatePort, setTemplatePort] = useState<string>()
-
     const openPort = useRef<YakitPort[]>([])
     const closedPort = useRef<YakitPort[]>([])
 
@@ -100,59 +96,20 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
-    const search = useMemoizedFn((searchParams?: { limit: number; keyword: string }) => {
-        const {limit, keyword} = searchParams || {}
-
-        setPluginLoading(true)
-        queryYakScriptList(
-            "port-scan",
-            (data, total) => {
-                setTotal(total || 0)
-                setScripts(data)
-                setParams({
-                    ...params,
-                    ScriptNames: (data || []).filter(i => i.IsGeneralModule).map(i => i.ScriptName)
-                })
-            },
-            () => setTimeout(() => setPluginLoading(false), 300),
-            limit || 200,
-            undefined,
-            keyword || ""
-        )
-    })
-    const allSelectYakScript = useMemoizedFn((flag: boolean) => {
-        if (flag) {
-            const newSelected = [...scripts.map((i) => i.ScriptName), ...params.ScriptNames]
-            setParams({...params, ScriptNames: newSelected.filter((e, index) => newSelected.indexOf(e) === index)})
-        } else {
-            setParams({...params, ScriptNames: []})
-        }
-    })
-    const selectYakScript = useMemoizedFn((y: YakScript) => {
-        if (!params.ScriptNames.includes(y.ScriptName))
-            setParams({...params, ScriptNames: [...params.ScriptNames, y.ScriptName]})
-    })
-    const unselectYakScript = useMemoizedFn((y: YakScript) => {
-        setParams({...params, ScriptNames: params.ScriptNames.filter((i) => i !== y.ScriptName)})
-    })
-
-    useEffect(() => {
-        search()
-    }, [])
-
     useEffect(() => {
         setLoading(true)
         ipcRenderer
             .invoke("get-value", ScanPortTemplate)
             .then((value: any) => {
-                if(value){
+                if (value) {
                     setTemplatePort(value || "")
                     setTimeout(() => {
                         setParams({...params, Ports: value || ""})
                     }, 300)
                 }
             })
-            .catch(() => {})
+            .catch(() => {
+            })
             .finally(() => {
                 setTimeout(() => setLoading(false), 100)
             })
@@ -206,22 +163,13 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                 <Tabs.TabPane tab={"扫描端口操作台"} key={"scan"}>
                     <div className='scan-port-body'>
                         <div style={{width: 360, height: "100%"}}>
-                            <PluginList
-                                loading={loading}
-                                lists={scripts}
-                                getLists={getScripts}
-                                total={total}
-                                selected={params.ScriptNames}
-                                allSelectScript={allSelectYakScript}
-                                selectScript={selectYakScript}
-                                unSelectScript={unselectYakScript}
-                                search={search}
-                                title={"端口扫描插件"}
-                                bodyStyle={{
-                                    padding: "0 4px",
-                                    overflow: "hidden"
+                            <SimplePluginList
+                                pluginTypes={""}
+                                initialSelected={params.ScriptNames}
+                                onSelected={scripts => {
+                                    setParams({...params, ScriptNames: scripts})
                                 }}
-                            ></PluginList>
+                            />
                         </div>
 
                         <div className='right-container'>
@@ -257,7 +205,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                     failed(`${f.name}非txt文件，请上传txt格式文件！`)
                                                     return false
                                                 }
-    
+
                                                 setUploadLoading(true)
                                                 ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
                                                     setParams({...params, Targets: res})
@@ -296,7 +244,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                     </Button>
                                                 )
                                             }
-                                        ></ContentUploadInput>
+                                        />
                                     </Spin>
 
                                     <Form.Item label='预设端口' colon={false} className='form-item-margin'>
@@ -304,7 +252,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             onChange={(value) => {
                                                 let res: string = (value || [])
                                                     .map((i) => {
-                                                        if(i === "template") return templatePort
+                                                        if (i === "template") return templatePort
                                                         // @ts-ignore
                                                         return PresetPorts[i] || ""
                                                     })
@@ -327,17 +275,18 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             rows={1}
                                             value={params.Ports}
                                             onChange={(e) => setParams({...params, Ports: e.target.value})}
-                                        ></Input.TextArea>
-                                        <Button style={{marginBottom: 4}} className="link-button-bfc" type="link" onClick={() => {
-                                            if(!params.Ports){
-                                                failed("请输入端口后再保存")
-                                                return
-                                            }
-                                            ipcRenderer.invoke("set-value", ScanPortTemplate, params.Ports).then(() => {
-                                                setTemplatePort(params.Ports)
-                                                success("保存成功")
-                                            })
-                                        }}>保存为模板</Button>
+                                        />
+                                        <Button style={{marginBottom: 4}} className="link-button-bfc" type="link"
+                                                onClick={() => {
+                                                    if (!params.Ports) {
+                                                        failed("请输入端口后再保存")
+                                                        return
+                                                    }
+                                                    ipcRenderer.invoke("set-value", ScanPortTemplate, params.Ports).then(() => {
+                                                        setTemplatePort(params.Ports)
+                                                        success("保存成功")
+                                                    })
+                                                }}>保存为模板</Button>
                                     </Form.Item>
 
                                     <Form.Item label=' ' colon={false} className='form-item-margin'>
@@ -380,25 +329,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 ) : (
                                                     <Tag>闲置中...</Tag>
                                                 )}
-                                                {/*<Button*/}
-                                                {/*    disabled={resettingData || loading}*/}
-                                                {/*    size={"small"}*/}
-                                                {/*    onClick={(e) => {*/}
-                                                {/*        xtermClear(xtermRef)*/}
-                                                {/*        openPort.current = []*/}
-                                                {/*        closedPort.current = []*/}
-                                                {/*        reset()*/}
-                                                {/*        setResettingData(true)*/}
-                                                {/*        setResetTrigger(!resetTrigger)*/}
-                                                {/*        setTimeout(() => {*/}
-                                                {/*            setResettingData(false)*/}
-                                                {/*        }, 1200)*/}
-                                                {/*    }}*/}
-                                                {/*    type={"link"}*/}
-                                                {/*    danger={true}*/}
-                                                {/*>*/}
-                                                {/*    清空缓存结果*/}
-                                                {/*</Button>*/}
                                             </div>
 
                                             <div style={{width: "100%", height: 178, overflow: "hidden"}}>
@@ -409,14 +339,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                         disableStdin: true
                                                     }}
                                                 />
-                                                {/* <XTerm
-                                                    ref={xtermRef}
-                                                    options={{
-                                                        convertEol: true,
-                                                        disableStdin: true
-                                                    }}
-                                                    onResize={(r) => xtermFit(xtermRef, r.cols, 10)}
-                                                /> */}
                                             </div>
 
                                             <Spin spinning={resettingData}>
@@ -456,20 +378,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                             }}
                         />
                     </div>
-                    {/* <Row gutter={12}>
-                        <Col span={24}>
-                            <PortAssetTable
-                                onClicked={(i) => {
-                                    setPort(i)
-                                }}
-                            />
-                        </Col> */}
-                        {/* <Col span={8}>
-                        {port ? <PortAssetDescription port={port}/> : <Empty>
-                            点击端口列表查看内容
-                        </Empty>}
-                    </Col> */}
-                    {/* </Row> */}
                 </Tabs.TabPane>
             </Tabs>
         </div>
