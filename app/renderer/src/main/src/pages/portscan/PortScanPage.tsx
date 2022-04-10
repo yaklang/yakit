@@ -164,7 +164,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                     <div className='scan-port-body'>
                         <div style={{width: 360, height: "100%"}}>
                             <SimplePluginList
-                                pluginTypes={""}
+                                pluginTypes={"port-scan"}
                                 initialSelected={params.ScriptNames}
                                 onSelected={scripts => {
                                     setParams({...params, ScriptNames: scripts})
