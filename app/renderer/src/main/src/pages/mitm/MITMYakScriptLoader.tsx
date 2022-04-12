@@ -7,6 +7,7 @@ import {QuestionCircleOutlined, ThunderboltFilled, UserOutlined} from "@ant-desi
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import {YakScript} from "../invoker/schema";
 import {failed} from "../../utils/notification";
+import {OneLine} from "../../utils/inputUtil";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -41,7 +42,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         return
                     }
 
-                    if ((script.Params || []).length > 0) {
+                    if ((script.Params || []).length > 0 && script.Type !== "port-scan") {
                         let m2 = showModal({
                             title: `设置 [${script.ScriptName}] 的参数`,
                             content: <>
@@ -61,32 +62,39 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
                     }
                 }}
-            />
-            <div style={{marginRight: 6, maxWidth: p.maxWidth || 260}}>
-                {!!i.ScriptName ? i.ScriptName : `{hot-patched}`}
-            </div>
+            >
+                <OneLine overflow={"hidden"} maxWidth={200}>
+                    {!!i.ScriptName ? i.ScriptName : `{hot-patched}`}
+                </OneLine>
+                {/*<div style={{marginRight: 6, maxWidth: p.maxWidth || 260, overflowX: "hidden", textOverflow: "ellipsis"}}>*/}
+                {/*</div>*/}
+            </Checkbox>
             {script.Help && <Tooltip title={script.Help}>
-                <Button size={"small"} type={"link"} icon={<QuestionCircleOutlined/>}/>
+                <a href={"#"}><QuestionCircleOutlined/></a>
             </Tooltip>}
 
             <div style={{flex: 1, textAlign: "right"}}>
-                {script.Author && <Tooltip title={script.Author}>
-                    <Button size={"small"} type={"link"} icon={<UserOutlined/>}/>
-                </Tooltip>}
-                <Popconfirm
-                    disabled={!p.onSendToPatch}
-                    title={"发送到【热加载】中调试代码？"}
-                    onConfirm={() => {
-                        let _ = p.onSendToPatch && p.onSendToPatch(script.Content);
-                    }}
-                >
-                    <Button
+                <OneLine>
+                    {script.Author && <Tooltip title={script.Author}>
+                        <a href={"#"}>
+                            <UserOutlined/>
+                        </a>
+                    </Tooltip>}
+                    <Popconfirm
                         disabled={!p.onSendToPatch}
-                        type={"link"}
-                        size={"small"}
-                        icon={<ThunderboltFilled/>}>
-                    </Button>
-                </Popconfirm>
+                        title={"发送到【热加载】中调试代码？"}
+                        onConfirm={() => {
+                            let _ = p.onSendToPatch && p.onSendToPatch(script.Content);
+                        }}
+                    >
+                        <Button
+                            disabled={!p.onSendToPatch}
+                            type={"link"}
+                            size={"small"}
+                            icon={<ThunderboltFilled/>}>
+                        </Button>
+                    </Popconfirm>
+                </OneLine>
             </div>
         </div>
     </Card>

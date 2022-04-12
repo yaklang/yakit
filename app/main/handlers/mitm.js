@@ -93,10 +93,11 @@ module.exports = (win, getClient) => {
         }
     })
 
-    ipcMain.handle("mitm-enable-plugin-mode", (e) => {
+    ipcMain.handle("mitm-enable-plugin-mode", (e, initPluginNames) => {
         if (stream) {
             stream.write({
                 setPluginMode: true,
+                initPluginNames,
             })
         }
     })

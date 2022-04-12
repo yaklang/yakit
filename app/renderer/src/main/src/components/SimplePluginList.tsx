@@ -70,7 +70,9 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
     return <PluginList
         bordered={props.bordered}
         loading={pluginLoading}
-        lists={scripts}
+        lists={(scripts || []).sort((a: YakScript, b: YakScript) => {
+            return (b.IsGeneralModule ? 1 : 0) - (a.IsGeneralModule ? 1 : 0)
+        })}
         disabled={props.disabled}
         getLists={getScripts}
         total={total}

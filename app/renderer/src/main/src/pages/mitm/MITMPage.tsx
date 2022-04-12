@@ -87,8 +87,8 @@ const allowHijackedResponseByRequest = (id: number) => {
     return ipcRenderer.invoke("mitm-hijacked-current-response", id)
 }
 
-const enableMITMPluginMode = () => {
-    return ipcRenderer.invoke("mitm-enable-plugin-mode")
+const enableMITMPluginMode = (initPluginNames?: string[]) => {
+    return ipcRenderer.invoke("mitm-enable-plugin-mode", initPluginNames)
 }
 
 interface CaCertData {
@@ -577,7 +577,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                 start()
 
                                 if (enableInitialPlugin) {
-                                    enableMITMPluginMode().then(() => {
+                                    enableMITMPluginMode(defaultPlugins).then(() => {
                                         info("被动扫描插件模式已启动")
                                     })
                                 }
@@ -604,8 +604,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                     <SimplePluginList
                                         disabled={!enableInitialPlugin}
                                         bordered={true}
+                                        initialSelected={defaultPlugins}
                                         onSelected={(list: string[]) => {
-                                            console.info(list)
+                                            setDefaultPlugins(list)
                                         }} pluginTypes={"mitm,port-scan"}
                                         verbose={<div>MITM 与 端口扫描插件</div>}/>
                                 </div>
@@ -818,9 +819,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                 />
                                                 // <MITMPluginOperator />
                                             )}
-                                            firstMinSize={340}
-                                            secondMinSize={340}
-                                            firstRatio={"340px"}
+                                            firstMinSize={"330px"}
+                                            secondMinSize={"340px"}
+                                            firstRatio={"330px"}
                                             secondNode={(
                                                 <AutoCard
                                                     style={{margin: 0, padding: 0}}
