@@ -1190,7 +1190,9 @@ message MITMRequest {
   bool setClearMITMPluginContext = 35;
 
   // 设置启用插件模式，自动加载所有主插件。
+  // 如果不设置 initPluginNames 的话，启动所有默认插件
   bool setPluginMode = 36;
+  repeated string initPluginNames = 37;
 }
 
 message RemoveHookParams {

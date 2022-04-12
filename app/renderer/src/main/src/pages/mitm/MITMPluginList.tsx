@@ -156,7 +156,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
         </>}
         {mode === "all" && <>
             <YakModuleList
-                Type={"mitm"}
+                Type={"mitm,port-scan"}
                 onClicked={(script: YakScript) => {
 
                 }}

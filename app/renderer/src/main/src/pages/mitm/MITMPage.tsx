@@ -3,7 +3,7 @@ import {
     Alert,
     Button,
     Checkbox,
-    Col,
+    Col, Divider,
     Form,
     Input,
     InputNumber,
@@ -42,6 +42,7 @@ import {MITMPluginList, MITMPluginListProp} from "./MITMPluginList";
 import {openABSFileLocated, saveABSFileToOpen} from "../../utils/openWebsite";
 import {getValue, saveValue} from "../../utils/kv";
 import {PluginList} from "../../components/PluginList";
+import {SimplePluginList} from "../../components/SimplePluginList";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -133,6 +134,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     const [urlInfo, setUrlInfo] = useState("监听中...")
     const [ipInfo, setIpInfo] = useState("")
+
+    // 设置初始化启动的插件
+    const [defaultPlugins, setDefaultPlugins] = useState<string[]>([]);
 
     // yakit log message
     const [logs, setLogs] = useState<ExecResultLog[]>([]);
@@ -572,9 +576,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                 e.preventDefault()
                                 start()
 
-                                enableMITMPluginMode().then(() => {
-                                    info("被动扫描插件模式已启动")
-                                })
+                                if (enableInitialPlugin) {
+                                    enableMITMPluginMode().then(() => {
+                                        info("被动扫描插件模式已启动")
+                                    })
+                                }
                             }}
                             layout={"horizontal"} labelCol={{span: 7}}
                             wrapperCol={{span: 13}}
@@ -585,24 +591,48 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             <Item label={"劫持代理监听端口"}>
                                 <InputNumber value={port} onChange={e => setPort(e)}/>
                             </Item>
+                            {/*<SwitchItem label={"启动 MITM 插件"} size={"small"} setValue={e => {*/}
+                            {/*    setEnableInitialPlugin(e)*/}
+                            {/*    if (e) {*/}
+                            {/*        saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "true")*/}
+                            {/*    } else {*/}
+                            {/*        saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "")*/}
+                            {/*    }*/}
+                            {/*}} value={enableInitialPlugin}/>*/}
+                            <Item label={"选择插件"} colon={true}>
+                                <div style={{height: enableInitialPlugin ? 400 : 180, maxWidth: 420}}>
+                                    <SimplePluginList
+                                        disabled={!enableInitialPlugin}
+                                        bordered={true}
+                                        onSelected={(list: string[]) => {
+                                            console.info(list)
+                                        }} pluginTypes={"mitm,port-scan"}
+                                        verbose={<div>MITM 与 端口扫描插件</div>}/>
+                                </div>
+                            </Item>
                             <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网"}>
                                 <Input value={downstreamProxy} onChange={e => setDownstreamProxy(e.target.value)}/>
                             </Item>
-                            <SwitchItem label={"启动 MITM 插件"} setValue={e => {
-                                setEnableInitialPlugin(e)
-                                if (e) {
-                                    saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "true")
-                                } else {
-                                    saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "")
-                                }
-                            }} value={enableInitialPlugin}/>
-                            {enableInitialPlugin && <Item label={" "} colon={false}>
-                            </Item>}
                             <Item label={" "} colon={false}>
                                 <Space>
                                     <Button type={"primary"} htmlType={"submit"}>
                                         劫持启动
                                     </Button>
+                                    <Divider type={"vertical"}/>
+                                    <Checkbox
+                                        checked={enableInitialPlugin}
+                                        onChange={node => {
+                                            const e = node.target.checked;
+                                            setEnableInitialPlugin(e)
+                                            if (e) {
+                                                saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "true")
+                                            } else {
+                                                saveValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, "")
+                                            }
+                                        }}
+                                    >
+                                        插件自动加载
+                                    </Checkbox>
                                 </Space>
                             </Item>
                         </Form>

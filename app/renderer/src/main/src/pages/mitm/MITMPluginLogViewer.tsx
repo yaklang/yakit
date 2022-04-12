@@ -9,6 +9,7 @@ import moment from "moment";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 
 import "./MITMPluginLogViewer.css"
+import {RiskStatsTag} from "../../utils/RiskStatsTag";
 
 export interface MITMPluginLogViewerProp {
     messages: ExecResultLog[]

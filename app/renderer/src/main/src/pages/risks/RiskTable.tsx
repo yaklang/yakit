@@ -13,6 +13,7 @@ import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
 import "./RiskTable.css"
 
 export interface RiskTableProp {
+    severity?: string
 }
 
 export interface QueryRisksParams extends QueryGeneralRequest {
@@ -77,7 +78,11 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         Pagination: genDefaultPagination(20),
         Total: 0
     })
-    const [params, setParams] = useState<QueryRisksParams>({Pagination: genDefaultPagination(20)})
+    const [params, setParams] = useState<QueryRisksParams>({
+            Severity: props.severity,
+            Pagination: genDefaultPagination(20)
+        }
+    )
     const total = response.Total
     const pagination = response.Pagination
     const page = response.Pagination.Page
@@ -235,7 +240,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     title: "等级",
                     render: (i: Risk) => {
                         const title = TitleColor.filter(item => item.key.includes(i.Severity || ""))[0]
-                        return <span className={title?.value || "title-default"}>{title ? title.name : i.Severity || "-"}</span>
+                        return <span
+                            className={title?.value || "title-default"}>{title ? title.name : i.Severity || "-"}</span>
                     },
                     width: 90
                 },

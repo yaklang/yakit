@@ -285,7 +285,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [params, setParams] = useState<QueryYakScriptRequest>({
         IsHistory: props.isHistory,
         Keyword: props.Keyword,
-        Pagination: {Limit: 10, Order: "desc", Page: 1, OrderBy: "updated_at"},
+        Pagination: {Limit: 15, Order: "desc", Page: 1, OrderBy: "updated_at"},
         Type: props.Type,
         IsIgnore: props.isIgnored
     })

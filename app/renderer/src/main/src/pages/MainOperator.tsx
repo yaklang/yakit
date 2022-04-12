@@ -53,9 +53,9 @@ import {AutoSpin} from "../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
 import {Fields} from "./risks/RiskTable";
 import {RiskStatsTag} from "../utils/RiskStatsTag";
-import { ItemSelects } from "../components/baseTemplate/FormItemUtil"
-import { BugInfoProps, BugList, CustomBugList } from "./invoker/batch/YakBatchExecutors"
-import { coordinate } from "./globalVariable"
+import {ItemSelects} from "../components/baseTemplate/FormItemUtil"
+import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
+import {coordinate} from "./globalVariable"
 
 import "./main.css"
 
@@ -142,10 +142,6 @@ const Main: React.FC<MainProp> = (props) => {
         }
     ])
     const [notification, setNotification] = useState("")
-    const [riskStats, setRiskStats] = useState<RiskStats>({
-        RiskLevelStats: {Values: []}, RiskTypeStats: {Values: []}
-    });
-    const [riskDelta, setRiskDelta] = useState(0);
 
     // 多开 tab 页面
     const [currentTabKey, setCurrentTabKey] = useState("")
@@ -233,33 +229,6 @@ const Main: React.FC<MainProp> = (props) => {
             if (!flag) fetchFuzzerList()
         })
         return () => ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
-    }, [])
-
-    // 设置统计增量小红点
-    useEffect(() => {
-        if (!riskStats || !riskStats?.RiskLevelStats || !riskStats?.RiskTypeStats) {
-            return
-        }
-
-        let count = 0;
-        riskStats.RiskTypeStats.Values.forEach(i => {
-            if (i.Delta > 0) {
-                count += i.Delta
-            }
-        })
-        setRiskDelta(count)
-    }, [riskStats])
-
-    const updateRiskStats = useMemoizedFn(() => {
-        ipcRenderer.invoke("QueryRiskTableStats", {}).then(data => {
-            setRiskStats(data)
-        }).catch(() => {})
-    })
-
-    useEffect(() => {
-        updateRiskStats()
-        let id = setInterval(updateRiskStats, 5000)
-        return () => clearInterval(id)
     }, [])
 
     // 系统类型
@@ -355,9 +324,9 @@ const Main: React.FC<MainProp> = (props) => {
             } as QueryYakScriptRequest)
             .then((data: QueryYakScriptsResponse) => {
                 const tabList: MenuDataProps[] = cloneDeep(RouteMenuData)
-                for(let item of tabList){
-                    if(item.subMenuData){
-                        if(item.key === Route.GeneralModule){
+                for (let item of tabList) {
+                    if (item.subMenuData) {
+                        if (item.key === Route.GeneralModule) {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
                                     icon: <EllipsisOutlined/>,
@@ -365,14 +334,14 @@ const Main: React.FC<MainProp> = (props) => {
                                     label: i.ScriptName,
                                 } as unknown as MenuDataProps
                             })
-    
+
                             item.subMenuData.push(...extraMenus)
                             let subMenuMap = new Map<string, MenuDataProps>()
                             item.subMenuData.forEach((e) => subMenuMap.set(e.key as string, e))
                             item.subMenuData = []
                             subMenuMap.forEach((v) => item.subMenuData?.push(v))
                             item.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
-                        }else{
+                        } else {
                             item.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
                         }
                     }
@@ -559,15 +528,16 @@ const Main: React.FC<MainProp> = (props) => {
         if (type === 1 && URL) {
             setBugUrl(URL)
             ipcRenderer.invoke("get-value", CustomBugList)
-            .then((res: any) => {
-                setBugList(res ? JSON.parse(res) : [])
-                setBugTestShow(true)
-            })
-            .catch(() => {}) 
+                .then((res: any) => {
+                    setBugList(res ? JSON.parse(res) : [])
+                    setBugTestShow(true)
+                })
+                .catch(() => {
+                })
         }
-        if(type === 2){
+        if (type === 2) {
             const filter = pageCache.filter(item => item.route === Route.PoC)
-            if(filter.length === 0){
+            if (filter.length === 0) {
                 const newTabId = `${Route.PoC}-[${randomString(49)}]`
                 const verboseNameRaw = routeKeyToLabel.get(Route.PoC) || `${Route.PoC}`
                 appendCache(
@@ -582,13 +552,13 @@ const Main: React.FC<MainProp> = (props) => {
                     setBugTestValue([])
                     setBugUrl("")
                 }, 300);
-            }else{
+            } else {
                 ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
                 setCurrentTabKey((filter || [])[0]?.id || "")
                 setBugTestValue([])
                 setBugUrl("")
             }
-            
+
         }
     })
 
@@ -596,9 +566,9 @@ const Main: React.FC<MainProp> = (props) => {
         const {name = "", code = ""} = res || {}
         const filter = pageCache.filter(item => item.route === Route.YakScript)
 
-        if(!name || !code) return false
+        if (!name || !code) return false
 
-        if((filter || []).length === 0){
+        if ((filter || []).length === 0) {
             const newTabId = `${Route.YakScript}-[${randomString(49)}]`
             const verboseNameRaw = routeKeyToLabel.get(Route.YakScript) || `${Route.YakScript}`
             appendCache(
@@ -612,7 +582,7 @@ const Main: React.FC<MainProp> = (props) => {
                 ipcRenderer.invoke("send-to-yak-running", {name, code})
 
             }, 300);
-        }else{
+        } else {
             ipcRenderer.invoke("send-to-yak-running", {name, code})
             setCurrentTabKey((filter || [])[0]?.id || "")
         }
@@ -625,11 +595,11 @@ const Main: React.FC<MainProp> = (props) => {
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
             const {type, data = {}} = res
 
-            if(type === "fuzzer") addFuzzer(data)
-            if(type === "scan-port") addScanPort(data)
-            if(type === "brute") addBrute(data)
-            if(type === "bug-test") addBugTest(1, data)
-            if(type === "plugin-store") addYakRunning(data)
+            if (type === "fuzzer") addFuzzer(data)
+            if (type === "scan-port") addScanPort(data)
+            if (type === "brute") addBrute(data)
+            if (type === "bug-test") addBugTest(1, data)
+            if (type === "plugin-store") addYakRunning(data)
         })
 
         return () => {
@@ -640,9 +610,9 @@ const Main: React.FC<MainProp> = (props) => {
 
     const coordinateTimer = useRef<any>(null)
     useEffect(() => {
-        document.onmousemove=(e)=>{
-            const {screenX,screenY,clientX,clientY,pageX,pageY} = e
-            if(coordinateTimer.current){
+        document.onmousemove = (e) => {
+            const {screenX, screenY, clientX, clientY, pageX, pageY} = e
+            if (coordinateTimer.current) {
                 clearTimeout(coordinateTimer.current)
                 coordinateTimer.current = null
             }
@@ -801,7 +771,7 @@ const Main: React.FC<MainProp> = (props) => {
                         </Col>
                         <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
                             <PerformanceDisplay/>
-                            {riskDelta > 0 && <RiskStatsTag delta={riskDelta} onUpdate={updateRiskStats}/>}
+                            <RiskStatsTag professionalMode={true}/>
                             <Space>
                                 {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
@@ -1099,7 +1069,7 @@ const Main: React.FC<MainProp> = (props) => {
                         取消
                     </Button>,
                     <Button key='back' type='primary' onClick={() => {
-                        if((bugTestValue || []).length === 0) return failed("请选择类型后再次提交")
+                        if ((bugTestValue || []).length === 0) return failed("请选择类型后再次提交")
                         addBugTest(2)
                         setBugTestShow(false)
                     }}>
@@ -1118,7 +1088,10 @@ const Main: React.FC<MainProp> = (props) => {
                         optText: "title",
                         optValue: "key",
                         value: (bugTestValue || [])[0]?.key,
-                        onChange: (value, option: any) => setBugTestValue(value ? [{key: option?.key, title: option?.title}] : [])
+                        onChange: (value, option: any) => setBugTestValue(value ? [{
+                            key: option?.key,
+                            title: option?.title
+                        }] : [])
                     }}
                 ></ItemSelects>
             </Modal>

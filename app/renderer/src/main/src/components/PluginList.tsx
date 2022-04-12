@@ -23,6 +23,7 @@ export interface PluginListProp extends AutoCardProps {
     unSelectScript: (info: YakScript) => any
     search: (params: { limit: number; keyword: string }) => any
     extra?: React.ReactNode
+    disabled?: boolean
 }
 
 interface YakScriptCheckboxProp {
@@ -31,6 +32,7 @@ interface YakScriptCheckboxProp {
     selected: string[]
     selectScript: (i: YakScript) => any
     unSelectScript: (i: YakScript) => any
+    disabled?: boolean
 }
 
 const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) => {
@@ -38,6 +40,7 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
 
     return <div key={info.ScriptName} className='list-opt'>
         <Checkbox
+            disabled={props.disabled}
             checked={selected.includes(info.ScriptName)}
             onChange={(r) => {
                 if (r.target.checked) selectScript(info)
@@ -82,6 +85,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
         allSelectScript,
         selectScript,
         unSelectScript,
+        disabled,
         search,
         extra,
         ...restCard
@@ -186,6 +190,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                             <Button size={"small"} type={!!keyword ? "primary" : "link"} icon={<SearchOutlined/>}/>
                         </Popover>
                         <Checkbox
+                            disabled={props.disabled}
                             indeterminate={indeterminate}
                             onChange={(r) => allSelectScript(r.target.checked)}
                             checked={checked}
@@ -212,7 +217,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                 <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto"}}>
                     <div ref={wrapperRef as any}>{list.map((i) => <YakScriptCheckbox
                         info={i.data} selectScript={selectScript} unSelectScript={unSelectScript}
-                        vlistWidth={vlistWidth} selected={selected}
+                        vlistWidth={vlistWidth} selected={selected} disabled={disabled}
                     />)}</div>
                 </div>
             </AutoCard>

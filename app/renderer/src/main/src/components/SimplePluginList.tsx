@@ -8,6 +8,9 @@ export interface SimplePluginListProp {
     pluginTypes?: string
     initialSelected?: string[]
     onSelected?: (names: string[]) => any
+    verbose?: string | any
+    bordered?: boolean
+    disabled?: boolean
 }
 
 export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
@@ -65,8 +68,10 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
     }, [])
 
     return <PluginList
+        bordered={props.bordered}
         loading={pluginLoading}
         lists={scripts}
+        disabled={props.disabled}
         getLists={getScripts}
         total={total}
         selected={params.ScriptNames}
@@ -74,7 +79,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
         selectScript={selectYakScript}
         unSelectScript={unselectYakScript}
         search={search}
-        title={"端口扫描插件"}
+        title={props?.verbose || "选择插件"}
         bodyStyle={{
             padding: "0 4px",
             overflow: "hidden"
