@@ -600,7 +600,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             {/*    }*/}
                             {/*}} value={enableInitialPlugin}/>*/}
                             <Item label={"选择插件"} colon={true}>
-                                <div style={{height: enableInitialPlugin ? 400 : 180, maxWidth: 420}}>
+                                <div style={{height: 200, maxWidth: 420}}>
                                     <SimplePluginList
                                         disabled={!enableInitialPlugin}
                                         bordered={true}
