@@ -46,6 +46,7 @@ import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 import {PayloadManagerPage} from "../payloadManager/PayloadManager";
 import {HackerPlugin} from "../hacker/HackerPlugin"
 import {fuzzerInfoProp} from "../MainOperator"
+import { ItemSelects } from "../../components/baseTemplate/FormItemUtil"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -826,7 +827,28 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             />
                                         </Col>
                                         <Col span={12} xl={8}>
-                                            <ManyMultiSelectForString
+                                            <ItemSelects
+                                                item={{
+                                                    style: {marginBottom: 4},
+                                                    label: <OneLine width={68}>设置代理</OneLine>,
+                                                }}
+                                                select={{
+                                                    style: {width: "100%"},
+                                                    allowClear: true,
+                                                    autoClearSearchValue: true,
+                                                    maxTagTextLength: 8,
+                                                    mode: "tags",
+                                                    data: [
+                                                        {text: "http://127.0.0.1:7890", value: "http://127.0.0.1:7890"},
+                                                        {text: "http://127.0.0.1:8080", value: "http://127.0.0.1:8080"},
+                                                        {text: "http://127.0.0.1:8082", value: "http://127.0.0.1:8082"}
+                                                    ],
+                                                    value: proxy ? proxy.split(",") : [],
+                                                    setValue: (value) => setProxy(value.join(",")),
+                                                    maxTagCount: "responsive",
+                                                }}
+                                            ></ItemSelects>
+                                            {/* <ManyMultiSelectForString
                                                 formItemStyle={{marginBottom: 4}}
                                                 label={<OneLine width={68}>设置代理</OneLine>}
                                                 data={[
@@ -842,7 +864,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 setValue={(r) => {
                                                     setProxy(r.split(",").join(","))
                                                 }}
-                                            />
+                                            /> */}
                                         </Col>
                                         <Col span={12} xl={8}>
                                             <InputItem

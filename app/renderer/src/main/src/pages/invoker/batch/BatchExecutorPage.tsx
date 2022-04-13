@@ -398,7 +398,7 @@ export const YakScriptWithCheckboxLine: React.FC<YakScriptWithCheckboxLineProp> 
                 }
             }}>
                 <Space>
-                    <OneLine maxWidth={270} overflow={"hidden"}>{plugin.ScriptName}</OneLine>
+                    <OneLine maxWidth={270} overflow={"hidden"} title={plugin.ScriptName}>{plugin.ScriptName}</OneLine>
                     {script.Help && <Button
                         size={"small"} type={"link"} onClick={() => {
                         showModal({
@@ -593,6 +593,12 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
     const [activeKey, setActiveKey] = useState<string>('executing')
     const [checked,setChecked] = useState<boolean>(false)
 
+    const allPluginTasks = useRef<Map<string, ExecBatchYakScriptResult[]>>(new Map<string, ExecBatchYakScriptResult[]>())
+
+    useEffect(() => {
+        if(props.executing && (!!allPluginTasks) && (!!allPluginTasks.current)) allPluginTasks.current.clear()
+    }, [props.executing])
+
     useEffect(() => {
         const update = () => {
             const result: BatchTask[] = [];
@@ -623,12 +629,15 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
             if (taskId === "") return
 
             // 缓存内容
-            let result = activeTask.get(taskId);
-            if (!result) {
-                result = []
-            }
-            result.push(data)
-            activeTask.set(taskId, result)
+            let activeResult = activeTask.get(taskId);
+            if (!activeResult) activeResult = []
+            activeResult.push(data)
+            activeTask.set(taskId, activeResult)
+            // 缓存全部
+            let allresult = allPluginTasks.current.get(taskId);
+            if (!allresult) allresult = []
+            allresult.push(data)
+            allPluginTasks.current.set(taskId, allresult)
 
             // 设置状态
             if (data.Status === "end") {
@@ -644,17 +653,14 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
 
         let cached = "";
         const syncActiveTask = () => {
-            if (activeTask.size <= 0) {
-                setActiveTask([]);
-                return
-            }
+            if (activeTask.size <= 0) setActiveTask([]);
+            if(activeTask.size <= 0 && allPluginTasks.current.size <= 0) return
+
             const result: BatchTask[] = [];
             const tasks: string[] = [];
             activeTask.forEach(value => {
-                if (value.length <= 0) {
-                    return
-                }
-
+                if (value.length <= 0) return
+                
                 const first = value[0];
                 const task = {
                     Target: first.Target || "",
@@ -667,14 +673,31 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
                 result.push(task)
                 tasks.push(`${value.length}` + task.TaskId)
             })
+            const allResult: BatchTask[] = [];
+            allPluginTasks.current.forEach(value => {
+                if (value.length <= 0) return
+                
+                const task = {
+                    Target: value[0].Target || "",
+                    ExtraParam: value[0].ExtraParams || [],
+                    PoC: value[0].PoC,
+                    TaskId: value[0].TaskId,
+                    CreatedAt: value[0].Timestamp,
+                } as BatchTask;
+                task.Results = value;
+                allResult.push(task)
+            })
+
+            const oldAllResult: BatchTask[] = []
+            allTasksMap.forEach(value => oldAllResult.push(value))
+            if(JSON.stringify(allResult) !== JSON.stringify(oldAllResult)){
+                allResult.forEach((value) => allTasksMap.set(value.TaskId, value))
+            }
 
             const tasksRaw = tasks.sort().join("|")
             if (tasksRaw !== cached) {
                 cached = tasksRaw
                 setActiveTask(result)
-                result.forEach((value) => {
-                    allTasksMap.set(value.TaskId, value)
-                })
             }
         }
 

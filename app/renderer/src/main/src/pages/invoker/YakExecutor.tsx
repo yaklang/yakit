@@ -12,12 +12,14 @@ import {
     FolderOpenOutlined,
     FullscreenExitOutlined,
     FullscreenOutlined,
-    PoweroffOutlined
+    PoweroffOutlined,
+    EditOutlined,
+    SaveOutlined
 } from "@ant-design/icons"
 import {YakScriptManagerPage} from "./YakScriptManager"
 import {getRandomInt} from "../../utils/randomUtil"
 import {showDrawer} from "../../utils/showModal"
-import {failed, info} from "../../utils/notification"
+import {failed, info, success} from "../../utils/notification"
 import {ExecResult} from "./schema"
 import {SelectOne} from "../../utils/inputUtil"
 import {writeExecResultXTerm, xtermClear} from "../../utils/xtermUtils"
@@ -76,6 +78,7 @@ interface tabCodeProps {
     suffix: string
     isFile: boolean
     route?: string
+    extraParams?: string
 }
 
 interface CustomMenuProps {
@@ -225,7 +228,8 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     code: res,
                     suffix: file.name.split(".").pop() === "yak" ? "yak" : "http",
                     isFile: true,
-                    route: file.path
+                    route: file.path,
+                    extraParams: file.extraParams
                 }
                 setActiveTab(`${tabList.length}`)
                 if (!isExists) setFileList(fileList.concat([tab]))
@@ -299,7 +303,8 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                             code: info.code,
                             isFile: true,
                             suffix: suffix === "yak" ? suffix : "http",
-                            route: res.filePath
+                            route: res.filePath,
+                            extraParams: info.extraParams
                         }
                         for (let item of fileList) {
                             if (item.route === file.route) {
@@ -687,13 +692,34 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                 <Popover
                                                     trigger={["click"]}
                                                     title={"设置命令行额外参数"}
+                                                    placement="bottomRight"
                                                     content={
                                                         <Space style={{width: 400}}>
                                                             <div>yak {tabList[+activeTab]?.tab || "[file]"}</div>
                                                             <Divider type={"vertical"} />
                                                             <Paragraph
-                                                                style={{marginBottom: 0}}
+                                                                style={{width: 200, marginBottom: 0}}
                                                                 editable={{
+                                                                    icon: <Space>
+                                                                        <EditOutlined />
+                                                                        <SaveOutlined onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            tabList[+activeTab].extraParams = extraParams
+                                                                            setTabList(tabList)
+                                                                            if(tabList[+activeTab].isFile){
+                                                                                const files = fileList.map(item => {
+                                                                                    if(item.route === tabList[+activeTab].route){
+                                                                                        item.extraParams = extraParams
+                                                                                        return item
+                                                                                    }
+                                                                                    return item
+                                                                                })
+                                                                                setFileList(files)
+                                                                            }
+                                                                            success("保存成功")
+                                                                        }} 
+                                                                    /></Space>,
+                                                                    tooltip: '编辑/保存为该文件默认参数',
                                                                     onChange: setExtraParams
                                                                 }}
                                                             >
@@ -702,7 +728,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                         </Space>
                                                     }
                                                 >
-                                                    <Button type={"link"} icon={<EllipsisOutlined />} />
+                                                    <Button type={"link"} icon={<EllipsisOutlined />} onClick={() => {
+                                                        setExtraParams(tabList[+activeTab]?.extraParams || "")
+                                                    }} />
                                                 </Popover>
                                                 {executing ? (
                                                     <Button
@@ -984,7 +1012,7 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                                 <div
                                     className={`list-opt ${activeFile === item.route ? "selected" : ""}`}
                                     style={{top: `${index * 22}px`}}
-                                    onClick={() => openFile({name: item.tab, path: item.route})}
+                                    onClick={() => openFile({name: item.tab, path: item.route, extraParams: item.extraParams})}
                                 >
                                     <div>
                                         {renameFlag && renameIndex === index ? (
