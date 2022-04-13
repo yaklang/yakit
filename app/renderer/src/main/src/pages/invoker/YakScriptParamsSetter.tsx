@@ -91,9 +91,13 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
 
     useEffect(() => {
         if((props.Params||[]).length===0) return
-        setOriginParams(cloneDeep(props.Params))
+        const cloneParams = props.Params.map(item => {
+            item.Value = item.DefaultValue ? item.DefaultValue : undefined
+            return item
+        })
+        setOriginParams(cloneParams)
         form.resetFields()
-        form.setFieldsValue({originParams: {}})
+        form.setFieldsValue({originParams: cloneParams})
     }, [props.Params])
 
     useEffect(() => {
