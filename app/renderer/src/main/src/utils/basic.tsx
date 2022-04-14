@@ -498,7 +498,7 @@ export const startExecYakCode = (
         width: "60%", maskClosable: false,
         title: `正在执行：${verbose}`,
         content: <div style={{height: 400, overflowY: "auto"}}>
-            <AutoCard>
+            <AutoCard bodyStyle={{overflowY: "auto"}}>
                 <StartToExecYakScriptViewer script={params} verbose={verbose}/>
             </AutoCard>
         </div>

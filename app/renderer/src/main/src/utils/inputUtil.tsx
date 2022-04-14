@@ -33,6 +33,7 @@ export interface OneLineProp extends JSX.ElementChildrenAttribute {
     width?: string | number
     overflow?: string
     maxWidth?: string | any
+    title?: string
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
@@ -42,7 +43,7 @@ export const OneLine: React.FC<OneLineProp> = (props) => {
         overflow: props.overflow || "auto",
         maxWidth: props.maxWidth,
         textOverflow: "ellipsis"// props.overflow === "hidden" ? "ellipsis" : undefined
-    }}>
+    }} title={props.title || ""}>
         {props.children}
     </div>
 };

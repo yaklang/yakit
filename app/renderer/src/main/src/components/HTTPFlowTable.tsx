@@ -856,14 +856,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             cellRender: ({rowData, dataKey, ...props}: any) => {
                                 return (
                                     <div style={{width: "100%", display: "flex"}}>
-                                        <div className='resize-ellipsis'>
+                                        <div className='resize-ellipsis' title={rowData.Url}>
                                             {!params.SearchURL ? (
                                                 rowData.Url
                                             ) : (
-                                                <Highlighter
-                                                    searchWords={[params.SearchURL]}
-                                                    textToHighlight={rowData.Url}
-                                                />
+                                                rowData.Url
+                                                // <Highlighter
+                                                //     searchWords={[params.SearchURL]}
+                                                //     textToHighlight={rowData.Url}
+                                                // />
                                             )}
                                         </div>
                                         {/*<CopyToClipboard*/}
