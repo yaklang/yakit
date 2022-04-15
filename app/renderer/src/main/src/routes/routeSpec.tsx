@@ -33,8 +33,9 @@ import {ReverseServerPage} from "../pages/reverse/ReverseServerPage";
 import {RiskPage} from "../pages/risks/RiskPage";
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage";
 import {BatchExecutorPage} from "../pages/invoker/batch/BatchExecutorPage";
-import { HTTPFuzzerPage } from "../pages/fuzzer/HTTPFuzzerPage";
-import { fuzzerInfoProp } from "../pages/MainOperator";
+import {HTTPFuzzerPage} from "../pages/fuzzer/HTTPFuzzerPage";
+import {fuzzerInfoProp} from "../pages/MainOperator";
+import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -86,6 +87,8 @@ export enum Route {
     ReverseServer = "reverse-server",
     ShellReceiver = "shellReceiver",
     DNSLog = "dnslog",
+    ICMPSizeLog = "icmp-sizelog",
+    TCPPortLog = "tcp-portlog",
 
     // 测试
     BatchExecutorPage = "batch-executor-page-ex",
@@ -143,8 +146,10 @@ export const RouteMenuData: MenuDataProps[] = [
         key: Route.ReverseManager, label: "反连管理", icon: <AppstoreOutlined/>,
         subMenuData: [
             {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined/>},
-            {key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined/>},
             {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined/>},
+            {key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined/>},
+            {key: Route.ICMPSizeLog, label: "ICMP-SizeLog", icon: <OneToOneOutlined/>},
+            {key: Route.TCPPortLog, label: "TCP-PortLog", icon: <OneToOneOutlined/>},
         ]
     },
     {
@@ -224,7 +229,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                 <HTTPHacker/>
             </Suspense>
         case Route.HTTPFuzzer:
-            return <HTTPFuzzerPage isHttps={params?.isHttps} request={params?.request} system={params?.system} order={params?.order} fuzzerParams={params?.fuzzerParams} />
+            return <HTTPFuzzerPage isHttps={params?.isHttps} request={params?.request} system={params?.system}
+                                   order={params?.order} fuzzerParams={params?.fuzzerParams}/>
         case Route.Codec:
             return <CodecPage/>
         case Route.ModManager:
@@ -232,9 +238,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.PayloadManager:
             return <PayloadManagerPage/>
         case Route.Mod_ScanPort:
-            return <PortScanPage sendTarget={params?.scanportParams} />
+            return <PortScanPage sendTarget={params?.scanportParams}/>
         case Route.Mod_Brute:
-            return <BrutePage sendTarget={params?.bruteParams} />
+            return <BrutePage sendTarget={params?.bruteParams}/>
         case Route.DataCompare:
             return <DataCompare/>
         case Route.DB_HTTPHistory:
@@ -251,6 +257,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <RiskPage/>
         case Route.DNSLog:
             return <DNSLogPage/>
+        case Route.ICMPSizeLog:
+            return <ICMPSizeLoggerPage/>
         case Route.BatchExecutorPage:
             return <BatchExecutorPage/>
         default:

@@ -116,7 +116,7 @@ const singletonRoute = [
     Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
     Route.DB_Risk,
 
-    Route.PoC, Route.DNSLog, Route.BatchExecutorPage,
+    Route.PoC, Route.DNSLog, Route.BatchExecutorPage, Route.ICMPSizeLog, Route.TCPPortLog,
 ]
 
 interface RiskStats {

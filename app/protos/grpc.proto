@@ -209,10 +209,33 @@ service Yak {
   rpc QueryRiskTableStats(Empty) returns (RiskTableStats);
   rpc ResetRiskTableStats(Empty) returns (Empty);
 
-  // DNSLog
+  // DNSLog / ICMP / RandomTrigger
+  rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
+  rpc GetCurrentYakBridgeLogServer(Empty) returns (YakDNSLogBridgeAddr);
   rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
   rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+  rpc RequireICMPRandomLength(Empty) returns (RequireICMPRandomLengthResponse);
   rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
+  rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
+  rpc QueryRandomPortTrigger(QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
+}
+
+message RequireICMPRandomLengthResponse {
+  int32 Length = 1;
+}
+
+message RandomPortTriggerNotification {
+
+}
+
+message QueryRandomPortTriggerRequest {
+
+}
+
+message RandomPortInfo {
+  string Token = 1;
+  string Addr = 2;
+  int32 Port = 3;
 }
 
 message DeleteHistoryHTTPFuzzerTaskRequest {
@@ -255,7 +278,7 @@ message QueryICMPTriggerResponse {
 
 message ICMPTriggerNotification {
   int32 Size = 1;
-  int32 CurrentRemoteAddr = 2;
+  string CurrentRemoteAddr = 2;
   repeated string Histories = 3;
   int32 CurrentRemoteCachedConnectionCount = 4;
   int32 SizedCachedHistoryConnectionCount = 5;
@@ -306,6 +329,7 @@ message ExecuteBatchPacketYakScriptParams {
 
 message YakDNSLogBridgeAddr {
   string DNSLogAddr = 1;
+  string DNSLogAddrSecret = 2;
 }
 
 message QueryDNSLogByTokenRequest {

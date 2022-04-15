@@ -33,5 +33,21 @@ module.exports = {
         ipcMain.handle("QueryDNSLogByToken", async (e, params) => {
             return await asyncQueryDNSLogByToken(params)
         })
+
+        // asyncQueryICMPTrigger wrapper
+        const asyncQueryICMPTrigger = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().QueryICMPTrigger(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("QueryICMPTrigger", async (e, params) => {
+            return await asyncQueryICMPTrigger(params)
+        })
     }
 }
