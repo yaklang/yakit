@@ -61,9 +61,11 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
     const update = useMemoizedFn(() => {
         ipcRenderer.invoke("QueryRandomPortTrigger", {
             Token: token
-        }).catch(() => {
         }).then((d: RandomPortTriggerNotification) => {
-            setNotification([d])
+            if (d?.RemoteAddr !== "") {
+                setNotification([d])
+            }
+        }).catch(() => {
         })
     })
 
@@ -103,11 +105,14 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
             </Alert>
             <Table<RandomPortTriggerNotification>
                 pagination={false}
-                rowKey={i => `${i.RemoteAddr}`}
+                rowKey={i => `${i?.RemoteAddr || randomString(12)}`}
                 dataSource={notification}
                 columns={[
-                    {title: "随机反连端口", render: (i: RandomPortTriggerNotification) => i.LocalPort},
-                    {title: "远端地址", render: (i: RandomPortTriggerNotification) => <CopyableField text={i.RemoteAddr}/>},
+                    {title: "随机反连端口", render: (i: RandomPortTriggerNotification) => i?.LocalPort},
+                    {
+                        title: "远端地址",
+                        render: (i: RandomPortTriggerNotification) => <CopyableField text={i?.RemoteAddr}/>
+                    },
                     {
                         title: "触发时间",
                         render: (i: RandomPortTriggerNotification) => <Tag>{formatTimestamp(i.TriggerTimestamp)}</Tag>
