@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from "react";
 import {AutoCard} from "../../components/AutoCard";
-import {Divider, Form, Space, Table, Tag} from "antd";
-import {InputInteger, InputItem} from "../../utils/inputUtil";
-import {randomInt} from "crypto";
+import {Alert, Button, Divider, Form, Space, Spin, Table, Tag} from "antd";
+import {CopyableField, InputInteger} from "../../utils/inputUtil";
 import {useDebounce, useMemoizedFn} from "ahooks";
 import {formatTimestamp} from "../../utils/timeUtil";
+import {success} from "../../utils/notification";
+import {ReloadOutlined} from "@ant-design/icons";
 
 export interface ICMPSizeLoggerPageProp {
 
@@ -24,8 +25,10 @@ interface ICMPSizeLoggerInfo {
 }
 
 export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
-    const [size, setSize] = useState<number>(123);
+    const [size, setSize] = useState<number>(0);
     const [records, setRecords] = useState<ICMPSizeLoggerInfo[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [host, setHost] = useState("");
 
     const sizeNow = useDebounce(size, {maxWait: 500});
 
@@ -41,9 +44,25 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
         })
     })
 
+    const refreshSize = useMemoizedFn(() => {
+        setLoading(true)
+        ipcRenderer.invoke("RequireICMPRandomLength", {}).then((d: { Length: number } | any) => {
+            setSize(d.Length)
+            setRecords([])
+        }).catch(() => {
+        }).finally(() => {
+            setTimeout(() => setLoading(false), 100)
+        })
+    })
+
     useEffect(() => {
+        if (sizeNow < 100) {
+            refreshSize()
+            return
+        }
+
         update()
-        let id = setInterval(update, 1000)
+        let id = setInterval(update, 4000)
         return () => {
             clearInterval(id)
         }
@@ -58,30 +77,66 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
         <Form onSubmitCapture={e => {
             e.preventDefault()
 
-
+            setLoading(true)
+            ipcRenderer.invoke("RequireICMPRandomLength", {}).then((d: { Length: number, ExternalHost: string } | any) => {
+                setSize(d.Length)
+                setHost(d.ExternalHost)
+                setRecords([])
+            }).finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
         }} layout={"inline"} size={"small"}>
             <InputInteger
+                disable={true}
                 label={"设置 Ping 包大小"}
                 setValue={setSize}
                 value={size}
             />
+            <Form.Item colon={false} label={" "}>
+                <Space>
+                    <Button disabled={loading} type="primary" htmlType="submit"> 随机生成可用长度 </Button>
+                    <Button disabled={loading} type="link" onClick={() => {
+                        update()
+                    }} icon={<ReloadOutlined/>}> 刷新 </Button>
+                </Space>
+            </Form.Item>
         </Form>
     </Space>} bordered={false}>
-        <Table<ICMPSizeLoggerInfo>
-            size={"small"}
-            dataSource={records}
-            rowKey={i => `${i.CurrentRemoteAddr}`}
-            pagination={false}
-            columns={[
-                {title: "ICMP/Ping 长度", render: (i: ICMPSizeLoggerInfo) => <Tag color={"geekblue"}>{i.Size}</Tag>},
-                {title: "远端IP", dataIndex: "CurrentRemoteAddr"},
-                {title: "触发时间",
-                    render: (i: ICMPSizeLoggerInfo) => <Tag
-                        color={"geekblue"}>{formatTimestamp(i.TriggerTimestamp)}</Tag>
-                },
-            ]}
-        >
+        <Space style={{width: "100%"}} direction={"vertical"}>
+            <Alert type={"success"} message={<Space direction={"vertical"} style={{width: "100%"}}>
+                <h4>ICMP Size Logger 是一个通过 Ping 包大小来判断 ICMP 反连的 ICMP 记录器</h4>
+                <Space>
+                    <div>在 Windows 系统中，使用</div>
+                    {host === "" || sizeNow <= 0 ? <Spin/> :
+                        <CopyableField mark={true} text={`ping -l ${sizeNow} ${host}`}/>}
+                    <div>命令</div>
+                </Space>
+                <Space>
+                    <div>在 MacOS/Linux/*nix 系统中，使用</div>
+                    {host === "" || sizeNow <= 0 ? <Spin/> :
+                        <CopyableField mark={true} text={`ping -c 4 -s ${sizeNow} ${host}`}/>}
+                    <div>命令</div>
+                </Space>
+            </Space>}>
 
-        </Table>
+            </Alert>
+            <Table<ICMPSizeLoggerInfo>
+                size={"small"}
+                dataSource={records}
+                rowKey={i => `${i.CurrentRemoteAddr}`}
+                pagination={false}
+                columns={[
+                    {title: "ICMP/Ping 长度", render: (i: ICMPSizeLoggerInfo) => <Tag color={"geekblue"}>{sizeNow}</Tag>},
+                    {title: "远端IP", dataIndex: "CurrentRemoteAddr"},
+                    {
+                        title: "触发时间",
+                        render: (i: ICMPSizeLoggerInfo) => <Tag
+                            color={"geekblue"}>{formatTimestamp(i.TriggerTimestamp)}</Tag>
+                    },
+                ]}
+            >
+
+            </Table>
+        </Space>
     </AutoCard>
 };

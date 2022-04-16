@@ -222,14 +222,23 @@ service Yak {
 
 message RequireICMPRandomLengthResponse {
   int32 Length = 1;
+  string ExternalHost = 2;
 }
 
 message RandomPortTriggerNotification {
-
+  string RemoteAddr = 1;
+  string RemoteIP = 2;
+  int32 RemotePort = 3;
+  int32 LocalPort = 4;
+  repeated string History = 5;
+  int32 CurrentRemoteCachedConnectionCount = 6;
+  int32 LocalPortCachedHistoryConnectionCount = 7;
+  int64 TriggerTimestamp = 8;
+  int64 Timestamp = 9;
 }
 
 message QueryRandomPortTriggerRequest {
-
+  string Token = 1;
 }
 
 message RandomPortInfo {

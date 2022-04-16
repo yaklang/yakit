@@ -36,6 +36,7 @@ import {BatchExecutorPage} from "../pages/invoker/batch/BatchExecutorPage";
 import {HTTPFuzzerPage} from "../pages/fuzzer/HTTPFuzzerPage";
 import {fuzzerInfoProp} from "../pages/MainOperator";
 import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage";
+import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -259,6 +260,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <DNSLogPage/>
         case Route.ICMPSizeLog:
             return <ICMPSizeLoggerPage/>
+        case Route.TCPPortLog:
+            return <RandomPortLogPage/>
         case Route.BatchExecutorPage:
             return <BatchExecutorPage/>
         default:

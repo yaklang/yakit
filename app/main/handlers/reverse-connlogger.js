@@ -49,5 +49,53 @@ module.exports = {
         ipcMain.handle("QueryICMPTrigger", async (e, params) => {
             return await asyncQueryICMPTrigger(params)
         })
+
+        // asyncRequireICMPRandomLength wrapper
+        const asyncRequireICMPRandomLength = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().RequireICMPRandomLength(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("RequireICMPRandomLength", async (e, params) => {
+            return await asyncRequireICMPRandomLength(params)
+        })
+
+        // asyncRequireRandomPortToken wrapper
+        const asyncRequireRandomPortToken = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().RequireRandomPortToken(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("RequireRandomPortToken", async (e, params) => {
+            return await asyncRequireRandomPortToken(params)
+        })
+
+        // asyncQueryRandomPortTrigger wrapper
+        const asyncQueryRandomPortTrigger = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().QueryRandomPortTrigger(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("QueryRandomPortTrigger", async (e, params) => {
+            return await asyncQueryRandomPortTrigger(params)
+        })
     }
 }
