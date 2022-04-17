@@ -58,6 +58,7 @@ import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExec
 import {coordinate} from "./globalVariable"
 
 import "./main.css"
+import Login from "./Login"
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -117,6 +118,7 @@ const singletonRoute = [
     Route.DB_Risk,
 
     Route.PoC, Route.DNSLog, Route.BatchExecutorPage, Route.ICMPSizeLog, Route.TCPPortLog,
+    Route.ModStoreOnline
 ]
 
 interface RiskStats {
@@ -142,6 +144,9 @@ const Main: React.FC<MainProp> = (props) => {
         }
     ])
     const [notification, setNotification] = useState("")
+
+    // 登录框状态
+    const [loginshow, setLoginShow] = useState<boolean>(false)
 
     // 多开 tab 页面
     const [currentTabKey, setCurrentTabKey] = useState("")
@@ -789,6 +794,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         配置
                                     </Button>
                                 </Dropdown>
+                                <Button type="link" onClick={() => setLoginShow(true)}>登录</Button>
                                 <Button type={"link"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
                                     if (winCloseFlag) setWinCloseShow(true)
                                     else {
@@ -1095,6 +1101,10 @@ const Main: React.FC<MainProp> = (props) => {
                     }}
                 ></ItemSelects>
             </Modal>
+            <Login
+                visible={loginshow}
+                onCancel={() => setLoginShow(!loginshow)}
+            ></Login>
         </Layout>
     )
 };

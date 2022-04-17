@@ -20,6 +20,7 @@ const createWindow = () => {
             nodeIntegration: false,
             contextIsolation: false,
             sandbox: true,
+            webviewTag: true
         },
     })
 

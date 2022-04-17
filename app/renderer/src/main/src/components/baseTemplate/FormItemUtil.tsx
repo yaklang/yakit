@@ -32,22 +32,27 @@ interface ItemSelectProps<T> extends SelectProps<T> {
     renderOpt?: (info: T) => ReactNode
 }
 
-/* 拖拽式上传组件，内部组件为textarea类型 */
-export interface ItemDraggerTextAreaProps {
-    // dragger组件属性
-    dragger?: ItemDraggerProps
+interface ItemGeneralParams {
     // item组件属性
     item?: ItemExtraProps
-    // textarea组件属性
-    textarea?: ItemTextAreaProps
-
+    // 是否外层包裹item组件，为false时prefixNode和suffixNode参数无效
+    isItem?: boolean
     // 放在form-item里面的前缀元素
     prefixNode?: ReactNode
     // 放在form-item里面的前缀元素
     suffixNode?: ReactNode
 }
+
+/* 拖拽式上传组件，内部组件为textarea类型 */
+export interface ItemDraggerTextAreaProps extends ItemGeneralParams {
+    // dragger组件属性
+    dragger?: ItemDraggerProps
+    // textarea组件属性
+    textarea?: ItemTextAreaProps
+}
 export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) => {
     const {
+        isItem = true,
         // @ts-ignore
         dragger: {className: DraggerClassName, ...restDragger} = {},
         item = {},
@@ -56,6 +61,37 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
         prefixNode,
         suffixNode
     } = props
+
+    if (!isItem) {
+        return (
+            <Dragger
+                {...restDragger}
+                className={`file-upload-dragger ${DraggerClassName || ""}`}
+                accept={restDragger.accept || "text/plain"}
+            >
+                <TextArea
+                    {...restTextarea}
+                    onChange={(e) => {
+                        if (restTextarea.onChange) restTextarea.onChange(e)
+                        setValue && setValue(e.target.value)
+                        if (!!isBubbing) e.stopPropagation()
+                    }}
+                    onPressEnter={(e) => {
+                        if (restTextarea.onPressEnter) restTextarea.onPressEnter(e)
+                        if (!!isBubbing) e.stopPropagation()
+                    }}
+                    onFocus={(e) => {
+                        if (restTextarea.onFocus) restTextarea.onFocus(e)
+                        if (!!isBubbing) e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                        if (restTextarea.onClick) restTextarea.onClick(e)
+                        if (!!isBubbing) e.stopPropagation()
+                    }}
+                ></TextArea>
+            </Dragger>
+        )
+    }
 
     return (
         <Item {...item}>
@@ -98,21 +134,15 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
 }
 
 /* 拖拽式上传组件，内部组件为input类型 */
-export interface ItemDraggerInputProps {
+export interface ItemDraggerInputProps extends ItemGeneralParams {
     // dragger组件属性
     dragger?: ItemDraggerProps
-    // item组件属性
-    item?: ItemExtraProps
     // input组件属性
     input?: ItemInputProps
-
-    // 放在form-item里面的前缀元素
-    prefixNode?: ReactNode
-    // 放在form-item里面的前缀元素
-    suffixNode?: ReactNode
 }
 export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
     const {
+        isItem = true,
         // @ts-ignore
         dragger: {className: DraggerClassName, ...restDragger} = {},
         item = {},
@@ -121,6 +151,37 @@ export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
         prefixNode,
         suffixNode
     } = props
+
+    if (!isItem) {
+        return (
+            <Dragger
+                {...restDragger}
+                className={`file-upload-dragger ${DraggerClassName || ""}`}
+                accept={restDragger.accept === undefined ? "text/plain" : restDragger.accept}
+            >
+                <Input
+                    {...restInput}
+                    onChange={(e) => {
+                        if (restInput.onChange) restInput.onChange(e)
+                        setValue && setValue(e.target.value)
+                        if (!!isBubbing) e.stopPropagation()
+                    }}
+                    onPressEnter={(e) => {
+                        if (restInput.onPressEnter) restInput.onPressEnter(e)
+                        if (!!isBubbing) e.stopPropagation()
+                    }}
+                    onFocus={(e) => {
+                        if (restInput.onFocus) restInput.onFocus(e)
+                        if (!!isBubbing) e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                        if (restInput.onClick) restInput.onClick(e)
+                        if (!!isBubbing) e.stopPropagation()
+                    }}
+                ></Input>
+            </Dragger>
+        )
+    }
 
     return (
         <Item {...item}>
@@ -163,19 +224,13 @@ export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
 }
 
 /* 下拉框类型组件 */
-export interface ItemSelectsProps<T> {
-    // item组件属性
-    item?: ItemExtraProps
+export interface ItemSelectsProps<T> extends ItemGeneralParams {
     // select组件属性
     select?: ItemSelectProps<T>
-
-    // 放在form-item里面的前缀元素
-    prefixNode?: ReactNode
-    // 放在form-item里面的前缀元素
-    suffixNode?: ReactNode
 }
 export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
     const {
+        isItem = true,
         item = {},
         // @ts-ignore
         select: {
@@ -190,6 +245,31 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
         prefixNode,
         suffixNode
     } = props
+
+    if (!isItem) {
+        return (
+            <Select
+                {...restSelect}
+                onChange={(value, option) => {
+                    if (setValue) setValue(value)
+                    if (restSelect.onChange) restSelect.onChange(value, option)
+                }}
+            >
+                {data.map((item, index) => {
+                    return (
+                        <Option
+                            key={item[optValue] || index}
+                            value={item[optValue]}
+                            title={item[optText]}
+                            disabled={item[optDisabled]}
+                        >
+                            {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : item[optValue]}
+                        </Option>
+                    )
+                })}
+            </Select>
+        )
+    }
 
     return (
         <Item {...item}>
