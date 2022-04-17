@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Checkbox, Col, Divider, Form, Input, Row, Space, Spin, Tabs, Tag} from "antd"
-import {InputInteger, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
 import {ExecResult, YakScript} from "../invoker/schema"
 import {failed, info, success} from "../../utils/notification"
@@ -45,6 +45,9 @@ export interface PortScanParams {
     ProbeTimeout: number
     ProbeMax: number
     EnableCClassScan: boolean
+
+    SkippedHostAliveScan?: boolean
+    HostAlivePorts?: string
 }
 
 const ScanKind: { [key: string]: string } = {
@@ -71,19 +74,20 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         ScriptNames: [],
         ProbeMax: 3,
         EnableCClassScan: false,
+        HostAlivePorts: "22,80,443",
     })
     const [token, setToken] = useState(randomString(40))
     const [resettingData, setResettingData] = useState(false)
     const xtermRef = useRef(null)
     const [resetTrigger, setResetTrigger] = useState(false)
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
-    const [closedPorts, setClosedPorts] = useState<YakitPort[]>([])
+    // const [closedPorts, setClosedPorts] = useState<YakitPort[]>([])
     const [port, setPort] = useState<PortAsset>()
 
     const [uploadLoading, setUploadLoading] = useState(false)
     const [templatePort, setTemplatePort] = useState<string>()
     const openPort = useRef<YakitPort[]>([])
-    const closedPort = useRef<YakitPort[]>([])
+    // const closedPort = useRef<YakitPort[]>([])
 
     const [infoState, {reset}] = useHoldingIPCRStream(
         "scan-port",
@@ -127,8 +131,11 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                     let logInfo = ExtractExecResultMessageToYakitPort(JSON.parse(messageJsonRaw))
                     if (!logInfo) return
 
-                    if (logInfo.isOpen) openPort.current.unshift(logInfo)
-                    else closedPort.current.unshift(logInfo)
+                    if (logInfo.isOpen) {
+                        openPort.current.unshift(logInfo)
+                    } else {
+                        // closedPort.current.unshift(logInfo)
+                    }
                 } catch (e) {
                     failed("解析端口扫描结果失败...")
                 }
@@ -145,8 +152,10 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 
         const syncPorts = () => {
             if (openPort.current) setOpenPorts([...openPort.current])
-            if (closedPort.current) setClosedPorts([...closedPort.current])
+            // if (closedPort.current) setClosedPorts([...closedPort.current])
         }
+
+        syncPorts()
         let id = setInterval(syncPorts, 1000)
         return () => {
             clearInterval(id)
@@ -191,7 +200,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 
                                         setLoading(true)
                                         openPort.current = []
-                                        closedPort.current = []
+                                        // closedPort.current = []
                                         reset()
                                         xtermClear(xtermRef)
                                         ipcRenderer.invoke("PortScan", params, token)
@@ -429,6 +438,19 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         value={params.EnableCClassScan}
                         setValue={EnableCClassScan => setParams({...params, EnableCClassScan})}
             />
+            <SwitchItem label={"跳过主机存活检测"} help={"主机存活检测，根据当前用户权限使用 ICMP/TCP Ping 探测主机是否存活"}
+                        value={params.SkippedHostAliveScan}
+                        setValue={SkippedHostAliveScan => setParams({...params, SkippedHostAliveScan})}
+            />
+            {!params.SkippedHostAliveScan && (
+                <>
+                    <InputItem
+                        label={"TCP Ping 端口"} help={"配置 TCP Ping 端口：以这些端口是否开放作为 TCP Ping 依据"}
+                        value={params.HostAlivePorts}
+                        setValue={HostAlivePorts => setParams({...params, HostAlivePorts})}
+                    />
+                </>
+            )}
             {params.Mode != "syn" && params.Active && <SelectOne
                 label={"服务指纹级别"}
                 help={"级别越高探测的详细程度越多，主动发包越多，时间越长"}

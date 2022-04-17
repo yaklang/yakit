@@ -780,6 +780,12 @@ message PortScanRequest {
 
   // 启用 C 段扫描
   bool EnableCClassScan = 15;
+
+  // HostAlive Scan
+  bool SkippedHostAliveScan = 16;
+  double HostAliveTimeout = 17;
+  int32 HostAliveConcurrent = 18;
+  string HostAlivePorts = 19;
 }
 
 message DeletePortsRequest {

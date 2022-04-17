@@ -4,8 +4,8 @@ import {YakitPort} from "../../components/yakitLogSchema";
 import {CopyableField, InputItem} from "../../utils/inputUtil";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {failed} from "../../utils/notification";
-import { DropdownMenu } from "../../components/baseTemplate/DropdownMenu";
-import { LineMenunIcon } from "../../assets/icons";
+import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu";
+import {LineMenunIcon} from "../../assets/icons";
 
 export interface PortTableProp {
     data: YakitPort[]
@@ -19,7 +19,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
     useEffect(() => {
-        if(props.data.length === 0){
+        if (props.data.length === 0) {
             setSelectedRowKeys([])
             setCheckedURL([])
         }
@@ -27,31 +27,33 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
 
     return <Table<YakitPort>
         size={"small"} bordered={true}
-        rowKey={(row)=>row.host}
+        rowKey={(row) => `${row.host}:${row.port}`}
         title={e => {
             return <Row>
                 <Col span={12}>开放端口 / Open Ports</Col>
                 <Col span={12} style={{textAlign: "right"}}>
-                <DropdownMenu 
-                    menu={{data: [
-                        {key:'bug-test',title:"发送到漏洞检测"},
-                        {key:'brute',title:"发送到爆破"}
-                    ]}}
-                    dropdown={{placement: "bottomRight"}}
-                    onClick={(key) => {
-                        if(checkedURL.length === 0){
-                            failed("请最少选择一个选项再进行操作")
-                            return
-                        }
-                        
-                        ipcRenderer.invoke("send-to-tab", {
-                            type: key,
-                            data:{URL: JSON.stringify(checkedURL)}
-                        })
-                    }}
-                >
-                    <Button type="link" style={{height: 16}} icon={<LineMenunIcon />}></Button>
-                </DropdownMenu>
+                    <DropdownMenu
+                        menu={{
+                            data: [
+                                {key: 'bug-test', title: "发送到漏洞检测"},
+                                {key: 'brute', title: "发送到爆破"}
+                            ]
+                        }}
+                        dropdown={{placement: "bottomRight"}}
+                        onClick={(key) => {
+                            if (checkedURL.length === 0) {
+                                failed("请最少选择一个选项再进行操作")
+                                return
+                            }
+
+                            ipcRenderer.invoke("send-to-tab", {
+                                type: key,
+                                data: {URL: JSON.stringify(checkedURL)}
+                            })
+                        }}
+                    >
+                        <Button type="link" style={{height: 16}} icon={<LineMenunIcon/>}></Button>
+                    </DropdownMenu>
                 </Col>
             </Row>
         }}
