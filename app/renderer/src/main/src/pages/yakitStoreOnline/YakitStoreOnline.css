@@ -1,3 +1,32 @@
+.plugin-list-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+}
+.plugin-list-container .list-filter {
+    width: 100%;
+    height: 40px;
+    margin-bottom: 4px;
+}
+.plugin-list-container .list-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-flow: column;
+}
+.plugin-list-container .list-body .list-content {
+    flex: 1;
+    padding: 0 5px;
+    overflow: hidden auto;
+}
+.plugin-list-container .list-body .list-pagination {
+    width: 100%;
+    height: 32px;
+    padding-top: 5;
+    text-align: right;
+}
+
 .plugin-list-opt {
     width: 100%;
 }
