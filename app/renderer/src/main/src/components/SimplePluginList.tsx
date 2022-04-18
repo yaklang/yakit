@@ -13,33 +13,36 @@ export interface SimplePluginListProp {
     disabled?: boolean
 }
 
-export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
+export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((props) => {
     const [scripts, setScripts, getScripts] = useGetState<YakScript[]>([])
     const [total, setTotal] = useState(0)
-    const [params, setParams] = useState<{ ScriptNames: string[] }>({ScriptNames: props.initialSelected || []})
+    const [listNames, setListNames] = useState<string[]>([...(props.initialSelected || [])]);
+
+    // const [params, setParams] = useState<{ ScriptNames: string[] }>({ScriptNames: [...props.initialSelected || []]})
     const [pluginLoading, setPluginLoading] = useState<boolean>(false)
 
     const allSelectYakScript = useMemoizedFn((flag: boolean) => {
         if (flag) {
-            const newSelected = [...scripts.map((i) => i.ScriptName), ...params.ScriptNames]
-            setParams({...params, ScriptNames: newSelected.filter((e, index) => newSelected.indexOf(e) === index)})
+            const newSelected = [...scripts.map((i) => i.ScriptName), ...listNames]
+            setListNames([...newSelected.filter((e, index) => newSelected.indexOf(e) === index)])
         } else {
-            setParams({...params, ScriptNames: []})
+            setListNames([])
         }
     })
     const selectYakScript = useMemoizedFn((y: YakScript) => {
-        if (!params.ScriptNames.includes(y.ScriptName))
-            setParams({...params, ScriptNames: [...params.ScriptNames, y.ScriptName]})
+        listNames.push(y.ScriptName)
+        setListNames([...listNames])
     })
     const unselectYakScript = useMemoizedFn((y: YakScript) => {
-        setParams({...params, ScriptNames: params.ScriptNames.filter((i) => i !== y.ScriptName)})
+        const names = listNames.splice(listNames.indexOf(y.ScriptName), 1);
+        setListNames([...listNames])
     })
 
     useEffect(() => {
         if (props.onSelected) {
-            props.onSelected(params.ScriptNames)
+            props.onSelected([...listNames])
         }
-    }, [params.ScriptNames])
+    }, [listNames])
 
 
     const search = useMemoizedFn((searchParams?: { limit: number; keyword: string }) => {
@@ -51,10 +54,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
             (data, total) => {
                 setTotal(total || 0)
                 setScripts(data)
-                setParams({
-                    ...params,
-                    ScriptNames: (data || []).filter(i => i.IsGeneralModule).map(i => i.ScriptName)
-                })
+                setListNames([...(data || []).filter(i => i.IsGeneralModule).map(i => i.ScriptName)])
             },
             () => setTimeout(() => setPluginLoading(false), 300),
             limit || 200,
@@ -76,7 +76,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
         disabled={props.disabled}
         getLists={getScripts}
         total={total}
-        selected={params.ScriptNames}
+        selected={listNames}
         allSelectScript={allSelectYakScript}
         selectScript={selectYakScript}
         unSelectScript={unselectYakScript}
@@ -87,4 +87,4 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = (props) => {
             overflow: "hidden"
         }}
     />
-};
+});
