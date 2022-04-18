@@ -357,7 +357,7 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                                 <div
                                     className={`text-icon-admin ${
                                         TagColor[["failed", "success", "not"][index % 3]].split("|")[0]
-                                    }`}
+                                    } vertical-center`}
                                 >
                                     {TagColor[["failed", "success", "not"][index % 3]].split("|")[1]}
                                 </div>
