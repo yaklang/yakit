@@ -1,16 +1,16 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {Row, Col, Input, Button, Pagination, List, Space, Tag, Card, Tooltip, Progress, Typography, Radio} from "antd"
-import {StarOutlined, StarFilled, ArrowLeftOutlined, DownloadOutlined} from "@ant-design/icons"
+import {Row, Col, Input, Button, Pagination, List, Space, Card, Tooltip, Progress, Typography} from "antd"
+import {StarOutlined, StarFilled} from "@ant-design/icons"
 import {QueryGeneralRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 import {useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import {failed} from "../../utils/notification"
+import {failed, success} from "../../utils/notification"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
-import {CopyableField} from "../../utils/inputUtil"
 import {YakitPluginInfo} from "./YakitPluginInfo"
+import {OfficialYakitLogoIcon} from "../../assets/icons"
+import {AutoSpin} from "../../components/AutoSpin"
 
 import "./YakitStoreOnline.css"
-import {OfficialYakitLogoIcon} from "../../assets/icons"
 
 const {ipcRenderer} = window.require("electron")
 const {Paragraph} = Typography
@@ -97,7 +97,17 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     const AddAllPlugin = useMemoizedFn(() => {
         setAddLoading(true)
     })
-    const StopAllPlugin = () => {}
+    const StopAllPlugin = () => {
+        setAddLoading(false)
+    }
+
+    const addLocalLab = useMemoizedFn((info: YakScript) => {
+        success("添加成功")
+    })
+
+    const starredPlugin = useMemoizedFn((info: YakScript) => {
+        success("星星改变成功")
+    })
 
     useEffect(() => {
         search()
@@ -106,145 +116,150 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     return !!pluginInfo ? (
         <YakitPluginInfo info={pluginInfo} onBack={() => setPluginInfo(undefined)} />
     ) : (
-        <div style={{width: "100%", height: "100%", display: "flex", flexFlow: "column"}}>
-            <div
-                style={{
-                    width: "100%",
-                    height: 40,
-                    marginBottom: 4
-                }}
-            >
-                <Row>
-                    <Col span={18}>
-                        <Space>
-                            <Input
-                                value={params.title}
-                                allowClear
-                                placeholder='搜索商店内插件'
-                                onChange={(e) => {
-                                    setParams({...params, title: e.target.value})
-                                    triggerSearch()
-                                }}
-                            />
-                            排序顺序
-                            <ItemSelects
-                                isItem={false}
-                                select={{
-                                    style: {width: 100},
-                                    data: [
-                                        {text: "按热度", value: "hot"},
-                                        {text: "按时间", value: "time"}
-                                    ],
-                                    value: params.order,
-                                    setValue: (value) => {
-                                        setParams({...params, order: value})
+        <AutoSpin spinning={loading}>
+            <div className='plugin-list-container'>
+                <div className='list-filter'>
+                    <Row>
+                        <Col span={18}>
+                            <Space>
+                                <Input
+                                    value={params.title}
+                                    allowClear
+                                    placeholder='搜索商店内插件'
+                                    onChange={(e) => {
+                                        setParams({...params, title: e.target.value})
                                         triggerSearch()
-                                    }
-                                }}
-                            />
-                            插件类型
-                            <ItemSelects
-                                isItem={false}
-                                select={{
-                                    style: {width: 120},
-                                    data: PluginType,
-                                    value: params.type,
-                                    setValue: (value) => {
-                                        setParams({...params, type: value})
-                                        triggerSearch()
-                                    }
-                                }}
-                            />
-                            {isAdmin && "审核状态"}
-                            {isAdmin && (
+                                    }}
+                                />
+                                排序顺序
                                 <ItemSelects
                                     isItem={false}
                                     select={{
-                                        style: {width: 120},
+                                        style: {width: 100},
                                         data: [
-                                            {text: "全部", value: ""},
-                                            {text: "未审核", value: "no"},
-                                            {text: "审核通过", value: "success"},
-                                            {text: "审核不通过", value: "failed"}
+                                            {text: "按热度", value: "hot"},
+                                            {text: "按时间", value: "time"}
                                         ],
-                                        value: params.status,
+                                        value: params.order,
                                         setValue: (value) => {
-                                            setParams({...params, status: value})
+                                            setParams({...params, order: value})
                                             triggerSearch()
                                         }
                                     }}
                                 />
-                            )}
-                        </Space>
-                    </Col>
-                    <Col span={6} style={{textAlign: "right"}}>
-                        <Space>
-                            {(addLoading || percent !== 0) && (
-                                <div style={{width: 100, marginRight: 5}}>
-                                    <Progress
-                                        size='small'
-                                        status={!addLoading && percent !== 0 ? "exception" : undefined}
-                                        percent={percent}
+                                插件类型
+                                <ItemSelects
+                                    isItem={false}
+                                    select={{
+                                        style: {width: 120},
+                                        data: PluginType,
+                                        value: params.type,
+                                        setValue: (value) => {
+                                            setParams({...params, type: value})
+                                            triggerSearch()
+                                        }
+                                    }}
+                                />
+                                {isAdmin && "审核状态"}
+                                {isAdmin && (
+                                    <ItemSelects
+                                        isItem={false}
+                                        select={{
+                                            style: {width: 120},
+                                            data: [
+                                                {text: "全部", value: ""},
+                                                {text: "未审核", value: "no"},
+                                                {text: "审核通过", value: "success"},
+                                                {text: "审核不通过", value: "failed"}
+                                            ],
+                                            value: params.status,
+                                            setValue: (value) => {
+                                                setParams({...params, status: value})
+                                                triggerSearch()
+                                            }
+                                        }}
                                     />
-                                </div>
-                            )}
-                            {addLoading ? (
-                                <Button type='primary' danger onClick={StopAllPlugin}>
-                                    停止添加
-                                </Button>
-                            ) : (
-                                <Button type='primary' onClick={AddAllPlugin}>
-                                    全部添加
-                                </Button>
-                            )}
-                        </Space>
-                    </Col>
-                </Row>
-            </div>
-
-            <div style={{flex: 1, overflow: "hidden", display: "flex", flexFlow: "column"}}>
-                <div style={{flex: 1, padding: "0 5px", overflow: "hidden auto"}}>
-                    <List
-                        grid={{gutter: 16, column: 4}}
-                        dataSource={response.Data}
-                        renderItem={(i: YakScript, index: number) => {
-                            let isAnonymous = false
-                            if (i.Author === "" || i.Author === "anonymous") {
-                                isAnonymous = true
-                            }
-
-                            return (
-                                <List.Item style={{marginLeft: 0}} key={i.Id}>
-                                    <PluginListOpt
-                                        index={index}
-                                        isAdmin={isAdmin}
-                                        info={i}
-                                        onClick={setPluginInfo}
-                                        onDownload={() => {}}
-                                        onStarred={() => {}}
-                                    />
-                                </List.Item>
-                            )
-                        }}
-                    ></List>
+                                )}
+                                <ItemSelects
+                                    isItem={false}
+                                    select={{
+                                        style: {width: 100},
+                                        data: ["true", "false"],
+                                        value: isAdmin.toString(),
+                                        setValue: (value) => setIsAdmin(value === "true" ? true : false)
+                                    }}
+                                />
+                            </Space>
+                        </Col>
+                        <Col span={6} style={{textAlign: "right"}}>
+                            <Space>
+                                {(addLoading || percent !== 0) && (
+                                    <div style={{width: 100, marginRight: 5}}>
+                                        <Progress
+                                            size='small'
+                                            status={!addLoading && percent !== 0 ? "exception" : undefined}
+                                            percent={percent}
+                                        />
+                                    </div>
+                                )}
+                                {addLoading ? (
+                                    <Button type='primary' danger onClick={StopAllPlugin}>
+                                        停止添加
+                                    </Button>
+                                ) : (
+                                    <Button type='primary' onClick={AddAllPlugin}>
+                                        全部添加
+                                    </Button>
+                                )}
+                            </Space>
+                        </Col>
+                    </Row>
                 </div>
 
-                <div style={{width: "100%", height: 32, paddingTop: 5, textAlign: "right"}}>
-                    <Pagination
-                        size='small'
-                        current={params.Pagination.Page}
-                        defaultPageSize={20}
-                        showSizeChanger={false}
-                        total={response.Total}
-                        showTotal={(total) => `总共${total}个插件`}
-                        onChange={(page, size) => {
-                            setParams({...params, Pagination: {...params.Pagination, Page: page}})
-                            setTimeout(() => search(), 300)
-                        }}
-                    ></Pagination>
+                <div className='list-body'>
+                    <div className='list-content'>
+                        <List
+                            grid={{gutter: 16, column: 4}}
+                            dataSource={response.Data}
+                            renderItem={(i: YakScript, index: number) => {
+                                let isAnonymous = false
+                                if (i.Author === "" || i.Author === "anonymous") {
+                                    isAnonymous = true
+                                }
+
+                                return (
+                                    <List.Item style={{marginLeft: 0}} key={i.Id}>
+                                        <PluginListOpt
+                                            index={index}
+                                            isAdmin={isAdmin}
+                                            info={i}
+                                            onClick={setPluginInfo}
+                                            onDownload={addLocalLab}
+                                            onStarred={starredPlugin}
+                                        />
+                                    </List.Item>
+                                )
+                            }}
+                        ></List>
+                    </div>
+
+                    <div className='list-pagination'>
+                        <Pagination
+                            size='small'
+                            current={params.Pagination.Page}
+                            defaultPageSize={20}
+                            showSizeChanger={false}
+                            total={response.Total}
+                            showTotal={(total) => `总共${total}个插件`}
+                            onChange={(page, size) => {
+                                setParams({...params, Pagination: {...params.Pagination, Page: page}})
+                                setTimeout(() => search(), 300)
+                            }}
+                        ></Pagination>
+                    </div>
                 </div>
             </div>
-        </div>
+        </AutoSpin>
     )
 }
 
@@ -309,7 +324,7 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                 <div className='info-title'>
                     <div className='title-text'>
                         <span
-                            style={{maxWidth: isAdmin ? "65%" : "80%"}}
+                            style={{maxWidth: isAdmin ? "60%" : "80%"}}
                             className='text-style content-ellipsis'
                             title={info.ScriptName}
                         >
@@ -325,7 +340,7 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                                     {TagColor[["failed", "success", "not"][index % 3]].split("|")[1]}
                                 </div>
                             ) : (
-                                index % 7 === 4 || (
+                                index % 7 === 4 && (
                                     // @ts-ignore
                                     <OfficialYakitLogoIcon className='text-icon-style' />
                                 )
@@ -348,23 +363,6 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                         </Tooltip>
                     </div>
                 </div>
-
-                {/* 
-                {isAdmin
-                    ? index % 4 === 2 && (
-                          <Tag
-                              color={TagColor[["failed", "success", "not"][index % 3]].split("-")[0]}
-                              style={{marginLeft: 5}}
-                          >
-                              {TagColor[["failed", "success", "not"][index % 3]].split("-")[1]}
-                          </Tag>
-                      )
-                    : index % 7 === 4 && (
-                          <Tag color={"green"} style={{marginLeft: 5}}>
-                              官方源
-                          </Tag>
-                      )}
-            </div> */}
 
                 <div className='info-content'>
                     <Paragraph className='content-style' ellipsis={{tooltip: true}}>

@@ -256,14 +256,13 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                 }}
             >
                 {data.map((item, index) => {
+                    const flag = Object.prototype.toString.call(item) === "[object Object]"
+                    const value = flag ? item[optValue] : item
+                    const title = flag ? item[optText] : item
+
                     return (
-                        <Option
-                            key={item[optValue] || index}
-                            value={item[optValue]}
-                            title={item[optText]}
-                            disabled={item[optDisabled]}
-                        >
-                            {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : item[optValue]}
+                        <Option key={value || index} value={value} title={title} disabled={item[optDisabled]}>
+                            {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
                         </Option>
                     )
                 })}
@@ -287,12 +286,16 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                         {data.map((item, index) => {
                             return (
                                 <Option
-                                    key={item[optValue] || index}
-                                    value={item[optValue]}
-                                    title={item[optText]}
+                                    key={item[optValue] || item || index}
+                                    value={item[optValue] || item}
+                                    title={item[optText] || item}
                                     disabled={item[optDisabled]}
                                 >
-                                    {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : item[optValue]}
+                                    {!!renderOpt
+                                        ? renderOpt(item)
+                                        : item[optText]
+                                        ? item[optText]
+                                        : item[optValue] || item}
                                 </Option>
                             )
                         })}
