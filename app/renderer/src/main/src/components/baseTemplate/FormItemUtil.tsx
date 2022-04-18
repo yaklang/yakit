@@ -286,18 +286,13 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                         }}
                     >
                         {data.map((item, index) => {
+                            const flag = Object.prototype.toString.call(item) === "[object Object]"
+                            const value = flag ? item[optValue] : item
+                            const title = flag ? item[optText] : item
+
                             return (
-                                <Option
-                                    key={item[optValue] || item || index}
-                                    value={item[optValue] || item}
-                                    title={item[optText] || item}
-                                    disabled={item[optDisabled]}
-                                >
-                                    {!!renderOpt
-                                        ? renderOpt(item)
-                                        : item[optText]
-                                        ? item[optText]
-                                        : item[optValue] || item}
+                                <Option key={value || index} value={value} title={title} disabled={item[optDisabled]}>
+                                    {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
                                 </Option>
                             )
                         })}

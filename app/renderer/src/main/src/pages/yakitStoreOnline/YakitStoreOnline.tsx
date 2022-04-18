@@ -123,6 +123,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                         <Col span={18}>
                             <Space>
                                 <Input
+                                    size='small'
                                     value={params.title}
                                     allowClear
                                     placeholder='搜索商店内插件'
@@ -131,58 +132,68 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                                         triggerSearch()
                                     }}
                                 />
-                                排序顺序
-                                <ItemSelects
-                                    isItem={false}
-                                    select={{
-                                        style: {width: 100},
-                                        data: [
-                                            {text: "按热度", value: "hot"},
-                                            {text: "按时间", value: "time"}
-                                        ],
-                                        value: params.order,
-                                        setValue: (value) => {
-                                            setParams({...params, order: value})
-                                            triggerSearch()
-                                        }
-                                    }}
-                                />
-                                插件类型
-                                <ItemSelects
-                                    isItem={false}
-                                    select={{
-                                        style: {width: 120},
-                                        data: PluginType,
-                                        value: params.type,
-                                        setValue: (value) => {
-                                            setParams({...params, type: value})
-                                            triggerSearch()
-                                        }
-                                    }}
-                                />
-                                {isAdmin && "审核状态"}
-                                {isAdmin && (
+                                <div className='filter-opt'>
+                                    <span>排序顺序</span>
                                     <ItemSelects
                                         isItem={false}
                                         select={{
-                                            style: {width: 120},
+                                            size: "small",
+                                            style: {width: 100, marginLeft: 3},
                                             data: [
-                                                {text: "全部", value: ""},
-                                                {text: "未审核", value: "no"},
-                                                {text: "审核通过", value: "success"},
-                                                {text: "审核不通过", value: "failed"}
+                                                {text: "按热度", value: "hot"},
+                                                {text: "按时间", value: "time"}
                                             ],
-                                            value: params.status,
+                                            value: params.order,
                                             setValue: (value) => {
-                                                setParams({...params, status: value})
+                                                setParams({...params, order: value})
                                                 triggerSearch()
                                             }
                                         }}
                                     />
+                                </div>
+                                <div className='filter-opt'>
+                                    <span>插件类型</span>
+                                    <ItemSelects
+                                        isItem={false}
+                                        select={{
+                                            size: "small",
+                                            style: {width: 120, marginLeft: 3},
+                                            data: PluginType,
+                                            value: params.type,
+                                            setValue: (value) => {
+                                                setParams({...params, type: value})
+                                                triggerSearch()
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                {isAdmin && (
+                                    <div className='filter-opt'>
+                                        <span>审核状态</span>
+                                        <ItemSelects
+                                            isItem={false}
+                                            select={{
+                                                size: "small",
+                                                style: {width: 120, marginLeft: 3},
+                                                data: [
+                                                    {text: "全部", value: ""},
+                                                    {text: "未审核", value: "no"},
+                                                    {text: "审核通过", value: "success"},
+                                                    {text: "审核不通过", value: "failed"}
+                                                ],
+                                                value: params.status,
+                                                setValue: (value) => {
+                                                    setParams({...params, status: value})
+                                                    triggerSearch()
+                                                }
+                                            }}
+                                        />
+                                    </div>
                                 )}
                                 <ItemSelects
                                     isItem={false}
                                     select={{
+                                        size: "small",
                                         style: {width: 100},
                                         data: ["true", "false"],
                                         value: isAdmin.toString(),
@@ -194,7 +205,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                         <Col span={6} style={{textAlign: "right"}}>
                             <Space>
                                 {(addLoading || percent !== 0) && (
-                                    <div style={{width: 100, marginRight: 5}}>
+                                    <div className='filter-opt-progress'>
                                         <Progress
                                             size='small'
                                             status={!addLoading && percent !== 0 ? "exception" : undefined}
@@ -203,11 +214,22 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                                     </div>
                                 )}
                                 {addLoading ? (
-                                    <Button type='primary' danger onClick={StopAllPlugin}>
+                                    <Button
+                                        className='filter-opt-btn'
+                                        size='small'
+                                        type='primary'
+                                        danger
+                                        onClick={StopAllPlugin}
+                                    >
                                         停止添加
                                     </Button>
                                 ) : (
-                                    <Button type='primary' onClick={AddAllPlugin}>
+                                    <Button
+                                        className='filter-opt-btn'
+                                        size='small'
+                                        type='primary'
+                                        onClick={AddAllPlugin}
+                                    >
                                         全部添加
                                     </Button>
                                 )}
@@ -243,7 +265,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                         ></List>
                     </div>
 
-                    <div className='list-pagination'>
+                    <div className='list-pagination vertical-center'>
                         <Pagination
                             size='small'
                             current={params.Pagination.Page}
@@ -317,7 +339,7 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
             size={"small"}
             className='plugin-list-opt'
             bordered={false}
-            bodyStyle={{padding: 0, border: "1px solid #EFF1F5", borderRadius: "4px", background: "#F6F7F9"}}
+            bodyStyle={{padding: 0, border: "1px solid #EFF1F5", borderRadius: "4px"}}
             onClick={() => onClick(info)}
         >
             <div className='opt-info'>
