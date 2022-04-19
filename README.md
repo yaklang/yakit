@@ -1,5 +1,7 @@
 # YAKIT-网络安全单兵工具
 
+[English](https://github.com/yaklang/yakit/blob/master/README-EN.md) • [中文](https://github.com/yaklang/yakit/blob/master/README.md)
+
 ## 免责声明
 
 1. 本工具仅面向 **合法授权** 的企业安全建设行为与个人学习行为，如您需要测试本工具的可用性，请自行搭建靶机环境。
