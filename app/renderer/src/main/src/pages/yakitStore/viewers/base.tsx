@@ -11,9 +11,9 @@ import {WebsiteTreeViewer} from "./WebsiteTree";
 import {BasicTable} from "./BasicTable";
 import {XTerm} from "xterm-for-react";
 import {formatDate} from "../../../utils/timeUtil";
-import { xtermFit } from "../../../utils/xtermUtils";
-import { CVXterm } from "../../../components/CVXterm";
-import { AutoCard } from "../../../components/AutoCard";
+import {xtermFit} from "../../../utils/xtermUtils";
+import {CVXterm} from "../../../components/CVXterm";
+import {AutoCard} from "../../../components/AutoCard";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -120,21 +120,21 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                            xtermFit(xtermRef, 50, 18)
                        }}
                        customKeyEventHandler={(e) => {
-                        if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
-                            const str = xtermRef?.current ? (xtermRef.current as any).terminal.getSelection() : ""
-    
-                            if (timer.current) {
-                                clearTimeout(timer.current)
-                                timer.current = null
-                            }
-                            timer.current = setTimeout(() => {
-                                ipcRenderer.invoke("copy-clipboard", str).finally(() => {
-                                    timer.current = null
-                                })
-                            }, 300)
-                        }
-                        return true
-                    }}
+                           if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
+                               const str = xtermRef?.current ? (xtermRef.current as any).terminal.getSelection() : ""
+
+                               if (timer.current) {
+                                   clearTimeout(timer.current)
+                                   timer.current = null
+                               }
+                               timer.current = setTimeout(() => {
+                                   ipcRenderer.invoke("copy-clipboard", str).finally(() => {
+                                       timer.current = null
+                                   })
+                               }, 300)
+                           }
+                           return true
+                       }}
                 />
             </div>
         </>}
@@ -199,10 +199,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         bodyStyle={{overflowY: "auto"}}
                     >
                         <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                            {timelineItemProps.map((e, index) => {
+                            {(timelineItemProps || []).reverse().map((e, index) => {
                                 return <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
-                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} 
-                                    onlyTime={true}/>
+                                    <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp}
+                                                       onlyTime={true}/>
                                 </Timeline.Item>
                             })}
                         </Timeline>
@@ -211,8 +211,8 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             </Tabs.TabPane>
             {!props.debugMode && props.onXtermRef && <Tabs.TabPane tab={"Console"} key={"console"}>
                 <div style={{width: "100%", height: "100%"}}>
-                    <CVXterm 
-                        ref={xtermRef} 
+                    <CVXterm
+                        ref={xtermRef}
                         options={{convertEol: true}}
                     />
                     {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}

@@ -91,7 +91,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
     >
         {props.prefixNode}
         {props.autoComplete ? <AutoComplete
-            style={{width: props.width || 200}}
+            style={{width: props.width || "100%"}}
             dropdownMatchSelectWidth={400}
             disabled={!!props.disable}
             placeholder={props.placeholder}
