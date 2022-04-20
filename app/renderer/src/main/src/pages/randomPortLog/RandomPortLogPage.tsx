@@ -133,13 +133,13 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
 
                                 showModal({
                                     title: "查看历史记录",
-                                    width: 300,
+                                    width: "40%",
                                     content: (
                                         <>
                                             <YakEditor
                                                 type={"http"}
                                                 readOnly={true}
-                                                value={(i?.History || []).join("\r\n")}
+                                                value={i?.History ? i.History.join("\n") : "-"}
                                             />
                                         </>
                                     )
