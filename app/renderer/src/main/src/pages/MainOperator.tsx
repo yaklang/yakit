@@ -654,17 +654,16 @@ const Main: React.FC<MainProp> = (props) => {
                 setPageCache([])
                 setCurrentTabKey("")
             } else {
-                const tabs = cloneDeep(pageCache)
-                for (let index in pageCache) {
-                    if (pageCache[index].id === tabInfo.id) {
-                        tabs.splice(index, 1)
-                        setCurrentTabKey(
-                            pageCache[+index === pageCache.length - 1 ? +index - 1 : +index + 1].id
-                        )
-                        setPageCache(tabs)
-                        break
+                let flag: any = undefined
+                const filterTabs = pageCache.filter((item, index) => {
+                    if(item.id === tabInfo.id){
+                        flag = pageCache[+index === pageCache.length - 1 ? +index - 1 : +index + 1].id
+                        return false
                     }
-                }
+                    return true
+                })
+                setCurrentTabKey(flag)
+                setPageCache(filterTabs)
             }
 
             delFuzzerList(2, tabInfo.time)
