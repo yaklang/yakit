@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Card, Col, Empty, Form, Input, List, Popover, Row, Space, Tag, Tooltip} from "antd"
+import {Alert, Button, Card, Col, Empty, Form, Input, List, Popover, Row, Space, Tag, Tooltip} from "antd"
 import {
     DownloadOutlined,
     PlusOutlined,
@@ -621,7 +621,7 @@ const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH";
 const YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH";
 
 export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => {
-    const [gitUrl, setGitUrl] = useState("")
+    const [gitUrl, setGitUrl] = useState("https://github.com/yaklang/yakit-store")
     const [nucleiGitUrl, setNucleiGitUrl] = useState("https://github.com/projectdiscovery/nuclei-templates")
     const [proxy, setProxy] = useState("")
     const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei">("official")
@@ -645,8 +645,9 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
     }, [])
 
     useEffect(() => {
-        if (loadMode === "official") {
-            setGitUrl("https://github.com/yaklang/yakit-store")
+        if (loadMode === "giturl" && proxy === "") {
+            setGitUrl("https://ghproxy.com/https://github.com/yaklang/yakit-store")
+            setNucleiGitUrl("https://ghproxy.com/https://github.com/projectdiscovery/nuclei-templates")
         }
     }, [loadMode])
 
@@ -725,10 +726,20 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                 setValue={setLoadMode}
             />
             {["official", "giturl"].includes(loadMode) && <>
+                {loadMode === "official" && <Form.Item label={" "} colon={false}>
+                    <Alert message={<div>
+                        如果因为网络问题无法访问 Github，请切换到第三方仓库源，选择 Gitee 镜像 ghproxy.com 镜像
+                    </div>}/>
+                </Form.Item>}
                 <InputItem
                     disable={loadMode === "official"}
                     required={true}
                     label={"Git URL"}
+                    autoComplete={[
+                        "https://github.com/yaklang/yakit-store",
+                        "https://ghproxy.com/https://github.com/yaklang/yakit-store",
+                        "https://gitee.com/wooluo/yakit-store.git",
+                    ]}
                     value={gitUrl}
                     setValue={setGitUrl}
                     help={"例如 https://github.com/yaklang/yakit-store"}
@@ -736,12 +747,25 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                 <InputItem
                     required={true}
                     disable={loadMode === "official"}
+                    autoComplete={[
+                        "https://github.com/projectdiscovery/nuclei-templates",
+                        "https://ghproxy.com/https://github.com/projectdiscovery/nuclei-templates",
+                        "https://gitee.com/wooluo/nuclei-templates.git",
+                    ]}
                     label={"Yaml PoC URL"}
                     value={nucleiGitUrl}
                     setValue={setNucleiGitUrl}
                     help={"nuclei templates 默认插件源"}
                 />
-                <InputItem label={"代理"} value={proxy} setValue={setProxy} help={"访问中国大陆无法访问的代码仓库"}/>
+                <InputItem
+                    label={"代理"} value={proxy} setValue={setProxy}
+                    help={"通过代理访问中国大陆无法访问的代码仓库：例如" + "http://127.0.0.1:7890"}
+                />
+                {proxy === "" && loadMode === "giturl" && <Form.Item label={" "} colon={false}>
+                    <Alert type={"warning"} message={<div>
+                        无代理设置推荐使用 ghproxy.com / gitee 镜像源
+                    </div>}/>
+                </Form.Item>}
             </>}
             {loadMode === "local" && <>
                 <InputItem label={"本地仓库地址"} value={localPath} setValue={setLocalPath}/>

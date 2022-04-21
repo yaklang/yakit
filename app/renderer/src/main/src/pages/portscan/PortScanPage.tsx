@@ -59,7 +59,7 @@ const ScanKindKeys: string[] = Object.keys(ScanKind)
 
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [loading, setLoading] = useState(false)
-    const [params, setParams] = useState<PortScanParams>({
+    const [params, setParams, getParams] = useGetState<PortScanParams>({
         Ports: "22,443,445,80,8000-8004,3306,3389,5432,8080-8084,7000-7005",
         Mode: "fingerprint",
         Targets: props.sendTarget ? JSON.parse(props.sendTarget || "[]").join(",") : "",
@@ -77,9 +77,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         HostAlivePorts: "22,80,443",
     })
     const [token, setToken] = useState(randomString(40))
-    const [resettingData, setResettingData] = useState(false)
     const xtermRef = useRef(null)
-    const [resetTrigger, setResetTrigger] = useState(false)
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     // const [closedPorts, setClosedPorts] = useState<YakitPort[]>([])
     const [port, setPort] = useState<PortAsset>()
@@ -108,7 +106,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                 if (value) {
                     setTemplatePort(value || "")
                     setTimeout(() => {
-                        setParams({...params, Ports: value || ""})
+                        setParams({...getParams(), Ports: value || ""})
                     }, 300)
                 }
             })
@@ -164,7 +162,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [xtermRef, resetTrigger])
+    }, [xtermRef])
 
     return (
         <div style={{width: "100%", height: "100%"}}>
@@ -173,10 +171,10 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                     <div className='scan-port-body'>
                         <div style={{width: 360, height: "100%"}}>
                             <SimplePluginList
-                                pluginTypes={"port-scan"}
+                                pluginTypes={"port-scan,mitm"}
                                 initialSelected={params.ScriptNames}
-                                onSelected={scripts => {
-                                    setParams({...params, ScriptNames: scripts})
+                                onSelected={l => {
+                                    setParams({...params, ScriptNames: [...l]})
                                 }}
                             />
                         </div>
@@ -350,16 +348,14 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 />
                                             </div>
 
-                                            <Spin spinning={resettingData}>
-                                                <Row style={{marginTop: 6}} gutter={6}>
-                                                    <Col span={24}>
-                                                        <OpenPortTableViewer data={openPorts}/>
-                                                    </Col>
-                                                    {/*<Col span={8}>*/}
-                                                    {/*    <ClosedPortTableViewer data={closedPorts}/>*/}
-                                                    {/*</Col>*/}
-                                                </Row>
-                                            </Spin>
+                                            <Row style={{marginTop: 6}} gutter={6}>
+                                                <Col span={24}>
+                                                    <OpenPortTableViewer data={openPorts}/>
+                                                </Col>
+                                                {/*<Col span={8}>*/}
+                                                {/*    <ClosedPortTableViewer data={closedPorts}/>*/}
+                                                {/*</Col>*/}
+                                            </Row>
                                         </div>
                                     </Tabs.TabPane>
                                     <Tabs.TabPane tab={"插件日志"} key={"pluginPort"} forceRender>

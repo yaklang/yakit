@@ -1,11 +1,13 @@
 import React, {useEffect, useState} from "react";
 import {AutoCard} from "../../components/AutoCard";
-import {Alert, Button, Divider, Form, Space, Spin, Table, Tag} from "antd";
+import {Alert, Button, Divider, Form, Space, Spin, Table, Tag, Tooltip} from "antd";
 import {useMemoizedFn} from "ahooks";
 import {randomString} from "../../utils/randomUtil";
 import {CopyableField, InputInteger} from "../../utils/inputUtil";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {ReloadOutlined} from "@ant-design/icons";
+import {showModal} from "../../utils/showModal";
+import {YakEditor} from "../../utils/editors";
 
 export interface RandomPortLogPageProp {
 
@@ -14,7 +16,7 @@ export interface RandomPortLogPageProp {
 const {ipcRenderer} = window.require("electron");
 
 interface RandomPortTriggerNotification {
-    History: string[]
+    History?: string[]
     RemoteAddr: string
     RemotePort: number
     RemoteIP: string
@@ -38,7 +40,9 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
             setToken(d.Token)
             setExternalAddr(d.Addr)
             setRandomPort(d.Port)
+            setNotification([])
         }).catch(() => {
+            setNotification([])
         }).finally(() => {
             setTimeout(() => {
                 setLoading(false)
@@ -104,6 +108,7 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
 
             </Alert>
             <Table<RandomPortTriggerNotification>
+                size={"small"}
                 pagination={false}
                 rowKey={i => `${i?.RemoteAddr || randomString(12)}`}
                 dataSource={notification}
@@ -112,6 +117,37 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
                     {
                         title: "远端地址",
                         render: (i: RandomPortTriggerNotification) => <CopyableField text={i?.RemoteAddr}/>
+                    },
+                    {
+                        title: "同主机其他连接(一分钟内)",
+                        render: (i: RandomPortTriggerNotification) => i?.CurrentRemoteCachedConnectionCount || 1
+                    },
+                    {
+                        title: "同端口历史(一分钟内)",
+                        render: (i: RandomPortTriggerNotification) => <Tooltip
+                            title={`对当前端口(${i?.LocalPort})来说，除了当前连接，还有${i?.LocalPortCachedHistoryConnectionCount || 1}个来自其他远端的连接`}>
+                            <a href="#" onClick={(e) => {
+                                e.preventDefault()
+
+                                console.info(i)
+
+                                showModal({
+                                    title: "查看历史记录",
+                                    width: "40%",
+                                    content: (
+                                        <>
+                                            <YakEditor
+                                                type={"http"}
+                                                readOnly={true}
+                                                value={i?.History ? i.History.join("\n") : "-"}
+                                            />
+                                        </>
+                                    )
+                                })
+                            }}>
+                                其他连接：{i?.LocalPortCachedHistoryConnectionCount || 1}
+                            </a>
+                        </Tooltip>
                     },
                     {
                         title: "触发时间",
