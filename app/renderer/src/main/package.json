@@ -25,6 +25,7 @@
     "antd": "4.17.2",
     "bizcharts": "^4.1.12",
     "codemirror": "^5.63.3",
+    "cross-env": "7.0.3",
     "customize-cra": "^1.0.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
@@ -48,14 +49,14 @@
     "react-scripts": "4.0.3",
     "react-sparklines": "^1.7.0",
     "rsuite-table": "^5.2.1",
+    "sass-resources-loader": "^2.2.5",
     "typescript": "^4.1.2",
     "web-vitals": "^1.0.1",
     "xterm-addon-fit": "^0.5.0",
     "xterm-addon-search": "^0.8.2",
     "xterm-addon-search-bar": "^0.2.0",
     "xterm-addon-unicode11": "^0.3.0",
-    "xterm-for-react": "^1.0.4",
-    "cross-env": "7.0.3"
+    "xterm-for-react": "^1.0.4"
   },
   "scripts": {
     "electron-render": "cross-env BROWSER=none react-app-rewired start",
@@ -89,7 +90,9 @@
     ]
   },
   "devDependencies": {
-    "prettier": "^2.4.1"
+    "node-sass": "6.0.0",
+    "prettier": "^2.4.1",
+    "sass-loader": "^12.6.0"
   },
   "resolutions": {
     "//": "See https://github.com/facebook/create-react-app/issues/11773",

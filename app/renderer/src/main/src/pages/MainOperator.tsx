@@ -205,7 +205,9 @@ const Main: React.FC<MainProp> = (props) => {
                     index += 1
                 }
             })
-            .catch(() => failed("fetch fuzzer cache failed"))
+            .catch(() => {
+                // failed("fetch fuzzer cache failed")
+            })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
     const addFuzzerList = (key: string, request?: string, isHttps?: boolean) => {
