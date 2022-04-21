@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {Button, Col, Row, Table, Tag} from "antd";
+import {Button, Col, Row, Table, Tag, Tooltip} from "antd";
 import {YakitPort} from "../../components/yakitLogSchema";
-import {CopyableField, InputItem} from "../../utils/inputUtil";
+import {CopyableField, InputItem, OneLine} from "../../utils/inputUtil";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {failed} from "../../utils/notification";
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu";
 import {LineMenunIcon} from "../../assets/icons";
+import {callCopyToClipboard} from "../../utils/basic";
 
 export interface PortTableProp {
     data: YakitPort[]
@@ -60,27 +61,39 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
         dataSource={props.data}
         scroll={{x: "auto"}}
         columns={[
-            {title: "主机地址", render: (i: YakitPort) => <CopyableField text={`${i.host}:${i.port}`}/>, fixed: "left",},
+            {
+                title: "主机地址", render: (i: YakitPort) => {
+                    const addr = `${i.host}:${i.port}`;
+                    return <Tooltip title={`点击复制`}>
+                        <a href="#" onClick={() => {
+                            callCopyToClipboard(addr)
+                        }}>{addr}</a>
+                    </Tooltip>
+                }, fixed: "left",
+            },
             {
                 title: "HTML Title",
-                render: (i: YakitPort) => i.htmlTitle ? <div style={{width: 150, overflow: "auto"}}>
-                    <CopyableField
-                        text={i.htmlTitle}
-                    />
-                </div> : "-",
+                render: (i: YakitPort) => i.htmlTitle ? <Tooltip title={i?.htmlTitle}>
+                    <OneLine width={150} overflow={"hidden"} title={i.htmlTitle}>
+                        {i?.htmlTitle}
+                    </OneLine>
+                </Tooltip> : "-",
                 width: 150,
             },
             {
-                title: "指纹", render: (i: YakitPort) => i.fingerprint ? <div style={{width: 200, overflowX: 'hidden'}}>
-                    <CopyableField
-                        text={i.fingerprint}
-                    />
-                </div> : "-", width: 230,
+                title: "指纹",
+                render: (i: YakitPort) => i.fingerprint ?
+                    <>
+                        <OneLine width={230} overflow={"hidden"} title={i.fingerprint}>
+                            {i?.fingerprint}
+                        </OneLine>
+                    </> : "-",
+                width: 230,
             },
-            {title: "扫描时间", render: (i: YakitPort) => <Tag>{formatTimestamp(i.timestamp)}</Tag>},
+            {title: "扫描时间", render: (i: YakitPort) => <>{formatTimestamp(i.timestamp)}</>},
         ]}
         pagination={{
-            size: "small", pageSize: 12, pageSizeOptions: ["12", "15", "30", "50"],
+            size: "small", pageSizeOptions: ["12", "15", "30", "50"],
             showSizeChanger: true,
         }}
         rowSelection={{

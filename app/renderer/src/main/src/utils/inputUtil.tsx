@@ -13,7 +13,7 @@ import {
     Select,
     Spin,
     Switch,
-    Tag,
+    Tag, Tooltip,
     Typography,
     Upload
 } from 'antd';
@@ -28,6 +28,7 @@ import {LiteralUnion} from "antd/lib/_util/type";
 import {FormItemProps} from "@ant-design/compatible/lib/form";
 import {useThrottleFn} from "ahooks";
 import {saveValue} from "./kv";
+import {callCopyToClipboard} from "./basic";
 
 export interface OneLineProp extends JSX.ElementChildrenAttribute {
     width?: string | number
@@ -37,14 +38,17 @@ export interface OneLineProp extends JSX.ElementChildrenAttribute {
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
-    return <div style={{
-        whiteSpace: "nowrap",
-        width: props.width,
-        overflow: props.overflow || "auto",
-        maxWidth: props.maxWidth,
-        textOverflow: "ellipsis"// props.overflow === "hidden" ? "ellipsis" : undefined
-    }} title={props.title || ""}>
-        {props.children}
+    return <div
+        style={{
+            whiteSpace: "nowrap",
+            width: props.width,
+            overflow: props.overflow || "auto",
+            maxWidth: props.maxWidth,
+            textOverflow: "ellipsis"// props.overflow === "hidden" ? "ellipsis" : undefined
+        }}>
+        {props?.title ? <Tooltip title={props.title}>
+            {props.children}
+        </Tooltip> : props.children}
     </div>
 };
 
