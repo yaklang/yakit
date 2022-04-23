@@ -391,6 +391,7 @@ message ConfigGlobalReverseParams {
 message QueryRiskRequest {
   int64 Id = 1;
   string Hash = 2;
+  QueryRisksRequest Filter = 3;
 }
 
 message Risk {

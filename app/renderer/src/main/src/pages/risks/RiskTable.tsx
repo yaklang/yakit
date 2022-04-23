@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Space, Table, Tag, Form, Typography, Divider} from "antd"
+import {Button, Space, Table, Tag, Form, Typography, Divider, Popconfirm} from "antd"
 import {Risk} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useMemoizedFn} from "ahooks"
@@ -8,7 +8,7 @@ import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {failed} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
 import ReactJson from "react-json-view"
-import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
+import {InputItem, ManyMultiSelectForString, SelectOne} from "../../utils/inputUtil"
 
 import "./RiskTable.css"
 
@@ -147,42 +147,67 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         <Table<Risk>
             title={() => {
                 return (
-                    <Space>
-                        {"风险与漏洞"}
-                        <Button
-                            size={"small"}
-                            type={"link"}
-                            onClick={() => {
+                    <div style={{display: "flex", justifyContent: "space-between"}}>
+
+                        <Space>
+                            {"风险与漏洞"}
+                            <Button
+                                size={"small"}
+                                type={"link"}
+                                onClick={() => {
+                                    update()
+                                }}
+                                icon={<ReloadOutlined/>}
+                            />
+                            <Divider type={"vertical"}/>
+                            <Form onSubmitCapture={e => {
+                                e.preventDefault()
                                 update()
-                            }}
-                            icon={<ReloadOutlined/>}
-                        />
-                        <Divider type={"vertical"}/>
-                        <Form onSubmitCapture={e => {
-                            e.preventDefault()
-                            update()
-                        }} layout={"inline"} size={"small"}>
-                            {types.length > 0 && <ManyMultiSelectForString
-                                label={"漏洞/风险类型"} value={params.RiskType || ""}
-                                formItemStyle={{minWidth: 280}}
-                                setValue={RiskType => setParams({...params, RiskType})} defaultSep={"|"}
-                                data={types.map(i => {
-                                    return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
-                                })}
-                            />}
-                            {types.length > 0 && <ManyMultiSelectForString
-                                label={"漏洞级别"} value={params.Severity || ""} defaultSep={"|"}
-                                formItemStyle={{minWidth: 240}}
-                                setValue={Severity => setParams({...params, Severity})}
-                                data={severities.map(i => {
-                                    return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
-                                })}
-                            />}
-                            <Form.Item colon={false}>
-                                <Button type="primary" htmlType="submit"> 搜索 </Button>
-                            </Form.Item>
-                        </Form>
-                    </Space>
+                            }} layout={"inline"} size={"small"}>
+                                {types.length > 0 && <ManyMultiSelectForString
+                                    label={"漏洞/风险类型"} value={params.RiskType || ""}
+                                    formItemStyle={{minWidth: 280}}
+                                    setValue={RiskType => setParams({...params, RiskType})} defaultSep={"|"}
+                                    data={types.map(i => {
+                                        return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
+                                    })}
+                                />}
+                                {types.length > 0 && <ManyMultiSelectForString
+                                    label={"漏洞级别"} value={params.Severity || ""} defaultSep={"|"}
+                                    formItemStyle={{minWidth: 240}}
+                                    setValue={Severity => setParams({...params, Severity})}
+                                    data={severities.map(i => {
+                                        return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
+                                    })}
+                                />}
+                                <Form.Item colon={false}>
+                                    <Button type="primary" htmlType="submit"> 搜索 </Button>
+                                </Form.Item>
+                            </Form>
+                        </Space>
+                        <Space>
+                            <Button danger={true} size={"small"} type={"primary"}
+                                    onClick={() => {
+                                        let m = showModal({
+                                            title: "删除数据选项",
+                                            width: "50%",
+                                            content: (
+                                                <div>
+                                                    <DeleteRiskForm
+                                                        types={types} severities={severities}
+                                                        onClose={() => {
+                                                            m.destroy()
+                                                            update(1)
+                                                        }}/>
+                                                </div>
+                                            )
+                                        })
+                                    }}
+                            >
+                                删除数据
+                            </Button>
+                        </Space>
+                    </div>
                 )
             }}
             size={"small"}
@@ -414,3 +439,51 @@ export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (pr
         </div>
     )
 }
+
+export interface DeleteRiskFormProp {
+    onClose: () => any
+    types?: FieldNameSelectItem[]
+    severities?: FieldNameSelectItem[]
+}
+
+export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
+    const {types, severities} = props;
+    const [params, setParams] = useState<QueryRisksParams>({
+        Network: "",
+        Pagination: genDefaultPagination(),
+        RiskType: "",
+        Search: "",
+        Severity: ""
+    });
+    return <div>
+        <Form onSubmitCapture={e => {
+            e.preventDefault()
+            ipcRenderer.invoke("DeleteRisk", {Filter: params}).then(e => {
+                props.onClose()
+            }).catch(() => {
+            }).finally()
+        }} layout={"horizontal"} labelCol={{span: 5}} wrapperCol={{span: 14}}>
+            <InputItem label={"按目标网络删除"} value={params.Network} setValue={Network => setParams({...params, Network})}/>
+            {types && types.length > 0 && <ManyMultiSelectForString
+                label={"按类型删除"} value={params.RiskType || ""}
+                formItemStyle={{minWidth: 280}}
+                setValue={RiskType => setParams({...params, RiskType})} defaultSep={"|"}
+                data={types.map(i => {
+                    return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
+                })}
+            />}
+            {severities && severities.length && <ManyMultiSelectForString
+                label={"按漏洞级别"} value={params.Severity || ""} defaultSep={"|"}
+                formItemStyle={{minWidth: 240}}
+                setValue={Severity => setParams({...params, Severity})}
+                data={severities.map(i => {
+                    return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
+                })}
+            />}
+            <InputItem label={"按关键字删除"} value={params.Search} setValue={Search => setParams({...params, Search})}/>
+            <Form.Item label={" "} colon={false}>
+                <Button danger={true} type={"primary"} htmlType={"submit"}>删除</Button>
+            </Form.Item>
+        </Form>
+    </div>
+};
