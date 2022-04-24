@@ -211,8 +211,8 @@ const Main: React.FC<MainProp> = (props) => {
                     index += 1
                 }
             })
-            .catch(() => {
-                // failed("fetch fuzzer cache failed")
+            .catch((e) => {
+                console.info(e)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -669,7 +669,7 @@ const Main: React.FC<MainProp> = (props) => {
             } else {
                 let flag: any = undefined
                 const filterTabs = pageCache.filter((item, index) => {
-                    if(item.id === tabInfo.id){
+                    if (item.id === tabInfo.id) {
                         flag = pageCache[+index === pageCache.length - 1 ? +index - 1 : +index + 1].id
                         return false
                     }

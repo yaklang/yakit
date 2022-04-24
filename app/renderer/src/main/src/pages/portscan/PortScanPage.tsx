@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Checkbox, Col, Divider, Form, Input, Row, Space, Spin, Tabs, Tag} from "antd"
+import {Button, Checkbox, Col, Divider, Form, Input, Row, Space, Spin, Tabs, Tag, Tooltip} from "antd"
 import {InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
 import {ExecResult, YakScript} from "../invoker/schema"
@@ -18,6 +18,7 @@ import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import {CVXterm} from "../../components/CVXterm"
 import {ContentUploadInput} from "../../components/functionTemplate/ContentUploadTextArea"
+import {ReloadOutlined} from "@ant-design/icons"
 
 import "./PortScanPage.css"
 import {SimplePluginList} from "../../components/SimplePluginList";
@@ -57,10 +58,12 @@ const ScanKind: { [key: string]: string } = {
 }
 const ScanKindKeys: string[] = Object.keys(ScanKind)
 
+const defaultPorts = "21,22,443,445,80,8000-8004,3306,3389,5432,6379,8080-8084,7000-7005,9000-9002,8443,7443,9443,7080,8070"
+
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [params, setParams, getParams] = useGetState<PortScanParams>({
-        Ports: "22,443,445,80,8000-8004,3306,3389,5432,8080-8084,7000-7005",
+        Ports: defaultPorts,
         Mode: "fingerprint",
         Targets: props.sendTarget ? JSON.parse(props.sendTarget || "[]").join(",") : "",
         Active: true,
@@ -70,7 +73,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         SaveClosedPorts: false,
         SaveToDB: true,
         Proxy: [],
-        ProbeTimeout: 5,
+        ProbeTimeout: 7,
         ScriptNames: [],
         ProbeMax: 3,
         EnableCClassScan: false,
@@ -105,9 +108,9 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
             .then((value: any) => {
                 if (value) {
                     setTemplatePort(value || "")
-                    setTimeout(() => {
-                        setParams({...getParams(), Ports: value || ""})
-                    }, 300)
+                    // setTimeout(() => {
+                    //     setParams({...getParams(), Ports: value || ""})
+                    // }, 300)
                 }
             })
             .catch(() => {
@@ -264,7 +267,9 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                         return PresetPorts[i] || ""
                                                     })
                                                     .join(",")
-                                                setParams({...params, Ports: res})
+                                                if (!!res) {
+                                                    setParams({...params, Ports: res})
+                                                }
                                             }}
                                         >
                                             <Checkbox value={"top100"}>常见100端口</Checkbox>
@@ -279,28 +284,44 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     <Form.Item label='扫描端口' colon={false} className='form-item-margin'>
                                         <Input.TextArea
                                             style={{width: "75%"}}
-                                            rows={1}
+                                            rows={2}
                                             value={params.Ports}
                                             onChange={(e) => setParams({...params, Ports: e.target.value})}
                                         />
-                                        <Button style={{marginBottom: 4}} className="link-button-bfc" type="link"
-                                                onClick={() => {
-                                                    if (!params.Ports) {
-                                                        failed("请输入端口后再保存")
-                                                        return
-                                                    }
-                                                    ipcRenderer.invoke("set-value", ScanPortTemplate, params.Ports).then(() => {
-                                                        setTemplatePort(params.Ports)
-                                                        success("保存成功")
-                                                    })
-                                                }}>保存为模板</Button>
+                                        <Space size={"small"} style={{marginBottom: 4}}>
+                                            <Tooltip title={"保存为模版"}>
+                                                <a className="link-button-bfc"
+                                                   onClick={() => {
+                                                       if (!params.Ports) {
+                                                           failed("请输入端口后再保存")
+                                                           return
+                                                       }
+                                                       ipcRenderer.invoke("set-value", ScanPortTemplate, params.Ports).then(() => {
+                                                           setTemplatePort(params.Ports)
+                                                           success("保存成功")
+                                                       })
+                                                   }}>保存</a>
+                                            </Tooltip>
+                                            <Tooltip title={"重置为默认扫描端口"}>
+                                                <a href={"#"} onClick={() => {
+                                                    setParams({...params, Ports: defaultPorts})
+                                                }}><ReloadOutlined/></a>
+                                            </Tooltip>
+                                        </Space>
                                     </Form.Item>
 
                                     <Form.Item label=' ' colon={false} className='form-item-margin'>
                                         <Space>
                                             <Tag>扫描模式:{ScanKind[params.Mode]}</Tag>
                                             <Tag>并发:{params.Concurrent}</Tag>
-                                            {params.EnableCClassScan && <Tag>自动扫C段</Tag>}
+                                            <Checkbox onClick={e => {
+                                                setParams({
+                                                    ...params,
+                                                    SkippedHostAliveScan: !params.SkippedHostAliveScan
+                                                })
+                                            }} checked={params.SkippedHostAliveScan}>
+                                                跳过主机存活检测
+                                            </Checkbox>
                                             <Button
                                                 type='link'
                                                 size='small'
