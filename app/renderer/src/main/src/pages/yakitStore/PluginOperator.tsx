@@ -11,7 +11,7 @@ import {DocumentEditor} from "./DocumentEditor"
 import MDEditor from "@uiw/react-md-editor"
 import {PluginHistoryTable} from "./PluginHistory"
 import {openABSFile} from "../../utils/openWebsite"
-import {EditOutlined, QuestionOutlined, SettingOutlined} from "@ant-design/icons"
+import {EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined} from "@ant-design/icons"
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator"
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
 import {getValue} from "../../utils/kv";
@@ -101,6 +101,8 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         <PluginExecutor
                             subTitle={
                                 <Space>
+                                    <Tooltip title={'12312312'}><FieldNumberOutlined style={{fontSize: 20}} /></Tooltip>
+                                    
                                     {script.Help && (
                                         <Tooltip title={script.Help}>
                                             <Button type={"link"} icon={<QuestionOutlined/>}/>

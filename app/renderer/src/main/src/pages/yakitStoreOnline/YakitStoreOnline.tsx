@@ -1,9 +1,8 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {Row, Col, Input, Button, Pagination, List, Space, Card, Tooltip, Progress, Typography} from "antd"
+import {Row, Col, Input, Button, Pagination, List, Space, Card, Tooltip, Progress} from "antd"
 import {StarOutlined, StarFilled} from "@ant-design/icons"
 import {QueryGeneralRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 import {useMemoizedFn} from "ahooks"
-import cloneDeep from "lodash/cloneDeep"
 import {failed, success} from "../../utils/notification"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {YakitPluginInfo} from "./YakitPluginInfo"
@@ -13,7 +12,6 @@ import {AutoSpin} from "../../components/AutoSpin"
 import "./YakitStoreOnline.scss"
 
 const {ipcRenderer} = window.require("electron")
-const {Paragraph} = Typography
 
 const PluginType: {text: string; value: string}[] = [
     {text: "全部", value: ""},
@@ -391,9 +389,9 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                 </div>
 
                 <div className='info-content'>
-                    <Paragraph className='content-style' ellipsis={{tooltip: true}}>
+                    <div className='content-style content-ellipsis' title={info.Help}>
                         {info.Help}
-                    </Paragraph>
+                    </div>
                 </div>
 
                 <div ref={tagList} className='info-tag'>
