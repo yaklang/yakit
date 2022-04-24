@@ -52,6 +52,22 @@ module.exports = (win, getClient) => {
         return await asyncQueryHTTPFlows(params)
     })
 
+    // asyncSetTagForHTTPFlow wrapper
+    const asyncSetTagForHTTPFlow = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetTagForHTTPFlow(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetTagForHTTPFlow", async (e, params) => {
+        return await asyncSetTagForHTTPFlow(params)
+    })
+
 
     // asyncQueryHTTPFlows wrapper
     const asyncGetHTTPFlowByHash = (params) => {

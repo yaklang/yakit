@@ -115,6 +115,7 @@ service Yak {
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
   rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
+  rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
 
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
@@ -218,6 +219,12 @@ service Yak {
   rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
   rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
   rpc QueryRandomPortTrigger(QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
+}
+
+message SetTagForHTTPFlowRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  repeated string Tags = 3;
 }
 
 message RequireICMPRandomLengthResponse {
@@ -391,6 +398,7 @@ message ConfigGlobalReverseParams {
 message QueryRiskRequest {
   int64 Id = 1;
   string Hash = 2;
+  QueryRisksRequest Filter = 3;
 }
 
 message Risk {
@@ -1160,6 +1168,8 @@ message HTTPFlow {
 
   string Tags = 27;
   bool NoFixContentLength = 28;
+
+  uint64 Id = 29;
 }
 
 message FuzzableParam {
