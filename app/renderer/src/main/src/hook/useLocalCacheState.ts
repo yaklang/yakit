@@ -20,7 +20,7 @@ export default function useLocalCacheState(keyword: string) {
         }
     }, [])
 
-    const setLocalCache = (value: string) => {
+    const setLocalCache = (value?: string) => {
         if (time.current) {
             clearTimeout(time.current)
             time.current = null
