@@ -1,8 +1,9 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Button, Modal, Space} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Modal} from "antd"
 import {GithubOutlined, QqOutlined, WechatOutlined} from "@ant-design/icons"
+import {AutoSpin} from "@/components/AutoSpin"
 
-import "./Login.css"
+import "./Login.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -17,18 +18,26 @@ const Login: React.FC<LoginProp> = (props) => {
 
     const divrefs = useRef(null)
 
+    const createView = (url: string) => {
+        const webview: any = document.createElement("webview")
+        webview.src = url
+        webview.style.height = "100%"
+        if (!divrefs || !divrefs.current) return
+        const body = divrefs.current as unknown as HTMLDivElement
+        body.innerHTML = ""
+        body.appendChild(webview)
+    }
+
     const fetchLogin = (type: string) => {
-        ipcRenderer.invoke("is-dev", {source: type}).then((flag) => {
-            setLoginShow(true)
-            const url = "https://www.baidu.com"
-            const webview: any = document.createElement("webview")
-            webview.src = url
-            webview.style.height = "100%"
-            if (!divrefs || !divrefs.current) return
-            const body = divrefs.current as unknown as HTMLDivElement
-            body.innerHTML = ""
-            body.appendChild(webview)
-        })
+        setLoading(true)
+        ipcRenderer
+            .invoke("fetch-login-url", {source: type})
+            .then((res) => {
+                setLoginShow(true)
+                createView("https://www.baidu.com")
+            })
+            .catch((err) => {})
+            .finally(() => setTimeout(() => setLoading(false), 300))
     }
 
     useEffect(() => {
@@ -41,35 +50,29 @@ const Login: React.FC<LoginProp> = (props) => {
 
     return (
         <Modal
-            title={"登录"}
             visible={props.visible}
-            maskClosable={false}
+            closable={false}
             footer={null}
             onCancel={() => {
                 setLoginShow(false)
                 props.onCancel()
             }}
         >
-            {loginShow ? (
-                <div className='login-wrap' ref={divrefs}></div>
-            ) : (
-                <div>
-                    <span>第三方帐号登录方式</span>
-                    <div
-                        style={{
-                            width: "100%",
-                            fontSize: 60,
-                            margin: "20px 0",
-                            display: "flex",
-                            justifyContent: "space-around"
-                        }}
-                    >
-                        <GithubOutlined className='login-icon' onClick={() => fetchLogin("github")} />
-                        <WechatOutlined className='login-icon' onClick={() => fetchLogin("wechat")} />
-                        <QqOutlined className='login-icon' onClick={() => fetchLogin("qq")} />
+            <AutoSpin spinning={loading}>
+                {loginShow ? (
+                    <div className='login-wrap' ref={divrefs}></div>
+                ) : (
+                    <div className='login-type-body'>
+                        <h2>登录</h2>
+                        <div className='login-subtitle'>第三方帐号登录方式</div>
+                        <div className='login-type-icon'>
+                            <GithubOutlined className='type-icon' onClick={() => fetchLogin("github")} />
+                            <WechatOutlined className='type-icon' onClick={() => fetchLogin("wechat")} />
+                            <QqOutlined className='type-icon' onClick={() => fetchLogin("qq")} />
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </AutoSpin>
         </Modal>
     )
 }
