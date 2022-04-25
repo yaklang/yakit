@@ -1,0 +1,21 @@
+.login-wrap {
+    width: 470px;
+    height: 510px;
+}
+
+.login-type-body {
+    .login-subtitle {
+        height: 30px;
+        line-height: 30px;
+    }
+    .login-type-icon {
+        width: 100%;
+        font-size: 60px;
+        margin: 20px 0;
+        display: flex;
+        justify-content: space-around;
+        .type-icon {
+            cursor: pointer;
+        }
+    }
+}

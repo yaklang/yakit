@@ -1,5 +1,6 @@
 const {ipcMain, nativeImage, Notification} = require("electron");
 const path = require("path");
+const fs = require("fs")
 const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader")
@@ -167,5 +168,11 @@ module.exports = {
 
         // reverse logger
         require("./handlers/reverse-connlogger").register(win, getClient);
+
+        // 接口注册
+        const api = fs.readdirSync(path.join(__dirname, "./api"))
+        api.forEach(item=>{
+            require(path.join(__dirname, `./api/${item}`))(win, getClient);
+        })
     }
 }
