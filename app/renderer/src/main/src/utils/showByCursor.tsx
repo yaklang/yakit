@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom"
-import { Card, Menu } from "antd"
+import {Card, Menu} from "antd"
 import "./showByCursor.css"
+import React from "react";
 
 export interface ByCursorContainerProp {
     content: JSX.Element
@@ -31,7 +32,7 @@ export const showByCursorContainer = (props: ByCursorContainerProp, x: number, y
                 document.removeEventListener("click", onClickOutsize)
             })
             ReactDOM.render(
-                <Card bodyStyle={{ padding: 0 }} bordered={true} hoverable={true}>
+                <Card bodyStyle={{padding: 0}} bordered={true} hoverable={true}>
                     {props.content}
                 </Card>,
                 div
@@ -40,18 +41,30 @@ export const showByCursorContainer = (props: ByCursorContainerProp, x: number, y
     }
     render()
 
-    return { destroy: destory }
+    return {destroy: destory}
 }
 
 interface MenuItemProps {
+    id?: string
     title: string
     onClick: () => void
     disabled?: boolean
+    subMenuItems?: MenuItemProps[]
+}
+
+function menuItemWalker(list: MenuItemProps[], handler: (item: MenuItemProps) => any) {
+    list.forEach(i => {
+        handler(i)
+        if (i?.subMenuItems && i.subMenuItems.length > 0) {
+            menuItemWalker(i.subMenuItems, handler)
+        }
+    })
 }
 
 export interface ByCursorMenuProp {
     content: MenuItemProps[]
 }
+
 const cursorMenuId = "yakit-cursor-menu"
 export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) => {
     const divExisted = document.getElementById(cursorMenuId)
@@ -80,14 +93,38 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
                 ReactDOM.render(
                     <Menu
                         className={"right-cursor-menu"}
-                        onClick={({ key }) => {
-                            const index = +(key.split("-").reverse().shift() as string)
-                            props.content[index].onClick()
+                        onClick={(item: { key: string }) => {
+                            const {key} = item;
+                            menuItemWalker(props.content, item => {
+                                if (item?.id === key) {
+                                    item.onClick()
+                                    return
+                                }
+
+                                if (item.title === key) {
+                                    item.onClick()
+                                    return
+                                }
+                            })
                         }}
                     >
                         {props.content.map((item, index) => {
+                            const {title, disabled, id} = item;
+                            if (item?.subMenuItems && item.subMenuItems.length > 0) {
+                                return <Menu.SubMenu key={`${title}-${index}`} title={title} disabled={!!disabled}>
+                                    {(item.subMenuItems || []).map((subItem, index) => {
+                                        const {title, disabled} = subItem;
+                                        const subId = subItem?.id;
+                                        return <Menu.Item
+                                            key={subId || subItem.title}
+                                            disabled={!!disabled}>
+                                            {subItem.title}
+                                        </Menu.Item>
+                                    })}
+                                </Menu.SubMenu>
+                            }
                             return (
-                                <Menu.Item key={`${item.title}-${index}`} disabled={!!item.disabled}>
+                                <Menu.Item key={item?.id || item.title} disabled={!!disabled}>
                                     {item.title}
                                 </Menu.Item>
                             )
@@ -99,5 +136,5 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
     }
     render()
 
-    return { destroy: destory }
+    return {destroy: destory}
 }

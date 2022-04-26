@@ -337,7 +337,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail hash={flow.Hash} onClose={onClosed} />
+            <HTTPFlowDetail hash={flow.Hash} onClose={onClosed}/>
         </div>
     )
 }
@@ -397,6 +397,18 @@ export const LogLevelToCode = (level: string) => {
     }
 }
 
+const availableColors = [
+    {color: "RED", title: "红色[#FFCCC7]"},
+    {color: "", title: "移除颜色"},
+    {color: "GREEN", title: "绿色[#D9F7BE]"},
+    {color: "BLUE", title: "蓝色[#D6E4FF]"},
+    {color: "YELLOW", title: "黄色[#FFFFB8]"},
+    {color: "ORANGE", title: "橙色[#FFE7BA]"},
+    {color: "PURPLE", title: "紫色[#EfDBFF]"},
+    {color: "CYAN", title: "天蓝色[#B5F5EC]"},
+    {color: "GREY", title: "灰色[#D9D9D9]"},
+]
+
 // 通过关键词输出渲染颜色
 const TableRowColor = (key: string) => {
     switch (key) {
@@ -417,7 +429,7 @@ const TableRowColor = (key: string) => {
         case "GREY":
             return "#d9d9d9"
     }
-    if(key.indexOf('#') > -1) return key
+    if (key.indexOf('#') > -1) return key
     else return `#${key}`
 }
 
@@ -440,7 +452,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: 20,
         Order: "desc",
-        OrderBy: "updated_at",
+        OrderBy: "created_at",
         Page: 1
     })
     const [autoReload, setAutoReload] = useState(true)
@@ -458,7 +470,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         if (selected) {
             ipcRenderer.invoke("send-to-tab", {
                 type: "fuzzer",
-                data:{
+                data: {
                     isHttps: selected?.IsHTTPS,
                     request: new Buffer(selected.Request).toString()
                 }
@@ -497,7 +509,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             Page: page || 1,
             Limit: limit || pagination.Limit,
             Order: order || "desc",
-            OrderBy: orderBy || "updated_at"
+            OrderBy: orderBy || "id"
         }
         if (!noLoading) {
             setLoading(true)
@@ -514,11 +526,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                const list = rsp.Data.map((item, index) => {
-                    item.Id = (rsp.Pagination.Page - 1) * rsp.Pagination.Limit + index + 1
-                    return item
-                })
-                setData(list)
+                setData(rsp?.Data || [])
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
             })
@@ -705,380 +713,380 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 className={"httpFlowTable"}
                 loading={loading}
                 columns={[
-                        {
-                            dataKey: "Id",
-                            width: 80,
-                            headRender: () => "序号",
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return rowData[dataKey]
-                            }
-                        },
-                        {
-                            dataKey: "Method",
-                            width: 70,
-                            headRender: (params1: any) => {
-                                return (
-                                    <div
-                                        style={{display: "flex", justifyContent: "space-between"}}
-                                    >
-                                        方法
-                                        <Popover
-                                            placement='bottom'
-                                            trigger='click'
-                                            content={
-                                                params &&
-                                                setParams && (
-                                                    <HTTLFlowFilterDropdownForms
-                                                        label={"搜索方法"}
-                                                        params={params}
-                                                        setParams={setParams}
-                                                        filterName={"Methods"}
-                                                        autoCompletions={["GET", "POST", "HEAD"]}
-                                                        submitFilter={() => update(1)}
-                                                    />
-                                                )
-                                            }
-                                        >
-                                            <Button
-                                                style={{
-                                                    paddingLeft: 4, paddingRight: 4, marginLeft: 4,
-                                                    color: !!params.Methods ? undefined : "gray",
-                                                }}
-                                                type={!!params.Methods ? "primary" : "link"} size={"small"}
-                                                icon={<SearchOutlined/>}
-                                            />
-                                        </Popover>
-                                    </div>
-                                )
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                // return (
-                                //     <Tag color={"geekblue"} style={{marginRight: 20}}>
-                                //         {rowData[dataKey]}
-                                //     </Tag>
-                                // )
-                                return rowData[dataKey]
-                            }
-                        },
-                        {
-                            dataKey: "StatusCode",
-                            width: 100,
-                            sortable: true,
-                            headRender: () => {
-                                return (
-                                    <div
-                                        style={{display: "inline-flex"}}
-                                    >
-                                        状态码
-                                        <Popover
-                                            placement='bottom'
-                                            trigger='click'
-                                            content={
-                                                params &&
-                                                setParams && (
-                                                    <HTTLFlowFilterDropdownForms
-                                                        label={"搜索状态码"}
-                                                        params={params}
-                                                        setParams={setParams}
-                                                        filterName={"StatusCode"}
-                                                        autoCompletions={[
-                                                            "200",
-                                                            "300-305",
-                                                            "400-404",
-                                                            "500-502",
-                                                            "200-299",
-                                                            "300-399",
-                                                            "400-499"
-                                                        ]}
-                                                        submitFilter={() => update(1)}
-                                                    />
-                                                )
-                                            }
-                                        >
-                                            <Button
-                                                style={{
-                                                    paddingLeft: 4, paddingRight: 4, marginLeft: 4,
-                                                    color: !!params.StatusCode ? undefined : "gray",
-                                                }}
-                                                type={!!params.StatusCode ? "primary" : "link"} size={"small"}
-                                                icon={<SearchOutlined/>}
-                                            />
-                                        </Popover>
-                                    </div>
-                                )
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return (
-                                    <div style={{color: StatusCodeToColor(rowData[dataKey])}}>
-                                        {rowData[dataKey]}
-                                    </div>
-                                )
-                            }
-                        },
-                        {
-                            dataKey: "Url",
-                            resizable: true,
-                            headRender: () => {
-                                return (
-                                    <div
-                                        style={{display: "flex", justifyContent: "space-between"}}
-                                    >
-                                        URL
-                                        <Popover
-                                            placement='bottom'
-                                            trigger='click'
-                                            content={
-                                                params &&
-                                                setParams && (
-                                                    <HTTLFlowFilterDropdownForms
-                                                        label={"搜索URL关键字"}
-                                                        params={params}
-                                                        setParams={setParams}
-                                                        filterName={"SearchURL"}
-                                                        pureString={true}
-                                                        submitFilter={() => update(1)}
-                                                    />
-                                                )
-                                            }
-                                        >
-                                            <Button
-                                                style={{
-                                                    paddingLeft: 4, paddingRight: 4, marginLeft: 4,
-                                                    color: !!params.SearchURL ? undefined : "gray",
-                                                }}
-                                                type={!!params.SearchURL ? "primary" : "link"} size={"small"}
-                                                icon={<SearchOutlined/>}
-                                            />
-                                        </Popover>
-                                    </div>
-                                )
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return (
-                                    <div style={{width: "100%", display: "flex"}}>
-                                        <div className='resize-ellipsis' title={rowData.Url}>
-                                            {!params.SearchURL ? (
-                                                rowData.Url
-                                            ) : (
-                                                rowData.Url
-                                                // <Highlighter
-                                                //     searchWords={[params.SearchURL]}
-                                                //     textToHighlight={rowData.Url}
-                                                // />
-                                            )}
-                                        </div>
-                                        {/*<CopyToClipboard*/}
-                                        {/*    text={`${rowData.Url}`}*/}
-                                        {/*    onCopy={(text, ok) => {*/}
-                                        {/*        if (ok) success("已复制到粘贴板")*/}
-                                        {/*    }}*/}
-                                        {/*>*/}
-                                        {/*    <Button type={"link"} size={"small"}>*/}
-                                        {/*        <CopyOutlined*/}
-                                        {/*            style={{*/}
-                                        {/*                paddingLeft: 5,*/}
-                                        {/*                paddingTop: 5,*/}
-                                        {/*                cursor: "pointer"*/}
-                                        {/*            }}*/}
-                                        {/*        />*/}
-                                        {/*    </Button>*/}
-                                        {/*</CopyToClipboard>*/}
-                                    </div>
-                                )
-                            },
-                            width: 600
-                        },
-                        {
-                            dataKey: "HtmlTitle",
-                            width: 120,
-                            resizable: true,
-                            headRender: () => {
-                                return "Html Title"
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return rowData[dataKey] ? rowData[dataKey] : ""
-                            }
-                        },
-                        {
-                            dataKey: "IPAddress",
-                            width: 140, resizable: true,
-                            headRender: () => {
-                                return "IP"
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return rowData[dataKey] ?rowData[dataKey] : ""
-                            }
-                        },
-                        {
-                            dataKey: "BodyLength",
-                            width: 120,
-                            sortable: true,
-                            headRender: () => {
-                                return (
-                                    <div style={{display: "inline-block", position: "relative"}}>
-                                        响应长度
-                                        <Popover
-                                            placement='bottom'
-                                            trigger='click'
-                                            content={
-                                                params &&
-                                                setParams && (
-                                                    <HTTLFlowFilterDropdownForms
-                                                        label={"是否存在Body？"}
-                                                        params={params}
-                                                        setParams={setParams}
-                                                        filterName={"HaveBody"}
-                                                        pureBool={true}
-                                                        submitFilter={() => update(1)}
-                                                    />
-                                                )
-                                            }
-                                        >
-                                            <Button
-                                                style={{
-                                                    paddingLeft: 4, paddingRight: 4, marginLeft: 4,
-                                                    color: !!params.HaveBody ? undefined : "gray",
-                                                }}
-                                                type={!!params.HaveBody ? "primary" : "link"} size={"small"}
-                                                icon={<SearchOutlined/>}
-                                            />
-                                        </Popover>
-                                    </div>
-                                )
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return (
-                                    <div style={{width: 100}}>
-                                        {/* 1M 以上的话，是红色*/}
-                                        <div style={{color: rowData.BodyLength > 1000000 ? "red" : undefined}}>
-                                            {rowData.BodySizeVerbose
-                                                ? rowData.BodySizeVerbose
-                                                : rowData.BodyLength}
-                                        </div>
-                                    </div>
-                                )
-                            }
-                        },
-                        // {
-                        //     dataKey: "UrlLength",
-                        //     width: 90,
-                        //     headRender: () => {
-                        //         return "URL 长度"
-                        //     },
-                        //     cellRender: ({rowData, dataKey, ...props}: any) => {
-                        //         const len = (rowData.Url || "").length
-                        //         return len > 0 ? <div>{len}</div> : "-"
-                        //     }
-                        // },
-                        {
-                            dataKey: "GetParamsTotal",
-                            width: 65,
-                            align: "center",
-                            headRender: () => {
-                                return (
-                                    <div
-                                        style={{display: "flex", justifyContent: "space-between"}}
-                                    >
-                                        参数
-                                        <Popover
-                                            placement='bottom'
-                                            trigger='click'
-                                            content={
-                                                params &&
-                                                setParams && (
-                                                    <HTTLFlowFilterDropdownForms
-                                                        label={"过滤是否存在基础参数"}
-                                                        params={params}
-                                                        setParams={setParams}
-                                                        filterName={"HaveCommonParams"}
-                                                        pureBool={true}
-                                                        submitFilter={() => update(1)}
-                                                    />
-                                                )
-                                            }
-                                        >
-                                            <Button
-                                                style={{
-                                                    paddingLeft: 4, paddingRight: 4, marginLeft: 4,
-                                                    color: !!params.HaveCommonParams ? undefined : "gray",
-                                                }}
-                                                type={!!params.HaveCommonParams ? "primary" : "link"} size={"small"}
-                                                icon={<SearchOutlined/>}
-                                            />
-                                        </Popover>
-                                    </div>
-                                )
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return (
-                                    <Space>
-                                        {(rowData.GetParamsTotal > 0 ||
-                                            rowData.PostParamsTotal > 0) && <CheckOutlined/>}
-                                    </Space>
-                                )
-                            }
-                        },
-                        {
-                            dataKey: "ContentType",
-                            resizable: true, width: 80,
-                            headRender: () => {
-                                return "响应类型"
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                let contentTypeFixed = rowData.ContentType.split(";")
-                                    .map((el: any) => el.trim())
-                                    .filter((i: any) => !i.startsWith("charset"))
-                                    .join(",") || "-"
-                                if (contentTypeFixed.includes("/")) {
-                                    const contentTypeFixedNew = contentTypeFixed.split("/").pop()
-                                    if (!!contentTypeFixedNew) {
-                                        contentTypeFixed = contentTypeFixedNew
-                                    }
-                                }
-                                return (
-                                    <div>
-                                        {contentTypeFixed}
-                                    </div>
-                                )
-                            }
-                        },
-                        {
-                            dataKey: "UpdatedAt",
-                            sortable: true,
-                            width: 110,
-                            headRender: () => {
-                                return "请求时间"
-                            },
-                            cellRender: ({rowData, dataKey, ...props}: any) => {
-                                return <Tooltip
-                                    title={formatTimestamp(rowData[dataKey])}
-                                >
-                                    {formatTime(rowData[dataKey])}
-                                </Tooltip>
-                            }
-                        },
-                        {
-                            dataKey: "operate",
-                            width: 90,
-                            headRender: () => "操作",
-                            cellRender: ({rowData}: any) => {
-                                return (
-                                    <a
-                                        onClick={(e) => {
-                                            let m = showDrawer({
-                                                width: "80%",
-                                                content: onExpandHTTPFlow(
-                                                    rowData,
-                                                    () => m.destroy()
-                                                )
-                                            })
-                                        }}
-                                    >
-                                        详情
-                                    </a>
-                                )
-                            }
+                    {
+                        dataKey: "Id",
+                        width: 80,
+                        headRender: () => "序号",
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return rowData[dataKey]
                         }
+                    },
+                    {
+                        dataKey: "Method",
+                        width: 70,
+                        headRender: (params1: any) => {
+                            return (
+                                <div
+                                    style={{display: "flex", justifyContent: "space-between"}}
+                                >
+                                    方法
+                                    <Popover
+                                        placement='bottom'
+                                        trigger='click'
+                                        content={
+                                            params &&
+                                            setParams && (
+                                                <HTTLFlowFilterDropdownForms
+                                                    label={"搜索方法"}
+                                                    params={params}
+                                                    setParams={setParams}
+                                                    filterName={"Methods"}
+                                                    autoCompletions={["GET", "POST", "HEAD"]}
+                                                    submitFilter={() => update(1)}
+                                                />
+                                            )
+                                        }
+                                    >
+                                        <Button
+                                            style={{
+                                                paddingLeft: 4, paddingRight: 4, marginLeft: 4,
+                                                color: !!params.Methods ? undefined : "gray",
+                                            }}
+                                            type={!!params.Methods ? "primary" : "link"} size={"small"}
+                                            icon={<SearchOutlined/>}
+                                        />
+                                    </Popover>
+                                </div>
+                            )
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            // return (
+                            //     <Tag color={"geekblue"} style={{marginRight: 20}}>
+                            //         {rowData[dataKey]}
+                            //     </Tag>
+                            // )
+                            return rowData[dataKey]
+                        }
+                    },
+                    {
+                        dataKey: "StatusCode",
+                        width: 100,
+                        sortable: true,
+                        headRender: () => {
+                            return (
+                                <div
+                                    style={{display: "inline-flex"}}
+                                >
+                                    状态码
+                                    <Popover
+                                        placement='bottom'
+                                        trigger='click'
+                                        content={
+                                            params &&
+                                            setParams && (
+                                                <HTTLFlowFilterDropdownForms
+                                                    label={"搜索状态码"}
+                                                    params={params}
+                                                    setParams={setParams}
+                                                    filterName={"StatusCode"}
+                                                    autoCompletions={[
+                                                        "200",
+                                                        "300-305",
+                                                        "400-404",
+                                                        "500-502",
+                                                        "200-299",
+                                                        "300-399",
+                                                        "400-499"
+                                                    ]}
+                                                    submitFilter={() => update(1)}
+                                                />
+                                            )
+                                        }
+                                    >
+                                        <Button
+                                            style={{
+                                                paddingLeft: 4, paddingRight: 4, marginLeft: 4,
+                                                color: !!params.StatusCode ? undefined : "gray",
+                                            }}
+                                            type={!!params.StatusCode ? "primary" : "link"} size={"small"}
+                                            icon={<SearchOutlined/>}
+                                        />
+                                    </Popover>
+                                </div>
+                            )
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return (
+                                <div style={{color: StatusCodeToColor(rowData[dataKey])}}>
+                                    {rowData[dataKey]}
+                                </div>
+                            )
+                        }
+                    },
+                    {
+                        dataKey: "Url",
+                        resizable: true,
+                        headRender: () => {
+                            return (
+                                <div
+                                    style={{display: "flex", justifyContent: "space-between"}}
+                                >
+                                    URL
+                                    <Popover
+                                        placement='bottom'
+                                        trigger='click'
+                                        content={
+                                            params &&
+                                            setParams && (
+                                                <HTTLFlowFilterDropdownForms
+                                                    label={"搜索URL关键字"}
+                                                    params={params}
+                                                    setParams={setParams}
+                                                    filterName={"SearchURL"}
+                                                    pureString={true}
+                                                    submitFilter={() => update(1)}
+                                                />
+                                            )
+                                        }
+                                    >
+                                        <Button
+                                            style={{
+                                                paddingLeft: 4, paddingRight: 4, marginLeft: 4,
+                                                color: !!params.SearchURL ? undefined : "gray",
+                                            }}
+                                            type={!!params.SearchURL ? "primary" : "link"} size={"small"}
+                                            icon={<SearchOutlined/>}
+                                        />
+                                    </Popover>
+                                </div>
+                            )
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return (
+                                <div style={{width: "100%", display: "flex"}}>
+                                    <div className='resize-ellipsis' title={rowData.Url}>
+                                        {!params.SearchURL ? (
+                                            rowData.Url
+                                        ) : (
+                                            rowData.Url
+                                            // <Highlighter
+                                            //     searchWords={[params.SearchURL]}
+                                            //     textToHighlight={rowData.Url}
+                                            // />
+                                        )}
+                                    </div>
+                                    {/*<CopyToClipboard*/}
+                                    {/*    text={`${rowData.Url}`}*/}
+                                    {/*    onCopy={(text, ok) => {*/}
+                                    {/*        if (ok) success("已复制到粘贴板")*/}
+                                    {/*    }}*/}
+                                    {/*>*/}
+                                    {/*    <Button type={"link"} size={"small"}>*/}
+                                    {/*        <CopyOutlined*/}
+                                    {/*            style={{*/}
+                                    {/*                paddingLeft: 5,*/}
+                                    {/*                paddingTop: 5,*/}
+                                    {/*                cursor: "pointer"*/}
+                                    {/*            }}*/}
+                                    {/*        />*/}
+                                    {/*    </Button>*/}
+                                    {/*</CopyToClipboard>*/}
+                                </div>
+                            )
+                        },
+                        width: 600
+                    },
+                    {
+                        dataKey: "HtmlTitle",
+                        width: 120,
+                        resizable: true,
+                        headRender: () => {
+                            return "Html Title"
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return rowData[dataKey] ? rowData[dataKey] : ""
+                        }
+                    },
+                    {
+                        dataKey: "IPAddress",
+                        width: 140, resizable: true,
+                        headRender: () => {
+                            return "IP"
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return rowData[dataKey] ? rowData[dataKey] : ""
+                        }
+                    },
+                    {
+                        dataKey: "BodyLength",
+                        width: 120,
+                        sortable: true,
+                        headRender: () => {
+                            return (
+                                <div style={{display: "inline-block", position: "relative"}}>
+                                    响应长度
+                                    <Popover
+                                        placement='bottom'
+                                        trigger='click'
+                                        content={
+                                            params &&
+                                            setParams && (
+                                                <HTTLFlowFilterDropdownForms
+                                                    label={"是否存在Body？"}
+                                                    params={params}
+                                                    setParams={setParams}
+                                                    filterName={"HaveBody"}
+                                                    pureBool={true}
+                                                    submitFilter={() => update(1)}
+                                                />
+                                            )
+                                        }
+                                    >
+                                        <Button
+                                            style={{
+                                                paddingLeft: 4, paddingRight: 4, marginLeft: 4,
+                                                color: !!params.HaveBody ? undefined : "gray",
+                                            }}
+                                            type={!!params.HaveBody ? "primary" : "link"} size={"small"}
+                                            icon={<SearchOutlined/>}
+                                        />
+                                    </Popover>
+                                </div>
+                            )
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return (
+                                <div style={{width: 100}}>
+                                    {/* 1M 以上的话，是红色*/}
+                                    <div style={{color: rowData.BodyLength > 1000000 ? "red" : undefined}}>
+                                        {rowData.BodySizeVerbose
+                                            ? rowData.BodySizeVerbose
+                                            : rowData.BodyLength}
+                                    </div>
+                                </div>
+                            )
+                        }
+                    },
+                    // {
+                    //     dataKey: "UrlLength",
+                    //     width: 90,
+                    //     headRender: () => {
+                    //         return "URL 长度"
+                    //     },
+                    //     cellRender: ({rowData, dataKey, ...props}: any) => {
+                    //         const len = (rowData.Url || "").length
+                    //         return len > 0 ? <div>{len}</div> : "-"
+                    //     }
+                    // },
+                    {
+                        dataKey: "GetParamsTotal",
+                        width: 65,
+                        align: "center",
+                        headRender: () => {
+                            return (
+                                <div
+                                    style={{display: "flex", justifyContent: "space-between"}}
+                                >
+                                    参数
+                                    <Popover
+                                        placement='bottom'
+                                        trigger='click'
+                                        content={
+                                            params &&
+                                            setParams && (
+                                                <HTTLFlowFilterDropdownForms
+                                                    label={"过滤是否存在基础参数"}
+                                                    params={params}
+                                                    setParams={setParams}
+                                                    filterName={"HaveCommonParams"}
+                                                    pureBool={true}
+                                                    submitFilter={() => update(1)}
+                                                />
+                                            )
+                                        }
+                                    >
+                                        <Button
+                                            style={{
+                                                paddingLeft: 4, paddingRight: 4, marginLeft: 4,
+                                                color: !!params.HaveCommonParams ? undefined : "gray",
+                                            }}
+                                            type={!!params.HaveCommonParams ? "primary" : "link"} size={"small"}
+                                            icon={<SearchOutlined/>}
+                                        />
+                                    </Popover>
+                                </div>
+                            )
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return (
+                                <Space>
+                                    {(rowData.GetParamsTotal > 0 ||
+                                        rowData.PostParamsTotal > 0) && <CheckOutlined/>}
+                                </Space>
+                            )
+                        }
+                    },
+                    {
+                        dataKey: "ContentType",
+                        resizable: true, width: 80,
+                        headRender: () => {
+                            return "响应类型"
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            let contentTypeFixed = rowData.ContentType.split(";")
+                                .map((el: any) => el.trim())
+                                .filter((i: any) => !i.startsWith("charset"))
+                                .join(",") || "-"
+                            if (contentTypeFixed.includes("/")) {
+                                const contentTypeFixedNew = contentTypeFixed.split("/").pop()
+                                if (!!contentTypeFixedNew) {
+                                    contentTypeFixed = contentTypeFixedNew
+                                }
+                            }
+                            return (
+                                <div>
+                                    {contentTypeFixed}
+                                </div>
+                            )
+                        }
+                    },
+                    {
+                        dataKey: "UpdatedAt",
+                        sortable: true,
+                        width: 110,
+                        headRender: () => {
+                            return "请求时间"
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return <Tooltip
+                                title={formatTimestamp(rowData[dataKey])}
+                            >
+                                {formatTime(rowData[dataKey])}
+                            </Tooltip>
+                        }
+                    },
+                    {
+                        dataKey: "operate",
+                        width: 90,
+                        headRender: () => "操作",
+                        cellRender: ({rowData}: any) => {
+                            return (
+                                <a
+                                    onClick={(e) => {
+                                        let m = showDrawer({
+                                            width: "80%",
+                                            content: onExpandHTTPFlow(
+                                                rowData,
+                                                () => m.destroy()
+                                            )
+                                        })
+                                    }}
+                                >
+                                    详情
+                                </a>
+                            )
+                        }
+                    }
                 ]}
                 data={data}
                 autoHeight={tableContentHeight <= 0}
@@ -1090,14 +1098,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             <div
                                 id='http-flow-row'
                                 ref={(node) => {
-                                    const color = 
-                                        rowData.Hash === selected?.Hash ? 
-                                        "rgba(78, 164, 255, 0.4)" :
-                                        rowData.Tags.indexOf("YAKIT_COLOR") > -1 ?
-                                            TableRowColor(rowData.Tags.split('_').pop().toUpperCase()):
-                                            ""
+                                    const color =
+                                        rowData.Hash === selected?.Hash ?
+                                            "rgba(78, 164, 255, 0.4)" :
+                                            rowData.Tags.indexOf("YAKIT_COLOR") > -1 ?
+                                                TableRowColor(rowData.Tags.split('_').pop().toUpperCase()) :
+                                                ""
                                     if (node) {
-                                        if(color) node.style.setProperty("background-color", color, "important")
+                                        if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
                                     }
                                 }}
@@ -1108,70 +1116,108 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         )
                     return children
                 }}
-                onRowContextMenu={(rowData: any, event: React.MouseEvent) => {
-                        showByCursorMenu(
-                            {
-                                content: [
-                                    {
-                                        title: '发送到 Web Fuzzer',
-                                        onClick: () => {
-                                            ipcRenderer.invoke("send-to-tab", {
-                                                type: "fuzzer",
-                                                data:{
-                                                    isHttps: rowData.IsHTTPS,
-                                                    request: new Buffer(rowData.Request).toString("utf8")
-                                                }
-                                            })
-                                        }
-                                    },
-                                    {
-                                        title: '发送到 数据包扫描',
-                                        onClick: () => {
-                                            ipcRenderer
-                                                .invoke("GetHTTPFlowByHash", {Hash: rowData.Hash})
-                                                .then((i: HTTPFlow) => {
-                                                    ipcRenderer.invoke("send-to-packet-hack", {
-                                                        request: i.Request,
-                                                        ishttps: i.IsHTTPS,
-                                                        response: i.Response
-                                                    })
-                                                })
-                                                .catch((e: any) => {
-                                                    failed(`Query Response failed: ${e}`)
-                                                })
-                                        }
-                                    },
-                                    {
-                                        title: '复制 URL',
-                                        onClick: () => {
-                                            callCopyToClipboard(rowData.Url)
-                                        },
-                                    },
-                                    {
-                                        title: '发送到对比器左侧',
-                                        onClick: () => {
-                                            setCompareLeft({
-                                                content: new Buffer(rowData.Request).toString("utf8"),
-                                                language: 'http'
-                                            })
-                                        },
-                                        disabled: [false, true, false][compareState]
-                                    },
-                                    {
-                                        title: '发送到对比器右侧',
-                                        onClick: () => {
-                                            setCompareRight({
-                                                content: new Buffer(rowData.Request).toString("utf8"),
-                                                language: 'http'
-                                            })
-                                        },
-                                        disabled: [false, false, true][compareState]
+                onRowContextMenu={(rowData: HTTPFlow | any, event: React.MouseEvent) => {
+                    if (rowData) {
+                        setSelected(rowData);
+                    }
+                    showByCursorMenu(
+                        {
+                            content: [
+                                {
+                                    title: '发送到 Web Fuzzer',
+                                    onClick: () => {
+                                        ipcRenderer.invoke("send-to-tab", {
+                                            type: "fuzzer",
+                                            data: {
+                                                isHttps: rowData.IsHTTPS,
+                                                request: new Buffer(rowData.Request).toString("utf8")
+                                            }
+                                        })
                                     }
-                                ]
-                            },
-                            event.clientX,
-                            event.clientY
-                        )
+                                },
+                                {
+                                    title: '发送到 数据包扫描',
+                                    onClick: () => {
+                                        ipcRenderer
+                                            .invoke("GetHTTPFlowByHash", {Hash: rowData.Hash})
+                                            .then((i: HTTPFlow) => {
+                                                ipcRenderer.invoke("send-to-packet-hack", {
+                                                    request: i.Request,
+                                                    ishttps: i.IsHTTPS,
+                                                    response: i.Response
+                                                })
+                                            })
+                                            .catch((e: any) => {
+                                                failed(`Query Response failed: ${e}`)
+                                            })
+                                    }
+                                },
+                                {
+                                    title: '复制 URL',
+                                    onClick: () => {
+                                        callCopyToClipboard(rowData.Url)
+                                    },
+                                },
+                                {
+                                    title: '标注颜色',
+                                    subMenuItems: availableColors.map(i => {
+                                        return {
+                                            title: i.title, onClick: () => {
+                                                const flow = rowData as HTTPFlow
+                                                if (!flow) {
+                                                    return
+                                                }
+
+                                                const existedTags = (flow?.Tags || "").split("|").filter(i => !!i && !i.startsWith("YAKIT_COLOR_"));
+                                                if (i.color === "") {
+                                                    ipcRenderer.invoke("SetTagForHTTPFlow", {
+                                                        Id: flow.Id, Hash: flow.Hash,
+                                                        Tags: existedTags,
+                                                    }).then(() => {
+                                                        info(`清除 HTTPFlow 颜色成功`)
+                                                        setData([...data])
+                                                    })
+                                                    return
+                                                }
+                                                existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
+                                                ipcRenderer.invoke("SetTagForHTTPFlow", {
+                                                    Id: flow.Id, Hash: flow.Hash,
+                                                    Tags: existedTags,
+                                                }).then(() => {
+                                                    info(`设置 HTTPFlow 颜色成功`)
+                                                    setData([...data])
+                                                })
+                                            }
+                                        }
+                                    }),
+                                    onClick: () => {
+                                    }
+                                },
+                                {
+                                    title: '发送到对比器左侧',
+                                    onClick: () => {
+                                        setCompareLeft({
+                                            content: new Buffer(rowData.Request).toString("utf8"),
+                                            language: 'http'
+                                        })
+                                    },
+                                    disabled: [false, true, false][compareState]
+                                },
+                                {
+                                    title: '发送到对比器右侧',
+                                    onClick: () => {
+                                        setCompareRight({
+                                            content: new Buffer(rowData.Request).toString("utf8"),
+                                            language: 'http'
+                                        })
+                                    },
+                                    disabled: [false, false, true][compareState]
+                                }
+                            ]
+                        },
+                        event.clientX,
+                        event.clientY
+                    )
                 }}
                 onRowClick={(rowDate: any) => {
                     if (rowDate.Hash !== selected?.Hash) {
