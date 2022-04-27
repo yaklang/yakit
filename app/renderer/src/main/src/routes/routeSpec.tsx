@@ -37,6 +37,7 @@ import {HTTPFuzzerPage} from "../pages/fuzzer/HTTPFuzzerPage";
 import {fuzzerInfoProp} from "../pages/MainOperator";
 import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage";
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage";
+import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -78,6 +79,7 @@ export enum Route {
     DB_HTTPHistory = "db-http-request",
     DB_Domain = "db-domains",
     DB_ExecResults = "db-exec-results",
+    DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
 
     // Handler
@@ -171,6 +173,7 @@ export const RouteMenuData: MenuDataProps[] = [
             {key: Route.DB_Domain, label: "域名资产", icon: <FireOutlined/>},
             {key: Route.DB_ExecResults, label: "插件执行结果", icon: <FireOutlined/>},
             {key: Route.DB_Risk, label: "漏洞与风险", icon: <BugOutlined/>},
+            {key: Route.DB_Report, label: "报告(Beta*)", icon: <FireOutlined/>},
         ],
     },
     // {
@@ -264,6 +267,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <RandomPortLogPage/>
         case Route.BatchExecutorPage:
             return <BatchExecutorPage/>
+        case Route.DB_Report:
+            return <ReportViewerPage/>
         default:
             return <div/>
     }

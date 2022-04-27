@@ -209,6 +209,13 @@ service Yak {
   rpc QueryAvailableRiskLevel(Empty) returns (Fields);
   rpc QueryRiskTableStats(Empty) returns (RiskTableStats);
   rpc ResetRiskTableStats(Empty) returns (Empty);
+  rpc QueryAvailableTarget(Empty) returns (Fields);
+
+  // Report
+  rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
+  rpc QueryReport(QueryReportRequest) returns (Report);
+  rpc DeleteReport(DeleteReportRequest) returns (Empty);
+  rpc QueryAvailableReportFrom(Empty) returns (Fields);
 
   // DNSLog / ICMP / RandomTrigger
   rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
@@ -219,6 +226,41 @@ service Yak {
   rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
   rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
   rpc QueryRandomPortTrigger(QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
+}
+
+message QueryReportRequest {
+  int64 Id = 1;
+  string Hash = 2;
+}
+
+message DeleteReportRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  QueryReportsRequest Filter = 3;
+}
+
+message QueryReportsResponse {
+  repeated Report Data = 1;
+  int64 Total = 2;
+  Paging Pagination = 3;
+}
+
+message QueryReportsRequest {
+  Paging Pagination = 1;
+  string Owner = 2;
+  string From = 3;
+  string Keyword = 4;
+  string Title = 5;
+}
+
+message Report {
+  string Title = 1;
+  uint64 PublishedAt = 2;
+  string Hash = 3;
+  uint64 Id = 4;
+  string Owner = 5;
+  string From = 6;
+  string JsonRaw = 7;
 }
 
 message SetTagForHTTPFlowRequest {
