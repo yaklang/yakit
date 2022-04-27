@@ -550,9 +550,10 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 ]}
                 setValue={TypeVerbose => typeChange(TypeVerbose)} value={params.TypeVerbose}
             />
-            {!["upload-path", "select"].includes(params.TypeVerbose) && <InputItem
+            {!["upload-path"].includes(params.TypeVerbose) && <InputItem
                 label={"默认值"} placeholder={"该参数的默认值"}
                 setValue={DefaultValue => setParams({...params, DefaultValue})} value={params.DefaultValue}
+                help={params.TypeVerbose === "select" ? "使用 逗号(,) 作为选项分隔符 " : undefined}
             />}
 
             {extraSettingComponent(params.TypeVerbose)}

@@ -20,9 +20,9 @@ import {YakExecutorParam} from "./YakExecutorParams";
 import {useMemoizedFn} from "ahooks";
 import {HTTPPacketEditor, YakCodeEditor} from "../../utils/editors";
 import cloneDeep from "lodash/cloneDeep"
-import { ContentUploadInput } from "../../components/functionTemplate/ContentUploadTextArea";
-import { failed } from "../../utils/notification";
-import { ItemSelects } from "../../components/baseTemplate/FormItemUtil";
+import {ContentUploadInput} from "../../components/functionTemplate/ContentUploadTextArea";
+import {failed} from "../../utils/notification";
+import {ItemSelects} from "../../components/baseTemplate/FormItemUtil";
 
 const {Title} = Typography;
 
@@ -78,19 +78,19 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     const [groupStates, setGroupStates] = useState<{ group: string, hidden: boolean }[]>([]);
 
     // 参数组数据流
-    const [extraGroup,setExtraGroup] = useState<string[]>([])
-    const [requiredParams,setRequiredParams] = useState<YakScriptParam[]>([])
+    const [extraGroup, setExtraGroup] = useState<string[]>([])
+    const [requiredParams, setRequiredParams] = useState<YakScriptParam[]>([])
     const groupToParams = useRef<Map<string, YakScriptParam[]>>(new Map<string, YakScriptParam[]>())
 
     // 控制局部组件的加载状态
     const [templateLoading, setTemplateLoading] = useState<boolean>(false)
     // 上传组件多选时定时器和临时数据暂存点
-    const timerToData = useRef<{time: any, data: string}>({time: undefined, data: ""})
+    const timerToData = useRef<{ time: any, data: string }>({time: undefined, data: ""})
     // antd的Form表单验证，此变量非常重要，复制Form验证功能必须
     const [form] = Form.useForm()
 
     useEffect(() => {
-        if((props.Params||[]).length===0) return
+        if ((props.Params || []).length === 0) return
         const cloneParams = props.Params.map(item => {
             item.Value = item.DefaultValue ? item.DefaultValue : undefined
             return item
@@ -103,7 +103,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     useEffect(() => {
         const groupToParam = new Map<string, YakScriptParam[]>();
         const extraGroup: string[] = [];
-        for(let item of originParams){
+        for (let item of originParams) {
             const group = item.Required ? "required" : (item.Group || "default");
             if (group !== "required" && !extraGroup.includes(group)) {
                 extraGroup.push(group)
@@ -125,11 +125,12 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
 
     const yakScriptParamToNode = (i: YakScriptParam, required: boolean, key: string, disabled: boolean, formItemStyle?: React.CSSProperties) => {
         let index = 0
-        for(let id in originParams){
-            if(originParams[id].Field === i.Field){
+        for (let id in originParams) {
+            if (originParams[id].Field === i.Field) {
                 index = +id
                 break
-        }}
+            }
+        }
 
         return <Form.Item
             labelCol={{span: 6}}
@@ -146,13 +147,14 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
             name={["originParams", `${index}`, "Value"]}
             rules={[{
                 validator: async (rule, value) => {
-                    if(i.TypeVerbose === "boolean") return
-                    else if(i.TypeVerbose === "float"){
-                        if(value === undefined || value === null) throw new Error('该参数为必填项!')
-                    }else{
-                        if(required && (value || []).length === 0) throw new Error('该参数为必填项!')
+                    if (i.TypeVerbose === "boolean") return
+                    else if (i.TypeVerbose === "float") {
+                        if (value === undefined || value === null) throw new Error('该参数为必填项!')
+                    } else {
+                        if (required && (value || []).length === 0) throw new Error('该参数为必填项!')
                     }
-            }}]}
+                }
+            }]}
         >
             <TypeVerboseToInput
                 TypeVerbose={i.TypeVerbose}
@@ -177,27 +179,28 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         formItemStyle?: React.CSSProperties
     ) => {
         let index = 0
-        for(let id in originParams){
-            if(originParams[id].Field === i.Field){
+        for (let id in originParams) {
+            if (originParams[id].Field === i.Field) {
                 index = +id
                 break
-        }}
+            }
+        }
 
         let extraSetting: any = undefined
         try {
-             extraSetting = JSON.parse(i.ExtraSetting || "{}")
+            extraSetting = JSON.parse(i.ExtraSetting || "{}")
         } catch (error) {
             failed("获取参数配置数据错误，请重新打开该页面")
         }
 
         if (i.TypeVerbose === "upload-path") {
             const before = (f: any) => {
-                if(!timerToData.current.time) setTemplateLoading(true)
-                if(timerToData.current.time){
+                if (!timerToData.current.time) setTemplateLoading(true)
+                if (timerToData.current.time) {
                     clearTimeout(timerToData.current.time)
                     timerToData.current.time = null
                 }
-                
+
                 timerToData.current.data = timerToData.current.data ? `${timerToData.current.data},${f.path}` : f.path
                 timerToData.current.time = setTimeout(() => {
                     for (let item of originParams) {
@@ -211,7 +214,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     timerToData.current = {time: undefined, data: ""}
                     setTimeout(() => setTemplateLoading(false), 50)
                 }, 100);
-                
+
                 return false
             }
 
@@ -233,7 +236,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                     <>{i.FieldVerbose ? `${i.FieldVerbose}` : `${i.Field}`}</>
                                     {i.Help && (
                                         <Tooltip title={i.Help}>
-                                            <Button icon={<QuestionOutlined />} type={"link"} size={"small"} />
+                                            <Button icon={<QuestionOutlined/>} type={"link"} size={"small"}/>
                                         </Tooltip>
                                     )}
                                 </Space>
@@ -254,7 +257,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                     >
                                         <span className='help-hint-title'>上传文件</span>
                                     </Upload>
-                                    <Divider style={{margin: "0 5px"}} type="vertical" />
+                                    <Divider style={{margin: "0 5px"}} type="vertical"/>
                                     <Upload
                                         directory
                                         multiple={false}
@@ -272,8 +275,9 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                             name: ["originParams", `${index}`, "Value"],
                             rules: [{
                                 validator: async (rule, value) => {
-                                    if(required && (value || []).length === 0) throw new Error('该参数为必填项!')
-                            }}],
+                                    if (required && (value || []).length === 0) throw new Error('该参数为必填项!')
+                                }
+                            }],
                         }}
                         input={{
                             isBubbing: true,
@@ -305,7 +309,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
 
         if (i.TypeVerbose === "select") {
             return (
-                <ItemSelects 
+                <ItemSelects
                     key={key}
                     item={{
                         style: {marginBottom: 8, ...formItemStyle},
@@ -315,7 +319,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                 <>{i.FieldVerbose ? `${i.FieldVerbose}` : `${i.Field}`}</>
                                 {i.Help && (
                                     <Tooltip title={i.Help}>
-                                        <Button icon={<QuestionOutlined />} type={"link"} size={"small"} />
+                                        <Button icon={<QuestionOutlined/>} type={"link"} size={"small"}/>
                                     </Tooltip>
                                 )}
                             </Space>
@@ -324,24 +328,26 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         required: required,
                         rules: [{
                             validator: async (rule, value) => {
-                                if(required && (value || []).length === 0) throw new Error('该参数为必填项!')
-                        }}],
+                                if (required && (value || []).length === 0) throw new Error('该参数为必填项!')
+                            }
+                        }],
                     }}
                     select={{
+                        tokenSeparators: [","],
                         allowClear: true,
                         data: extraSetting.data || [],
                         optText: "key",
-                        value: i.Value,
+                        value: extraSetting.double ? (i.Value || "").split(",") : i.Value,
                         setValue: (value) => {
                             originParams[index].Value = value
                             setOriginParams([...originParams])
                             form.setFieldsValue({originParams: {...originParams}})
                         },
-                        mode: !!extraSetting.double ? 'multiple' : undefined,
+                        mode: !!extraSetting.double ? 'tags' : undefined,
                         maxTagCount: !!extraSetting.double ? 'responsive' : undefined,
                         disabled: disabled
                     }}
-                ></ItemSelects>
+                />
             )
         }
         return <div style={{height: 0}}></div>
@@ -412,7 +418,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     {/*</Title>*/}
                     {!isGroupHidden(extraGroup[0] || "default", !defaultExpand) && <>
                         {(groupToParams.current.get(extraGroup[0] || "default") || []).map((i: YakScriptParam, index) => {
-                            if(newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, false, `defaultParamsGroup-${index}`, !!props.loading)
+                            if (newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, false, `defaultParamsGroup-${index}`, !!props.loading)
                             else return yakScriptParamToNode(i, false, `defaultParamsGroup-${index}`, !!props.loading)
                         })}
                     </>}
@@ -436,7 +442,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                             </Title>
                             {!isGroupHidden(i, !defaultExpand) && <>
                                 {(groupToParams.current.get(i) || []).map((i: YakScriptParam, index) => {
-                                    if(newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, false, `paramsGroup-${index}`, !!props.loading)
+                                    if (newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, false, `paramsGroup-${index}`, !!props.loading)
                                     else return yakScriptParamToNode(i, false, `paramsGroup-${index}`, !!props.loading)
                                 })}
                             </>}
@@ -453,7 +459,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                 form={form}
                 onFinish={(value) => {
                     form.validateFields()
-		            .then(values => submit())
+                        .then(values => submit())
                 }}
                 // onSubmitCapture={(e) => {
                 //     e.preventDefault()
@@ -465,7 +471,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     <>
                         <div style={{marginTop: 0}}>
                             {requiredParams.map((i, index) => {
-                                if(newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, true, `params-${index}`, !!props.loading)
+                                if (newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, true, `params-${index}`, !!props.loading)
                                 else return yakScriptParamToNode(i, true, `params-${index}`, !!props.loading)
                             })}
                         </div>
@@ -489,19 +495,19 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                     </Button>
                                 )}
                                 {groupToParams.current.size > 0 &&
-                                    (groupToParams.current.size === 1 &&
-                                    (groupToParams.current.get("default") || []).length <= 0 ? (
-                                        ""
-                                    ) : (
-                                        <Popover
-                                            title={"设置额外参数"}
-                                            trigger={"click"}
-                                            content={<div style={{width: 700}}>{renderExtraParams(true)}</div>}
-                                        >
-                                            <Button size={"small"} type={"link"}>
-                                                额外参数
-                                            </Button>
-                                        </Popover>
+                                (groupToParams.current.size === 1 &&
+                                (groupToParams.current.get("default") || []).length <= 0 ? (
+                                    ""
+                                ) : (
+                                    <Popover
+                                        title={"设置额外参数"}
+                                        trigger={"click"}
+                                        content={<div style={{width: 700}}>{renderExtraParams(true)}</div>}
+                                    >
+                                        <Button size={"small"} type={"link"}>
+                                            额外参数
+                                        </Button>
+                                    </Popover>
                                 ))}
                                 {props.loading ? (
                                     <Button
@@ -590,7 +596,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         </Space>
                     </Title>
                     {requiredParams.map((i, index) => {
-                        if(newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, true, `params-${index}`, !!props.loading)
+                        if (newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, true, `params-${index}`, !!props.loading)
                         else return yakScriptParamToNode(i, true, `params-${index}`, !!props.loading)
                     })}
                 </>}
