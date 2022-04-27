@@ -1,14 +1,14 @@
-import React, {useEffect, useState} from "react"
-import {Button, Space, Table, Tag, Form, Typography, Divider, Popconfirm} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Button, Space, Table, Tag, Form, Typography} from "antd"
 import {Risk} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {failed} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
 import ReactJson from "react-json-view"
-import {InputItem, ManyMultiSelectForString, SelectOne} from "../../utils/inputUtil"
+import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
 
 import "./RiskTable.css"
 
@@ -78,7 +78,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         Pagination: genDefaultPagination(20),
         Total: 0
     })
-    const [params, setParams] = useState<QueryRisksParams>({
+    const [params, setParams, getParams] = useGetState<QueryRisksParams>({
             Severity: props.severity,
             Pagination: genDefaultPagination(20)
         }
@@ -90,6 +90,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [types, setTypes] = useState<FieldNameSelectItem[]>([]);
     const [severities, setSeverities] = useState<FieldNameSelectItem[]>([]);
+
+    const time = useRef<any>(null)
 
     const updateRiskAndLevel = useMemoizedFn(() => {
         ipcRenderer.invoke("QueryAvailableRiskType", {}).then((f: Fields) => {
@@ -139,222 +141,312 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
+    const filterSelect = useMemoizedFn((type: string, value: string) => {
+        const relation = {type: "RiskType", severity: "Severity"}
+
+        const arr = getParams()[relation[type]] ? getParams()[relation[type]]?.split("|") : []
+        const flag = arr.filter((item) => value.startsWith(item)) || []
+        if (flag.length === 0) {
+            arr?.push(value)
+            setParams({...getParams(), [relation[type]]: arr?.join("|")})
+        } else {
+            const filters = arr?.filter((item) => !value.startsWith(item)) || []
+            setParams({...getParams(), [relation[type]]: filters.join("|")})
+        }
+
+        if(time.current){
+            clearTimeout(time.current)
+            time.current = null
+        }
+        time.current = setTimeout(() => {
+            update(1)
+        }, 1000);
+    })
+    const isSelected = useMemoizedFn((type: string, value: string) => {
+        const relation = {type: "RiskType", severity: "Severity"}
+        const arr = getParams()[relation[type]] ? getParams()[relation[type]]?.split("|") : []
+        const num = arr.filter((item) => value.startsWith(item))
+        return num.length !== 0
+    })
+
     useEffect(() => {
         update(1)
     }, [])
 
-    return (
-        <Table<Risk>
-            title={() => {
-                return (
-                    <div style={{display: "flex", justifyContent: "space-between"}}>
+    const showSelectedTag = ()=>{
+        const risktypes = getParams().RiskType ? getParams().RiskType?.split("|") : []
+        const severitys = getParams().Severity ? getParams().Severity?.split("|") : []
 
-                        <Space>
-                            {"风险与漏洞"}
-                            <Button
-                                size={"small"}
-                                type={"link"}
-                                onClick={() => {
-                                    update()
-                                }}
-                                icon={<ReloadOutlined/>}
-                            />
-                            <Divider type={"vertical"}/>
-                            <Form onSubmitCapture={e => {
-                                e.preventDefault()
-                                update()
-                            }} layout={"inline"} size={"small"}>
-                                {types.length > 0 && <ManyMultiSelectForString
-                                    label={"漏洞/风险类型"} value={params.RiskType || ""}
-                                    formItemStyle={{minWidth: 280}}
-                                    setValue={RiskType => setParams({...params, RiskType})} defaultSep={"|"}
-                                    data={types.map(i => {
-                                        return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
-                                    })}
-                                />}
-                                {types.length > 0 && <ManyMultiSelectForString
-                                    label={"漏洞级别"} value={params.Severity || ""} defaultSep={"|"}
-                                    formItemStyle={{minWidth: 240}}
-                                    setValue={Severity => setParams({...params, Severity})}
-                                    data={severities.map(i => {
-                                        return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
-                                    })}
-                                />}
-                                <Form.Item colon={false}>
-                                    <Button type="primary" htmlType="submit"> 搜索 </Button>
-                                </Form.Item>
-                            </Form>
-                        </Space>
-                        <Space>
-                            <Button danger={true} size={"small"} type={"primary"}
-                                    onClick={() => {
-                                        let m = showModal({
-                                            title: "删除数据选项",
-                                            width: "50%",
-                                            content: (
-                                                <div>
-                                                    <DeleteRiskForm
-                                                        types={types} severities={severities}
-                                                        onClose={() => {
-                                                            m.destroy()
-                                                            update(1)
-                                                        }}/>
-                                                </div>
-                                            )
-                                        })
-                                    }}
-                            >
-                                删除数据
-                            </Button>
-                        </Space>
+        const typekind = types.map((item: any) => {
+            item.Names = (item.Names || []).toString()
+            return item
+        })
+        const severitykind = severities.map((item: any) => {
+            item.Names = (item.Names || []).toString()
+            return item
+        })
+
+        return (
+            <>
+                {risktypes?.map((type) => (
+                    <div className="title-selected-tag">
+                        <span className="tag-name-style" key={type}>{typekind.filter((item) => item.Names.startsWith(type))[0].Verbose}</span>
+                        <span className="tag-del-style" onClick={()=>filterSelect("type",type)}>x</span>
                     </div>
-                )
-            }}
-            size={"small"}
-            bordered={true}
-            columns={[
-                {
-                    title: "标题",
-                    render: (i: Risk) => <Paragraph style={{maxWidth: 500, marginBottom: 0}}
-                                                    ellipsis={{tooltip: true}}>{i?.TitleVerbose || i.Title}</Paragraph>,
-                    width: 500,
-                    filterIcon: (filtered) => {
-                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
-                    },
-                    filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                ))}
+                {severitys?.map((severity) => (
+                    <div className="title-selected-tag">
+                        <span className="tag-name-style" key={severity}>{severitykind.filter((item) => item.Names.startsWith(severity))[0].Verbose}</span>
+                        <span className="tag-del-style" onClick={()=>filterSelect("severity",severity)}>x</span>
+                    </div>
+                ))}
+            </>
+        )
+    }
+
+    return (
+        <div className='risk-table-container'>
+            <div className="container-table">
+                <Table<Risk>
+                    title={() => {
                         return (
-                            params &&
-                            setParams && (
-                                <TableFilterDropdownString
-                                    label={"搜索关键字"}
-                                    params={params}
-                                    setParams={setParams}
-                                    filterName={"Search"}
-                                    confirm={confirm}
-                                    setSelectedKeys={setSelectedKeys}
-                                    update={update}
-                                />
-                            )
+                            <div>
+                                <div className="table-title">
+                                    <Space>
+                                        {"风险与漏洞"}
+                                        <Button
+                                            size={"small"}
+                                            type={"link"}
+                                            onClick={() => {
+                                                update()
+                                            }}
+                                            icon={<ReloadOutlined />}
+                                        />
+                                    </Space>
+                                    <Space>
+                                        <Button
+                                            danger={true}
+                                            size={"small"}
+                                            type={"primary"}
+                                            onClick={() => {
+                                                let m = showModal({
+                                                    title: "删除数据选项",
+                                                    width: "50%",
+                                                    content: (
+                                                        <div>
+                                                            <DeleteRiskForm
+                                                                types={types}
+                                                                severities={severities}
+                                                                onClose={() => {
+                                                                    m.destroy()
+                                                                    update(1)
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )
+                                                })
+                                            }}
+                                        >
+                                            删除数据
+                                        </Button>
+                                    </Space>
+                                </div>
+                                <div className="title-header">{showSelectedTag()}</div>
+                            </div>
                         )
-                    }
-                },
-                {
-                    title: "类型",
-                    render: (i: Risk) => i?.RiskTypeVerbose || i.RiskType,
-                    filterIcon: (filtered) => {
-                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
-                    },
-                    filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
-                        return (
-                            params &&
-                            setParams && (
-                                <TableFilterDropdownString
-                                    label={"搜索类型关键字"}
-                                    params={params}
-                                    setParams={setParams}
-                                    filterName={"RiskType"}
-                                    confirm={confirm}
-                                    setSelectedKeys={setSelectedKeys}
-                                    update={update}
-                                />
+                    }}
+                    size={"small"}
+                    bordered={true}
+                    columns={[
+                        {
+                            title: "标题",
+                            render: (i: Risk) => (
+                                <Paragraph style={{maxWidth: 400, marginBottom: 0}} ellipsis={{tooltip: true}}>
+                                    {i?.TitleVerbose || i.Title}
+                                </Paragraph>
+                            ),
+                            width: 400,
+                            filterIcon: (filtered) => {
+                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                            },
+                            filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                                return (
+                                    params &&
+                                    setParams && (
+                                        <TableFilterDropdownString
+                                            label={"搜索关键字"}
+                                            params={params}
+                                            setParams={setParams}
+                                            filterName={"Search"}
+                                            confirm={confirm}
+                                            setSelectedKeys={setSelectedKeys}
+                                            update={update}
+                                        />
+                                    )
+                                )
+                            }
+                        },
+                        {
+                            title: "类型",
+                            render: (i: Risk) => i?.RiskTypeVerbose || i.RiskType,
+                            filterIcon: (filtered) => {
+                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                            },
+                            filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                                return (
+                                    params &&
+                                    setParams && (
+                                        <TableFilterDropdownString
+                                            label={"搜索类型关键字"}
+                                            params={params}
+                                            setParams={setParams}
+                                            filterName={"RiskType"}
+                                            confirm={confirm}
+                                            setSelectedKeys={setSelectedKeys}
+                                            update={update}
+                                        />
+                                    )
+                                )
+                            }
+                        },
+                        {
+                            title: "等级",
+                            render: (i: Risk) => {
+                                const title = TitleColor.filter((item) => item.key.includes(i.Severity || ""))[0]
+                                return (
+                                    <span className={title?.value || "title-default"}>
+                                        {title ? title.name : i.Severity || "-"}
+                                    </span>
+                                )
+                            },
+                            width: 90
+                        },
+                        {
+                            title: "IP",
+                            render: (i: Risk) => i?.IP || "-",
+                            filterIcon: (filtered) => {
+                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                            },
+                            filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
+                                return (
+                                    params &&
+                                    setParams && (
+                                        <TableFilterDropdownString
+                                            label={"搜索网段"}
+                                            params={params}
+                                            setParams={setParams}
+                                            filterName={"Network"}
+                                            confirm={confirm}
+                                            setSelectedKeys={setSelectedKeys}
+                                            update={update}
+                                        />
+                                    )
+                                )
+                            }
+                        },
+                        {title: "Token", render: (i: Risk) => i?.ReverseToken || "-"},
+                        {
+                            title: "发现时间",
+                            render: (i: Risk) => <Tag>{i.CreatedAt > 0 ? formatTimestamp(i.CreatedAt) : "-"}</Tag>
+                        },
+                        {
+                            title: "操作",
+                            render: (i: Risk) => (
+                                <Space>
+                                    <Button
+                                        size='small'
+                                        type={"link"}
+                                        onClick={() => {
+                                            showModal({
+                                                width: "60",
+                                                title: "详情",
+                                                content: (
+                                                    <div style={{overflow: "auto"}}>
+                                                        <ReactJson src={i} />
+                                                    </div>
+                                                )
+                                            })
+                                        }}
+                                    >
+                                        详情
+                                    </Button>
+                                    <Button size='small' type={"link"} danger onClick={() => delRisk(i.Hash)}>
+                                        删除
+                                    </Button>
+                                </Space>
                             )
-                        )
-                    }
-                },
-                {
-                    title: "等级",
-                    render: (i: Risk) => {
-                        const title = TitleColor.filter(item => item.key.includes(i.Severity || ""))[0]
-                        return <span
-                            className={title?.value || "title-default"}>{title ? title.name : i.Severity || "-"}</span>
-                    },
-                    width: 90
-                },
-                {
-                    title: "IP",
-                    render: (i: Risk) => i?.IP || "-",
-                    filterIcon: (filtered) => {
-                        return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
-                    },
-                    filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
-                        return (
-                            params &&
-                            setParams && (
-                                <TableFilterDropdownString
-                                    label={"搜索网段"}
-                                    params={params}
-                                    setParams={setParams}
-                                    filterName={"Network"}
-                                    confirm={confirm}
-                                    setSelectedKeys={setSelectedKeys}
-                                    update={update}
-                                />
+                        }
+                    ]}
+                    rowKey={(e) => e.Hash}
+                    loading={loading}
+                    dataSource={response.Data}
+                    pagination={{
+                        current: +page,
+                        pageSize: limit,
+                        showSizeChanger: true,
+                        total: total,
+                        showTotal: (total) => <Tag>Total:{total}</Tag>,
+                        pageSizeOptions: ["5", "10", "20"]
+                    }}
+                    onChange={(pagination, filters, sorter, extra) => {
+                        const action = extra.action
+                        switch (action) {
+                            case "paginate":
+                                const current = pagination.current
+                                update(+page === current ? 1 : current, pagination.pageSize)
+                                return
+                            case "filter":
+                                update()
+                                return
+                        }
+                    }}
+                />
+            </div>
+
+            <div className='container-filter-body'>
+                {severities.length > 0 && <div className='filter-body-opt'>
+                    <div className='opt-header'>漏洞级别</div>
+                    <div className='opt-list'>
+                        {severities.map((item) => {
+                            const value = (item.Names || []).toString()
+                            return (
+                                <div
+                                    key={value}
+                                    className={`opt-list-item ${isSelected("severity", value) ? "selected" : ""}`}
+                                    onClick={() => filterSelect("severity", value)}
+                                >
+                                    <span className='item-name' title={item.Verbose}>
+                                        {item.Verbose}
+                                    </span>
+                                    <span>{item.Total}</span>
+                                </div>
                             )
-                        )
-                    }
-                },
-                {title: "Token", render: (i: Risk) => i?.ReverseToken || "-"},
-                {
-                    title: "发现时间",
-                    render: (i: Risk) => <Tag>{i.CreatedAt > 0 ? formatTimestamp(i.CreatedAt) : "-"}</Tag>
-                },
-                {
-                    title: "操作",
-                    render: (i: Risk) => (
-                        <Space>
-                            <Button
-                                size="small"
-                                type={"link"}
-                                onClick={() => {
-                                    showModal({
-                                        width: "60",
-                                        title: "详情",
-                                        content: (
-                                            <div style={{overflow: "auto"}}>
-                                                <ReactJson src={i}/>
-                                            </div>
-                                        )
-                                    })
-                                }}
-                            >
-                                详情
-                            </Button>
-                            <Button
-                                size="small"
-                                type={"link"}
-                                danger
-                                onClick={() => delRisk(i.Hash)}
-                            >
-                                删除
-                            </Button>
-                        </Space>
-                    )
-                }
-            ]}
-            rowKey={(e) => e.Hash}
-            loading={loading}
-            dataSource={response.Data}
-            pagination={{
-                current: +page,
-                pageSize: limit,
-                showSizeChanger: true,
-                total: total,
-                showTotal: (total) => <Tag>Total:{total}</Tag>,
-                pageSizeOptions: ["5", "10", "20"]
-            }}
-            onChange={(pagination, filters, sorter, extra) => {
-                const action = extra.action
-                switch (action) {
-                    case "paginate":
-                        const current = pagination.current
-                        update(+page === current ? 1 : current, pagination.pageSize)
-                        return
-                    case "filter":
-                        update()
-                        return
-                }
-            }}
-        />
+                        })}
+                    </div>
+                </div>}
+
+                <div className="opt-separator"></div>
+
+                {types.length > 0 && <div className='filter-body-opt'>
+                    <div className='opt-header'>漏洞/风险类型</div>
+                    <div className='opt-list'>
+                        {types.map((item) => {
+                            const value = (item.Names || []).toString()
+                            return (
+                                <div
+                                    key={value}
+                                    className={`opt-list-item ${isSelected("type", value) ? "selected" : ""}`}
+                                    onClick={() => filterSelect("type", value)}
+                                >
+                                    <span>{item.Verbose}</span>
+                                    <span>{item.Total}</span>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>}
+            </div>
+        </div>
     )
 }
 
