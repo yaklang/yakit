@@ -11,7 +11,8 @@ export const queryYakScriptList = (
     limit?: number,
     page?: number,
     keyword?: string,
-    extraParam?: QueryYakScriptRequest
+    extraParam?: QueryYakScriptRequest,
+    onFailed?: (e: any) => any,
 ) => {
     if (limit !== undefined && limit <= 0) {
         limit = 200
@@ -23,5 +24,8 @@ export const queryYakScriptList = (
         onResult(rsp.Data, rsp.Total)
     }).catch(e => {
         failed(`Query Yak Plugin failed: ${e}`)
+        if (onFailed) {
+            onFailed(e)
+        }
     }).finally(onFinally)
 };

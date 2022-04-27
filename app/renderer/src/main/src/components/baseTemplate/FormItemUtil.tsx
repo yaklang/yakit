@@ -5,6 +5,7 @@ import {DraggerProps} from "antd/lib/upload"
 import {TextAreaProps} from "antd/lib/input"
 
 import "./FormItemUtil.css"
+import {ManyMultiSelectForString} from "../../utils/inputUtil";
 
 const {Item} = Form
 const {Dragger} = Upload
