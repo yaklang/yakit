@@ -27,44 +27,44 @@
     overflow: hidden;
 }
 
-.risk-table-container .container-table{
+.risk-table-container .container-table {
     flex: 1;
     overflow: hidden auto;
 }
-.risk-table-container .container-table .table-title{
+.risk-table-container .container-table .table-title {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
 }
-.risk-table-container .container-table .title-header{
-    overflow: auto hidden;
+.risk-table-container .container-table .title-header {
+    margin-top: 8px;
+    overflow: hidden;
     display: flex;
+    flex-flow: wrap;
     align-items: center;
-    height: 32px;
+    min-height: 40px;
     border: 1px solid #f1f1f1;
     border-radius: 4px;
     background-color: #fafafa;
-    padding: 0 4px;
+    padding: 4px;
 }
-.risk-table-container .container-table .title-header .title-selected-tag{
-    display: inline-block;
+.risk-table-container .container-table .title-header .title-selected-tag {
+    display: flex;
     height: 20px;
-    line-height: 18px;
     font-size: 12px;
-    color: #595959;
+    color: #7e7e7e;
     border: 1px solid #a9a9a9;
-    border-radius: 4px;
+    border-radius: 2px;
+    margin: 2px;
 }
-.risk-table-container .container-table .title-header .title-selected-tag + .title-selected-tag{
+.risk-table-container .container-table .title-header .title-selected-tag .tag-name-style {
+    height: 100%;
     margin-left: 6px;
-}
-.risk-table-container .container-table .title-header .title-selected-tag .tag-name-style{
-    margin-left: 2px;
     white-space: nowrap;
 }
-.risk-table-container .container-table .title-header .title-selected-tag .tag-del-style{
+.risk-table-container .container-table .title-header .title-selected-tag .tag-del-style {
+    height: 100%;
     margin-left: 6px;
-    margin-right: 2px;
+    margin-right: 6px;
     cursor: pointer;
 }
 
@@ -77,14 +77,12 @@
 .risk-table-container .container-filter-body .filter-body-opt .opt-header {
     height: 30px;
     line-height: 30px;
-    font-size: 12px;
     font-weight: 600;
 }
 .risk-table-container .container-filter-body .filter-body-opt .opt-list {
     max-height: 300px;
     overflow-y: auto;
     padding-left: 8px;
-    font-size: 12px;
 }
 .risk-table-container .container-filter-body .filter-body-opt .opt-list .opt-list-item {
     cursor: pointer;

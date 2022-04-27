@@ -190,14 +190,14 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             <>
                 {risktypes?.map((type) => (
                     <div className="title-selected-tag">
-                        <span className="tag-name-style" key={type}>{typekind.filter((item) => item.Names.startsWith(type))[0].Verbose}</span>
-                        <span className="tag-del-style" onClick={()=>filterSelect("type",type)}>x</span>
+                        <div className="tag-name-style" key={type}>{typekind.filter((item) => item.Names.startsWith(type))[0].Verbose}</div>
+                        <div className="tag-del-style" onClick={()=>filterSelect("type",type)}>x</div>
                     </div>
                 ))}
                 {severitys?.map((severity) => (
                     <div className="title-selected-tag">
-                        <span className="tag-name-style" key={severity}>{severitykind.filter((item) => item.Names.startsWith(severity))[0].Verbose}</span>
-                        <span className="tag-del-style" onClick={()=>filterSelect("severity",severity)}>x</span>
+                        <div className="tag-name-style" key={severity}>{severitykind.filter((item) => item.Names.startsWith(severity))[0].Verbose}</div>
+                        <div className="tag-del-style" onClick={()=>filterSelect("severity",severity)}>x</div>
                     </div>
                 ))}
             </>
@@ -251,7 +251,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                         </Button>
                                     </Space>
                                 </div>
-                                <div className="title-header">{showSelectedTag()}</div>
+                                {(!!getParams().Severity || !!getParams().RiskType) && <div className="title-header">{showSelectedTag()}</div>}
                             </div>
                         )
                     }}
