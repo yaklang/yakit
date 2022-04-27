@@ -105,6 +105,8 @@ export interface YakScript {
     GeneralModuleVerbose?: string
     GeneralModuleKey?: string
     FromGit?: string
+    EnablePluginSelector?: boolean
+    PluginSelectorTypes?: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

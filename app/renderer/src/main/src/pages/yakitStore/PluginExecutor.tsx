@@ -17,6 +17,7 @@ export interface PluginExecutorProp {
 
     settingShow?: boolean
     settingNode?: React.ReactNode
+    extraYakExecutorParams?: YakExecutorParam[]
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -41,7 +42,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
 
         setTimeout(() => {
             ipcRenderer.invoke("exec-yak-script", {
-                Params: p,
+                Params: [...p, ...(props.extraYakExecutorParams || [])],
                 YakScriptId: props.script.Id,
             }, token)
         }, 300);
