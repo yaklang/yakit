@@ -308,7 +308,6 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         }
 
         if (i.TypeVerbose === "select") {
-            console.info(i)
             return (
                 <ItemSelects
                     key={key}
