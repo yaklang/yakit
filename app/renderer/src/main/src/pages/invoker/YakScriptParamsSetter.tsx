@@ -308,6 +308,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         }
 
         if (i.TypeVerbose === "select") {
+            console.info(i)
             return (
                 <ItemSelects
                     key={key}
@@ -337,7 +338,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         allowClear: true,
                         data: extraSetting.data || [],
                         optText: "key",
-                        value: extraSetting.double ? (i.Value || "").split(",") : i.Value,
+                        value: (`${i.Value}` || "").split(",").filter(i => !!i),
                         setValue: (value) => {
                             originParams[index].Value = value
                             setOriginParams([...originParams])

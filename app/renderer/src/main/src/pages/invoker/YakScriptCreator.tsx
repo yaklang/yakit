@@ -541,7 +541,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                     danger
                     icon={<DeleteOutlined/>}
                     onClick={() => updateExtraSetting("select", "del", "", "", index)}
-                ></Button>
+                />
             </div>
         )
     }
