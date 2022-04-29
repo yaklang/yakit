@@ -1,23 +1,51 @@
 .title-debug {
     color: #000000;
 }
+.title-background-debug {
+    color: #000000;
+    background-color: rgba(0, 0, 0, 0.08);
+}
 .title-info {
     color: #8c8c8c;
+}
+.title-background-info {
+    color: #8c8c8c;
+    background-color: rgba(140, 140, 140, 0.08);
 }
 .title-low {
     color: #ffa940;
 }
+.title-background-low {
+    color: #ffa940;
+    background-color: rgba(255, 169, 64, 0.08);
+}
 .title-middle {
     color: #ff7a45;
+}
+.title-background-middle {
+    color: #ff7a45;
+    background-color: rgba(255, 122, 69, 0.08);
 }
 .title-high {
     color: #f5222d;
 }
+.title-background-high {
+    color: #f5222d;
+    background-color: rgba(245, 34, 45, 0.08);
+}
 .title-fatal {
     color: #a8071a;
 }
+.title-background-fatal {
+    color: #a8071a;
+    background-color: rgba(168, 7, 26, 0.08);
+}
 .title-default {
     color: #000000;
+}
+.title-background-default {
+    color: #000000;
+    background-color: rgba(0, 0, 0, 0.08);
 }
 
 .risk-table-container {
@@ -105,4 +133,53 @@
     background-color: #e6eaef;
     border-radius: 1px;
     margin: 20px 0;
+}
+
+.text-ellipsis{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.container-title-body {
+    display: flex;
+}
+.container-title-body .title-icon {
+    width: 64px;
+    height: 64px;
+}
+.container-title-body .title-icon .icon-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+}
+.container-title-body .title-header {
+    flex: 1;
+    padding-left: 8px;
+    overflow: hidden;
+}
+.container-title-body .title-header .header-name {
+    height: 24px;
+    line-height: 24px;
+    max-width: 90%;
+}
+.container-title-body .title-header .header-subtitle {
+    height: 20px;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    margin-top: 8px;
+}
+.container-title-body .title-header .header-subtitle .subtitle-level {
+    width: 48px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+}
+.container-title-body .title-header .header-subtitle .subtitle-spacing {
+    margin: 0 24px;
+}
+.container-title-body .title-header .header-subtitle .subtitle-font {
+    color: #999EA8;
+    margin-left: 8px;
 }

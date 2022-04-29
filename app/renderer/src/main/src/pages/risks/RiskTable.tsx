@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Space, Table, Tag, Form, Typography} from "antd"
+import {Button, Space, Table, Tag, Form, Typography, Descriptions} from "antd"
 import {Risk} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -7,8 +7,14 @@ import {formatTimestamp} from "../../utils/timeUtil"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {failed} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
-import ReactJson from "react-json-view"
 import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
+
+import infoImg from "../../assets/riskDetails/info.png"
+import highImg from "../../assets/riskDetails/high.png"
+import fatalImg from "../../assets/riskDetails/fatal.png"
+import middleImg from "../../assets/riskDetails/middle.png"
+import lowImg from "../../assets/riskDetails/low.png"
+import debugImg from "../../assets/riskDetails/debug.png"
 
 import "./RiskTable.css"
 
@@ -64,12 +70,12 @@ const mergeFieldNames = (f: Fields) => {
 }
 
 const TitleColor = [
-    {key: ["trace", "debug", "note"], value: "title-debug", name: "调试信息"},
-    {key: ["info", "fingerprint", "infof", "default"], value: "title-info", name: "信息/指纹"},
-    {key: ["low"], value: "title-low", name: "低危"},
-    {key: ["middle", "warn", "warning"], value: "title-middle", name: "中危"},
-    {key: ["high"], value: "title-high", name: "高危"},
-    {key: ["fatal", "critical", "panic"], value: "title-fatal", name: "严重"},
+    {key: ["trace", "debug", "note"], value: "title-debug", name: "调试信息", img: debugImg, tag: "title-background-debug"},
+    {key: ["info", "fingerprint", "infof", "default"], value: "title-info", name: "信息/指纹", img: infoImg, tag: "title-background-info"},
+    {key: ["low"], value: "title-low", name: "低危", img: lowImg, tag: "title-background-low"},
+    {key: ["middle", "warn", "warning"], value: "title-middle", name: "中危", img: middleImg, tag: "title-background-middle"},
+    {key: ["high"], value: "title-high", name: "高危", img: highImg, tag: "title-background-high"},
+    {key: ["fatal", "critical", "panic"], value: "title-fatal", name: "严重", img: fatalImg, tag: "title-background-fatal"},
 ]
 
 export const RiskTable: React.FC<RiskTableProp> = (props) => {
@@ -358,11 +364,11 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                         type={"link"}
                                         onClick={() => {
                                             showModal({
-                                                width: "60",
+                                                width: "80%",
                                                 title: "详情",
                                                 content: (
                                                     <div style={{overflow: "auto"}}>
-                                                        <ReactJson src={i} />
+                                                        <RiskDetails info={i} />
                                                     </div>
                                                 )
                                             })
@@ -579,3 +585,98 @@ export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
         </Form>
     </div>
 };
+
+ interface RiskDetailsProp {
+    info: Risk
+}
+
+const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
+    const {info} = props
+    const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
+
+    return (
+        <Descriptions
+            title={
+                <div className='container-title-body'>
+                    <div className='title-icon'>
+                        <img src={title.img} className='icon-img' />
+                    </div>
+
+                    <div className='title-header'>
+                        <div className='header-name text-ellipsis' title={info?.TitleVerbose || info.Title}>
+                            {info?.TitleVerbose || info.Title}
+                        </div>
+
+                        <div className='header-subtitle'>
+                            <div className={`${title?.tag || "title-background-default"} subtitle-level`}>
+                                {title ? title.name : info.Severity || "-"}
+                            </div>
+                            <div style={{maxWidth: 260}} className='subtitle-spacing text-ellipsis'>
+                                Url
+                                <span className='subtitle-font' title={info?.Url || "-"}>
+                                    {info?.Url || "-"}
+                                </span>
+                            </div>
+                            <div className='subtitle-spacing'>
+                                发现时间
+                                <span className='subtitle-font'>
+                                    {info.CreatedAt > 0 ? formatTimestamp(info.CreatedAt) : "-"}
+                                </span>
+                            </div>
+                            <div>
+                                最近更新时间
+                                <span className='subtitle-font'>
+                                    {info.CreatedAt > 0 ? formatTimestamp(info.CreatedAt) : "-"}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            bordered
+            size='small'
+        >
+            <Descriptions.Item label='IP'>
+                <div>{info.IP || "-"}</div>
+            </Descriptions.Item>
+            <Descriptions.Item label='ID'>
+                <div>{info.Id || "-"}</div>
+            </Descriptions.Item>
+            <Descriptions.Item label='端口'>
+                <div>{info.Port || "-"}</div>
+            </Descriptions.Item>
+
+            <Descriptions.Item label='Host'>
+                <div>{info.Host || "-"}</div>
+            </Descriptions.Item>
+            <Descriptions.Item label='类型'>
+                <div>{info?.RiskTypeVerbose || info.RiskType}</div>
+            </Descriptions.Item>
+            <Descriptions.Item label='来源'>
+                <div>{info?.FromYakScript || "漏洞检测"}</div>
+            </Descriptions.Item>
+
+            <Descriptions.Item label='反连Token'>
+                <div>{info.ReverseToken || "-"}</div>
+            </Descriptions.Item>
+            <Descriptions.Item label='Hash'>
+                <div>{info.Hash || "-"}</div>
+            </Descriptions.Item>
+            <Descriptions.Item label='验证状态'>
+                <div style={{color: `${!info.WaitingVerified ? "#11AB4E" : "#FAAF2B"}`}}>
+                    {!info.WaitingVerified ? "已验证" : "未验证"}
+                </div>
+            </Descriptions.Item>
+
+            <Descriptions.Item label='Parameter' span={3}>
+                <div>{info.Parameter || "-"}</div>
+            </Descriptions.Item>
+            <Descriptions.Item label='Payload' span={3}>
+                <div>{info.Payload || "-"}</div>
+            </Descriptions.Item>
+            <Descriptions.Item label='详情' span={3}>
+                <div>{info.Details || "-"}</div>
+            </Descriptions.Item>
+        </Descriptions>
+    )
+})
