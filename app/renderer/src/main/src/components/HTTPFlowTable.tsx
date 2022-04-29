@@ -398,15 +398,79 @@ export const LogLevelToCode = (level: string) => {
 }
 
 const availableColors = [
-    {color: "RED", title: "红色[#FFCCC7]"},
-    {color: "", title: "移除颜色"},
-    {color: "GREEN", title: "绿色[#D9F7BE]"},
-    {color: "BLUE", title: "蓝色[#D6E4FF]"},
-    {color: "YELLOW", title: "黄色[#FFFFB8]"},
-    {color: "ORANGE", title: "橙色[#FFE7BA]"},
-    {color: "PURPLE", title: "紫色[#EfDBFF]"},
-    {color: "CYAN", title: "天蓝色[#B5F5EC]"},
-    {color: "GREY", title: "灰色[#D9D9D9]"},
+    {
+        color: "RED",
+        title: "红色[#FFCCC7]",
+        render: (
+            <div className='history-color-tag'>
+                红色<div style={{backgroundColor: "#FFCCC7"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    // {color: "", title: "移除颜色", render: <div>移除颜色</div>},
+    {
+        color: "GREEN",
+        title: "绿色[#D9F7BE]",
+        render: (
+            <div className='history-color-tag'>
+                绿色<div style={{backgroundColor: "#D9F7BE"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "BLUE",
+        title: "蓝色[#D6E4FF]",
+        render: (
+            <div className='history-color-tag'>
+                蓝色<div style={{backgroundColor: "#D6E4FF"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "YELLOW",
+        title: "黄色[#FFFFB8]",
+        render: (
+            <div className='history-color-tag'>
+                黄色<div style={{backgroundColor: "#FFFFB8"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "ORANGE",
+        title: "橙色[#FFE7BA]",
+        render: (
+            <div className='history-color-tag'>
+                橙色<div style={{backgroundColor: "#FFE7BA"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "PURPLE",
+        title: "紫色[#EfDBFF]",
+        render: (
+            <div className='history-color-tag'>
+                紫色<div style={{backgroundColor: "#EfDBFF"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "CYAN",
+        title: "天蓝色[#B5F5EC]",
+        render: (
+            <div className='history-color-tag'>
+                天蓝色<div style={{backgroundColor: "#B5F5EC"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "GREY",
+        title: "灰色[#D9D9D9]",
+        render: (
+            <div className='history-color-tag'>
+                灰色<div style={{backgroundColor: "#D9D9D9"}} className='tag-color-display'></div>
+            </div>
+        )
+    }
 ]
 
 // 通过关键词输出渲染颜色
@@ -428,9 +492,9 @@ const TableRowColor = (key: string) => {
             return "#b5f5ec"
         case "GREY":
             return "#d9d9d9"
+        default:
+            return "#ffffff"
     }
-    if (key.indexOf('#') > -1) return key
-    else return `#${key}`
 }
 
 export interface YakQueryHTTPFlowResponse {
@@ -1102,8 +1166,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash ?
                                             "rgba(78, 164, 255, 0.4)" :
                                             rowData.Tags.indexOf("YAKIT_COLOR") > -1 ?
-                                                TableRowColor(rowData.Tags.split('_').pop().toUpperCase()) :
-                                                ""
+                                                TableRowColor(rowData.Tags.split("|").pop().split('_').pop().toUpperCase()) :
+                                                "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
@@ -1162,36 +1226,57 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     title: '标注颜色',
                                     subMenuItems: availableColors.map(i => {
                                         return {
-                                            title: i.title, onClick: () => {
+                                            title: i.title, 
+                                            render: i.render,
+                                            onClick: () => {
                                                 const flow = rowData as HTTPFlow
                                                 if (!flow) {
                                                     return
                                                 }
 
-                                                const existedTags = (flow?.Tags || "").split("|").filter(i => !!i && !i.startsWith("YAKIT_COLOR_"));
-                                                if (i.color === "") {
-                                                    ipcRenderer.invoke("SetTagForHTTPFlow", {
-                                                        Id: flow.Id, Hash: flow.Hash,
-                                                        Tags: existedTags,
-                                                    }).then(() => {
-                                                        info(`清除 HTTPFlow 颜色成功`)
-                                                        setData([...data])
-                                                    })
-                                                    return
-                                                }
+                                                const existedTags = flow.Tags ? flow.Tags.split("|").filter(i => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+                                                // (flow?.Tags || "").split("|").filter(i => !!i && !i.startsWith("YAKIT_COLOR_"));
+                                                // if (i.color === "") {
+                                                //     existedTags.pop()
+                                                //     ipcRenderer.invoke("SetTagForHTTPFlow", {
+                                                //         Id: flow.Id, Hash: flow.Hash,
+                                                //         Tags: existedTags,
+                                                //     }).then(() => {
+                                                //         info(`清除 HTTPFlow 颜色成功`)
+                                                //         // setData([...data])
+                                                //     })
+                                                //     return
+                                                // }
                                                 existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
                                                 ipcRenderer.invoke("SetTagForHTTPFlow", {
                                                     Id: flow.Id, Hash: flow.Hash,
                                                     Tags: existedTags,
                                                 }).then(() => {
                                                     info(`设置 HTTPFlow 颜色成功`)
-                                                    setData([...data])
+                                                    // setData([...data])
                                                 })
                                             }
                                         }
                                     }),
+                                    onClick: () => {}
+                                },
+                                {
+                                    title: '移除颜色',
                                     onClick: () => {
-                                    }
+                                        const flow = rowData as HTTPFlow
+                                        if (!flow) return
+
+                                        const existedTags = flow.Tags ? flow.Tags.split("|").filter(i => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+                                        existedTags.pop()
+                                        ipcRenderer.invoke("SetTagForHTTPFlow", {
+                                            Id: flow.Id, Hash: flow.Hash,
+                                            Tags: existedTags,
+                                        }).then(() => {
+                                            info(`清除 HTTPFlow 颜色成功`)
+                                            // setData([...data])
+                                        })
+                                        return
+                                    },
                                 },
                                 {
                                     title: '发送到对比器左侧',

@@ -47,6 +47,7 @@ export const showByCursorContainer = (props: ByCursorContainerProp, x: number, y
 interface MenuItemProps {
     id?: string
     title: string
+    render?: React.ReactNode
     onClick: () => void
     disabled?: boolean
     subMenuItems?: MenuItemProps[]
@@ -113,12 +114,12 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
                             if (item?.subMenuItems && item.subMenuItems.length > 0) {
                                 return <Menu.SubMenu key={`${title}-${index}`} title={title} disabled={!!disabled}>
                                     {(item.subMenuItems || []).map((subItem, index) => {
-                                        const {title, disabled} = subItem;
+                                        const {title, render, disabled} = subItem;
                                         const subId = subItem?.id;
                                         return <Menu.Item
                                             key={subId || subItem.title}
                                             disabled={!!disabled}>
-                                            {subItem.title}
+                                            {render || subItem.title}
                                         </Menu.Item>
                                     })}
                                 </Menu.SubMenu>
