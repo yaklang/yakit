@@ -176,6 +176,13 @@ module.exports = (win, getClient) => {
         }
     })
 
+    // 设置正则替换
+    ipcMain.handle("mitm-content-replacers", (e, filter) => {
+        if (stream) {
+            stream.write({...filter, setContentReplacers: true})
+        }
+    })
+
     // 清除 mitm 插件缓存
     ipcMain.handle("mitm-clear-plugin-cache", () => {
         if (stream) {
@@ -200,6 +207,11 @@ module.exports = (win, getClient) => {
 
         // 设置服务器发回的消息的回调函数
         stream.on("data", data => {
+            // 检查替代规则的问题
+            if (win && ((data?.replacers || []).length > 0) || data?.justContentReplacers) {
+                win.webContents.send("client-mitm-content-replacer-update", data)
+            }
+
             // 检查如果是 exec result 的话，对应字段应该是
             if (win && data["haveMessage"]) {
                 win.webContents.send("client-mitm-message", data["message"]);

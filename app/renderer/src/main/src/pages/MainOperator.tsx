@@ -114,7 +114,7 @@ const singletonRoute = [
 
     // database
     Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
-    Route.DB_Risk,
+    Route.DB_Risk, Route.DB_Report,
 
     Route.PoC, Route.DNSLog, Route.BatchExecutorPage, Route.ICMPSizeLog, Route.TCPPortLog,
 ]
