@@ -1104,6 +1104,8 @@ message FuzzerRequest {
 
   // 如果不想自动修复 Content-Length
   bool NoFixContentLength = 13;
+
+  string HotPatchCode = 14;
 }
 
 message RedirectRequestParams {

@@ -208,7 +208,7 @@ module.exports = (win, getClient) => {
         // 设置服务器发回的消息的回调函数
         stream.on("data", data => {
             // 检查替代规则的问题
-            if (win && ((data?.replacers || []).length > 0) || data?.justContentReplacers) {
+            if (win && data?.justContentReplacers) {
                 win.webContents.send("client-mitm-content-replacer-update", data)
             }
 

@@ -289,7 +289,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 PerRequestTimeoutSeconds: timeout,
                 NoFixContentLength: noFixContentLength,
                 Proxy: proxy,
-                ActualAddr: actualHost
+                ActualAddr: actualHost,
+                HotPatchCode: hotPatchCode,
             },
             fuzzToken
         )

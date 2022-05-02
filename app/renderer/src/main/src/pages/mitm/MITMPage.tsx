@@ -543,6 +543,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         <MITMContentReplacer
                             rules={replacers}
                             onSaved={rules => {
+                                setReplacers(rules)
                                 m.destroy()
                             }}/>
                     ),
