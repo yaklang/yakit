@@ -2,6 +2,22 @@ const {ipcMain} = require("electron");
 
 
 module.exports = (win, getClient) => {
+    // asyncStringFuzzer wrapper
+    const asyncStringFuzzer = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().StringFuzzer(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("StringFuzzer", async (e, params) => {
+        return await asyncStringFuzzer(params)
+    })
+
     ipcMain.handle("string-fuzzer", (e, params) => {
         getClient().StringFuzzer({Template: params.template}, (err, data) => {
             if (win) {

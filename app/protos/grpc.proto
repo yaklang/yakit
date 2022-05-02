@@ -1050,6 +1050,7 @@ message ExecHistoryRecord {
 // Fuzz 相关模型
 message StringFuzzerRequest {
   string Template = 1;
+  string HotPatchCode = 2;
 }
 
 
