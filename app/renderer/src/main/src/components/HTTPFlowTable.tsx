@@ -1,4 +1,4 @@
-import React, {ReactNode, Ref, useEffect, useState} from "react"
+import React, {ReactNode, Ref, useEffect, useRef, useState} from "react"
 import {
     Button,
     Col,
@@ -529,6 +529,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [compareState, setCompareState] = useState(0)
     const [tableContentHeight, setTableContentHeight] = useState<number>(0);
 
+    const tableRef = useRef(null)
+
     const ref = useHotkeys('ctrl+r', e => {
         const selected = getSelected()
         if (selected) {
@@ -590,9 +592,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                setData(rsp?.Data || [])
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
+                if(autoReload || !page || page === 1) setData(rsp?.Data || [])
+                else {
+                    setData(data.concat(rsp?.Data || []))
+                    setTimeout(() => {
+                        if (!tableRef || !tableRef.current) return
+                        const table = tableRef.current as unknown as HTMLDivElement
+                        // @ts-ignore
+                        table.scrollTop((page - 1) * 500)
+                    }, 50);
+                }
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
@@ -707,6 +718,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             type={"link"}
                             size={"small"}
                             onClick={(e) => {
+                                setData([])
                                 update(1, undefined, "desc")
                             }}
                         />
@@ -724,6 +736,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 setParams({...params, SearchURL: e.target.value})
                             }}
                             onSearch={(v) => {
+                                setData([])
                                 update(1)
                             }}
                         />
@@ -754,7 +767,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     </Space>
                 </Col>
                 <Col span={12} style={{textAlign: "right"}}>
-                    <Pagination
+                    <Tag>{total} Records</Tag>
+                    {/* <Pagination
                         // simple={true}
                         size={"small"}
                         showSizeChanger={true}
@@ -770,10 +784,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             update(1, limit)
                         }}
                         defaultCurrent={1}
-                    />
+                    /> */}
                 </Col>
             </Row>
             <TableResizableColumn
+                tableRef={tableRef}
                 className={"httpFlowTable"}
                 loading={loading}
                 columns={[
@@ -1311,6 +1326,19 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         // setSelected(undefined)
                     }
                 }}
+                onScroll={(scrollX, scrollY)=>{
+                    let contextHeight = data.length * 42
+                    let top = Math.abs(scrollY)
+                    let maxPage = Math.ceil(total / 20)
+
+                    // if(pagination.Page > 1 && top === 0) update(parseInt(pagination.Page.toString()) - 1)
+                    if(parseInt(pagination.Page.toString()) === maxPage) return
+                    if(contextHeight - top - tableContentHeight < 0) {
+                        setAutoReload(false)
+                        update(parseInt(pagination.Page.toString()) + 1)
+                    }
+                }}
+                
             />
         </div>
         // </AutoCard>

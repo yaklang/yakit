@@ -101,10 +101,10 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
 
     const updateRiskAndLevel = useMemoizedFn(() => {
         ipcRenderer.invoke("QueryAvailableRiskType", {}).then((f: Fields) => {
-            setTypes(mergeFieldNames(f))
+            setTypes(mergeFieldNames(f).sort((a,b)=>a.Total - b.Total))
         })
         ipcRenderer.invoke("QueryAvailableRiskLevel", {}).then((i: Fields) => {
-            setSeverities(mergeFieldNames(i))
+            setSeverities(mergeFieldNames(i).sort((a,b)=>a.Total - b.Total))
         })
     })
 

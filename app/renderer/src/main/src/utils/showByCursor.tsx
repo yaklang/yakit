@@ -73,6 +73,7 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
     div.style.left = `${x}px`
     div.style.top = `${y}px`
     div.style.position = "absolute"
+    div.style.zIndex = "9999"
     div.id = cursorMenuId
     div.className = "popup"
     document.body.appendChild(div)
