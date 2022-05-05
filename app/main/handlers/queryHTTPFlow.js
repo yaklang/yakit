@@ -101,22 +101,19 @@ module.exports = (win, getClient) => {
         return await asyncGetHTTPFlowById(params)
     })
 
-    ipcMain.handle("get-http-flow", async (r, hash) => {
-        getClient().GetHTTPFlowByHash({
-            Hash: hash,
-        }, (err, data) => {
-            if (err && win) {
-                try {
-                    win.webContents.send(`ERROR:${hash}`, err?.details || "UNKNOWN")
-                } catch (e) {
-                    console.info(e)
+    // asyncGetAvailableYakScriptTags wrapper
+    const asyncGetAvailableYakScriptTags = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAvailableYakScriptTags(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
                 }
-                return
-            }
-
-            if (data && win) {
-                win.webContents.send(hash, data)
-            }
-        });
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAvailableYakScriptTags", async (e, params) => {
+        return await asyncGetAvailableYakScriptTags(params)
     })
 }
