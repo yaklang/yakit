@@ -230,6 +230,9 @@ service Yak {
 
   // 获取 Tags
   rpc GetAvailableYakScriptTags(Empty) returns (Fields);
+
+  // 通用的漏洞检测技术方案
+  rpc ExecYakitPluginsByYakScriptFilter(QueryYakScriptRequest) returns (stream ExecResult);
 }
 
 message QueryReportRequest {
@@ -945,6 +948,7 @@ message QueryYakScriptRequest {
   bool IsBatch = 7;
   bool ExcludeNucleiWorkflow = 8;
   repeated string ExcludeScriptNames = 9;
+  repeated string IncludedScriptNames = 10;
 }
 
 message QueryYakScriptResponse {
