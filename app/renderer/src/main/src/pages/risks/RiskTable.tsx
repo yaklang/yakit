@@ -580,7 +580,16 @@ export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
             />}
             <InputItem label={"按关键字删除"} value={params.Search} setValue={Search => setParams({...params, Search})}/>
             <Form.Item label={" "} colon={false}>
-                <Button danger={true} type={"primary"} htmlType={"submit"}>删除</Button>
+                <Space>
+                    <Button danger={true} type={"primary"} htmlType={"submit"}>删除</Button>
+                    <Popconfirm title={"确定要删除全部吗？"} onConfirm={() => {
+                        ipcRenderer.invoke("DeleteRisk", {DeleteAll: true}).then(e => {
+                            props.onClose()
+                        }).catch(e => console.info(e)).finally()
+                    }}>
+                        <Button danger={true} htmlType={"submit"}>删除全部</Button>
+                    </Popconfirm>
+                </Space>
             </Form.Item>
         </Form>
     </div>

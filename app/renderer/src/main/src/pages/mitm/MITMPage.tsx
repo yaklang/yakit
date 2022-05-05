@@ -43,6 +43,7 @@ import {openABSFileLocated, saveABSFileToOpen} from "../../utils/openWebsite";
 import {getValue, saveValue} from "../../utils/kv";
 import {PluginList} from "../../components/PluginList";
 import {SimplePluginList} from "../../components/SimplePluginList";
+import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -62,6 +63,9 @@ export interface MITMResponse extends MITMFilterSchema {
     forResponse?: boolean
     response?: Uint8Array
     responseId?: number
+
+    justContentReplacers?: boolean
+    replacers?: MITMContentReplacerRule[]
 }
 
 const dropRequest = (id: number) => {
@@ -146,6 +150,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     // filter 过滤器
     const [mitmFilter, setMITMFilter] = useState<MITMFilterSchema>();
+
+    // 内容替代模块
+    const [replacers, setReplacers] = useState<MITMContentReplacerRule[]>([]);
 
     // mouse
     const mouseState = useMouse();
@@ -261,7 +268,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             excludeMethod: res.excludeMethod,
                             excludeSuffix: res.excludeSuffix,
                             includeHostname: res.includeHostname,
-                            excludeHostname: res.excludeHostname
+                            excludeHostname: res.excludeHostname,
+                            excludeContentTypes: res.excludeContentTypes,
                         }
                         setMITMFilter(filter)
                         ipcRenderer.invoke("mitm-filter", {
@@ -274,6 +282,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             excludeSuffix: msg.excludeSuffix,
                             includeHostname: msg.includeHostname,
                             excludeHostname: msg.excludeHostname,
+                            excludeContentTypes: msg.excludeContentTypes,
                         })
                     }
                 })
@@ -334,6 +343,17 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     }, [autoForward])
 
     useEffect(() => {
+        ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
+            console.info(data)
+            setReplacers(data?.replacers || [])
+            return
+        });
+        return () => {
+            ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
+        }
+    }, [])
+
+    useEffect(() => {
         if (currentPacketId <= 0 && status === "hijacked") {
             recover()
             const id = setInterval(() => {
@@ -361,6 +381,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             excludeSuffix: msg.excludeSuffix,
             includeHostname: msg.includeHostname,
             excludeHostname: msg.excludeHostname,
+            excludeContentTypes: msg.excludeContentTypes,
         })
 
         // passive 模式是 mitm 插件模式
@@ -512,6 +533,28 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         </Tooltip>
     })
 
+    const contentReplacer = useMemoizedFn(() => {
+        return <Button
+            type={"link"} style={{padding: `4px 6px`}}
+            onClick={() => {
+                let m = showDrawer({
+                    placement: "top", height: "50%",
+                    content: (
+                        <MITMContentReplacer
+                            rules={replacers}
+                            onSaved={rules => {
+                                setReplacers(rules)
+                                m.destroy()
+                            }}/>
+                    ),
+                    maskClosable: false,
+                })
+            }}
+        >
+            正则内容替换
+        </Button>
+    })
+
     const setFilter = useMemoizedFn(() => {
         return <Button type={"link"} style={{padding: '4px 6px'}}
                        onClick={() => {
@@ -651,6 +694,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                     style={{marginRight: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 8}}
                                     extra={
                                         <Space>
+                                            {contentReplacer()}
                                             {setFilter()}
                                             {downloadCert()}
                                             <Button danger={true} type={"link"}
@@ -659,7 +703,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         setUrlInfo("监听中...")
                                                         setIpInfo("")
                                                     }} icon={<PoweroffOutlined/>}
-                                            ></Button>
+                                            />
                                         </Space>}>
                                     <Row>
                                         <Col span={12}>

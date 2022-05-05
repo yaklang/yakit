@@ -46,7 +46,8 @@ import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 import {PayloadManagerPage} from "../payloadManager/PayloadManager";
 import {HackerPlugin} from "../hacker/HackerPlugin"
 import {fuzzerInfoProp} from "../MainOperator"
-import { ItemSelects } from "../../components/baseTemplate/FormItemUtil"
+import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
+import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -115,6 +116,7 @@ Host: www.example.com
 {"key": "value"}`
 
 const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
+const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 
 interface HistoryHTTPFuzzerTask {
     Request: string
@@ -148,6 +150,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [advancedConfig, setAdvancedConfig] = useState(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>();
+    const [hotPatchCode, setHotPatchCode] = useState<string>("");
 
     // state
     const [loading, setLoading] = useState(false)
@@ -173,6 +176,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
     const [timer, setTimer] = useState<any>()
 
+    useEffect(() => {
+        getValue(WEB_FUZZ_HOTPATCH_CODE).then((data: any) => {
+            if (!data) {
+                return
+            }
+            setHotPatchCode(`${data}`)
+        })
+    }, [])
+
     // 定时器
     const sendTimer = useRef<any>(null)
 
@@ -194,7 +206,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
         ipcRenderer.invoke("send-to-tab", {
             type: "fuzzer",
-            data:{isHttps: isHttps, request: request}
+            data: {isHttps: isHttps, request: request}
         })
     })
     const sendToPlugin = useMemoizedFn((request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
@@ -277,7 +289,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 PerRequestTimeoutSeconds: timeout,
                 NoFixContentLength: noFixContentLength,
                 Proxy: proxy,
-                ActualAddr: actualHost
+                ActualAddr: actualHost,
+                HotPatchCode: hotPatchCode,
             },
             fuzzToken
         )
@@ -568,6 +581,24 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
             />
         )
+    })
+
+    const hotPatchTrigger = useMemoizedFn(() => {
+        let m = showModal({
+            title: "调试 / 插入热加载代码",
+            width: "60%",
+            content: (
+                <div>
+                    <HTTPFuzzerHotPatch initialHotPatchCode={hotPatchCode || ""} onInsert={tag => {
+                        if (reqEditor) monacoEditorWrite(reqEditor, tag);
+                        m.destroy()
+                    }} onSaveCode={code => {
+                        setHotPatchCode(code)
+                        saveValue(WEB_FUZZ_HOTPATCH_CODE, code)
+                    }}/>
+                </div>
+            )
+        })
     })
 
     return (
@@ -928,11 +959,26 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 })
                             }
                         },
+                        {
+                            id: "insert-hotpatch-tag",
+                            label: "插入热加载标签",
+                            contextMenuGroupId: "1_urlPacket",
+                            run: (editor) => {
+                                hotPatchTrigger()
+                            }
+                        },
                     ]}
                     onEditor={setReqEditor}
                     onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
                     extra={
-                        <Space>
+                        <Space size={2}>
+                            <Button
+                                style={{marginRight: 1}}
+                                size={"small"} type={"primary"}
+                                onClick={() => {
+                                    hotPatchTrigger()
+                                }}
+                            >热加载标签</Button>
                             <Popover
                                 trigger={"click"}
                                 title={"从 URL 加载数据包"}

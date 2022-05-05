@@ -661,7 +661,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "textarea":
         case "text":
             return <Input.TextArea
-                value={props.value as string} rows={5}
+                value={props.value as string} rows={3}
                 onChange={e => {
                     props.setValue(e.target.value)
                 }} placeholder={props.placeholder}

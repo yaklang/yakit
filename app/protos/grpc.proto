@@ -204,7 +204,7 @@ service Yak {
   // Risk
   rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
   rpc QueryRisk(QueryRiskRequest) returns (Risk);
-  rpc DeleteRisk(QueryRiskRequest) returns (Empty);
+  rpc DeleteRisk(DeleteRiskRequest) returns (Empty);
   rpc QueryAvailableRiskType(Empty) returns (Fields);
   rpc QueryAvailableRiskLevel(Empty) returns (Fields);
   rpc QueryRiskTableStats(Empty) returns (RiskTableStats);
@@ -437,9 +437,18 @@ message ConfigGlobalReverseParams {
   string LocalAddr = 2;
 }
 
+message DeleteRiskRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  repeated int64 Ids = 4;
+  QueryRisksRequest Filter = 3;
+  bool DeleteAll = 5;
+}
+
 message QueryRiskRequest {
   int64 Id = 1;
   string Hash = 2;
+  repeated int64 Ids = 4;
   QueryRisksRequest Filter = 3;
 }
 
@@ -1041,6 +1050,7 @@ message ExecHistoryRecord {
 // Fuzz 相关模型
 message StringFuzzerRequest {
   string Template = 1;
+  string HotPatchCode = 2;
 }
 
 
@@ -1094,6 +1104,8 @@ message FuzzerRequest {
 
   // 如果不想自动修复 Content-Length
   bool NoFixContentLength = 13;
+
+  string HotPatchCode = 14;
 }
 
 message RedirectRequestParams {
@@ -1251,6 +1263,7 @@ message MITMRequest {
   repeated string excludeSuffix = 9;
   repeated string includeSuffix = 10;
   repeated string excludeMethod = 11;
+  repeated string excludeContentTypes = 40;
   bool updateFilter = 12;
 
   // 劫持当前请求的响应信息
@@ -1286,6 +1299,34 @@ message MITMRequest {
   // 如果不设置 initPluginNames 的话，启动所有默认插件
   bool setPluginMode = 36;
   repeated string initPluginNames = 37;
+
+  // 设置内容替代器
+  bool setContentReplacers = 38;
+  repeated MITMContentReplacer replacers = 39;
+}
+
+message MITMContentReplacer {
+  // 如果是正则的话，就把匹配到的内容替换成对应结果
+  // 优先 Golang 原生规则
+  // 然后再是 Re2 规则
+  // 然后子字符串
+  string Rule = 1;
+
+  // 这个功能意义在于，不要替代内容，仅标注颜色（敏感内容）
+  bool NoReplace = 2;
+
+  // 这里保存对应结果
+  string Result = 3;
+
+  // 选择替换之后的颜色
+  string Color = 4;
+
+  // 生效内容
+  bool EnableForRequest = 5;
+  bool EnableForResponse = 6;
+
+  // Index
+  int32 Index = 7;
 }
 
 message RemoveHookParams {
@@ -1312,6 +1353,11 @@ message MITMResponse {
   repeated string excludeSuffix = 19;
   repeated string includeSuffix = 110;
   repeated string excludeMethod = 111;
+  repeated string excludeContentTypes = 113;
+
+  // 替代过滤器的内容
+  bool justContentReplacer = 120;
+  repeated MITMContentReplacer replacers = 121;
 
   // 刷新表格: 如果这个是 True 的话，那么不应该发送回劫持器，应该只发送刷新表格的信息
   bool refresh = 2;
