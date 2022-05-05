@@ -62,7 +62,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
         <Button size={"small"} onClick={() => {
             setAllowSaved(true)
         }} type={"primary"}>更新到引擎</Button>
-    </Space>} size={"small"}>
+    </Space>} size={"small"} bodyStyle={{overflowY: "auto"}}>
         <Table<MITMContentReplacerRule>
             dataSource={rules}
             pagination={false}
