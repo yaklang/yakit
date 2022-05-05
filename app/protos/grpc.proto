@@ -113,6 +113,7 @@ service Yak {
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
+  rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
   rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
@@ -1167,6 +1168,10 @@ message Paging {
 
 message GetHTTPFlowByHashRequest {
   string Hash = 1;
+}
+
+message GetHTTPFlowByIdRequest {
+  int64 Id = 1;
 }
 
 message QueryHTTPFlowRequest {

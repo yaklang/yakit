@@ -51,17 +51,32 @@ module.exports = (win, getClient) => {
     })
 
 
-    ipcMain.handle("analyze-fuzzer-response", (e, rsp, flag) => {
-        getClient().ConvertFuzzerResponseToHTTPFlow(rsp, (err, req) => {
-            if (err && win) {
-                win.webContents.send(`ERROR:${flag}`, err?.details || "unknown")
-            }
-
-            if (req && win) {
-                win.webContents.send(flag, req)
-            }
+    // asyncConvertFuzzerResponseToHTTPFlow wrapper
+    const asyncConvertFuzzerResponseToHTTPFlow = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ConvertFuzzerResponseToHTTPFlow(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
         })
+    }
+    ipcMain.handle("ConvertFuzzerResponseToHTTPFlow", async (e, params) => {
+        return await asyncConvertFuzzerResponseToHTTPFlow(params)
     })
+    // ipcMain.handle("analyze-fuzzer-response", (e, rsp, flag) => {
+    //     getClient().ConvertFuzzerResponseToHTTPFlow(rsp, (err, req) => {
+    //         if (err && win) {
+    //             win.webContents.send(`ERROR:${flag}`, err?.details || "unknown")
+    //         }
+    //
+    //         if (req && win) {
+    //             win.webContents.send(flag, req)
+    //         }
+    //     })
+    // })
 
     // asyncHTTPRequestMutate wrapper
     const asyncHTTPRequestMutate = (params) => {
