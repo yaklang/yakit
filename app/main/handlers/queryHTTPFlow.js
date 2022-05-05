@@ -85,6 +85,22 @@ module.exports = (win, getClient) => {
         return await asyncGetHTTPFlowByHash(params)
     })
 
+    // asyncGetHTTPFlowById wrapper
+    const asyncGetHTTPFlowById = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetHTTPFlowById(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetHTTPFlowById", async (e, params) => {
+        return await asyncGetHTTPFlowById(params)
+    })
+
     ipcMain.handle("get-http-flow", async (r, hash) => {
         getClient().GetHTTPFlowByHash({
             Hash: hash,
