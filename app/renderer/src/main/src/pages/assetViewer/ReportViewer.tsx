@@ -61,7 +61,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
     return <AutoCard size={"small"} bordered={false} loading={loading} title={<Space>
         {report.Title} <Tag>{props.id}</Tag>
-    </Space>} extra={<Space>
+    </Space>} bodyStyle={{overflow: "auto"}} extra={<Space>
         <a href={"#"} onClick={() => {
             showModal({
                 title: "RAW DATA", content: (
