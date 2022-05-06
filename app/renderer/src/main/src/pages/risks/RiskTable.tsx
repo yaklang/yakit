@@ -183,12 +183,12 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         const risktypes = getParams().RiskType ? getParams().RiskType?.split("|") : []
         const severitys = getParams().Severity ? getParams().Severity?.split("|") : []
 
-        const typekind = types.map((item: any) => {
-            item.Names = (item.Names || []).toString()
+        const typekind = types.map((item) => {
+            item.Names = item.Names || []
             return item
         })
         const severitykind = severities.map((item: any) => {
-            item.Names = (item.Names || []).toString()
+            item.Names = item.Names || []
             return item
         })
 
@@ -196,13 +196,13 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             <>
                 {risktypes?.map((type) => (
                     <div className="title-selected-tag">
-                        <div className="tag-name-style" key={type}>{typekind.filter((item) => item.Names.startsWith(type))[0].Verbose}</div>
+                        <div className="tag-name-style" key={type}>{typekind.filter((item) => item.Names.join(",").startsWith(type))[0].Verbose}</div>
                         <div className="tag-del-style" onClick={()=>filterSelect("type",type)}>x</div>
                     </div>
                 ))}
                 {severitys?.map((severity) => (
                     <div className="title-selected-tag">
-                        <div className="tag-name-style" key={severity}>{severitykind.filter((item) => item.Names.startsWith(severity))[0].Verbose}</div>
+                        <div className="tag-name-style" key={severity}>{severitykind.filter((item) => item.Names.join(",").startsWith(severity))[0].Verbose}</div>
                         <div className="tag-del-style" onClick={()=>filterSelect("severity",severity)}>x</div>
                     </div>
                 ))}
@@ -414,7 +414,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     <div className='opt-header'>漏洞级别</div>
                     <div className='opt-list'>
                         {severities.map((item) => {
-                            const value = (item.Names || []).toString()
+                            const value = (item.Names || []).join(",")
                             return (
                                 <div
                                     key={value}
@@ -437,7 +437,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     <div className='opt-header'>漏洞/风险类型</div>
                     <div className='opt-list'>
                         {types.map((item) => {
-                            const value = (item.Names || []).toString()
+                            const value = (item.Names || []).join(",")
                             return (
                                 <div
                                     key={value}

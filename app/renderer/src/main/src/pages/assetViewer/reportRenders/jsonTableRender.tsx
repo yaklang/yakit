@@ -27,7 +27,6 @@ export const JSONTableRender: React.FC<JSONTableRenderProp> = (props) => {
                         obj[header[pIndex]] = i[pIndex]
                     }
                 }
-                console.info(obj)
                 return obj
             }).filter(i => i._index >= 0) as object[])
         } catch (e) {

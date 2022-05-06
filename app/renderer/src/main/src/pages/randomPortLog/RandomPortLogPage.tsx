@@ -129,8 +129,6 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
                             <a href="#" onClick={(e) => {
                                 e.preventDefault()
 
-                                console.info(i)
-
                                 showModal({
                                     title: "查看历史记录",
                                     width: "40%",

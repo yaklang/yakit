@@ -344,7 +344,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     useEffect(() => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
-            console.info(data)
             setReplacers(data?.replacers || [])
             return
         });

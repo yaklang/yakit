@@ -33,7 +33,6 @@ export const PieGraph: React.FC<PieGraphProps> = (graph) => {
             radius={0.8}
             label={{
                 visible: !graph.hideLabel, type: "outer", offset: 8, formatter: (_: any, node: any) => {
-                    console.info(node, total)
                     return `${node._origin.key}:${((node._origin.value / total) * 100).toFixed(2)}%`
                 },
             }}
