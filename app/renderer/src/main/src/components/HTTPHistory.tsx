@@ -35,6 +35,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         <HTTPFlowDetailMini
                             noHeader={true}
                             hash={selected?.Hash || ""}
+                            id={selected?.Id}
                             defaultHttps={selected?.IsHTTPS}
                             sendToWebFuzzer={true}
                             // defaultHeight={detailHeight}

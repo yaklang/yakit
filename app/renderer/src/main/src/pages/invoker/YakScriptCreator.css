@@ -14,7 +14,9 @@
     padding-right: 5px;
 }
 .select-type-opt .opt-hint-input{
-    width: 180px;
+    width: 30%;
+    min-width: 121px;
+    max-width: 180px;
 }
 .select-type-opt .opt-hint-input + .opt-hint-title{
     margin-left: 10px;

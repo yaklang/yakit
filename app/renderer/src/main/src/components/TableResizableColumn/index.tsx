@@ -7,6 +7,7 @@ export interface TableResizableColumnProp<T> extends TableProps {
     columns: any[]
     data: T[]
     sortFilter: any
+    tableRef?: any
 }
 
 const CellRender = ({rowData, dataKey, render, ...props}: any) => {
@@ -14,7 +15,7 @@ const CellRender = ({rowData, dataKey, render, ...props}: any) => {
 }
 
 export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
-    const {sortFilter, className, ...restTable} = props
+    const {sortFilter, className, tableRef, ...restTable} = props
     const [cols, setCols] = useState(props.columns)
     const [sortColumn, setSortColumn] = useState("")
     const [sortType, setSortType] = useState()
@@ -32,6 +33,7 @@ export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
     return (
         <Table
             {...(restTable as TableProps)}
+            ref={tableRef}
             className={`${className} reszie-table`}
             sortColumn={sortColumn}
             sortType={sortType}

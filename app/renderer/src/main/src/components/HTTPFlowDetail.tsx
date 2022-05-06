@@ -36,6 +36,7 @@ export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any;
 
 export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     hash: string
+    id?: number
     noHeader?: boolean
     onClose?: () => any
     defaultHeight?: number
@@ -316,13 +317,23 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
         setFlow(undefined)
         setLoading(true)
-        ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
-            setFlow(i)
-        }).catch((e: any) => {
-            failed(`Query HTTPFlow failed: ${e}`)
-        }).finally(() => {
-            setTimeout(() => setLoading(false), 400)
-        })
+        if(props.id){
+            ipcRenderer.invoke("GetHTTPFlowById", {Id: props.id}).then((i: HTTPFlow) => {
+                setFlow(i)
+            }).catch((e: any) => {
+                failed(`Query HTTPFlow failed: ${e}`)
+            }).finally(() => {
+                setTimeout(() => setLoading(false), 400)
+            })
+        }else{
+            ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
+                setFlow(i)
+            }).catch((e: any) => {
+                failed(`Query HTTPFlow failed: ${e}`)
+            }).finally(() => {
+                setTimeout(() => setLoading(false), 400)
+            })
+        }
     }, [props.hash])
 
     if (!flow) {
