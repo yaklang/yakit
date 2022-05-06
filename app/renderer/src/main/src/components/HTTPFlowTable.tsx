@@ -508,6 +508,31 @@ interface CompateData {
     language: string
 }
 
+const HeaderTable: HTTPFlow = {
+    Method: "",
+    Path: "",
+    Hash: "",
+    IsHTTPS: false,
+    Url: "...",
+    Request: new Uint8Array(),
+    Response: new Uint8Array(),
+    StatusCode: 0,
+    BodyLength: 0,
+    ContentType: "",
+    SourceType: "",
+    RequestHeader: [],
+    ResponseHeader: [],
+    GetParamsTotal: 0,
+    PostParamsTotal: 0,
+    CookieParamsTotal: 0,
+    CreatedAt: 0,
+    UpdatedAt: 0,
+    GetParams: [],
+    PostParams: [],
+    CookieParams: [],
+    Tags: ""
+}
+
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData] = useState<HTTPFlow[]>([])
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>(
@@ -530,6 +555,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [tableContentHeight, setTableContentHeight] = useState<number>(0);
 
     const tableRef = useRef(null)
+    const counter = useRef<number>(0)
 
     const ref = useHotkeys('ctrl+r', e => {
         const selected = getSelected()
@@ -596,6 +622,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
                 setTimeout(() => {
+                    if((rsp?.Data || []).length > 10) setAutoReload(false)
+                    else setAutoReload(true)
+
                     if (!tableRef || !tableRef.current) return
                     const table = tableRef.current as unknown as HTMLDivElement
                     // @ts-ignore
@@ -625,7 +654,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                setData(page === 1 ? (rsp?.Data || []) : data.concat(rsp?.Data || []))
+                setData(page === 1 ? [HeaderTable].concat(rsp?.Data || []) : [HeaderTable].concat(data.concat(rsp?.Data || [])))
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
                 setTimeout(() => {
@@ -661,18 +690,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         props.onSelected && props.onSelected(selected)
     }, [selected])
 
-    // useEffect(() => {
-    //     if (autoReload) {
-    //         const id = setInterval(() => {
-    //             update(1, undefined, "desc", undefined, undefined, true)
-    //         }, 1000)
-    //         return () => {
-    //             clearInterval(id)
-    //         }
-    //     }
-    // }, [autoReload])
-
-    useEffect(() => update(1), [])
+    useEffect(() => {
+        if (autoReload) {
+            const id = setInterval(() => {
+                update(1, undefined, "desc", undefined, undefined, true)
+            }, 1000)
+            return () => {
+                clearInterval(id)
+            }
+        }
+    }, [autoReload])
 
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
@@ -779,9 +806,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     setTimeout(() => {
                                         update(1)
                                         if (props.onSelected) props.onSelected(undefined)
-                                        // setTimeout(() => {
-                                        //     setAutoReload(true)
-                                        // }, 1000)
+                                        setTimeout(() => {
+                                            setAutoReload(true)
+                                        }, 1000)
                                     }, 400)
                                 }}
                             >
@@ -924,7 +951,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return (
                                 <div style={{color: StatusCodeToColor(rowData[dataKey])}}>
-                                    {rowData[dataKey]}
+                                    {rowData[dataKey] === 0 ? "..." : rowData[dataKey]}
                                 </div>
                             )
                         }
@@ -1295,7 +1322,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                     Tags: existedTags,
                                                 }).then(() => {
                                                     info(`设置 HTTPFlow 颜色成功`)
-                                                    // setData([...data])
+                                                    if(!autoReload){
+                                                        setData(data.map(item => {
+                                                            if(item.Hash === flow.Hash){
+                                                                item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
+                                                                return item
+                                                            }
+                                                            return item
+                                                        }))
+                                                    }
                                                 })
                                             }
                                         }
@@ -1315,7 +1350,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             Tags: existedTags,
                                         }).then(() => {
                                             info(`清除 HTTPFlow 颜色成功`)
-                                            // setData([...data])
+                                            if(!autoReload){
+                                                setData(data.map(item => {
+                                                    if(item.Hash === flow.Hash){
+                                                        item.Tags = ""
+                                                        return item
+                                                    }
+                                                    return item
+                                                }))
+                                            }
                                         })
                                         return
                                     },
@@ -1347,6 +1390,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     )
                 }}
                 onRowClick={(rowDate: any) => {
+                    if(!rowDate.Hash) return
                     if (rowDate.Hash !== selected?.Hash) {
                         setSelected(rowDate)
                     } else {
@@ -1357,14 +1401,21 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     let contextHeight = data.length * 42
                     let top = Math.abs(scrollY)
                     let maxPage = Math.ceil(total / 100)
-
+                    
                     // 防止无数据触发加载
                     if(data.length === 0) return
-                    if(top === 0) scrollUpdate(1)
+                    // 防止初始加载的触发
+                    if(top === counter.current) return
+                    counter.current = top
+                    if(top === 0) {
+                        scrollUpdate(1)
+                        setAutoReload(false)
+                    }
                     // 防止最后一页还进行向下加载
                     if (parseInt(pagination.Page.toString()) === maxPage) return
                     if (contextHeight - top - tableContentHeight < 0) {
                         scrollUpdate(parseInt(pagination.Page.toString()) + 1)
+                        setAutoReload(false)
                     }
                 }}
             />
