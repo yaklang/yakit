@@ -514,7 +514,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         props.params || {SourceType: "mitm"}
     )
     const [pagination, setPagination] = useState<PaginationSchema>({
-        Limit: 20,
+        Limit: 100,
         Order: "desc",
         OrderBy: "created_at",
         Page: 1
@@ -579,7 +579,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
         if (!noLoading) {
             setLoading(true)
-            setAutoReload(false)
+            // setAutoReload(false)
         }
         // yakQueryHTTPFlow({
         //     SourceType: sourceType, ...params,
@@ -592,18 +592,48 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
+                setData(rsp?.Data || [])
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
-                if(autoReload || !page || page === 1) setData(rsp?.Data || [])
-                else {
-                    setData(data.concat(rsp?.Data || []))
-                    setTimeout(() => {
-                        if (!tableRef || !tableRef.current) return
-                        const table = tableRef.current as unknown as HTMLDivElement
-                        // @ts-ignore
-                        table.scrollTop((page - 1) * 500)
-                    }, 50);
-                }
+                setTimeout(() => {
+                    if (!tableRef || !tableRef.current) return
+                    const table = tableRef.current as unknown as HTMLDivElement
+                    // @ts-ignore
+                    table.scrollTop(20)
+                }, 50)
+            })
+            .catch((e: any) => {
+                failed(`query HTTP Flow failed: ${e}`)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
+
+    const scrollUpdate = useMemoizedFn((page?: number, limit?: number, sourceType?: string,) => {
+        const paginationProps = {
+            Page: page || 1,
+            Limit: pagination.Limit,
+            Order: "desc",
+            OrderBy: "id"
+        }
+        setLoading(true)
+        ipcRenderer
+            .invoke("QueryHTTPFlows", {
+                SourceType: sourceType,
+                ...params,
+                Pagination: {...paginationProps}
+            })
+            .then((rsp: YakQueryHTTPFlowResponse) => {
+                setData(page === 1 ? (rsp?.Data || []) : data.concat(rsp?.Data || []))
+                setPagination(rsp.Pagination)
+                setTotal(rsp.Total)
+                setTimeout(() => {
+                    if (!tableRef || !tableRef.current) return
+                    const table = tableRef.current as unknown as HTMLDivElement
+                    // @ts-ignore
+                    table.scrollTop(page === 1 ? 20 : (page - 1) * 4100)
+                }, 50)
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
@@ -621,9 +651,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
 
         if (column && type) {
-            update(1, 20, type, keyRelation[column])
+            update(1, 100, type, keyRelation[column])
         } else {
-            update(1, 20)
+            update(1, 100)
         }
     })
 
@@ -631,16 +661,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         props.onSelected && props.onSelected(selected)
     }, [selected])
 
-    useEffect(() => {
-        if (autoReload) {
-            const id = setInterval(() => {
-                update(1, undefined, "desc", undefined, undefined, true)
-            }, 1000)
-            return () => {
-                clearInterval(id)
-            }
-        }
-    }, [autoReload])
+    // useEffect(() => {
+    //     if (autoReload) {
+    //         const id = setInterval(() => {
+    //             update(1, undefined, "desc", undefined, undefined, true)
+    //         }, 1000)
+    //         return () => {
+    //             clearInterval(id)
+    //         }
+    //     }
+    // }, [autoReload])
+
+    useEffect(() => update(1), [])
 
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
@@ -717,15 +749,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             icon={<ReloadOutlined/>}
                             type={"link"}
                             size={"small"}
-                            onClick={(e) => {
-                                setData([])
-                                update(1, undefined, "desc")
-                            }}
+                            onClick={(e) => { update(1, undefined, "desc") }}
                         />
-                        <Space>
+                        {/* <Space>
                             自动刷新:
                             <Switch size={"small"} checked={autoReload} onChange={setAutoReload}/>
-                        </Space>
+                        </Space> */}
                         <Input.Search
                             placeholder={"URL关键字"}
                             enterButton={true}
@@ -735,10 +764,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             onChange={(e) => {
                                 setParams({...params, SearchURL: e.target.value})
                             }}
-                            onSearch={(v) => {
-                                setData([])
-                                update(1)
-                            }}
+                            onSearch={(v) => { update(1) }}
                         />
                         {props.noHeader && (
                             <Popconfirm
@@ -753,9 +779,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     setTimeout(() => {
                                         update(1)
                                         if (props.onSelected) props.onSelected(undefined)
-                                        setTimeout(() => {
-                                            setAutoReload(true)
-                                        }, 1000)
+                                        // setTimeout(() => {
+                                        //     setAutoReload(true)
+                                        // }, 1000)
                                     }, 400)
                                 }}
                             >
@@ -789,6 +815,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             </Row>
             <TableResizableColumn
                 tableRef={tableRef}
+                virtualized={true}
                 className={"httpFlowTable"}
                 loading={loading}
                 columns={[
@@ -1326,19 +1353,20 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         // setSelected(undefined)
                     }
                 }}
-                onScroll={(scrollX, scrollY)=>{
+                onScroll={(scrollX, scrollY) => {
                     let contextHeight = data.length * 42
                     let top = Math.abs(scrollY)
-                    let maxPage = Math.ceil(total / 20)
+                    let maxPage = Math.ceil(total / 100)
 
-                    // if(pagination.Page > 1 && top === 0) update(parseInt(pagination.Page.toString()) - 1)
-                    if(parseInt(pagination.Page.toString()) === maxPage) return
-                    if(contextHeight - top - tableContentHeight < 0) {
-                        setAutoReload(false)
-                        update(parseInt(pagination.Page.toString()) + 1)
+                    // 防止无数据触发加载
+                    if(data.length === 0) return
+                    if(top === 0) scrollUpdate(1)
+                    // 防止最后一页还进行向下加载
+                    if (parseInt(pagination.Page.toString()) === maxPage) return
+                    if (contextHeight - top - tableContentHeight < 0) {
+                        scrollUpdate(parseInt(pagination.Page.toString()) + 1)
                     }
                 }}
-                
             />
         </div>
         // </AutoCard>
