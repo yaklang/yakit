@@ -101,10 +101,24 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
 
     const updateRiskAndLevel = useMemoizedFn(() => {
         ipcRenderer.invoke("QueryAvailableRiskType", {}).then((f: Fields) => {
-            setTypes(mergeFieldNames(f).sort((a,b)=>a.Total - b.Total))
+            setTypes(mergeFieldNames(f).sort((a,b) => {
+                const diff = a.Total - b.Total
+                if(diff === 0){
+                    return a.Verbose.localeCompare(b.Verbose)
+                }else{
+                    return diff
+                }
+            }))
         })
         ipcRenderer.invoke("QueryAvailableRiskLevel", {}).then((i: Fields) => {
-            setSeverities(mergeFieldNames(i).sort((a,b)=>a.Total - b.Total))
+            setSeverities(mergeFieldNames(i).sort((a,b) => {
+                const diff = a.Total - b.Total
+                if(diff === 0){
+                    return a.Verbose.localeCompare(b.Verbose)
+                }else{
+                    return diff
+                }
+            }))
         })
     })
 
@@ -187,7 +201,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             item.Names = item.Names || []
             return item
         })
-        const severitykind = severities.map((item: any) => {
+        const severitykind = severities.map((item) => {
             item.Names = item.Names || []
             return item
         })

@@ -513,12 +513,12 @@ const HeaderTable: HTTPFlow = {
     Path: "",
     Hash: "",
     IsHTTPS: false,
-    Url: "...",
+    Url: "",
     Request: new Uint8Array(),
     Response: new Uint8Array(),
     StatusCode: 0,
-    BodyLength: 0,
-    ContentType: "",
+    BodyLength: -1,
+    ContentType: "null",
     SourceType: "",
     RequestHeader: [],
     ResponseHeader: [],
@@ -556,6 +556,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     const tableRef = useRef(null)
     const counter = useRef<number>(0)
+    const tableTimer = useRef<any>(null)
 
     const ref = useHotkeys('ctrl+r', e => {
         const selected = getSelected()
@@ -628,7 +629,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     if (!tableRef || !tableRef.current) return
                     const table = tableRef.current as unknown as HTMLDivElement
                     // @ts-ignore
-                    table.scrollTop(20)
+                    table.scrollTop(34)
                 }, 50)
             })
             .catch((e: any) => {
@@ -654,21 +655,21 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                setData(page === 1 ? [HeaderTable].concat(rsp?.Data || []) : [HeaderTable].concat(data.concat(rsp?.Data || [])))
+                setData(page === 1 ? [HeaderTable].concat(rsp?.Data || []) : data.concat(rsp?.Data || []))
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
                 setTimeout(() => {
                     if (!tableRef || !tableRef.current) return
                     const table = tableRef.current as unknown as HTMLDivElement
                     // @ts-ignore
-                    table.scrollTop(page === 1 ? 20 : (page - 1) * 4100)
+                    table.scrollTop(page === 1 ? 34 : (page - 1) * 4100)
                 }, 50)
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
             })
             .finally(() => {
-                setLoading(false)
+                setTimeout(() => setLoading(false), 300);
             })
     })
 
@@ -951,7 +952,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return (
                                 <div style={{color: StatusCodeToColor(rowData[dataKey])}}>
-                                    {rowData[dataKey] === 0 ? "..." : rowData[dataKey]}
+                                    {rowData[dataKey] === 0 ? "" : rowData[dataKey]}
                                 </div>
                             )
                         }
@@ -1091,11 +1092,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             return (
                                 <div style={{width: 100}}>
                                     {/* 1M 以上的话，是红色*/}
-                                    <div style={{color: rowData.BodyLength > 1000000 ? "red" : undefined}}>
-                                        {rowData.BodySizeVerbose
-                                            ? rowData.BodySizeVerbose
-                                            : rowData.BodyLength}
-                                    </div>
+                                    {rowData.BodyLength !== -1 ? 
+                                        (<div style={{color: rowData.BodyLength > 1000000 ? "red" : undefined}}>
+                                            {rowData.BodySizeVerbose
+                                                ? rowData.BodySizeVerbose
+                                                : rowData.BodyLength}
+                                        </div>)
+                                        :
+                                        (<div></div>)
+                                    }
                                 </div>
                             )
                         }
@@ -1178,7 +1183,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             }
                             return (
                                 <div>
-                                    {contentTypeFixed}
+                                    {contentTypeFixed === "null" ? "" : contentTypeFixed}
                                 </div>
                             )
                         }
@@ -1192,9 +1197,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return <Tooltip
-                                title={formatTimestamp(rowData[dataKey])}
+                                title={rowData[dataKey] === 0 ? "" : formatTimestamp(rowData[dataKey])}
                             >
-                                {formatTime(rowData[dataKey])}
+                                {rowData[dataKey] === 0 ? "" : formatTime(rowData[dataKey])}
                             </Tooltip>
                         }
                     },
@@ -1203,6 +1208,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         width: 90,
                         headRender: () => "操作",
                         cellRender: ({rowData}: any) => {
+                            if(!rowData.Hash) return <></>
                             return (
                                 <a
                                     onClick={(e) => {
@@ -1405,18 +1411,24 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     // 防止无数据触发加载
                     if(data.length === 0) return
                     // 防止初始加载的触发
-                    if(top === counter.current) return
+                    if(top !== 0 && top === counter.current) return
                     counter.current = top
-                    if(top === 0) {
-                        scrollUpdate(1)
-                        setAutoReload(false)
+                    if(tableTimer.current){
+                        clearTimeout(tableTimer.current)
+                        tableTimer.current = null
                     }
-                    // 防止最后一页还进行向下加载
-                    if (parseInt(pagination.Page.toString()) === maxPage) return
-                    if (contextHeight - top - tableContentHeight < 0) {
-                        scrollUpdate(parseInt(pagination.Page.toString()) + 1)
-                        setAutoReload(false)
-                    }
+                    tableTimer.current = setTimeout(() => {
+                        if(top === 0) {
+                            scrollUpdate(1)
+                            setAutoReload(false)
+                        }
+                        // 防止最后一页还进行向下加载
+                        if (parseInt(pagination.Page.toString()) === maxPage) return
+                        if (contextHeight - top - tableContentHeight < 0) {
+                            scrollUpdate(parseInt(pagination.Page.toString()) + 1)
+                            setAutoReload(false)
+                        }
+                    }, 300);
                 }}
             />
         </div>
