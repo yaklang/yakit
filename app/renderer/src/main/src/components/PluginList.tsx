@@ -216,6 +216,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                 />
                 <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto"}}>
                     <div ref={wrapperRef as any}>{list.map((i) => <YakScriptCheckbox
+                        key={i.data.ScriptName}
                         info={i.data} selectScript={selectScript} unSelectScript={unSelectScript}
                         vlistWidth={vlistWidth} selected={selected} disabled={disabled}
                     />)}</div>
