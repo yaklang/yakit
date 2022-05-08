@@ -141,4 +141,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetHistoryHTTPFuzzerTask", async (e, params) => {
         return await asyncGetHistoryHTTPFuzzerTask(params)
     })
+
+    // asyncGenerateYakCodeByPacket wrapper
+    const asyncGenerateYakCodeByPacket = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateYakCodeByPacket(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateYakCodeByPacket", async (e, params) => {
+        return await asyncGenerateYakCodeByPacket(params)
+    })
 }
