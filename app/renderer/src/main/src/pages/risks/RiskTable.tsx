@@ -71,11 +71,29 @@ const mergeFieldNames = (f: Fields) => {
 
 const TitleColor = [
     {key: ["trace", "debug", "note"], value: "title-debug", name: "调试信息", img: debugImg, tag: "title-background-debug"},
-    {key: ["info", "fingerprint", "infof", "default"], value: "title-info", name: "信息/指纹", img: infoImg, tag: "title-background-info"},
+    {
+        key: ["info", "fingerprint", "infof", "default"],
+        value: "title-info",
+        name: "信息/指纹",
+        img: infoImg,
+        tag: "title-background-info"
+    },
     {key: ["low"], value: "title-low", name: "低危", img: lowImg, tag: "title-background-low"},
-    {key: ["middle", "warn", "warning"], value: "title-middle", name: "中危", img: middleImg, tag: "title-background-middle"},
+    {
+        key: ["middle", "warn", "warning"],
+        value: "title-middle",
+        name: "中危",
+        img: middleImg,
+        tag: "title-background-middle"
+    },
     {key: ["high"], value: "title-high", name: "高危", img: highImg, tag: "title-background-high"},
-    {key: ["fatal", "critical", "panic"], value: "title-fatal", name: "严重", img: fatalImg, tag: "title-background-fatal"},
+    {
+        key: ["fatal", "critical", "panic"],
+        value: "title-fatal",
+        name: "严重",
+        img: fatalImg,
+        tag: "title-background-fatal"
+    },
 ]
 
 export const RiskTable: React.FC<RiskTableProp> = (props) => {
@@ -101,21 +119,21 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
 
     const updateRiskAndLevel = useMemoizedFn(() => {
         ipcRenderer.invoke("QueryAvailableRiskType", {}).then((f: Fields) => {
-            setTypes(mergeFieldNames(f).sort((a,b) => {
+            setTypes(mergeFieldNames(f).sort((a, b) => {
                 const diff = a.Total - b.Total
-                if(diff === 0){
+                if (diff === 0) {
                     return a.Verbose.localeCompare(b.Verbose)
-                }else{
+                } else {
                     return diff
                 }
             }))
         })
         ipcRenderer.invoke("QueryAvailableRiskLevel", {}).then((i: Fields) => {
-            setSeverities(mergeFieldNames(i).sort((a,b) => {
+            setSeverities(mergeFieldNames(i).sort((a, b) => {
                 const diff = a.Total - b.Total
-                if(diff === 0){
+                if (diff === 0) {
                     return a.Verbose.localeCompare(b.Verbose)
-                }else{
+                } else {
                     return diff
                 }
             }))
@@ -174,7 +192,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             setParams({...getParams(), [relation[type]]: filters.join("|")})
         }
 
-        if(time.current){
+        if (time.current) {
             clearTimeout(time.current)
             time.current = null
         }
@@ -193,7 +211,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         update(1)
     }, [])
 
-    const showSelectedTag = ()=>{
+    const showSelectedTag = () => {
         const risktypes = getParams().RiskType ? getParams().RiskType?.split("|") : []
         const severitys = getParams().Severity ? getParams().Severity?.split("|") : []
 
@@ -210,14 +228,38 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             <>
                 {risktypes?.map((type) => (
                     <div className="title-selected-tag">
-                        <div className="tag-name-style" key={type}>{typekind.filter((item) => item.Names.join(",").startsWith(type))[0].Verbose}</div>
-                        <div className="tag-del-style" onClick={()=>filterSelect("type",type)}>x</div>
+                        <div className="tag-name-style" key={type}>{
+                            (() => {
+                                const result = typekind.filter((item) => {
+                                    return item.Names.join(",").startsWith(type)
+                                })
+                                if (result.length > 0) {
+                                    return result[0] && result[0].Verbose
+                                }
+                                return ""
+                            })()
+                        }</div>
+                        <div className="tag-del-style" onClick={() => filterSelect("type", type)}>x</div>
                     </div>
                 ))}
                 {severitys?.map((severity) => (
                     <div className="title-selected-tag">
-                        <div className="tag-name-style" key={severity}>{severitykind.filter((item) => item.Names.join(",").startsWith(severity))[0].Verbose}</div>
-                        <div className="tag-del-style" onClick={()=>filterSelect("severity",severity)}>x</div>
+                        <div className="tag-name-style"
+                             key={severity}>
+                            {
+                                (() => {
+                                    const result = severitykind.filter((item) => {
+                                        return item.Names.join(",").startsWith(severity)
+                                    })
+                                    if (result.length > 0) {
+                                        return result[0] && result[0].Verbose
+                                    }
+                                    return ""
+                                })()
+                            }
+                            {/*{severitykind.filter((item) => item.Names.join(",").startsWith(severity))[0].Verbose}*/}
+                        </div>
+                        <div className="tag-del-style" onClick={() => filterSelect("severity", severity)}>x</div>
                     </div>
                 ))}
             </>
@@ -240,7 +282,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                             onClick={() => {
                                                 update()
                                             }}
-                                            icon={<ReloadOutlined />}
+                                            icon={<ReloadOutlined/>}
                                         />
                                     </Space>
                                     <Space>
@@ -271,7 +313,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                         </Button>
                                     </Space>
                                 </div>
-                                {(!!getParams().Severity || !!getParams().RiskType) && <div className="title-header">{showSelectedTag()}</div>}
+                                {(!!getParams().Severity || !!getParams().RiskType) &&
+                                <div className="title-header">{showSelectedTag()}</div>}
                             </div>
                         )
                     }}
@@ -287,7 +330,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             ),
                             width: 400,
                             filterIcon: (filtered) => {
-                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                             },
                             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                                 return (
@@ -310,7 +353,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             title: "类型",
                             render: (i: Risk) => i?.RiskTypeVerbose || i.RiskType,
                             filterIcon: (filtered) => {
-                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                             },
                             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                                 return (
@@ -345,7 +388,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             title: "IP",
                             render: (i: Risk) => i?.IP || "-",
                             filterIcon: (filtered) => {
-                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                             },
                             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                                 return (
@@ -382,7 +425,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                                 title: "详情",
                                                 content: (
                                                     <div style={{overflow: "auto"}}>
-                                                        <RiskDetails info={i} />
+                                                        <RiskDetails info={i}/>
                                                     </div>
                                                 )
                                             })
@@ -609,7 +652,7 @@ export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
     </div>
 };
 
- interface RiskDetailsProp {
+interface RiskDetailsProp {
     info: Risk
 }
 
@@ -622,7 +665,7 @@ const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
             title={
                 <div className='container-title-body'>
                     <div className='title-icon'>
-                        <img src={title.img} className='icon-img' />
+                        <img src={title.img} className='icon-img'/>
                     </div>
 
                     <div className='title-header'>
