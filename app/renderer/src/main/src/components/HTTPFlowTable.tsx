@@ -626,7 +626,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     })
 
     const scrollUpdate = useMemoizedFn((page?: number, limit?: number, sourceType?: string,) => {
-        if (getInScrollUpdateCD()) {
+        if (!autoReload && getInScrollUpdateCD()) {
             info("刷新太快了，休息一下吧 ;-)  ...1.5秒")
             return
         }
@@ -1431,6 +1431,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     if (data.length === 0) return
                     // 防止初始加载的触发
                     if (top !== 0 && top === counter.current) return
+                    if(autoReload) return
                     counter.current = top
                     if (tableTimer.current) {
                         clearTimeout(tableTimer.current)
