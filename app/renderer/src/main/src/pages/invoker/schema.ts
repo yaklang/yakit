@@ -120,6 +120,9 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     IsGeneralModule?: boolean
     ExcludeNucleiWorkflow?: boolean
     ExcludeScriptNames?: string[]
+    IncludedScriptNames?: string[]
+    Tag?: string[]
+    NoResultReturn?: boolean
 }
 
 /*

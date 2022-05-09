@@ -230,12 +230,23 @@ service Yak {
 
   // 获取 Tags
   rpc GetAvailableYakScriptTags(Empty) returns (Fields);
+  rpc ForceUpdateAvailableYakScriptTags(Empty) returns (Empty);
 
   // 通用的漏洞检测技术方案
   rpc ExecYakitPluginsByYakScriptFilter(QueryYakScriptRequest) returns (stream ExecResult);
 
   // GenerateYakCodeByPacket
   rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
+}
+
+message ExecYakitPluginsByYakScriptFilterRequest {
+    QueryYakScriptRequest Filter = 1;
+
+    // 这个 Target 很复杂，URL / IP / CIDR / Host / Host:port
+    string Target = 2;
+    string Ports = 3;
+
+    repeated ExecParamItem ExtraParams = 4;
 }
 
 message GenerateYakCodeByPacketRequest {
@@ -966,6 +977,8 @@ message QueryYakScriptRequest {
   bool ExcludeNucleiWorkflow = 8;
   repeated string ExcludeScriptNames = 9;
   repeated string IncludedScriptNames = 10;
+  repeated string Tag = 11;
+  bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
 }
 
 message QueryYakScriptResponse {
