@@ -987,6 +987,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             i.singleNode
                                                         ) : (
                                                             <MainTabs
+                                                                currentTabKey={currentTabKey}
                                                                 tabType={i.route}
                                                                 pages={i.multipleNode}
                                                                 currentKey={i.multipleCurrentKey || ""}

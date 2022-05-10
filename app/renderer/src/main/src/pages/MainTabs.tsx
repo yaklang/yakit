@@ -9,6 +9,7 @@ import "./MainTabs.css"
 const {TabPane} = Tabs
 
 export interface MainTabsProp {
+    currentTabKey: string
     tabType: string
     pages: multipleNodeInfo[]
     currentKey: string
@@ -18,7 +19,7 @@ export interface MainTabsProp {
 }
 
 export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
-    const {tabType, pages, currentKey, setCurrentKey, removePage, removeOtherPage} = props
+    const {currentTabKey, tabType, pages, currentKey, setCurrentKey, removePage, removeOtherPage} = props
 
     const [loading, setLoading] = useState<boolean>(false)
     const tabsRef = useRef(null)
@@ -30,6 +31,15 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
             ref.focus()
         }, 100)
     }, [currentKey])
+    useEffect(() => {
+        if (currentTabKey === tabType) {
+            setTimeout(() => {
+                if (!tabsRef || !tabsRef.current) return
+                const ref = tabsRef.current as unknown as HTMLDivElement
+                ref.focus()
+            }, 100)
+        }
+    }, [currentTabKey])
 
     const bars = (props: any, TabBarDefault: any) => {
         return (
