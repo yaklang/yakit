@@ -233,7 +233,7 @@ service Yak {
   rpc ForceUpdateAvailableYakScriptTags(Empty) returns (Empty);
 
   // 通用的漏洞检测技术方案
-  rpc ExecYakitPluginsByYakScriptFilter(QueryYakScriptRequest) returns (stream ExecResult);
+  rpc ExecYakitPluginsByYakScriptFilter(ExecYakitPluginsByYakScriptFilterRequest) returns (stream ExecResult);
 
   // GenerateYakCodeByPacket
   rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
