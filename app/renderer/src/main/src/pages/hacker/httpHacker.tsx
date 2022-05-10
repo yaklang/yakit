@@ -61,7 +61,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 }}
             >
                 <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
-                    <div style={{height: "100%"}}>
+                    <div style={{height: "100%", overflow: "auto"}}>
                         <MITMPage />
                     </div>
                 </Tabs.TabPane>
