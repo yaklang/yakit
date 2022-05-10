@@ -606,13 +606,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
+                if ((rsp?.Data || []).length > 10) setAutoReload(false)
+                else setAutoReload(true)
                 setData(rsp?.Data || [])
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
                 setTimeout(() => {
-                    if ((rsp?.Data || []).length > 10) setAutoReload(false)
-                    else setAutoReload(true)
-
                     if (!tableRef || !tableRef.current) return
                     const table = tableRef.current as unknown as HTMLDivElement
                     // @ts-ignore

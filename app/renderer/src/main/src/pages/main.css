@@ -26,11 +26,6 @@
     flex-direction: column;
 }
 
-.full-spin {
-    height: 100%;
-    width: 100%;
-}
-
 .flex-card .ant-card-body {
     flex: 1;
     display: flex;
@@ -39,4 +34,23 @@
 
 .main-container-cion:hover{
     color: #1890ff;
+}
+
+.yakit-layout-tabs.ant-tabs-top > .ant-tabs-nav {
+    margin: 0 0 4px 0 !important;
+}
+.yakit-layout-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+/* MainOperator页样式 */
+.yakit-main-layout{
+    width: 100%;
+    height: 100vh;
+}
+.main-laytou-header{
+    height: 60px;
+    padding: 0;
+    background-color: #fff;
 }
