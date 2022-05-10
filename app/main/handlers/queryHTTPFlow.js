@@ -116,4 +116,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetAvailableYakScriptTags", async (e, params) => {
         return await asyncGetAvailableYakScriptTags(params)
     })
+
+    // asyncForceUpdateAvailableYakScriptTags wrapper
+    const asyncForceUpdateAvailableYakScriptTags = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ForceUpdateAvailableYakScriptTags(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ForceUpdateAvailableYakScriptTags", async (e, params) => {
+        return await asyncForceUpdateAvailableYakScriptTags(params)
+    })
 }
