@@ -122,7 +122,7 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
     const cancel = useMemoizedFn(() => {
         CancelBatchYakScript(token).then()
     })
-    useEffect(()=>{
+    useEffect(() => {
         return cancel()
     }, [])
 
@@ -137,6 +137,20 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
             setLoading(false)
         }, 300);
     })
+
+    useEffect(() => {
+        if (!token) {
+            return
+        }
+
+        ipcRenderer.on(`${token}-end`, async (e) => {
+            console.info("call finished by token filter")
+            setTimeout(() => setExecuting(false), 300)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [token])
 
     return <AutoCard
         title={<Space>

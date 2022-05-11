@@ -639,12 +639,13 @@ export const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props
     useEffect(() => {
         const activeTask = new Map<string, ExecBatchYakScriptResult[]>();
         ipcRenderer.on(`${props.token}-error`, async (e, exception) => {
+            if (`${exception}`.includes("Cancelled on client")) {
+                return
+            }
             console.info("call exception")
             console.info(exception)
         })
-        ipcRenderer.on(`${props.token}-end`, async (e) => {
-            console.info("call finished")
-        })
+
         ipcRenderer.on(`${props.token}-data`, async (e, data: ExecBatchYakScriptResult) => {
             // 处理进度信息
             if (data.ProgressMessage) {
