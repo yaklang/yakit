@@ -1,17 +1,20 @@
 import React, {useEffect, useState} from "react";
 import {AutoCard} from "../../../components/AutoCard";
-import {QueryYakScriptParamProp, SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
-import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScriptParam} from "../schema";
-import {showModal} from "../../../utils/showModal";
-import {YakEditor} from "../../../utils/editors";
+import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
+import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "../schema";
 import {useDebounce, useMemoizedFn} from "ahooks";
-import {YakScriptParamsSetter, YakScriptParamsSetterProps} from "../YakScriptParamsSetter";
-import {SimplePluginList} from "../../../components/SimplePluginList";
-import {YakExecutorParam} from "../YakExecutorParams";
-import useHoldingIPCRStream from "../../../hook/useHoldingIPCRStream";
 import {randomString} from "../../../utils/randomUtil";
-import {PluginResultUI} from "../../yakitStore/viewers/base";
-import {Spin} from "antd";
+import {Divider, Progress, Space, Tag} from "antd";
+import {
+    BatchExecutorResultUI,
+    CancelBatchYakScript,
+    ExecSelectedPlugins,
+    ExecuteTaskHistory,
+    TargetRequest,
+    TaskHistoryProps
+} from "./BatchExecutorPage";
+import {formatTimestamp} from "../../../utils/timeUtil";
+import {failed} from "../../../utils/notification";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -37,92 +40,26 @@ const simpleQueryToFull = (i: SimpleQueryYakScriptSchema): QueryYakScriptRequest
     return result
 }
 
-const OrdinaryParamsToBatchExecuteByFilterParamsMap = {
-    "target": "Target",
-    "target-file": "TargetFile",
-    "ports": "Ports",
-}
-const BatchExecuteByFilterParamsSchema: YakScriptParam[] = [
-    {
-        Field: "target",
-        DefaultValue: "",
-        TypeVerbose: "text",
-        FieldVerbose: "扫描目标",
-        Help: "URL / IP / CIDR / IP:PORT 均可，换行与逗号均可用于分割",
-        Value: "",
-        Required: true,
-        Group: "",
-        BuildInParam: false,
-    },
-    {
-        Field: "target-file",
-        DefaultValue: "",
-        TypeVerbose: "upload-path",
-        FieldVerbose: "扫描目标",
-        Help: "仅接受一个文件字典",
-        Value: "",
-        Required: false,
-        Group: "",
-        BuildInParam: false,
-    },
-    {
-        Field: "ports",
-        DefaultValue: "22,21,80,443,7001,3389,3306,25",
-        TypeVerbose: "string",
-        FieldVerbose: "扫描端口",
-        Help: "输入一个目标来进行简易端口扫描",
-        Value: "",
-        Required: false,
-        Group: "",
-        BuildInParam: false,
-    },
-
-    // debug
-    {
-        Field: "debug",
-        DefaultValue: "",
-        TypeVerbose: "bool",
-        FieldVerbose: "调试模式",
-        Help: "调试模式：更多输出",
-        Value: "",
-        Required: false,
-        Group: "",
-        BuildInParam: false,
-    },
-    // concurrent
-    {
-        Field: "concurrent",
-        DefaultValue: "10",
-        TypeVerbose: "uint",
-        FieldVerbose: "并发",
-        Help: "设置运行 PoC 的并发量：推荐为10",
-        Value: "",
-        Required: false,
-        Group: "",
-        BuildInParam: false,
-    },
-];
-
-
-export interface BatchExecuteByFilterRequest {
-    Filter: QueryYakScriptRequest
-    Target: string
-    TargetFile: string
-    Ports?: string
-    ExtraParams: YakExecutorParam[]
-}
+const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryYakScriptRequest, token: string) => {
+    const params = {
+        Target: target.target,
+        TargetFile: target.targetFile,
+        ScriptNames: [], EnablePluginFilter: true, PluginFilter: filter,
+        Concurrent: target.concurrent || 5,
+        TotalTimeoutSeconds: target.totalTimeout || 1800,
+    };
+    return ipcRenderer.invoke("ExecBatchYakScript", params, token)
+};
 
 export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.memo((props) => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [token, setToken] = useState(randomString(20))
     const [executing, setExecuting] = useState(false);
-    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
-        `batch-execute-by-filter-yak-script`,
-        "ExecYakitPluginsByYakScriptFilter",
-        token,
-        () => setTimeout(() => setExecuting(false), 300)
-    )
+    const [percent, setPercent] = useState(0);
+
+    // 执行任务历史列表
+    const [taskHistory, setTaskHistory] = useState<TaskHistoryProps[]>([])
 
     useEffect(() => {
         setLoading(true)
@@ -134,78 +71,99 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
         }).finally(() => setTimeout(() => setLoading(false), 300))
     }, [useDebounce(props.simpleQuery, {wait: 500})])
 
-    const executeByParams = useMemoizedFn((p: BatchExecuteByFilterRequest) => {
-        setExecuting(true)
+    // 回复缓存
+    useEffect(() => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("get-value", ExecuteTaskHistory)
+            .then((res: any) => {
+                setTaskHistory(res ? JSON.parse(res) : [])
+            })
+            .catch(() => {
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
+    }, [])
+
+    // 执行批量任务
+    const run = useMemoizedFn((t: TargetRequest) => {
+        setPercent(0)
+
+        //@ts-ignore
+        const time = Date.parse(new Date()) / 1000
+        const obj: TaskHistoryProps = {
+            target: t,
+            selected: [],
+            enablePluginFilter: true,
+            pluginFilter: simpleQueryToFull(props.simpleQuery),
+            pluginType: props.simpleQuery.type,
+            limit: 100000,
+            keyword: "",
+            time: formatTimestamp(time)
+        }
+        const arr = [...taskHistory]
+        if (taskHistory.length === 10) arr.pop()
+        arr.unshift(obj)
+        setTaskHistory(arr)
+        ipcRenderer.invoke("set-value", ExecuteTaskHistory, JSON.stringify(arr))
+
+        const tokens = randomString(40)
+        setToken(tokens)
+        StartExecBatchYakScriptWithFilter(
+            t, simpleQueryToFull(props.simpleQuery),
+            tokens).then(() => {
+            setExecuting(true)
+        }).catch(e => {
+            failed(`启动批量执行插件失败：${e}`)
+        })
+    });
+
+    const cancel = useMemoizedFn(() => {
+        CancelBatchYakScript(token).then()
+    })
+
+    const executeHistory = useMemoizedFn((item: TaskHistoryProps) => {
+        setLoading(true)
+
+        alert("history fetch error!")
+        // if (item.pluginType === pluginType) setTimeout(() => search(), 300);
+        // else setPluginType(item.pluginType)
+
         setTimeout(() => {
-            ipcRenderer.invoke("ExecYakitPluginsByYakScriptFilter", p, token)
+            setLoading(false)
         }, 300);
     })
 
-    const cancelTask = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-ExecYakitPluginsByYakScriptFilter", token)
-    })
-
-    useEffect(() => {
-        return () => {
-            cancelTask()
-        }
-    }, [token])
-
-    return <AutoCard size={"small"} title={(
-        <div>
-            {`当前已选：${total}`}
-            {loading && <Spin size={"small"}/>}
-        </div>
-    )} extra={<a href="#" onClick={() => {
-        try {
-            const raw = JSON.stringify(props.simpleQuery);
-            showModal({
-                title: "JSON", content: (
-                    <>
-                        <YakEditor readOnly={true} value={raw}/>
-                    </>
-                ), width: "50%"
-            })
-        } catch (e) {
-
-        }
-    }}>
-        Config
-    </a>}>
-        <div style={{marginTop: 12}}>
-            <YakScriptParamsSetter
-                loading={executing}
-                primaryParamsOnly={true}
-                Params={BatchExecuteByFilterParamsSchema}
-                onParamsConfirm={execParamItems => {
-                    const params: BatchExecuteByFilterRequest = {
-                        Filter: simpleQueryToFull(props.simpleQuery),
-                        Target: "", TargetFile: "", Ports: "",
-                        ExtraParams: [],
-                    }
-                    const extraParams = execParamItems.filter(i => {
-                        const field = OrdinaryParamsToBatchExecuteByFilterParamsMap[i.Key];
-                        if (field !== undefined) {
-                            params[field] = i.Value
-                            return false
-                        }
-                        return true
-                    })
-                    params.ExtraParams = extraParams;
-                    executeByParams(params)
-                }}
-                onClearData={reset}
-                onCanceled={cancelTask}
-            />
-        </div>
-        <PluginResultUI
-            featureType={infoState.featureTypeState}
-            results={infoState.messageState}
-            statusCards={infoState.statusState} progress={infoState.processState}
-            loading={executing}
-            feature={infoState.featureMessageState}
-            // console
-            onXtermRef={setXtermRef} defaultConsole={true}
+    return <AutoCard
+        title={<Space>
+            {"已选插件"}
+            <Tag>{`${total}`}</Tag>
+        </Space>}
+        size={"small"} bordered={false}
+        extra={<Space>
+            {(percent > 0 || executing) && <div style={{width: 200}}>
+                <Progress status={executing ? "active" : undefined} percent={
+                    parseInt((percent * 100).toFixed(0))
+                }/>
+            </div>}
+        </Space>}
+        bodyStyle={{display: "flex", flexDirection: "column", padding: '0 5px', overflow: "hidden"}}
+    >
+        <ExecSelectedPlugins
+            disableStartButton={total <= 0}
+            onSubmit={run}
+            onCancel={cancel}
+            executing={executing}
+            loading={loading}
+            history={taskHistory}
+            executeHistory={executeHistory}
         />
+        <Divider style={{margin: 4}}/>
+        <div style={{flex: '1', overflow: "hidden"}}>
+            <AutoCard style={{padding: 4}} bodyStyle={{padding: 4, overflow: "hidden"}} bordered={false}>
+                <BatchExecutorResultUI token={token} executing={executing}/>
+            </AutoCard>
+        </div>
     </AutoCard>
 });
