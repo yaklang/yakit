@@ -43,6 +43,7 @@ message ExecBatchYakScriptRequest {
   int64 Concurrent = 6;
 
   // 精确使用脚本名称
+  // 要注意，这个 Scripts 和 PluginFilter 是冲突的
   repeated string ScriptNames = 8;
 
   // Tags with exclude / include
@@ -1374,6 +1375,9 @@ message MITMContentReplacer {
 
   // Index
   int32 Index = 7;
+
+  // 额外标签，用于标注 flow
+  repeated string ExtraTag = 8;
 }
 
 message RemoveHookParams {

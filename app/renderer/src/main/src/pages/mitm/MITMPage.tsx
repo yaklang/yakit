@@ -64,7 +64,7 @@ export interface MITMResponse extends MITMFilterSchema {
     response?: Uint8Array
     responseId?: number
 
-    justContentReplacers?: boolean
+    justContentReplacer?: boolean
     replacers?: MITMContentReplacerRule[]
 }
 
@@ -528,7 +528,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         </div>
                     })
                 }}
-            >SSL/TLS</Button>
+            >HTTPS 证书配置</Button>
         </Tooltip>
     })
 
@@ -550,7 +550,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 })
             }}
         >
-            正则内容替换
+            匹配/标记/替换
         </Button>
     })
 
@@ -569,7 +569,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                </>
                            });
                        }}
-        >设置过滤器</Button>
+        >过滤器</Button>
     })
 
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {

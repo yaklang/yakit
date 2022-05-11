@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {AutoCard} from "../../components/AutoCard";
 import {Button, Checkbox, Form, List, Space, Table, Typography} from "antd";
 import {failed, info} from "../../utils/notification";
-import {InputInteger, InputItem, ManySelectOne, SwitchItem} from "../../utils/inputUtil";
+import {InputInteger, InputItem, ManyMultiSelectForString, ManySelectOne, SwitchItem} from "../../utils/inputUtil";
 import {showModal} from "../../utils/showModal";
 
 export interface MITMContentReplacerProp {
@@ -19,6 +19,7 @@ export interface MITMContentReplacerRule {
     Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan"
     EnableForRequest: boolean
     EnableForResponse: boolean
+    ExtraTag: string[]
 }
 
 const {Text} = Typography;
@@ -212,7 +213,8 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
         Index: props.existed.length + 1,
         NoReplace: false,
         Result: "",
-        Rule: ""
+        Rule: "",
+        ExtraTag: []
     })
     return <Form
         style={{marginBottom: 20}}
@@ -240,11 +242,15 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
                         value={params.EnableForResponse}/>
         </>}
         <ManySelectOne
-            formItemStyle={{marginBottom: 0}} label={"命中颜色"}
+            label={"命中颜色"}
             data={["red", "blue", "cyan", "green", "grey", "purple", "yellow", "orange"].map(i => {
                 return {value: i, text: i}
             })}
             setValue={Color => setParams({...params, Color})} value={params.Color}
+        />
+        <ManyMultiSelectForString
+            mode={"tags"} data={[]} label={"标记 Tag"} defaultSep={","}
+            setValue={e => setParams({...params, ExtraTag: e.split(",")})} value={(params?.ExtraTag || []).join(",")}
         />
         <Form.Item colon={false} label={" "}>
             <Button type="primary" htmlType="submit"> 添加该规则 </Button>

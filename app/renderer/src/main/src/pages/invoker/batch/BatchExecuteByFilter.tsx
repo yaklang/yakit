@@ -67,7 +67,7 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
         ipcRenderer.invoke("QueryYakScript", result).then((data: QueryYakScriptsResponse) => {
             setTotal(data.Total)
         }).catch(e => {
-            console.info()
+            console.info(e)
         }).finally(() => setTimeout(() => setLoading(false), 300))
     }, [useDebounce(props.simpleQuery, {wait: 500})])
 

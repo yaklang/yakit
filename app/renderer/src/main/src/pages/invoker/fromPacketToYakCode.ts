@@ -12,7 +12,6 @@ export const generateYakCodeByRequest = (isHttps: boolean, req: Uint8Array, onRe
     ipcRenderer.invoke("GenerateYakCodeByPacket", {
         IsHttps: isHttps, Request: req, CodeTemplate: template || RequestToYakCodeTemplate.Ordinary,
     }).then((r: { Code: Uint8Array }) => {
-        console.info(r)
         onResult(new Buffer(r.Code).toString())
     }).catch(e => {
         failed(`Generate Yak Code Failed：${e}`)
