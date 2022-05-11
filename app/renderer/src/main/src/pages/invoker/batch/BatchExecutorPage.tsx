@@ -591,6 +591,7 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
 interface BatchExecutorResultUIProp {
     token: string
     executing?: boolean
+    setPercent?: (i: number) => any
 }
 
 interface BatchTask {
@@ -645,10 +646,11 @@ export const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props
             console.info("call finished")
         })
         ipcRenderer.on(`${props.token}-data`, async (e, data: ExecBatchYakScriptResult) => {
-            console.info(data)
-
             // 处理进度信息
             if (data.ProgressMessage) {
+                if (!!props.setPercent) {
+                    props.setPercent(data.ProgressPercent || 0)
+                }
                 setTotal(data.ProgressTotal || 0)
                 setFinished(data.ProgressCount || 0)
                 return

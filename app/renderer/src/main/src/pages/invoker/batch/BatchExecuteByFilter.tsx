@@ -122,6 +122,9 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
     const cancel = useMemoizedFn(() => {
         CancelBatchYakScript(token).then()
     })
+    useEffect(()=>{
+        return cancel()
+    }, [])
 
     const executeHistory = useMemoizedFn((item: TaskHistoryProps) => {
         setLoading(true)
@@ -162,7 +165,7 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
         <Divider style={{margin: 4}}/>
         <div style={{flex: '1', overflow: "hidden"}}>
             <AutoCard style={{padding: 4}} bodyStyle={{padding: 4, overflow: "hidden"}} bordered={false}>
-                <BatchExecutorResultUI token={token} executing={executing}/>
+                <BatchExecutorResultUI token={token} executing={executing} setPercent={setPercent}/>
             </AutoCard>
         </div>
     </AutoCard>
