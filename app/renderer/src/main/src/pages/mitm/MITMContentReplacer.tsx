@@ -19,6 +19,8 @@ export interface MITMContentReplacerRule {
     Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan"
     EnableForRequest: boolean
     EnableForResponse: boolean
+    EnableForBody: boolean
+    EnableForHeader: boolean
     ExtraTag: string[]
 }
 
@@ -135,7 +137,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             })
                             setRules([...rules])
                         }}
-                    >不会替换命中内容</Checkbox>
+                    />
                 },
                 {
                     title: "对请求生效", render: (i: MITMContentReplacerRule) => <Checkbox
@@ -150,7 +152,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             setRules([...rules])
                         }}
                         disabled={i.NoReplace}
-                    >对 Request 生效</Checkbox>
+                    />
                 },
                 {
                     title: "对响应生效", render: (i: MITMContentReplacerRule) => <Checkbox
@@ -165,7 +167,37 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             setRules([...rules])
                         }}
                         disabled={i.NoReplace}
-                    >对 Response 生效</Checkbox>
+                    />
+                },
+                {
+                    title: "对 Header 生效", render: (i: MITMContentReplacerRule) => <Checkbox
+                        checked={i.EnableForHeader}
+                        onChange={() => {
+                            rules.forEach(target => {
+                                if (target.Index != i.Index) {
+                                    return
+                                }
+                                target.EnableForHeader = !target.EnableForHeader
+                            })
+                            setRules([...rules])
+                        }}
+                        disabled={i.NoReplace}
+                    />
+                },
+                {
+                    title: "对 Body 生效", render: (i: MITMContentReplacerRule) => <Checkbox
+                        checked={i.EnableForBody}
+                        onChange={() => {
+                            rules.forEach(target => {
+                                if (target.Index != i.Index) {
+                                    return
+                                }
+                                target.EnableForBody = !target.EnableForBody
+                            })
+                            setRules([...rules])
+                        }}
+                        disabled={i.NoReplace}
+                    />
                 },
                 {
                     title: "命中颜色", render: (i: MITMContentReplacerRule) => <ManySelectOne
@@ -189,7 +221,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     title: "操作", render: (i: MITMContentReplacerRule) => <Space>
                         <Button size={"small"} onClick={() => {
                             setRules(rules.filter(t => t.Index !== i.Index))
-                        }}>删除</Button>
+                        }} danger={true}>删除</Button>
                     </Space>
 
                 },
@@ -210,6 +242,8 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
         Color: "red",
         EnableForRequest: false,
         EnableForResponse: false,
+        EnableForBody: false,
+        EnableForHeader: true,
         Index: props.existed.length + 1,
         NoReplace: false,
         Result: "",
@@ -240,6 +274,13 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
             <SwitchItem label={"对 Response 生效"}
                         setValue={EnableForResponse => setParams({...params, EnableForResponse})}
                         value={params.EnableForResponse}/>
+            <SwitchItem label={"对 Header 生效"}
+                        setValue={EnableForHeader => setParams({...params, EnableForHeader})}
+                        value={params.EnableForHeader}
+            />
+            <SwitchItem label={"对 Body 生效"}
+                        setValue={EnableForBody => setParams({...params, EnableForBody})} value={params.EnableForBody}
+            />
         </>}
         <ManySelectOne
             label={"命中颜色"}

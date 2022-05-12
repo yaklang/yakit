@@ -1369,9 +1369,11 @@ message MITMContentReplacer {
   // 选择替换之后的颜色
   string Color = 4;
 
-  // 生效内容
+  // 生效内容：默认对 body 生效
   bool EnableForRequest = 5;
   bool EnableForResponse = 6;
+  bool EnableForHeader = 9;
+  bool EnableForBody = 10;
 
   // Index
   int32 Index = 7;
