@@ -1034,10 +1034,23 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         width: 120,
                         resizable: true,
                         headRender: () => {
-                            return "Html Title"
+                            return "Title"
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return rowData[dataKey] ? rowData[dataKey] : ""
+                        }
+                    },
+                    {
+                        dataKey: "Tags",
+                        width: 120,
+                        resizable: true,
+                        headRender: () => {
+                            return "Tags"
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return rowData[dataKey] ? (
+                                `${rowData[dataKey]}`.split("|").filter(i => !i.startsWith("YAKIT_COLOR_")).join(", ")
+                            ) : ""
                         }
                     },
                     {
@@ -1430,7 +1443,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     if (data.length === 0) return
                     // 防止初始加载的触发
                     if (top !== 0 && top === counter.current) return
-                    if(autoReload) return
+                    if (autoReload) return
                     counter.current = top
                     if (tableTimer.current) {
                         clearTimeout(tableTimer.current)
