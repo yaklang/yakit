@@ -1,0 +1,63 @@
+.batch-executor-result {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-flow: column;
+}
+
+.result-notice-body {
+    height: 70px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+.result-notice-body .notice-body {
+    height: 60px;
+    padding: 2px;
+    /* border: 1px solid #999EA8;
+    border-radius: 3px; */
+}
+.result-notice-body .notice-body .notice-body-header {
+    height: 38px;
+    line-height: 38px;
+    font-size: 16px;
+    font-weight: 600;
+}
+.result-notice-body .notice-body .notice-font-in-progress {
+    color: #ffd666;
+}
+.result-notice-body .notice-body .notice-font-completed {
+    color: #bae637;
+}
+.result-notice-body .notice-body .notice-body-counter {
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    font-weight: 500;
+}
+.result-notice-body .notice-divider{
+    height: 100%;
+    margin: 4px;
+}
+
+.div-width-height-100{
+    width: 100%;
+    height: 100%;
+}
+
+.result-table-body{
+    flex: 1;
+    overflow: hidden;
+}
+.div-font-ellipsis{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.result-table-body .table-empty{
+    width: 100%;
+    top: 50%;
+    position: absolute;
+    margin-top: -65px;
+}

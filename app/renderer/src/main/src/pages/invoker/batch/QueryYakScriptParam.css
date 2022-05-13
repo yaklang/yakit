@@ -1,0 +1,29 @@
+.div-width-100 {
+    width: 100%;
+}
+.div-height-100 {
+    height: 100%;
+}
+
+.select-render-all {
+    height: 26px;
+    line-height: 26px;
+    padding-left: 8px;
+    cursor: pointer;
+}
+.select-render-all:hover {
+    color: #69c0ff;
+}
+
+.plugin-list-opt-box {
+    width: 100%;
+}
+.plugin-list-opt-box span + span {
+    width: 100%;
+}
+.plugin-list-opt-box span .plugin-title {
+    width: 95%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

@@ -1,16 +1,23 @@
-import React, {useDebugValue, useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
+import {Button, Checkbox, Divider, Form, Input, List, Popconfirm, Spin, Tag} from "antd";
+import { SearchOutlined } from '@ant-design/icons';
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema";
-import {AutoCard} from "../../../components/AutoCard";
-import {Button, Checkbox, Divider, Form, InputNumber, List, Popconfirm, Space, Spin, Tag} from "antd";
-import {FieldName, Fields} from "../../risks/RiskTable";
-import {Field} from "ahooks/es/useFusionTable/types";
+import {FieldName} from "../../risks/RiskTable";
 import {useDebounce, useMemoizedFn} from "ahooks";
-import {InputInteger, InputItem, OneLine} from "../../../utils/inputUtil";
-import {AutoSpin} from "../../../components/AutoSpin";
+import {AutoCard} from "../../../components/AutoCard";
+import { ItemSelects } from "../../../components/baseTemplate/FormItemUtil";
+
+import "./QueryYakScriptParam.css"
 
 export interface QueryYakScriptParamProp {
     params: SimpleQueryYakScriptSchema
     onParams: (param: SimpleQueryYakScriptSchema) => any
+    loading: boolean
+    allTag: FieldName[]
+    onAllTag: () => any
+    isAll: boolean
+    onIsAll: (flag: boolean) => any
+    historyTask: string
 }
 
 export interface SimpleQueryYakScriptSchema {
@@ -23,8 +30,18 @@ export interface SimpleQueryYakScriptSchema {
 const {ipcRenderer} = window.require("electron");
 
 export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = React.memo((props) => {
+    const {loading, allTag, onAllTag, isAll, onIsAll, historyTask} = props
+    // 下拉框选中tag值
+    const selectRef = useRef(null)
+    const [itemSelects, setItemSelects] = useState<string[]>([])
+    const [selectLoading, setSelectLoading] = useState<boolean>(true)
+    useEffect(() => {
+        setTimeout(() => setSelectLoading(false), 300)
+    }, [selectLoading])
+
+    // 设置本地搜索 tags 的状态
+    const [searchTag, setSearchTag] = useState("");
     // 用于存储 tag 的搜索与结果
-    const [tags, setTags] = useState<Fields>({Values: []});
     const [topTags, setTopTags] = useState<FieldName[]>([]);
     const [topN, setTopN] = useState(15);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -37,37 +54,15 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
     }, [params])
 
     // 辅助变量
-    const [loading, setLoading] = useState(false);
-    const [updateTagsTrigger, setUpdateTagsTrigger] = useState(true);
     const [updateTagsSelectorTrigger, setUpdateTagsSelector] = useState(false);
-
-    // 设置本地搜索 tags 的状态
-    const [searchTag, setSearchTag] = useState("");
 
     // 设置最大最小值
     const [minTagWeight, setMinTagWeight] = useState(1);
     const [maxTagWeight, setMaxTagWeight] = useState(2000);
 
-    const updateTags = () => {
-        setUpdateTagsTrigger(!updateTagsTrigger)
-    }
-    const updateTagsSelector = () => {
-        setUpdateTagsSelector(!updateTagsSelectorTrigger)
-    }
-
-    const [loadingSelectorFlag, setLoadingSelector] = useState(true);
-    const loadingSelector = () => {
-        setLoadingSelector(true)
-    }
-
-
-    // 加载 topN
-    useEffect(() => {
-        setTimeout(() => setLoadingSelector(false), 300)
-    }, [loadingSelectorFlag])
     useEffect(() => {
         let count = 0;
-        const showTags = tags.Values.filter(d => {
+        const showTags = allTag.filter(d => {
             if (
                 count <= topN // 限制数量
                 && d.Total >= minTagWeight && d.Total <= maxTagWeight
@@ -81,7 +76,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         })
         setTopTags([...showTags])
     }, [
-        tags,
+        allTag,
         useDebounce(minTagWeight, {wait: 500}),
         useDebounce(maxTagWeight, {wait: 500}),
         useDebounce(searchTag, {wait: 500}),
@@ -90,6 +85,9 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         updateTagsSelectorTrigger,
     ])
 
+    const updateTagsSelector = () => {
+        setUpdateTagsSelector(!updateTagsSelectorTrigger)
+    }
     const syncTags = useMemoizedFn(() => {
         setParams({
             type: params.type,
@@ -99,6 +97,11 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         })
     })
 
+    useEffect(() => {
+        const tags = historyTask ? historyTask.split(",") : []
+        setSelectedTags(tags)
+    }, [historyTask])
+
     // 更新 params Tags
     useEffect(() => {
         syncTags()
@@ -107,109 +110,194 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
     useEffect(() => {
         setTopN(10)
     }, [searchTag])
-
-    // 加载所有标签
-    useEffect(() => {
-        setLoading(true)
-        ipcRenderer.invoke("GetAvailableYakScriptTags", {}).then((data: Fields) => {
-            setTags(data)
-        }).catch(e => {
-            console.info(e)
-        }).finally(() => setTimeout(() => setLoading(false), 300))
-    }, [updateTagsTrigger])
-
-    return <AutoCard size={"small"} bordered={true} title={"选择插件"} extra={(
-        <Popconfirm title={"强制更新"} onConfirm={() => {
-            updateTags()
-        }}>
-            <a href={"#"}>更新 Tags</a>
-        </Popconfirm>
-    )} loading={loading} bodyStyle={{display: "flex", flexDirection: "column"}}>
-        <Space direction={"vertical"} style={{width: "100%"}}>
-            <AutoCard bordered={false} size={"small"} title={(
-                <>
-                    <Form layout={"inline"} onSubmitCapture={e => {
-                        e.preventDefault()
-                    }} size={"small"}>
-                        <InputItem
-                            label={"搜索Tag"}
-                            extraFormItemProps={{style: {marginBottom: 0}}}
-                            value={searchTag}
-                            setValue={setSearchTag}
-                        />
-                        {/*<InputInteger label={"TOP"} value={topN} setValue={setTopN}/>*/}
-                    </Form>
-                </>
-            )}>
-                <Spin spinning={loadingSelectorFlag}>
-                    <div>
-                        {topTags.map(i => <Tag style={{marginBottom: 4}}>
-                            <Checkbox checked={selectedTags.includes(i.Name)} onClick={() => {
-                                if (selectedTags.includes(i.Name)) {
-                                    return
-                                }
-                                setSelectedTags([...selectedTags, i.Name])
-                            }}>
-                                {i.Name}[{i.Total}]
-                            </Checkbox>
-                        </Tag>)}
-                        <Button type={"link"} size={"small"} onClick={() => {
-                            setTopN(topN + 10)
-                            loadingSelector()
-                        }}>展开更多</Button>
-                        {topN > 5 && <Button type={"link"} size={"small"} onClick={() => {
-                            if (topN - 5 > 0) {
-                                setTopN(topN - 5)
-                                loadingSelector()
-                            }
-                        }} danger={true}>减少展示</Button>}
-                    </div>
+    
+    const selectedAll = useMemoizedFn(() => {
+        if(!selectRef || !selectRef.current) return
+        const ref = selectRef.current as unknown as HTMLDivElement
+        ref.blur()
+        setTimeout(() => {
+            onIsAll(true)
+            setItemSelects([])
+            setSearchTag("")
+            setParams({type: params.type, tags: "", include: [], exclude: []})
+        }, 200);
+    })
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+        return (
+            <div>
+                <Spin spinning={selectLoading}>
+                    <div className="select-render-all" onClick={selectedAll}>全选</div>
+                    {originNode}
                 </Spin>
-            </AutoCard>
-            <AutoCard title={"已选中 Tag"} size={"small"} extra={(
-                <Popconfirm title={"清空已选 Tag？"} onConfirm={() => {
-                    setSelectedTags([])
-                    setParams({type: params.type, tags: "", include: [], exclude: []})
-                    updateTagsSelector()
-                }}>
-                    <Button size={"small"} danger={true}>清空</Button>
+            </div>
+        )
+    })
+
+    return (
+        <AutoCard
+            size={"small"}
+            bordered={true}
+            title={"选择插件"}
+            extra={
+                <Popconfirm
+                    title={"强制更新"}
+                    onConfirm={() => onAllTag()}
+                >
+                    <a href={"#"}>更新 Tags</a>
                 </Popconfirm>
-            )}>
-                {selectedTags.map(i => {
-                    return <Tag style={{marginBottom: 2}} color={"red"} onClose={() => {
-                        setSelectedTags(selectedTags.filter(element => i !== element))
-                    }} closable={true}>{i}</Tag>
-                })}
-            </AutoCard>
-        </Space>
-        <SearchYakScriptForFilter simpleFilter={params} onInclude={(i) => {
-            setParams({
-                ...params,
-                include: [...params.include, i.ScriptName],
-                exclude: [...params.exclude.filter(target => i.ScriptName != target)]
-            })
-        }} onExclude={i => {
-            const existedInTag = params.tags.split(",").filter(tag => !!tag).filter(
-                tag => i.Tags.includes(tag)
-            ).length > 0;
-            if (existedInTag) {
-                setParams({
-                    ...params,
-                    exclude: [...params.exclude, i.ScriptName],
-                    include: [...params.include.filter(target => i.ScriptName != target)]
-                })
-            } else {
-                setParams({
-                    ...params,
-                    include: [...params.include.filter(target => i.ScriptName != target)]
-                })
             }
-        }}/>
-    </AutoCard>
+            loading={loading}
+            bodyStyle={{display: "flex", flexDirection: "column", overflow: "hidden"}}
+        >
+            <div className="div-width-100" style={{maxHeight: 237}}>
+                <div className="div-width-100">
+                    <Form size="small">
+                        <ItemSelects
+                            item={{
+                                style: {marginBottom: 0},
+                                label: "设置Tag"
+                            }}
+                            select={{
+                                ref: selectRef,
+                                className: "div-width-100",
+                                allowClear: true,
+                                autoClearSearchValue: false,
+                                maxTagCount: "responsive",
+                                mode: "multiple",
+                                data: topTags,
+                                optValue: "Name",
+                                optionLabelProp: "Name",
+                                renderOpt: (info: FieldName) => {
+                                    return <div style={{display: "flex", justifyContent: "space-between"}}><span>{info.Name}</span><span>{info.Total}</span></div>
+                                },
+                                value: itemSelects,
+                                onSearch: (keyword: string) => setSearchTag(keyword),
+                                setValue: (value) => setItemSelects(value),
+                                onDropdownVisibleChange: (open) => {
+                                    if(open){
+                                        setItemSelects([])
+                                        setSearchTag("")
+                                    }else{
+                                        const filters = itemSelects.filter(item => !selectedTags.includes(item))
+                                        setSelectedTags(selectedTags.concat(filters))
+                                        setItemSelects([])
+                                        setSearchTag("")
+                                    }
+                                },
+                                onPopupScroll: (e) => {
+                                    const {target} = e
+                                    const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                                    if(ref.scrollTop + ref.offsetHeight === ref.scrollHeight){
+                                        setSelectLoading(true)
+                                        setTopN(topN + 10)
+                                    }
+                                },
+                                dropdownRender: (originNode: React.ReactNode) => selectDropdown(originNode)
+                            }}
+                        ></ItemSelects>
+                    </Form>
+                </div>
+
+                <Divider style={{margin: "6px 0"}} />
+
+                {(isAll || selectedTags.length !== 0) && (
+                    <div className='div-width-100 div-height-100' style={{maxHeight: 200}}>
+                        <AutoCard
+                            size='small'
+                            title={"已选中 Tag"}
+                            bodyStyle={{overflow: "hidden auto"}}
+                            extra={
+                                <Popconfirm
+                                    title={"清空已选 Tag？"}
+                                    onConfirm={() => {
+                                        onIsAll(false)
+                                        setSelectedTags([])
+                                        setParams({type: params.type, tags: "", include: [], exclude: []})
+                                        updateTagsSelector()
+                                    }}
+                                >
+                                    <Button size={"small"} danger={true}>
+                                        清空
+                                    </Button>
+                                </Popconfirm>
+                            }
+                        >
+                            {isAll ? (
+                                <Tag
+                                    style={{marginBottom: 2}}
+                                    color={"blue"}
+                                    onClose={() => {
+                                        onIsAll(false)
+                                        setSelectedTags([])
+                                        setParams({type: params.type, tags: "", include: [], exclude: []})
+                                        updateTagsSelector()
+                                    }}
+                                    closable={true}
+                                >
+                                    全选
+                                </Tag>
+                            ) : (
+                                selectedTags.map((i) => {
+                                    return (
+                                        <Tag
+                                            key={i}
+                                            style={{marginBottom: 2}}
+                                            color={"blue"}
+                                            onClose={() => {
+                                                setSelectedTags(selectedTags.filter((element) => i !== element))
+                                            }}
+                                            closable={true}
+                                        >
+                                            {i}
+                                        </Tag>
+                                    )
+                                })
+                            )}
+                        </AutoCard>
+                    </div>
+                )}
+            </div>
+
+            <div style={{flex: 1, overflow: "hidden", paddingTop: 6}}>
+                <SearchYakScriptForFilter
+                    simpleFilter={params}
+                    isAll={isAll}
+                    onInclude={(i) => {
+                        setParams({
+                            ...params,
+                            include: isAll ? [...params.include] : [...params.include, i.ScriptName],
+                            exclude: [...params.exclude.filter((target) => i.ScriptName != target)]
+                        })
+                    }}
+                    onExclude={(i) => {
+                        const existedInTag = isAll ? true :
+                            params.tags
+                                .split(",")
+                                .filter((tag) => !!tag)
+                                .filter((tag) => i.Tags.includes(tag)).length > 0
+
+                        if (existedInTag) {
+                            setParams({
+                                ...params,
+                                exclude: [...params.exclude, i.ScriptName],
+                                include: [...params.include.filter((target) => i.ScriptName != target)]
+                            })
+                        } else {
+                            setParams({
+                                ...params,
+                                include: [...params.include.filter((target) => i.ScriptName != target)]
+                            })
+                        }
+                    }}
+                />
+            </div>
+        </AutoCard>
+    )
 });
 
 interface SearchYakScriptForFilterProp {
     simpleFilter: SimpleQueryYakScriptSchema
+    isAll: boolean
     onExclude: (i: YakScript) => any
     onInclude: (i: YakScript) => any
 }
@@ -219,12 +307,12 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
         ExcludeNucleiWorkflow: true,
         ExcludeScriptNames: [],
         Keyword: "",
-        Pagination: genDefaultPagination(10),
+        Pagination: genDefaultPagination(20),
         Type: ""
     });
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
         Data: [],
-        Pagination: genDefaultPagination(10),
+        Pagination: genDefaultPagination(20),
         Total: 0
     });
     const [loading, setLoading] = useState(false)
@@ -241,52 +329,72 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
 
     useEffect(() => {
         update()
-    }, [])
+    }, [useDebounce(params.Keyword, {wait: 500})])
 
-    return <AutoCard
-        title={"搜索" + `${props.simpleFilter.tags}`}
-        loading={loading} size={"small"} bordered={false}
-    >
-        <List
-            pagination={false}
-            dataSource={data}
-            split={false}
-            renderItem={(item: YakScript) => {
-                const haveBeenExcluded = props.simpleFilter.exclude.includes(item.ScriptName);
-                let selected = false;
-                if (!haveBeenExcluded) {
-                    props.simpleFilter.tags.split(",").forEach(e => {
-                        if (!e) {
-                            return
-                        }
-                        if (item.Tags.includes(e)) {
-                            selected = true
-                            return
-                        }
-                    })
-                    if (!selected) {
-                        selected = props.simpleFilter.include.includes(item.ScriptName)
-                    }
-                }
-
-                return <>
-                    <AutoCard size={"small"} style={{marginBottom: 4}}>
-                        <Checkbox checked={selected} onClick={() => {
-                            if (selected) {
-                                props.onExclude(item)
-                            } else {
-                                props.onInclude(item)
-                            }
-                        }}><OneLine maxWidth={240}
-                                    overflow={"eclipse"}>
-                            {item.ScriptName}
-                        </OneLine>
-                        </Checkbox>
-                    </AutoCard>
-                </>
-            }}
+    return (
+        <AutoCard
+            title={
+                <Input
+                    allowClear={true}
+                    prefix={<SearchOutlined />}
+                    placeholder="搜索插件"
+                    value={params.Keyword}
+                    onChange={(e) => setParams({...params, Keyword: e.target.value})}
+                />
+            }
+            loading={loading}
+            size={"small"}
+            bordered={false}
+            headStyle={{padding: 0, borderBottom: "0px"}}
+            bodyStyle={{padding: "0 0 12px 0", overflow:"hidden auto"}}
         >
+            <List
+                pagination={false}
+                dataSource={data}
+                split={false}
+                renderItem={(item: YakScript) => {
+                    const haveBeenExcluded = props.simpleFilter.exclude.includes(item.ScriptName)
+                    let selected = false
 
-        </List>
-    </AutoCard>
+                    if (!haveBeenExcluded) {
+                        if(props.isAll){
+                            selected = true
+                        }else{
+                            props.simpleFilter.tags.split(",").forEach((e) => {
+                                if (!e) return
+                                
+                                if (item.Tags.includes(e)) {
+                                    selected = true
+                                    return
+                                }
+                            })
+                            if (!selected) {
+                                selected = props.simpleFilter.include.includes(item.ScriptName)
+                            }
+                        }
+                    }
+
+                    return (
+                        <AutoCard size={"small"} style={{marginBottom: 4}} bodyStyle={{padding: "6px 12px"}}>
+                            <Checkbox
+                                className="plugin-list-opt-box"
+                                checked={selected}
+                                onClick={() => {
+                                    if (selected) {
+                                        props.onExclude(item)
+                                    } else {
+                                        props.onInclude(item)
+                                    }
+                                }}
+                            >
+                                <div className="plugin-title" title={item.ScriptName}>
+                                    {item.ScriptName}
+                                </div>
+                            </Checkbox>
+                        </AutoCard>
+                    )
+                }}
+            ></List>
+        </AutoCard>
+    )
 });

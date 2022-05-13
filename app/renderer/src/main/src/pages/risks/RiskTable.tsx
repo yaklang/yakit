@@ -69,7 +69,7 @@ const mergeFieldNames = (f: Fields) => {
     return items
 }
 
-const TitleColor = [
+export const TitleColor = [
     {key: ["trace", "debug", "note"], value: "title-debug", name: "调试信息", img: debugImg, tag: "title-background-debug"},
     {
         key: ["info", "fingerprint", "infof", "default"],
@@ -654,10 +654,11 @@ export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
 
 interface RiskDetailsProp {
     info: Risk
+    isShowTime?: boolean
 }
 
-const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
-    const {info} = props
+export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
+    const {info, isShowTime = true} = props
     const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
 
     return (
@@ -683,18 +684,18 @@ const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
                                     {info?.Url || "-"}
                                 </span>
                             </div>
-                            <div className='subtitle-spacing'>
+                            {isShowTime && <div className='subtitle-spacing'>
                                 发现时间
                                 <span className='subtitle-font'>
                                     {info.CreatedAt > 0 ? formatTimestamp(info.CreatedAt) : "-"}
                                 </span>
-                            </div>
-                            <div>
+                            </div>}
+                            {isShowTime && <div>
                                 最近更新时间
                                 <span className='subtitle-font'>
                                     {info.CreatedAt > 0 ? formatTimestamp(info.CreatedAt) : "-"}
                                 </span>
-                            </div>
+                            </div>}
                         </div>
                     </div>
                 </div>
