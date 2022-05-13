@@ -40,7 +40,7 @@ import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed, success} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
-import {useMemoizedFn} from "ahooks";
+import {useGetState, useMemoizedFn} from "ahooks";
 import {getValue, saveValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 import {PayloadManagerPage} from "../payloadManager/PayloadManager";
@@ -48,6 +48,7 @@ import {HackerPlugin} from "../hacker/HackerPlugin"
 import {fuzzerInfoProp} from "../MainOperator"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch";
+import {AutoCard} from "../../components/AutoCard";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -107,6 +108,7 @@ export interface FuzzerResponse {
 
     HeaderSimilarity?: number
     BodySimilarity?: number
+    MatchedByFilter?: boolean
 }
 
 const defaultPostTemplate = `POST / HTTP/1.1
@@ -137,6 +139,20 @@ export const showDictsAndSelect = (res: (i: string) => any) => {
     })
 }
 
+interface FuzzResponseFilter {
+    MinBodySize: number
+    MaxBodySize: number
+    Regexps: string[]
+    Keywords: string[]
+    StatusCode: string[]
+}
+
+function filterIsEmpty(f: FuzzResponseFilter): boolean {
+    return f.MinBodySize === 0 && f.MaxBodySize === 0 &&
+        f.Regexps.length === 0 && f.Keywords.length === 0 &&
+        f.StatusCode.length === 0
+}
+
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
     const [isHttps, setIsHttps] = useState<boolean>(props.fuzzerParams?.isHttps || props.isHttps || false)
@@ -151,6 +167,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>();
     const [hotPatchCode, setHotPatchCode] = useState<string>("");
+
+    // filter
+    const [filter, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
+        Keywords: [],
+        MaxBodySize: 0,
+        MinBodySize: 0,
+        Regexps: [],
+        StatusCode: []
+    });
+    const [droppedCount, setDroppedCount] = useState(0);
 
     // state
     const [loading, setLoading] = useState(false)
@@ -279,6 +305,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         history.push(request)
         setHistory([...history])
 
+        console.info(filter)
         ipcRenderer.invoke(
             "HTTPFuzzer",
             {
@@ -291,6 +318,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Proxy: proxy,
                 ActualAddr: actualHost,
                 HotPatchCode: hotPatchCode,
+                Filter: filter,
             },
             fuzzToken
         )
@@ -315,6 +343,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
         })
         let buffer: FuzzerResponse[] = []
+        let droppedCount = 0;
         let count: number = 0
         const updateData = () => {
             if (buffer.length <= 0) {
@@ -322,8 +351,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             if (JSON.stringify(buffer) !== JSON.stringify(content)) setContent([...buffer])
         }
+
         ipcRenderer.on(dataToken, (e: any, data: any) => {
-            const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
+            if (data["MatchedByFilter"] !== true && !filterIsEmpty(getFilter())) {
+                // 不匹配的
+                droppedCount++
+                setDroppedCount(droppedCount)
+                return
+            }
+            // const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
 
             buffer.push({
                 StatusCode: data.StatusCode,
@@ -354,6 +390,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             updateData()
             buffer = []
             count = 0
+            droppedCount = 0
             setLoading(false)
         })
 
@@ -603,8 +640,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
-            <Row gutter={8}>
-                <Col span={24} style={{textAlign: "left"}}>
+            <Row gutter={8} style={{marginBottom: 8}}>
+                <Col span={24} style={{textAlign: "left", marginTop: 4}}>
                     <Space>
                         {loading ? (
                             <Button
@@ -684,6 +721,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             setValue={setAdvancedConfig}
                             size={"small"}
                         />
+                        {droppedCount > 0 && <Tag color={"red"}>已丢弃[{droppedCount}]个响应</Tag>}
                         {onlyOneResponse && content[0].Ok && (
                             <Form.Item style={{marginBottom: 0}}>
                                 <Button
@@ -737,7 +775,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             </Row>
 
             {advancedConfig && (
-                <Row style={{marginTop: 8}} gutter={8}>
+                <Row style={{marginBottom: 8}} gutter={8}>
                     <Col span={16}>
                         {/*高级配置*/}
                         <Card bordered={true} size={"small"} bodyStyle={{height: 106}}>
@@ -922,15 +960,54 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </Card>
                     </Col>
                     <Col span={8}>
-                        <Card bordered={true} size={"small"} bodyStyle={{height: 106}}>
-                            <div style={{marginTop: 30, textAlign: "center"}}>
-                                <p style={{color: "#888"}}>选择可用的漏洞插件（装修中）</p>
-                            </div>
-                        </Card>
+                        <AutoCard title={<Tooltip title={"通过过滤匹配，丢弃无用数据包，保证界面性能！"}>
+                            设置过滤器
+                        </Tooltip>}
+                                  bordered={false} size={"small"} bodyStyle={{paddingTop: 4}}
+                                  style={{marginTop: 0, paddingTop: 0}}
+                        >
+                            <Form size={"small"} onSubmitCapture={e => e.preventDefault()}>
+                                <Row gutter={20}>
+                                    <Col span={12}>
+                                        <InputItem
+                                            label={"状态码"} placeholder={"200,300-399"}
+                                            disable={loading}
+                                            value={filter.StatusCode.join(",")}
+                                            setValue={e => {
+                                                setFilter({...filter, StatusCode: e.split(",")})
+                                            }}
+                                            extraFormItemProps={{style: {marginBottom: 0}}}
+                                        />
+                                    </Col>
+                                    <Col span={12}>
+                                        <InputItem
+                                            label={"关键字"} placeholder={"Login,登录成功"}
+                                            value={filter.Keywords.join(",")}
+                                            disable={loading}
+                                            setValue={e => {
+                                                setFilter({...filter, Keywords: e.split(",")})
+                                            }}
+                                            extraFormItemProps={{style: {marginBottom: 0}}}
+                                        />
+                                    </Col>
+                                    <Col span={12}>
+                                        <InputItem
+                                            label={"正则"} placeholder={`Welcome\\s+\\w+!`}
+                                            value={filter.Regexps.join(",")}
+                                            disable={loading}
+                                            setValue={e => {
+                                                setFilter({...filter, Regexps: e.split(",")})
+                                            }}
+                                            extraFormItemProps={{style: {marginBottom: 0, marginTop: 2}}}
+                                        />
+                                    </Col>
+                                </Row>
+                            </Form>
+                        </AutoCard>
                     </Col>
                 </Row>
             )}
-            <Divider style={{marginTop: 12, marginBottom: 4}}/>
+            {/*<Divider style={{marginTop: 6, marginBottom: 8, paddingTop: 0}}/>*/}
             <ResizeBox
                 firstMinSize={350} secondMinSize={360}
                 style={{overflow: "hidden"}}
@@ -1016,6 +1093,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     构造请求
                                                 </Button>
                                             </Form.Item>
+
                                         </Form>
                                     </div>
                                 }

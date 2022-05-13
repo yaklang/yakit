@@ -503,6 +503,7 @@ const Main: React.FC<MainProp> = (props) => {
         // 开发环境不展示fuzzer缓存
         ipcRenderer.invoke("is-dev").then((flag) => {
             if (!flag) fetchFuzzerList()
+            // fetchFuzzerList()
         })
         return () => ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
     }, [])

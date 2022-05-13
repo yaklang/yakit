@@ -1150,6 +1150,21 @@ message FuzzerRequest {
   bool NoFixContentLength = 13;
 
   string HotPatchCode = 14;
+
+  // 设置 Fuzzer
+  FuzzerResponseFilter Filter = 15;
+}
+
+message FuzzerResponseFilter {
+  // 设置 body 大小作为过滤依据
+  int64 MinBodySize = 1;
+  int64 MaxBodySize = 2;
+
+  // 设置正则作为过滤依据，这个正则针对整个数据包生效
+  repeated string Regexps = 3;
+  repeated string Keywords = 4;
+
+  repeated string StatusCode = 6;
 }
 
 message RedirectRequestParams {
@@ -1200,6 +1215,9 @@ message FuzzerResponse {
 
   double BodySimilarity = 35;
   double HeaderSimilarity = 36;
+
+  // Matched by filter
+  bool MatchedByFilter = 37;
 }
 
 message Paging {
