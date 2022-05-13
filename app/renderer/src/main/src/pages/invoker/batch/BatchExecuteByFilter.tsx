@@ -1,8 +1,8 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Divider, Progress, Space, Tag} from "antd";
+import {Card, Col, Divider, Empty, List, Progress, Row, Space, Tabs, Tag, Typography} from "antd";
 import {AutoCard} from "../../../components/AutoCard";
 import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
-import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema";
+import {ExecResult, genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema";
 import {useCreation, useDebounce, useMemoizedFn} from "ahooks";
 import {randomString} from "../../../utils/randomUtil";
 import {
@@ -10,6 +10,7 @@ import {
     ExecSelectedPlugins,
     ExecuteTaskHistory,
     TargetRequest,
+    Timer,
 } from "./BatchExecutorPage";
 import {formatTimestamp} from "../../../utils/timeUtil";
 import {failed} from "../../../utils/notification";
@@ -18,11 +19,12 @@ import { TableResizableColumn } from "../../../components/TableResizableColumn";
 import { FieldName, RiskDetails, TitleColor } from "../../risks/RiskTable";
 import { showModal } from "../../../utils/showModal";
 import ReactResizeDetector from "react-resize-detector";
-import { ExecResultLog, ExecResultMessage } from "./ExecMessageViewer";
+import { ExecResultLog, ExecResultMessage, ExecResultsViewer } from "./ExecMessageViewer";
 
 import "./BatchExecuteByFilter.css"
 
 const {ipcRenderer} = window.require("electron");
+const {Text} = Typography
 
 export interface BatchExecuteByFilterProp {
     simpleQuery: SimpleQueryYakScriptSchema
@@ -390,102 +392,147 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
         <Divider style={{margin: 4}} />
 
         <div className="result-table-body">
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!width || !height) return
-                    setTableContentHeight(height - 4)
-                }}
-                handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}/>
-            <TableResizableColumn
-                virtualized={true}
-                sortFilter={() => {}}
-                autoHeight={tableContentHeight <= 0}
-                height={tableContentHeight}
-                data={hitTasks.map(item => JSON.parse(item.data))}
-                wordWrap={true}
-                renderRow={(children: React.ReactNode, rowData: any)=>{ return children}}
-                columns={[
-                    {
-                        dataKey: "TitleVerbose",
-                        width: 400,
-                        resizable: true,
-                        headRender: () => "标题",
-                        cellRender: ({rowData, dataKey, ...props}: any) => {
-                            return (
-                                <div
-                                    className="div-font-ellipsis"
-                                    style={{width: "100%"}}
-                                    title={rowData?.TitleVerbose || rowData.Title}
-                                >
-                                    {rowData?.TitleVerbose || rowData.Title}
-                                </div>
-                            )
-                        }
-                    },
-                    {
-                        dataKey: "RiskTypeVerbose",
-                        width: 130,
-                        headRender: () => "类型",
-                        cellRender: ({rowData, dataKey, ...props}: any) => {
-                            return rowData?.RiskTypeVerbose || rowData.RiskType
-                        }
-                    },
-                    {
-                        dataKey: "Severity",
-                        width: 90,
-                        headRender: () => "等级",
-                        cellRender: ({rowData, dataKey, ...props}: any) => {
-                            const title = TitleColor.filter((item) => item.key.includes(rowData.Severity || ""))[0]
-                            return (
-                                <span className={title?.value || "title-default"}>
-                                    {title ? title.name : rowData.Severity || "-"}
-                                </span>
-                            )
-                        }
-                    },
-                    {
-                        dataKey: "IP",
-                        width: 140,
-                        headRender: () => "IP",
-                        cellRender: ({rowData, dataKey, ...props}: any) => {
-                            return rowData?.IP || "-"
-                        }
-                    },
-                    {
-                        dataKey: "ReverseToken",
-                        headRender: () => "Token",
-                        cellRender: ({rowData, dataKey, ...props}: any) => {
-                            return rowData?.ReverseToken || "-"
-                        }
-                    },
-                    {
-                        dataKey: "operate",
-                        width: 90,
-                        fixed: "right",
-                        headRender: () => "操作",
-                        cellRender: ({rowData}: any) => {
-                            return (
-                                <a
-                                    onClick={(e) => {
-                                        showModal({
-                                            width: "80%",
-                                            title: "详情",
-                                            content: (
-                                                <div style={{overflow: "auto"}}>
-                                                    <RiskDetails info={rowData} isShowTime={false} />
-                                                </div>
-                                            )
-                                        })
-                                    }}
-                                >详情</a>
-                            )
-                        }
-                    }
-                ].map(item => {
-                    item["verticalAlign"] = "middle"
-                    return item
-                })}
-            />
+            <Tabs className="div-width-height-100 yakit-layout-tabs">
+                <Tabs.TabPane tab="执行中任务" key={"executing"}>
+                    <div className="div-width-height-100" style={{overflow: "hidden"}}>
+                        <List<BatchTask>
+                            style={{height: '100%', overflow: "auto"}}
+                            pagination={false}
+                            dataSource={activeTask.sort((a, b) => a.TaskId.localeCompare(b.TaskId))}
+                            rowKey={(item) => item.TaskId}
+                            renderItem={(task: BatchTask) => {
+                                const res = task.Results[task.Results.length - 1];
+                                return (
+                                    <Card
+                                        bordered={false}
+                                        style={{marginBottom: 8, width: "100%"}}
+                                        size={"small"}
+                                        title={
+                                            <Row gutter={8}>
+                                                <Col span={20}>
+                                                    <Text
+                                                        ellipsis={{tooltip: true}}>{task.Target + " / " + task.PoC.ScriptName}</Text>
+                                                </Col>
+                                                <Col span={4}>
+                                                    <Timer fromTimestamp={task.CreatedAt} executing={!!props.executing}/>
+                                                </Col>
+                                            </Row>
+                                        }>
+                                        <div style={{width: "100%"}}>
+                                            <ExecResultsViewer
+                                                results={task.Results.map(i => i.Result).filter(i => !!i) as ExecResult[]}
+                                                oneLine={true}
+                                            />
+                                        </div>
+                                    </Card>
+                                )
+                            }}
+                        />
+                    </div>
+                </Tabs.TabPane>
+                <Tabs.TabPane tab="命中任务列表" key={"hitTable"}>
+                    <div style={{width: "100%", height: "100%"}}>
+                        <ReactResizeDetector
+                            onResize={(width, height) => {
+                                if (!width || !height) return
+                                setTableContentHeight(height - 4)
+                            }}
+                            handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}/>
+                        <TableResizableColumn
+                            virtualized={true}
+                            sortFilter={() => {}}
+                            autoHeight={tableContentHeight <= 0}
+                            height={tableContentHeight}
+                            data={hitTasks.map(item => JSON.parse(item.data))}
+                            wordWrap={true}
+                            renderEmpty={() => {
+                                return <Empty className="table-empty" description="数据加载中" />
+                            }}
+                            columns={[
+                                {
+                                    dataKey: "TitleVerbose",
+                                    width: 400,
+                                    resizable: true,
+                                    headRender: () => "标题",
+                                    cellRender: ({rowData, dataKey, ...props}: any) => {
+                                        return (
+                                            <div
+                                                className="div-font-ellipsis"
+                                                style={{width: "100%"}}
+                                                title={rowData?.TitleVerbose || rowData.Title}
+                                            >
+                                                {rowData?.TitleVerbose || rowData.Title}
+                                            </div>
+                                        )
+                                    }
+                                },
+                                {
+                                    dataKey: "RiskTypeVerbose",
+                                    width: 130,
+                                    headRender: () => "类型",
+                                    cellRender: ({rowData, dataKey, ...props}: any) => {
+                                        return rowData?.RiskTypeVerbose || rowData.RiskType
+                                    }
+                                },
+                                {
+                                    dataKey: "Severity",
+                                    width: 90,
+                                    headRender: () => "等级",
+                                    cellRender: ({rowData, dataKey, ...props}: any) => {
+                                        const title = TitleColor.filter((item) => item.key.includes(rowData.Severity || ""))[0]
+                                        return (
+                                            <span className={title?.value || "title-default"}>
+                                                {title ? title.name : rowData.Severity || "-"}
+                                            </span>
+                                        )
+                                    }
+                                },
+                                {
+                                    dataKey: "IP",
+                                    width: 140,
+                                    headRender: () => "IP",
+                                    cellRender: ({rowData, dataKey, ...props}: any) => {
+                                        return rowData?.IP || "-"
+                                    }
+                                },
+                                {
+                                    dataKey: "ReverseToken",
+                                    headRender: () => "Token",
+                                    cellRender: ({rowData, dataKey, ...props}: any) => {
+                                        return rowData?.ReverseToken || "-"
+                                    }
+                                },
+                                {
+                                    dataKey: "operate",
+                                    width: 90,
+                                    fixed: "right",
+                                    headRender: () => "操作",
+                                    cellRender: ({rowData}: any) => {
+                                        return (
+                                            <a
+                                                onClick={(e) => {
+                                                    showModal({
+                                                        width: "80%",
+                                                        title: "详情",
+                                                        content: (
+                                                            <div style={{overflow: "auto"}}>
+                                                                <RiskDetails info={rowData} isShowTime={false} />
+                                                            </div>
+                                                        )
+                                                    })
+                                                }}
+                                            >详情</a>
+                                        )
+                                    }
+                                }
+                            ].map(item => {
+                                item["verticalAlign"] = "middle"
+                                return item
+                            })}
+                        />
+                    </div>
+                </Tabs.TabPane>
+            </Tabs>
         </div>
     </div>
 };

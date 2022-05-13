@@ -41,6 +41,11 @@
     margin: 4px;
 }
 
+.div-width-height-100{
+    width: 100%;
+    height: 100%;
+}
+
 .result-table-body{
     flex: 1;
     overflow: hidden;
@@ -49,4 +54,10 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+.result-table-body .table-empty{
+    width: 100%;
+    top: 50%;
+    position: absolute;
+    margin-top: -65px;
 }

@@ -564,6 +564,10 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
                                                 key={item.time}
                                                 onClick={() => {
                                                     if (executing) return
+                                                    if(!item.simpleQuery){
+                                                        failed("该調历史记录无法使用!")
+                                                        return
+                                                    }
                                                     executeHistory(item)
                                                     setTarget({...item.target})
                                                 }}
@@ -805,7 +809,7 @@ interface TimerProp {
     executing?: boolean
 }
 
-const Timer: React.FC<TimerProp> = React.memo((props) => {
+export const Timer: React.FC<TimerProp> = React.memo((props) => {
     const [duration, setDuration] = useState<number>();
 
     useEffect(() => {
