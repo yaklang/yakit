@@ -44,6 +44,7 @@ import "./BatchExecutorPage.css"
 import {CacheStatusCardProps} from "../../../hook/useHoldingIPCRStream";
 import {writeExecResultXTerm} from "../../../utils/xtermUtils";
 import {PluginResultUI, StatusCardInfoProps, StatusCardProps} from "../../yakitStore/viewers/base";
+import { NewTaskHistoryProps } from "./BatchExecuteByFilter";
 
 export interface BatchExecutorPageProp {
 
@@ -373,7 +374,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
                 </Space>}
                 bodyStyle={{display: "flex", flexDirection: "column", padding: '0 5px', overflow: "hidden"}}
             >
-                <ExecSelectedPlugins
+                {/* <ExecSelectedPlugins
                     disableStartButton={selected.length === 0}
                     onSubmit={run}
                     onCancel={cancel}
@@ -381,7 +382,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
                     loading={loading}
                     history={taskHistory}
                     executeHistory={executeHistory}
-                />
+                /> */}
                 <Divider style={{margin: 4}}/>
                 <div style={{flex: '1', overflow: "hidden"}}>
                     <AutoCard style={{padding: 4}} bodyStyle={{padding: 4, overflow: "hidden"}} bordered={false}>
@@ -447,8 +448,8 @@ interface ExecSelectedPluginsProp {
     executing?: boolean
     onCancel: () => any
 
-    history: TaskHistoryProps[]
-    executeHistory: (item: TaskHistoryProps) => any
+    history: NewTaskHistoryProps[]
+    executeHistory: (item: NewTaskHistoryProps) => any
 }
 
 export interface TargetRequest {
@@ -475,8 +476,6 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
                     failed('请输入目标或上传目标文件夹绝对路径!')
                     return
                 }
-
-                console.info(target)
                 props.onSubmit(target)
             }}
         >
