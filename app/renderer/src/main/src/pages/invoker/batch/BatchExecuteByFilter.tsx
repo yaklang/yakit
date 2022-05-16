@@ -205,7 +205,7 @@ interface BatchTask {
     CreatedAt: number
 }
 interface TaskResultLog extends ExecResultLog{
-    key: string
+    key: number
 }
 
 export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterProp> = (props) => {
@@ -274,6 +274,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
     }, [])
 
     useEffect(() => {
+        let index = 0
         const activeTask = new Map<string, ExecBatchYakScriptResult[]>();
         ipcRenderer.on(`${props.token}-error`, async (e, exception) => {
             if (`${exception}`.includes("Cancelled on client")) {
@@ -310,7 +311,8 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
             if (data.Result && data.Result.IsMessage) {
                 const info: TaskResultLog = JSON.parse(new Buffer(data.Result.Message).toString()).content
                 if(info){
-                    info.key = data?.TaskId || data.Id
+                    info.key = index
+                    index += 1
                     const arr: TaskResultLog[] = [...getTaskLog()]
                     if(arr.length >= 20) arr.shift()
                     arr.push(info)
