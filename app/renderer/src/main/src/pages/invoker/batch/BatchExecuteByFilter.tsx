@@ -418,7 +418,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                             {taskLog.map(item => {
                                 return <Timeline.Item key={item.key}>
                                     <YakitLogFormatter data={item.data} level={item.level} 
-                                        timestamp={item.timestamp} onlyTime={true}/>
+                                        timestamp={item.timestamp} onlyTime={true} isCollapsed={true} />
                                 </Timeline.Item>
                             })}
                         </Timeline>
