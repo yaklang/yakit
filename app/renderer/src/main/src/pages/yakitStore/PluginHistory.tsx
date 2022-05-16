@@ -47,7 +47,6 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
         if (limit) newParams.Pagination.Limit = limit;
 
         setLoading(true)
-        console.info(newParams)
         ipcRenderer.invoke("QueryExecHistory", newParams).then(data => {
             setResponse(data)
         }).catch((e: any) => {

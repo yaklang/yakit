@@ -2,6 +2,22 @@ const {ipcMain} = require("electron");
 
 
 module.exports = (win, getClient) => {
+    // asyncStringFuzzer wrapper
+    const asyncStringFuzzer = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().StringFuzzer(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("StringFuzzer", async (e, params) => {
+        return await asyncStringFuzzer(params)
+    })
+
     ipcMain.handle("string-fuzzer", (e, params) => {
         getClient().StringFuzzer({Template: params.template}, (err, data) => {
             if (win) {
@@ -35,17 +51,32 @@ module.exports = (win, getClient) => {
     })
 
 
-    ipcMain.handle("analyze-fuzzer-response", (e, rsp, flag) => {
-        getClient().ConvertFuzzerResponseToHTTPFlow(rsp, (err, req) => {
-            if (err && win) {
-                win.webContents.send(`ERROR:${flag}`, err?.details || "unknown")
-            }
-
-            if (req && win) {
-                win.webContents.send(flag, req)
-            }
+    // asyncConvertFuzzerResponseToHTTPFlow wrapper
+    const asyncConvertFuzzerResponseToHTTPFlow = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ConvertFuzzerResponseToHTTPFlow(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
         })
+    }
+    ipcMain.handle("ConvertFuzzerResponseToHTTPFlow", async (e, params) => {
+        return await asyncConvertFuzzerResponseToHTTPFlow(params)
     })
+    // ipcMain.handle("analyze-fuzzer-response", (e, rsp, flag) => {
+    //     getClient().ConvertFuzzerResponseToHTTPFlow(rsp, (err, req) => {
+    //         if (err && win) {
+    //             win.webContents.send(`ERROR:${flag}`, err?.details || "unknown")
+    //         }
+    //
+    //         if (req && win) {
+    //             win.webContents.send(flag, req)
+    //         }
+    //     })
+    // })
 
     // asyncHTTPRequestMutate wrapper
     const asyncHTTPRequestMutate = (params) => {
@@ -109,5 +140,21 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("GetHistoryHTTPFuzzerTask", async (e, params) => {
         return await asyncGetHistoryHTTPFuzzerTask(params)
+    })
+
+    // asyncGenerateYakCodeByPacket wrapper
+    const asyncGenerateYakCodeByPacket = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateYakCodeByPacket(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateYakCodeByPacket", async (e, params) => {
+        return await asyncGenerateYakCodeByPacket(params)
     })
 }

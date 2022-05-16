@@ -176,6 +176,13 @@ module.exports = (win, getClient) => {
         }
     })
 
+    // 设置正则替换
+    ipcMain.handle("mitm-content-replacers", (e, filter) => {
+        if (stream) {
+            stream.write({...filter, setContentReplacers: true})
+        }
+    })
+
     // 清除 mitm 插件缓存
     ipcMain.handle("mitm-clear-plugin-cache", () => {
         if (stream) {
@@ -200,6 +207,23 @@ module.exports = (win, getClient) => {
 
         // 设置服务器发回的消息的回调函数
         stream.on("data", data => {
+            // 处理第一个消息
+            // 第一个消息应该更新状态，第一个消息应该是同步 Filter 的信息。。。
+            if (win && isFirstData) {
+                isFirstData = false;
+                win.webContents.send("client-mitm-start-success")
+            }
+
+            // 检查替代规则的问题，如果返回了有内容，说明没 BUG
+            if (win && (data?.replacers || []).length > 0) {
+                win.webContents.send("client-mitm-content-replacer-update", data)
+            }
+
+            // 如果是强制更新的话，一般通过这里触发
+            if (win && data?.justContentReplacer) {
+                win.webContents.send("client-mitm-content-replacer-update", data)
+            }
+
             // 检查如果是 exec result 的话，对应字段应该是
             if (win && data["haveMessage"]) {
                 win.webContents.send("client-mitm-message", data["message"]);
@@ -210,12 +234,6 @@ module.exports = (win, getClient) => {
             if (win && data["getCurrentHook"]) {
                 win.webContents.send("client-mitm-hooks", data["hooks"])
                 return
-            }
-
-            // 第一个消息应该更新状态，第一个消息应该是同步 Filter 的信息。。。
-            if (win && isFirstData) {
-                isFirstData = false;
-                win.webContents.send("client-mitm-start-success")
             }
 
             // 自动更新 HTTP Flow 的表格

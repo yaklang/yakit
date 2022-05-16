@@ -75,7 +75,6 @@ const highlightRanges: any[] = [];
 export const monacoEditorRemoveAllHighlight = (editor?: IMonacoEditor) => {
     if (editor && highlightRanges.length > 0) {
         editor.deltaDecorations([], highlightRanges.map(i => {
-            console.info(i)
             return {range: i, options: {inlineClassName: undefined}} as any
         }))
     }

@@ -19,6 +19,7 @@ export interface MITMFilterSchema {
     includeSuffix?: string[]
     excludeSuffix?: string[]
     excludeMethod?: string[]
+    excludeContentTypes?: string[]
 }
 
 export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
@@ -85,6 +86,15 @@ export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
                 value={(params.excludeSuffix || []).join(",")}
                 setValue={(r) => {
                     setParams({...params, excludeSuffix: r.split(",")})
+                }}
+                mode={"tags"}
+            />
+            <ManyMultiSelectForString
+                label={"排除 Content-Type"}
+                data={[]}
+                value={(params.excludeContentTypes || []).join(",")}
+                setValue={(r) => {
+                    setParams({...params, excludeContentTypes: r.split(",")})
                 }}
                 mode={"tags"}
             />

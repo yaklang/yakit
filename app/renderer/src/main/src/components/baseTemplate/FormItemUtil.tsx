@@ -5,6 +5,7 @@ import {DraggerProps} from "antd/lib/upload"
 import {TextAreaProps} from "antd/lib/input"
 
 import "./FormItemUtil.css"
+import {ManyMultiSelectForString} from "../../utils/inputUtil";
 
 const {Item} = Form
 const {Dragger} = Upload
@@ -24,6 +25,7 @@ interface ItemTextAreaProps extends TextAreaProps {
     setValue?: (s: string) => any
 }
 interface ItemSelectProps<T> extends SelectProps<T> {
+    ref?: any
     setValue?: (value: any) => any
     data?: T[]
     optText?: string

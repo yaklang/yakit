@@ -43,7 +43,12 @@ message ExecBatchYakScriptRequest {
   int64 Concurrent = 6;
 
   // 精确使用脚本名称
+  // 要注意，这个 Scripts 和 PluginFilter 是冲突的
   repeated string ScriptNames = 8;
+
+  // Tags with exclude / include
+  QueryYakScriptRequest PluginFilter = 12;
+  bool EnablePluginFilter = 13;
 }
 
 message ExecBatchYakScriptResult {
@@ -113,6 +118,7 @@ service Yak {
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
+  rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
   rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
@@ -204,11 +210,18 @@ service Yak {
   // Risk
   rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
   rpc QueryRisk(QueryRiskRequest) returns (Risk);
-  rpc DeleteRisk(QueryRiskRequest) returns (Empty);
+  rpc DeleteRisk(DeleteRiskRequest) returns (Empty);
   rpc QueryAvailableRiskType(Empty) returns (Fields);
   rpc QueryAvailableRiskLevel(Empty) returns (Fields);
   rpc QueryRiskTableStats(Empty) returns (RiskTableStats);
   rpc ResetRiskTableStats(Empty) returns (Empty);
+  rpc QueryAvailableTarget(Empty) returns (Fields);
+
+  // Report
+  rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
+  rpc QueryReport(QueryReportRequest) returns (Report);
+  rpc DeleteReport(DeleteReportRequest) returns (Empty);
+  rpc QueryAvailableReportFrom(Empty) returns (Fields);
 
   // DNSLog / ICMP / RandomTrigger
   rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
@@ -219,6 +232,76 @@ service Yak {
   rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
   rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
   rpc QueryRandomPortTrigger(QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
+
+  // 获取 Tags
+  rpc GetAvailableYakScriptTags(Empty) returns (Fields);
+  rpc ForceUpdateAvailableYakScriptTags(Empty) returns (Empty);
+
+  // 通用的漏洞检测技术方案
+  rpc ExecYakitPluginsByYakScriptFilter(ExecYakitPluginsByYakScriptFilterRequest) returns (stream ExecResult);
+
+  // GenerateYakCodeByPacket
+  rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
+}
+
+message ExecYakitPluginsByYakScriptFilterRequest {
+  QueryYakScriptRequest Filter = 1;
+
+  // 这个 Target 很复杂，URL / IP / CIDR / Host / Host:port
+  string Target = 2;
+  string Ports = 3;
+  string TargetFile = 5;
+
+  repeated ExecParamItem ExtraParams = 4;
+}
+
+message GenerateYakCodeByPacketRequest {
+  bool IsHttps = 1;
+  bytes Request = 2;
+  enum Template {
+    Ordinary = 0;
+    Batch = 1;
+  }
+  Template CodeTemplate = 3;
+}
+
+message GenerateYakCodeByPacketResponse {
+  bytes Code = 1;
+}
+
+message QueryReportRequest {
+  int64 Id = 1;
+  string Hash = 2;
+}
+
+message DeleteReportRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  QueryReportsRequest Filter = 3;
+}
+
+message QueryReportsResponse {
+  repeated Report Data = 1;
+  int64 Total = 2;
+  Paging Pagination = 3;
+}
+
+message QueryReportsRequest {
+  Paging Pagination = 1;
+  string Owner = 2;
+  string From = 3;
+  string Keyword = 4;
+  string Title = 5;
+}
+
+message Report {
+  string Title = 1;
+  uint64 PublishedAt = 2;
+  string Hash = 3;
+  uint64 Id = 4;
+  string Owner = 5;
+  string From = 6;
+  string JsonRaw = 7;
 }
 
 message SetTagForHTTPFlowRequest {
@@ -395,9 +478,18 @@ message ConfigGlobalReverseParams {
   string LocalAddr = 2;
 }
 
+message DeleteRiskRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  repeated int64 Ids = 4;
+  QueryRisksRequest Filter = 3;
+  bool DeleteAll = 5;
+}
+
 message QueryRiskRequest {
   int64 Id = 1;
   string Hash = 2;
+  repeated int64 Ids = 4;
   QueryRisksRequest Filter = 3;
 }
 
@@ -890,6 +982,9 @@ message QueryYakScriptRequest {
   bool IsBatch = 7;
   bool ExcludeNucleiWorkflow = 8;
   repeated string ExcludeScriptNames = 9;
+  repeated string IncludedScriptNames = 10;
+  repeated string Tag = 11;
+  bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
 }
 
 message QueryYakScriptResponse {
@@ -932,6 +1027,8 @@ message YakScript {
   string GeneralModuleVerbose = 14;
   string GeneralModuleKey = 15;
   string FromGit = 16;
+  bool EnablePluginSelector = 17;
+  string PluginSelectorTypes = 18;
 }
 
 message CodecRequest {
@@ -997,6 +1094,7 @@ message ExecHistoryRecord {
 // Fuzz 相关模型
 message StringFuzzerRequest {
   string Template = 1;
+  string HotPatchCode = 2;
 }
 
 
@@ -1050,6 +1148,23 @@ message FuzzerRequest {
 
   // 如果不想自动修复 Content-Length
   bool NoFixContentLength = 13;
+
+  string HotPatchCode = 14;
+
+  // 设置 Fuzzer
+  FuzzerResponseFilter Filter = 15;
+}
+
+message FuzzerResponseFilter {
+  // 设置 body 大小作为过滤依据
+  int64 MinBodySize = 1;
+  int64 MaxBodySize = 2;
+
+  // 设置正则作为过滤依据，这个正则针对整个数据包生效
+  repeated string Regexps = 3;
+  repeated string Keywords = 4;
+
+  repeated string StatusCode = 6;
 }
 
 message RedirectRequestParams {
@@ -1100,6 +1215,9 @@ message FuzzerResponse {
 
   double BodySimilarity = 35;
   double HeaderSimilarity = 36;
+
+  // Matched by filter
+  bool MatchedByFilter = 37;
 }
 
 message Paging {
@@ -1111,6 +1229,10 @@ message Paging {
 
 message GetHTTPFlowByHashRequest {
   string Hash = 1;
+}
+
+message GetHTTPFlowByIdRequest {
+  int64 Id = 1;
 }
 
 message QueryHTTPFlowRequest {
@@ -1207,6 +1329,7 @@ message MITMRequest {
   repeated string excludeSuffix = 9;
   repeated string includeSuffix = 10;
   repeated string excludeMethod = 11;
+  repeated string excludeContentTypes = 40;
   bool updateFilter = 12;
 
   // 劫持当前请求的响应信息
@@ -1242,6 +1365,39 @@ message MITMRequest {
   // 如果不设置 initPluginNames 的话，启动所有默认插件
   bool setPluginMode = 36;
   repeated string initPluginNames = 37;
+
+  // 设置内容替代器
+  bool setContentReplacers = 38;
+  repeated MITMContentReplacer replacers = 39;
+}
+
+message MITMContentReplacer {
+  // 如果是正则的话，就把匹配到的内容替换成对应结果
+  // 优先 Golang 原生规则
+  // 然后再是 Re2 规则
+  // 然后子字符串
+  string Rule = 1;
+
+  // 这个功能意义在于，不要替代内容，仅标注颜色（敏感内容）
+  bool NoReplace = 2;
+
+  // 这里保存对应结果
+  string Result = 3;
+
+  // 选择替换之后的颜色
+  string Color = 4;
+
+  // 生效内容：默认对 body 生效
+  bool EnableForRequest = 5;
+  bool EnableForResponse = 6;
+  bool EnableForHeader = 9;
+  bool EnableForBody = 10;
+
+  // Index
+  int32 Index = 7;
+
+  // 额外标签，用于标注 flow
+  repeated string ExtraTag = 8;
 }
 
 message RemoveHookParams {
@@ -1268,6 +1424,11 @@ message MITMResponse {
   repeated string excludeSuffix = 19;
   repeated string includeSuffix = 110;
   repeated string excludeMethod = 111;
+  repeated string excludeContentTypes = 113;
+
+  // 替代过滤器的内容
+  bool justContentReplacer = 120;
+  repeated MITMContentReplacer replacers = 121;
 
   // 刷新表格: 如果这个是 True 的话，那么不应该发送回劫持器，应该只发送刷新表格的信息
   bool refresh = 2;

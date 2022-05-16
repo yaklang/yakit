@@ -85,22 +85,51 @@ module.exports = (win, getClient) => {
         return await asyncGetHTTPFlowByHash(params)
     })
 
-    ipcMain.handle("get-http-flow", async (r, hash) => {
-        getClient().GetHTTPFlowByHash({
-            Hash: hash,
-        }, (err, data) => {
-            if (err && win) {
-                try {
-                    win.webContents.send(`ERROR:${hash}`, err?.details || "UNKNOWN")
-                } catch (e) {
-                    console.info(e)
+    // asyncGetHTTPFlowById wrapper
+    const asyncGetHTTPFlowById = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetHTTPFlowById(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
                 }
-                return
-            }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetHTTPFlowById", async (e, params) => {
+        return await asyncGetHTTPFlowById(params)
+    })
 
-            if (data && win) {
-                win.webContents.send(hash, data)
-            }
-        });
+    // asyncGetAvailableYakScriptTags wrapper
+    const asyncGetAvailableYakScriptTags = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAvailableYakScriptTags(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAvailableYakScriptTags", async (e, params) => {
+        return await asyncGetAvailableYakScriptTags(params)
+    })
+
+    // asyncForceUpdateAvailableYakScriptTags wrapper
+    const asyncForceUpdateAvailableYakScriptTags = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ForceUpdateAvailableYakScriptTags(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ForceUpdateAvailableYakScriptTags", async (e, params) => {
+        return await asyncForceUpdateAvailableYakScriptTags(params)
     })
 }

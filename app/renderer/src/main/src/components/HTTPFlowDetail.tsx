@@ -36,6 +36,7 @@ export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any;
 
 export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     hash: string
+    id?: number
     noHeader?: boolean
     onClose?: () => any
     defaultHeight?: number
@@ -68,22 +69,15 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     }, [rsp.response])
 
     useEffect(() => {
-        const flag = randomString(30);
-        ipcRenderer.on(flag, (e: any, data: HTTPFlow) => {
-            setHash(data.Hash)
-            setLoading(false)
-        })
-        ipcRenderer.on(`ERROR:${flag}`, (e: any, data: string) => {
-            setLoading(false)
-            failed("分析参数失败：" + data)
-        })
-
-        ipcRenderer.invoke("analyze-fuzzer-response", response, flag)
-
-        return () => {
-            ipcRenderer.removeAllListeners(flag)
-            ipcRenderer.removeAllListeners(`ERROR:${flag}`)
+        if (!response) {
+            return
         }
+        setLoading(true)
+        ipcRenderer.invoke("ConvertFuzzerResponseToHTTPFlow", {...response}).then((d: HTTPFlow) => {
+            setHash(d.Hash)
+        }).catch(e => {
+            failed(`分析参数失败: ${e}`)
+        }).finally(() => setTimeout(() => setLoading(false), 300))
     }, [response])
 
     const fetchInfo = (kind: number) => {
@@ -124,8 +118,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             run: () => {
                 ipcRenderer.invoke("send-to-tab", {
                     type: "fuzzer",
-                    data:{
-                        isHttps: flow?.IsHTTPS, 
+                    data: {
+                        isHttps: flow?.IsHTTPS,
                         request: Buffer.from(flow?.Request || []).toString("utf8")
                     }
                 })
@@ -136,8 +130,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             id: 'send-to-plugin',
             label: '发送到数据包扫描',
             contextMenuGroupId: 'send-fuzzer-info',
-            run: () => ipcRenderer.invoke("send-to-packet-hack", {request: flow?.Request, ishttps: flow?.IsHTTPS, response: flow?.Response})
-            
+            run: () => ipcRenderer.invoke("send-to-packet-hack", {
+                request: flow?.Request,
+                ishttps: flow?.IsHTTPS,
+                response: flow?.Response
+            })
+
         }
     ]
 
@@ -145,21 +143,26 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         if (!props.hash) {
             return
         }
-
-        ipcRenderer.on(props.hash, (e: any, data: HTTPFlow) => {
-            setFlow(data)
-            setTimeout(() => setLoading(false), 300)
-        })
-        ipcRenderer.on(`ERROR:${props.hash}`, (e: any, details: any) => {
-            failed(`查询该请求失败[${props.hash}]: ` + details)
-        })
+        //
+        // ipcRenderer.on(props.hash, (e: any, data: HTTPFlow) => {
+        //     setFlow(data)
+        //     setTimeout(() => setLoading(false), 300)
+        // })
+        // ipcRenderer.on(`ERROR:${props.hash}`, (e: any, details: any) => {
+        //     failed(`查询该请求失败[${props.hash}]: ` + details)
+        // })
 
         setLoading(true)
-        ipcRenderer.invoke("get-http-flow", props.hash)
+        ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((data: HTTPFlow) => {
+            setFlow(data)
+        }).catch(e => {
+            failed(`GetHTTPFlow ByHash[${props.hash}] failed`)
+        }).finally(() => setTimeout(() => setLoading(false), 300))
+        // ipcRenderer.invoke("get-http-flow", props.hash)
 
         return () => {
-            ipcRenderer.removeAllListeners(props.hash)
-            ipcRenderer.removeAllListeners(`ERROR:${props.hash}`)
+            // ipcRenderer.removeAllListeners(props.hash)
+            // ipcRenderer.removeAllListeners(`ERROR:${props.hash}`)
         }
     }, [props.hash])
 
@@ -314,13 +317,23 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
         setFlow(undefined)
         setLoading(true)
-        ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
-            setFlow(i)
-        }).catch((e: any) => {
-            failed(`Query HTTPFlow failed: ${e}`)
-        }).finally(() => {
-            setTimeout(() => setLoading(false), 400)
-        })
+        if(props.id){
+            ipcRenderer.invoke("GetHTTPFlowById", {Id: props.id}).then((i: HTTPFlow) => {
+                setFlow(i)
+            }).catch((e: any) => {
+                failed(`Query HTTPFlow failed: ${e}`)
+            }).finally(() => {
+                setTimeout(() => setLoading(false), 400)
+            })
+        }else{
+            ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
+                setFlow(i)
+            }).catch((e: any) => {
+                failed(`Query HTTPFlow failed: ${e}`)
+            }).finally(() => {
+                setTimeout(() => setLoading(false), 400)
+            })
+        }
     }, [props.hash])
 
     if (!flow) {

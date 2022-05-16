@@ -20,7 +20,19 @@
     background: unset;
 }
 /* 自定义悬浮样式 */
-.httpFlowTable.reszie-table.rs-table-hover .rs-table-row #http-flow-row:hover {
+/* .httpFlowTable.reszie-table.rs-table-hover .rs-table-row #http-flow-row:hover {
     border: 3px solid transparent;
     box-shadow: 0 1px 2px -2px rgb(0 0 0 / 16%), 0 3px 6px 0 rgb(0 0 0 / 12%), 0 5px 12px 4px rgb(0 0 0 / 9%);
+} */
+
+/* history表格右键菜单颜色功能样式 */
+.history-color-tag {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.history-color-tag .tag-color-display {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
 }

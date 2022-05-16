@@ -37,6 +37,7 @@ export interface YakitLogFormatterProp {
     data: string | any
     timestamp: number
     onlyTime?: boolean
+    isCollapsed?: boolean
 }
 
 
@@ -98,7 +99,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                     {props.timestamp > 0 &&
                     <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                     <Card title={"JSON 结果输出"} size={"small"}>
-                        <ReactJson src={obj} enableClipboard={false}/>
+                        <ReactJson src={obj} enableClipboard={false} collapsed={!!props.isCollapsed} />
                     </Card>
                 </Space>
             } catch (e) {

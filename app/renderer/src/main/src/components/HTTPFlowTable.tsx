@@ -1,43 +1,21 @@
-import React, {ReactNode, Ref, useEffect, useState} from "react"
-import {
-    Button,
-    Col,
-    Empty,
-    Form,
-    Input,
-    PageHeader,
-    Pagination,
-    Popconfirm,
-    Row,
-    Select,
-    Space,
-    Switch,
-    Tag,
-    Popover, Tooltip
-} from "antd"
+import React, {ReactNode, Ref, useEffect, useRef, useState} from "react"
+import {Button, Col, Empty, Form, Input, PageHeader, Popconfirm, Popover, Row, Select, Space, Tag, Tooltip} from "antd"
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../utils/showByCursor"
 import {showDrawer} from "../utils/showModal"
 import {PaginationSchema} from "../pages/invoker/schema"
-import {CheckOutlined, ReloadOutlined, SearchOutlined, CopyOutlined} from "@ant-design/icons"
-import {
-    InputItem,
-    ManyMultiSelectForString,
-    SwitchItem
-} from "../utils/inputUtil"
-import {HTTPFlowDetail, SendToFuzzerFunc} from "./HTTPFlowDetail"
+import {CheckOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons"
+import {InputItem, ManyMultiSelectForString, SwitchItem} from "../utils/inputUtil"
+import {HTTPFlowDetail} from "./HTTPFlowDetail"
 import {failed, info, success} from "../utils/notification"
 import "./style.css"
-import Highlighter from "react-highlight-words"
-
-import {CopyToClipboard} from "react-copy-to-clipboard"
 import {TableResizableColumn} from "./TableResizableColumn"
 import {formatTime, formatTimestamp} from "../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook";
 import {useGetState, useMemoizedFn} from "ahooks";
-import {AutoCard} from "./AutoCard";
 import ReactResizeDetector from "react-resize-detector";
 import {callCopyToClipboard} from "../utils/basic";
+import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -398,15 +376,87 @@ export const LogLevelToCode = (level: string) => {
 }
 
 const availableColors = [
-    {color: "RED", title: "红色[#FFCCC7]"},
-    {color: "", title: "移除颜色"},
-    {color: "GREEN", title: "绿色[#D9F7BE]"},
-    {color: "BLUE", title: "蓝色[#D6E4FF]"},
-    {color: "YELLOW", title: "黄色[#FFFFB8]"},
-    {color: "ORANGE", title: "橙色[#FFE7BA]"},
-    {color: "PURPLE", title: "紫色[#EfDBFF]"},
-    {color: "CYAN", title: "天蓝色[#B5F5EC]"},
-    {color: "GREY", title: "灰色[#D9D9D9]"},
+    {
+        color: "RED",
+        title: "红色[#FFCCC7]",
+        render: (
+            <div className='history-color-tag'>
+                红色
+                <div style={{backgroundColor: "#FFCCC7"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    // {color: "", title: "移除颜色", render: <div>移除颜色</div>},
+    {
+        color: "GREEN",
+        title: "绿色[#D9F7BE]",
+        render: (
+            <div className='history-color-tag'>
+                绿色
+                <div style={{backgroundColor: "#D9F7BE"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "BLUE",
+        title: "蓝色[#D6E4FF]",
+        render: (
+            <div className='history-color-tag'>
+                蓝色
+                <div style={{backgroundColor: "#D6E4FF"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "YELLOW",
+        title: "黄色[#FFFFB8]",
+        render: (
+            <div className='history-color-tag'>
+                黄色
+                <div style={{backgroundColor: "#FFFFB8"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "ORANGE",
+        title: "橙色[#FFE7BA]",
+        render: (
+            <div className='history-color-tag'>
+                橙色
+                <div style={{backgroundColor: "#FFE7BA"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "PURPLE",
+        title: "紫色[#EfDBFF]",
+        render: (
+            <div className='history-color-tag'>
+                紫色
+                <div style={{backgroundColor: "#EfDBFF"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "CYAN",
+        title: "天蓝色[#B5F5EC]",
+        render: (
+            <div className='history-color-tag'>
+                天蓝色
+                <div style={{backgroundColor: "#B5F5EC"}} className='tag-color-display'></div>
+            </div>
+        )
+    },
+    {
+        color: "GREY",
+        title: "灰色[#D9D9D9]",
+        render: (
+            <div className='history-color-tag'>
+                灰色
+                <div style={{backgroundColor: "#D9D9D9"}} className='tag-color-display'></div>
+            </div>
+        )
+    }
 ]
 
 // 通过关键词输出渲染颜色
@@ -428,9 +478,9 @@ const TableRowColor = (key: string) => {
             return "#b5f5ec"
         case "GREY":
             return "#d9d9d9"
+        default:
+            return "#ffffff"
     }
-    if (key.indexOf('#') > -1) return key
-    else return `#${key}`
 }
 
 export interface YakQueryHTTPFlowResponse {
@@ -444,13 +494,39 @@ interface CompateData {
     language: string
 }
 
+const HeaderTable: HTTPFlow = {
+    Method: "",
+    Path: "",
+    Hash: "",
+    IsHTTPS: false,
+    Url: "",
+    Request: new Uint8Array(),
+    Response: new Uint8Array(),
+    StatusCode: 0,
+    BodyLength: -1,
+    ContentType: "null",
+    SourceType: "",
+    RequestHeader: [],
+    ResponseHeader: [],
+    GetParamsTotal: 0,
+    PostParamsTotal: 0,
+    CookieParamsTotal: 0,
+    CreatedAt: 0,
+    UpdatedAt: 0,
+    GetParams: [],
+    PostParams: [],
+    CookieParams: [],
+    Tags: ""
+}
+
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData] = useState<HTTPFlow[]>([])
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>(
         props.params || {SourceType: "mitm"}
     )
+    const [_, setInScrollUpdateCD, getInScrollUpdateCD] = useGetState(false);
     const [pagination, setPagination] = useState<PaginationSchema>({
-        Limit: 20,
+        Limit: 100,
         Order: "desc",
         OrderBy: "created_at",
         Page: 1
@@ -464,6 +540,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [compareRight, setCompareRight] = useState<CompateData>({content: '', language: 'http'})
     const [compareState, setCompareState] = useState(0)
     const [tableContentHeight, setTableContentHeight] = useState<number>(0);
+
+    const tableRef = useRef(null)
+    const counter = useRef<number>(0)
+    const tableTimer = useRef<any>(null)
 
     const ref = useHotkeys('ctrl+r', e => {
         const selected = getSelected()
@@ -513,7 +593,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
         if (!noLoading) {
             setLoading(true)
-            setAutoReload(false)
+            // setAutoReload(false)
         }
         // yakQueryHTTPFlow({
         //     SourceType: sourceType, ...params,
@@ -526,15 +606,65 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
+                if ((rsp?.Data || []).length > 10) setAutoReload(false)
+                else setAutoReload(true)
                 setData(rsp?.Data || [])
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
+                setTimeout(() => {
+                    if (!tableRef || !tableRef.current) return
+                    const table = tableRef.current as unknown as HTMLDivElement
+                    // @ts-ignore
+                    table.scrollTop(34)
+                }, 50)
+            })
+            .catch((e: any) => {
+                failed(`query HTTP Flow failed: ${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+
+    const scrollUpdate = useMemoizedFn((page?: number, limit?: number, sourceType?: string,) => {
+        if (!autoReload && getInScrollUpdateCD()) {
+            info("刷新太快了，休息一下吧 ;-)  ...1.5秒")
+            return
+        }
+
+        const paginationProps = {
+            Page: page || 1,
+            Limit: pagination.Limit,
+            Order: "desc",
+            OrderBy: "id"
+        }
+        setLoading(true)
+
+        setInScrollUpdateCD(true)
+        setTimeout(() => {
+            setInScrollUpdateCD(false)
+        }, 1500)
+
+        ipcRenderer
+            .invoke("QueryHTTPFlows", {
+                SourceType: sourceType,
+                ...params,
+                Pagination: {...paginationProps}
+            })
+            .then((rsp: YakQueryHTTPFlowResponse) => {
+                setData(page === 1 ? [HeaderTable].concat(rsp?.Data || []) : data.concat(rsp?.Data || []))
+                setPagination(rsp.Pagination)
+                setTotal(rsp.Total)
+                setTimeout(() => {
+                    if (!tableRef || !tableRef.current) return
+                    const table = tableRef.current as unknown as HTMLDivElement
+                    // @ts-ignore
+                    table.scrollTop(page === 1 ? 34 : (page - 1) * 4100)
+                }, 50)
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
             })
             .finally(() => {
-                setLoading(false)
+                setTimeout(() => setLoading(false), 200);
             })
     })
 
@@ -546,9 +676,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
 
         if (column && type) {
-            update(1, 20, type, keyRelation[column])
+            update(1, 100, type, keyRelation[column])
         } else {
-            update(1, 20)
+            update(1, 100)
         }
     })
 
@@ -646,10 +776,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 update(1, undefined, "desc")
                             }}
                         />
-                        <Space>
+                        {/* <Space>
                             自动刷新:
                             <Switch size={"small"} checked={autoReload} onChange={setAutoReload}/>
-                        </Space>
+                        </Space> */}
                         <Input.Search
                             placeholder={"URL关键字"}
                             enterButton={true}
@@ -690,7 +820,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     </Space>
                 </Col>
                 <Col span={12} style={{textAlign: "right"}}>
-                    <Pagination
+                    <Tag>{total} Records</Tag>
+                    {/* <Pagination
                         // simple={true}
                         size={"small"}
                         showSizeChanger={true}
@@ -706,10 +837,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             update(1, limit)
                         }}
                         defaultCurrent={1}
-                    />
+                    /> */}
                 </Col>
             </Row>
             <TableResizableColumn
+                tableRef={tableRef}
+                virtualized={true}
                 className={"httpFlowTable"}
                 loading={loading}
                 columns={[
@@ -718,7 +851,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         width: 80,
                         headRender: () => "序号",
                         cellRender: ({rowData, dataKey, ...props}: any) => {
-                            return rowData[dataKey]
+                            return `${rowData[dataKey] || "..."}`
                         }
                     },
                     {
@@ -818,7 +951,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return (
                                 <div style={{color: StatusCodeToColor(rowData[dataKey])}}>
-                                    {rowData[dataKey]}
+                                    {rowData[dataKey] === 0 ? "" : rowData[dataKey]}
                                 </div>
                             )
                         }
@@ -901,10 +1034,23 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         width: 120,
                         resizable: true,
                         headRender: () => {
-                            return "Html Title"
+                            return "Title"
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return rowData[dataKey] ? rowData[dataKey] : ""
+                        }
+                    },
+                    {
+                        dataKey: "Tags",
+                        width: 120,
+                        resizable: true,
+                        headRender: () => {
+                            return "Tags"
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return rowData[dataKey] ? (
+                                `${rowData[dataKey]}`.split("|").filter(i => !i.startsWith("YAKIT_COLOR_")).join(", ")
+                            ) : ""
                         }
                     },
                     {
@@ -958,11 +1104,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             return (
                                 <div style={{width: 100}}>
                                     {/* 1M 以上的话，是红色*/}
-                                    <div style={{color: rowData.BodyLength > 1000000 ? "red" : undefined}}>
-                                        {rowData.BodySizeVerbose
-                                            ? rowData.BodySizeVerbose
-                                            : rowData.BodyLength}
-                                    </div>
+                                    {rowData.BodyLength !== -1 ?
+                                        (<div style={{color: rowData.BodyLength > 1000000 ? "red" : undefined}}>
+                                            {rowData.BodySizeVerbose
+                                                ? rowData.BodySizeVerbose
+                                                : rowData.BodyLength}
+                                        </div>)
+                                        :
+                                        (<div></div>)
+                                    }
                                 </div>
                             )
                         }
@@ -1045,7 +1195,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             }
                             return (
                                 <div>
-                                    {contentTypeFixed}
+                                    {contentTypeFixed === "null" ? "" : contentTypeFixed}
                                 </div>
                             )
                         }
@@ -1059,9 +1209,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return <Tooltip
-                                title={formatTimestamp(rowData[dataKey])}
+                                title={rowData[dataKey] === 0 ? "" : formatTimestamp(rowData[dataKey])}
                             >
-                                {formatTime(rowData[dataKey])}
+                                {rowData[dataKey] === 0 ? "" : formatTime(rowData[dataKey])}
                             </Tooltip>
                         }
                     },
@@ -1070,6 +1220,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         width: 90,
                         headRender: () => "操作",
                         cellRender: ({rowData}: any) => {
+                            if (!rowData.Hash) return <></>
                             return (
                                 <a
                                     onClick={(e) => {
@@ -1102,8 +1253,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash ?
                                             "rgba(78, 164, 255, 0.4)" :
                                             rowData.Tags.indexOf("YAKIT_COLOR") > -1 ?
-                                                TableRowColor(rowData.Tags.split('_').pop().toUpperCase()) :
-                                                ""
+                                                TableRowColor(rowData.Tags.split("|").pop().split('_').pop().toUpperCase()) :
+                                                "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
@@ -1159,33 +1310,57 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     },
                                 },
                                 {
+                                    title: '复制为 Yak PoC 模版', onClick: () => {
+                                    },
+                                    subMenuItems: [
+                                        {
+                                            title: "数据包 PoC 模版", onClick: () => {
+                                                const flow = rowData as HTTPFlow;
+                                                if (!flow) return;
+                                                generateYakCodeByRequest(flow.IsHTTPS, flow.Request, code => {
+                                                    callCopyToClipboard(code)
+                                                }, RequestToYakCodeTemplate.Ordinary)
+                                            }
+                                        },
+                                        {
+                                            title: "批量检测 PoC 模版", onClick: () => {
+                                                const flow = rowData as HTTPFlow;
+                                                if (!flow) return;
+                                                generateYakCodeByRequest(flow.IsHTTPS, flow.Request, code => {
+                                                    callCopyToClipboard(code)
+                                                }, RequestToYakCodeTemplate.Batch)
+                                            }
+                                        },
+                                    ]
+                                },
+                                {
                                     title: '标注颜色',
                                     subMenuItems: availableColors.map(i => {
                                         return {
-                                            title: i.title, onClick: () => {
+                                            title: i.title,
+                                            render: i.render,
+                                            onClick: () => {
                                                 const flow = rowData as HTTPFlow
                                                 if (!flow) {
                                                     return
                                                 }
 
-                                                const existedTags = (flow?.Tags || "").split("|").filter(i => !!i && !i.startsWith("YAKIT_COLOR_"));
-                                                if (i.color === "") {
-                                                    ipcRenderer.invoke("SetTagForHTTPFlow", {
-                                                        Id: flow.Id, Hash: flow.Hash,
-                                                        Tags: existedTags,
-                                                    }).then(() => {
-                                                        info(`清除 HTTPFlow 颜色成功`)
-                                                        setData([...data])
-                                                    })
-                                                    return
-                                                }
+                                                const existedTags = flow.Tags ? flow.Tags.split("|").filter(i => !!i && !i.startsWith("YAKIT_COLOR_")) : []
                                                 existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
                                                 ipcRenderer.invoke("SetTagForHTTPFlow", {
                                                     Id: flow.Id, Hash: flow.Hash,
                                                     Tags: existedTags,
                                                 }).then(() => {
                                                     info(`设置 HTTPFlow 颜色成功`)
-                                                    setData([...data])
+                                                    if (!autoReload) {
+                                                        setData(data.map(item => {
+                                                            if (item.Hash === flow.Hash) {
+                                                                item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
+                                                                return item
+                                                            }
+                                                            return item
+                                                        }))
+                                                    }
                                                 })
                                             }
                                         }
@@ -1194,25 +1369,57 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     }
                                 },
                                 {
-                                    title: '发送到对比器左侧',
+                                    title: '移除颜色',
                                     onClick: () => {
-                                        setCompareLeft({
-                                            content: new Buffer(rowData.Request).toString("utf8"),
-                                            language: 'http'
+                                        const flow = rowData as HTTPFlow
+                                        if (!flow) return
+
+                                        const existedTags = flow.Tags ? flow.Tags.split("|").filter(i => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+                                        existedTags.pop()
+                                        ipcRenderer.invoke("SetTagForHTTPFlow", {
+                                            Id: flow.Id, Hash: flow.Hash,
+                                            Tags: existedTags,
+                                        }).then(() => {
+                                            info(`清除 HTTPFlow 颜色成功`)
+                                            if (!autoReload) {
+                                                setData(data.map(item => {
+                                                    if (item.Hash === flow.Hash) {
+                                                        item.Tags = ""
+                                                        return item
+                                                    }
+                                                    return item
+                                                }))
+                                            }
                                         })
+                                        return
                                     },
-                                    disabled: [false, true, false][compareState]
                                 },
                                 {
-                                    title: '发送到对比器右侧',
-                                    onClick: () => {
-                                        setCompareRight({
-                                            content: new Buffer(rowData.Request).toString("utf8"),
-                                            language: 'http'
-                                        })
+                                    title: "发送到对比器", onClick: () => {
                                     },
-                                    disabled: [false, false, true][compareState]
-                                }
+                                    subMenuItems: [
+                                        {
+                                            title: '发送到对比器左侧',
+                                            onClick: () => {
+                                                setCompareLeft({
+                                                    content: new Buffer(rowData.Request).toString("utf8"),
+                                                    language: 'http'
+                                                })
+                                            },
+                                            disabled: [false, true, false][compareState]
+                                        },
+                                        {
+                                            title: '发送到对比器右侧',
+                                            onClick: () => {
+                                                setCompareRight({
+                                                    content: new Buffer(rowData.Request).toString("utf8"),
+                                                    language: 'http'
+                                                })
+                                            },
+                                            disabled: [false, false, true][compareState]
+                                        }
+                                    ]
+                                },
                             ]
                         },
                         event.clientX,
@@ -1220,11 +1427,40 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     )
                 }}
                 onRowClick={(rowDate: any) => {
+                    if (!rowDate.Hash) return
                     if (rowDate.Hash !== selected?.Hash) {
                         setSelected(rowDate)
                     } else {
                         // setSelected(undefined)
                     }
+                }}
+                onScroll={(scrollX, scrollY) => {
+                    let contextHeight = data.length * 42
+                    let top = Math.abs(scrollY)
+                    let maxPage = Math.ceil(total / 100)
+
+                    // 防止无数据触发加载
+                    if (data.length === 0) return
+                    // 防止初始加载的触发
+                    if (top !== 0 && top === counter.current) return
+                    if (autoReload) return
+                    counter.current = top
+                    if (tableTimer.current) {
+                        clearTimeout(tableTimer.current)
+                        tableTimer.current = null
+                    }
+                    tableTimer.current = setTimeout(() => {
+                        if (top === 0) {
+                            scrollUpdate(1)
+                            setAutoReload(false)
+                        }
+                        // 防止最后一页还进行向下加载
+                        if (parseInt(pagination.Page.toString()) === maxPage) return
+                        if (contextHeight - top - tableContentHeight < 0) {
+                            scrollUpdate(parseInt(pagination.Page.toString()) + 1)
+                            setAutoReload(false)
+                        }
+                    }, 50);
                 }}
             />
         </div>

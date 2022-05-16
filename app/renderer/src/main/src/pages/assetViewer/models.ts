@@ -13,3 +13,14 @@ export interface PortAsset {
     CreatedAt: number;
     UpdatedAt: number;
 }
+
+
+export interface Report {
+    Title: string
+    Id: number
+    Hash: string
+    Owner: string
+    From: string
+    PublishedAt: number
+    JsonRaw: string
+}

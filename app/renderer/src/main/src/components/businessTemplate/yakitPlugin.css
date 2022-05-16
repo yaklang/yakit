@@ -1,0 +1,29 @@
+.plugin-list-opt-info-body {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+.plugin-list-opt-info-body .plugin-list-opt-info-checkbox{
+    flex: 1;
+    overflow: hidden;
+}
+.plugin-list-opt-info-body .plugin-list-opt-info-checkbox .opt-info-checkbox {
+    width: 100%;
+}
+.plugin-list-opt-info-body .plugin-list-opt-info-checkbox .opt-info-checkbox span + span {
+    width: 100%;
+}
+.plugin-list-opt-info-body .plugin-list-opt-info-checkbox .opt-info-checkbox .opt-info-checkbox-title {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.plugin-list-opt-info-body .plugin-list-opt-info-hint {
+    width: 40px;
+    text-align: right;
+}
+.plugin-list-opt-info-body .plugin-list-opt-info-hint .opt-info-hint-a {
+    margin: 0 2px;
+}
+/* -------------------------------------------------- */
