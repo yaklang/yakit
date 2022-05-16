@@ -1,16 +1,15 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Card, Col, Divider, Empty, List, Progress, Row, Space, Tabs, Tag, Typography} from "antd";
+import {Divider, Empty, Progress, Space, Tabs, Tag, Timeline} from "antd";
 import {AutoCard} from "../../../components/AutoCard";
 import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
 import {ExecResult, genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema";
-import {useCreation, useDebounce, useMemoizedFn} from "ahooks";
+import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks";
 import {randomString} from "../../../utils/randomUtil";
 import {
     CancelBatchYakScript,
     ExecSelectedPlugins,
     ExecuteTaskHistory,
     TargetRequest,
-    Timer,
 } from "./BatchExecutorPage";
 import {formatTimestamp} from "../../../utils/timeUtil";
 import {failed} from "../../../utils/notification";
@@ -19,12 +18,12 @@ import { TableResizableColumn } from "../../../components/TableResizableColumn";
 import { FieldName, RiskDetails, TitleColor } from "../../risks/RiskTable";
 import { showModal } from "../../../utils/showModal";
 import ReactResizeDetector from "react-resize-detector";
-import { ExecResultLog, ExecResultMessage, ExecResultsViewer } from "./ExecMessageViewer";
+import { ExecResultLog, ExecResultMessage } from "./ExecMessageViewer";
+import { YakitLogFormatter } from "../YakitLogFormatter";
 
 import "./BatchExecuteByFilter.css"
 
 const {ipcRenderer} = window.require("electron");
-const {Text} = Typography
 
 export interface BatchExecuteByFilterProp {
     simpleQuery: SimpleQueryYakScriptSchema
@@ -205,17 +204,22 @@ interface BatchTask {
     Results: ExecBatchYakScriptResult[]
     CreatedAt: number
 }
+interface TaskResultLog extends ExecResultLog{
+    key: string
+}
 
 export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterProp> = (props) => {
     const [activeTask, setActiveTask] = useState<BatchTask[]>([]);
     const allPluginTasks = useRef<Map<string, ExecBatchYakScriptResult[]>>(new Map<string, ExecBatchYakScriptResult[]>())
     const [allTasks, setAllTasks] = useState<BatchTask[]>([]);
     const [hitTasks, setHitTasks] = useState<ExecResultLog[]>([]);
+    const [taskLog, setTaskLog, getTaskLog] = useGetState<TaskResultLog[]>([]);
     const allTasksMap = useCreation<Map<string, BatchTask>>(() => {
         return new Map<string, BatchTask>()
     }, [])
 
     const [tableContentHeight, setTableContentHeight] = useState<number>(0);
+    const [activeKey, setActiveKey] = useState<string>("executing")
 
     useEffect(() => {
         if (props.executing && (!!allPluginTasks) && (!!allPluginTasks.current)) allPluginTasks.current.clear()
@@ -303,6 +307,17 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
             allresult.push(data)
             allPluginTasks.current.set(taskId, allresult)
 
+            if (data.Result && data.Result.IsMessage) {
+                const info: TaskResultLog = JSON.parse(new Buffer(data.Result.Message).toString()).content
+                if(info){
+                    info.key = data?.TaskId || data.Id
+                    const arr: TaskResultLog[] = [...getTaskLog()]
+                    if(arr.length >= 20) arr.shift()
+                    arr.push(info)
+                    setTaskLog([...arr])
+                }
+            }
+
             // 设置状态
             if (data.Status === "end") {
                 activeTask.delete(taskId)
@@ -371,7 +386,9 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
             ipcRenderer.removeAllListeners(`${props.token}-end`)
             ipcRenderer.removeAllListeners(`${props.token}-error`)
             allTasksMap.clear()
+            setTaskLog([])
             setAllTasks([])
+            setActiveKey("executing")
             clearInterval(id);
         }
     }, [props.token])
@@ -392,42 +409,17 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
         <Divider style={{margin: 4}} />
 
         <div className="result-table-body">
-            <Tabs className="div-width-height-100 yakit-layout-tabs">
-                <Tabs.TabPane tab="执行中任务" key={"executing"}>
+            <Tabs className="div-width-height-100 yakit-layout-tabs" activeKey={activeKey} onChange={setActiveKey}>
+                <Tabs.TabPane tab="任务日志" key={"executing"}>
                     <div className="div-width-height-100" style={{overflow: "hidden"}}>
-                        <List<BatchTask>
-                            style={{height: '100%', overflow: "auto"}}
-                            pagination={false}
-                            dataSource={activeTask.sort((a, b) => a.TaskId.localeCompare(b.TaskId))}
-                            rowKey={(item) => item.TaskId}
-                            renderItem={(task: BatchTask) => {
-                                const res = task.Results[task.Results.length - 1];
-                                return (
-                                    <Card
-                                        bordered={false}
-                                        style={{marginBottom: 8, width: "100%"}}
-                                        size={"small"}
-                                        title={
-                                            <Row gutter={8}>
-                                                <Col span={20}>
-                                                    <Text
-                                                        ellipsis={{tooltip: true}}>{task.Target + " / " + task.PoC.ScriptName}</Text>
-                                                </Col>
-                                                <Col span={4}>
-                                                    <Timer fromTimestamp={task.CreatedAt} executing={!!props.executing}/>
-                                                </Col>
-                                            </Row>
-                                        }>
-                                        <div style={{width: "100%"}}>
-                                            <ExecResultsViewer
-                                                results={task.Results.map(i => i.Result).filter(i => !!i) as ExecResult[]}
-                                                oneLine={true}
-                                            />
-                                        </div>
-                                    </Card>
-                                )
-                            }}
-                        />
+                        <Timeline className="body-time-line" pending={props.executing} reverse={true}>
+                            {taskLog.map(item => {
+                                return <Timeline.Item key={item.key}>
+                                    <YakitLogFormatter data={item.data} level={item.level} 
+                                        timestamp={item.timestamp} onlyTime={true}/>
+                                </Timeline.Item>
+                            })}
+                        </Timeline>
                     </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab="命中任务列表" key={"hitTable"}>

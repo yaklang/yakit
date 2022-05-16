@@ -6,6 +6,7 @@ import {FieldName} from "../../risks/RiskTable";
 import {useDebounce, useMemoizedFn} from "ahooks";
 import {AutoCard} from "../../../components/AutoCard";
 import { ItemSelects } from "../../../components/baseTemplate/FormItemUtil";
+import { PluginListOptInfo } from "../../../components/businessTemplate/yakitPlugin";
 
 import "./QueryYakScriptParam.css"
 
@@ -327,6 +328,14 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
         }).finally(() => setTimeout(() => setLoading(false), 300))
     })
 
+    const onSelect = useMemoizedFn((selected: boolean, item: YakScript) => {
+        if (selected) {
+            props.onExclude(item)
+        } else {
+            props.onInclude(item)
+        }
+    })
+
     useEffect(() => {
         update()
     }, [useDebounce(params.Keyword, {wait: 500})])
@@ -376,21 +385,11 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
 
                     return (
                         <AutoCard size={"small"} style={{marginBottom: 4}} bodyStyle={{padding: "6px 12px"}}>
-                            <Checkbox
-                                className="plugin-list-opt-box"
-                                checked={selected}
-                                onClick={() => {
-                                    if (selected) {
-                                        props.onExclude(item)
-                                    } else {
-                                        props.onInclude(item)
-                                    }
-                                }}
-                            >
-                                <div className="plugin-title" title={item.ScriptName}>
-                                    {item.ScriptName}
-                                </div>
-                            </Checkbox>
+                            <PluginListOptInfo
+                                info={item}
+                                selected={selected}
+                                onSelect={() => onSelect(selected, item)}
+                            />
                         </AutoCard>
                     )
                 }}

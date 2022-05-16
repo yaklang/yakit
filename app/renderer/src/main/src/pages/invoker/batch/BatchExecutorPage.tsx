@@ -565,7 +565,7 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
                                                 onClick={() => {
                                                     if (executing) return
                                                     if(!item.simpleQuery){
-                                                        failed("该調历史记录无法使用!")
+                                                        failed("该条历史记录无法使用!")
                                                         return
                                                     }
                                                     executeHistory(item)

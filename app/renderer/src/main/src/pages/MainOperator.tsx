@@ -309,6 +309,21 @@ const Main: React.FC<MainProp> = (props) => {
             }
         }
     )
+    const menuAddPage = useMemoizedFn((route: Route) => {
+        if (route === "ignore") return
+
+        if (route === Route.HTTPFuzzer) {
+            const time = new Date().getTime().toString()
+            addTabPage(Route.HTTPFuzzer, {
+                time: time,
+                node: ContentByRoute(Route.HTTPFuzzer, undefined, {
+                    system: system,
+                    order: time
+                }),
+                isRecord: true
+            })
+        } else addTabPage(route as Route)
+    })
     const removePage = (route: string) => {
         const targetIndex = getCacheIndex(route)
 
@@ -848,17 +863,9 @@ const Main: React.FC<MainProp> = (props) => {
                                             onSelect={(e) => {
                                                 if (e.key === "ignore") return
 
-                                                if (e.key === Route.HTTPFuzzer) {
-                                                    const time = new Date().getTime().toString()
-                                                    addTabPage(Route.HTTPFuzzer, {
-                                                        time: time,
-                                                        node: ContentByRoute(Route.HTTPFuzzer, undefined, {
-                                                            system: system,
-                                                            order: time
-                                                        }),
-                                                        isRecord: true
-                                                    })
-                                                } else addTabPage(e.key as Route)
+                                                const flag = pageCache.filter(item => item.route === (e.key as Route)).length === 0
+                                                if(flag) menuAddPage(e.key as Route)
+                                                else setCurrentTabKey(e.key)
                                             }}
                                         >
                                             {menuItems.map((i) => {
@@ -991,6 +998,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                 tabType={i.route}
                                                                 pages={i.multipleNode}
                                                                 currentKey={i.multipleCurrentKey || ""}
+                                                                isShowAdd={true}
                                                                 setCurrentKey={(key, type) => {
                                                                     setMultipleCurrentKey(key, type as Route)
                                                                 }}
@@ -1000,6 +1008,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                 removeOtherPage={(key, type) => {
                                                                     removeOtherMultipleNodePage(key, type as Route)
                                                                 }}
+                                                                onAddTab={() => menuAddPage(i.route)}
                                                             ></MainTabs>
                                                         )}
                                                     </div>
