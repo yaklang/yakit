@@ -909,6 +909,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "trigger-auto-hijacked",
                                                                             label: "切换为自动劫持模式",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
                                                                             ],
@@ -951,6 +952,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "trigger-auto-hijacked",
                                                                             label: "切换为自动劫持模式",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
                                                                             ],
@@ -963,6 +965,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "send-to-fuzzer",
                                                                             label: "发送到 Web Fuzzer",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_R
                                                                             ],
@@ -975,6 +978,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "send-to-plugin",
                                                                             label: "发送到 数据包扫描",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_E
                                                                             ],
@@ -988,6 +992,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "forward-response",
                                                                             label: "放行该 HTTP Request",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_F
                                                                             ],

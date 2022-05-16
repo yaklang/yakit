@@ -309,7 +309,7 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
         ExcludeScriptNames: [],
         Keyword: "",
         Pagination: genDefaultPagination(20),
-        Type: ""
+        Type: "mitm,port-scan,nuclei"
     });
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
         Data: [],
