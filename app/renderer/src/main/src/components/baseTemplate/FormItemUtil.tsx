@@ -25,6 +25,7 @@ interface ItemTextAreaProps extends TextAreaProps {
     setValue?: (s: string) => any
 }
 interface ItemSelectProps<T> extends SelectProps<T> {
+    ref?: any
     setValue?: (value: any) => any
     data?: T[]
     optText?: string
