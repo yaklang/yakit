@@ -382,7 +382,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
             }
         }
 
-        let id = setInterval(syncActiveTask, 1000);
+        let id = setInterval(syncActiveTask, 300);
         return () => {
             ipcRenderer.removeAllListeners(`${props.token}-data`)
             ipcRenderer.removeAllListeners(`${props.token}-end`)
