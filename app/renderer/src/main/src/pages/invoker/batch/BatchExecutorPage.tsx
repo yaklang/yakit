@@ -1,12 +1,29 @@
 import React, {Ref, useEffect, useRef, useState} from "react";
 import {queryYakScriptList} from "../../yakitStore/network";
-import {Button, Card, Checkbox, Col, Divider, Form, List, Popover, Progress, Row, Space, Switch, Tabs, Tag, Tooltip, Typography} from "antd";
+import {
+    Button,
+    Card,
+    Checkbox,
+    Col,
+    Divider,
+    Form,
+    List,
+    Popover,
+    Progress,
+    Row,
+    Space,
+    Switch,
+    Tabs,
+    Tag,
+    Tooltip,
+    Typography
+} from "antd";
 import {AutoCard} from "../../../components/AutoCard";
 import {
     CopyableField,
     InputFileNameItem,
     InputInteger,
-    InputItem, 
+    InputItem,
     OneLine,
     SelectOne,
     SwitchItem
@@ -21,19 +38,20 @@ import {failed} from "../../../utils/notification";
 import {ExecBatchYakScriptResult} from "./YakBatchExecutorLegacy";
 import moment from "moment";
 import {ExecResultLog, ExecResultMessage, ExecResultProgress, ExecResultsViewer} from "./ExecMessageViewer";
-import { formatTimestamp } from "../../../utils/timeUtil";
+import {formatTimestamp} from "../../../utils/timeUtil";
 
 import "./BatchExecutorPage.css"
-import { CacheStatusCardProps } from "../../../hook/useHoldingIPCRStream";
-import { writeExecResultXTerm } from "../../../utils/xtermUtils";
-import { PluginResultUI, StatusCardInfoProps, StatusCardProps } from "../../yakitStore/viewers/base";
+import {CacheStatusCardProps} from "../../../hook/useHoldingIPCRStream";
+import {writeExecResultXTerm} from "../../../utils/xtermUtils";
+import {PluginResultUI, StatusCardInfoProps, StatusCardProps} from "../../yakitStore/viewers/base";
+import { NewTaskHistoryProps } from "./BatchExecuteByFilter";
 
 export interface BatchExecutorPageProp {
 
 }
 
 const {ipcRenderer} = window.require("electron");
-const ExecuteTaskHistory='execute-task-history'
+export const ExecuteTaskHistory = 'execute-task-history'
 const {Text} = Typography
 
 /*
@@ -64,14 +82,16 @@ const {Text} = Typography
 }
 * */
 
-interface TaskHistoryProps{
+export interface TaskHistoryProps {
     target: TargetRequest
     selected: string[]
-    pluginType: "yak" | "nuclei"
+    pluginType: "yak" | "nuclei" | string
     limit: number
     keyword: string
     time: string
-} 
+    enablePluginFilter?: boolean
+    pluginFilter?: QueryYakScriptRequest
+}
 
 const StartExecBatchYakScript = (target: TargetRequest, names: string[], token: string) => {
     const params = {
@@ -84,13 +104,13 @@ const StartExecBatchYakScript = (target: TargetRequest, names: string[], token: 
     return ipcRenderer.invoke("ExecBatchYakScript", params, token)
 };
 
-const CancelBatchYakScript = (token: string) => {
+export const CancelBatchYakScript = (token: string) => {
     return ipcRenderer.invoke("cancel-ExecBatchYakScript", token)
 }
 
 export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
     const [loading, setLoading] = useState(false);
-    const [pluginType, setPluginType] = useState<"yak" | "nuclei">("yak");
+    const [pluginType, setPluginType] = useState<"yak" | "nuclei" | string>("yak");
     const [limit, setLimit] = useState(200);
     const [keyword, setKeyword] = useState("");
     const [scripts, setScripts, getScripts] = useGetState<YakScript[]>([]);
@@ -122,7 +142,8 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
             .then((res: any) => {
                 setTaskHistory(res ? JSON.parse(res) : [])
             })
-            .catch(() => {})
+            .catch(() => {
+            })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
             })
@@ -193,13 +214,13 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
             keyword: keyword || "",
             time: formatTimestamp(time)
         }
-        const arr=[...taskHistory]
-        if(taskHistory.length===10) arr.pop()
+        const arr = [...taskHistory]
+        if (taskHistory.length === 10) arr.pop()
         arr.unshift(obj)
         setTaskHistory(arr)
         ipcRenderer.invoke("set-value", ExecuteTaskHistory, JSON.stringify(arr))
 
-        const tokens=randomString(40)
+        const tokens = randomString(40)
         setToken(tokens)
         StartExecBatchYakScript(t, selected, tokens).then(() => {
             setExecuting(true)
@@ -236,12 +257,12 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
         }
     }, [token])
 
-    const executeHistory=useMemoizedFn((item: TaskHistoryProps)=>{
+    const executeHistory = useMemoizedFn((item: TaskHistoryProps) => {
         setLoading(true)
         setLimit(item.limit)
         setKeyword(item.keyword)
 
-        if(item.pluginType === pluginType) setTimeout(() => search(), 300); 
+        if (item.pluginType === pluginType) setTimeout(() => search(), 300);
         else setPluginType(item.pluginType)
 
         setTimeout(() => {
@@ -353,15 +374,15 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
                 </Space>}
                 bodyStyle={{display: "flex", flexDirection: "column", padding: '0 5px', overflow: "hidden"}}
             >
-                <ExecSelectedPlugins
-                    selected={selected}
+                {/* <ExecSelectedPlugins
+                    disableStartButton={selected.length === 0}
                     onSubmit={run}
                     onCancel={cancel}
                     executing={executing}
                     loading={loading}
                     history={taskHistory}
                     executeHistory={executeHistory}
-                />
+                /> */}
                 <Divider style={{margin: 4}}/>
                 <div style={{flex: '1', overflow: "hidden"}}>
                     <AutoCard style={{padding: 4}} bodyStyle={{padding: 4, overflow: "hidden"}} bordered={false}>
@@ -421,17 +442,17 @@ export const YakScriptWithCheckboxLine: React.FC<YakScriptWithCheckboxLineProp> 
 };
 
 interface ExecSelectedPluginsProp {
-    selected: string[]
+    disableStartButton: boolean
     onSubmit: (target: TargetRequest) => any
     loading?: boolean
     executing?: boolean
     onCancel: () => any
 
-    history: TaskHistoryProps[]
-    executeHistory: (item: TaskHistoryProps) => any
+    history: NewTaskHistoryProps[]
+    executeHistory: (item: NewTaskHistoryProps) => any
 }
 
-interface TargetRequest {
+export interface TargetRequest {
     target: string
     targetFile: string
     allowFuzz: boolean
@@ -439,32 +460,31 @@ interface TargetRequest {
     totalTimeout: number
 }
 
-const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props) => {
+export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props) => {
     const [target, setTarget] = useState<TargetRequest>({
         allowFuzz: true, target: "", targetFile: "",
         concurrent: 5, totalTimeout: 1800,
     });
-    const {loading, executing, selected, history, executeHistory} = props;
+    const {loading, executing, disableStartButton, history, executeHistory} = props;
 
     return <div style={{marginTop: 20}}>
         <Form
             layout={"horizontal"}
             onSubmitCapture={e => {
                 e.preventDefault()
-                if(!target.target && !target.targetFile){
+                if (!target.target && !target.targetFile) {
                     failed('请输入目标或上传目标文件夹绝对路径!')
                     return
                 }
-
                 props.onSubmit(target)
             }}
         >
-            <InputItem 
+            <InputItem
                 style={{marginBottom: 0}}
                 width={'80%'}
                 textareaRow={1}
-                textarea={true} 
-                value={target.target} 
+                textarea={true}
+                value={target.target}
                 label={"输入目标"}
                 setValue={targetRaw => setTarget({...target, target: targetRaw})}
                 suffixNode={
@@ -473,7 +493,7 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
                             <Button
                                 type='primary'
                                 danger={true}
-                                disabled={executing ? false : selected.length === 0}
+                                disabled={executing ? false : disableStartButton}
                                 onClick={props.onCancel}
                             >
                                 {" "}
@@ -483,7 +503,7 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
                             <Button
                                 type='primary'
                                 htmlType='submit'
-                                disabled={executing ? false : selected.length === 0}
+                                disabled={executing ? false : disableStartButton}
                                 loading={loading}
                             >
                                 执行任务
@@ -498,11 +518,11 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
                     <Tag>并发: {target.concurrent}</Tag>
                     <Tag>总超时: {target.totalTimeout}</Tag>
                     {target.targetFile &&
-                            <Tag color={"geekblue"}>
-                                <Space>
-                                    目标文件：<CopyableField text={target.targetFile} maxWidth={100} tooltip={true}/>
-                                </Space>
-                            </Tag>
+                    <Tag color={"geekblue"}>
+                        <Space>
+                            目标文件：<CopyableField text={target.targetFile} maxWidth={100} tooltip={true}/>
+                        </Space>
+                    </Tag>
                     }
                     <Popover title={"额外配置"} content={<div style={{width: 340}}>
                         <Form
@@ -531,36 +551,40 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
                         <Button type="link" style={{padding: 4}}> 额外配置 </Button>
                     </Popover>
                     {history.length !== 0 && (
-                            <Popover
-                                title={"历史任务(选择后可回显目标与poc)"}
-                                trigger={["click"]}
-                                placement='bottom'
-                                content={
-                                    <div className='history-list-body'>
-                                        {history.map((item) => {
-                                            return (
-                                                <div
-                                                    className='list-opt'
-                                                    key={item.time}
-                                                    onClick={() => {
-                                                        if(executing) return
-                                                        executeHistory(item)
-                                                        setTarget({...item.target})
-                                                    }}
-                                                >
-                                                    {item.time}
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                }
-                            >
-                                <Button type='link' style={{padding: 4}}>
-                                    {" "}
-                                    历史任务{" "}
-                                </Button>
-                            </Popover>
-                        )}
+                        <Popover
+                            title={"历史任务(选择后可回显目标与poc)"}
+                            trigger={["click"]}
+                            placement='bottom'
+                            content={
+                                <div className='history-list-body'>
+                                    {history.map((item) => {
+                                        return (
+                                            <div
+                                                className='list-opt'
+                                                key={item.time}
+                                                onClick={() => {
+                                                    if (executing) return
+                                                    if(!item.simpleQuery){
+                                                        failed("该条历史记录无法使用!")
+                                                        return
+                                                    }
+                                                    executeHistory(item)
+                                                    setTarget({...item.target})
+                                                }}
+                                            >
+                                                {item.time}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            }
+                        >
+                            <Button type='link' style={{padding: 4}}>
+                                {" "}
+                                历史任务{" "}
+                            </Button>
+                        </Popover>
+                    )}
                 </Space>
             </div>
         </Form>
@@ -570,6 +594,7 @@ const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props
 interface BatchExecutorResultUIProp {
     token: string
     executing?: boolean
+    setPercent?: (i: number) => any
 }
 
 interface BatchTask {
@@ -581,7 +606,7 @@ interface BatchTask {
     CreatedAt: number
 }
 
-const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
+export const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
     const [total, setTotal] = useState(0);
     const [finished, setFinished] = useState(0);
     const [activeTask, setActiveTask] = useState<BatchTask[]>([]);
@@ -591,12 +616,12 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
     const [allTasks, setAllTasks] = useState<BatchTask[]>([]);
 
     const [activeKey, setActiveKey] = useState<string>('executing')
-    const [checked,setChecked] = useState<boolean>(false)
+    const [checked, setChecked] = useState<boolean>(false)
 
     const allPluginTasks = useRef<Map<string, ExecBatchYakScriptResult[]>>(new Map<string, ExecBatchYakScriptResult[]>())
 
     useEffect(() => {
-        if(props.executing && (!!allPluginTasks) && (!!allPluginTasks.current)) allPluginTasks.current.clear()
+        if (props.executing && (!!allPluginTasks) && (!!allPluginTasks.current)) allPluginTasks.current.clear()
     }, [props.executing])
 
     useEffect(() => {
@@ -616,9 +641,20 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
 
     useEffect(() => {
         const activeTask = new Map<string, ExecBatchYakScriptResult[]>();
+        ipcRenderer.on(`${props.token}-error`, async (e, exception) => {
+            if (`${exception}`.includes("Cancelled on client")) {
+                return
+            }
+            console.info("call exception")
+            console.info(exception)
+        })
+
         ipcRenderer.on(`${props.token}-data`, async (e, data: ExecBatchYakScriptResult) => {
             // 处理进度信息
             if (data.ProgressMessage) {
+                if (!!props.setPercent) {
+                    props.setPercent(data.ProgressPercent || 0)
+                }
                 setTotal(data.ProgressTotal || 0)
                 setFinished(data.ProgressCount || 0)
                 return
@@ -654,13 +690,13 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
         let cached = "";
         const syncActiveTask = () => {
             if (activeTask.size <= 0) setActiveTask([]);
-            if(activeTask.size <= 0 && allPluginTasks.current.size <= 0) return
+            if (activeTask.size <= 0 && allPluginTasks.current.size <= 0) return
 
             const result: BatchTask[] = [];
             const tasks: string[] = [];
             activeTask.forEach(value => {
                 if (value.length <= 0) return
-                
+
                 const first = value[0];
                 const task = {
                     Target: first.Target || "",
@@ -676,7 +712,7 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
             const allResult: BatchTask[] = [];
             allPluginTasks.current.forEach(value => {
                 if (value.length <= 0) return
-                
+
                 const task = {
                     Target: value[0].Target || "",
                     ExtraParam: value[0].ExtraParams || [],
@@ -690,7 +726,7 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
 
             const oldAllResult: BatchTask[] = []
             allTasksMap.forEach(value => oldAllResult.push(value))
-            if(JSON.stringify(allResult) !== JSON.stringify(oldAllResult)){
+            if (JSON.stringify(allResult) !== JSON.stringify(oldAllResult)) {
                 allResult.forEach((value) => allTasksMap.set(value.TaskId, value))
             }
 
@@ -704,6 +740,8 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
         let id = setInterval(syncActiveTask, 1000);
         return () => {
             ipcRenderer.removeAllListeners(`${props.token}-data`)
+            ipcRenderer.removeAllListeners(`${props.token}-end`)
+            ipcRenderer.removeAllListeners(`${props.token}-error`)
             allTasksMap.clear()
             setAllTasks([])
             clearInterval(id);
@@ -711,13 +749,13 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
     }, [props.token])
 
     return <div style={{height: "100%", overflow: "auto"}}>
-        <Tabs 
+        <Tabs
             className="exec-result-body"
             onChange={setActiveKey}
             activeKey={activeKey}
             tabBarExtraContent={{
                 right: activeKey !== "executing" && <div style={{width: 140}}>
-                    <span style={{display: "inline-block", height: 22,marginRight: 5}}>只展示命中项</span>
+                    <span style={{display: "inline-block", height: 22, marginRight: 5}}>只展示命中项</span>
                     <Switch checked={checked} onChange={checked => setChecked(checked)}></Switch>
                 </div>
             }}
@@ -738,10 +776,11 @@ const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props) => {
                                 title={
                                     <Row gutter={8}>
                                         <Col span={20}>
-                                        <Text ellipsis={{tooltip: true}}>{task.Target + " / " + task.PoC.ScriptName}</Text>
+                                            <Text
+                                                ellipsis={{tooltip: true}}>{task.Target + " / " + task.PoC.ScriptName}</Text>
                                         </Col>
                                         <Col span={4}>
-                                        <Timer fromTimestamp={task.CreatedAt} executing={!!props.executing}/>
+                                            <Timer fromTimestamp={task.CreatedAt} executing={!!props.executing}/>
                                         </Col>
                                     </Row>
                                 }>
@@ -770,7 +809,7 @@ interface TimerProp {
     executing?: boolean
 }
 
-const Timer: React.FC<TimerProp> = React.memo((props) => {
+export const Timer: React.FC<TimerProp> = React.memo((props) => {
     const [duration, setDuration] = useState<number>();
 
     useEffect(() => {
@@ -792,7 +831,7 @@ const Timer: React.FC<TimerProp> = React.memo((props) => {
         return <></>
     }
 
-    if(!props.executing) return <Tag style={{maxWidth: 103}} color={"red"}>已中断</Tag>
+    if (!props.executing) return <Tag style={{maxWidth: 103}} color={"red"}>已中断</Tag>
     return <Tag style={{maxWidth: 103}} color={props.color || "green"}>已运行{duration}秒</Tag>
 });
 
@@ -890,21 +929,24 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
                             Timestamp: timestamp,
                             Tags: Array.isArray(tags) ? tags : []
                         })
-                    } catch (e) {}
+                    } catch (e) {
+                    }
                     return
                 }
 
                 if (item.type === "log" && logData.level === "json-feature") {
                     try {
                         featureTypes.unshift(item)
-                    } catch (e) {}
+                    } catch (e) {
+                    }
                     return
                 }
 
                 if (item.type === "log" && logData.level === "feature-table-data") {
                     try {
                         featureMessages.unshift(item)
-                    } catch (e) {}
+                    } catch (e) {
+                    }
                     return
                 }
 
@@ -914,7 +956,8 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
                 if (messages.length > 100) {
                     messages.pop()
                 }
-            } catch (e) {}
+            } catch (e) {
+            }
         }
 
         let results = messages.filter((i) => i.type === "log").map((i) => i.content as ExecResultLog)
@@ -933,7 +976,7 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
         processKVPair.forEach((value, id) => {
             processes.push({id: id, progress: value})
         })
-        const cacheStatusKVPair: {[x: string]: StatusCardInfoProps} = {}
+        const cacheStatusKVPair: { [x: string]: StatusCardInfoProps } = {}
         const statusCards: StatusCardProps[] = []
         statusKVPair.forEach((value) => {
             const item = JSON.parse(JSON.stringify(value))
@@ -967,67 +1010,68 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
         )
     }
 
-    useEffect(()=>{
-        if(!props.checked) setTasks(props.tasks)
+    useEffect(() => {
+        if (!props.checked) setTasks(props.tasks)
     }, [props.tasks])
-    useEffect(()=>{
-        if(props.checked){
+    useEffect(() => {
+        if (props.checked) {
             const filterTasks: BatchTask[] = getTasks()
                 .filter(item => item.Results.length !== 0)
-                .filter(item => 
+                .filter(item =>
                     (convertTask(item).filter((e) => e.type === "log")
-                         .map((i) => i.content)
-                         .sort((a: any, b: any) => a.timestamp - b.timestamp) as ExecResultLog[])
-                         .filter((i) => ["json", "success"]
-                         .includes((i?.level || "").toLowerCase())).length > 0
+                        .map((i) => i.content)
+                        .sort((a: any, b: any) => a.timestamp - b.timestamp) as ExecResultLog[])
+                        .filter((i) => ["json", "success"]
+                            .includes((i?.level || "").toLowerCase())).length > 0
                 )
             setTasks(filterTasks)
-        }else{
+        } else {
             setTasks(props.tasks)
         }
     }, [props.checked])
 
     return <AutoCard bodyStyle={{padding: 0, overflow: "hidden"}} style={{height: "100%"}}>
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!width || !height) {
-                        return
-                    }
-                    setHeight(height)
-                }}
-                handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
-            />
-            <div ref={containerRef as Ref<any>} style={{height: height, overflow: "auto"}}>
-                <div ref={listRef as Ref<any>}>
-                    {list.map(i => {
-                        return <div className="history-list-task-opt" key={i.data.TaskId}>
-                            <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 300}}>{`${i.data.Target} / ${i.data.PoC.ScriptName}`}</Text>
-                            <Divider type='vertical'/>
-                            {statusTag(i.data)}
-                            <Divider type='vertical'/>
-                            <Tag color="green">{formatTimestamp(i.data.CreatedAt)}</Tag>
-                            <Divider type='vertical'/>
-                            <Button type="link" onClick={(e)=>{
-                                let m = showDrawer({
-                                    title: "poc详情",
-                                    keyboard: false,
-                                    width: "60%",
-                                    onClose: ()=>{
-                                        m.destroy()
-                                    },
-                                    content: (details(i.data))
-                                })
-                                setTimeout(() => {
-                                    // @ts-ignore
-                                    const execResults: ExecResult[] = i.data.Results.filter(
-                                        (item) => !!item.Result
-                                    ).map((item) => item.Result)
-                                    for (let item of execResults) writeExecResultXTerm(getXtermRef(), item)
-                                }, 500)
-                            }}>详情</Button>
-                        </div>
-                    })}
-                </div>
+        <ReactResizeDetector
+            onResize={(width, height) => {
+                if (!width || !height) {
+                    return
+                }
+                setHeight(height)
+            }}
+            handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}
+        />
+        <div ref={containerRef as Ref<any>} style={{height: height, overflow: "auto"}}>
+            <div ref={listRef as Ref<any>}>
+                {list.map(i => {
+                    return <div className="history-list-task-opt" key={i.data.TaskId}>
+                        <Text ellipsis={{tooltip: true}} copyable={true}
+                              style={{width: 300}}>{`${i.data.Target} / ${i.data.PoC.ScriptName}`}</Text>
+                        <Divider type='vertical'/>
+                        {statusTag(i.data)}
+                        <Divider type='vertical'/>
+                        <Tag color="green">{formatTimestamp(i.data.CreatedAt)}</Tag>
+                        <Divider type='vertical'/>
+                        <Button type="link" onClick={(e) => {
+                            let m = showDrawer({
+                                title: "poc详情",
+                                keyboard: false,
+                                width: "60%",
+                                onClose: () => {
+                                    m.destroy()
+                                },
+                                content: (details(i.data))
+                            })
+                            setTimeout(() => {
+                                // @ts-ignore
+                                const execResults: ExecResult[] = i.data.Results.filter(
+                                    (item) => !!item.Result
+                                ).map((item) => item.Result)
+                                for (let item of execResults) writeExecResultXTerm(getXtermRef(), item)
+                            }, 500)
+                        }}>详情</Button>
+                    </div>
+                })}
             </div>
-        </AutoCard>
+        </div>
+    </AutoCard>
 });

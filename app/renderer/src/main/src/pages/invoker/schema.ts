@@ -75,6 +75,7 @@ export interface YakScriptParam {
     Required?: boolean
     Group?: string
     ExtraSetting?: string
+    BuildInParam?: boolean
 }
 
 export interface YakScriptHooks {
@@ -120,6 +121,9 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     IsGeneralModule?: boolean
     ExcludeNucleiWorkflow?: boolean
     ExcludeScriptNames?: string[]
+    IncludedScriptNames?: string[]
+    Tag?: string[]
+    NoResultReturn?: boolean
 }
 
 /*

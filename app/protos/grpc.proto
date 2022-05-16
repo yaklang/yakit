@@ -43,7 +43,12 @@ message ExecBatchYakScriptRequest {
   int64 Concurrent = 6;
 
   // 精确使用脚本名称
+  // 要注意，这个 Scripts 和 PluginFilter 是冲突的
   repeated string ScriptNames = 8;
+
+  // Tags with exclude / include
+  QueryYakScriptRequest PluginFilter = 12;
+  bool EnablePluginFilter = 13;
 }
 
 message ExecBatchYakScriptResult {
@@ -230,12 +235,24 @@ service Yak {
 
   // 获取 Tags
   rpc GetAvailableYakScriptTags(Empty) returns (Fields);
+  rpc ForceUpdateAvailableYakScriptTags(Empty) returns (Empty);
 
   // 通用的漏洞检测技术方案
-  rpc ExecYakitPluginsByYakScriptFilter(QueryYakScriptRequest) returns (stream ExecResult);
+  rpc ExecYakitPluginsByYakScriptFilter(ExecYakitPluginsByYakScriptFilterRequest) returns (stream ExecResult);
 
   // GenerateYakCodeByPacket
   rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
+}
+
+message ExecYakitPluginsByYakScriptFilterRequest {
+  QueryYakScriptRequest Filter = 1;
+
+  // 这个 Target 很复杂，URL / IP / CIDR / Host / Host:port
+  string Target = 2;
+  string Ports = 3;
+  string TargetFile = 5;
+
+  repeated ExecParamItem ExtraParams = 4;
 }
 
 message GenerateYakCodeByPacketRequest {
@@ -966,6 +983,8 @@ message QueryYakScriptRequest {
   bool ExcludeNucleiWorkflow = 8;
   repeated string ExcludeScriptNames = 9;
   repeated string IncludedScriptNames = 10;
+  repeated string Tag = 11;
+  bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
 }
 
 message QueryYakScriptResponse {
@@ -1131,6 +1150,21 @@ message FuzzerRequest {
   bool NoFixContentLength = 13;
 
   string HotPatchCode = 14;
+
+  // 设置 Fuzzer
+  FuzzerResponseFilter Filter = 15;
+}
+
+message FuzzerResponseFilter {
+  // 设置 body 大小作为过滤依据
+  int64 MinBodySize = 1;
+  int64 MaxBodySize = 2;
+
+  // 设置正则作为过滤依据，这个正则针对整个数据包生效
+  repeated string Regexps = 3;
+  repeated string Keywords = 4;
+
+  repeated string StatusCode = 6;
 }
 
 message RedirectRequestParams {
@@ -1181,6 +1215,9 @@ message FuzzerResponse {
 
   double BodySimilarity = 35;
   double HeaderSimilarity = 36;
+
+  // Matched by filter
+  bool MatchedByFilter = 37;
 }
 
 message Paging {
@@ -1350,12 +1387,17 @@ message MITMContentReplacer {
   // 选择替换之后的颜色
   string Color = 4;
 
-  // 生效内容
+  // 生效内容：默认对 body 生效
   bool EnableForRequest = 5;
   bool EnableForResponse = 6;
+  bool EnableForHeader = 9;
+  bool EnableForBody = 10;
 
   // Index
   int32 Index = 7;
+
+  // 额外标签，用于标注 flow
+  repeated string ExtraTag = 8;
 }
 
 message RemoveHookParams {

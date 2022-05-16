@@ -148,10 +148,18 @@ module.exports = (win, getClient) => {
         return await asyncWriteFile(params);
     });
 
+    // 批量执行脚本的新接口：通过一个短 Filter 执行
     const streamExecutePacketYakScriptMap = new Map();
     ipcMain.handle("cancel-ExecutePacketYakScript", handlerHelper.cancelHandler(streamExecutePacketYakScriptMap));
     ipcMain.handle("ExecutePacketYakScript", (e, params, token) => {
         let stream = getClient().ExecutePacketYakScript(params);
         handlerHelper.registerHandler(win, stream, streamExecutePacketYakScriptMap, token)
+    })
+
+    const streamExecYakitPluginsByYakScriptFilterMap = new Map();
+    ipcMain.handle("cancel-ExecYakitPluginsByYakScriptFilter", handlerHelper.cancelHandler(streamExecYakitPluginsByYakScriptFilterMap));
+    ipcMain.handle("ExecYakitPluginsByYakScriptFilter", (e, params, token) => {
+        let stream = getClient().ExecYakitPluginsByYakScriptFilter(params);
+        handlerHelper.registerHandler(win, stream, streamExecYakitPluginsByYakScriptFilterMap, token)
     })
 };

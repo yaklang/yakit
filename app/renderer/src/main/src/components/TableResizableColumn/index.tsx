@@ -6,7 +6,7 @@ import "./style.css"
 export interface TableResizableColumnProp<T> extends TableProps {
     columns: any[]
     data: T[]
-    sortFilter: any
+    sortFilter: (col: string, type: any) => any
     tableRef?: any
 }
 

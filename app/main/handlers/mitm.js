@@ -207,8 +207,20 @@ module.exports = (win, getClient) => {
 
         // 设置服务器发回的消息的回调函数
         stream.on("data", data => {
-            // 检查替代规则的问题
-            if (win && data?.justContentReplacers) {
+            // 处理第一个消息
+            // 第一个消息应该更新状态，第一个消息应该是同步 Filter 的信息。。。
+            if (win && isFirstData) {
+                isFirstData = false;
+                win.webContents.send("client-mitm-start-success")
+            }
+
+            // 检查替代规则的问题，如果返回了有内容，说明没 BUG
+            if (win && (data?.replacers || []).length > 0) {
+                win.webContents.send("client-mitm-content-replacer-update", data)
+            }
+
+            // 如果是强制更新的话，一般通过这里触发
+            if (win && data?.justContentReplacer) {
                 win.webContents.send("client-mitm-content-replacer-update", data)
             }
 
@@ -222,12 +234,6 @@ module.exports = (win, getClient) => {
             if (win && data["getCurrentHook"]) {
                 win.webContents.send("client-mitm-hooks", data["hooks"])
                 return
-            }
-
-            // 第一个消息应该更新状态，第一个消息应该是同步 Filter 的信息。。。
-            if (win && isFirstData) {
-                isFirstData = false;
-                win.webContents.send("client-mitm-start-success")
             }
 
             // 自动更新 HTTP Flow 的表格

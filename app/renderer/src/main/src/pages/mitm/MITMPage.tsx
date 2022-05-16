@@ -64,7 +64,7 @@ export interface MITMResponse extends MITMFilterSchema {
     response?: Uint8Array
     responseId?: number
 
-    justContentReplacers?: boolean
+    justContentReplacer?: boolean
     replacers?: MITMContentReplacerRule[]
 }
 
@@ -528,7 +528,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         </div>
                     })
                 }}
-            >SSL/TLS</Button>
+            >HTTPS 证书配置</Button>
         </Tooltip>
     })
 
@@ -550,7 +550,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 })
             }}
         >
-            正则内容替换
+            匹配/标记/替换
         </Button>
     })
 
@@ -569,7 +569,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                </>
                            });
                        }}
-        >设置过滤器</Button>
+        >过滤器</Button>
     })
 
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
@@ -909,6 +909,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "trigger-auto-hijacked",
                                                                             label: "切换为自动劫持模式",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
                                                                             ],
@@ -951,6 +952,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "trigger-auto-hijacked",
                                                                             label: "切换为自动劫持模式",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
                                                                             ],
@@ -963,6 +965,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "send-to-fuzzer",
                                                                             label: "发送到 Web Fuzzer",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_R
                                                                             ],
@@ -975,6 +978,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "send-to-plugin",
                                                                             label: "发送到 数据包扫描",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_E
                                                                             ],
@@ -988,6 +992,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "forward-response",
                                                                             label: "放行该 HTTP Request",
                                                                             keybindings: [
+                                                                                monaco.KeyMod.Shift | 
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_F
                                                                             ],

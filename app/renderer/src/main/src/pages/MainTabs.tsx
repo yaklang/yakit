@@ -13,13 +13,15 @@ export interface MainTabsProp {
     tabType: string
     pages: multipleNodeInfo[]
     currentKey: string
+    isShowAdd?: boolean
     setCurrentKey: (key: string, type: string) => void
     removePage: (key: string, type: string) => void
     removeOtherPage: (key: string, type: string) => void
+    onAddTab?: () => any
 }
 
 export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
-    const {currentTabKey, tabType, pages, currentKey, setCurrentKey, removePage, removeOtherPage} = props
+    const {currentTabKey, tabType, pages, currentKey, isShowAdd = false, setCurrentKey, removePage, removeOtherPage, onAddTab = () => {}} = props
 
     const [loading, setLoading] = useState<boolean>(false)
     const tabsRef = useRef(null)
@@ -91,17 +93,25 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                         }, 300)
                         return
                     }
+                    if (e.code === "KeyT" && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if(!isShowAdd) return
+                        onAddTab()
+                        return
+                    }
                 }}
             >
                 <Tabs
                     className='secondary-menu-tabs yakit-layout-tabs'
                     size='small'
                     type='editable-card'
-                    hideAdd={true}
+                    hideAdd={!isShowAdd}
                     activeKey={currentKey}
                     onChange={(key) => setCurrentKey(key, tabType)}
                     onEdit={(targetKey, action) => {
                         if (action === "remove") removePage(targetKey as unknown as string, tabType)
+                        if(action === "add") onAddTab()
                     }}
                     renderTabBar={(props, TabBarDefault) => {
                         return bars(props, TabBarDefault)

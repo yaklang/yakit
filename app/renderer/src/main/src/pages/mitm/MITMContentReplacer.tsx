@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {AutoCard} from "../../components/AutoCard";
 import {Button, Checkbox, Form, List, Space, Table, Typography} from "antd";
 import {failed, info} from "../../utils/notification";
-import {InputInteger, InputItem, ManySelectOne, SwitchItem} from "../../utils/inputUtil";
+import {InputInteger, InputItem, ManyMultiSelectForString, ManySelectOne, SwitchItem} from "../../utils/inputUtil";
 import {showModal} from "../../utils/showModal";
 
 export interface MITMContentReplacerProp {
@@ -19,6 +19,9 @@ export interface MITMContentReplacerRule {
     Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan"
     EnableForRequest: boolean
     EnableForResponse: boolean
+    EnableForBody: boolean
+    EnableForHeader: boolean
+    ExtraTag: string[]
 }
 
 const {Text} = Typography;
@@ -134,7 +137,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             })
                             setRules([...rules])
                         }}
-                    >不会替换命中内容</Checkbox>
+                    />
                 },
                 {
                     title: "对请求生效", render: (i: MITMContentReplacerRule) => <Checkbox
@@ -149,7 +152,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             setRules([...rules])
                         }}
                         disabled={i.NoReplace}
-                    >对 Request 生效</Checkbox>
+                    />
                 },
                 {
                     title: "对响应生效", render: (i: MITMContentReplacerRule) => <Checkbox
@@ -164,7 +167,37 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             setRules([...rules])
                         }}
                         disabled={i.NoReplace}
-                    >对 Response 生效</Checkbox>
+                    />
+                },
+                {
+                    title: "对 Header 生效", render: (i: MITMContentReplacerRule) => <Checkbox
+                        checked={i.EnableForHeader}
+                        onChange={() => {
+                            rules.forEach(target => {
+                                if (target.Index != i.Index) {
+                                    return
+                                }
+                                target.EnableForHeader = !target.EnableForHeader
+                            })
+                            setRules([...rules])
+                        }}
+                        disabled={i.NoReplace}
+                    />
+                },
+                {
+                    title: "对 Body 生效", render: (i: MITMContentReplacerRule) => <Checkbox
+                        checked={i.EnableForBody}
+                        onChange={() => {
+                            rules.forEach(target => {
+                                if (target.Index != i.Index) {
+                                    return
+                                }
+                                target.EnableForBody = !target.EnableForBody
+                            })
+                            setRules([...rules])
+                        }}
+                        disabled={i.NoReplace}
+                    />
                 },
                 {
                     title: "命中颜色", render: (i: MITMContentReplacerRule) => <ManySelectOne
@@ -185,10 +218,30 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     />
                 },
                 {
+                    title: "追加 Tag", render: (i: MITMContentReplacerRule) => <ManyMultiSelectForString
+                        data={["敏感信息", "疑似漏洞", "KEY泄漏"].map(i => {
+                            return {value: i, label: i}
+                        })}
+                        label={""} mode={"tags"}
+                        setValue={tagSTr => {
+                            rules.forEach(target => {
+                                if (target.Index != i.Index) {
+                                    return
+                                }
+                                target.ExtraTag = tagSTr.split(",")
+                            })
+                            setRules([...rules])
+                        }} value={i.ExtraTag.join(",")}
+                        formItemStyle={{marginBottom: 0}}
+                    >
+
+                    </ManyMultiSelectForString>
+                },
+                {
                     title: "操作", render: (i: MITMContentReplacerRule) => <Space>
                         <Button size={"small"} onClick={() => {
                             setRules(rules.filter(t => t.Index !== i.Index))
-                        }}>删除</Button>
+                        }} danger={true}>删除</Button>
                     </Space>
 
                 },
@@ -208,11 +261,14 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
     const [params, setParams] = useState<MITMContentReplacerRule>({
         Color: "red",
         EnableForRequest: false,
-        EnableForResponse: false,
+        EnableForResponse: true,
+        EnableForBody: true,
+        EnableForHeader: true,
         Index: props.existed.length + 1,
         NoReplace: false,
         Result: "",
-        Rule: ""
+        Rule: "",
+        ExtraTag: []
     })
     return <Form
         style={{marginBottom: 20}}
@@ -229,22 +285,33 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
         }}
     >
         <InputInteger label={"执行顺序"} setValue={Index => setParams({...params, Index})} value={params.Index}/>
-        <InputItem label={"规则内容"} setValue={Rule => setParams({...params, Rule})} value={params.Rule}/>
-        <InputItem label={"替换结果"} setValue={Result => setParams({...params, Result})} value={params.Result}/>
-        <SwitchItem label={"禁用规则"} setValue={NoReplace => setParams({...params, NoReplace})} value={params.NoReplace}/>
-        {!params.NoReplace && <>
-            <SwitchItem label={"对 Request 生效"} setValue={EnableForRequest => setParams({...params, EnableForRequest})}
-                        value={params.EnableForRequest}/>
-            <SwitchItem label={"对 Response 生效"}
-                        setValue={EnableForResponse => setParams({...params, EnableForResponse})}
-                        value={params.EnableForResponse}/>
-        </>}
+        <InputItem label={"规则内容"} setValue={Rule => setParams({...params, Rule})} value={params.Rule} required={true}/>
+        <InputItem label={"替换结果"} setValue={Result => setParams({...params, Result})} value={params.Result} placeholder={"想要替换成的内容，可以为空~"}/>
+        {/*<SwitchItem label={"禁用规则"} setValue={NoReplace => setParams({...params, NoReplace})} value={params.NoReplace}/>*/}
+        {/*{!params.NoReplace && <>*/}
+        {/*    <SwitchItem label={"对 Request 生效"} setValue={EnableForRequest => setParams({...params, EnableForRequest})}*/}
+        {/*                value={params.EnableForRequest}/>*/}
+        {/*    <SwitchItem label={"对 Response 生效"}*/}
+        {/*                setValue={EnableForResponse => setParams({...params, EnableForResponse})}*/}
+        {/*                value={params.EnableForResponse}/>*/}
+        {/*    <SwitchItem label={"对 Header 生效"}*/}
+        {/*                setValue={EnableForHeader => setParams({...params, EnableForHeader})}*/}
+        {/*                value={params.EnableForHeader}*/}
+        {/*    />*/}
+        {/*    <SwitchItem label={"对 Body 生效"}*/}
+        {/*                setValue={EnableForBody => setParams({...params, EnableForBody})} value={params.EnableForBody}*/}
+        {/*    />*/}
+        {/*</>}*/}
         <ManySelectOne
-            formItemStyle={{marginBottom: 0}} label={"命中颜色"}
+            label={"命中颜色"}
             data={["red", "blue", "cyan", "green", "grey", "purple", "yellow", "orange"].map(i => {
                 return {value: i, text: i}
             })}
             setValue={Color => setParams({...params, Color})} value={params.Color}
+        />
+        <ManyMultiSelectForString
+            mode={"tags"} data={[]} label={"标记 Tag"} defaultSep={","}
+            setValue={e => setParams({...params, ExtraTag: e.split(",")})} value={(params?.ExtraTag || []).join(",")}
         />
         <Form.Item colon={false} label={" "}>
             <Button type="primary" htmlType="submit"> 添加该规则 </Button>

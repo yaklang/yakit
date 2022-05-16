@@ -4,10 +4,10 @@ import {
     AimOutlined,
     AppstoreOutlined,
     AuditOutlined,
+    BugOutlined,
     CodeOutlined,
     EllipsisOutlined,
     FireOutlined,
-    BugOutlined,
     FunctionOutlined,
     OneToOneOutlined,
     RocketOutlined,
@@ -16,7 +16,6 @@ import {
 // import {CodecPage} from "../pages/codec/CodecPage";
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage";
 import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors";
-import {YakScriptManagerPage} from "../pages/invoker/YakScriptManager";
 import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager";
 import {PortScanPage} from "../pages/portscan/PortScanPage";
 import {YakitStorePage} from "../pages/yakitStore/YakitStorePage";
@@ -26,18 +25,17 @@ import {BrutePage} from "../pages/brute/BrutePage";
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory";
 import {PortAssetTable} from "../pages/assetViewer/PortAssetPage";
-import {ExecResultsViewer} from "../pages/invoker/batch/ExecMessageViewer";
 import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable";
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage";
 import {ReverseServerPage} from "../pages/reverse/ReverseServerPage";
 import {RiskPage} from "../pages/risks/RiskPage";
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage";
-import {BatchExecutorPage} from "../pages/invoker/batch/BatchExecutorPage";
 import {HTTPFuzzerPage} from "../pages/fuzzer/HTTPFuzzerPage";
 import {fuzzerInfoProp} from "../pages/MainOperator";
 import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage";
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage";
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage";
+import {BatchExecutorPageEx} from "../pages/invoker/batch/BatchExecutorPageEx";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -266,7 +264,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.TCPPortLog:
             return <RandomPortLogPage/>
         case Route.BatchExecutorPage:
-            return <BatchExecutorPage/>
+            // return <BatchExecutorPage/>
+            return <BatchExecutorPageEx/>
         case Route.DB_Report:
             return <ReportViewerPage/>
         default:
