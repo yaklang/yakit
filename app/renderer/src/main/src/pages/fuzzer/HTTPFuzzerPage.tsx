@@ -147,6 +147,13 @@ interface FuzzResponseFilter {
     StatusCode: string[]
 }
 
+function removeEmptyFiledFromFuzzResponseFilter(i: FuzzResponseFilter): FuzzResponseFilter {
+    i.Keywords = (i.Keywords || []).filter(i => !!i)
+    i.StatusCode = (i.StatusCode || []).filter(i => !!i)
+    i.Regexps = (i.Regexps || []).filter(i => !!i)
+    return {...i}
+}
+
 function filterIsEmpty(f: FuzzResponseFilter): boolean {
     return f.MinBodySize === 0 && f.MaxBodySize === 0 &&
         f.Regexps.length === 0 && f.Keywords.length === 0 &&
@@ -169,7 +176,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [hotPatchCode, setHotPatchCode] = useState<string>("");
 
     // filter
-    const [filter, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
+    const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
         Keywords: [],
         MaxBodySize: 0,
         MinBodySize: 0,
@@ -305,7 +312,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         history.push(request)
         setHistory([...history])
 
-        console.info(filter)
+        setDroppedCount(0)
         ipcRenderer.invoke(
             "HTTPFuzzer",
             {
@@ -318,7 +325,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Proxy: proxy,
                 ActualAddr: actualHost,
                 HotPatchCode: hotPatchCode,
-                Filter: filter,
+                Filter: getFilter(),
             },
             fuzzToken
         )
@@ -972,9 +979,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <InputItem
                                             label={"状态码"} placeholder={"200,300-399"}
                                             disable={loading}
-                                            value={filter.StatusCode.join(",")}
+                                            value={getFilter().StatusCode.join(",")}
                                             setValue={e => {
-                                                setFilter({...filter, StatusCode: e.split(",")})
+                                                setFilter({...getFilter(), StatusCode: e.split(",").filter(i => !!i)})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0}}}
                                         />
@@ -982,10 +989,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <Col span={12}>
                                         <InputItem
                                             label={"关键字"} placeholder={"Login,登录成功"}
-                                            value={filter.Keywords.join(",")}
+                                            value={getFilter().Keywords.join(",")}
                                             disable={loading}
                                             setValue={e => {
-                                                setFilter({...filter, Keywords: e.split(",")})
+                                                setFilter({...getFilter(), Keywords: e.split(",").filter(i => !!i)})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0}}}
                                         />
@@ -993,10 +1000,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <Col span={12}>
                                         <InputItem
                                             label={"正则"} placeholder={`Welcome\\s+\\w+!`}
-                                            value={filter.Regexps.join(",")}
+                                            value={getFilter().Regexps.join(",")}
                                             disable={loading}
                                             setValue={e => {
-                                                setFilter({...filter, Regexps: e.split(",")})
+                                                setFilter({...getFilter(), Regexps: e.split(",").filter(i => !!i)})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0, marginTop: 2}}}
                                         />
