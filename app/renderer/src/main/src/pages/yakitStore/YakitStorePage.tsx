@@ -738,7 +738,6 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                     autoComplete={[
                         "https://github.com/yaklang/yakit-store",
                         "https://ghproxy.com/https://github.com/yaklang/yakit-store",
-                        "https://gitee.com/wooluo/yakit-store.git",
                     ]}
                     value={gitUrl}
                     setValue={setGitUrl}
@@ -750,7 +749,6 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                     autoComplete={[
                         "https://github.com/projectdiscovery/nuclei-templates",
                         "https://ghproxy.com/https://github.com/projectdiscovery/nuclei-templates",
-                        "https://gitee.com/wooluo/nuclei-templates.git",
                     ]}
                     label={"Yaml PoC URL"}
                     value={nucleiGitUrl}
