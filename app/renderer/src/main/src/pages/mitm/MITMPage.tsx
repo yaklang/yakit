@@ -509,23 +509,28 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     showModal({
                         title: "下载 SSL/TLS 证书以劫持 HTTPS",
                         width: "50%",
-                        content: <div>
-                            <AutoCard extra={<Button
-                                type={"link"}
-                                onClick={() => {
-                                    saveABSFileToOpen("yakit证书.crt.pem", caCerts.CaCerts)
-                                    // openABSFileLocated(caCerts.LocalFile)
-                                }}
-                            >
-                                下载到本地并打开
-                            </Button>} size={"small"} bodyStyle={{padding: 0}}>
+                        content: <Space direction={"vertical"} style={{width: "100%"}}>
+                            <AutoCard
+                                title={"证书配置"}
+                                extra={<Button
+                                    type={"link"}
+                                    onClick={() => {
+                                        saveABSFileToOpen("yakit证书.crt.pem", caCerts.CaCerts)
+                                        // openABSFileLocated(caCerts.LocalFile)
+                                    }}
+                                >
+                                    下载到本地并打开
+                                </Button>} size={"small"} bodyStyle={{padding: 0}}>
                                 <div style={{height: 360}}>
                                     <YakEditor bytes={true}
                                                valueBytes={caCerts.CaCerts}
                                     />
                                 </div>
                             </AutoCard>
-                        </div>
+                            <Alert message={<Space>
+                                在设置代理后访问：<CopyableField text={"http://download-mitm-cert.yaklang.io"}/> 可自动下载证书
+                            </Space>}/>
+                        </Space>
                     })
                 }}
             >HTTPS 证书配置</Button>
@@ -909,7 +914,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "trigger-auto-hijacked",
                                                                             label: "切换为自动劫持模式",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.Shift | 
+                                                                                monaco.KeyMod.Shift |
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
                                                                             ],
@@ -952,7 +957,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "trigger-auto-hijacked",
                                                                             label: "切换为自动劫持模式",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.Shift | 
+                                                                                monaco.KeyMod.Shift |
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_T
                                                                             ],
@@ -965,7 +970,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "send-to-fuzzer",
                                                                             label: "发送到 Web Fuzzer",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.Shift | 
+                                                                                monaco.KeyMod.Shift |
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_R
                                                                             ],
@@ -978,7 +983,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "send-to-plugin",
                                                                             label: "发送到 数据包扫描",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.Shift | 
+                                                                                monaco.KeyMod.Shift |
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_E
                                                                             ],
@@ -992,7 +997,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                                             id: "forward-response",
                                                                             label: "放行该 HTTP Request",
                                                                             keybindings: [
-                                                                                monaco.KeyMod.Shift | 
+                                                                                monaco.KeyMod.Shift |
                                                                                 (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
                                                                                 monaco.KeyCode.KEY_F
                                                                             ],
