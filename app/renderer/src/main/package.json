@@ -56,7 +56,8 @@
     "xterm-addon-search": "^0.8.2",
     "xterm-addon-search-bar": "^0.2.0",
     "xterm-addon-unicode11": "^0.3.0",
-    "xterm-for-react": "^1.0.4"
+    "xterm-for-react": "^1.0.4",
+    "zustand": "^4.0.0-rc.1"
   },
   "scripts": {
     "electron-render": "cross-env BROWSER=none react-app-rewired start",

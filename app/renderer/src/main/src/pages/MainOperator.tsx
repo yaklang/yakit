@@ -46,7 +46,7 @@ import MDEditor from "@uiw/react-md-editor"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "./invoker/schema"
 import {PerformanceDisplay} from "../components/PerformanceDisplay"
 import {useHotkeys} from "react-hotkeys-hook";
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import {AutoSpin} from "../components/AutoSpin"
@@ -55,11 +55,13 @@ import {Fields} from "./risks/RiskTable";
 import {RiskStatsTag} from "../utils/RiskStatsTag";
 import {ItemSelects} from "../components/baseTemplate/FormItemUtil"
 import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
-import {coordinate} from "./globalVariable"
+import {coordinate, UserPlatformType} from "./globalVariable"
 import { DropdownMenu } from "@/components/baseTemplate/DropdownMenu"
 import { MainTabs } from "./MainTabs"
 import Login from "./Login"
 import { TrustList } from "./TrustList"
+import yakitImg from "../assets/yakit.jpg"
+import { UserInfoProps, useStore } from "@/store"
 
 import "./main.css"
 import "./GlobalClass.scss"
@@ -95,6 +97,17 @@ const singletonRoute = [
     Route.ICMPSizeLog,
     Route.TCPPortLog,
 ]
+const defaultUserInfo: UserInfoProps = {
+    isLogin: false,
+    platform: null,
+    githubName: null,
+    githubHeadImg: null,
+    wechatName: null,
+    wechatHeadImg: null,
+    qqName: null,
+    qqHeadImg: null,
+    role: null
+}
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -164,7 +177,7 @@ const Main: React.FC<MainProp> = (props) => {
     const [trustShow, setTrustShow] = useState<boolean>(false)
 
     // 登录框状态
-    const [loginshow, setLoginShow] = useState<boolean>(false)
+    const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
 
     // 系统类型
     const [system, setSystem] = useState<string>("")
@@ -444,6 +457,14 @@ const Main: React.FC<MainProp> = (props) => {
                 coordinate.pageY = pageY
             }, 50);
         }
+    }, [])
+    // 全局监听登录状态
+    const {userInfo, setStoreUserInfo} = useStore()
+    useEffect(() => {
+        ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
+            setStoreUserInfo(res)
+        })
+        return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
 
     // 全局注册快捷键功能
@@ -834,30 +855,40 @@ const Main: React.FC<MainProp> = (props) => {
                                         配置
                                     </Button>
                                 </Dropdown>
-                                <Button type="link" onClick={() => setLoginShow(true)}>登录</Button>
-                                <div>
-                                    <DropdownMenu
-                                        menu={{
-                                            data: [
-                                                {key: "sign-out", title: "退出登录"},
-                                                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                                                {key: "trust-list", title: "信任用户管理"}
-                                            ]
-                                        }}
-                                        dropdown={{
-                                            placement: "bottomCenter",
-                                            trigger: ["click"]
-                                        }}
-                                        onClick={(key) => {
-                                            if(key === "trust-list") setTrustShow(true)
-                                        }}
-                                    >
-                                        <img
-                                            src='https://profile-avatar.csdnimg.cn/87dc7bdc769b44fd9b82afb51946be1a_freeb1rd.jpg'
-                                            style={{width: 32, height: 32, borderRadius: "50%", cursor: "pointer"}}
-                                        />
-                                    </DropdownMenu>
-                                </div>
+                                {userInfo.isLogin ? (
+                                    <div>
+                                        <DropdownMenu
+                                            menu={{
+                                                data: [
+                                                    {key: "sign-out", title: "退出登录"},
+                                                    {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                                                    {key: "trust-list", title: "信任用户管理"}
+                                                ]
+                                            }}
+                                            dropdown={{
+                                                placement: "bottomCenter",
+                                                trigger: ["click"]
+                                            }}
+                                            onClick={(key) => {
+                                                if(key === "sign-out"){
+                                                    setStoreUserInfo(defaultUserInfo)
+                                                    ipcRenderer.send("user-sign-out")
+                                                    setTimeout(() => success("已成功退出账号"), 500);
+                                                }
+                                                if (key === "trust-list") setTrustShow(true)
+                                            }}
+                                        >
+                                            <img
+                                                src={userInfo[UserPlatformType[userInfo.platform || ""].img] || yakitImg}
+                                                style={{width: 32, height: 32, borderRadius: "50%", cursor: "pointer"}}
+                                            />
+                                        </DropdownMenu>
+                                    </div>
+                                ) : (
+                                    <Button type='link' onClick={() => setLoginShow(true)}>
+                                        登录
+                                    </Button>
+                                )}
                                 <Button type={"link"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
                                     if (winCloseFlag) setWinCloseShow(true)
                                     else {
@@ -1127,7 +1158,7 @@ const Main: React.FC<MainProp> = (props) => {
             </Modal>
             <Login
                 visible={loginshow}
-                onCancel={() => setLoginShow(!loginshow)}
+                onCancel={() => setLoginShow(!getLoginShow())}
             ></Login>
             <Modal
                 visible={trustShow}
@@ -1139,7 +1170,7 @@ const Main: React.FC<MainProp> = (props) => {
                 onCancel={() => setTrustShow(false)}
                 footer={null}
             >
-                <TrustList info={""}></TrustList>
+                <TrustList></TrustList>
             </Modal>
         </Layout>
     )

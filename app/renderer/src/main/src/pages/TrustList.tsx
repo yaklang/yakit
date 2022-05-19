@@ -4,6 +4,7 @@ import {GithubOutlined, QqOutlined, WechatOutlined, SearchOutlined} from "@ant-d
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
 
 import "./TrustList.scss"
+import {useMemoizedFn} from "ahooks"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -13,11 +14,48 @@ const PlatformIcon: {[key: string]: ReactNode} = {
     qq: <QqOutlined />
 }
 
-export interface TrustListProp {
-    info: any
+export interface TrustListProp {}
+interface UserInfoProps{
+    id:number
+    head_img:string
+    from_platform:string
+    user_verbose:string
 }
 
+
 export const TrustList: React.FC<TrustListProp> = memo((props) => {
+    const [userList, setUserList] = useState()
+
+    const getUserList = useMemoizedFn((str: string) => {
+        ipcRenderer
+            .invoke("fetch-user-list", {keywords: str})
+            .then((res) => {
+                console.log(123, res)
+            })
+            .catch((err) => {})
+        // .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const getTrustUserList = useMemoizedFn(() => {
+        const param = {
+            page: 1,
+            limit: 20,
+            keywords: "all"
+        }
+
+        ipcRenderer
+            .invoke("fetch-trust-user-list", param)
+            .then((res) => {
+                console.log(321, JSON.parse(res.from))
+            })
+            .catch((err) => {})
+        // .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+
+    useEffect(() => {
+        // getUserList()
+        getTrustUserList()
+    }, [])
+
     return (
         <div className='trust-list-container'>
             <div className='add-account-body'>
@@ -51,6 +89,7 @@ export const TrustList: React.FC<TrustListProp> = memo((props) => {
                         optionLabelProp: "name",
                         value: undefined,
                         onChange: (value, option: any) => {},
+                        onSearch: getUserList,
                         renderOpt: (info) => {
                             return (
                                 <div className='select-opt'>
