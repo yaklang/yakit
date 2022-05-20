@@ -12,30 +12,32 @@ export interface SaveConfigProp {
 }
 
 export interface BatchScanConfig {
-    Group: string
-    Name: string
-    QueryConfig: SimpleQueryYakScriptSchema
+    group: string
+    name: string
+    query: SimpleQueryYakScriptSchema
 }
 
 export const SaveConfig: React.FC<SaveConfigProp> = (props) => {
-    const [params, setParams] = useState<BatchScanConfig>({Group: "", Name: "", QueryConfig: props.QueryConfig});
+    const [params, setParams] = useState<BatchScanConfig>({group: "", name: "", query: props.QueryConfig});
     return <div>
         <Form
             labelCol={{span: 5}} wrapperCol={{span: 14}}
             onSubmitCapture={e => {
                 e.preventDefault()
                 const filename = `config-${moment().format("YYYY-MM-DD-HH-mm-SS")}.json`
-                saveABSFileToOpen(filename, JSON.stringify(params.QueryConfig))
+                saveABSFileToOpen(filename, JSON.stringify(params))
                 if (!!props.onSave) {
                     props.onSave(filename)
                 }
             }}
         >
-            <InputItem required={true} label={"一级菜单组"} setValue={Group => setParams({...params, Group})} value={params.Group}/>
-            <InputItem required={true} label={"二级菜单"} setValue={Name => setParams({...params, Name})} value={params.Name}/>
+            <InputItem required={true} label={"一级菜单组"} setValue={Group => setParams({...params, group: Group})}
+                       value={params.group}/>
+            <InputItem required={true} label={"二级菜单"} setValue={Name => setParams({...params, name: Name})}
+                       value={params.name}/>
             <Form.Item label={"内容"}>
                 <div style={{height: 300}}>
-                    <YakEditor type={"http"} readOnly={true} value={JSON.stringify(params.QueryConfig)}/>
+                    <YakEditor type={"http"} readOnly={true} value={JSON.stringify(params.query)}/>
                 </div>
             </Form.Item>
             <Form.Item colon={false} label={" "}>
