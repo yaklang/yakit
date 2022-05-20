@@ -1,10 +1,12 @@
 import React, {useEffect, useState} from "react";
 import {QueryYakScriptRequest, YakScript} from "../pages/invoker/schema";
 import {PluginList} from "./PluginList";
-import {useGetState, useMemoizedFn} from "ahooks";
+import {useDebounce, useGetState, useMemoizedFn} from "ahooks";
 import {queryYakScriptList} from "../pages/yakitStore/network";
 
 export interface SimplePluginListProp {
+    readOnly?: boolean
+    initialQuery?: QueryYakScriptRequest
     pluginTypes?: string
     initialSelected?: string[]
     onSelected?: (names: string[]) => any
@@ -59,15 +61,17 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
             () => setTimeout(() => setPluginLoading(false), 300),
             limit || 200,
             undefined,
-            keyword || ""
+            keyword || "",
+            props.initialQuery,
         )
     })
 
     useEffect(() => {
         search()
-    }, [])
+    }, [useDebounce(props.initialQuery, {wait: 500})])
 
     return <PluginList
+        readOnly={props.readOnly}
         bordered={props.bordered}
         loading={pluginLoading}
         lists={(scripts || []).sort((a: YakScript, b: YakScript) => {

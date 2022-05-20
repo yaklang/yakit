@@ -39,7 +39,7 @@ export interface NewTaskHistoryProps {
     time: string
 }
 
-const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema, allTag: FieldName[]): QueryYakScriptRequest => {
+export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema, allTag: FieldName[]): QueryYakScriptRequest => {
     const result = {
         Pagination: genDefaultPagination(1),
         Type: i.type,

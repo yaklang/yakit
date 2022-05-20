@@ -178,6 +178,7 @@ service Yak {
   rpc RemoveFromMenu(RemoveFromMenuRequest) returns (Empty);
   rpc YakScriptIsInMenu(YakScriptIsInMenuRequest) returns (Empty);
   rpc GetAllMenuItem(Empty) returns (MenuByGroup);
+  rpc GetMenuItemById(GetMenuItemByIdRequest) returns (MenuItem);
   rpc QueryGroupsByYakScriptId(QueryGroupsByYakScriptIdRequest) returns (GroupNames);
 
   // document
@@ -805,11 +806,25 @@ message MenuItem {
   string Group = 1;
   string Verbose = 2;
   int64 YakScriptId = 3;
+  BatchExecutionPluginFilter Query = 4;
+  uint64 MenuItemId = 5;
+}
+
+// 这里的小写不要改动，兼容前端已有的格式
+message BatchExecutionPluginFilter {
+  string type = 1;
+  string tags = 2;
+  repeated string include = 3;
+  repeated string exclude = 4;
 }
 
 message MenuItemGroup {
   string Group = 1;
   repeated MenuItem Items = 2;
+}
+
+message GetMenuItemByIdRequest {
+  uint64 ID = 1;
 }
 
 message MenuByGroup {

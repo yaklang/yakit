@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Checkbox, Form, Popover, Space, Tooltip, Typography} from "antd"
-import {QuestionCircleOutlined, UserOutlined, SettingOutlined, SearchOutlined} from "@ant-design/icons"
+import {QuestionCircleOutlined, UserOutlined, SettingOutlined, SearchOutlined, CodeOutlined} from "@ant-design/icons"
 import {YakScript} from "../pages/invoker/schema"
 import {AutoCard, AutoCardProps} from "./AutoCard"
 import ReactResizeDetector from "react-resize-detector"
@@ -9,6 +9,7 @@ import {showModal} from "../utils/showModal"
 import {InputInteger, InputItem, OneLine} from "../utils/inputUtil"
 
 import "./PluginList.css"
+import {YakEditor} from "../utils/editors";
 
 const {Text} = Typography
 
@@ -24,6 +25,7 @@ export interface PluginListProp extends AutoCardProps {
     search: (params: { limit: number; keyword: string }) => any
     extra?: React.ReactNode
     disabled?: boolean
+    readOnly?: boolean
 }
 
 interface YakScriptCheckboxProp {
@@ -33,13 +35,18 @@ interface YakScriptCheckboxProp {
     selectScript: (i: YakScript) => any
     unSelectScript: (i: YakScript) => any
     disabled?: boolean
+    readOnly?: boolean
 }
 
 const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) => {
     const {info, selected, vlistWidth, selectScript, unSelectScript,} = props;
 
     return <div key={info.ScriptName} className='list-opt'>
-        <Checkbox
+        {props.readOnly ? <OneLine width={vlistWidth} overflow={"hidden"}>
+            <div>
+                {info.ScriptName}
+            </div>
+        </OneLine> : <Checkbox
             disabled={props.disabled}
             checked={selected.includes(info.ScriptName)}
             onChange={(r) => {
@@ -52,7 +59,7 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
                     {info.ScriptName}
                 </div>
             </OneLine>
-        </Checkbox>
+        </Checkbox>}
         <div style={{flex: 1, textAlign: "right"}}>
             {info.Help && (
                 <a
@@ -70,6 +77,25 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
                 <Tooltip title={info.Author}>
                     <a href={"#"} style={{marginRight: 2, marginLeft: 2}}><UserOutlined/></a>
                 </Tooltip>
+            )}
+            {!!info.Content && props.readOnly && (
+                <a href={"#"}
+                   style={{marginRight: 2, marginLeft: 2}}
+                   onClick={() => {
+                       showModal({
+                           title: info.ScriptName, width: "60%",
+                           content: (
+                               <div style={{height: 400}}>
+                                   <YakEditor
+                                       type={info.Type === "nuclei" ? "yaml" : "yak"}
+                                       readOnly={true}
+                                       value={info.Content}
+                                   />
+                               </div>
+                           )
+                       })
+                   }}
+                ><CodeOutlined/></a>
             )}
         </div>
     </div>
@@ -127,7 +153,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                 bordered={false}
                 {...restCard}
                 extra={
-                    <Space>
+                    !props.readOnly && <Space>
                         <Popover
                             title={"额外设置"}
                             trigger={["click"]}
@@ -216,7 +242,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                 />
                 <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto"}}>
                     <div ref={wrapperRef as any}>{list.map((i) => <YakScriptCheckbox
-                        key={i.data.ScriptName}
+                        key={i.data.ScriptName} readOnly={props.readOnly}
                         info={i.data} selectScript={selectScript} unSelectScript={unSelectScript}
                         vlistWidth={vlistWidth} selected={selected} disabled={disabled}
                     />)}</div>
