@@ -30,6 +30,10 @@
 .result-notice-body .notice-body .notice-font-completed {
     color: #bae637;
 }
+.result-notice-body .notice-body .notice-font-vuln {
+    color: #a8071a;
+}
+
 .result-notice-body .notice-body .notice-body-counter {
     height: 18px;
     line-height: 18px;

@@ -655,6 +655,7 @@ export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
 interface RiskDetailsProp {
     info: Risk
     isShowTime?: boolean
+    shrink?: boolean
 }
 
 export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
@@ -735,15 +736,17 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
                 </div>
             </Descriptions.Item>
 
-            <Descriptions.Item label='Parameter' span={3}>
-                <div>{info.Parameter || "-"}</div>
-            </Descriptions.Item>
-            <Descriptions.Item label='Payload' span={3}>
-                <div>{info.Payload || "-"}</div>
-            </Descriptions.Item>
-            <Descriptions.Item label='详情' span={3}>
-                <div>{info.Details || "-"}</div>
-            </Descriptions.Item>
+            {!props.shrink && <>
+                <Descriptions.Item label='Parameter' span={3}>
+                    <div>{info.Parameter || "-"}</div>
+                </Descriptions.Item>
+                <Descriptions.Item label='Payload' span={3}>
+                    <div>{info.Payload || "-"}</div>
+                </Descriptions.Item>
+                <Descriptions.Item label='详情' span={3}>
+                    <div>{info.Details || "-"}</div>
+                </Descriptions.Item>
+            </>}
         </Descriptions>
     )
 })
