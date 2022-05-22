@@ -176,7 +176,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [request, setRequest, getRequest] = useGetState(props.fuzzerParams?.request || props.request || defaultPostTemplate)
     const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
     const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
-    const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 5.0)
+    const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 10.0)
     const [proxy, setProxy] = useState(props.fuzzerParams?.proxy || "")
     const [actualHost, setActualHost] = useState(props.fuzzerParams?.actualHost || "")
     const [advancedConfig, setAdvancedConfig] = useState(false)
