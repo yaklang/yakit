@@ -103,7 +103,7 @@ export interface FuzzerResponse {
     Reason: string
     Payloads?: string[]
 
-    IsHttps?: boolean
+    IsHTTPS?: boolean
     Count?: number
 
     HeaderSimilarity?: number
@@ -367,7 +367,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return
             }
             // const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
-
             buffer.push({
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
@@ -385,7 +384,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 ResponseRaw: data.ResponseRaw,
                 RequestRaw: data.RequestRaw,
                 Payloads: data.Payloads,
-                isHttps: data.IsHTTPS,
+                IsHTTPS: data.IsHTTPS,
                 Count: count,
                 BodySimilarity: data.BodySimilarity,
                 HeaderSimilarity: data.HeaderSimilarity,
@@ -568,7 +567,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             {loading && <Spin size={"small"} spinning={loading}/>}
                             {onlyOneResponse ? (
                                 <Space>
-                                    {content[0].IsHttps && <Tag>{content[0].IsHttps ? "https" : ""}</Tag>}
+                                    {content[0].IsHTTPS && <Tag>{content[0].IsHTTPS ? "https" : ""}</Tag>}
                                     <Tag>{content[0].DurationMs}ms</Tag>
                                     <Space key='single'>
                                         <Button

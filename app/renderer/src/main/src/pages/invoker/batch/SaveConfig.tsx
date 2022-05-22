@@ -5,6 +5,9 @@ import {InputItem} from "../../../utils/inputUtil";
 import {YakEditor} from "../../../utils/editors";
 import {saveABSFileToOpen} from "../../../utils/openWebsite";
 import moment from "moment";
+import {YakScriptParamsSetter} from "../YakScriptParamsSetter";
+import {ImportMenuConfig} from "./consts_importConfigYakCode";
+import {startExecYakCode} from "../../../utils/basic";
 
 export interface SaveConfigProp {
     QueryConfig: SimpleQueryYakScriptSchema
@@ -44,5 +47,23 @@ export const SaveConfig: React.FC<SaveConfigProp> = (props) => {
                 <Button type="primary" htmlType="submit"> 保存到本地 </Button>
             </Form.Item>
         </Form>
+    </div>
+};
+
+export interface ImportConfigProp {
+
+}
+
+export const ImportConfig: React.FC<ImportConfigProp> = (props) => {
+    return <div>
+        <YakScriptParamsSetter
+            Params={ImportMenuConfig.Params} primaryParamsOnly={true}
+            onParamsConfirm={params => {
+                startExecYakCode("导入配置", {
+                    Script: ImportMenuConfig.Code,
+                    Params: params,
+                })
+            }}
+        />
     </div>
 };

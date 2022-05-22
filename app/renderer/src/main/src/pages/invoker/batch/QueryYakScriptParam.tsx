@@ -11,8 +11,10 @@ import {PluginListOptInfo} from "../../../components/businessTemplate/yakitPlugi
 import "./QueryYakScriptParam.css"
 import {useHotkeys} from "react-hotkeys-hook";
 import {showDrawer, showModal} from "../../../utils/showModal";
-import {SaveConfig} from "./SaveConfig";
+import {ImportConfig, SaveConfig} from "./SaveConfig";
 import {info} from "../../../utils/notification";
+import {startExecYakCode} from "../../../utils/basic";
+import {ImportMenuConfig} from "./consts_importConfigYakCode";
 
 export interface QueryYakScriptParamProp {
     params: SimpleQueryYakScriptSchema
@@ -153,6 +155,18 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         })
     })
     useHotkeys("alt+p", saveConfigTemplate)
+    const importConfigTemplate = useMemoizedFn(() => {
+        let m = showModal({
+            title: "导出批量扫描配置",
+            width: "50%",
+            content: (
+                <>
+                    <ImportConfig/>
+                </>
+            ),
+        })
+    })
+    useHotkeys("alt+u", importConfigTemplate)
 
     return (
         <AutoCard
@@ -163,10 +177,10 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                 <Space>
 
                     <Popconfirm
-                        title={"强制更新"}
+                        title={"强制更新讲重新构建 Tags 索引"}
                         onConfirm={() => onAllTag()}
                     >
-                        <a href={"#"}>更新 Tags</a>
+                        <a href={"#"}>强制更新 Tags</a>
                     </Popconfirm>
                 </Space>
             }

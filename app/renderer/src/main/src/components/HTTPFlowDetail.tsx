@@ -73,6 +73,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
             return
         }
         setLoading(true)
+        debugger
         ipcRenderer.invoke("ConvertFuzzerResponseToHTTPFlow", {...response}).then((d: HTTPFlow) => {
             setHash(d.Hash)
         }).catch(e => {
@@ -168,26 +169,27 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     return <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
         {flow ? <>
-            {props.noHeader ? undefined : <PageHeader title={`请求详情`} subTitle={props.hash}
-                                                      extra={
-                                                          props.fetchRequest ?
-                                                              <Space>
-                                                                  <Tooltip title={"上一个请求"}>
-                                                                      <Button type="link" disabled={!!props.isFront}
-                                                                              icon={<LeftOutlined/>} onClick={() => {
-                                                                          props?.fetchRequest!(1)
-                                                                      }}></Button>
-                                                                  </Tooltip>
-                                                                  <Tooltip title={"下一个请求"}>
-                                                                      <Button type="link" disabled={!!props.isBehind}
-                                                                              icon={<RightOutlined/>} onClick={() => {
-                                                                          props?.fetchRequest!(2)
-                                                                      }}></Button>
-                                                                  </Tooltip>
-                                                              </Space>
-                                                              :
-                                                              <></>
-                                                      }/>
+            {props.noHeader ? undefined : <PageHeader
+                title={`请求详情`} subTitle={props.hash}
+                extra={
+                    props.fetchRequest ?
+                        <Space>
+                            <Tooltip title={"上一个请求"}>
+                                <Button type="link" disabled={!!props.isFront}
+                                        icon={<LeftOutlined/>} onClick={() => {
+                                    props?.fetchRequest!(1)
+                                }}></Button>
+                            </Tooltip>
+                            <Tooltip title={"下一个请求"}>
+                                <Button type="link" disabled={!!props.isBehind}
+                                        icon={<RightOutlined/>} onClick={() => {
+                                    props?.fetchRequest!(2)
+                                }}></Button>
+                            </Tooltip>
+                        </Space>
+                        :
+                        <></>
+                }/>
             }
             <Space direction={"vertical"} style={{width: "100%"}}>
                 <Descriptions column={4} bordered={true} size={"small"}>
@@ -317,7 +319,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
         setFlow(undefined)
         setLoading(true)
-        if(props.id){
+        if (props.id) {
             ipcRenderer.invoke("GetHTTPFlowById", {Id: props.id}).then((i: HTTPFlow) => {
                 setFlow(i)
             }).catch((e: any) => {
@@ -325,7 +327,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             }).finally(() => {
                 setTimeout(() => setLoading(false), 400)
             })
-        }else{
+        } else {
             ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
                 setFlow(i)
             }).catch((e: any) => {
