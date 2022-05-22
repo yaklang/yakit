@@ -49,6 +49,7 @@ import {fuzzerInfoProp} from "../MainOperator"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch";
 import {AutoCard} from "../../components/AutoCard";
+import {callCopyToClipboard} from "../../utils/basic";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -160,11 +161,19 @@ function filterIsEmpty(f: FuzzResponseFilter): boolean {
         f.StatusCode.length === 0
 }
 
+function copyAsUrl(f: { Request: string, IsHTTPS: boolean }) {
+    ipcRenderer.invoke("ExtractUrl", f).then((data: { Url: string }) => {
+        callCopyToClipboard(data.Url)
+    }).catch(e => {
+        failed("复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
+    })
+}
+
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
-    const [isHttps, setIsHttps] = useState<boolean>(props.fuzzerParams?.isHttps || props.isHttps || false)
+    const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(props.fuzzerParams?.isHttps || props.isHttps || false)
     const [noFixContentLength, setNoFixContentLength] = useState(false)
-    const [request, setRequest] = useState(props.fuzzerParams?.request || props.request || defaultPostTemplate)
+    const [request, setRequest, getRequest] = useGetState(props.fuzzerParams?.request || props.request || defaultPostTemplate)
     const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
     const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
     const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 5.0)
@@ -1033,6 +1042,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             }
                         },
                         {
+                            id: "copy-as-url",
+                            label: "复制为 URL",
+                            contextMenuGroupId: "1_urlPacket",
+                            run: () => {
+                                copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
+                            }
+                        },
+                        {
                             id: "insert-intruder-tag",
                             label: "插入模糊测试字典标签",
                             contextMenuGroupId: "1_urlPacket",
@@ -1152,18 +1169,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     <DownloadOutlined style={{cursor: "pointer"}}
                                                                       onClick={downloadContent}/>
                                                 }></Input>
-                                            {/* <Button
-                                                size={"small"}
-                                                type={viewMode === "result" ? "primary" : "link"}
-                                                icon={<ColumnWidthOutlined/>}
-                                                onClick={() => {
-                                                    if (viewMode === "result") {
-                                                        setViewMode("split")
-                                                    } else {
-                                                        setViewMode("result")
-                                                    }
-                                                }}
-                                            /> */}
                                         </div>
                                     }
                                     failedResponses={failedResults}

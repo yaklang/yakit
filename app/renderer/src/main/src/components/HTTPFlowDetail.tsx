@@ -73,7 +73,6 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
             return
         }
         setLoading(true)
-        debugger
         ipcRenderer.invoke("ConvertFuzzerResponseToHTTPFlow", {...response}).then((d: HTTPFlow) => {
             setHash(d.Hash)
         }).catch(e => {
