@@ -145,6 +145,34 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         };
     };
 
+    const fixContextMenu = useMemoizedFn((editor: IMonacoEditor) => {
+        editor.onContextMenu(e => {
+            if (!outterContainer) {
+                return
+            }
+            if (!outterContainer.current) {
+                return
+            }
+
+            // 注入右键菜单的样式
+            const divElement = outterContainer.current as HTMLDivElement;
+            const host = divElement.querySelector(".shadow-root-host")
+            // adds the custom stylesheet once per editor
+            if (host && host.shadowRoot && !host.shadowRoot.querySelector(".custom")) {
+                const style = document.createElement("style");
+
+                style.setAttribute("class", "custom");
+                style.innerHTML = `
+.context-view.monaco-menu-container > .monaco-scrollable-element {
+    margin-left: 2px;
+}
+`;
+                host.shadowRoot.prepend(style);
+            }
+        })
+
+    })
+
     return <>
         {!reload && <div style={{height: "100%", width: "100%", overflow: "hidden"}} ref={outterContainer}>
             <ReactResizeDetector
@@ -176,6 +204,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                             setEditor(editor)
                             if (props.editorDidMount) props.editorDidMount(editor);
 
+                            fixContextMenu(editor)
                             if (props.full) {
                                 handleEditorMount(editor, monaco)
                             }
@@ -369,7 +398,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     onClick={() => {
                         ipcRenderer.invoke("send-to-tab", {
                             type: "fuzzer",
-                            data:{isHttps: props.defaultHttps || false, request: strValue}
+                            data: {isHttps: props.defaultHttps || false, request: strValue}
                         })
                     }}
                 >FUZZ</Button>}
