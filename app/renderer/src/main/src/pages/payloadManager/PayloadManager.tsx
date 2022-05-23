@@ -402,6 +402,11 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
+                    if(params.Content.length > 2097152){
+                        failed("字典内容大小过大，请使用上传功能的字典路径上传")
+                        return
+                    }
+
                     props.onLoading && props.onLoading()
                     ipcRenderer
                         .invoke("SavePayload", params)
@@ -525,6 +530,11 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                 <Form
                     onSubmitCapture={(e) => {
                         e.preventDefault()
+
+                        if(params.Content.length > 2097152){
+                            failed("字典内容大小过大，请使用字典路径方式上传")
+                            return
+                        }
 
                         setUploadLoading(true)
                         ipcRenderer

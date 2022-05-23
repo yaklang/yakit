@@ -117,7 +117,7 @@ export const RiskStatsTag: React.FC<RiskStatsTagProp> = React.memo((props) => {
                     setOriginTotal(0)
                     setOriginCriticalOrHigh(0)
                 }} size={"small"}>标为已读(全部)</Button>
-                {viewAll("high,critical")}
+                {viewAll("high|critical")}
             </Space>}
         >
             <Tag
