@@ -403,7 +403,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     e.preventDefault()
 
                     if(params.Content.length > 2097152){
-                        failed("字典内容大小过大，请使用上传功能的字典路径上传")
+                        failed("字典内容过大，请使用上传功能的字典路径上传")
                         return
                     }
 
@@ -532,7 +532,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         e.preventDefault()
 
                         if(params.Content.length > 2097152){
-                            failed("字典内容大小过大，请使用字典路径方式上传")
+                            failed("字典内容过大，请使用字典路径方式上传")
                             return
                         }
 
@@ -579,6 +579,10 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         beforeUpload={(f: any) => {
                             if (!FileType.includes(f.type)) {
                                 failed(`${f.name}非txt或csv文件，请上传txt、csv格式文件！`)
+                                return false
+                            }
+                            if(f.size > (2 * 1024 * 1024)){
+                                failed(`字典文件过大，请使用字典路径方式上传`)
                                 return false
                             }
                             routes.current.push({path: f.path, type: f.type})

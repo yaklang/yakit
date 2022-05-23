@@ -254,7 +254,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     if (result.length > 0) {
                                         return result[0] && result[0].Verbose
                                     }
-                                    return ""
+                                    return severity
                                 })()
                             }
                             {/*{severitykind.filter((item) => item.Names.join(",").startsWith(severity))[0].Verbose}*/}
