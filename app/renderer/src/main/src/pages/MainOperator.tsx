@@ -58,9 +58,9 @@ import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExec
 import {coordinate} from "./globalVariable"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {MainTabs} from "./MainTabs"
+import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 
 import "./main.css"
-import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam";
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
