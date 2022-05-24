@@ -227,7 +227,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         return (
             <>
                 {risktypes?.map((type) => (
-                    <div className="title-selected-tag">
+                    <div className="title-selected-tag" key={type}>
                         <div className="tag-name-style" key={type}>{
                             (() => {
                                 const result = typekind.filter((item) => {
@@ -243,7 +243,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     </div>
                 ))}
                 {severitys?.map((severity) => (
-                    <div className="title-selected-tag">
+                    <div className="title-selected-tag" key={severity}>
                         <div className="tag-name-style"
                              key={severity}>
                             {
@@ -254,7 +254,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     if (result.length > 0) {
                                         return result[0] && result[0].Verbose
                                     }
-                                    return ""
+                                    return severity
                                 })()
                             }
                             {/*{severitykind.filter((item) => item.Names.join(",").startsWith(severity))[0].Verbose}*/}
@@ -667,7 +667,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
             title={
                 <div className='container-title-body'>
                     <div className='title-icon'>
-                        <img src={title.img} className='icon-img'/>
+                        <img src={title?.img || infoImg} className='icon-img'/>
                     </div>
 
                     <div className='title-header'>
@@ -744,7 +744,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
                     <div>{info.Payload || "-"}</div>
                 </Descriptions.Item>
                 <Descriptions.Item label='详情' span={3}>
-                    <div>{info.Details || "-"}</div>
+                    <div style={{maxHeight: 180, overflow:"auto"}}>{info.Details || "-"}</div>
                 </Descriptions.Item>
             </>}
         </Descriptions>
