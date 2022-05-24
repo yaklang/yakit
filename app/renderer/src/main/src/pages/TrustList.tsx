@@ -54,8 +54,6 @@ export const TrustList: React.FC = memo(() => {
   const [appid, setAppid] = useState<string>('');
   const getUserList = debounce(
     useMemoizedFn((str: string) => {
-      console.log(444);
-
       ipcRenderer
         .invoke("fetch-user-list", { keywords: str })
         .then((res) => {
