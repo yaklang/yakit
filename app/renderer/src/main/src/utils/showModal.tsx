@@ -56,9 +56,12 @@ export const showModal = (props: ShowModalProps) => {
                     }}
                 >
                     <ErrorBoundary FallbackComponent={({error, resetErrorBoundary}) => {
+                        if (!error) {
+                            return <div>未知错误</div>
+                        }
                         return <div>
                             <p>弹框内逻辑性崩溃，请关闭重试！</p>
-                            <pre>{error.message}</pre>
+                            <pre>{error?.message}</pre>
                         </div>
                     }}>
                         {targetConfig.content}
