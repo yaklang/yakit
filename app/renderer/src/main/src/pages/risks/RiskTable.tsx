@@ -80,7 +80,7 @@ export const TitleColor = [
     },
     {key: ["low"], value: "title-low", name: "低危", img: lowImg, tag: "title-background-low"},
     {
-        key: ["middle", "warn", "warning"],
+        key: ["middle", "warn", "warning", "medium"],
         value: "title-middle",
         name: "中危",
         img: middleImg,
