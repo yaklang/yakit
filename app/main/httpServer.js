@@ -6,10 +6,13 @@ const service = axios.create({
     timeout: 30 * 1000 // 请求超时时间
 })
 
+
+
 // request拦截器,拦截每一个请求加上请求头
 service.interceptors.request.use(
     (config) => {
         if (USER_INFO.isLogin && USER_INFO.token) config.headers["Authorization"] = USER_INFO.token
+       
         return config
     },
     (error) => {
@@ -22,7 +25,6 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     (response) => {
         const res = response.data
-
         if (!res.ok) return Promise.reject(res.reason || "请求失败,请稍等片刻后再次尝试")
         else return response.data
     },
@@ -39,8 +41,10 @@ function httpApi(method, url, params) {
     return service({
         url: url,
         method: method,
-        params: method === "get" ? params : undefined,
+        params,
         data: method === "post" ? params : undefined
+        // params: method === "get" ? params : undefined,
+        // data: method === "post" ? params : undefined
     })
 }
 

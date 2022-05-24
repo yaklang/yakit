@@ -1,10 +1,14 @@
 .trust-list-container {
+    min-height: 400px;
+
     .add-account-body {
         height: 50px;
         line-height: 50px;
+
         .add-select {
-            margin: 0 36px;
+            margin: 0 12px;
         }
+
         .add-btn {
             border-radius: 4px;
         }
@@ -14,43 +18,52 @@
         .added-header {
             height: 40px;
             line-height: 40px;
+
             .header-title {
                 font-size: 16px;
                 font-weight: 600;
             }
-            .header-input {
-                margin-left: 12px;
-                display: inline-block;
-            }
         }
+
         .added-list {
             margin-top: 20px;
             padding: 0 6px;
-            max-height: 400px;
-            overflow: hidden auto;
+
+            .ant-list {
+                height: 250px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
             .list-opt {
                 display: flex;
                 justify-content: space-around;
                 align-items: center;
                 height: 40px;
                 margin: 16px 0;
+
                 .opt-img {
                     width: 36px;
                     height: 36px;
                     border-radius: 50%;
                 }
+
                 .opt-author {
                     height: 40px;
+
                     .author-name {
                         height: 24px;
                         line-height: 24px;
                         max-width: 70px;
                     }
+
                     .author-icon {
                         height: 16px;
                         line-height: 16px;
                     }
                 }
+
                 .opt-remove {
                     padding: 0;
                 }
@@ -61,25 +74,29 @@
 
 .select-opt {
     display: flex;
-    height: 32px;
-    line-height: 32px;
+    height: 40px;
+    line-height: 40px;
+
     .opt-img {
-        width: 24px;
-        height: 24px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
     }
+
     .opt-author {
         flex: 1;
         overflow: hidden;
         margin-left: 8px;
+
         .author-name {
             height: 20px;
             line-height: 20px;
             width: 100%;
         }
+
         .author-platform {
-            height: 12px;
-            line-height: 12px;
+            height: 16px;
+            line-height: 16px;
         }
     }
 }
