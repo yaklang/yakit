@@ -62,6 +62,7 @@ import Login from "./Login"
 import { TrustList } from "./TrustList"
 import yakitImg from "../assets/yakit.jpg"
 import { UserInfoProps, useStore } from "@/store"
+import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 
 import "./main.css"
 import "./GlobalClass.scss"
@@ -115,10 +116,19 @@ export interface MainProp {
     onErrorConfirmed?: () => any
 }
 
+export interface MenuItem {
+    Group: string;
+    YakScriptId: number;
+    Verbose: string;
+    Query?: SimpleQueryYakScriptSchema;
+    MenuItemId: number;
+}
+
 interface MenuItemGroup {
     Group: string
-    Items: { Group: string; YakScriptId: number; Verbose: string }[]
+    Items: MenuItem[]
 }
+
 interface PluginMenuItem {
     Group: string
     YakScriptId: number
@@ -131,6 +141,7 @@ export interface multipleNodeInfo {
     node: ReactNode
     time?: string
 }
+
 interface PageCache {
     verbose: string
     route: Route
@@ -160,7 +171,7 @@ const Main: React.FC<MainProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([])
     const [routeMenuData, setRouteMenuData] = useState<MenuDataProps[]>(RouteMenuData)
-    
+
     const [notification, setNotification] = useState("")
 
     const [pageCache, setPageCache] = useState<PageCache[]>([
@@ -246,7 +257,7 @@ const Main: React.FC<MainProp> = (props) => {
     useEffect(() => {
         if (engineStatus === "error") props.onErrorConfirmed && props.onErrorConfirmed()
     }, [engineStatus])
-    
+
     // 整合路由对应名称
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`;
     const routeKeyToLabel = new Map<string, string>();
@@ -269,7 +280,7 @@ const Main: React.FC<MainProp> = (props) => {
         return targets.length > 0 ? pageCache.indexOf(targets[0]) : -1
     }
     const addTabPage = useMemoizedFn(
-        (route: Route, nodeParams?: {time?: string; node: ReactNode; isRecord?: boolean}) => {
+        (route: Route, nodeParams?: { time?: string; node: ReactNode; isRecord?: boolean }) => {
             const filterPage = pageCache.filter((i) => i.route === route)
             const filterPageLength = filterPage.length
 
@@ -323,7 +334,13 @@ const Main: React.FC<MainProp> = (props) => {
                     }
                     setPageCache([
                         ...pageCache,
-                        {verbose: tabName, route: route, singleNode: undefined, multipleNode: [node], multipleCurrentKey: tabId}
+                        {
+                            verbose: tabName,
+                            route: route,
+                            singleNode: undefined,
+                            multipleNode: [node],
+                            multipleCurrentKey: tabId
+                        }
                     ])
                     setCurrentTabKey(route)
                     if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
@@ -353,26 +370,26 @@ const Main: React.FC<MainProp> = (props) => {
             const targetCache = pageCache[targetIndex - 1]
             setCurrentTabKey(targetCache.route)
         }
-        if(targetIndex === 0 && pageCache[targetIndex + 1]){
+        if (targetIndex === 0 && pageCache[targetIndex + 1]) {
             const targetCache = pageCache[targetIndex + 1]
             setCurrentTabKey(targetCache.route)
         }
-        if(targetIndex ===0 && pageCache.length === 1) setCurrentTabKey("")
+        if (targetIndex === 0 && pageCache.length === 1) setCurrentTabKey("")
 
         setPageCache(pageCache.filter((i) => i.route !== route))
 
-        if(route === Route.HTTPFuzzer) delFuzzerList(1)
+        if (route === Route.HTTPFuzzer) delFuzzerList(1)
     }
     const updateCacheVerbose = (id: string, verbose: string) => {
         const index = getCacheIndex(id)
         if (index < 0) return
-        
+
         pageCache[index].verbose = verbose
         setPageCache([...pageCache])
     }
     const setMultipleCurrentKey = useMemoizedFn((key: string, type: Route) => {
         const arr = pageCache.map(item => {
-            if(item.route === type){
+            if (item.route === type) {
                 item.multipleCurrentKey = key
                 return item
             }
@@ -382,36 +399,37 @@ const Main: React.FC<MainProp> = (props) => {
     })
     const removeMultipleNodePage = useMemoizedFn((key: string, type: Route) => {
         const removeArr: multipleNodeInfo[] = pageCache.filter(item => item.route === type)[0]?.multipleNode || []
-        if(removeArr.length === 0) return
+        if (removeArr.length === 0) return
         const nodes = removeArr.filter(item => item.id === key)
         const time = nodes[0].time
 
         let index = 0
-        for(let i in removeArr){
-            if(removeArr[i].id === key){
+        for (let i in removeArr) {
+            if (removeArr[i].id === key) {
                 index = +i
                 break
-        }}
+            }
+        }
 
-        if(index === 0 && removeArr.length === 1){
+        if (index === 0 && removeArr.length === 1) {
             removePage(type)
             return
         }
 
         let current = ""
         let filterArr: multipleNodeInfo[] = []
-        if(index > 0 && removeArr[index - 1]){
+        if (index > 0 && removeArr[index - 1]) {
             current = removeArr[index - 1].id
             filterArr = removeArr.filter(item => item.id !== key)
         }
-        if(index === 0 && removeArr[index + 1]){
+        if (index === 0 && removeArr[index + 1]) {
             current = removeArr[index + 1].id
             filterArr = removeArr.filter(item => item.id !== key)
         }
 
-        if(current){
+        if (current) {
             const arr = pageCache.map(item => {
-                if(item.route === type){
+                if (item.route === type) {
                     item.multipleNode = [...filterArr]
                     item.multipleCurrentKey = current
                     return item
@@ -419,16 +437,17 @@ const Main: React.FC<MainProp> = (props) => {
                 return item
             })
             setPageCache([...arr])
-            if(type === Route.HTTPFuzzer) delFuzzerList(2, time)}
+            if (type === Route.HTTPFuzzer) delFuzzerList(2, time)
+        }
     })
     const removeOtherMultipleNodePage = useMemoizedFn((key: string, type: Route) => {
         const removeArr: multipleNodeInfo[] = pageCache.filter(item => item.route === type)[0]?.multipleNode || []
-        if(removeArr.length === 0) return
+        if (removeArr.length === 0) return
         const nodes = removeArr.filter(item => item.id === key)
         const time = nodes[0].time
 
         const arr = pageCache.map(item => {
-            if(item.route === type){
+            if (item.route === type) {
                 item.multipleNode = [...nodes]
                 item.multipleCurrentKey = key
                 return item
@@ -436,7 +455,7 @@ const Main: React.FC<MainProp> = (props) => {
             return item
         })
         setPageCache([...arr])
-        if(type === Route.HTTPFuzzer) delFuzzerList(3, time)
+        if (type === Route.HTTPFuzzer) delFuzzerList(3, time)
     })
 
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
@@ -505,8 +524,8 @@ const Main: React.FC<MainProp> = (props) => {
                     const time = new Date().getTime().toString()
                     fuzzerList.current.set(time, {...item, time: time})
                     addTabPage(Route.HTTPFuzzer, {
-                        time: time, 
-                        node: 
+                        time: time,
+                        node:
                             ContentByRoute(
                                 Route.HTTPFuzzer,
                                 undefined,
@@ -580,7 +599,8 @@ const Main: React.FC<MainProp> = (props) => {
                 .catch((e: any) => {
                     setEngineStatus("error")
                 })
-                .finally(() => {})
+                .finally(() => {
+                })
         }
         let id = setInterval(updateEngineStatus, 3000)
         return () => {
@@ -590,7 +610,8 @@ const Main: React.FC<MainProp> = (props) => {
         }
     }, [])
 
-    useHotkeys("Ctrl+Alt+T", () => {})
+    useHotkeys("Ctrl+Alt+T", () => {
+    })
 
     useEffect(() => {
         ipcRenderer.invoke("query-latest-notification").then((e: string) => {
@@ -628,7 +649,7 @@ const Main: React.FC<MainProp> = (props) => {
         ipcRenderer.on("main-container-add-compare", (e, params) => {
             const newTabId = `${Route.DataCompare}-[${randomString(49)}]`;
             const verboseNameRaw = routeKeyToLabel.get(Route.DataCompare) || `${Route.DataCompare}`;
-            addTabPage(Route.DataCompare,{node: ContentByRoute(Route.DataCompare, undefined, {system: system})})
+            addTabPage(Route.DataCompare, {node: ContentByRoute(Route.DataCompare, undefined, {system: system})})
 
             // 区分新建对比页面还是别的页面请求对比的情况
             ipcRenderer.invoke("created-data-compare")
@@ -645,8 +666,8 @@ const Main: React.FC<MainProp> = (props) => {
         if (request) {
             const time = new Date().getTime().toString()
             addTabPage(Route.HTTPFuzzer, {
-                time: time, 
-                node: 
+                time: time,
+                node:
                     ContentByRoute(
                         Route.HTTPFuzzer,
                         undefined,
@@ -692,7 +713,8 @@ const Main: React.FC<MainProp> = (props) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {})
+                .catch(() => {
+                })
         }
         if (type === 2) {
             const filter = pageCache.filter(item => item.route === Route.PoC)
@@ -761,7 +783,7 @@ const Main: React.FC<MainProp> = (props) => {
             onOk: () => {
                 const arr = pageCache.filter((i) => i.route === route)
                 setPageCache(arr)
-                if(route === Route.HTTPFuzzer) delFuzzerList(1)
+                if (route === Route.HTTPFuzzer) delFuzzerList(1)
             }
         })
     })
@@ -929,7 +951,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                 if (e.key === "ignore") return
 
                                                 const flag = pageCache.filter(item => item.route === (e.key as Route)).length === 0
-                                                if(flag) menuAddPage(e.key as Route)
+                                                if (flag) menuAddPage(e.key as Route)
                                                 else setCurrentTabKey(e.key)
                                             }}
                                         >
@@ -941,11 +963,23 @@ const Main: React.FC<MainProp> = (props) => {
                                                     <Menu.SubMenu icon={<EllipsisOutlined/>} key={i.Group}
                                                                   title={i.Group}>
                                                         {i.Items.map((item) => {
+                                                            if (item.YakScriptId > 0) {
+                                                                return (
+                                                                    <MenuItem icon={<EllipsisOutlined/>}
+                                                                              key={`plugin:${item.Group}:${item.YakScriptId}`}>
+                                                                        <Text
+                                                                            ellipsis={{tooltip: true}}>{item.Verbose}</Text>
+                                                                    </MenuItem>
+                                                                )
+                                                            }
                                                             return (
-                                                                <MenuItem icon={<EllipsisOutlined/>} key={`plugin:${item.Group}:${item.YakScriptId}`}>
-                                                                    <Text ellipsis={{tooltip: true}}>{item.Verbose}</Text>
+                                                                <MenuItem icon={<EllipsisOutlined/>}
+                                                                          key={`batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`}>
+                                                                    <Text
+                                                                        ellipsis={{tooltip: true}}>{item.Verbose}</Text>
                                                                 </MenuItem>
                                                             )
+
                                                         })}
                                                     </Menu.SubMenu>
                                                 )
@@ -956,8 +990,10 @@ const Main: React.FC<MainProp> = (props) => {
                                                         <Menu.SubMenu icon={i.icon} key={i.key} title={i.label}>
                                                             {(i.subMenuData || []).map((subMenu) => {
                                                                 return (
-                                                                    <MenuItem icon={subMenu.icon} key={subMenu.key} disabled={subMenu.disabled}>
-                                                                        <Text ellipsis={{tooltip: true}}>{subMenu.label}</Text>
+                                                                    <MenuItem icon={subMenu.icon} key={subMenu.key}
+                                                                              disabled={subMenu.disabled}>
+                                                                        <Text
+                                                                            ellipsis={{tooltip: true}}>{subMenu.label}</Text>
                                                                     </MenuItem>
                                                                 )
                                                             })}

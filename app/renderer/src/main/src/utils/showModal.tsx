@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from "react";
 import ReactDOM from "react-dom";
 import {ModalProps} from "antd/lib/modal";
 import {Drawer, DrawerProps, Modal} from "antd";
+import {ErrorBoundary} from 'react-error-boundary'
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
     onVisibleSetter?: (setter: (i: boolean) => any) => any
@@ -54,7 +55,17 @@ export const showModal = (props: ShowModalProps) => {
                         }
                     }}
                 >
-                    {targetConfig.content}
+                    <ErrorBoundary FallbackComponent={({error, resetErrorBoundary}) => {
+                        if (!error) {
+                            return <div>未知错误</div>
+                        }
+                        return <div>
+                            <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                            <pre>{error?.message}</pre>
+                        </div>
+                    }}>
+                        {targetConfig.content}
+                    </ErrorBoundary>
                 </BaseModal>
             </>, div)
         })

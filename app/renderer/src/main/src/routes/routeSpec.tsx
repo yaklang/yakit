@@ -37,6 +37,7 @@ import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage";
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage";
 import {BatchExecutorPageEx} from "../pages/invoker/batch/BatchExecutorPageEx";
 import { YakitStoreOnline } from "../pages/yakitStoreOnline/YakitStoreOnline";
+import {ReadOnlyBatchExecutorByMenuItem} from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -201,6 +202,7 @@ interface ComponentParams {
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
     const routeStr = `${r}`;
+    // 处理社区插件（以插件 ID 添加的情况）
     if (routeStr.startsWith("plugin:")) {
         let id = -1;
         try {
@@ -214,6 +216,18 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             yakScriptId={yakScriptId || id} size={"big"}
             fromMenu={true}
         />
+    }
+
+    if (routeStr.startsWith("batch:")) {
+        let batchMenuItemId = 0;
+        try {
+            let splitList = routeStr.split(":");
+            let verbose = splitList.reverse().shift();
+            batchMenuItemId = parseInt(verbose || "0");
+        } catch (e) {
+            failed(`Loading PluginKey: ${r} failed`)
+        }
+        return <ReadOnlyBatchExecutorByMenuItem MenuItemId={batchMenuItemId}/>
     }
 
     switch (r) {

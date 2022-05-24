@@ -369,6 +369,7 @@ export const LogLevelToCode = (level: string) => {
         case "warning":
         case "warn":
         case "middle":
+        case "medium":
             return "orange"
         default:
             return "blue"

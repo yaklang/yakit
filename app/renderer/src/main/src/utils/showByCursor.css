@@ -42,3 +42,45 @@
     height: 30px;
     line-height: 30px;
 }
+.right-cursor-menu .ant-menu-submenu{
+    height: 30px;
+    line-height: 30px;
+}
+.right-cursor-menu .ant-menu-submenu .ant-menu-submenu-title{
+    height: 30px;
+    line-height: 30px;
+}
+.right-cursor-menu.ant-menu-vertical .ant-menu-submenu{
+    margin: 2px 0;
+}
+.right-cursor-menu.ant-menu-vertical .ant-menu-item:not(:last-child){
+    margin-bottom: 0;
+}
+.right-cursor-menu.ant-menu-vertical .ant-menu-item{
+    margin: 2px 0;
+}
+.right-cursor-menu.ant-menu-light .ant-menu-item:hover{
+    background-color: #1890ff;
+    color: #ffffff;
+}
+.right-cursor-menu.ant-menu-light .ant-menu-submenu-active{
+    background-color: #1890ff;
+    color: #ffffff;
+}
+.right-cursor-menu.ant-menu-light .ant-menu-submenu-title:hover{
+    color: #ffffff;
+}
+.right-cursor-submenu.ant-menu-light .ant-menu-item{
+    height: 30px;
+    line-height: 30px;
+}
+.right-cursor-submenu.ant-menu-light .ant-menu-item:hover{
+    background-color: #1890ff;
+    color: #ffffff;
+}
+.right-cursor-submenu .ant-menu-vertical .ant-menu-item:not(:last-child){
+    margin-bottom: 0;
+}
+.right-cursor-submenu .ant-menu-vertical .ant-menu-item{
+    margin: 2px 0;
+}

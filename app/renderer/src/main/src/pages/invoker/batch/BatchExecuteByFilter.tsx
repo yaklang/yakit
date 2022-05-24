@@ -13,15 +13,16 @@ import {
 } from "./BatchExecutorPage";
 import {formatTimestamp} from "../../../utils/timeUtil";
 import {failed} from "../../../utils/notification";
-import { ExecBatchYakScriptResult } from "./YakBatchExecutorLegacy";
-import { TableResizableColumn } from "../../../components/TableResizableColumn";
-import { FieldName, RiskDetails, TitleColor } from "../../risks/RiskTable";
-import { showModal } from "../../../utils/showModal";
+import {ExecBatchYakScriptResult} from "./YakBatchExecutorLegacy";
+import {TableResizableColumn} from "../../../components/TableResizableColumn";
+import {FieldName, RiskDetails, TitleColor} from "../../risks/RiskTable";
+import {showModal} from "../../../utils/showModal";
 import ReactResizeDetector from "react-resize-detector";
-import { ExecResultLog, ExecResultMessage } from "./ExecMessageViewer";
-import { YakitLogFormatter } from "../YakitLogFormatter";
+import {ExecResultLog, ExecResultMessage} from "./ExecMessageViewer";
+import {YakitLogFormatter} from "../YakitLogFormatter";
 
 import "./BatchExecuteByFilter.css"
+import {Risk} from "../../risks/schema";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -39,7 +40,7 @@ export interface NewTaskHistoryProps {
     time: string
 }
 
-const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema, allTag: FieldName[]): QueryYakScriptRequest => {
+export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema, allTag: FieldName[]): QueryYakScriptRequest => {
     const result = {
         Pagination: genDefaultPagination(1),
         Type: i.type,
@@ -86,7 +87,7 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
         ipcRenderer.invoke("QueryYakScript", result).then((data: QueryYakScriptsResponse) => {
             setTotal(data.Total)
         }).catch(e => console.info(e))
-        .finally(() => setTimeout(() => setLoading(false), 300))
+            .finally(() => setTimeout(() => setLoading(false), 300))
     }, [
         useDebounce(props.simpleQuery, {wait: 500}),
         useDebounce(props.isAll, {wait: 500})
@@ -100,7 +101,8 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
             .then((res: any) => {
                 setTaskHistory(res ? JSON.parse(res) : [])
             })
-            .catch(() => {})
+            .catch(() => {
+            })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
             })
@@ -186,7 +188,7 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
         />
         <Divider style={{margin: 4}}/>
         <div style={{flex: '1', overflow: "hidden"}}>
-            <BatchExecutorResultByFilter token={token} executing={executing} setPercent={setPercent} />
+            <BatchExecutorResultByFilter token={token} executing={executing} setPercent={setPercent}/>
         </div>
     </AutoCard>
 });
@@ -196,6 +198,7 @@ interface BatchExecutorResultByFilterProp {
     executing?: boolean
     setPercent?: (i: number) => any
 }
+
 interface BatchTask {
     PoC: YakScript
     Target: string
@@ -204,7 +207,8 @@ interface BatchTask {
     Results: ExecBatchYakScriptResult[]
     CreatedAt: number
 }
-interface TaskResultLog extends ExecResultLog{
+
+interface TaskResultLog extends ExecResultLog {
     key: number
 }
 
@@ -217,6 +221,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
     const allTasksMap = useCreation<Map<string, BatchTask>>(() => {
         return new Map<string, BatchTask>()
     }, [])
+    const [jsonRisks, setJsonRisks] = useState<Risk[]>([]);
 
     const [tableContentHeight, setTableContentHeight] = useState<number>(0);
     const [activeKey, setActiveKey] = useState<string>("executing")
@@ -251,15 +256,15 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
             const result: BatchTask[] = [];
             const hitResilt: ExecResultLog[] = [];
             allTasksMap.forEach(value => {
-                if(value.Results[value.Results.length - 1]?.Status === "end"){
+                if (value.Results[value.Results.length - 1]?.Status === "end") {
                     result.push(value)
-                    if(value.Results.length !== 0){
-                        const arr: ExecResultLog[] = 
+                    if (value.Results.length !== 0) {
+                        const arr: ExecResultLog[] =
                             (convertTask(value)
                                 .filter((e) => e.type === "log")
                                 .map((i) => i.content) as ExecResultLog[])
                                 .filter((i) => (i?.level || "").toLowerCase() === "json-risk")
-                        if(arr.length > 0) hitResilt.push(arr[0])
+                        if (arr.length > 0) hitResilt.push(arr[0])
                     }
                 }
             })
@@ -310,11 +315,11 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
 
             if (data.Result && data.Result.IsMessage) {
                 const info: TaskResultLog = JSON.parse(new Buffer(data.Result.Message).toString()).content
-                if(info){
+                if (info) {
                     info.key = index
                     index += 1
                     const arr: TaskResultLog[] = [...getTaskLog()]
-                    if(arr.length >= 20) arr.shift()
+                    if (arr.length >= 20) arr.shift()
                     arr.push(info)
                     setTaskLog([...arr])
                 }
@@ -395,20 +400,38 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
         }
     }, [props.token])
 
+    useEffect(() => {
+        if (hitTasks.length <= 0) {
+            return
+        }
+        setJsonRisks(hitTasks.map(i => {
+            try {
+                return JSON.parse(i.data)
+            } catch (e) {
+                return undefined
+            }
+        }).filter(i => !!i))
+    }, [hitTasks])
+
     return <div className="batch-executor-result">
         <div className="result-notice-body">
             <div className="notice-body">
                 <div className="notice-body-header notice-font-in-progress">正在执行任务</div>
                 <div className="notice-body-counter">{activeTask.length}</div>
             </div>
-            <Divider type="vertical" className="notice-divider" />
+            <Divider type="vertical" className="notice-divider"/>
             <div className="notice-body">
                 <div className="notice-body-header notice-font-completed">已完成任务</div>
                 <div className="notice-body-counter">{allTasks.length}</div>
             </div>
+            <Divider type="vertical" className="notice-divider"/>
+            <div className="notice-body">
+                <div className="notice-body-header notice-font-vuln">命中风险/漏洞</div>
+                <div className="notice-body-counter">{jsonRisks.length}</div>
+            </div>
         </div>
 
-        <Divider style={{margin: 4}} />
+        <Divider style={{margin: 4}}/>
 
         <div className="result-table-body">
             <Tabs className="div-width-height-100 yakit-layout-tabs" activeKey={activeKey} onChange={setActiveKey}>
@@ -417,14 +440,14 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                         <Timeline className="body-time-line" pending={props.executing} reverse={true}>
                             {taskLog.map(item => {
                                 return <Timeline.Item key={item.key}>
-                                    <YakitLogFormatter data={item.data} level={item.level} 
-                                        timestamp={item.timestamp} onlyTime={true} isCollapsed={true} />
+                                    <YakitLogFormatter data={item.data} level={item.level}
+                                                       timestamp={item.timestamp} onlyTime={true} isCollapsed={true}/>
                                 </Timeline.Item>
                             })}
                         </Timeline>
                     </div>
                 </Tabs.TabPane>
-                <Tabs.TabPane tab="命中任务列表" key={"hitTable"}>
+                <Tabs.TabPane tab="命中风险与漏洞" key={"hitTable"}>
                     <div style={{width: "100%", height: "100%"}}>
                         <ReactResizeDetector
                             onResize={(width, height) => {
@@ -434,13 +457,14 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                             handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}/>
                         <TableResizableColumn
                             virtualized={true}
-                            sortFilter={() => {}}
+                            sortFilter={() => {
+                            }}
                             autoHeight={tableContentHeight <= 0}
                             height={tableContentHeight}
-                            data={hitTasks.map(item => JSON.parse(item.data))}
+                            data={jsonRisks}
                             wordWrap={true}
                             renderEmpty={() => {
-                                return <Empty className="table-empty" description="数据加载中" />
+                                return <Empty className="table-empty" description="数据加载中"/>
                             }}
                             columns={[
                                 {
@@ -510,7 +534,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                                                         title: "详情",
                                                         content: (
                                                             <div style={{overflow: "auto"}}>
-                                                                <RiskDetails info={rowData} isShowTime={false} />
+                                                                <RiskDetails info={rowData} isShowTime={false}/>
                                                             </div>
                                                         )
                                                     })

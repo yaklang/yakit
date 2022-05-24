@@ -26,7 +26,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                         <div className='content-upload-input-help'>
                             可将TXT文件拖入框内或
                             <Upload
-                                accept={"text/plain"}
+                                // accept={"text/plain"}
                                 multiple={false}
                                 maxCount={1}
                                 showUploadList={false}
@@ -45,7 +45,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                 }}
                 input={{...input}}
                 {...restProps}
-            ></ItemDraggerInput>
+            />
         )
     }
     if (type === "textarea") {
@@ -57,7 +57,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                         <div className='content-upload-input-help'>
                             可将TXT文件拖入框内或
                             <Upload
-                                accept={"text/plain"}
+                                // accept={"text/plain"}
                                 multiple={false}
                                 maxCount={1}
                                 showUploadList={false}
@@ -76,7 +76,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                 }}
                 textarea={{...textarea}}
                 {...restProps}
-            ></ItemDraggerTextArea>
+            />
         )
     }
 

@@ -64,7 +64,10 @@ export default function useHoldingIPCRStream(
 
             let featureTypeResults = featureTypes.current
                 .filter((i) => i.type === "log")
-                .map((i) => i.content as ExecResultLog).filter((i) => i.data !== 'null')
+                .map((i) => i.content as ExecResultLog)
+                .filter((i) => i.data !== 'null')
+            const featureTypeFilter = featureTypeResults.map(item => item.data)
+            featureTypeResults = featureTypeResults.filter((item, index) => featureTypeFilter.indexOf(item.data) === index)
 
             const processes: ExecResultProgress[] = []
             processKVPair.current.forEach((value, id) => {

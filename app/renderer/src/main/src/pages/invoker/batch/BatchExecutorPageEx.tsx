@@ -31,6 +31,14 @@ export const BatchExecutorPageEx: React.FC<BatchExecutorPageExProp> = (props) =>
         .finally(() => setTimeout(() => setLoading(false), 300))
     }
 
+    const forceUpdateAllTag = () => {
+        setLoading(true)
+        ipcRenderer.invoke("ForceUpdateAvailableYakScriptTags", {}).then((data: Fields) => {
+            if(data && data.Values) setAllTag(data.Values)
+        }).catch(e => console.info(e))
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    }
+
     const executeHistory = useMemoizedFn((info: NewTaskHistoryProps) => {
         setLoading(true)
         setSimpleQuery(info.simpleQuery)
@@ -50,7 +58,7 @@ export const BatchExecutorPageEx: React.FC<BatchExecutorPageExProp> = (props) =>
                         }}
                         loading={loading}
                         allTag={allTag}
-                        onAllTag={updateAllTag}
+                        onAllTag={forceUpdateAllTag}
                         isAll={isAll}
                         onIsAll={setIsAll}
                         historyTask={historyTask}

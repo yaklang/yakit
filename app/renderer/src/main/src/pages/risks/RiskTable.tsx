@@ -80,7 +80,7 @@ export const TitleColor = [
     },
     {key: ["low"], value: "title-low", name: "低危", img: lowImg, tag: "title-background-low"},
     {
-        key: ["middle", "warn", "warning"],
+        key: ["middle", "warn", "warning", "medium"],
         value: "title-middle",
         name: "中危",
         img: middleImg,
@@ -227,7 +227,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         return (
             <>
                 {risktypes?.map((type) => (
-                    <div className="title-selected-tag">
+                    <div className="title-selected-tag" key={type}>
                         <div className="tag-name-style" key={type}>{
                             (() => {
                                 const result = typekind.filter((item) => {
@@ -243,7 +243,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     </div>
                 ))}
                 {severitys?.map((severity) => (
-                    <div className="title-selected-tag">
+                    <div className="title-selected-tag" key={severity}>
                         <div className="tag-name-style"
                              key={severity}>
                             {
@@ -254,7 +254,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     if (result.length > 0) {
                                         return result[0] && result[0].Verbose
                                     }
-                                    return ""
+                                    return severity
                                 })()
                             }
                             {/*{severitykind.filter((item) => item.Names.join(",").startsWith(severity))[0].Verbose}*/}
@@ -655,6 +655,7 @@ export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
 interface RiskDetailsProp {
     info: Risk
     isShowTime?: boolean
+    shrink?: boolean
 }
 
 export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
@@ -666,7 +667,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
             title={
                 <div className='container-title-body'>
                     <div className='title-icon'>
-                        <img src={title.img} className='icon-img'/>
+                        <img src={title?.img || infoImg} className='icon-img'/>
                     </div>
 
                     <div className='title-header'>
@@ -735,15 +736,17 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
                 </div>
             </Descriptions.Item>
 
-            <Descriptions.Item label='Parameter' span={3}>
-                <div>{info.Parameter || "-"}</div>
-            </Descriptions.Item>
-            <Descriptions.Item label='Payload' span={3}>
-                <div>{info.Payload || "-"}</div>
-            </Descriptions.Item>
-            <Descriptions.Item label='详情' span={3}>
-                <div>{info.Details || "-"}</div>
-            </Descriptions.Item>
+            {!props.shrink && <>
+                <Descriptions.Item label='Parameter' span={3}>
+                    <div>{info.Parameter || "-"}</div>
+                </Descriptions.Item>
+                <Descriptions.Item label='Payload' span={3}>
+                    <div>{info.Payload || "-"}</div>
+                </Descriptions.Item>
+                <Descriptions.Item label='详情' span={3}>
+                    <div style={{maxHeight: 180, overflow:"auto"}}>{info.Details || "-"}</div>
+                </Descriptions.Item>
+            </>}
         </Descriptions>
     )
 })
