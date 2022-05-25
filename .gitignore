@@ -43,3 +43,4 @@ wizard/dist/
 *.mmdb
 release/
 package-lock.json
+.bashrc
