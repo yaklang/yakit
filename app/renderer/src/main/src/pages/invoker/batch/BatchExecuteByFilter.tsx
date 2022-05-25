@@ -254,7 +254,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
     useEffect(() => {
         const update = () => {
             const result: BatchTask[] = [];
-            const hitResilt: ExecResultLog[] = [];
+            let hitResult: ExecResultLog[] = [];
             allTasksMap.forEach(value => {
                 if (value.Results[value.Results.length - 1]?.Status === "end") {
                     result.push(value)
@@ -264,12 +264,14 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                                 .filter((e) => e.type === "log")
                                 .map((i) => i.content) as ExecResultLog[])
                                 .filter((i) => (i?.level || "").toLowerCase() === "json-risk")
-                        if (arr.length > 0) hitResilt.push(arr[0])
+                        if (arr.length > 0) {
+                            hitResult = hitResult.concat(...arr)
+                        }
                     }
                 }
             })
             setAllTasks(result)
-            setHitTasks(hitResilt)
+            setHitTasks(hitResult)
         }
         update()
         const id = setInterval(update, 3000)
