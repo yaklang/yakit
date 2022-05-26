@@ -18,7 +18,7 @@ export interface YakitHTTPFlowRisk {
     request: Uint8Array
     response: Uint8Array
     fragment: string[]
-    level: "low" | "middle" | "high" | "critical"
+    level: "low" | "middle" | "high" | "critical" | "medium"
     risk_name: string
 }
 

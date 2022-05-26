@@ -246,7 +246,8 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                 <div className='content-upload-input-help'>
                                     点击此处
                                     <Upload
-                                        accept={"text/plain"}
+                                        // accept={"text/plain"}
+                                        accept={"*"}
                                         multiple={true}
                                         maxCount={1}
                                         showUploadList={false}
@@ -302,7 +303,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                             placeholder: "获取文件路径，支持多选文件，文件夹，路径以逗号分隔",
                             disabled: disabled
                         }}
-                    ></ContentUploadInput>
+                    />
                 </Spin>
             )
         }

@@ -65,6 +65,22 @@ module.exports = (win, getClient) => {
         return await asyncGetAllMenuItem(params)
     })
 
+    // asyncGetMenuItemById wrapper
+    const asyncGetMenuItemById = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetMenuItemById(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetMenuItemById", async (e, params) => {
+        return await asyncGetMenuItemById(params)
+    })
+
     // asyncQueryGroupsByYakScriptId wrapper
     const asyncQueryGroupsByYakScriptId = (params) => {
         return new Promise((resolve, reject) => {

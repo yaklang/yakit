@@ -1,10 +1,10 @@
 import React from "react";
 import {showModal} from "./showModal";
-import {Space} from "antd";
-import {IMonacoActionDescriptor, IMonacoCodeEditor, IMonacoEditor, YakEditor} from "./editors";
+import {Button, Space} from "antd";
+import {IMonacoActionDescriptor, IMonacoCodeEditor, YakEditor} from "./editors";
 import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "../pages/fuzzer/fuzzerTemplates";
-import {editor} from "monaco-editor";
 import {failed} from "./notification";
+import {AutoCard} from "../components/AutoCard";
 
 export type CodecType = |
     "fuzz" | "md5" | "sha1" | "sha256" | "sha512"
@@ -150,12 +150,30 @@ export const MonacoEditorMutateHTTPRequestActions: {
 export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boolean, replaceEditor?: IMonacoCodeEditor, clear?: boolean) => {
     return ipcRenderer.invoke("Codec", {Text: text, Type: typeStr}).then((result: { Result: string }) => {
         if (replaceEditor) {
-            if (clear) {
-                monacoEditorClear(replaceEditor)
-                replaceEditor.getModel()?.setValue(result.Result)
-            } else {
-                monacoEditorWrite(replaceEditor, result.Result)
-            }
+            let m = showModal({
+                width: "50%",
+                content: (
+                    <AutoCard title={"编码结果"} bordered={false} extra={<Button type={"primary"} onClick={() => {
+                        if (clear) {
+                            monacoEditorClear(replaceEditor)
+                            replaceEditor.getModel()?.setValue(result.Result)
+                        } else {
+                            monacoEditorWrite(replaceEditor, result.Result)
+                        }
+                        m.destroy()
+                    }} size={"small"}>
+                        替换内容
+                    </Button>} size={"small"}>
+                        <div style={{width: "100%", height: 300}}>
+                            <YakEditor
+                                type={"http"}
+                                readOnly={true} value={result.Result}
+                            />
+                        </div>
+                    </AutoCard>
+                )
+            })
+
         }
 
         if (noPrompt) {

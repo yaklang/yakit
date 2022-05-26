@@ -482,7 +482,7 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
             <InputItem
                 style={{marginBottom: 0}}
                 width={'80%'}
-                textareaRow={1}
+                textareaRow={2}
                 textarea={true}
                 value={target.target}
                 label={"输入目标"}

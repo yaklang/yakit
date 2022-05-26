@@ -28,7 +28,6 @@ import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {queryYakScriptList} from "../yakitStore/network";
 
 import "./style.css"
-import {execCodec} from "../../utils/encodec";
 
 const {ipcRenderer} = window.require("electron")
 

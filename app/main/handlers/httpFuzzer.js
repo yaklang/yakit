@@ -50,6 +50,22 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerMap, token)
     })
 
+    // asyncExtractUrl wrapper
+    const asyncExtractUrl = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExtractUrl(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExtractUrl", async (e, params) => {
+        return await asyncExtractUrl(params)
+    })
+
 
     // asyncConvertFuzzerResponseToHTTPFlow wrapper
     const asyncConvertFuzzerResponseToHTTPFlow = (params) => {

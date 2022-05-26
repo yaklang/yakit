@@ -113,7 +113,7 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
                         {props.content.map((item, index) => {
                             const {title, disabled, id} = item;
                             if (item?.subMenuItems && item.subMenuItems.length > 0) {
-                                return <Menu.SubMenu key={`${title}-${index}`} title={title} disabled={!!disabled}>
+                                return <Menu.SubMenu popupClassName="right-cursor-submenu" key={`${title}-${index}`} title={title} disabled={!!disabled}>
                                     {(item.subMenuItems || []).map((subItem, index) => {
                                         const {title, render, disabled} = subItem;
                                         const subId = subItem?.id;
