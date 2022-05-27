@@ -12,7 +12,7 @@ import "./style.css"
 import {TableResizableColumn} from "./TableResizableColumn"
 import {formatTime, formatTimestamp} from "../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook";
-import {useGetState, useMemoizedFn} from "ahooks";
+import {useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks";
 import ReactResizeDetector from "react-resize-detector";
 import {callCopyToClipboard} from "../utils/basic";
 import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode";
@@ -520,14 +520,15 @@ const HeaderTable: HTTPFlow = {
     Tags: ""
 }
 
+const offsetLimit = 30;
+
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData] = useState<HTTPFlow[]>([])
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>(
         props.params || {SourceType: "mitm"}
     )
-    const [_, setInScrollUpdateCD, getInScrollUpdateCD] = useGetState(false);
     const [pagination, setPagination] = useState<PaginationSchema>({
-        Limit: 100,
+        Limit: offsetLimit,
         Order: "desc",
         OrderBy: "created_at",
         Page: 1
@@ -616,7 +617,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     if (!tableRef || !tableRef.current) return
                     const table = tableRef.current as unknown as HTMLDivElement
                     // @ts-ignore
-                    table.scrollTop(34)
+                    table.scrollTop(41)
                 }, 50)
             })
             .catch((e: any) => {
@@ -625,11 +626,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
-    const scrollUpdate = useMemoizedFn((page?: number, limit?: number, sourceType?: string,) => {
-        if (!autoReload && getInScrollUpdateCD()) {
-            info("刷新太快了，休息一下吧 ;-)  ...1.5秒")
-            return
-        }
+    const scrollUpdateRaw = useMemoizedFn((page?: number, limit?: number, sourceType?: string,) => {
+        // if (!autoReload && getInScrollUpdateCD()) {
+        //     info("刷新太快了，休息一下吧 ;-)  ...1.5秒")
+        //     return
+        // }
 
         const paginationProps = {
             Page: page || 1,
@@ -638,11 +639,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             OrderBy: "id"
         }
         setLoading(true)
-
-        setInScrollUpdateCD(true)
-        setTimeout(() => {
-            setInScrollUpdateCD(false)
-        }, 1500)
 
         ipcRenderer
             .invoke("QueryHTTPFlows", {
@@ -656,9 +652,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 setTotal(rsp.Total)
                 setTimeout(() => {
                     if (!tableRef || !tableRef.current) return
-                    const table = tableRef.current as unknown as HTMLDivElement
-                    // @ts-ignore
-                    table.scrollTop(page === 1 ? 34 : (page - 1) * 4100)
+                    const table = tableRef.current as unknown as {
+                        scrollTop: (number) => any,
+                        scrollLeft: (number) => any,
+                    }
+                    table.scrollTop(page === 1 ? 40 : ((page || 1) - 1) * (41 * offsetLimit))
                 }, 50)
             })
             .catch((e: any) => {
@@ -667,7 +665,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             .finally(() => {
                 setTimeout(() => setLoading(false), 200);
             })
-    })
+    });
+    const scrollDebounceState = useThrottleFn(scrollUpdateRaw, {wait: 3000})
+    const scrollUpdate = scrollDebounceState.run;
 
     const sortFilter = useMemoizedFn((column: string, type: any) => {
         const keyRelation: any = {
@@ -677,9 +677,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
 
         if (column && type) {
-            update(1, 100, type, keyRelation[column])
+            update(1, offsetLimit, type, keyRelation[column])
         } else {
-            update(1, 100)
+            update(1, offsetLimit)
         }
     })
 
@@ -1436,9 +1436,13 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     }
                 }}
                 onScroll={(scrollX, scrollY) => {
+                    console.info(scrollX, scrollY)
+
+                    const toTop = scrollY <= 0;
+
                     let contextHeight = data.length * 42
                     let top = Math.abs(scrollY)
-                    let maxPage = Math.ceil(total / 100)
+                    let maxPage = Math.ceil(total / offsetLimit)
 
                     // 防止无数据触发加载
                     if (data.length === 0) return
