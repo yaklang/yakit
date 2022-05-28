@@ -12,7 +12,7 @@ import "./style.css"
 import {TableResizableColumn} from "./TableResizableColumn"
 import {formatTime, formatTimestamp} from "../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook";
-import {useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks";
+import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks";
 import ReactResizeDetector from "react-resize-detector";
 import {callCopyToClipboard} from "../utils/basic";
 import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode";
@@ -532,7 +532,7 @@ const ROW_HEIGHT = 42;
 const MAX_ROW_COUNT = Math.abs(OFFSET_LIMIT * 2);
 
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
-    const [data, setData] = useState<HTTPFlow[]>([])
+    const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>(
         props.params || {SourceType: "mitm"}
     )
@@ -546,11 +546,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [total, setTotal] = useState<number>(0)
     const [loading, setLoading] = useState(false)
     const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
+    const [_lastSelected, setLastSelected, getLastSelected] = useGetState<HTTPFlow>()
 
     const [compareLeft, setCompareLeft] = useState<CompateData>({content: '', language: 'http'})
     const [compareRight, setCompareRight] = useState<CompateData>({content: '', language: 'http'})
     const [compareState, setCompareState] = useState(0)
-    const [tableContentHeight, setTableContentHeight] = useState<number>(0);
+    const [tableContentHeight, setTableContentHeight, getTableContentHeight] = useGetState<number>(0);
+    // 用于记录适合
+    const [_scrollY, setScrollYRaw, getScrollY] = useGetState(0)
+    const setScrollY = useThrottleFn(setScrollYRaw, {wait: 300}).run
 
     // 用于增量刷新的 ID 记录
     const [_newest, setNewestId, getNewestId] = useGetState(0);
@@ -564,7 +568,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     const tableRef = useRef(null)
 
-    const ref = useHotkeys('ctrl+r', e => {
+    const ref = useHotkeys('ctrl+r, enter', e => {
         const selected = getSelected()
         if (selected) {
             ipcRenderer.invoke("send-to-tab", {
@@ -575,6 +579,49 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 }
             })
         }
+    })
+
+    // 使用上下箭头
+    useHotkeys("up", () => {
+        setLastSelected(getSelected())
+        const data = getData();
+        if (data.length <= 0) {
+            return
+        }
+        if (!getSelected()) {
+            setSelected(data[0])
+            return
+        }
+        const expected = parseInt(`${parseInt(`${(getSelected()?.Id as number)}`) + 1}`);
+        // 如果上点的话，应该是选择更新的内容
+        for (let i = 0; i < data.length; i++) {
+            let current = parseInt(`${data[i]?.Id}`);
+            if (current === expected) {
+                setSelected(data[i])
+                return
+            }
+        }
+        setSelected(undefined)
+    })
+    useHotkeys("down", () => {
+        setLastSelected(getSelected())
+        const data = getData();
+
+        if (data.length <= 0) {
+            return
+        }
+        if (!getSelected()) {
+            setSelected(data[0])
+            return
+        }
+        // 如果上点的话，应该是选择更新的内容
+        for (let i = 0; i < data.length; i++) {
+            if (data[i]?.Id == (getSelected()?.Id as number) - 1) {
+                setSelected(data[i])
+                return
+            }
+        }
+        setSelected(undefined)
     })
 
     // 向主页发送对比数据
@@ -596,6 +643,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [compareRight])
 
+    // 用于差量更新
     useEffect(() => {
         // 设置最新的 ID
         for (let i = 0; i < data.length; i++) {
@@ -711,8 +759,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             OrderBy: "id"
         }
 
-        console.info("触底！")
-
         // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", {
@@ -767,9 +813,65 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     })
 
+    // 这是用来设置选中坐标的，不需要做防抖
     useEffect(() => {
-        props.onSelected && props.onSelected(selected)
+        if (!getLastSelected() || !getSelected()) {
+            return
+        }
+
+        const lastSelected = getLastSelected() as HTTPFlow;
+        const up = parseInt(`${lastSelected?.Id}`) < parseInt(`${selected?.Id}`)
+        // if (up) {
+        //     console.info("up")
+        // } else {
+        //     console.info("down")
+        // }
+        // console.info(lastSelected.Id, selected?.Id)
+        const screenRowCount = Math.floor(getTableContentHeight() / ROW_HEIGHT) - 1
+
+        if (!autoReload) {
+            let count = 0;
+            const data = getData();
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].Id != getSelected()?.Id) {
+                    count++
+                } else {
+                    break
+                }
+            }
+
+            let minCount = count
+            if (minCount < 0) {
+                minCount = 0
+            }
+            const viewHeightMin = getScrollY() + tableContentHeight
+            const viewHeightMax = getScrollY() + tableContentHeight * 2
+            const minHeight = minCount * ROW_HEIGHT;
+            const maxHeight = minHeight + tableContentHeight
+            const maxHeightBottom = minHeight + tableContentHeight + 3 * ROW_HEIGHT
+            // console.info("top: ", minHeight, "maxHeight: ", maxHeight, "maxHeightBottom: ", maxHeightBottom)
+            // console.info("viewTop: ", viewHeightMin, "viewButtom: ", viewHeightMax)
+            if (maxHeight < viewHeightMin) {
+                // 往下滚动
+                scrollTableTo(minHeight)
+                return
+            }
+            if (maxHeightBottom > viewHeightMax) {
+                // 上滚动
+                const offset = minHeight - (screenRowCount - 2) * ROW_HEIGHT;
+                console.info(screenRowCount, minHeight, minHeight - (screenRowCount - 1) * ROW_HEIGHT)
+                if (offset > 0) {
+                    scrollTableTo(offset)
+                }
+                return
+            }
+        }
     }, [selected])
+
+    // 给设置做防抖
+    useDebounceEffect(() => {
+        props.onSelected && props.onSelected(selected)
+    }, [selected], {wait: 400, trailing: true, leading: true})
 
     useEffect(() => {
         if (autoReload) {
@@ -1484,6 +1586,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     }
                 }}
                 onScroll={(scrollX, scrollY) => {
+                    setScrollY(scrollY)
                     // 防止无数据触发加载
                     if (data.length === 0 && !getAutoReload()) {
                         setAutoReload(true)
@@ -1500,8 +1603,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     setAutoReload(false)
 
                     // 向下刷新数据
-                    // console.info(scrollY, scrollY / data.length)
-                    // console.info(data.length, (data.length) * ROW_HEIGHT)
                     if (contextHeight <= offsetY) {
                         setAutoReload(false)
                         scrollUpdateButt(tableContentHeight)
