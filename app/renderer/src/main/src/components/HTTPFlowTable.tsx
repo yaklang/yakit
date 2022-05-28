@@ -54,6 +54,10 @@ export interface HTTPFlow {
     CookieParams: FuzzableParams[]
 
     Tags?: string
+
+
+    // Placeholder
+    IsPlaceholder?: boolean
 }
 
 export interface FuzzableParams {
@@ -495,7 +499,7 @@ interface CompateData {
     language: string
 }
 
-const HeaderTable: HTTPFlow = {
+const TableFirstLinePlaceholder: HTTPFlow = {
     Method: "",
     Path: "",
     Hash: "",
@@ -517,10 +521,15 @@ const HeaderTable: HTTPFlow = {
     GetParams: [],
     PostParams: [],
     CookieParams: [],
-    Tags: ""
+    Tags: "",
+    Id: -1,
+    IsPlaceholder: true,
 }
 
-const offsetLimit = 30;
+const OFFSET_LIMIT = 30;
+const OFFSET_STEP = 20;
+const ROW_HEIGHT = 42;
+const MAX_ROW_COUNT = Math.abs(OFFSET_LIMIT * 2);
 
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData] = useState<HTTPFlow[]>([])
@@ -528,14 +537,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         props.params || {SourceType: "mitm"}
     )
     const [pagination, setPagination] = useState<PaginationSchema>({
-        Limit: offsetLimit,
+        Limit: OFFSET_LIMIT,
         Order: "desc",
         OrderBy: "created_at",
         Page: 1
     })
-    const [autoReload, setAutoReload] = useState(true)
+    const [autoReload, setAutoReload, getAutoReload] = useGetState(false)
     const [total, setTotal] = useState<number>(0)
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
     const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
 
     const [compareLeft, setCompareLeft] = useState<CompateData>({content: '', language: 'http'})
@@ -543,9 +552,17 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [compareState, setCompareState] = useState(0)
     const [tableContentHeight, setTableContentHeight] = useState<number>(0);
 
+    // 用于增量刷新的 ID 记录
+    const [_newest, setNewestId, getNewestId] = useGetState(0);
+    const [_oldest, setOldestId, getOldestId] = useGetState(0);
+    // 如果这个大于等于 0 ，就 Lock 住，否则忽略
+    const [_trigger, setLockedScroll, getLockedScroll] = useGetState(-1);
+    const lockScrollTimeout = (size: number, timeout: number) => {
+        setLockedScroll(size)
+        setTimeout(() => setLockedScroll(-1), timeout)
+    }
+
     const tableRef = useRef(null)
-    const counter = useRef<number>(0)
-    const tableTimer = useRef<any>(null)
 
     const ref = useHotkeys('ctrl+r', e => {
         const selected = getSelected()
@@ -579,6 +596,25 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [compareRight])
 
+    useEffect(() => {
+        // 设置最新的 ID
+        for (let i = 0; i < data.length; i++) {
+            if ((data[i]?.Id || 0) > 0) {
+                setNewestId(data[i].Id as number)
+                break
+            }
+        }
+        // 设置最老的 ID
+        for (let i = 0; i < data.length; i++) {
+            let idCache = (data[data.length - 1 - i]?.Id || 0);
+            if (idCache > 0) {
+                setOldestId(idCache as number)
+                break
+            }
+        }
+
+    }, [data])
+
     const update = useMemoizedFn((
         page?: number,
         limit?: number,
@@ -608,17 +644,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                if ((rsp?.Data || []).length > 10) setAutoReload(false)
-                else setAutoReload(true)
-                setData(rsp?.Data || [])
+                setData((rsp?.Data || []))
                 setPagination(rsp.Pagination)
                 setTotal(rsp.Total)
-                setTimeout(() => {
-                    if (!tableRef || !tableRef.current) return
-                    const table = tableRef.current as unknown as HTMLDivElement
-                    // @ts-ignore
-                    table.scrollTop(41)
-                }, 50)
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
@@ -626,48 +654,104 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
-    const scrollUpdateRaw = useMemoizedFn((page?: number, limit?: number, sourceType?: string,) => {
-        // if (!autoReload && getInScrollUpdateCD()) {
-        //     info("刷新太快了，休息一下吧 ;-)  ...1.5秒")
-        //     return
-        // }
+    // 第一次启动的时候加载一下
+    useEffect(() => {
+        update(1)
+    }, [])
 
+    const scrollTableTo = useMemoizedFn((size: number) => {
+        if (!tableRef || !tableRef.current) return
+        const table = tableRef.current as unknown as {
+            scrollTop: (number) => any,
+            scrollLeft: (number) => any,
+        }
+        table.scrollTop(size)
+    })
+
+    const scrollUpdateTop = useDebounceFn(useMemoizedFn(() => {
         const paginationProps = {
-            Page: page || 1,
-            Limit: pagination.Limit,
+            Page: 1,
+            Limit: OFFSET_STEP,
             Order: "desc",
             OrderBy: "id"
         }
-        setLoading(true)
 
+        // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", {
-                SourceType: sourceType,
+                SourceType: "mitm",
                 ...params,
+                AfterId: getNewestId(),  // 用于计算增量的
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                setData(page === 1 ? [HeaderTable].concat(rsp?.Data || []) : data.concat(rsp?.Data || []))
-                setPagination(rsp.Pagination)
-                setTotal(rsp.Total)
-                setTimeout(() => {
-                    if (!tableRef || !tableRef.current) return
-                    const table = tableRef.current as unknown as {
-                        scrollTop: (number) => any,
-                        scrollLeft: (number) => any,
-                    }
-                    table.scrollTop(page === 1 ? 40 : ((page || 1) - 1) * (41 * offsetLimit))
-                }, 50)
+                const offsetDeltaData = (rsp?.Data || [])
+                if (offsetDeltaData.length <= 0) {
+                    // 没有增量数据
+                    return
+                }
+                setLoading(true)
+                let offsetData = offsetDeltaData.concat(data);
+                if (offsetData.length > MAX_ROW_COUNT) {
+                    offsetData = offsetData.splice(0, MAX_ROW_COUNT)
+                }
+                setData(offsetData);
+                scrollTableTo((offsetDeltaData.length + 1) * ROW_HEIGHT)
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
             })
-            .finally(() => {
-                setTimeout(() => setLoading(false), 200);
+            .finally(() => setTimeout(() => setLoading(false), 200))
+    }), {wait: 600, leading: true, trailing: false}).run
+    const scrollUpdateButt = useDebounceFn(useMemoizedFn((tableClientHeight: number) => {
+        const paginationProps = {
+            Page: 1,
+            Limit: OFFSET_STEP,
+            Order: "desc",
+            OrderBy: "id"
+        }
+
+        console.info("触底！")
+
+        // 查询数据
+        ipcRenderer
+            .invoke("QueryHTTPFlows", {
+                SourceType: "mitm",
+                ...params,
+                BeforeId: getOldestId(),  // 用于计算增量的
+                Pagination: {...paginationProps}
             })
-    });
-    const scrollDebounceState = useThrottleFn(scrollUpdateRaw, {wait: 3000})
-    const scrollUpdate = scrollDebounceState.run;
+            .then((rsp: YakQueryHTTPFlowResponse) => {
+                const offsetDeltaData = (rsp?.Data || [])
+                if (offsetDeltaData.length <= 0) {
+                    // 没有增量数据
+                    return
+                }
+                setLoading(true)
+                const originDataLength = data.length;
+                let offsetData = data.concat(offsetDeltaData);
+                let metMax = false
+                const originOffsetLength = offsetData.length;
+                if (originOffsetLength > MAX_ROW_COUNT) {
+                    metMax = true
+                    offsetData = offsetData.splice(originOffsetLength - MAX_ROW_COUNT, MAX_ROW_COUNT)
+                }
+                setData(offsetData);
+                setTimeout(() => {
+                    if (!metMax) {
+                        // 没有丢结果的裁剪问题
+                        scrollTableTo((originDataLength + 1) * ROW_HEIGHT - tableClientHeight)
+                    } else {
+                        // 丢了结果之后的裁剪计算
+                        const a = originOffsetLength - offsetDeltaData.length;
+                        scrollTableTo((originDataLength + 1 + MAX_ROW_COUNT - originOffsetLength) * ROW_HEIGHT - tableClientHeight)
+                    }
+                }, 50)
+            })
+            .catch((e: any) => {
+                failed(`query HTTP Flow failed: ${e}`)
+            }).finally(() => setTimeout(() => setLoading(false), 60))
+    }), {wait: 600, leading: true, trailing: false}).run
 
     const sortFilter = useMemoizedFn((column: string, type: any) => {
         const keyRelation: any = {
@@ -677,9 +761,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
 
         if (column && type) {
-            update(1, offsetLimit, type, keyRelation[column])
+            update(1, OFFSET_LIMIT, type, keyRelation[column])
         } else {
-            update(1, offsetLimit)
+            update(1, OFFSET_LIMIT)
         }
     })
 
@@ -807,9 +891,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     setTimeout(() => {
                                         update(1)
                                         if (props.onSelected) props.onSelected(undefined)
-                                        setTimeout(() => {
-                                            setAutoReload(true)
-                                        }, 1000)
                                     }, 400)
                                 }}
                             >
@@ -818,27 +899,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 </Button>
                             </Popconfirm>
                         )}
+                        {autoReload && <Button size={"small"}>自动刷新</Button>}
                     </Space>
                 </Col>
                 <Col span={12} style={{textAlign: "right"}}>
                     <Tag>{total} Records</Tag>
-                    {/* <Pagination
-                        // simple={true}
-                        size={"small"}
-                        showSizeChanger={true}
-                        pageSize={pagination.Limit || 10}
-                        total={total}
-                        showTotal={(e) => <Tag>{e} Records</Tag>}
-                        onChange={(page, limit) => {
-                            setAutoReload(false)
-                            update(page, limit)
-                        }}
-                        onShowSizeChange={(_, limit) => {
-                            setAutoReload(false)
-                            update(1, limit)
-                        }}
-                        defaultCurrent={1}
-                    /> */}
                 </Col>
             </Row>
             <TableResizableColumn
@@ -852,7 +917,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         width: 80,
                         headRender: () => "序号",
                         cellRender: ({rowData, dataKey, ...props}: any) => {
-                            return `${rowData[dataKey] || "..."}`
+                            return `${rowData[dataKey] <= 0 ? "..." : rowData[dataKey]}`
                         }
                     },
                     {
@@ -996,6 +1061,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             )
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
+                            if (rowData.IsPlaceholder) {
+                                return <div style={{color: "#888585"}}>{"上拉刷新..."}</div>
+                            }
                             return (
                                 <div style={{width: "100%", display: "flex"}}>
                                     <div className='resize-ellipsis' title={rowData.Url}>
@@ -1003,28 +1071,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             rowData.Url
                                         ) : (
                                             rowData.Url
-                                            // <Highlighter
-                                            //     searchWords={[params.SearchURL]}
-                                            //     textToHighlight={rowData.Url}
-                                            // />
                                         )}
                                     </div>
-                                    {/*<CopyToClipboard*/}
-                                    {/*    text={`${rowData.Url}`}*/}
-                                    {/*    onCopy={(text, ok) => {*/}
-                                    {/*        if (ok) success("已复制到粘贴板")*/}
-                                    {/*    }}*/}
-                                    {/*>*/}
-                                    {/*    <Button type={"link"} size={"small"}>*/}
-                                    {/*        <CopyOutlined*/}
-                                    {/*            style={{*/}
-                                    {/*                paddingLeft: 5,*/}
-                                    {/*                paddingTop: 5,*/}
-                                    {/*                cursor: "pointer"*/}
-                                    {/*            }}*/}
-                                    {/*        />*/}
-                                    {/*    </Button>*/}
-                                    {/*</CopyToClipboard>*/}
                                 </div>
                             )
                         },
@@ -1240,7 +1288,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         }
                     }
                 ]}
-                data={data}
+                data={autoReload ? data : [TableFirstLinePlaceholder].concat(data)}
                 autoHeight={tableContentHeight <= 0}
                 height={tableContentHeight}
                 sortFilter={sortFilter}
@@ -1436,36 +1484,47 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     }
                 }}
                 onScroll={(scrollX, scrollY) => {
-                    console.info(scrollX, scrollY)
-
-                    const toTop = scrollY <= 0;
-
-                    let contextHeight = data.length * 42
-                    let top = Math.abs(scrollY)
-                    let maxPage = Math.ceil(total / offsetLimit)
-
                     // 防止无数据触发加载
                     if (data.length === 0) return
-                    // 防止初始加载的触发
-                    if (top !== 0 && top === counter.current) return
-                    if (autoReload) return
-                    counter.current = top
-                    if (tableTimer.current) {
-                        clearTimeout(tableTimer.current)
-                        tableTimer.current = null
+
+                    // 根据页面展示内容决定是否自动刷新
+                    let contextHeight = (data.length + 1) * ROW_HEIGHT // +1 是要把表 title 算进去
+                    let offsetY = scrollY + tableContentHeight;
+                    if (contextHeight < tableContentHeight) {
+                        setAutoReload(true)
+                        return
                     }
-                    tableTimer.current = setTimeout(() => {
-                        if (top === 0) {
-                            scrollUpdate(1)
-                            setAutoReload(false)
+                    if (!getAutoReload()) {
+                        setAutoReload(false)
+                    }
+                    if (getAutoReload()) {
+                        return
+                    }
+
+
+                    // 向下刷新数据
+                    // console.info(scrollY, scrollY / data.length)
+                    // console.info(data.length, (data.length) * ROW_HEIGHT)
+                    if (contextHeight <= offsetY) {
+                        setAutoReload(false)
+                        scrollUpdateButt(tableContentHeight)
+                        return
+                    }
+
+
+                    // 锁住滚轮
+                    if (getLockedScroll() > 0 && getLockedScroll() >= scrollY) {
+                        if (scrollY === getLockedScroll()) {
+                            return
                         }
-                        // 防止最后一页还进行向下加载
-                        if (parseInt(pagination.Page.toString()) === maxPage) return
-                        if (contextHeight - top - tableContentHeight < 0) {
-                            scrollUpdate(parseInt(pagination.Page.toString()) + 1)
-                            setAutoReload(false)
-                        }
-                    }, 50);
+                        // scrollTableTo(getLockedScroll())
+                        return
+                    }
+                    const toTop = scrollY <= 0;
+                    if (toTop) {
+                        lockScrollTimeout(ROW_HEIGHT, 600)
+                        scrollUpdateTop()
+                    }
                 }}
             />
         </div>

@@ -1259,6 +1259,12 @@ message QueryHTTPFlowRequest {
   bool HaveCommonParams = 6;
   bool HaveBody = 7;
   string SearchContentType = 9;
+
+  // 一般用于查询增量，查询所有更新前的内容
+  int64 BeforeUpdatedAt = 10;
+  int64 AfterUpdatedAt = 11;
+  int64 AfterId = 12;
+  int64 BeforeId = 13;
 }
 
 message DeleteHTTPFlowRequest {
