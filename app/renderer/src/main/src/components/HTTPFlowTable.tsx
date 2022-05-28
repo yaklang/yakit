@@ -1485,7 +1485,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 }}
                 onScroll={(scrollX, scrollY) => {
                     // 防止无数据触发加载
-                    if (data.length === 0) return
+                    if (data.length === 0 && !getAutoReload()) {
+                        setAutoReload(true)
+                        return
+                    }
 
                     // 根据页面展示内容决定是否自动刷新
                     let contextHeight = (data.length + 1) * ROW_HEIGHT // +1 是要把表 title 算进去
@@ -1494,13 +1497,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         setAutoReload(true)
                         return
                     }
-                    if (!getAutoReload()) {
-                        setAutoReload(false)
-                    }
-                    if (getAutoReload()) {
-                        return
-                    }
-
+                    setAutoReload(false)
 
                     // 向下刷新数据
                     // console.info(scrollY, scrollY / data.length)
