@@ -29,6 +29,7 @@ import {HTTPPacketFuzzable} from "./HTTPHistory";
 import {AutoSpin} from "./AutoSpin";
 import {ResizeBox} from "./ResizeBox";
 import ReactResizeDetector from "react-resize-detector";
+import {Buffer} from "buffer";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -324,7 +325,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             }).catch((e: any) => {
                 failed(`Query HTTPFlow failed: ${e}`)
             }).finally(() => {
-                setTimeout(() => setLoading(false), 400)
+                setTimeout(() => setLoading(false), 300)
             })
         } else {
             ipcRenderer.invoke("GetHTTPFlowByHash", {Hash: props.hash}).then((i: HTTPFlow) => {
@@ -332,38 +333,42 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             }).catch((e: any) => {
                 failed(`Query HTTPFlow failed: ${e}`)
             }).finally(() => {
-                setTimeout(() => setLoading(false), 400)
+                setTimeout(() => setLoading(false), 300)
             })
         }
     }, [props.hash])
 
-    if (!flow) {
-        return <>
-            <AutoSpin tip={"选中 HTTP History Record 查看详情"} indicator={<PlusCircleOutlined/>}>
-                <Col span={12} style={{padding: 20}}>
-                    <Skeleton/>
-                </Col>
-            </AutoSpin>
-        </>
-    }
+    // if (!flow) {
+    //     return <>
+    //         <AutoSpin tip={"选中 HTTP History Record 查看详情"} indicator={<PlusCircleOutlined/>}>
+    //             <Col span={12} style={{padding: 20}}>
+    //                 <Skeleton/>
+    //             </Col>
+    //         </AutoSpin>
+    //     </>
+    // }
 
-    return <>
+    return <AutoSpin spinning={(!flow || loading)} tip={"选择想要查看的请求 / 等待加载"}>
         {/*<ReactResizeDetector onResize={(h, w) => {*/}
         {/*    console.info(h, w)*/}
         {/*}}/>*/}
         <ResizeBox
             firstNode={<HTTPPacketEditor
-                originValue={flow.Request} readOnly={true} sendToWebFuzzer={!!props.sendToWebFuzzer}
-                defaultHeight={props.defaultHeight} defaultHttps={props.defaultHttps} hideSearch={true}
+                originValue={(flow?.Request) || new Uint8Array} readOnly={true}
+                sendToWebFuzzer={!!props.sendToWebFuzzer}
+                defaultHeight={props.defaultHeight}
+                defaultHttps={props.defaultHttps}
+                hideSearch={true}
             />}
             firstMinSize={300}
             secondNode={<HTTPPacketEditor
-                originValue={flow.Response}
+                isResponse={true}
+                originValue={(flow?.Response) || new Uint8Array}
                 readOnly={true} defaultHeight={props.defaultHeight}
                 hideSearch={true}
             />}
             secondMinSize={300}
         >
         </ResizeBox>
-    </>
+    </AutoSpin>
 }

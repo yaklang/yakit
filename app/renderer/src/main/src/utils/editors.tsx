@@ -22,6 +22,7 @@ import ReactResizeDetector from "react-resize-detector";
 
 import './editors.css'
 import {useMemoizedFn} from "ahooks";
+import {Buffer} from "buffer";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -202,12 +203,13 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                         height={100}
                         editorDidMount={(editor: IMonacoEditor, monaco: any) => {
                             setEditor(editor)
-                            if (props.editorDidMount) props.editorDidMount(editor);
+                            editor.setSelection({startColumn: 0, startLineNumber: 0, endColumn: 0, endLineNumber: 0})
 
                             fixContextMenu(editor)
                             if (props.full) {
                                 handleEditorMount(editor, monaco)
                             }
+                            if (props.editorDidMount) props.editorDidMount(editor);
                         }}
                         options={{
                             readOnly: props.readOnly,
@@ -258,6 +260,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     language?: "html" | "http" | "yak" | any
 
     system?: string
+    isResponse?: boolean
 }
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
@@ -265,7 +268,7 @@ export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
 }
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props) => {
-    const isResponse = (new Buffer(props.originValue.subarray(0, 5)).toString("utf8")).startsWith("HTTP/")
+    const isResponse = props.isResponse || (new Buffer(props.originValue.subarray(0, 5)).toString("utf8")).startsWith("HTTP/")
     const [mode, setMode] = useState("text");
     const [strValue, setStrValue] = useState(new Buffer(props.originValue).toString('utf8'));
     const [hexValue, setHexValue] = useState<Uint8Array>(new Buffer(props.originValue))
@@ -279,21 +282,22 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         if (!monacoEditor) {
             return
         }
+
         // @ts-ignore
-        let range = monacoEditor?.getModel().findMatches(search, false, !!regexp, false, null, false)
-        if (range && range.length > 0) {
-            const decs = monacoEditor.deltaDecorations(highlightDecorations, range.map(i => {
-                return {
-                    id: `highlight[${searchValue}]`,
-                    range: i.range,
-                    options: {
-                        isWholeLine: false,
-                        inlineClassName: 'monacoInlineHighlight'
-                    }
-                } as any
-            }))
-            setHighlightDecorations(decs)
-        }
+        // let range = monacoEditor?.getModel().findMatches(search, false, !!regexp, false, null, false)
+        // if (range && range.length > 0) {
+        //     const decs = monacoEditor.deltaDecorations(highlightDecorations, range.map(i => {
+        //         return {
+        //             id: `highlight[${searchValue}]`,
+        //             range: i.range,
+        //             options: {
+        //                 isWholeLine: false,
+        //                 inlineClassName: 'monacoInlineHighlight'
+        //             }
+        //         } as any
+        //     }))
+        //     setHighlightDecorations(decs)
+        // }
     })
 
     /*如何实现 monaco editor 高亮？*/
@@ -319,9 +323,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
     useEffect(() => {
         if (monacoEditor) {
-            setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
             props.onEditor && props.onEditor(monacoEditor)
+            monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
         }
+
+        if (!props.simpleMode && !props.hideSearch && monacoEditor) {
+            setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
+        }
+
 
         if (props.readOnly) {
             setStrValue(new Buffer(props.originValue).toString('utf8'))
@@ -466,7 +475,11 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                 {mode === "text" && !empty && <YakEditor
                     loading={props.loading}
                     type={props.language || (isResponse ? "html" : "http")}
-                    value={strValue} readOnly={props.readOnly}
+                    value={
+                        props.readOnly && props.originValue.length > 0 ?
+                            new Buffer(props.originValue).toString() : strValue
+                    }
+                    readOnly={props.readOnly}
                     setValue={setStrValue} noWordWrap={noWordwrap}
                     fontSize={fontSize}
                     actions={[
