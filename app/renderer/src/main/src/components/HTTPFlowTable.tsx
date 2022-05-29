@@ -859,7 +859,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             if (maxHeightBottom > viewHeightMax) {
                 // 上滚动
                 const offset = minHeight - (screenRowCount - 2) * ROW_HEIGHT;
-                console.info(screenRowCount, minHeight, minHeight - (screenRowCount - 1) * ROW_HEIGHT)
+                // console.info(screenRowCount, minHeight, minHeight - (screenRowCount - 1) * ROW_HEIGHT)
                 if (offset > 0) {
                     scrollTableTo(offset)
                 }
