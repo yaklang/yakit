@@ -1,75 +1,48 @@
 import React, {useEffect, useState} from "react";
-import {AutoCard} from "../../components/AutoCard";
-import {Button, Checkbox, Form, List, Space, Table, Typography} from "antd";
+import {Button, Checkbox, Space, Table, Typography} from "antd";
+import {MITMContentReplacerRule} from "./MITMContentReplacer";
+import {InputInteger, ManyMultiSelectForString, ManySelectOne} from "../../utils/inputUtil";
 import {failed, info} from "../../utils/notification";
-import {InputInteger, InputItem, ManyMultiSelectForString, ManySelectOne, SwitchItem} from "../../utils/inputUtil";
-import {showDrawer, showModal} from "../../utils/showModal";
-import {MITMContentReplacerExport} from "./MITMContentReplacerImport";
+import {AutoCard} from "../../components/AutoCard";
 
-export interface MITMContentReplacerProp {
-    rules: MITMContentReplacerRule[]
-    onSaved: (i: MITMContentReplacerRule[]) => any
-}
-
-export interface MITMContentReplacerRule {
-    // 文本字符串，正则/Re2/字符串硬匹配
-    Index: number
-    Rule: string
-    NoReplace: boolean
-    Result: string
-    Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan"
-    EnableForRequest: boolean
-    EnableForResponse: boolean
-    EnableForBody: boolean
-    EnableForHeader: boolean
-    ExtraTag: string[]
+export interface MITMContentReplacerViewerProp {
 }
 
 const {Text} = Typography;
 
 const {ipcRenderer} = window.require("electron");
 
-export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) => {
-    const [rules, setRules] = useState<MITMContentReplacerRule[]>(props.rules);
-    const [allowSaved, setAllowSaved] = useState(false);
-    const [loading, setLoading] = useState(false);
+export const MITMContentReplacerViewer: React.FC<MITMContentReplacerViewerProp> = (props) => {
+    const [rules, setRules] = useState<MITMContentReplacerRule[]>([]);
 
     useEffect(() => {
-        if (!allowSaved) {
-            return
-        }
-        setLoading(true)
-        ipcRenderer.invoke("mitm-content-replacers", {
-            replacers: rules,
-        }).then(() => {
-            try {
-                props.onSaved(rules)
-            } catch (e) {
-                console.info(e)
-            }
-        }).finally(() => setTimeout(() => setLoading(false), 500))
-        setAllowSaved(false)
-    }, [rules, allowSaved])
+        ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: { Rules: MITMContentReplacerRule[] }) => {
+            setRules(rsp.Rules)
+        })
+    }, [])
 
-    return <AutoCard loading={loading} title={<Space>
-        根据规则替换请求或响应的内容
-        <Button size={"small"} onClick={() => {
-            let m = showModal({
-                title: "新增规则", width: "60%", content: (
-                    <CreateMITMContentReplacer existed={rules} onCreated={i => {
-                        setRules([...rules, i].sort((a, b) => a.Index - b.Index))
-                        m.destroy()
-                    }}/>
-                )
-            })
-        }}>新增规则</Button>
-        <Button size={"small"} onClick={() => {
-            setAllowSaved(true)
-        }} type={"primary"}>更新到引擎</Button>
-        <Button size={"small"} onClick={() => {
-            showModal({title: "导出配置", width: "50%", content: (<MITMContentReplacerExport/>)})
-        }} type={"link"}>导出配置</Button>
-    </Space>} size={"small"} bodyStyle={{overflowY: "auto"}}>
+    return <AutoCard
+        size={"small"}
+        bordered={false}
+        title={(
+            <Space>
+                <div>
+                    现有 MITM 内容规则
+                </div>
+                <Button
+                    size={"small"} type={"primary"}
+                    onClick={() => {
+                        ipcRenderer.invoke("SetCurrentRules", {Rules: rules}).then(e => {
+                            info("保存成功")
+                        }).catch(e => {
+                            failed(`保存失败: ${e}`)
+                        })
+                    }}
+                >保存</Button>
+            </Space>
+        )}
+        bodyStyle={{overflowY: "auto"}}
+    >
         <Table<MITMContentReplacerRule>
             dataSource={rules}
             pagination={false}
@@ -114,7 +87,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                                     setRules([...rules])
                                 }
                             }}
-
+                            code={true} copyable={true}
                         >{i.Rule}</Text>
                     </div>
                 },
@@ -125,6 +98,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                         style={{maxWidth: 200}}
                     >
                         <Text
+                            copyable={!!i.Result && true}
                             editable={i.NoReplace ? false : {
                                 onChange: newResult => {
                                     rules.forEach(target => {
@@ -261,72 +235,4 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
 
         </Table>
     </AutoCard>
-};
-
-interface CreateMITMContentReplacerProp {
-    existed: MITMContentReplacerRule[]
-    onCreated: (i: MITMContentReplacerRule) => any
-}
-
-const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (props) => {
-    const [params, setParams] = useState<MITMContentReplacerRule>({
-        Color: "red",
-        EnableForRequest: false,
-        EnableForResponse: true,
-        EnableForBody: true,
-        EnableForHeader: true,
-        Index: props.existed.length + 1,
-        NoReplace: false,
-        Result: "",
-        Rule: "",
-        ExtraTag: []
-    })
-    return <Form
-        style={{marginBottom: 20}}
-        labelCol={{span: 5}} wrapperCol={{span: 14}}
-        onSubmitCapture={e => {
-            e.preventDefault()
-
-            if (props.existed.filter(i => i.Index === params.Index).length > 0) {
-                showModal({title: "错误", content: "执行顺序冲突（Index 冲突），重新设置执行顺序"})
-                return
-            }
-
-            props.onCreated({...params})
-        }}
-    >
-        <InputInteger label={"执行顺序"} setValue={Index => setParams({...params, Index})} value={params.Index}/>
-        <InputItem label={"规则内容"} setValue={Rule => setParams({...params, Rule})} value={params.Rule} required={true}/>
-        <InputItem label={"替换结果"} setValue={Result => setParams({...params, Result})} value={params.Result}
-                   placeholder={"想要替换成的内容，可以为空~"}/>
-        {/*<SwitchItem label={"禁用规则"} setValue={NoReplace => setParams({...params, NoReplace})} value={params.NoReplace}/>*/}
-        {/*{!params.NoReplace && <>*/}
-        {/*    <SwitchItem label={"对 Request 生效"} setValue={EnableForRequest => setParams({...params, EnableForRequest})}*/}
-        {/*                value={params.EnableForRequest}/>*/}
-        {/*    <SwitchItem label={"对 Response 生效"}*/}
-        {/*                setValue={EnableForResponse => setParams({...params, EnableForResponse})}*/}
-        {/*                value={params.EnableForResponse}/>*/}
-        {/*    <SwitchItem label={"对 Header 生效"}*/}
-        {/*                setValue={EnableForHeader => setParams({...params, EnableForHeader})}*/}
-        {/*                value={params.EnableForHeader}*/}
-        {/*    />*/}
-        {/*    <SwitchItem label={"对 Body 生效"}*/}
-        {/*                setValue={EnableForBody => setParams({...params, EnableForBody})} value={params.EnableForBody}*/}
-        {/*    />*/}
-        {/*</>}*/}
-        <ManySelectOne
-            label={"命中颜色"}
-            data={["red", "blue", "cyan", "green", "grey", "purple", "yellow", "orange"].map(i => {
-                return {value: i, text: i}
-            })}
-            setValue={Color => setParams({...params, Color})} value={params.Color}
-        />
-        <ManyMultiSelectForString
-            mode={"tags"} data={[]} label={"标记 Tag"} defaultSep={","}
-            setValue={e => setParams({...params, ExtraTag: e.split(",")})} value={(params?.ExtraTag || []).join(",")}
-        />
-        <Form.Item colon={false} label={" "}>
-            <Button type="primary" htmlType="submit"> 添加该规则 </Button>
-        </Form.Item>
-    </Form>
 };

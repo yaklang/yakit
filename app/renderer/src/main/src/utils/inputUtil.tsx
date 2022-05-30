@@ -416,13 +416,15 @@ export interface MultiSelectForStringProps extends InputBase {
     placeholder?: string
 
     data: CheckboxOptionType[]
+    disabled?: boolean
 }
 
 export const MultiSelectForString: React.FC<MultiSelectForStringProps> = (p) => {
     let sep = p.defaultSep || ",";
-    return <MultiSelect label={p.label} value={p.value ? p.value.split(sep) : []} data={p.data} setValue={(items) => {
-        items && p.setValue(items.join(sep))
-    }}/>
+    return <MultiSelect disabled={p.disabled} label={p.label} value={p.value ? p.value.split(sep) : []} data={p.data}
+                        setValue={(items) => {
+                            items && p.setValue(items.join(sep))
+                        }}/>
 };
 
 export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p) => {
@@ -435,6 +437,7 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
     }
     return <Item label={p.label} help={p.help} style={p.formItemStyle}>
         <Select
+            disabled={p.disabled}
             style={{width: "200"}}
             allowClear={true}
             autoClearSearchValue={true}
@@ -458,6 +461,7 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
 
 export interface MultiSelectProps extends InputBase {
     value?: string[]
+    disabled?: boolean
 
     setValue(s?: string[]): any
 
@@ -466,10 +470,11 @@ export interface MultiSelectProps extends InputBase {
 
 export const MultiSelect: React.FC<MultiSelectProps> = (p) => {
     return <Item label={p.label}>
-        <Checkbox.Group options={p.data} value={p.value} onChange={(values: CheckboxValueType[]) => {
-            let a = values as string[];
-            p.setValue(a)
-        }}/>
+        <Checkbox.Group disabled={p.disabled} options={p.data} value={p.value}
+                        onChange={(values: CheckboxValueType[]) => {
+                            let a = values as string[];
+                            p.setValue(a)
+                        }}/>
     </Item>
 };
 

@@ -313,4 +313,68 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DownloadMITMCert", async (e, params) => {
         return await asyncDownloadMITMCert(params)
     })
+
+    // asyncExportMITMReplacerRules wrapper
+    const asyncExportMITMReplacerRules = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExportMITMReplacerRules(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExportMITMReplacerRules", async (e, params) => {
+        return await asyncExportMITMReplacerRules(params)
+    })
+
+    // asyncImportMITMReplacerRules wrapper
+    const asyncImportMITMReplacerRules = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ImportMITMReplacerRules(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ImportMITMReplacerRules", async (e, params) => {
+        return await asyncImportMITMReplacerRules(params)
+    })
+
+    // asyncGetCurrentRules wrapper
+    const asyncGetCurrentRules = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetCurrentRules(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetCurrentRules", async (e, params) => {
+        return await asyncGetCurrentRules(params)
+    })
+
+    // asyncSetCurrentRules wrapper
+    const asyncSetCurrentRules = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetCurrentRules(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetCurrentRules", async (e, params) => {
+        return await asyncSetCurrentRules(params)
+    })
 }
