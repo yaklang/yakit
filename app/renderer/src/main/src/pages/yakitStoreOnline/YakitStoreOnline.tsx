@@ -114,7 +114,6 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     })
 
     const starredPlugin = useMemoizedFn((info: PluginStoreProps) => {
-        // if (info.is_stars) return
         const prams = {
             id: info?.id,
             operation: info.is_stars ? "remove" : "add"
@@ -124,12 +123,12 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             .then((res) => {
                 const index: number = response.data.findIndex((ele: PluginStoreProps) => ele.id === info.id)
                 if (index !== -1) {
-                    response.data[index].is_stars = !response.data[index].is_stars
                     if (info.is_stars) {
                         response.data[index].stars -= 1
                     } else {
                         response.data[index].stars += 1
                     }
+                    response.data[index].is_stars = !response.data[index].is_stars
                     setResponse({
                         ...response,
                         data: [...response.data]

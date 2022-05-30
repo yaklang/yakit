@@ -29,7 +29,6 @@
     "yarn": "^1.22.11"
   },
   "dependencies": {
-    "@electron/remote": "^2.0.8",
     "@grpc/grpc-js": "^1.3.6",
     "@grpc/proto-loader": "^0.6.4",
     "axios": "^0.26.1",
