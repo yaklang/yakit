@@ -6,13 +6,10 @@ const service = axios.create({
     timeout: 30 * 1000 // 请求超时时间
 })
 
-
-
 // request拦截器,拦截每一个请求加上请求头
 service.interceptors.request.use(
     (config) => {
         if (USER_INFO.isLogin && USER_INFO.token) config.headers["Authorization"] = USER_INFO.token
-       
         return config
     },
     (error) => {
@@ -29,19 +26,20 @@ service.interceptors.response.use(
         else return response.data
     },
     (error) => {
+        console.log("res_error", error)
         return Promise.reject(error)
     }
 )
 
-function httpApi(method, url, params) {
+function httpApi(method, url, params, headers, isAddParams = true) {
     if (!["get", "post"].includes(method)) {
         return Promise.reject(`call yak echo failed: ${e}`)
     }
-
     return service({
         url: url,
         method: method,
-        params,
+        headers,
+        params: isAddParams ? params : undefined,
         data: method === "post" ? params : undefined
         // params: method === "get" ? params : undefined,
         // data: method === "post" ? params : undefined

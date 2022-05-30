@@ -47,7 +47,7 @@ export interface DebounceSelectProps<ValueType = any>
 
 export const TrustList: React.FC = memo(() => {
   const [userList, setUserList] = useState<TrustListProp[]>([]);
-  const [currentUser, setCurrentUser] = useState<string>('');
+  const [currentUser, setCurrentUser] = useState<string>();
   const [trustUserData, setTrustUserData] = useState<ListReturnType>({ data: [], pagemeta: null });
   const [loading, setLoading] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(false);
@@ -69,7 +69,6 @@ export const TrustList: React.FC = memo(() => {
       limit: pageSize,
       keywords: value
     }
-
     ipcRenderer
       .invoke("fetch-trust-user-list", param)
       .then((res) => {

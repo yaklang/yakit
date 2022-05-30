@@ -247,7 +247,6 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
         prefixNode,
         suffixNode
     } = props
-
     if (!isItem) {
         return (
             <Select
@@ -261,7 +260,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                     const flag = Object.prototype.toString.call(item) === "[object Object]"
                     const value = flag ? item[optValue] : item
                     const title = flag ? item[optText] : item
-
+                    
                     return (
                         <Option key={value || index} value={value} title={title} disabled={item[optDisabled]}>
                             {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
