@@ -556,9 +556,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [_scrollY, setScrollYRaw, getScrollY] = useGetState(0)
     const setScrollY = useThrottleFn(setScrollYRaw, {wait: 300}).run
 
-    // 用于增量刷新的 ID 记录
-    const [_newest, setNewestId, getNewestId] = useGetState(0);
-    const [_oldest, setOldestId, getOldestId] = useGetState(0);
     // 如果这个大于等于 0 ，就 Lock 住，否则忽略
     const [_trigger, setLockedScroll, getLockedScroll] = useGetState(-1);
     const lockScrollTimeout = (size: number, timeout: number) => {
@@ -643,26 +640,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [compareRight])
 
-    // 用于差量更新
-    useEffect(() => {
-        // 设置最新的 ID
-        for (let i = 0; i < data.length; i++) {
-            if ((data[i]?.Id || 0) > 0) {
-                setNewestId(data[i].Id as number)
-                break
-            }
-        }
-        // 设置最老的 ID
-        for (let i = 0; i < data.length; i++) {
-            let idCache = (data[data.length - 1 - i]?.Id || 0);
-            if (idCache > 0) {
-                setOldestId(idCache as number)
-                break
-            }
-        }
-
-    }, [data])
-
     const update = useMemoizedFn((
         page?: number,
         limit?: number,
@@ -702,6 +679,31 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
+    const getNewestId = useMemoizedFn(() => {
+        let max = 0;
+        (getData() || []).forEach(e => {
+            const id = parseInt(`${e.Id}`)
+            if (id >= max) {
+                max = id
+            }
+        })
+        return max
+    })
+
+    const getOldestId = useMemoizedFn(() => {
+        if (getData().length <= 0) {
+            return 0
+        }
+        let min = parseInt(`${getData()[0].Id}`);
+        (getData() || []).forEach(e => {
+            const id = parseInt(`${e.Id}`)
+            if (id <= min) {
+                min = id
+            }
+        })
+        return min
+    })
+
     // 第一次启动的时候加载一下
     useEffect(() => {
         update(1)
@@ -724,12 +726,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             OrderBy: "id"
         }
 
+        const offsetId = getNewestId()
+        console.info("触顶：", offsetId)
         // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", {
                 SourceType: "mitm",
                 ...params,
-                AfterId: getNewestId(),  // 用于计算增量的
+                AfterId: offsetId,  // 用于计算增量的
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -759,12 +763,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             OrderBy: "id"
         }
 
+        const offsetId = getOldestId();
+        console.info("触底：", offsetId)
+
         // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", {
                 SourceType: "mitm",
                 ...params,
-                BeforeId: getOldestId(),  // 用于计算增量的
+                BeforeId: offsetId,  // 用于计算增量的
                 Pagination: {...paginationProps}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1001,7 +1008,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 </Button>
                             </Popconfirm>
                         )}
-                        {autoReload && <Button size={"small"}>自动刷新</Button>}
+                        {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                 </Col>
                 <Col span={12} style={{textAlign: "right"}}>
@@ -1164,7 +1171,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             if (rowData.IsPlaceholder) {
-                                return <div style={{color: "#888585"}}>{"滚轮上滑刷新~ ;-)"}</div>
+                                return <div style={{color: "#888585"}}>{"滚轮上滑刷新..."}</div>
                             }
                             return (
                                 <div style={{width: "100%", display: "flex"}}>
