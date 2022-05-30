@@ -1164,7 +1164,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             if (rowData.IsPlaceholder) {
-                                return <div style={{color: "#888585"}}>{"上拉刷新..."}</div>
+                                return <div style={{color: "#888585"}}>{"滚轮上滑刷新~ ;-)"}</div>
                             }
                             return (
                                 <div style={{width: "100%", display: "flex"}}>
