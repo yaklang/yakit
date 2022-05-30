@@ -1,13 +1,15 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {Row, Col, Input, Button, Pagination, List, Space, Card, Tooltip, Progress} from "antd"
 import {StarOutlined, StarFilled} from "@ant-design/icons"
-import {QueryGeneralRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 import {useMemoizedFn} from "ahooks"
 import {failed, success} from "../../utils/notification"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {YakitPluginInfo} from "./YakitPluginInfo"
+import {PluginStoreProps, PagemetaProps} from "./YakitPluginInfo.d"
 import {OfficialYakitLogoIcon} from "../../assets/icons"
 import {AutoSpin} from "../../components/AutoSpin"
+import {useStore} from "@/store"
+import numeral from "numeral"
 
 import "./YakitStoreOnline.scss"
 
@@ -24,59 +26,66 @@ const PluginType: {text: string; value: string}[] = [
 ]
 
 export interface YakitStoreOnlineProp {}
-interface SearchPluginOnlineRequest extends QueryGeneralRequest {
-    title?: string
-    order: string
+interface SearchPluginOnlineRequest {
+    keywords: string
+    status: number | null
     type: string
-    status: string
+    order_by: string
+    order?: string
+    page?: number
+    limit?: number
+}
+
+export interface ListReturnType {
+    data: PluginStoreProps[]
+    pagemeta: null | PagemetaProps
 }
 
 export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
     const [params, setParams] = useState<SearchPluginOnlineRequest>({
-        title: "",
-        order: "hot",
-        Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+        keywords: "",
+        order_by: "stars",
+        order: "desc",
         type: "",
-        status: "no"
+        page: 1,
+        limit: 12,
+        status: null
     })
-    const [response, setResponse] = useState<QueryYakScriptsResponse>({
-        Data: [],
-        Pagination: {
-            Limit: 10,
-            Page: 1,
-            Order: "desc",
-            OrderBy: "updated_at"
-        },
-        Total: 0
+    const [response, setResponse] = useState<ListReturnType>({
+        data: [],
+        pagemeta: {
+            limit: 12,
+            page: 1,
+            total: 0,
+            total_page: 1
+        }
     })
     // 全部添加进度条
     const [addLoading, setAddLoading] = useState<boolean>(false)
     const [percent, setPercent] = useState<number>(0)
 
-    const [pluginInfo, setPluginInfo] = useState<YakScript>()
+    const [pluginInfo, setPluginInfo] = useState<PluginStoreProps>()
     const [index, setIndex] = useState<number>(-1)
 
-    const search = useMemoizedFn(() => {
-        const paramss = {
-            IsHistory: false,
-            Keyword: params.title,
-            Pagination: params.Pagination,
-            Type: params.type,
-            IsIgnore: false
-        }
-        console.log(paramss, paramss.Pagination)
+    // 全局登录状态
+    const {userInfo} = useStore()
 
+    const search = useMemoizedFn(() => {
+        let url = "fetch-plugin-list-unlogged"
+        if (userInfo.isLogin) {
+            url = "fetch-plugin-list-logged"
+        }
         setLoading(true)
         ipcRenderer
-            .invoke("QueryYakScript", paramss)
-            .then((data) => {
-                console.log(data.Data)
-                setResponse(data)
+            .invoke(url, params)
+            .then((res) => {
+                const pluginRes = (res?.from && JSON.parse(res.from)) || {data: [], pagemeta: null}
+                setResponse(pluginRes)
             })
             .catch((e: any) => {
-                failed("Query Local Yak Script failed: " + `${e}`)
+                failed("插件列表获取失败" + e)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
@@ -100,34 +109,68 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
         setAddLoading(false)
     }
 
-    const addLocalLab = useMemoizedFn((info: YakScript) => {
+    const addLocalLab = useMemoizedFn((info: PluginStoreProps) => {
         success("添加成功")
     })
 
-    const starredPlugin = useMemoizedFn((info: YakScript) => {
-        success("星星改变成功")
+    const starredPlugin = useMemoizedFn((info: PluginStoreProps) => {
+        // if (info.is_stars) return
+        const prams = {
+            id: info?.id,
+            operation: info.is_stars ? "remove" : "add"
+        }
+        ipcRenderer
+            .invoke("fetch-plugin-stars", prams)
+            .then((res) => {
+                const index: number = response.data.findIndex((ele: PluginStoreProps) => ele.id === info.id)
+                if (index !== -1) {
+                    response.data[index].is_stars = !response.data[index].is_stars
+                    if (info.is_stars) {
+                        response.data[index].stars -= 1
+                    } else {
+                        response.data[index].stars += 1
+                    }
+                    setResponse({
+                        ...response,
+                        data: [...response.data]
+                    })
+                }
+            })
+            .catch((e: any) => {
+                failed("点星" + e)
+            })
     })
 
     useEffect(() => {
         search()
-    }, [])
+    }, [userInfo.isLogin])
+
+    useEffect(() => {
+        setIsAdmin(userInfo.role === "admin")
+    }, [userInfo.role])
 
     return !!pluginInfo ? (
-        <YakitPluginInfo info={pluginInfo} index={index} isAdmin={isAdmin} onBack={() => setPluginInfo(undefined)} />
+        <YakitPluginInfo
+            info={pluginInfo}
+            index={index}
+            isAdmin={isAdmin}
+            onBack={() => setPluginInfo(undefined)}
+            isLogin={userInfo.isLogin}
+        />
     ) : (
         <AutoSpin spinning={loading}>
             <div className='plugin-list-container'>
                 <div className='list-filter'>
                     <Row>
                         <Col span={18}>
-                            <Space>
+                            <Space size='middle'>
                                 <Input
                                     size='small'
-                                    value={params.title}
+                                    value={params.keywords}
                                     allowClear
                                     placeholder='搜索商店内插件'
                                     onChange={(e) => {
-                                        setParams({...params, title: e.target.value})
+                                        setParams({...params, keywords: e.target.value})
                                         triggerSearch()
                                     }}
                                 />
@@ -137,14 +180,13 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                                         isItem={false}
                                         select={{
                                             size: "small",
-                                            style: {width: 100, marginLeft: 3},
                                             data: [
-                                                {text: "按热度", value: "hot"},
-                                                {text: "按时间", value: "time"}
+                                                {text: "按热度", value: "stars"},
+                                                {text: "按时间", value: "created_at"}
                                             ],
-                                            value: params.order,
+                                            value: params.order_by,
                                             setValue: (value) => {
-                                                setParams({...params, order: value})
+                                                setParams({...params, order_by: value})
                                                 triggerSearch()
                                             }
                                         }}
@@ -156,7 +198,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                                         isItem={false}
                                         select={{
                                             size: "small",
-                                            style: {width: 120, marginLeft: 3},
+                                            style: {width: 120},
                                             data: PluginType,
                                             value: params.type,
                                             setValue: (value) => {
@@ -173,32 +215,35 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                                             isItem={false}
                                             select={{
                                                 size: "small",
-                                                style: {width: 120, marginLeft: 3},
+                                                style: {width: 120},
                                                 data: [
-                                                    {text: "全部", value: ""},
-                                                    {text: "未审核", value: "no"},
-                                                    {text: "审核通过", value: "success"},
-                                                    {text: "审核不通过", value: "failed"}
-                                                ],
-                                                value: params.status,
+                                                    {text: "全部", value: "all"},
+                                                    {text: "待审核", value: "0"},
+                                                    {text: "审核通过", value: "1"},
+                                                    {text: "审核不通过", value: "2"}
+                                                ], // 避免重复key
+                                                value: params.status === null ? "all" : params.status.toString(),
                                                 setValue: (value) => {
-                                                    setParams({...params, status: value})
+                                                    setParams({
+                                                        ...params,
+                                                        status: value === "all" ? null : Number(value)
+                                                    })
                                                     triggerSearch()
                                                 }
                                             }}
                                         />
                                     </div>
                                 )}
-                                <ItemSelects
-                                    isItem={false}
-                                    select={{
-                                        size: "small",
-                                        style: {width: 100},
-                                        data: ["true", "false"],
-                                        value: isAdmin.toString(),
-                                        setValue: (value) => setIsAdmin(value === "true" ? true : false)
-                                    }}
-                                />
+                                {/* <ItemSelects
+                  isItem={false}
+                  select={{
+                    size: "small",
+                    style: { width: 100 },
+                    data: ["true", "false"],
+                    value: isAdmin.toString(),
+                    setValue: (value) => setIsAdmin(value === "true" ? true : false)
+                  }}
+                /> */}
                             </Space>
                         </Col>
                         <Col span={6} style={{textAlign: "right"}}>
@@ -239,17 +284,12 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
 
                 <div className='list-body'>
                     <div className='list-content'>
-                        <List
+                        <List<PluginStoreProps>
                             grid={{gutter: 16, column: 4}}
-                            dataSource={response.Data}
-                            renderItem={(i: YakScript, index: number) => {
-                                let isAnonymous = false
-                                if (i.Author === "" || i.Author === "anonymous") {
-                                    isAnonymous = true
-                                }
-
+                            dataSource={response.data || []}
+                            renderItem={(i: PluginStoreProps, index: number) => {
                                 return (
-                                    <List.Item style={{marginLeft: 0}} key={i.Id}>
+                                    <List.Item style={{marginLeft: 0}} key={i.id}>
                                         <PluginListOpt
                                             index={index}
                                             isAdmin={isAdmin}
@@ -270,13 +310,13 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                     <div className='list-pagination vertical-center'>
                         <Pagination
                             size='small'
-                            current={params.Pagination.Page}
-                            defaultPageSize={20}
+                            current={response?.pagemeta?.page || 1}
+                            defaultPageSize={12}
                             showSizeChanger={false}
-                            total={response.Total}
+                            total={response?.pagemeta?.total || 0}
                             showTotal={(total) => `总共${total}个插件`}
                             onChange={(page, size) => {
-                                setParams({...params, Pagination: {...params.Pagination, Page: page}})
+                                setParams({...params, page})
                                 setTimeout(() => search(), 300)
                             }}
                         ></Pagination>
@@ -290,7 +330,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
 export const TagColor: {[key: string]: string} = {
     failed: "color-bgColor-red|审核不通过",
     success: "color-bgColor-green|审核通过",
-    not: "color-bgColor-blue|未审核"
+    not: "color-bgColor-blue|待审核"
 }
 export const RandomTagColor: string[] = [
     "color-bgColor-orange",
@@ -303,15 +343,15 @@ export const RandomTagColor: string[] = [
 interface PluginListOptProps {
     index: number
     isAdmin: boolean
-    info: YakScript
-    onClick: (info: YakScript) => any
-    onDownload: (info: YakScript) => any
-    onStarred: (info: YakScript) => any
+    info: PluginStoreProps
+    onClick: (info: PluginStoreProps) => any
+    onDownload: (info: PluginStoreProps) => any
+    onStarred: (info: PluginStoreProps) => any
 }
 
 const PluginListOpt = memo((props: PluginListOptProps) => {
     const {isAdmin, info, onClick, onDownload, onStarred, index} = props
-    const Tags: string[] = info.Tags ? info.Tags.split(",") : []
+    const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const tagList = useRef(null)
 
     const [flag, setFlag] = useState<number>(-1)
@@ -350,21 +390,21 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                         <span
                             style={{maxWidth: isAdmin ? "60%" : "80%"}}
                             className='text-style content-ellipsis'
-                            title={info.ScriptName}
+                            title={info.script_name}
                         >
-                            {info.ScriptName}
+                            {info.script_name}
                         </span>
                         <div className='text-icon vertical-center'>
                             {isAdmin ? (
                                 <div
                                     className={`text-icon-admin ${
-                                        TagColor[["failed", "success", "not"][index % 3]].split("|")[0]
+                                        TagColor[["not", "success", "failed"][info.status]].split("|")[0]
                                     } vertical-center`}
                                 >
-                                    {TagColor[["failed", "success", "not"][index % 3]].split("|")[1]}
+                                    {TagColor[["not", "success", "failed"][info.status]].split("|")[1]}
                                 </div>
                             ) : (
-                                index % 7 === 4 && (
+                                info.official && (
                                     // @ts-ignore
                                     <OfficialYakitLogoIcon className='text-icon-style' />
                                 )
@@ -389,18 +429,18 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                 </div>
 
                 <div className='info-content'>
-                    <div className='content-style content-ellipsis' title={info.Help}>
-                        {info.Help}
+                    <div className='content-style content-ellipsis' title={info.content}>
+                        {info.content}
                     </div>
                 </div>
 
                 <div ref={tagList} className='info-tag'>
-                    {Tags.length !== 0 ? (
-                        Tags.map((item, index) => {
-                            const tagClass = RandomTagColor[parseInt(`${Math.random() * 5}`)]
+                    {tags.length !== 0 ? (
+                        tags.map((item, index) => {
+                            const tagClass = RandomTagColor[index]
                             if (flag !== -1 && index > flag) return ""
                             return (
-                                <div key={`${info.Id}-${item}`} className={`tag-text ${tagClass}`}>
+                                <div key={`${info.id}-${item}`} className={`tag-text ${tagClass}`}>
                                     {item}
                                 </div>
                             )
@@ -414,27 +454,24 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
             <div className='opt-author horizontal-divide-aside' onClick={(e) => e.stopPropagation()}>
                 <div className='author-left'>
                     <div className='left-pic vertical-center'>
-                        <img
-                            src='https://profile-avatar.csdnimg.cn/87dc7bdc769b44fd9b82afb51946be1a_freeb1rd.jpg'
-                            className='left-pic-style'
-                        />
+                        <img src={info.head_img} className='left-pic-style' />
                     </div>
                     <div className='left-name vertical-center'>
-                        <span className='left-name-style content-ellipsis' title={info.Author || "anonymous"}>
-                            {info.Author || "anonymous"}
+                        <span className='left-name-style content-ellipsis' title={info.authors || "anonymous"}>
+                            {info.authors || "anonymous"}
                         </span>
                     </div>
                 </div>
 
                 <div className='author-right'>
                     <div className='vertical-center' onClick={(e) => onStarred(info)}>
-                        {index % 5 === 4 ? (
+                        {info.is_stars ? (
                             <StarFilled className='solid-star' />
                         ) : (
                             <StarOutlined className='empty-star' />
                         )}
                     </div>
-                    <div className='vertical-center'>{index * 7 + 3}</div>
+                    <div className='vertical-center'>{numeral(info.stars).format("0,0")}</div>
                 </div>
             </div>
         </Card>

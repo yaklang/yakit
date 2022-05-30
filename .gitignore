@@ -44,3 +44,4 @@ wizard/dist/
 release/
 package-lock.json
 .bashrc
+yarn.lock
