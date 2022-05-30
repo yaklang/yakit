@@ -326,19 +326,23 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             props.onEditor && props.onEditor(monacoEditor)
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
         }
-
         if (!props.simpleMode && !props.hideSearch && monacoEditor) {
             setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
         }
+    }, [monacoEditor])
 
-
+    useEffect(() => {
         if (props.readOnly) {
             setStrValue(new Buffer(props.originValue).toString('utf8'))
             setHexValue(new Buffer(props.originValue))
         }
+        if (props.readOnly && monacoEditor) {
+            monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+        }
     }, [
         props.originValue,
-        monacoEditor,
+        props.readOnly,
+        // monacoEditor,
     ])
 
     useEffect(() => {
