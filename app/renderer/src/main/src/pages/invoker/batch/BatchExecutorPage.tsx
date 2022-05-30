@@ -99,7 +99,7 @@ const StartExecBatchYakScript = (target: TargetRequest, names: string[], token: 
         TargetFile: target.targetFile,
         ScriptNames: names,
         Concurrent: target.concurrent || 5,
-        TotalTimeoutSeconds: target.totalTimeout || 1800,
+        TotalTimeoutSeconds: target.totalTimeout || 3600 * 2,
     };
     return ipcRenderer.invoke("ExecBatchYakScript", params, token)
 };
@@ -463,7 +463,7 @@ export interface TargetRequest {
 export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props) => {
     const [target, setTarget] = useState<TargetRequest>({
         allowFuzz: true, target: "", targetFile: "",
-        concurrent: 5, totalTimeout: 1800,
+        concurrent: 5, totalTimeout: 3600 * 2,
     });
     const {loading, executing, disableStartButton, history, executeHistory} = props;
 

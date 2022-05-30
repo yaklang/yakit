@@ -64,7 +64,7 @@ const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryY
         TargetFile: target.targetFile,
         ScriptNames: [], EnablePluginFilter: true, PluginFilter: filter,
         Concurrent: target.concurrent || 5,
-        TotalTimeoutSeconds: target.totalTimeout || 1800,
+        TotalTimeoutSeconds: target.totalTimeout || 3600 * 2,
     };
     return ipcRenderer.invoke("ExecBatchYakScript", params, token)
 };
