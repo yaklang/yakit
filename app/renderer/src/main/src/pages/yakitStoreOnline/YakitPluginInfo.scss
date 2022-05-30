@@ -15,6 +15,7 @@
         overflow: hidden auto;
         display: flex;
         flex-flow: column;
+
         .info-back {
             width: 100%;
             height: 17px;
@@ -24,6 +25,7 @@
             display: block;
             cursor: pointer;
         }
+
         .info-header {
             width: 100%;
             height: 33px;
@@ -31,9 +33,11 @@
             margin: 24px 0 8px 0;
             display: flex;
             justify-content: space-between;
+
             .header-title-body {
                 display: flex;
                 max-width: 70%;
+
                 .title-body-text {
                     font-size: 24px;
                     font-weight: 600;
@@ -41,6 +45,7 @@
                     display: inline-block;
                     max-width: 85%;
                 }
+
                 .title-body-admin-tag {
                     height: 20px;
                     line-height: 20px;
@@ -50,6 +55,7 @@
                     margin-left: 8px;
                 }
             }
+
             .header-btn-body {
                 .btn-like {
                     background-color: #f6f7f9;
@@ -58,14 +64,17 @@
                     color: #686c78;
                     padding: 4px 14px;
                     border: 1px solid #ffffff;
+
                     .empty-star {
                         cursor: pointer;
                     }
+
                     .solid-star {
                         color: #ffb95d;
                         cursor: pointer;
                     }
                 }
+
                 .btn-add {
                     background-color: #036ffe;
                     border-radius: 4px;
@@ -76,18 +85,22 @@
                 }
             }
         }
+
         .info-preface {
             width: 100%;
             height: 24px;
             line-height: 24px;
             display: flex;
+
             .preface-author {
                 display: flex;
+
                 .author-img {
                     width: 24px;
                     height: 24px;
                     border-radius: 50%;
                 }
+
                 .author-name {
                     color: #1e1f23;
                     font-size: 12px;
@@ -96,29 +109,41 @@
                     display: inline-block;
                 }
             }
+
             .preface-divider {
                 height: 100%;
             }
+
             .preface-time {
                 font-size: 12px;
                 height: 20px;
                 line-height: 20px;
+
                 .time-title {
                     color: #1e1f23;
                     display: inline-block;
                 }
+
                 .time-style {
                     margin-left: 8px;
                     color: #999ea8;
                     display: inline-block;
                 }
             }
+
             .preface-star-and-download {
                 display: flex;
+
+                .solid-star {
+                    color: #ffb95d;
+                    cursor: pointer;
+                }
+
                 .star-download-icon {
                     cursor: pointer;
                     font-size: 16px;
                 }
+
                 .star-download-num {
                     margin-left: 4px;
                     color: #999ea8;
@@ -129,11 +154,13 @@
                 }
             }
         }
+
         .info-summary {
             margin: 16px 0 40px 0;
             padding: 24px;
             width: 100%;
             background-color: #f9fafb;
+
             .summary-introduce {
                 .introduce-title {
                     width: 100%;
@@ -143,28 +170,34 @@
                     font-weight: 600;
                     color: #1e1f23;
                 }
+
                 .introduce-content {
                     margin-top: 8px;
                 }
             }
         }
+
         .info-comment-box {
             margin-bottom: 24px;
             width: 100%;
+
             .box-header {
                 height: 24px;
                 line-height: 24px;
                 font-size: 16px;
                 font-weight: 600;
+
                 .header-title {
                     color: #1e1f23;
                 }
+
                 .header-subtitle {
                     color: #999ea8;
                     margin-left: 8px;
                 }
             }
         }
+
         // .info-comment-content {
         // }
     }
@@ -176,10 +209,12 @@
         height: 72px;
         box-shadow: 0 -2px 4px 0 rgba(195, 199, 207, 0.3);
         background-color: #ffffff;
+
         .info-examine-body {
             height: 100%;
             display: flex;
             justify-content: space-between;
+
             .examine-title {
                 height: 24px;
                 line-height: 24px;
@@ -187,12 +222,14 @@
                 font-weight: 600;
                 color: #1e1f23;
             }
+
             .examine-reject {
                 background-color: #f9fafb;
                 color: #686c78;
                 border: 1px solid #ffffff;
                 border-radius: 4px;
             }
+
             .examine-adopt {
                 background-color: #036ffe;
                 color: #ffffff;
@@ -206,31 +243,38 @@
 
 .plugin-info-comment-input {
     width: 100%;
+
     .box-input {
         margin: 8px 0 22px 0;
         width: 100%;
+
         .input-stlye {
             background-color: #f9fafb;
             border: 1px solid #e6eaef;
             border-radius: 4px;
             box-shadow: 0 0 0 #ffffff;
         }
+
         textarea.ant-input.input-stlye::-webkit-input-placeholder {
             color: #1e1f23;
         }
     }
+
     .box-upload {
         display: flex;
+
         .upload-img-opt {
             width: 90px;
             height: 90px;
             cursor: pointer;
             position: relative;
+
             .opt-pic {
                 width: 90px;
                 height: 90px;
                 border-radius: 10px;
             }
+
             .opt-del {
                 position: absolute;
                 top: 3px;
@@ -242,23 +286,29 @@
                 font-weight: 600;
                 z-index: 99;
             }
+
             .opt-del:hover {
                 color: #ff8787;
             }
         }
-        .upload-img-opt + .upload-img-opt {
+
+        .upload-img-opt+.upload-img-opt {
             margin-left: 10px;
         }
     }
+
     .box-btn {
         display: flex;
         justify-content: space-between;
+
         .btn-pic {
             color: #8e8e8e;
         }
+
         .btn-pic-disabled {
             color: #d6d6d6;
         }
+
         .btn-submit {
             background-color: #f9fafb;
             color: #cbd1da;
@@ -270,13 +320,16 @@
 .comment-reply-dialog {
     .ant-modal-content {
         border-radius: 10px;
+
         .ant-modal-header {
             border: 0;
             border-radius: 10px;
+
             .header-title {
                 font-weight: 600;
             }
         }
+
         .ant-modal-body {
             padding: 10px 24px 24px 24px;
         }
@@ -289,19 +342,24 @@
     border-radius: 1px;
     margin: 24px 0;
 }
+
 .plugin-comment-opt {
     display: flex;
+
     .opt-author-img {
         margin-right: 16px;
         width: 48px;
+
         .author-img-style {
             width: 48px;
             height: 48px;
             border-radius: 50%;
         }
     }
+
     .opt-comment-body {
         flex: 1;
+
         .comment-body-name {
             height: 20px;
             line-height: 20px;
@@ -309,14 +367,17 @@
             color: #1e1f23;
             margin-top: 2px;
         }
+
         .comment-body-content {
             margin: 4px 0 8px 0;
+
             .content-style {
                 color: #686c78;
                 line-height: 20px;
                 margin-bottom: 0;
             }
         }
+
         .comment-body-time-func {
             height: 20px;
             line-height: 20px;
@@ -325,23 +386,34 @@
             align-items: center;
             color: #999ea8;
             font-size: 12px;
+
             .func-comment-and-star {
                 display: flex;
                 height: 16px;
                 line-height: 16px;
+
                 .comment-and-star {
                     display: flex;
                     align-items: center;
+
                     .icon-style {
                         font-size: 16px;
                         cursor: pointer;
                     }
+
+                    .icon-style-start {
+                        font-size: 16px;
+                        cursor: pointer;
+                        color: #ffb95d;
+                    }
+
                     .num-style {
                         margin-left: 4px;
                     }
                 }
             }
         }
+
         .comment-body-subcomment {
             width: 100%;
             background-color: #f9fafb;
@@ -358,17 +430,26 @@
     display: flex;
     justify-content: center;
     align-items: center;
+
     .mask-display-icon-body {
         position: absolute;
         top: 10px;
         right: 20px;
         font-size: 50px;
         color: #d6d6d6;
+
         .display-icon {
             cursor: pointer;
         }
+
         .display-icon-middle {
             margin: 0 20px;
         }
     }
+}
+
+.un-login {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
 }

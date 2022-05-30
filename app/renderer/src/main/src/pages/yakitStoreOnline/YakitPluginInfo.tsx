@@ -10,87 +10,193 @@ import {
     ZoomInOutlined,
     ZoomOutOutlined
 } from "@ant-design/icons"
-import {YakScript} from "../invoker/schema"
 import {useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import {failed} from "../../utils/notification"
+import {failed, success} from "../../utils/notification"
 import {TagColor} from "./YakitStoreOnline"
 import {CollapseParagraph} from "./CollapseParagraph"
 import {OnlineCommentIcon, OnlineThumbsUpIcon} from "@/assets/icons"
-
-import "./YakitPluginInfo.scss"
+import {PluginStoreProps, PagemetaProps} from "./YakitPluginInfo.d"
 import {AutoSpin} from "@/components/AutoSpin"
 import {SecondConfirm} from "@/components/functionTemplate/SecondConfirm"
 import {showFullScreenMask} from "@/components/functionTemplate/showByContext"
+import moment from "moment"
+import numeral from "numeral"
+import "./YakitPluginInfo.scss"
+import {getCommentRange} from "typescript"
+import Item from "antd/lib/list/Item"
 
 const {ipcRenderer} = window.require("electron")
-
 export interface YakitPluginInfoProp {
-    info: YakScript
+    info: PluginStoreProps
     onBack: () => any
     index: number
     isAdmin: boolean
+    isLogin: boolean
 }
 interface uploadImgInfo {
     name: string
     path: string | ArrayBuffer | null
 }
 
+interface CommentListProps {
+    id: number
+    created_at: number
+    updated_at: number
+    plugin_id: number
+    root_id: number
+    parent_id: number
+    user_id: number
+    user_name: string
+    head_img: string
+    message: string
+    message_img: string
+    like_num: number
+    child: string
+    is_stars?: boolean
+}
+interface CommentResponsesProps {
+    data: CommentListProps[]
+    pagemeta: PagemetaProps | null
+}
+
 export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
-    const {info, onBack, index, isAdmin} = props
+    const {info, onBack, index, isAdmin, isLogin} = props
 
     const [loading, setLoading] = useState<boolean>(false)
-    const [plugin, setPlugin, getPlugin] = useGetState<YakScript>()
+    const [commentLoading, setCommentLoading] = useState<boolean>(false)
+    const [plugin, setPlugin] = useGetState<PluginStoreProps>()
+
+    const [commentResponses, setCommentResponses] = useGetState<CommentResponsesProps>()
     const [commentText, setCommentText] = useState<string>("")
     const [files, setFiles] = useState<uploadImgInfo[]>([])
 
     useEffect(() => {
-        setLoading(true)
-        ipcRenderer
-            .invoke("GetYakScriptById", {Id: info.Id})
-            .then((e: YakScript) => {
-                if (e) setPlugin(e)
-            })
-            .catch((e: any) => {
-                failed("Query Plugin Info By ID failed")
-            })
-            .finally(() => setTimeout(() => setLoading(false), 300))
+        getPluginDetail()
+        // getComment()
     }, [])
 
+    const getPluginDetail = useMemoizedFn(() => {
+        let url = "fetch-plugin-detail-unlogged"
+        if (isLogin) {
+            url = "fetch-plugin-detail"
+        }
+        setLoading(true)
+        ipcRenderer
+            .invoke(url, {id: info.id})
+            .then((res) => {
+                const item = (res?.from && JSON.parse(res.from)) || {}
+                setPlugin(item)
+            })
+            .catch((e: any) => {
+                failed("插件详情获取失败:" + e)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
+            })
+    })
+
+    const getComment = useMemoizedFn(() => {
+        const params = {
+            plugin_id: info.id,
+            page: commentResponses?.pagemeta?.page || 1
+        }
+        ipcRenderer
+            .invoke("fetch-plugin-comment", params)
+            .then((res) => {
+                const item = (res?.from && JSON.parse(res.from)) || {}
+                setCommentResponses(item)
+            })
+            .catch((e: any) => {
+                failed("评论查询失败:" + e)
+            })
+    })
+
     const pluginStar = useMemoizedFn(() => {
-        alert("点赞成功")
+        if (plugin) {
+            plugin.is_stars = !plugin.is_stars
+            setPlugin({...plugin})
+            success("点赞成功")
+        }
     })
 
     const pluginAdd = useMemoizedFn(() => {
         alert("添加成功")
     })
-
+    // 新增评论
     const pluginComment = useMemoizedFn(() => {
-        const number = files.length
-        alert(`评论内容：${commentText}${number !== 0 ? "和" + number + "张图片" : ""}`)
+        if (!plugin) return
+        if (!commentText) {
+            failed("请输入评论内容")
+            return
+        }
+        const imgList = ["https://yakit-online.oss-cn-hongkong.aliyuncs.com/comment/20225271151321653623492jpg"]
+        const params = {
+            plugin_id: plugin.id,
+            message_img: imgList,
+            parent_id: 0,
+            root_id: 0,
+            message: commentText
+        }
+        addComment(params)
+    })
+
+    const addComment = useMemoizedFn((params: any) => {
+        setCommentLoading(true)
+        ipcRenderer
+            .invoke("add-plugin-comment", params)
+            .then((res) => {
+                getComment()
+
+                if (commentText) setCommentText("")
+                if (commentInputText) setCommentInputText("")
+                if (commentSecondShow) setCommentShow(false)
+                if (currentComment?.id) setCurrentComment(null)
+            })
+            .catch((e: any) => {
+                failed("评论错误" + e)
+            })
+            .finally(() => {
+                setTimeout(() => setCommentLoading(false), 200)
+            })
     })
 
     const [commentShow, setCommentShow] = useState<boolean>(false)
     const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
-    const [commentName, setCommentName] = useState<string>("")
+    const [currentComment, setCurrentComment] = useState<CommentListProps | null>()
     const [commentInputText, setCommentInputText] = useState<string>("")
     const [commentFiles, setCommentFiles] = useState<uploadImgInfo[]>([])
 
-    const pluginReply = useMemoizedFn((name: string) => {
-        setCommentName(name)
+    const pluginReply = useMemoizedFn((item: CommentListProps) => {
+        setCurrentComment(item)
         setCommentShow(true)
     })
     const pluginReplyComment = useMemoizedFn(() => {
-        setCommentName("")
-        setCommentInputText("")
-        setCommentFiles([])
-        setCommentShow(false)
-        const number = commentFiles.length
-        alert(`评论内容：${commentInputText}${number !== 0 ? "和" + number + "张图片" : ""}`)
+        // setCommentName("")
+        // setCommentInputText("")
+        // setCommentFiles([])
+        // setCommentShow(false)
+        // const number = commentFiles.length
+        // alert(`评论内容：${commentInputText}${number !== 0 ? "和" + number + "张图片" : ""}`)
+        if (!plugin) return
+        if (!currentComment?.id) return
+        if (!commentInputText) {
+            failed("请输入评论内容")
+            return
+        }
+        const imgList = ["https://yakit-online.oss-cn-hongkong.aliyuncs.com/comment/20225271151321653623492jpg"]
+        const params = {
+            plugin_id: plugin.id,
+            message_img: imgList,
+            parent_id: currentComment?.id,
+            root_id: currentComment?.id,
+            message: commentInputText
+        }
+        addComment(params)
     })
     const pluginCancelComment = useMemoizedFn((flag: number) => {
         if (flag === 2) {
-            setCommentName("")
+            setCurrentComment(null)
             setCommentInputText("")
             setCommentFiles([])
             setCommentShow(false)
@@ -98,12 +204,45 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
         setCommentSencondShow(false)
     })
 
-    const pluginCommentStar = useMemoizedFn((name: string) => {
-        alert(`给${name}点赞操作成功`)
+    const pluginCommentStar = useMemoizedFn((item: CommentListProps) => {
+        const params = {
+            comment_id: item.id,
+            operation: item.is_stars ? "remove" : "add"
+        }
+        ipcRenderer
+            .invoke("add-plugin-comment-stars", params)
+            .then((res) => {
+                if (!commentResponses) return
+                const index: number = commentResponses.data.findIndex((ele: CommentListProps) => ele.id === item.id)
+                if (index !== -1) {
+                    commentResponses.data[index].is_stars = !commentResponses.data[index].is_stars
+                    commentResponses.data[index].like_num += 1
+                    setCommentResponses({
+                        ...commentResponses,
+                        data: [...commentResponses.data]
+                    })
+                }
+            })
+            .catch((e: any) => {
+                failed("点赞失败" + e)
+            })
+            .finally(() => {})
     })
 
-    const pluginExamine = useMemoizedFn((flag: boolean) => {
-        alert(`插件审核${flag ? "通过" : "不通过"}`)
+    const pluginExamine = useMemoizedFn((status: number) => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("fetch-plugin-audit", {id: plugin?.id, status})
+            .then((res) => {
+                if (plugin) setPlugin({...plugin, status})
+                success(`插件审核${status === 1 ? "通过" : "不通过"}`)
+            })
+            .catch((e: any) => {
+                failed("审核失败" + e)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
+            })
     })
 
     if (!plugin) {
@@ -113,7 +252,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             </div>
         )
     }
-
     return (
         <AutoSpin spinning={loading}>
             <div className='yakit-plugin-info-container'>
@@ -128,17 +266,17 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
 
                     <div className='info-header'>
                         <div className='header-title-body'>
-                            <span className='content-ellipsis title-body-text' title={plugin.ScriptName}>
-                                {plugin.ScriptName}
+                            <span className='content-ellipsis title-body-text' title={plugin.script_name}>
+                                {plugin.script_name}
                             </span>
                             {isAdmin && (
                                 <div className='vertical-center'>
                                     <div
                                         className={`${
-                                            TagColor[["failed", "success", "not"][index % 3]].split("|")[0]
+                                            TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
                                         } title-body-admin-tag`}
                                     >
-                                        {TagColor[["failed", "success", "not"][index % 3]].split("|")[1]}
+                                        {TagColor[["not", "success", "failed"][plugin.status]].split("|")[1]}
                                     </div>
                                 </div>
                             )}
@@ -148,7 +286,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             <Button
                                 className='btn-like'
                                 icon={
-                                    index % 5 === 4 ? (
+                                    plugin.is_stars ? (
                                         <StarFilled className='solid-star' />
                                     ) : (
                                         <StarOutlined className='empty-star' />
@@ -166,12 +304,9 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
 
                     <div className='info-preface'>
                         <div className='preface-author'>
-                            <img
-                                src='https://profile-avatar.csdnimg.cn/87dc7bdc769b44fd9b82afb51946be1a_freeb1rd.jpg'
-                                className='author-img'
-                            />
+                            <img src={plugin.head_img} className='author-img' />
                             <div className='vertical-center' style={{marginLeft: 8}}>
-                                <span className='author-name'>{plugin.Author || "anonymous"}</span>
+                                <span className='author-name'>{plugin.authors || "anonymous"}</span>
                             </div>
                         </div>
 
@@ -180,16 +315,21 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                         <div className='vertical-center'>
                             <div className='preface-time'>
                                 <span className='time-title'>最新更新时间</span>
-                                <span className='time-style'>{"2022/04/12"}</span>
+                                <span className='time-style'>
+                                    {info?.updated_at && moment.unix(info.updated_at).format("YYYY年MM月DD日")}
+                                </span>
                             </div>
                         </div>
-
                         <div className='preface-star-and-download' style={{margin: "0 24px 0 26px"}}>
-                            <div className='vertical-center'>
-                                <StarOutlined className='star-download-icon' />
+                            <div className='vertical-center' onClick={pluginStar}>
+                                {plugin.is_stars ? (
+                                    <StarFilled className='solid-star' />
+                                ) : (
+                                    <StarOutlined className='star-download-icon' />
+                                )}
                             </div>
                             <div className='vertical-center'>
-                                <span className='star-download-num'>{index * 7 + 3}</span>
+                                <span className='star-download-num'>{plugin.stars}</span>
                             </div>
                         </div>
 
@@ -198,7 +338,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                                 <DownloadOutlined className='star-download-icon' />
                             </div>
                             <div className='vertical-center'>
-                                <span className='star-download-num'>{index * 7 + 3}</span>
+                                <span className='star-download-num'>{plugin.downloaded_total}</span>
                             </div>
                         </div>
                     </div>
@@ -208,17 +348,15 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             <div className='introduce-title'>概述</div>
 
                             <div className='introduce-content'>
-                                <CollapseParagraph value={plugin.Help} isLine={true} rows={3}></CollapseParagraph>
+                                <CollapseParagraph value={plugin.content} isLine={true} rows={3}></CollapseParagraph>
                             </div>
                         </div>
-
-                        {/* <div style={{marginTop: 24}}></div> */}
                     </div>
 
                     <div className='info-comment-box'>
                         <div className='box-header'>
                             <span className='header-title'>用户评论</span>
-                            <span className='header-subtitle'>{index + 102}</span>
+                            <span className='header-subtitle'>{commentResponses?.pagemeta?.total || 0}</span>
                         </div>
 
                         <PluginCommentInput
@@ -227,33 +365,24 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             files={files}
                             setFiles={setFiles}
                             onSubmit={pluginComment}
+                            loading={commentLoading}
+                            isLogin={isLogin}
                         ></PluginCommentInput>
                     </div>
 
                     <div className='info-comment-content'>
-                        {[
-                            {
-                                name: 1,
-                                value: [
-                                    {name: 2, value: 1},
-                                    {name: 3, value: 2}
-                                ]
-                            },
-                            {name: 4, value: 1},
-                            {name: 5, value: 1}
-                        ].map((item, index) => {
-                            return (
-                                <div key={item.name}>
-                                    <PluginCommentInfo
-                                        info={plugin}
-                                        value={item.value}
-                                        onReply={pluginReply}
-                                        onStar={pluginCommentStar}
-                                    ></PluginCommentInfo>
-                                    {index !== [1, 2, 3].length - 1 && <div className='comment-separator'></div>}
-                                </div>
-                            )
-                        })}
+                        {commentResponses?.data?.map((item: CommentListProps, index) => (
+                            <>
+                                <PluginCommentInfo
+                                    key={item.id}
+                                    info={item}
+                                    onReply={pluginReply}
+                                    onStar={pluginCommentStar}
+                                    isStarChange={item.is_stars}
+                                />
+                                <div className='comment-separator'></div>
+                            </>
+                        ))}
                     </div>
                 </div>
 
@@ -265,10 +394,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             </div>
                             <div className='vertical-center'>
                                 <div>
-                                    <Button className='examine-reject' onClick={() => pluginExamine(false)}>
+                                    <Button className='examine-reject' onClick={() => pluginExamine(2)}>
                                         不通过
                                     </Button>
-                                    <Button className='examine-adopt' onClick={() => pluginExamine(true)}>
+                                    <Button className='examine-adopt' onClick={() => pluginExamine(1)}>
                                         通过
                                     </Button>
                                 </div>
@@ -279,7 +408,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
 
                 <Modal
                     wrapClassName='comment-reply-dialog'
-                    title={<div className='header-title'>回复@{commentName}</div>}
+                    title={<div className='header-title'>回复@{currentComment?.user_name}</div>}
                     visible={commentShow}
                     centered={true}
                     footer={null}
@@ -292,6 +421,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                         files={commentFiles}
                         setFiles={setCommentFiles}
                         onSubmit={pluginReplyComment}
+                        loading={commentLoading}
                     ></PluginCommentInput>
                 </Modal>
                 <SecondConfirm visible={commentSecondShow} onCancel={pluginCancelComment}></SecondConfirm>
@@ -302,6 +432,8 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
 
 interface PluginCommentInputProps {
     value: string
+    loading: boolean
+    isLogin?: boolean
     setValue: (value: string) => any
     files: uploadImgInfo[]
     setFiles: (files: uploadImgInfo[]) => any
@@ -309,24 +441,24 @@ interface PluginCommentInputProps {
 }
 // 评论功能的部分组件-输入组件、展示图片组件、上传和提交按钮组件
 const PluginCommentInput = (props: PluginCommentInputProps) => {
-    const {value, setValue, files, setFiles, onSubmit} = props
+    const {value, loading, isLogin, setValue, files, setFiles, onSubmit} = props
 
     const fileRef = useRef<any[]>([])
     const time = useRef<any>(null)
 
-    const uploadImg = () => {
-        const imgs: uploadImgInfo[] = []
-        for (let file of fileRef.current) {
-            let reader = new FileReader()
-            reader.readAsDataURL(file)
-            reader.onload = () => {
-                imgs.push({name: file.name, path: reader.result})
-                if (imgs.length === fileRef.current.length) {
-                    setFiles(files.concat(imgs))
-                    fileRef.current = []
-                }
-            }
-        }
+    const uploadImg = (file) => {
+        // const imgs: uploadImgInfo[] = []
+        // for (let file of fileRef.current) {
+        //   let reader = new FileReader()
+        //   reader.readAsDataURL(file)
+        //   reader.onload = () => {
+        //     imgs.push({ name: file.name, path: reader.result })
+        //     if (imgs.length === fileRef.current.length) {
+        //       setFiles(files.concat(imgs))
+        //       fileRef.current = []
+        //     }
+        //   }
+        // }
     }
 
     return (
@@ -378,40 +510,45 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
             )}
 
             <div className='box-btn'>
-                <Upload
-                    accept='image/jpeg,image/png,image/jpg,image/gif'
-                    multiple={true}
-                    disabled={files.length >= 3}
-                    showUploadList={false}
-                    beforeUpload={(file: any) => {
-                        if (file) fileRef.current.push(file)
-
-                        if (time.current) {
-                            clearTimeout(time.current)
-                            time.current = null
-                        }
-                        time.current = setTimeout(() => {
-                            if (fileRef.current.length !== 0) uploadImg()
-                        }, 200)
-
-                        return false
-                    }}
-                >
-                    <Button
-                        type='link'
+                {isLogin && (
+                    <Upload
+                        accept='image/jpeg,image/png,image/jpg,image/gif'
+                        method='post'
+                        multiple={true}
                         disabled={files.length >= 3}
-                        icon={<PictureOutlined className={files.length >= 3 ? "btn-pic-disabled" : "btn-pic"} />}
-                    />
-                </Upload>
-
-                <Button
-                    disabled={!value && files.length === 0}
-                    type={value || files.length !== 0 ? "primary" : undefined}
-                    className={value || files.length !== 0 ? "" : "btn-submit"}
-                    onClick={onSubmit}
-                >
-                    评论
-                </Button>
+                        showUploadList={false}
+                        beforeUpload={(file: any) => {
+                            if (file) {
+                                console.log("file", file)
+                                ipcRenderer
+                                    .invoke("upload-img", {path: file.path, type: file.type, name: file.name})
+                                    .then((res) => {
+                                        console.log(123, res)
+                                    })
+                                // uploadImg(file)
+                            }
+                            return false
+                        }}
+                        // customRequest={uploadImg}
+                    >
+                        <Button
+                            type='link'
+                            disabled={files.length >= 3}
+                            icon={<PictureOutlined className={files.length >= 3 ? "btn-pic-disabled" : "btn-pic"} />}
+                        />
+                    </Upload>
+                )}
+                {(isLogin && (
+                    <Button
+                        disabled={!value && files.length === 0}
+                        type={value || files.length !== 0 ? "primary" : undefined}
+                        className={value || files.length !== 0 ? "" : "btn-submit"}
+                        onClick={onSubmit}
+                        loading={loading}
+                    >
+                        评论
+                    </Button>
+                )) || <div className='un-login'>未登录</div>}
             </div>
         </div>
     )
@@ -461,30 +598,73 @@ const PluginMaskImage = memo((props: PluginMaskImageProps) => {
 })
 
 interface PluginCommentInfoProps {
-    info: YakScript
-    value: number | {name: number; value: number}[]
-    onReply: (name: string) => any
-    onStar: (name: string) => any
+    info: CommentListProps
+    key: number
+    isStarChange?: boolean
+    onReply: (name: CommentListProps) => any
+    onStar: (name: CommentListProps) => any
 }
 // 评论内容单条组件
 const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
-    const {info, value, onReply, onStar} = props
-
+    const {info, onReply, onStar, key, isStarChange} = props
+    const [commentChildList, setCommentChildList] = useState<CommentListProps[]>()
+    // 获取子评论列表
+    const getChildComment = useMemoizedFn(() => {
+        const params = {
+            root_id: info.id,
+            plugin_id: info.plugin_id
+        }
+        ipcRenderer
+            .invoke("fetch-plugin-comment-reply", params)
+            .then((res) => {
+                const item = (res?.from && JSON.parse(res.from)) || {}
+                console.log("评论child列表", item?.data)
+                setCommentChildList(item?.data || [])
+            })
+            .catch((e: any) => {
+                failed("评论查询失败:" + e)
+            })
+    })
+    const onCommentChildStar = useMemoizedFn((childItem: CommentListProps) => {
+        const params = {
+            comment_id: childItem.id,
+            operation: childItem.is_stars ? "remove" : "add"
+        }
+        ipcRenderer
+            .invoke("add-plugin-comment-stars", params)
+            .then((res) => {
+                if (!commentChildList) return
+                const index: number = commentChildList.findIndex((ele: CommentListProps) => ele.id === childItem.id)
+                if (index !== -1) {
+                    commentChildList[index].is_stars = !commentChildList[index].is_stars
+                    if(childItem.is_stars){
+                      commentChildList[index].like_num -= 1
+                    }else{
+                      commentChildList[index].like_num += 1
+                    }
+                   
+                    setCommentChildList({
+                        ...commentChildList
+                    })
+                }
+            })
+            .catch((e: any) => {
+                failed("点赞失败" + e)
+            })
+            .finally(() => {})
+    })
     return (
-        <div className='plugin-comment-opt'>
+        <div className='plugin-comment-opt' key={key}>
             <div className='opt-author-img'>
-                <img
-                    src='https://profile-avatar.csdnimg.cn/87dc7bdc769b44fd9b82afb51946be1a_freeb1rd.jpg'
-                    className='author-img-style'
-                />
+                <img src={info.head_img} className='author-img-style' />
             </div>
 
             <div className='opt-comment-body'>
-                <div className='comment-body-name'>{info.Author || "anonymous"}</div>
+                <div className='comment-body-name'>{info.user_name || "anonymous"}</div>
 
                 <div className='comment-body-content'>
                     <CollapseParagraph
-                        value={info.Help}
+                        value={info.message}
                         rows={2}
                         valueConfig={{className: "content-style"}}
                     ></CollapseParagraph>
@@ -492,42 +672,35 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
 
                 <div className='comment-body-time-func'>
                     <div>
-                        <span>{"2022/04/04  12:30"}</span>
+                        <span>{moment.unix(info.created_at).format("YYYY-MM-DD HH:mm")}</span>
                     </div>
                     <div className='func-comment-and-star'>
-                        <div className='comment-and-star' onClick={() => onReply(info.Author || "anonymous")}>
+                        <div className='comment-and-star' onClick={() => onReply(info)}>
                             {/* @ts-ignore */}
                             <OnlineCommentIcon className='icon-style' />
                         </div>
-                        <div
-                            style={{marginLeft: 18}}
-                            className='comment-and-star'
-                            onClick={() => onStar(info.Author || "anonymous")}
-                        >
+                        <div style={{marginLeft: 18}} className='comment-and-star' onClick={() => onStar(info)}>
                             {/* @ts-ignore */}
-                            <OnlineThumbsUpIcon className='icon-style' />
-                            <span className='num-style'>{123}</span>
+                            {(isStarChange && <OnlineThumbsUpIcon className='icon-style-start' />) || (
+                                // @ts-ignore
+                                <OnlineThumbsUpIcon className='icon-style' />
+                            )}
+                            <span className='num-style'>{numeral(info.like_num).format("0,0")}</span>
                         </div>
                     </div>
                 </div>
-
-                {Array.isArray(value) && (
-                    <div className='comment-body-subcomment'>
-                        {value.map((item, index) => {
-                            return (
-                                <div key={item.name}>
-                                    <PluginCommentInfo
-                                        info={info}
-                                        value={item.value}
-                                        onReply={onReply}
-                                        onStar={onStar}
-                                    ></PluginCommentInfo>
-                                    {index !== value.length - 1 && <div className='comment-separator'></div>}
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
+                <span onClick={getChildComment}>展开</span>
+                {commentChildList?.map((childItem: CommentListProps, index: number) => (
+                    <>
+                        <PluginCommentInfo
+                            key={childItem.id}
+                            info={childItem}
+                            onReply={onReply}
+                            onStar={onCommentChildStar}
+                        ></PluginCommentInfo>
+                        <div className='comment-separator'></div>
+                    </>
+                ))}
             </div>
         </div>
     )
