@@ -243,6 +243,26 @@ service Yak {
 
   // GenerateYakCodeByPacket
   rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
+
+  // MITM 衍生功能：
+  // Replacers 管理
+  rpc ExportMITMReplacerRules(Empty) returns (ExportMITMReplacerRulesResponse);
+  rpc ImportMITMReplacerRules(ImportMITMReplacerRulesRequest) returns (Empty);
+  rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
+  rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
+}
+
+message MITMContentReplacers {
+  repeated MITMContentReplacer Rules = 1;
+}
+
+message ImportMITMReplacerRulesRequest {
+  bytes JsonRaw = 1;
+  bool ReplaceAll = 2;
+}
+
+message ExportMITMReplacerRulesResponse {
+  bytes JsonRaw = 1;
 }
 
 message ExecYakitPluginsByYakScriptFilterRequest {

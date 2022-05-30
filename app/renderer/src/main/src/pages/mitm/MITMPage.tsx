@@ -44,6 +44,8 @@ import {getValue, saveValue} from "../../utils/kv";
 import {PluginList} from "../../components/PluginList";
 import {SimplePluginList} from "../../components/SimplePluginList";
 import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer";
+import {MITMContentReplacerViewer} from "./MITMContentReplacerViewer";
+import {MITMContentReplacerExport, MITMContentReplacerImport} from "./MITMContentReplacerImport";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -658,8 +660,47 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         verbose={<div>MITM 与 端口扫描插件</div>}/>
                                 </div>
                             </Item>
-                            <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网"}>
+                            <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描"}>
                                 <Input value={downstreamProxy} onChange={e => setDownstreamProxy(e.target.value)}/>
+                            </Item>
+                            <Item label={"内容规则"} help={"使用规则进行匹配、替换、标记、染色，同时配置生效位置"}>
+                                <Space>
+                                    <Button
+                                        onClick={() => {
+                                            let m = showDrawer({
+                                                placement: "top", height: "50%",
+                                                content: (
+                                                    <MITMContentReplacerViewer/>
+                                                ),
+                                                maskClosable: false,
+                                            })
+                                        }}
+                                    >已有规则</Button>
+                                    <Button type={"link"} onClick={() => {
+                                        const m = showModal({
+                                            title: "从 JSON 中导入",
+                                            width: "60%",
+                                            content: (
+                                                <>
+                                                    <MITMContentReplacerImport onClosed={() => {
+                                                        m.destroy()
+                                                    }}/>
+                                                </>
+                                            )
+                                        })
+                                    }}>从 JSON 导入</Button>
+                                    <Button type={"link"} onClick={() => {
+                                        showModal({
+                                            title: "导出配置 JSON",
+                                            width: "50%",
+                                            content: (
+                                                <>
+                                                    <MITMContentReplacerExport/>
+                                                </>
+                                            )
+                                        })
+                                    }}>导出为 JSON</Button>
+                                </Space>
                             </Item>
                             <Item label={" "} colon={false}>
                                 <Space>

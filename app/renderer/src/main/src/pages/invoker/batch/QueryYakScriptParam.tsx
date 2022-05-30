@@ -175,12 +175,24 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             title={"选择插件"}
             extra={
                 <Space>
-
                     <Popconfirm
                         title={"强制更新讲重新构建 Tags 索引"}
                         onConfirm={() => onAllTag()}
                     >
                         <a href={"#"}>强制更新 Tags</a>
+                    </Popconfirm>
+                    <Popconfirm
+                        title={"清空已选 Tag？"}
+                        onConfirm={() => {
+                            onIsAll(false)
+                            setSelectedTags([])
+                            setParams({type: params.type, tags: "", include: [], exclude: []})
+                            updateTagsSelector()
+                        }}
+                    >
+                        <Button size={"small"} type={"link"} danger={true}>
+                            清空
+                        </Button>
                     </Popconfirm>
                 </Space>
             }
@@ -243,23 +255,8 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                     <div className='div-width-100 div-height-100' style={{maxHeight: 200}}>
                         <AutoCard
                             size='small'
-                            title={"已选中 Tag"}
-                            bodyStyle={{overflow: "hidden auto"}}
-                            extra={
-                                <Popconfirm
-                                    title={"清空已选 Tag？"}
-                                    onConfirm={() => {
-                                        onIsAll(false)
-                                        setSelectedTags([])
-                                        setParams({type: params.type, tags: "", include: [], exclude: []})
-                                        updateTagsSelector()
-                                    }}
-                                >
-                                    <Button size={"small"} danger={true}>
-                                        清空
-                                    </Button>
-                                </Popconfirm>
-                            }
+                            bordered={false}
+                            bodyStyle={{overflow: "hidden auto", padding: 2}}
                         >
                             {isAll ? (
                                 <Tag
@@ -297,7 +294,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                 )}
             </div>
 
-            <div style={{flex: 1, overflow: "hidden", paddingTop: 6}}>
+            <div style={{flex: 1, overflow: "hidden", paddingTop: 0, marginTop: 2}}>
                 <SearchYakScriptForFilter
                     simpleFilter={params}
                     isAll={isAll}

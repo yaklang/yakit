@@ -9,7 +9,7 @@ module.exports = {
         config.output.publicPath = "./"
         config.plugins.push(
             new MonacoWebpackPlugin({
-                languages: ["json", "javascript", "go", "markdown", "html"]
+                languages: ["json", "javascript", "go", "markdown", "html", "yaml", "java"]
             })
         )
         return config
