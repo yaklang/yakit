@@ -3,7 +3,8 @@ import {
     Alert,
     Button,
     Checkbox,
-    Col, Divider,
+    Col,
+    Divider,
     Form,
     Input,
     InputNumber,
@@ -18,7 +19,7 @@ import {
     Typography
 } from "antd";
 import {failed, info, success} from "../../utils/notification";
-import {CheckOutlined, PoweroffOutlined, ReloadOutlined, CopyOutlined} from "@ant-design/icons";
+import {CheckOutlined, CopyOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons";
 import {HTTPPacketEditor, YakEditor} from "../../utils/editors";
 import {MITMFilters, MITMFilterSchema} from "./MITMFilters";
 import {showDrawer, showModal} from "../../utils/showModal";
@@ -28,9 +29,8 @@ import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
-import {CopyableField, SelectOne, SwitchItem} from "../../utils/inputUtil";
-import {MITMPluginOperator} from "./MITMPluginOperator";
-import {useGetState, useHistoryTravel, useLatest, useMemoizedFn, useMouse} from "ahooks";
+import {CopyableField, SelectOne} from "../../utils/inputUtil";
+import {useGetState, useLatest, useMemoizedFn, useMouse} from "ahooks";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import {useHotkeys} from "react-hotkeys-hook";
 import * as monaco from 'monaco-editor';
@@ -38,10 +38,9 @@ import CopyToClipboard from "react-copy-to-clipboard";
 import {AutoCard} from "../../components/AutoCard";
 import {ResizeBox} from "../../components/ResizeBox";
 import {MITMPluginLogViewer} from "./MITMPluginLogViewer";
-import {MITMPluginList, MITMPluginListProp} from "./MITMPluginList";
-import {openABSFileLocated, saveABSFileToOpen} from "../../utils/openWebsite";
+import {MITMPluginList} from "./MITMPluginList";
+import {saveABSFileToOpen} from "../../utils/openWebsite";
 import {getValue, saveValue} from "../../utils/kv";
-import {PluginList} from "../../components/PluginList";
 import {SimplePluginList} from "../../components/SimplePluginList";
 import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer";
 import {MITMContentReplacerViewer} from "./MITMContentReplacerViewer";

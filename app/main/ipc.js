@@ -143,6 +143,9 @@ module.exports = {
         // 数据对比
         require("./handlers/dataCompare")(win, getClient);
 
+        // 增加一个通用的导出功能
+        require("./handlers/generalExport")(win, getClient);
+
         //
         require("./handlers/facadeServer")(win, getClient);
         // 小工具插件
