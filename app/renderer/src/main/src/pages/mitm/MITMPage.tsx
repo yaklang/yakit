@@ -46,6 +46,7 @@ import {SimplePluginList} from "../../components/SimplePluginList";
 import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer";
 import {MITMContentReplacerViewer} from "./MITMContentReplacerViewer";
 import {MITMContentReplacerExport, MITMContentReplacerImport} from "./MITMContentReplacerImport";
+import {ChromeLauncherButton, startChrome} from "./MITMChromeLauncher";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -739,6 +740,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                     style={{marginRight: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 8}}
                                     extra={
                                         <Space>
+                                            <ChromeLauncherButton host={host} port={port}/>
                                             {contentReplacer()}
                                             {setFilter()}
                                             {downloadCert()}

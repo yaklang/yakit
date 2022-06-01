@@ -156,5 +156,8 @@ module.exports = {
 
         // reverse logger
         require("./handlers/reverse-connlogger").register(win, getClient);
+
+        // start chrome manager
+        require("./handlers/chromelauncher")(win, getClient);
     }
 }
