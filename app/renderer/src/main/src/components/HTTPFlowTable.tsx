@@ -541,8 +541,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         Order: "desc",
         OrderBy: "created_at",
         Page: 1
-    })
-    const [autoReload, setAutoReload, getAutoReload] = useGetState(false)
+    });
+
+    // const [autoReload, setAutoReload, getAutoReload] = useGetState(false);
+    const autoReloadRef = useRef<boolean>(false);
+    const autoReload = autoReloadRef.current;
+    const setAutoReload = (b: boolean) => {
+        autoReloadRef.current = b
+    };
+    const getAutoReload = () => autoReloadRef.current;
+
     const [total, setTotal] = useState<number>(0)
     const [loading, setLoading] = useState(false)
     const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
@@ -1615,7 +1623,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         scrollUpdateButt(tableContentHeight)
                         return
                     }
-
 
                     // 锁住滚轮
                     if (getLockedScroll() > 0 && getLockedScroll() >= scrollY) {
