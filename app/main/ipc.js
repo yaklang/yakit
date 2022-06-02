@@ -161,15 +161,12 @@ module.exports = {
         // reverse logger
         require("./handlers/reverse-connlogger").register(win, getClient);
 
-<<<<<<< HEAD
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
         api.forEach(item=>{
             require(path.join(__dirname, `./api/${item}`))(win, getClient);
         })
-=======
         // start chrome manager
         require("./handlers/chromelauncher")(win, getClient);
->>>>>>> 8054f59a5c623d5e896512d806aa0779b52c2bbc
     }
 }
