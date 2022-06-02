@@ -3,7 +3,8 @@ const {USER_INFO} = require("./state")
 
 const service = axios.create({
     baseURL: "http://onlinecs.vaiwan.cn/api/",
-    timeout: 30 * 1000 // 请求超时时间
+    timeout: 30 * 1000, // 请求超时时间
+    maxBodyLength: Infinity //设置适当的大小
 })
 
 // request拦截器,拦截每一个请求加上请求头

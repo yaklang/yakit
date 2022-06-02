@@ -184,10 +184,18 @@
             }
 
             .solid-star {
-                color: #ffb95d;
+                color: #036ffe;
                 font-size: 16px;
                 margin-right: 4px;
                 cursor: pointer;
+            }
+
+            .stars-number {
+                cursor: pointer;
+            }
+
+            .stars-number-active {
+                color: #036ffe;
             }
         }
     }
@@ -235,4 +243,14 @@
 .color-bgColor-gray {
     background-color: rgba(246, 247, 249, 0.08);
     color: rgba(246, 247, 249, 1);
+}
+
+.hover-active {
+    &:hover {
+        color: #036ffe !important;
+
+        svg {
+            color: #036ffe !important;
+        }
+    }
 }

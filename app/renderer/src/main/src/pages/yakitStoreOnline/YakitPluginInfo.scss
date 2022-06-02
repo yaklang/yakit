@@ -1,3 +1,5 @@
+$active-color:#036ffe;
+
 .yakit-plugin-info-container {
     width: 100%;
     height: 100%;
@@ -36,7 +38,7 @@
 
             .header-title-body {
                 display: flex;
-                max-width: 70%;
+                width: 70%;
 
                 .title-body-text {
                     font-size: 24px;
@@ -70,7 +72,7 @@
                     }
 
                     .solid-star {
-                        color: #ffb95d;
+                        color: $active-color;
                         cursor: pointer;
                     }
                 }
@@ -135,7 +137,7 @@
                 display: flex;
 
                 .solid-star {
-                    color: #ffb95d;
+                    color: $active-color;
                     cursor: pointer;
                 }
 
@@ -146,11 +148,18 @@
 
                 .star-download-num {
                     margin-left: 4px;
-                    color: #999ea8;
                     font-size: 12px;
                     height: 20px;
                     line-height: 20px;
                     display: inline-block;
+                }
+
+                .star-download-num-active {
+                    color: $active-color;
+                }
+
+                &:hover {
+                    color: $active-color;
                 }
             }
         }
@@ -345,6 +354,7 @@
 
 .plugin-comment-opt {
     display: flex;
+    width: 100%;
 
     .opt-author-img {
         margin-right: 16px;
@@ -376,41 +386,10 @@
                 line-height: 20px;
                 margin-bottom: 0;
             }
-        }
 
-        .comment-body-time-func {
-            height: 20px;
-            line-height: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #999ea8;
-            font-size: 12px;
-
-            .func-comment-and-star {
-                display: flex;
-                height: 16px;
-                line-height: 16px;
-
-                .comment-and-star {
-                    display: flex;
-                    align-items: center;
-
-                    .icon-style {
-                        font-size: 16px;
-                        cursor: pointer;
-                    }
-
-                    .icon-style-start {
-                        font-size: 16px;
-                        cursor: pointer;
-                        color: #ffb95d;
-                    }
-
-                    .num-style {
-                        margin-left: 4px;
-                    }
-                }
+            .content-by-name {
+                color: $active-color;
+                margin-left: 3px;
             }
         }
 
@@ -420,8 +399,19 @@
             margin-top: 16px;
             padding: 16px 24px;
         }
+
+        .comment-pic {
+            width: 90px;
+            height: 90px;
+            border-radius: 10px;
+        }
+
+        .comment-reply {
+            font-size: 12px;
+        }
     }
 }
+
 
 .mask-img-display {
     width: 100%;
@@ -452,4 +442,78 @@
     display: flex;
     justify-content: flex-end;
     width: 100%;
+}
+
+.comment-child-body {
+    height: 70vh;
+    overflow: auto;
+    margin-top: 16px;
+    padding: 0 16px;
+}
+
+.comment-body-time-func {
+    height: 20px;
+    line-height: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #999ea8;
+    font-size: 12px;
+    margin-bottom: 12px;
+
+    .func-comment-and-star {
+        display: flex;
+        height: 16px;
+        line-height: 16px;
+
+        .comment-and-star {
+            display: flex;
+            align-items: center;
+
+            .icon-style {
+                font-size: 21px;
+                cursor: pointer;
+                color: #686C78;
+            }
+
+            .icon-style-comment {
+                font-size: 16px;
+                cursor: pointer;
+                color: #686C78;
+            }
+
+            .icon-style-start {
+                font-size: 21px;
+                cursor: pointer;
+                color: $active-color;
+            }
+
+            .num-style {
+                margin-left: 4px;
+                cursor: pointer;
+            }
+
+            .num-style-active {
+                color: $active-color;
+            }
+        }
+    }
+}
+
+.hover-active {
+    &:hover {
+        color: $active-color !important;
+
+        svg {
+            color: $active-color !important;
+        }
+    }
+}
+
+.no-more-text {
+    text-align: center;
+}
+
+.padding-bottom-12 {
+    padding-bottom: 12px;
 }
