@@ -2,7 +2,7 @@ import React, {memo, useEffect, useRef, useState} from "react"
 import {Row, Col, Input, Button, Pagination, List, Space, Card, Tooltip, Progress} from "antd"
 import {StarOutlined, StarFilled} from "@ant-design/icons"
 import {useMemoizedFn} from "ahooks"
-import {failed, success} from "../../utils/notification"
+import {failed, warn, success} from "../../utils/notification"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {YakitPluginInfo} from "./YakitPluginInfo"
 import {PluginStoreProps, PagemetaProps} from "./YakitPluginInfo.d"
@@ -110,10 +110,18 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     }
 
     const addLocalLab = useMemoizedFn((info: PluginStoreProps) => {
+        if (!userInfo.isLogin) {
+            warn("请先登录")
+            return
+        }
         success("添加成功")
     })
 
     const starredPlugin = useMemoizedFn((info: PluginStoreProps) => {
+        if (!userInfo.isLogin) {
+            warn("请先登录")
+            return
+        }
         const prams = {
             id: info?.id,
             operation: info.is_stars ? "remove" : "add"
@@ -234,16 +242,6 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                                         />
                                     </div>
                                 )}
-                                {/* <ItemSelects
-                  isItem={false}
-                  select={{
-                    size: "small",
-                    style: { width: 100 },
-                    data: ["true", "false"],
-                    value: isAdmin.toString(),
-                    setValue: (value) => setIsAdmin(value === "true" ? true : false)
-                  }}
-                /> */}
                             </Space>
                         </Col>
                         <Col span={6} style={{textAlign: "right"}}>
