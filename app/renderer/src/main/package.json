@@ -58,7 +58,8 @@
     "xterm-addon-search-bar": "^0.2.0",
     "xterm-addon-unicode11": "^0.3.0",
     "xterm-for-react": "^1.0.4",
-    "zustand": "^4.0.0-rc.1"
+    "zustand": "^4.0.0-rc.1",
+    "@ant-design/icons": "latest"
   },
   "scripts": {
     "electron-render": "cross-env BROWSER=none react-app-rewired start",

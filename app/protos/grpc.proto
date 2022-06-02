@@ -243,6 +243,49 @@ service Yak {
 
   // GenerateYakCodeByPacket
   rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
+
+  // MITM 衍生功能：
+  // Replacers 管理
+  rpc ExportMITMReplacerRules(Empty) returns (ExportMITMReplacerRulesResponse);
+  rpc ImportMITMReplacerRules(ImportMITMReplacerRulesRequest) returns (Empty);
+  rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
+  rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
+
+  rpc ExtractDataToFile(stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
+}
+
+message ExtractDataToFileResult {
+  string FilePath = 1;
+}
+
+message ExtractDataToFileRequest {
+  bool JsonOutput = 1;
+  bool CSVOutput = 2;
+  string DirName = 3;
+
+  map<string, ExtractableData> Data = 4;
+  string FileNamePattern = 5;
+
+  // 当没有数据的时候，执行这个即可
+  bool Finished = 6;
+}
+
+message ExtractableData {
+  string StringValue = 1;
+  bytes BytesValue = 2;
+}
+
+message MITMContentReplacers {
+  repeated MITMContentReplacer Rules = 1;
+}
+
+message ImportMITMReplacerRulesRequest {
+  bytes JsonRaw = 1;
+  bool ReplaceAll = 2;
+}
+
+message ExportMITMReplacerRulesResponse {
+  bytes JsonRaw = 1;
 }
 
 message ExecYakitPluginsByYakScriptFilterRequest {

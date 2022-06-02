@@ -144,6 +144,9 @@ module.exports = {
         // 数据对比
         require("./handlers/dataCompare")(win, getClient);
 
+        // 增加一个通用的导出功能
+        require("./handlers/generalExport")(win, getClient);
+
         //
         require("./handlers/facadeServer")(win, getClient);
         // 小工具插件
@@ -158,10 +161,15 @@ module.exports = {
         // reverse logger
         require("./handlers/reverse-connlogger").register(win, getClient);
 
+<<<<<<< HEAD
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
         api.forEach(item=>{
             require(path.join(__dirname, `./api/${item}`))(win, getClient);
         })
+=======
+        // start chrome manager
+        require("./handlers/chromelauncher")(win, getClient);
+>>>>>>> 8054f59a5c623d5e896512d806aa0779b52c2bbc
     }
 }

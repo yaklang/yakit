@@ -3,7 +3,8 @@ import {
     Alert,
     Button,
     Checkbox,
-    Col, Divider,
+    Col,
+    Divider,
     Form,
     Input,
     InputNumber,
@@ -18,7 +19,7 @@ import {
     Typography
 } from "antd";
 import {failed, info, success} from "../../utils/notification";
-import {CheckOutlined, PoweroffOutlined, ReloadOutlined, CopyOutlined} from "@ant-design/icons";
+import {CheckOutlined, CopyOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons";
 import {HTTPPacketEditor, YakEditor} from "../../utils/editors";
 import {MITMFilters, MITMFilterSchema} from "./MITMFilters";
 import {showDrawer, showModal} from "../../utils/showModal";
@@ -28,9 +29,8 @@ import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import "./MITMPage.css";
-import {CopyableField, SelectOne, SwitchItem} from "../../utils/inputUtil";
-import {MITMPluginOperator} from "./MITMPluginOperator";
-import {useGetState, useHistoryTravel, useLatest, useMemoizedFn, useMouse} from "ahooks";
+import {CopyableField, SelectOne} from "../../utils/inputUtil";
+import {useGetState, useLatest, useMemoizedFn, useMouse} from "ahooks";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import {useHotkeys} from "react-hotkeys-hook";
 import * as monaco from 'monaco-editor';
@@ -38,12 +38,14 @@ import CopyToClipboard from "react-copy-to-clipboard";
 import {AutoCard} from "../../components/AutoCard";
 import {ResizeBox} from "../../components/ResizeBox";
 import {MITMPluginLogViewer} from "./MITMPluginLogViewer";
-import {MITMPluginList, MITMPluginListProp} from "./MITMPluginList";
-import {openABSFileLocated, saveABSFileToOpen} from "../../utils/openWebsite";
+import {MITMPluginList} from "./MITMPluginList";
+import {saveABSFileToOpen} from "../../utils/openWebsite";
 import {getValue, saveValue} from "../../utils/kv";
-import {PluginList} from "../../components/PluginList";
 import {SimplePluginList} from "../../components/SimplePluginList";
 import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer";
+import {MITMContentReplacerViewer} from "./MITMContentReplacerViewer";
+import {MITMContentReplacerExport, MITMContentReplacerImport} from "./MITMContentReplacerImport";
+import {ChromeLauncherButton, startChrome} from "./MITMChromeLauncher";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -658,8 +660,47 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                         verbose={<div>MITM 与 端口扫描插件</div>}/>
                                 </div>
                             </Item>
-                            <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网"}>
+                            <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描"}>
                                 <Input value={downstreamProxy} onChange={e => setDownstreamProxy(e.target.value)}/>
+                            </Item>
+                            <Item label={"内容规则"} help={"使用规则进行匹配、替换、标记、染色，同时配置生效位置"}>
+                                <Space>
+                                    <Button
+                                        onClick={() => {
+                                            let m = showDrawer({
+                                                placement: "top", height: "50%",
+                                                content: (
+                                                    <MITMContentReplacerViewer/>
+                                                ),
+                                                maskClosable: false,
+                                            })
+                                        }}
+                                    >已有规则</Button>
+                                    <Button type={"link"} onClick={() => {
+                                        const m = showModal({
+                                            title: "从 JSON 中导入",
+                                            width: "60%",
+                                            content: (
+                                                <>
+                                                    <MITMContentReplacerImport onClosed={() => {
+                                                        m.destroy()
+                                                    }}/>
+                                                </>
+                                            )
+                                        })
+                                    }}>从 JSON 导入</Button>
+                                    <Button type={"link"} onClick={() => {
+                                        showModal({
+                                            title: "导出配置 JSON",
+                                            width: "50%",
+                                            content: (
+                                                <>
+                                                    <MITMContentReplacerExport/>
+                                                </>
+                                            )
+                                        })
+                                    }}>导出为 JSON</Button>
+                                </Space>
                             </Item>
                             <Item label={" "} colon={false}>
                                 <Space>
@@ -698,6 +739,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                     style={{marginRight: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 8}}
                                     extra={
                                         <Space>
+                                            <ChromeLauncherButton host={host} port={port}/>
                                             {contentReplacer()}
                                             {setFilter()}
                                             {downloadCert()}
