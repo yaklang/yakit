@@ -13,7 +13,7 @@ import {
 import {useGetState, useMemoizedFn} from "ahooks"
 import throttle from "lodash/throttle"
 import cloneDeep from "lodash/cloneDeep"
-import {failed, info, success} from "../../utils/notification"
+import {failed, warn, success} from "../../utils/notification"
 import {TagColor} from "./YakitStoreOnline"
 import {CollapseParagraph} from "./CollapseParagraph"
 import {OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon} from "@/assets/icons"
@@ -156,6 +156,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginStar = useMemoizedFn(() => {
+        if (!isLogin) {
+            warn("请先登录")
+            return
+        }
         if (!plugin) return
         const prams = {
             id: plugin?.id,
@@ -179,6 +183,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginAdd = useMemoizedFn(() => {
+        if (!isLogin) {
+            warn("请先登录")
+            return
+        }
         alert("添加成功")
     })
     // 新增评论
@@ -200,6 +208,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const addComment = useMemoizedFn((params: any) => {
+        if (!isLogin) {
+            warn("请先登录")
+            return
+        }
         setCommentLoading(true)
         ipcRenderer
             .invoke("add-plugin-comment", params)
@@ -252,6 +264,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginCommentStar = useMemoizedFn((item: CommentListProps) => {
+        if (!isLogin) {
+            warn("请先登录")
+            return
+        }
         const params = {
             comment_id: item.id,
             operation: item.is_stars ? "remove" : "add"
@@ -310,7 +326,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             const contentScrollTop = dom.scrollTop //滚动条距离顶部
             const clientHeight = dom.clientHeight //可视区域
             const scrollHeight = dom.scrollHeight //滚动条内容的总高度
-            if (contentScrollTop + clientHeight >= scrollHeight-200) {
+            if (contentScrollTop + clientHeight >= scrollHeight - 200) {
                 setHasFetchComment(false)
                 const number = commentResponses?.pagemeta?.page || 0
                 getComment(number + 1) // 获取数据的方法
