@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {Input, Button, Divider, Upload, Empty, Modal} from "antd"
+import {Input, Button, Divider, Upload, Empty, Modal, List, Skeleton} from "antd"
 import {
     StarOutlined,
     StarFilled,
@@ -11,32 +11,29 @@ import {
     ZoomOutOutlined
 } from "@ant-design/icons"
 import {useGetState, useMemoizedFn} from "ahooks"
+import throttle from "lodash/throttle"
 import cloneDeep from "lodash/cloneDeep"
-import {failed, success} from "../../utils/notification"
+import {failed, info, success} from "../../utils/notification"
 import {TagColor} from "./YakitStoreOnline"
 import {CollapseParagraph} from "./CollapseParagraph"
-import {OnlineCommentIcon, OnlineThumbsUpIcon} from "@/assets/icons"
+import {OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon} from "@/assets/icons"
 import {PluginStoreProps, PagemetaProps} from "./YakitPluginInfo.d"
 import {AutoSpin} from "@/components/AutoSpin"
 import {SecondConfirm} from "@/components/functionTemplate/SecondConfirm"
 import {showFullScreenMask} from "@/components/functionTemplate/showByContext"
 import moment from "moment"
 import numeral from "numeral"
+import InfiniteScroll from "react-infinite-scroll-component"
 import "./YakitPluginInfo.scss"
-import {getCommentRange} from "typescript"
-import Item from "antd/lib/list/Item"
 
 const {ipcRenderer} = window.require("electron")
+const limit = 5
 export interface YakitPluginInfoProp {
     info: PluginStoreProps
     onBack: () => any
     index: number
     isAdmin: boolean
     isLogin: boolean
-}
-interface uploadImgInfo {
-    name: string
-    path: string | ArrayBuffer | null
 }
 
 interface CommentListProps {
@@ -54,6 +51,9 @@ interface CommentListProps {
     like_num: number
     child: string
     is_stars?: boolean
+    reply_num: number
+    by_user_id: number
+    by_user_name: string
 }
 interface CommentResponsesProps {
     data: CommentListProps[]
@@ -62,18 +62,34 @@ interface CommentResponsesProps {
 
 export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     const {info, onBack, index, isAdmin, isLogin} = props
-
+    const listRef = useRef<any>({current: null})
     const [loading, setLoading] = useState<boolean>(false)
     const [commentLoading, setCommentLoading] = useState<boolean>(false)
     const [plugin, setPlugin] = useGetState<PluginStoreProps>()
+    const [hasMore, setHasMore] = useState<boolean>(false)
+    const [hasFetchComment, setHasFetchComment] = useState<boolean>(true)
 
-    const [commentResponses, setCommentResponses] = useGetState<CommentResponsesProps>()
+    const [commentResponses, setCommentResponses] = useGetState<CommentResponsesProps>({
+        data: [],
+        pagemeta: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            total_page: 0
+        }
+    })
     const [commentText, setCommentText] = useState<string>("")
-    const [files, setFiles] = useState<uploadImgInfo[]>([])
+    const [files, setFiles] = useState<string[]>([])
+
+    const [commentShow, setCommentShow] = useState<boolean>(false)
+    const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
+    const [currentComment, setCurrentComment] = useState<CommentListProps | null>()
+    const [commentInputText, setCommentInputText] = useState<string>("")
+    const [commentFiles, setCommentFiles] = useState<string[]>([])
 
     useEffect(() => {
         getPluginDetail()
-        // getComment()
+        getComment(1)
     }, [])
 
     const getPluginDetail = useMemoizedFn(() => {
@@ -92,32 +108,74 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                 failed("插件详情获取失败:" + e)
             })
             .finally(() => {
+                setHasFetchComment(true)
                 setTimeout(() => setLoading(false), 200)
             })
     })
 
-    const getComment = useMemoizedFn(() => {
+    const getComment = useMemoizedFn((page: number = 1) => {
         const params = {
             plugin_id: info.id,
-            page: commentResponses?.pagemeta?.page || 1
+            limit,
+            page
         }
+        // debugger
         ipcRenderer
             .invoke("fetch-plugin-comment", params)
             .then((res) => {
-                const item = (res?.from && JSON.parse(res.from)) || {}
-                setCommentResponses(item)
+                const item: CommentResponsesProps = (res?.from && JSON.parse(res.from)) || {
+                    data: [],
+                    pagemeta: {
+                        page: 1,
+                        limit,
+                        total: 0,
+                        total_page: 0
+                    }
+                }
+                const newCommentResponses = {
+                    data: page === 1 ? item.data : commentResponses.data.concat(item.data),
+                    pagemeta: item.pagemeta
+                }
+                if (item.data && item.data.length > 0) {
+                    const isMore = item.data.length < limit
+                    setHasMore(!isMore)
+                    setCommentResponses({
+                        data: [...newCommentResponses.data],
+                        pagemeta: item.pagemeta
+                    })
+                } else {
+                    setHasMore(false)
+                }
             })
             .catch((e: any) => {
                 failed("评论查询失败:" + e)
             })
+            .finally(() => {
+                setHasFetchComment(true)
+            })
     })
 
     const pluginStar = useMemoizedFn(() => {
-        if (plugin) {
-            plugin.is_stars = !plugin.is_stars
-            setPlugin({...plugin})
-            success("点赞成功")
+        if (!plugin) return
+        const prams = {
+            id: plugin?.id,
+            operation: plugin.is_stars ? "remove" : "add"
         }
+        ipcRenderer
+            .invoke("fetch-plugin-stars", prams)
+            .then((res) => {
+                if (plugin.is_stars) {
+                    plugin.is_stars = false
+                    plugin.stars -= 1
+                } else {
+                    plugin.is_stars = true
+                    plugin.stars += 1
+                }
+                setPlugin({...plugin})
+            })
+            .catch((e: any) => {
+                failed("点星" + e)
+            })
     })
 
     const pluginAdd = useMemoizedFn(() => {
@@ -130,12 +188,12 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             failed("请输入评论内容")
             return
         }
-        const imgList = ["https://yakit-online.oss-cn-hongkong.aliyuncs.com/comment/20225271151321653623492jpg"]
         const params = {
             plugin_id: plugin.id,
-            message_img: imgList,
+            message_img: files,
             parent_id: 0,
             root_id: 0,
+            by_user_id: 0,
             message: commentText
         }
         addComment(params)
@@ -146,12 +204,13 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
         ipcRenderer
             .invoke("add-plugin-comment", params)
             .then((res) => {
-                getComment()
-
+                getComment(1)
                 if (commentText) setCommentText("")
+                if (files.length > 0) setFiles([])
                 if (commentInputText) setCommentInputText("")
-                if (commentSecondShow) setCommentShow(false)
                 if (currentComment?.id) setCurrentComment(null)
+                if (commentFiles.length > 0) setCommentFiles([])
+                if (commentShow) setCommentShow(false)
             })
             .catch((e: any) => {
                 failed("评论错误" + e)
@@ -161,35 +220,23 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             })
     })
 
-    const [commentShow, setCommentShow] = useState<boolean>(false)
-    const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
-    const [currentComment, setCurrentComment] = useState<CommentListProps | null>()
-    const [commentInputText, setCommentInputText] = useState<string>("")
-    const [commentFiles, setCommentFiles] = useState<uploadImgInfo[]>([])
-
     const pluginReply = useMemoizedFn((item: CommentListProps) => {
         setCurrentComment(item)
         setCommentShow(true)
     })
     const pluginReplyComment = useMemoizedFn(() => {
-        // setCommentName("")
-        // setCommentInputText("")
-        // setCommentFiles([])
-        // setCommentShow(false)
-        // const number = commentFiles.length
-        // alert(`评论内容：${commentInputText}${number !== 0 ? "和" + number + "张图片" : ""}`)
         if (!plugin) return
         if (!currentComment?.id) return
         if (!commentInputText) {
             failed("请输入评论内容")
             return
         }
-        const imgList = ["https://yakit-online.oss-cn-hongkong.aliyuncs.com/comment/20225271151321653623492jpg"]
         const params = {
             plugin_id: plugin.id,
-            message_img: imgList,
-            parent_id: currentComment?.id,
-            root_id: currentComment?.id,
+            message_img: commentFiles,
+            parent_id: currentComment.root_id === 0 ? 0 : currentComment.id,
+            root_id: currentComment.root_id || currentComment.id,
+            by_user_id: currentComment.user_id,
             message: commentInputText
         }
         addComment(params)
@@ -215,8 +262,13 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                 if (!commentResponses) return
                 const index: number = commentResponses.data.findIndex((ele: CommentListProps) => ele.id === item.id)
                 if (index !== -1) {
-                    commentResponses.data[index].is_stars = !commentResponses.data[index].is_stars
-                    commentResponses.data[index].like_num += 1
+                    if (item.is_stars) {
+                        commentResponses.data[index].like_num -= 1
+                        commentResponses.data[index].is_stars = false
+                    } else {
+                        commentResponses.data[index].like_num += 1
+                        commentResponses.data[index].is_stars = true
+                    }
                     setCommentResponses({
                         ...commentResponses,
                         data: [...commentResponses.data]
@@ -252,12 +304,29 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             </div>
         )
     }
+    const onScrollCapture = (e) => {
+        if (listRef && hasFetchComment && hasMore) {
+            const dom = listRef.current
+            const contentScrollTop = dom.scrollTop //滚动条距离顶部
+            const clientHeight = dom.clientHeight //可视区域
+            const scrollHeight = dom.scrollHeight //滚动条内容的总高度
+            if (contentScrollTop + clientHeight >= scrollHeight-200) {
+                setHasFetchComment(false)
+                const number = commentResponses?.pagemeta?.page || 0
+                getComment(number + 1) // 获取数据的方法
+            }
+        }
+    }
     return (
         <AutoSpin spinning={loading}>
+            {/* @ts-ignore */}
+
             <div className='yakit-plugin-info-container'>
                 <div
                     className='plugin-info-width plugin-info-body'
                     style={{padding: isAdmin ? "16px 8px 76px 0" : "16px 8px 4px 0"}}
+                    onScroll={onScrollCapture}
+                    ref={listRef}
                 >
                     <div className='vertical-center info-back' onClick={onBack}>
                         <ArrowLeftOutlined />
@@ -321,7 +390,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             </div>
                         </div>
                         <div className='preface-star-and-download' style={{margin: "0 24px 0 26px"}}>
-                            <div className='vertical-center' onClick={pluginStar}>
+                            <div onClick={pluginStar}>
                                 {plugin.is_stars ? (
                                     <StarFilled className='solid-star' />
                                 ) : (
@@ -329,7 +398,9 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                                 )}
                             </div>
                             <div className='vertical-center'>
-                                <span className='star-download-num'>{plugin.stars}</span>
+                                <span className={`star-download-num ${plugin.is_stars && `star-download-num-active`}`}>
+                                    {plugin.stars}
+                                </span>
                             </div>
                         </div>
 
@@ -383,6 +454,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                                 <div className='comment-separator'></div>
                             </>
                         ))}
+                        {!hasFetchComment && hasMore && <Skeleton avatar paragraph={{rows: 1}} active />}
+                        {!hasMore && (commentResponses?.pagemeta?.total || 0) > 0 && (
+                            <div className='no-more-text padding-bottom-12'>It is all, nothing more 🤐</div>
+                        )}
                     </div>
                 </div>
 
@@ -405,27 +480,27 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                         </div>
                     </div>
                 )}
-
-                <Modal
-                    wrapClassName='comment-reply-dialog'
-                    title={<div className='header-title'>回复@{currentComment?.user_name}</div>}
-                    visible={commentShow}
-                    centered={true}
-                    footer={null}
-                    destroyOnClose={true}
-                    onCancel={() => setCommentSencondShow(true)}
-                >
-                    <PluginCommentInput
-                        value={commentInputText}
-                        setValue={setCommentInputText}
-                        files={commentFiles}
-                        setFiles={setCommentFiles}
-                        onSubmit={pluginReplyComment}
-                        loading={commentLoading}
-                    ></PluginCommentInput>
-                </Modal>
-                <SecondConfirm visible={commentSecondShow} onCancel={pluginCancelComment}></SecondConfirm>
             </div>
+            <Modal
+                wrapClassName='comment-reply-dialog'
+                title={<div className='header-title'>回复@{currentComment?.user_name}</div>}
+                visible={commentShow}
+                centered={true}
+                footer={null}
+                destroyOnClose={true}
+                onCancel={() => setCommentSencondShow(true)}
+            >
+                <PluginCommentInput
+                    value={commentInputText}
+                    setValue={setCommentInputText}
+                    files={commentFiles}
+                    setFiles={setCommentFiles}
+                    onSubmit={pluginReplyComment}
+                    loading={commentLoading}
+                    isLogin={isLogin}
+                ></PluginCommentInput>
+            </Modal>
+            <SecondConfirm visible={commentSecondShow} onCancel={pluginCancelComment}></SecondConfirm>
         </AutoSpin>
     )
 }
@@ -435,32 +510,25 @@ interface PluginCommentInputProps {
     loading: boolean
     isLogin?: boolean
     setValue: (value: string) => any
-    files: uploadImgInfo[]
-    setFiles: (files: uploadImgInfo[]) => any
-    onSubmit: () => any
+    files: string[]
+    setFiles: (files: string[]) => any
+    onSubmit: (callback?) => any
 }
 // 评论功能的部分组件-输入组件、展示图片组件、上传和提交按钮组件
 const PluginCommentInput = (props: PluginCommentInputProps) => {
     const {value, loading, isLogin, setValue, files, setFiles, onSubmit} = props
-
-    const fileRef = useRef<any[]>([])
-    const time = useRef<any>(null)
-
-    const uploadImg = (file) => {
-        // const imgs: uploadImgInfo[] = []
-        // for (let file of fileRef.current) {
-        //   let reader = new FileReader()
-        //   reader.readAsDataURL(file)
-        //   reader.onload = () => {
-        //     imgs.push({ name: file.name, path: reader.result })
-        //     if (imgs.length === fileRef.current.length) {
-        //       setFiles(files.concat(imgs))
-        //       fileRef.current = []
-        //     }
-        //   }
-        // }
+    const [filesLoading, setFilesLoading] = useState<boolean>(false)
+    const uploadFiles = (file: any) => {
+        setFilesLoading(true)
+        ipcRenderer
+            .invoke("upload-img", {path: file.path, type: file.type})
+            .then((res) => {
+                setFiles(files.concat(res.from))
+            })
+            .finally(() => {
+                setTimeout(() => setFilesLoading(false), 1)
+            })
     }
-
     return (
         <div className='plugin-info-comment-input'>
             <div className='box-input'>
@@ -477,10 +545,10 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                 <div className='box-upload'>
                     {files.map((item, index) => {
                         return (
-                            <div key={item.name} className='upload-img-opt'>
+                            <div key={item} className='upload-img-opt'>
                                 <img
-                                    key={item.name}
-                                    src={item.path as any}
+                                    key={item}
+                                    src={item as any}
                                     className='opt-pic'
                                     onClick={() => {
                                         let m = showFullScreenMask(
@@ -518,20 +586,18 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                         disabled={files.length >= 3}
                         showUploadList={false}
                         beforeUpload={(file: any) => {
+                            if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
+                                failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
+                                return false
+                            }
                             if (file) {
-                                console.log("file", file)
-                                ipcRenderer
-                                    .invoke("upload-img", {path: file.path, type: file.type, name: file.name})
-                                    .then((res) => {
-                                        console.log(123, res)
-                                    })
-                                // uploadImg(file)
+                                uploadFiles(file)
                             }
                             return false
                         }}
-                        // customRequest={uploadImg}
                     >
                         <Button
+                            loading={filesLoading}
                             type='link'
                             disabled={files.length >= 3}
                             icon={<PictureOutlined className={files.length >= 3 ? "btn-pic-disabled" : "btn-pic"} />}
@@ -540,8 +606,8 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                 )}
                 {(isLogin && (
                     <Button
-                        disabled={!value && files.length === 0}
-                        type={value || files.length !== 0 ? "primary" : undefined}
+                        disabled={!value}
+                        type={value ? "primary" : undefined}
                         className={value || files.length !== 0 ? "" : "btn-submit"}
                         onClick={onSubmit}
                         loading={loading}
@@ -555,7 +621,7 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
 }
 
 interface PluginMaskImageProps {
-    info: uploadImgInfo
+    info: string
 }
 // 全屏预览图功能组件
 const PluginMaskImage = memo((props: PluginMaskImageProps) => {
@@ -578,7 +644,7 @@ const PluginMaskImage = memo((props: PluginMaskImageProps) => {
         setImgSize(imgSize - 1)
     })
     const downloadImg = () => {
-        alert(`下载${info.name}图片成功`)
+        alert(`图片下载成功`)
     }
 
     return (
@@ -588,17 +654,14 @@ const PluginMaskImage = memo((props: PluginMaskImageProps) => {
                 <ZoomOutOutlined className='display-icon display-icon-middle' onClick={narrowSize} />
                 <DownloadOutlined className='display-icon' onClick={downloadImg} />
             </div>
-            <img
-                className='mask-disply-image'
-                style={{width: getWidth(), height: getHeight()}}
-                src={info.path as any}
-            />
+            <img className='mask-disply-image' style={{width: getWidth(), height: getHeight()}} src={info as any} />
         </>
     )
 })
 
 interface PluginCommentInfoProps {
     info: CommentListProps
+    parentInfo?: CommentListProps
     key: number
     isStarChange?: boolean
     onReply: (name: CommentListProps) => any
@@ -606,53 +669,14 @@ interface PluginCommentInfoProps {
 }
 // 评论内容单条组件
 const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
-    const {info, onReply, onStar, key, isStarChange} = props
-    const [commentChildList, setCommentChildList] = useState<CommentListProps[]>()
-    // 获取子评论列表
-    const getChildComment = useMemoizedFn(() => {
-        const params = {
-            root_id: info.id,
-            plugin_id: info.plugin_id
-        }
-        ipcRenderer
-            .invoke("fetch-plugin-comment-reply", params)
-            .then((res) => {
-                const item = (res?.from && JSON.parse(res.from)) || {}
-                console.log("评论child列表", item?.data)
-                setCommentChildList(item?.data || [])
-            })
-            .catch((e: any) => {
-                failed("评论查询失败:" + e)
-            })
-    })
-    const onCommentChildStar = useMemoizedFn((childItem: CommentListProps) => {
-        const params = {
-            comment_id: childItem.id,
-            operation: childItem.is_stars ? "remove" : "add"
-        }
-        ipcRenderer
-            .invoke("add-plugin-comment-stars", params)
-            .then((res) => {
-                if (!commentChildList) return
-                const index: number = commentChildList.findIndex((ele: CommentListProps) => ele.id === childItem.id)
-                if (index !== -1) {
-                    commentChildList[index].is_stars = !commentChildList[index].is_stars
-                    if(childItem.is_stars){
-                      commentChildList[index].like_num -= 1
-                    }else{
-                      commentChildList[index].like_num += 1
-                    }
-                   
-                    setCommentChildList({
-                        ...commentChildList
-                    })
-                }
-            })
-            .catch((e: any) => {
-                failed("点赞失败" + e)
-            })
-            .finally(() => {})
-    })
+    const {info, onReply, onStar, key, isStarChange, parentInfo} = props
+    const [commentChildVisible, setCommentChildVisible] = useState<boolean>(false)
+
+    const openCommentChildModel = () => {
+        setCommentChildVisible(true)
+    }
+
+    const message_img: string[] = (info.message_img && JSON.parse(info.message_img)) || []
     return (
         <div className='plugin-comment-opt' key={key}>
             <div className='opt-author-img'>
@@ -663,11 +687,13 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                 <div className='comment-body-name'>{info.user_name || "anonymous"}</div>
 
                 <div className='comment-body-content'>
-                    <CollapseParagraph
-                        value={info.message}
-                        rows={2}
-                        valueConfig={{className: "content-style"}}
-                    ></CollapseParagraph>
+                    <CollapseParagraph value={info.message} rows={2} valueConfig={{className: "content-style"}}>
+                        {info.by_user_name && (
+                            <span>
+                                回复<span className='content-by-name'>{info.by_user_name}</span>:
+                            </span>
+                        )}
+                    </CollapseParagraph>
                 </div>
 
                 <div className='comment-body-time-func'>
@@ -677,31 +703,207 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                     <div className='func-comment-and-star'>
                         <div className='comment-and-star' onClick={() => onReply(info)}>
                             {/* @ts-ignore */}
-                            <OnlineCommentIcon className='icon-style' />
+                            <OnlineCommentIcon className='icon-style-comment hover-active' />
                         </div>
-                        <div style={{marginLeft: 18}} className='comment-and-star' onClick={() => onStar(info)}>
+                        <div
+                            style={{marginLeft: 18}}
+                            className='hover-active  comment-and-star'
+                            onClick={() => onStar(info)}
+                        >
                             {/* @ts-ignore */}
-                            {(isStarChange && <OnlineThumbsUpIcon className='icon-style-start' />) || (
+                            {(isStarChange && <OnlineSurfaceIcon className='hover-active icon-style-start' />) || (
                                 // @ts-ignore
-                                <OnlineThumbsUpIcon className='icon-style' />
+                                <OnlineThumbsUpIcon className='hover-active  icon-style' />
                             )}
-                            <span className='num-style'>{numeral(info.like_num).format("0,0")}</span>
+                            <span className={`hover-active  num-style ${isStarChange && "num-style-active"}`}>
+                                {numeral(info.like_num).format("0,0")}
+                            </span>
                         </div>
                     </div>
                 </div>
-                <span onClick={getChildComment}>展开</span>
-                {commentChildList?.map((childItem: CommentListProps, index: number) => (
-                    <>
-                        <PluginCommentInfo
-                            key={childItem.id}
-                            info={childItem}
-                            onReply={onReply}
-                            onStar={onCommentChildStar}
-                        ></PluginCommentInfo>
-                        <div className='comment-separator'></div>
-                    </>
-                ))}
+                <div>
+                    {message_img.map((url) => (
+                        <img
+                            key={url + info.id}
+                            src={url as any}
+                            className='comment-pic'
+                            onClick={() => {
+                                let m = showFullScreenMask(
+                                    <PluginMaskImage info={url} />,
+                                    "mask-img-display",
+                                    undefined,
+                                    (e) => {
+                                        if ((e.target as any).className === "mask-img-display") m.destroy()
+                                    }
+                                )
+                            }}
+                        />
+                    ))}
+                </div>
+                {info.reply_num > 0 && (
+                    <a className='comment-reply' onClick={openCommentChildModel}>
+                        查看更多回复
+                    </a>
+                )}
+                <PluginCommentChildModal
+                    visible={commentChildVisible}
+                    parentInfo={info}
+                    onReply={onReply}
+                    onCancel={setCommentChildVisible}
+                />
             </div>
         </div>
+    )
+})
+
+interface PluginCommentChildModalProps {
+    visible: boolean
+    parentInfo: CommentListProps
+    onReply: (info: CommentListProps) => any
+    onCancel: (visible: boolean) => any
+}
+
+const PluginCommentChildModal = memo((props: PluginCommentChildModalProps) => {
+    const {parentInfo, visible, onReply, onCancel} = props
+
+    const [hasMore, setHasMore] = useState<boolean>(false)
+    const [loadingChild, setLoadingChild] = useState<boolean>(false)
+    const [commentChildResponses, setCommentChildResponses] = useState<CommentResponsesProps>({
+        data: [],
+        pagemeta: null
+    })
+
+    const onCommentChildCancel = useMemoizedFn(() => {
+        onCancel(false)
+    })
+    const loadMoreData = useMemoizedFn(() => {
+        if (commentChildResponses?.pagemeta?.page) {
+            getChildComment(commentChildResponses?.pagemeta?.page + 1)
+        }
+    })
+    // 获取子评论列表
+    const getChildComment = useMemoizedFn((page: number = 1, payload: any = {}) => {
+        const params = {
+            root_id: parentInfo.id,
+            plugin_id: parentInfo.plugin_id,
+            limit,
+            page,
+            order_by: "created_at",
+            ...payload
+        }
+
+        ipcRenderer
+            .invoke("fetch-plugin-comment-reply", params)
+            .then((res) => {
+                const item: CommentResponsesProps = (res?.from && JSON.parse(res.from)) || {
+                    data: [],
+                    pagemeta: {
+                        page: 1,
+                        limit,
+                        total: 0,
+                        total_page: 0
+                    }
+                }
+                if (!item.data) return
+                const newCommentChildResponses = {
+                    data: page === 1 ? item.data : commentChildResponses.data.concat(item.data),
+                    pagemeta: item.pagemeta
+                }
+                const isMore = item.data.length < limit
+                setHasMore(!isMore)
+                setCommentChildResponses({
+                    data: [...newCommentChildResponses.data],
+                    pagemeta: item.pagemeta
+                })
+            })
+            .catch((e: any) => {
+                failed("评论查询失败:" + e)
+            })
+            .finally(() => {
+                setLoadingChild(false)
+            })
+    })
+    const onCommentChildStar = useMemoizedFn((childItem: CommentListProps) => {
+        const params = {
+            comment_id: childItem.id,
+            operation: childItem.is_stars ? "remove" : "add"
+        }
+        ipcRenderer
+            .invoke("add-plugin-comment-stars", params)
+            .then((res) => {
+                const index: number = commentChildResponses.data.findIndex(
+                    (ele: CommentListProps) => ele.id === childItem.id
+                )
+                if (index !== -1) {
+                    if (childItem.is_stars) {
+                        commentChildResponses.data[index].like_num -= 1
+                        commentChildResponses.data[index].is_stars = false
+                    } else {
+                        commentChildResponses.data[index].like_num += 1
+                        commentChildResponses.data[index].is_stars = true
+                    }
+                    setCommentChildResponses({
+                        ...commentChildResponses,
+                        data: [...commentChildResponses.data]
+                    })
+                }
+            })
+            .catch((e: any) => {
+                failed("点赞失败" + e)
+            })
+            .finally(() => {})
+    })
+    useEffect(() => {
+        // 接收
+        ipcRenderer.on("ref-comment-child-list", (_, data) => {
+            const refParams = {
+                root_id: parentInfo.id,
+                plugin_id: parentInfo.plugin_id
+            }
+            getChildComment(1, refParams)
+        })
+    }, [])
+    useEffect(() => {
+        if (visible) {
+            setLoadingChild(true)
+            getChildComment(1)
+        }
+    }, [visible])
+    return (
+        <Modal visible={visible} onCancel={onCommentChildCancel} footer={null} width='70%' centered>
+            <div id='scroll-able-div' className='comment-child-body'>
+                {/* @ts-ignore */}
+                <InfiniteScroll
+                    dataLength={commentChildResponses?.pagemeta?.total || 0}
+                    key={commentChildResponses?.pagemeta?.page}
+                    next={loadMoreData}
+                    hasMore={hasMore}
+                    loader={<Skeleton avatar paragraph={{rows: 1}} active />}
+                    endMessage={
+                        (commentChildResponses?.pagemeta?.total || 0) > 0 && (
+                            <div className='no-more-text'>It is all, nothing more 🤐</div>
+                        )
+                    }
+                    scrollableTarget='scroll-able-div'
+                >
+                    <List
+                        dataSource={commentChildResponses.data || []}
+                        loading={loadingChild}
+                        renderItem={(childItem) => (
+                            <>
+                                <PluginCommentInfo
+                                    key={childItem.id}
+                                    info={childItem}
+                                    onReply={onReply}
+                                    onStar={onCommentChildStar}
+                                    isStarChange={childItem.is_stars}
+                                ></PluginCommentInfo>
+                                <div className='comment-separator'></div>
+                            </>
+                        )}
+                    />
+                </InfiniteScroll>
+            </div>
+        </Modal>
     )
 })

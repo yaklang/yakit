@@ -125,10 +125,11 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                 if (index !== -1) {
                     if (info.is_stars) {
                         response.data[index].stars -= 1
+                        response.data[index].is_stars = false
                     } else {
                         response.data[index].stars += 1
+                        response.data[index].is_stars = true
                     }
-                    response.data[index].is_stars = !response.data[index].is_stars
                     setResponse({
                         ...response,
                         data: [...response.data]
@@ -462,15 +463,21 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                     </div>
                 </div>
 
-                <div className='author-right'>
-                    <div className='vertical-center' onClick={(e) => onStarred(info)}>
+                <div className='author-right hover-active'>
+                    <div className='vertical-center ' onClick={(e) => onStarred(info)}>
                         {info.is_stars ? (
                             <StarFilled className='solid-star' />
                         ) : (
-                            <StarOutlined className='empty-star' />
+                            <StarOutlined className='empty-star hover-active' />
                         )}
                     </div>
-                    <div className='vertical-center'>{numeral(info.stars).format("0,0")}</div>
+                    <div
+                        className={`stars-number vertical-center hover-active ${
+                            info.is_stars && "stars-number-active"
+                        }`}
+                    >
+                        {numeral(info.stars).format("0,0")}
+                    </div>
                 </div>
             </div>
         </Card>
