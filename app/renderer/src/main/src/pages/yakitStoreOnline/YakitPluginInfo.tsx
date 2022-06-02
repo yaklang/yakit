@@ -429,7 +429,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             <span className='header-title'>用户评论</span>
                             <span className='header-subtitle'>{commentResponses?.pagemeta?.total || 0}</span>
                         </div>
-
                         <PluginCommentInput
                             value={commentText}
                             setValue={setCommentText}
@@ -440,7 +439,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             isLogin={isLogin}
                         ></PluginCommentInput>
                     </div>
-
                     <div className='info-comment-content'>
                         {commentResponses?.data?.map((item: CommentListProps, index) => (
                             <>
