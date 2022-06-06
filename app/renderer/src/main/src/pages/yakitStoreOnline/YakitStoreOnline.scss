@@ -44,7 +44,7 @@
         .list-pagination {
             width: 100%;
             height: 32px;
-            padding-top: 5;
+            padding-top: 5px;
             text-align: right;
         }
     }
@@ -254,3 +254,65 @@
         }
     }
 }
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 220px 150px 190px 220px auto;
+    margin: 12px 0 18px;
+    grid-gap: 12px;
+    grid-row-gap: 24px;
+
+    .grid-item {
+        display: inline-block;
+
+        .grid-text {
+            margin-right: 12px;
+        }
+    }
+
+    .btn {
+        display: flex;
+        justify-content: flex-end;
+
+    }
+
+    .filter-opt-progress {
+        flex: 1;
+    }
+}
+
+
+@media(max-width: 1350px) {
+    .grid-container {
+        grid-template-columns: 220px 150px 190px 220px;
+    }
+
+    .btn {
+        justify-content: flex-start !important;
+        min-width: 300px;
+    }
+}
+
+@media(max-width: 1200px) {
+    .grid-container {
+        grid-template-columns: 220px 150px 190px 220px;
+    }
+
+    .btn {
+        justify-content: flex-start !important;
+        min-width: 300px;
+    }
+}
+
+@media(max-width: 1100px) {
+    .grid-container {
+        grid-template-columns: 220px 150px 190px;
+    }
+
+    .btn {
+        justify-content: flex-start !important;
+        min-width: 300px;
+    }
+}
+
+

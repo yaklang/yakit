@@ -14,6 +14,7 @@ import numeral from "numeral"
 import "./YakitStoreOnline.scss"
 
 const {ipcRenderer} = window.require("electron")
+const {Search} = Input
 
 const PluginType: {text: string; value: string}[] = [
     {text: "全部", value: ""},
@@ -168,116 +169,106 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     ) : (
         <AutoSpin spinning={loading}>
             <div className='plugin-list-container'>
-                <div className='list-filter'>
-                    <Row>
-                        <Col span={18}>
-                            <Space size='middle'>
-                                <Input
-                                    size='small'
-                                    value={params.keywords}
-                                    allowClear
-                                    placeholder='搜索商店内插件'
-                                    onChange={(e) => {
-                                        setParams({...params, keywords: e.target.value})
+                <div className='grid-container'>
+                    <div className='grid-item'>
+                        <Search
+                            placeholder='搜索商店内插件'
+                            allowClear
+                            size='small'
+                            onSearch={triggerSearch}
+                            value={params.keywords}
+                            onChange={(e) => {
+                                setParams({...params, keywords: e.target.value})
+                                triggerSearch()
+                            }}
+                        />
+                    </div>
+                    <div className='grid-item'>
+                        <span className='grid-text'>排序顺序</span>
+                        <ItemSelects
+                            isItem={false}
+                            select={{
+                                size: "small",
+                                data: [
+                                    {text: "按热度", value: "stars"},
+                                    {text: "按时间", value: "created_at"}
+                                ],
+                                value: params.order_by,
+                                setValue: (value) => {
+                                    setParams({...params, order_by: value})
+                                    triggerSearch()
+                                }
+                            }}
+                        />
+                    </div>
+                    <div className='grid-item'>
+                        <span className='grid-text'>插件类型</span>
+                        <ItemSelects
+                            isItem={false}
+                            select={{
+                                size: "small",
+                                style: {width: 120},
+                                data: PluginType,
+                                value: params.type,
+                                setValue: (value) => {
+                                    setParams({...params, type: value})
+                                    triggerSearch()
+                                }
+                            }}
+                        />
+                    </div>
+                    {isAdmin && (
+                        <div className='grid-item'>
+                            <span className='grid-text'>审核状态</span>
+                            <ItemSelects
+                                isItem={false}
+                                select={{
+                                    size: "small",
+                                    style: {width: 150},
+                                    data: [
+                                        {text: "全部", value: "all"},
+                                        {text: "待审核", value: "0"},
+                                        {text: "审核通过", value: "1"},
+                                        {text: "审核不通过", value: "2"}
+                                    ], // 避免重复key
+                                    value: params.status === null ? "all" : params.status.toString(),
+                                    setValue: (value) => {
+                                        setParams({
+                                            ...params,
+                                            status: value === "all" ? null : Number(value)
+                                        })
                                         triggerSearch()
-                                    }}
+                                    }
+                                }}
+                            />
+                        </div>
+                    )}
+                    <div className='grid-item btn'>
+                        {(addLoading || percent !== 0) && (
+                            <div className='filter-opt-progress'>
+                                <Progress
+                                    size='small'
+                                    status={!addLoading && percent !== 0 ? "exception" : undefined}
+                                    percent={percent}
                                 />
-                                <div className='filter-opt'>
-                                    <span>排序顺序</span>
-                                    <ItemSelects
-                                        isItem={false}
-                                        select={{
-                                            size: "small",
-                                            data: [
-                                                {text: "按热度", value: "stars"},
-                                                {text: "按时间", value: "created_at"}
-                                            ],
-                                            value: params.order_by,
-                                            setValue: (value) => {
-                                                setParams({...params, order_by: value})
-                                                triggerSearch()
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className='filter-opt'>
-                                    <span>插件类型</span>
-                                    <ItemSelects
-                                        isItem={false}
-                                        select={{
-                                            size: "small",
-                                            style: {width: 120},
-                                            data: PluginType,
-                                            value: params.type,
-                                            setValue: (value) => {
-                                                setParams({...params, type: value})
-                                                triggerSearch()
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                {isAdmin && (
-                                    <div className='filter-opt'>
-                                        <span>审核状态</span>
-                                        <ItemSelects
-                                            isItem={false}
-                                            select={{
-                                                size: "small",
-                                                style: {width: 120},
-                                                data: [
-                                                    {text: "全部", value: "all"},
-                                                    {text: "待审核", value: "0"},
-                                                    {text: "审核通过", value: "1"},
-                                                    {text: "审核不通过", value: "2"}
-                                                ], // 避免重复key
-                                                value: params.status === null ? "all" : params.status.toString(),
-                                                setValue: (value) => {
-                                                    setParams({
-                                                        ...params,
-                                                        status: value === "all" ? null : Number(value)
-                                                    })
-                                                    triggerSearch()
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                )}
-                            </Space>
-                        </Col>
-                        <Col span={6} style={{textAlign: "right"}}>
-                            <Space>
-                                {(addLoading || percent !== 0) && (
-                                    <div className='filter-opt-progress'>
-                                        <Progress
-                                            size='small'
-                                            status={!addLoading && percent !== 0 ? "exception" : undefined}
-                                            percent={percent}
-                                        />
-                                    </div>
-                                )}
-                                {addLoading ? (
-                                    <Button
-                                        className='filter-opt-btn'
-                                        size='small'
-                                        type='primary'
-                                        danger
-                                        onClick={StopAllPlugin}
-                                    >
-                                        停止添加
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        className='filter-opt-btn'
-                                        size='small'
-                                        type='primary'
-                                        onClick={AddAllPlugin}
-                                    >
-                                        全部添加
-                                    </Button>
-                                )}
-                            </Space>
-                        </Col>
-                    </Row>
+                            </div>
+                        )}
+                        {addLoading ? (
+                            <Button
+                                className='filter-opt-btn'
+                                size='small'
+                                type='primary'
+                                danger
+                                onClick={StopAllPlugin}
+                            >
+                                停止添加
+                            </Button>
+                        ) : (
+                            <Button className='filter-opt-btn' size='small' type='primary' onClick={AddAllPlugin}>
+                                全部添加
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 <div className='list-body'>
