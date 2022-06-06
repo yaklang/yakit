@@ -14,7 +14,7 @@ service.interceptors.request.use(
         return config
     },
     (error) => {
-        // console.log("request", error)
+        console.log("request", error)
         Promise.reject(error)
     }
 )
@@ -23,12 +23,12 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     (response) => {
         const res = response.data
-        console.log('response',response);
+        // console.log('response',response);
         if (!res.ok) return Promise.reject(res.reason || "请求失败,请稍等片刻后再次尝试")
         else return response.data
     },
     (error) => {
-        // console.log("res_error", error)
+        console.log("res_error", error)
         return Promise.reject(error)
     }
 )
