@@ -28,7 +28,13 @@ service.interceptors.response.use(
         else return response.data
     },
     (error) => {
-        console.log("res_error", error)
+        console.log("res_error", error.response)
+        if (error?.response?.data?.code === 401) {
+            return Promise.reject("未登录，请先登录或者刷新~~")
+        }
+        if (error?.response?.data?.reason) {
+            return Promise.reject(error?.response?.data?.reason)
+        }
         return Promise.reject(error)
     }
 )

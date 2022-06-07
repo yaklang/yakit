@@ -22,4 +22,8 @@ module.exports = (win, getClient) => {
     ipcMain.handle("fetch-plugin-stars", async (e, params) => {
         return httpApi("post", "yakit/plugin/stars", params)
     })
+
+    ipcMain.handle("upload-plugin", async (e, params) => {
+        return httpApi("post", "yakit/plugin", params)
+    })
 }

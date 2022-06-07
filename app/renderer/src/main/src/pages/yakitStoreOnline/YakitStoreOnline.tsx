@@ -163,7 +163,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             info={pluginInfo}
             index={index}
             isAdmin={isAdmin}
-            onBack={() => setPluginInfo(undefined)}
+            onBack={() => {setPluginInfo(undefined);search()}}
             isLogin={userInfo.isLogin}
         />
     ) : (

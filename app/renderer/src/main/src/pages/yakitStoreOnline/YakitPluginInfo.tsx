@@ -87,6 +87,9 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     const [commentInputText, setCommentInputText] = useState<string>("")
     const [commentFiles, setCommentFiles] = useState<string[]>([])
 
+    const [commentChildVisible, setCommentChildVisible] = useState<boolean>(false)
+    const [parentComment, setParentComment] = useState<CommentListProps>()
+
     useEffect(() => {
         getPluginDetail()
         getComment(1)
@@ -216,7 +219,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
         ipcRenderer
             .invoke("add-plugin-comment", params)
             .then((res) => {
-                getComment(1)
+                if (params.root_id === 0) getComment(1)
                 if (commentText) setCommentText("")
                 if (files.length > 0) setFiles([])
                 if (commentInputText) setCommentInputText("")
@@ -313,13 +316,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             })
     })
 
-    if (!plugin) {
-        return (
-            <div className='yakit-plugin-info-container'>
-                <Empty description='无插件信息' />
-            </div>
-        )
-    }
     const onScrollCapture = (e) => {
         if (listRef && hasFetchComment && hasMore) {
             const dom = listRef.current
@@ -332,6 +328,17 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                 getComment(number + 1) // 获取数据的方法
             }
         }
+    }
+    const openCommentChildModel = (visible) => {
+        setCommentChildVisible(visible)
+    }
+
+    if (!plugin) {
+        return (
+            <div className='yakit-plugin-info-container'>
+                <Empty description='无插件信息' />
+            </div>
+        )
     }
     return (
         <AutoSpin spinning={loading}>
@@ -464,6 +471,8 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                                     onReply={pluginReply}
                                     onStar={pluginCommentStar}
                                     isStarChange={item.is_stars}
+                                    setParentComment={setParentComment}
+                                    openCommentChildModel={openCommentChildModel}
                                 />
                                 <div className='comment-separator'></div>
                             </>
@@ -495,6 +504,15 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                     </div>
                 )}
             </div>
+            <PluginCommentChildModal
+                visible={commentChildVisible}
+                parentInfo={parentComment}
+                onReply={pluginReply}
+                onCancel={(val) => {
+                    setParentComment(undefined)
+                    setCommentChildVisible(val)
+                }}
+            />
             <Modal
                 wrapClassName='comment-reply-dialog'
                 title={<div className='header-title'>回复@{currentComment?.user_name}</div>}
@@ -600,6 +618,10 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                         disabled={files.length >= 3}
                         showUploadList={false}
                         beforeUpload={(file: any) => {
+                            if (file.size / 1024 / 1024 > 10) {
+                                failed("图片大小不超过10M")
+                                return false
+                            }
                             if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
                                 failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
                                 return false
@@ -675,20 +697,16 @@ const PluginMaskImage = memo((props: PluginMaskImageProps) => {
 
 interface PluginCommentInfoProps {
     info: CommentListProps
-    parentInfo?: CommentListProps
     key: number
     isStarChange?: boolean
     onReply: (name: CommentListProps) => any
     onStar: (name: CommentListProps) => any
+    openCommentChildModel?: (visible: boolean) => any
+    setParentComment?: (name: CommentListProps) => any
 }
 // 评论内容单条组件
 const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
-    const {info, onReply, onStar, key, isStarChange, parentInfo} = props
-    const [commentChildVisible, setCommentChildVisible] = useState<boolean>(false)
-
-    const openCommentChildModel = () => {
-        setCommentChildVisible(true)
-    }
+    const {info, onReply, onStar, key, isStarChange, openCommentChildModel, setParentComment} = props
 
     const message_img: string[] = (info.message_img && JSON.parse(info.message_img)) || []
     return (
@@ -755,16 +773,20 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                     ))}
                 </div>
                 {info.reply_num > 0 && (
-                    <a className='comment-reply' onClick={openCommentChildModel}>
+                    <a
+                        className='comment-reply'
+                        onClick={() => {
+                            if (openCommentChildModel && setParentComment) {
+                                setParentComment(info)
+                                setTimeout(() => {
+                                    openCommentChildModel(true)
+                                }, 1)
+                            }
+                        }}
+                    >
                         查看更多回复
                     </a>
                 )}
-                <PluginCommentChildModal
-                    visible={commentChildVisible}
-                    parentInfo={info}
-                    onReply={onReply}
-                    onCancel={setCommentChildVisible}
-                />
             </div>
         </div>
     )
@@ -772,12 +794,12 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
 
 interface PluginCommentChildModalProps {
     visible: boolean
-    parentInfo: CommentListProps
+    parentInfo?: CommentListProps
     onReply: (info: CommentListProps) => any
     onCancel: (visible: boolean) => any
 }
 
-const PluginCommentChildModal = memo((props: PluginCommentChildModalProps) => {
+const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
     const {parentInfo, visible, onReply, onCancel} = props
 
     const [hasMore, setHasMore] = useState<boolean>(false)
@@ -788,6 +810,10 @@ const PluginCommentChildModal = memo((props: PluginCommentChildModalProps) => {
     })
 
     const onCommentChildCancel = useMemoizedFn(() => {
+        setCommentChildResponses({
+            data: [],
+            pagemeta: null
+        })
         onCancel(false)
     })
     const loadMoreData = useMemoizedFn(() => {
@@ -798,8 +824,8 @@ const PluginCommentChildModal = memo((props: PluginCommentChildModalProps) => {
     // 获取子评论列表
     const getChildComment = useMemoizedFn((page: number = 1, payload: any = {}) => {
         const params = {
-            root_id: parentInfo.id,
-            plugin_id: parentInfo.plugin_id,
+            root_id: parentInfo?.id,
+            plugin_id: parentInfo?.plugin_id,
             limit,
             page,
             order_by: "created_at",
@@ -842,6 +868,7 @@ const PluginCommentChildModal = memo((props: PluginCommentChildModalProps) => {
             comment_id: childItem.id,
             operation: childItem.is_stars ? "remove" : "add"
         }
+
         ipcRenderer
             .invoke("add-plugin-comment-stars", params)
             .then((res) => {
@@ -867,16 +894,21 @@ const PluginCommentChildModal = memo((props: PluginCommentChildModalProps) => {
             })
             .finally(() => {})
     })
+
     useEffect(() => {
         // 接收
         ipcRenderer.on("ref-comment-child-list", (_, data) => {
             const refParams = {
-                root_id: parentInfo.id,
-                plugin_id: parentInfo.plugin_id
+                root_id: parentInfo?.id,
+                plugin_id: parentInfo?.plugin_id
             }
             getChildComment(1, refParams)
         })
-    }, [])
+
+        return () => {
+            ipcRenderer.removeAllListeners("ref-comment-child-list")
+        }
+    }, [parentInfo])
     useEffect(() => {
         if (visible) {
             setLoadingChild(true)
@@ -920,4 +952,4 @@ const PluginCommentChildModal = memo((props: PluginCommentChildModalProps) => {
             </div>
         </Modal>
     )
-})
+}
