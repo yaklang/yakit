@@ -50,6 +50,7 @@ import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch";
 import {AutoCard} from "../../components/AutoCard";
 import {callCopyToClipboard} from "../../utils/basic";
+import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1159,16 +1160,43 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     }}
                                     extra={
                                         <div>
-                                            <Input
-                                                value={keyword}
-                                                style={{maxWidth: 200}}
-                                                allowClear
-                                                placeholder="输入字符串或正则表达式"
-                                                onChange={e => setKeyword(e.target.value)}
-                                                addonAfter={
-                                                    <DownloadOutlined style={{cursor: "pointer"}}
-                                                                      onClick={downloadContent}/>
-                                                }></Input>
+                                            <Popover
+                                                title={"导出数据"}
+                                                trigger={["click"]}
+                                                content={<>
+                                                    <Space>
+                                                        <Button
+                                                            size={"small"}
+                                                            type={"primary"}
+                                                            onClick={() => {
+                                                                exportHTTPFuzzerResponse(successResults)
+                                                            }}
+                                                        >
+                                                            导出所有请求
+                                                        </Button>
+                                                        <Button
+                                                            size={"small"}
+                                                            type={"primary"}
+                                                            onClick={() => {
+                                                                exportPayloadResponse(successResults)
+                                                            }}
+                                                        >
+                                                            仅导出 Payload
+                                                        </Button>
+                                                    </Space>
+                                                </>}>
+                                                <Button>导出数据</Button>
+                                            </Popover>
+                                            {/*<Input*/}
+                                            {/*    value={keyword}*/}
+                                            {/*    style={{maxWidth: 200}}*/}
+                                            {/*    allowClear*/}
+                                            {/*    placeholder="输入字符串或正则表达式"*/}
+                                            {/*    onChange={e => setKeyword(e.target.value)}*/}
+                                            {/*    addonAfter={*/}
+                                            {/*        <DownloadOutlined style={{cursor: "pointer"}}*/}
+                                            {/*                          onClick={downloadContent}/>*/}
+                                            {/*    }></Input>*/}
                                         </div>
                                     }
                                     failedResponses={failedResults}
