@@ -29,7 +29,7 @@ export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
         setSortType(sortType)
         props.sortFilter(sortColumn, sortType)
     }
-
+    
     return (
         <Table
             {...(restTable as TableProps)}
