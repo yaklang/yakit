@@ -761,7 +761,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
             })
-            .finally(() => setTimeout(() => setLoading(false), 200))
+            .finally(() => setTimeout(() => setLoading(false), 0))
     }), {wait: 600, leading: true, trailing: false}).run
     const scrollUpdateButt = useDebounceFn(useMemoizedFn((tableClientHeight: number) => {
         const paginationProps = {
@@ -891,12 +891,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // 设置是否自动刷新
     const autoUpdateTop = getScrollY() < ROW_HEIGHT;
     useEffect(() => {
+        if (autoReload) {
+            return
+        }
         if (autoUpdateTop) {
             scrollUpdateTop()
             let id = setInterval(scrollUpdateTop, 1000)
             return () => clearInterval(id)
         }
-    }, [autoUpdateTop])
+    }, [autoUpdateTop, autoReload])
 
     useEffect(() => {
         if (autoReload) {
