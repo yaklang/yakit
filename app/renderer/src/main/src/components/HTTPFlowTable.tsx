@@ -25,7 +25,7 @@ export interface HTTPHeaderItem {
 }
 
 export interface HTTPFlow {
-    Id?: number
+    Id: number
     Method: string
     Path: string
     Hash: string
@@ -319,7 +319,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail hash={flow.Hash} onClose={onClosed}/>
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed}/>
         </div>
     )
 }
@@ -1456,7 +1456,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     title: '发送到 数据包扫描',
                                     onClick: () => {
                                         ipcRenderer
-                                            .invoke("GetHTTPFlowByHash", {Hash: rowData.Hash})
+                                            .invoke("GetHTTPFlowById", {Id: rowData.Id})
                                             .then((i: HTTPFlow) => {
                                                 ipcRenderer.invoke("send-to-packet-hack", {
                                                     request: i.Request,
@@ -1585,6 +1585,17 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             disabled: [false, false, true][compareState]
                                         }
                                     ]
+                                },
+                                {
+                                    title: "删除该记录", onClick: () => {
+                                        setLoading(true)
+                                        ipcRenderer.invoke("DeleteHTTPFlows", {
+                                            Id: [rowData.Id]
+                                        }).then(() => {
+                                            info("删除成功")
+                                            update()
+                                        }).finally(() => setTimeout(() => setLoading(false), 100))
+                                    }, danger: true,
                                 },
                             ]
                         },
