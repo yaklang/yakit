@@ -84,7 +84,6 @@ const TooltipTitle: React.FC<TooltipTitleProps> = React.memo((props) => {
                     }}
                     key={info.Id}
                     title={list.length > 1&&<p className="tooltip-id">{info.Id}</p>}
-                    // title={<p className="tooltip-id">{info.Id}</p>}
                     value={info.Data}
                 />
             ))}

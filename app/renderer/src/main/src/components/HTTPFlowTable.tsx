@@ -12,7 +12,7 @@ import "./style.css"
 import {TableResizableColumn} from "./TableResizableColumn"
 import {formatTime, formatTimestamp} from "../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {useDebounce, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../utils/basic"
 import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode"
@@ -319,6 +319,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
     return (
         <div style={{width: "100%"}}>
             <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
+            {/* <HTTPFlowDetail hash={flow.Hash} onClose={onClosed} /> */}
         </div>
     )
 }
