@@ -51,8 +51,6 @@ const {Text} = Typography;
 const {Item} = Form;
 const {ipcRenderer} = window.require("electron");
 
-const DefaultMitmFilter = "default-mitm-filter"
-
 export interface MITMPageProp {
 }
 
@@ -261,33 +259,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             }, 300)
         });
         ipcRenderer.on("client-mitm-filter", (e, msg) => {
-            ipcRenderer
-                .invoke("get-value", DefaultMitmFilter)
-                .then((res: any) => {
-                    if (res) {
-                        const filter = {
-                            includeSuffix: res.includeSuffix,
-                            excludeMethod: res.excludeMethod,
-                            excludeSuffix: res.excludeSuffix,
-                            includeHostname: res.includeHostname,
-                            excludeHostname: res.excludeHostname,
-                            excludeContentTypes: res.excludeContentTypes,
-                        }
-                        setMITMFilter(filter)
-                        ipcRenderer.invoke("mitm-filter", {
-                            updateFilter: true, ...filter
-                        })
-                    } else {
-                        setMITMFilter({
-                            includeSuffix: msg.includeSuffix,
-                            excludeMethod: msg.excludeMethod,
-                            excludeSuffix: msg.excludeSuffix,
-                            includeHostname: msg.includeHostname,
-                            excludeHostname: msg.excludeHostname,
-                            excludeContentTypes: msg.excludeContentTypes,
-                        })
-                    }
-                })
+            setMITMFilter({
+                includeSuffix: msg.includeSuffix,
+                excludeMethod: msg.excludeMethod,
+                excludeSuffix: msg.excludeSuffix,
+                includeHostname: msg.includeHostname,
+                excludeHostname: msg.excludeHostname,
+                excludeContentTypes: msg.excludeContentTypes,
+            })
         })
 
         const updateLogs = () => {

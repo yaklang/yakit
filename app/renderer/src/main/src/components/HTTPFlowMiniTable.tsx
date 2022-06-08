@@ -38,6 +38,16 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
         dataSource: response.Data,
         columns: props.simple ? [
             {
+                code: "Hash", name: "ID", render: (i: any) => {
+                    const flow: HTTPFlow | undefined = findHTTPFlowById(i)
+
+                    return <div style={{overflow: "hidden"}}>
+                        {flow?.Id}
+                    </div>
+                },
+                width: 60, lock: true,
+            },
+            {
                 code: "Hash", name: "状态", render: (i: any) => {
                     const flow: HTTPFlow | undefined = findHTTPFlowById(i)
 
@@ -69,6 +79,16 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                 width: 700,
             },
             {
+                code: "Hash", name: "Body大小", render: (i: any) => {
+                    const flow: HTTPFlow | undefined = findHTTPFlowById(i)
+
+                    return <div style={{overflow: "hidden"}}>
+                        {flow?.BodySizeVerbose}
+                    </div>
+                },
+                width: 100, lock: true,
+            },
+            {
                 code: "Hash", name: "操作", render: (i: any) => {
                     return <>
                         <Space>
@@ -80,7 +100,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                         content: onExpandHTTPFlow(
                                             findHTTPFlowById(i),
                                             () => m.destroy()
-                                            ),
+                                        ),
                                     })
                                 }}
                             >详情</Button>
@@ -130,8 +150,8 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                     if (req) {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
-                                            data:{
-                                                isHttps: req.IsHTTPS, 
+                                            data: {
+                                                isHttps: req.IsHTTPS,
                                                 request: new Buffer(req.Request).toString()
                                             }
                                         })
@@ -144,7 +164,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
                                     let m = showDrawer({
                                         width: "80%",
                                         content: onExpandHTTPFlow(
-                                            findHTTPFlowById(i), 
+                                            findHTTPFlowById(i),
                                             () => m.destroy()
                                         )
                                     })

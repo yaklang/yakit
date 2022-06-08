@@ -74,7 +74,7 @@ const GeneralExporter: React.FC<GeneralExporterProp> = (props) => {
         }
     }, [token])
 
-    return <AutoCard title={"获取生成的文件"}>
+    return <AutoCard title={"获取生成的文件（点击打开文件位置）"}>
         <Space direction={"vertical"}>
             {paths.map(i => {
                 return <Button

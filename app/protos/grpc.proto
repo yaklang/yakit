@@ -1276,6 +1276,8 @@ message FuzzerResponse {
 
   // Matched by filter
   bool MatchedByFilter = 37;
+
+  string Url = 38;
 }
 
 message Paging {
