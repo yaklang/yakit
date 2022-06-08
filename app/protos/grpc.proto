@@ -1314,9 +1314,11 @@ message QueryHTTPFlowRequest {
 
 message DeleteHTTPFlowRequest {
   bool DeleteAll = 1;
+  repeated int64 Id = 4;
   repeated string ItemHash = 2;
 
   string URLPrefix = 3;
+  QueryHTTPFlowRequest Filter = 5;
 }
 
 message HTTPHeader {
