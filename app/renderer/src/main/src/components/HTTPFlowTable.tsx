@@ -1,4 +1,4 @@
-import React, {ReactNode, Ref, useEffect, useRef, useState} from "react"
+import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
 import {Button, Col, Empty, Form, Input, PageHeader, Popconfirm, Popover, Row, Select, Space, Tag, Tooltip} from "antd"
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../utils/showByCursor"
@@ -12,7 +12,7 @@ import "./style.css"
 import {TableResizableColumn} from "./TableResizableColumn"
 import {formatTime, formatTimestamp} from "../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook";
-import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks";
+import {useDebounce, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks";
 import ReactResizeDetector from "react-resize-detector";
 import {callCopyToClipboard} from "../utils/basic";
 import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode";
@@ -887,6 +887,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     useDebounceEffect(() => {
         props.onSelected && props.onSelected(selected)
     }, [selected], {wait: 400, trailing: true, leading: true})
+
+    // 设置是否自动刷新
+    const autoUpdateTop = getScrollY() < ROW_HEIGHT;
+    useEffect(() => {
+        if (autoUpdateTop) {
+            scrollUpdateTop()
+            let id = setInterval(scrollUpdateTop, 1000)
+            return () => clearInterval(id)
+        }
+    }, [autoUpdateTop])
 
     useEffect(() => {
         if (autoReload) {
