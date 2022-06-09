@@ -319,7 +319,6 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
     return (
         <div style={{width: "100%"}}>
             <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
-            {/* <HTTPFlowDetail hash={flow.Hash} onClose={onClosed} /> */}
         </div>
     )
 }
