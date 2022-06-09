@@ -895,10 +895,8 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
     })
 
     useEffect(() => {
-        console.log('parentInfo---1',parentInfo);
         // 接收
         ipcRenderer.on("ref-comment-child-list", (_, data) => {
-            console.log('parentInfo---2',parentInfo);
             if(!parentInfo)return;
             const refParams = {
                 root_id: parentInfo?.id,
