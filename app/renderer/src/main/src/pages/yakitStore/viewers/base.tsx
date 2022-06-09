@@ -79,10 +79,11 @@ const TooltipTitle: React.FC<TooltipTitleProps> = React.memo((props) => {
             {list.map((info, infoIndex) => (
                 <Statistic
                     valueStyle={{
-                        color: idToColor(info.Id)
+                        color: idToColor(info.Id),
+                        fontSize:14
                     }}
                     key={info.Id}
-                    title={list.length > 1 ? info.Id : ""}
+                    title={2 > 1 ? info.Id : ""}
                     value={info.Data}
                 />
             ))}
@@ -183,8 +184,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 )
         }
     }
-    console.log("statusCards", statusCards)
-
     return (
         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
             {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
