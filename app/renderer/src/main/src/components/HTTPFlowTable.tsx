@@ -1049,8 +1049,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         },
                                         DeleteAll:false
                                     }
-                                    console.log('newParams',newParams);
-                                    
                                     ipcRenderer.invoke("delete-http-flows-all", newParams)
                                     setLoading(true)
                                     info("正在删除...如自动刷新失败请手动刷新")
