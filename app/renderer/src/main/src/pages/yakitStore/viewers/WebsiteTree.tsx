@@ -62,7 +62,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
         }
 
         ipcRenderer
-            .invoke("delete-http-flow-signle", {URLPrefix: fetchUrl(node, "")})
+            .invoke("DeleteHTTPFlows", {URLPrefix: fetchUrl(node, "")})
             .then((res) => {
                 refresh()
             })

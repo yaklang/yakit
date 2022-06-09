@@ -1,4 +1,4 @@
-import React, {ReactNode, Ref, useEffect, useRef, useState} from "react"
+import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
 import {Button, Col, Empty, Form, Input, PageHeader, Popconfirm, Popover, Row, Select, Space, Tag, Tooltip} from "antd"
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../utils/showByCursor"
@@ -11,11 +11,11 @@ import {failed, info, success} from "../utils/notification"
 import "./style.css"
 import {TableResizableColumn} from "./TableResizableColumn"
 import {formatTime, formatTimestamp} from "../utils/timeUtil"
-import {useHotkeys} from "react-hotkeys-hook"
-import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
-import ReactResizeDetector from "react-resize-detector"
-import {callCopyToClipboard} from "../utils/basic"
-import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode"
+import {useHotkeys} from "react-hotkeys-hook";
+import {useDebounce, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks";
+import ReactResizeDetector from "react-resize-detector";
+import {callCopyToClipboard} from "../utils/basic";
+import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -25,7 +25,7 @@ export interface HTTPHeaderItem {
 }
 
 export interface HTTPFlow {
-    Id?: number
+    Id: number
     Method: string
     Path: string
     Hash: string
@@ -318,7 +318,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail hash={flow.Hash} onClose={onClosed} />
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed}/>
         </div>
     )
 }
@@ -922,6 +922,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         {wait: 400, trailing: true, leading: true}
     )
 
+    // 设置是否自动刷新
+    const autoUpdateTop = getScrollY() < ROW_HEIGHT;
+    useEffect(() => {
+        if (autoUpdateTop) {
+            scrollUpdateTop()
+            let id = setInterval(scrollUpdateTop, 1000)
+            return () => clearInterval(id)
+        }
+    }, [autoUpdateTop])
+
     useEffect(() => {
         if (autoReload) {
             const id = setInterval(() => {
@@ -1492,7 +1502,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     title: "发送到 数据包扫描",
                                     onClick: () => {
                                         ipcRenderer
-                                            .invoke("GetHTTPFlowByHash", {Hash: rowData.Hash})
+                                            .invoke("GetHTTPFlowById", {Id: rowData.Id})
                                             .then((i: HTTPFlow) => {
                                                 ipcRenderer.invoke("send-to-packet-hack", {
                                                     request: i.Request,
@@ -1648,7 +1658,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             disabled: [false, false, true][compareState]
                                         }
                                     ]
-                                }
+                                },
+                                {
+                                    title: "删除该记录", onClick: () => {
+                                        setLoading(true)
+                                        ipcRenderer.invoke("DeleteHTTPFlows", {
+                                            Id: [rowData.Id]
+                                        }).then(() => {
+                                            info("删除成功")
+                                            update()
+                                        }).finally(() => setTimeout(() => setLoading(false), 100))
+                                    }, danger: true,
+                                },
                             ]
                         },
                         event.clientX,
