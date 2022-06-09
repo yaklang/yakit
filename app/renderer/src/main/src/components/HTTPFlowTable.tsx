@@ -11,11 +11,11 @@ import {failed, info, success} from "../utils/notification"
 import "./style.css"
 import {TableResizableColumn} from "./TableResizableColumn"
 import {formatTime, formatTimestamp} from "../utils/timeUtil"
-import {useHotkeys} from "react-hotkeys-hook";
-import {useDebounce, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks";
-import ReactResizeDetector from "react-resize-detector";
-import {callCopyToClipboard} from "../utils/basic";
-import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode";
+import {useHotkeys} from "react-hotkeys-hook"
+import {useDebounce, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
+import ReactResizeDetector from "react-resize-detector"
+import {callCopyToClipboard} from "../utils/basic"
+import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -318,7 +318,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail id={flow.Id} onClose={onClosed}/>
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
         </div>
     )
 }
@@ -923,7 +923,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     )
 
     // 设置是否自动刷新
-    const autoUpdateTop = getScrollY() < ROW_HEIGHT;
+    const autoUpdateTop = getScrollY() < ROW_HEIGHT
     useEffect(() => {
         if (autoUpdateTop) {
             scrollUpdateTop()
@@ -1043,7 +1043,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             <Popconfirm
                                 title={"确定想要删除所有记录吗？不可恢复"}
                                 onConfirm={(e) => {
-                                    ipcRenderer.invoke("delete-http-flows-all")
+                                    const newParams = {
+                                        Filter: {
+                                            SearchURL: params.SearchURL
+                                        },
+                                        DeleteAll:false
+                                    }
+                                    console.log('newParams',newParams);
+                                    
+                                    ipcRenderer.invoke("delete-http-flows-all", newParams)
                                     setLoading(true)
                                     info("正在删除...如自动刷新失败请手动刷新")
                                     setCompareLeft({content: "", language: "http"})
@@ -1660,16 +1668,21 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     ]
                                 },
                                 {
-                                    title: "删除该记录", onClick: () => {
+                                    title: "删除该记录",
+                                    onClick: () => {
                                         setLoading(true)
-                                        ipcRenderer.invoke("DeleteHTTPFlows", {
-                                            Id: [rowData.Id]
-                                        }).then(() => {
-                                            info("删除成功")
-                                            update()
-                                        }).finally(() => setTimeout(() => setLoading(false), 100))
-                                    }, danger: true,
-                                },
+                                        ipcRenderer
+                                            .invoke("DeleteHTTPFlows", {
+                                                Id: [rowData.Id]
+                                            })
+                                            .then(() => {
+                                                info("删除成功")
+                                                update()
+                                            })
+                                            .finally(() => setTimeout(() => setLoading(false), 100))
+                                    },
+                                    danger: true
+                                }
                             ]
                         },
                         event.clientX,

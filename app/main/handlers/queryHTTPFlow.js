@@ -2,8 +2,8 @@ const {ipcMain} = require("electron");
 
 
 module.exports = (win, getClient) => {
-    ipcMain.handle("delete-http-flows-all", async () => {
-        getClient().DeleteHTTPFlows({DeleteAll: true}, (err, data) => {
+    ipcMain.handle("delete-http-flows-all", async (e,params) => {
+        getClient().DeleteHTTPFlows({DeleteAll: true,...params}, (err, data) => {
         })
     })
 
