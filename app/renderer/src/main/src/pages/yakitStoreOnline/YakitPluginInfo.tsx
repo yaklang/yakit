@@ -27,7 +27,7 @@ import InfiniteScroll from "react-infinite-scroll-component"
 import "./YakitPluginInfo.scss"
 
 const {ipcRenderer} = window.require("electron")
-const limit = 5
+const limit = 20
 export interface YakitPluginInfoProp {
     info: PluginStoreProps
     onBack: () => any
@@ -73,7 +73,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
         data: [],
         pagemeta: {
             page: 1,
-            limit: 20,
+            limit,
             total: 0,
             total_page: 0
         }
@@ -122,7 +122,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             limit,
             page
         }
-        // debugger
         ipcRenderer
             .invoke("fetch-plugin-comment", params)
             .then((res) => {
@@ -219,7 +218,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
         ipcRenderer
             .invoke("add-plugin-comment", params)
             .then((res) => {
-                if (params.root_id === 0) getComment(1)
+                if (params.parent_id === 0) getComment(1)
                 if (commentText) setCommentText("")
                 if (files.length > 0) setFiles([])
                 if (commentInputText) setCommentInputText("")
@@ -896,8 +895,11 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
     })
 
     useEffect(() => {
+        console.log('parentInfo---1',parentInfo);
         // 接收
         ipcRenderer.on("ref-comment-child-list", (_, data) => {
+            console.log('parentInfo---2',parentInfo);
+            if(!parentInfo)return;
             const refParams = {
                 root_id: parentInfo?.id,
                 plugin_id: parentInfo?.plugin_id
