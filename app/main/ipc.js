@@ -4,6 +4,7 @@ const fs = require("fs")
 const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader")
+const {ca} = require("wait-on/exampleConfig");
 const packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
     {
@@ -118,6 +119,14 @@ module.exports = {
         require("./handlers/completion")(win, getClient);
         require("./handlers/portScan")(win, getClient);
         require("./handlers/startBrute")(win, getClient);
+
+        // start chrome manager
+        try {
+            require("./handlers/chromelauncher")(win, getClient);
+        } catch (e) {
+            console.info("Import chrome launcher failed")
+            console.error(e)
+        }
 
         //assets
         require("./handlers/assets")(win, getClient);

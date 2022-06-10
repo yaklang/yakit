@@ -925,12 +925,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // 设置是否自动刷新
     const autoUpdateTop = getScrollY() < ROW_HEIGHT
     useEffect(() => {
+        if (autoReload) {
+            return
+        }
         if (autoUpdateTop) {
             scrollUpdateTop()
             let id = setInterval(scrollUpdateTop, 1000)
             return () => clearInterval(id)
         }
-    }, [autoUpdateTop])
+    }, [autoUpdateTop, autoReload])
 
     useEffect(() => {
         if (autoReload) {
@@ -1047,17 +1050,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         Filter: {
                                             ...params
                                         },
-                                        DeleteAll:false
+                                        DeleteAll: false
                                     }
-                                    console.log('newParams',newParams);
-                                    console.log('props.params',props.params);
-                                    ipcRenderer.invoke("delete-http-flows-all", newParams)
-                                    .then((i: HTTPFlow) => {
-                                        setParams(props.params || {SourceType: "mitm"})
-                                    })
-                                    .catch((e: any) => {
-                                        failed(`历史记录删除失败: ${e}`)
-                                    })
+                                    ipcRenderer
+                                        .invoke("delete-http-flows-all", newParams)
+                                        .then((i: HTTPFlow) => {
+                                            setParams(props.params || {SourceType: "mitm"})
+                                        })
+                                        .catch((e: any) => {
+                                            failed(`历史记录删除失败: ${e}`)
+                                        })
                                     setLoading(true)
                                     info("正在删除...如自动刷新失败请手动刷新")
                                     setCompareLeft({content: "", language: "http"})

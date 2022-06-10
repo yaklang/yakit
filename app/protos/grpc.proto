@@ -252,6 +252,24 @@ service Yak {
   rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
 
   rpc ExtractDataToFile(stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
+
+  // 尝试自动解码
+  rpc AutoDecode(AutoDecodeRequest) returns (AutoDecodeResponse);
+}
+
+message AutoDecodeRequest {
+  string Data = 1;
+}
+
+message AutoDecodeResult {
+  string Type = 1;
+  string TypeVerbose = 2;
+  bytes Origin = 3;
+  bytes Result = 4;
+}
+
+message AutoDecodeResponse {
+  repeated AutoDecodeResult Results = 1;
 }
 
 message ExtractDataToFileResult {
