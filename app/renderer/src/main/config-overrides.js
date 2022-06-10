@@ -3,6 +3,16 @@ const path = require("path")
 const OUTPUT_PATH = path.resolve(__dirname, "..", "..", "pages", "main")
 // const { override, addWebpackAlias } = require('customize-cra')
 
+// 配置全局公共scss变量
+/* const styleLoader = (rule) => {
+    if (rule.test.toString().includes("scss")) {
+        rule.use.push({
+            loader: require.resolve("sass-resources-loader"),
+            options: {resources: "./src/assets/index.scss"}
+        })
+    }
+} */
+
 module.exports = {
     webpack: function (config, env) {
         config.output.path = OUTPUT_PATH
@@ -12,6 +22,24 @@ module.exports = {
                 languages: ["json", "javascript", "go", "markdown", "html", "yaml", "java"]
             })
         )
+
+        // 支持别名
+        config.resolve.alias = {
+            "@": path.resolve(__dirname, "src")
+        }
+        // 支持scss预处理器
+        let loaderList = config.module.rules[1].oneOf
+        loaderList.splice(loaderList.length - 1, 0, {
+            test: /\.scss$/,
+            use: ["style-loader", "css-loader", "sass-loader"]
+        })
+        //配置全局公共scss变量
+        /* const mode = process.env.NODE_ENV === "production" ? "prod" : "dev"
+        const loader = mode === "prod" ? "css-extract-plugin" : "style-loader"
+        const loaders = config.module.rules.find((rule) => Array.isArray(rule.oneOf)).oneOf
+        const styleLoaders = loaders.filter(({use}) => use && use[0] && (use[0].loader || use[0]).includes(loader))
+        styleLoaders.forEach((loader) => styleLoader(loader)) */
+
         return config
     },
     devServer: function (configFunction) {
