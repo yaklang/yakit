@@ -74,6 +74,9 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
         }
         setLoading(true)
         ipcRenderer.invoke("ConvertFuzzerResponseToHTTPFlow", {...response}).then((d: HTTPFlow) => {
+            if (d.Id <= 0) {
+                return
+            }
             setId(d.Id)
         }).catch(e => {
             failed(`分析参数失败: ${e}`)
@@ -139,6 +142,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     ]
 
     useEffect(() => {
+        if (props.id <= 0) {
+            return
+        }
         // ipcRenderer.on(props.hash, (e: any, data: HTTPFlow) => {
         //     setFlow(data)
         //     setTimeout(() => setLoading(false), 300)
