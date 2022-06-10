@@ -996,7 +996,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 </Select>
                             </Form.Item>
                             <Popconfirm
-                                title={"确定想要删除所有记录吗？不可恢复"}
+                                title={"确定想要删除记录吗？不可恢复"}
                                 onConfirm={(e) => {
                                     ipcRenderer.invoke("delete-http-flows-all")
                                     setLoading(true)
@@ -1053,7 +1053,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         DeleteAll: false
                                     }
                                     ipcRenderer
-                                        .invoke("delete-http-flows-all", newParams)
+                                        .invoke("DeleteHTTPFlows", newParams)
                                         .then((i: HTTPFlow) => {
                                             setParams(props.params || {SourceType: "mitm"})
                                         })
