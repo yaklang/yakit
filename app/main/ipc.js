@@ -3,7 +3,6 @@ const path = require("path");
 const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader")
-const {ca} = require("wait-on/exampleConfig");
 const packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
     {
