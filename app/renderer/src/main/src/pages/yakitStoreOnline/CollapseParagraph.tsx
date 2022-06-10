@@ -14,7 +14,7 @@ export interface CollapseParagraphProps {
 }
 
 export const CollapseParagraph: React.FC<CollapseParagraphProps> = (props) => {
-    const {value, rows = 1, isLine, valueConfig} = props
+    const {value, rows = 1, isLine, valueConfig, children} = props
     const [key, setKey] = useState(0)
     const [fold, setFold] = useState(true)
 
@@ -35,6 +35,7 @@ export const CollapseParagraph: React.FC<CollapseParagraphProps> = (props) => {
                 }}
                 {...valueConfig}
             >
+                {children}
                 {value}
                 {!!isLine && !fold && (
                     <div className='collapse-paragraph-collapse-btn' onClick={onCollapse}>

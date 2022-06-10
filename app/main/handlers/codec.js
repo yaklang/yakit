@@ -16,4 +16,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("Codec", async (e, params) => {
         return await asyncCodec(params)
     })
+
+    // asyncAutoDecode wrapper
+    const asyncAutoDecode = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AutoDecode(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AutoDecode", async (e, params) => {
+        return await asyncAutoDecode(params)
+    })
 }

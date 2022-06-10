@@ -50,6 +50,7 @@ interface MenuItemProps {
     render?: React.ReactNode
     onClick: () => void
     disabled?: boolean
+    danger?: boolean
     subMenuItems?: MenuItemProps[]
 }
 

@@ -6,8 +6,6 @@ import { success } from "../../utils/notification";
 
 const {ipcRenderer} = window.require("electron");
 
-const DefaultMitmFilter = "default-mitm-filter"
-
 export interface MITMFiltersProp {
     filter?: MITMFilterSchema
     onFinished?: (filter: MITMFilterSchema) => any
@@ -29,18 +27,6 @@ export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
     useEffect(() => {
         setParams(props.filter || {})
     }, [props.filter])
-
-    const saveDefaultFilter = useMemoizedFn(() => {
-        setLoading(true)
-
-        if(JSON.stringify(params) === "{}") return
-        ipcRenderer.invoke("set-value", DefaultMitmFilter, params)
-        success("保存默认模板值成功")
-        
-        ipcRenderer.invoke("mitm-filter", {
-            updateFilter: true, ...params
-        }).finally(() => setLoading(false))
-    })
 
     return <Spin spinning={loading}>
         <Form onSubmitCapture={e => {
@@ -110,7 +96,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
             <Form.Item colon={false} label={" "}>
                 <Space>
                     <Button type="primary" htmlType="submit"> 确认修改 </Button>
-                    <Button type="primary" onClick={saveDefaultFilter}> 确认修改并保存为模板 </Button>
+                    {/*<Button type="primary" onClick={saveDefaultFilter}> 确认修改并保存为模板 </Button>*/}
                 </Space>
             </Form.Item>
         </Form>

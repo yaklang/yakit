@@ -10,7 +10,8 @@ export interface HTTPPacketFuzzable {
     sendToWebFuzzer?: boolean | (() => any) | ((isHttps: boolean, request: string) => any)
 }
 
-export interface HTTPHistoryProp extends HTTPPacketFuzzable {}
+export interface HTTPHistoryProp extends HTTPPacketFuzzable {
+}
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
@@ -34,8 +35,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     <div style={{width: "100%", height: "100%"}}>
                         <HTTPFlowDetailMini
                             noHeader={true}
-                            hash={selected?.Hash || ""}
-                            id={selected?.Id}
+                            id={selected?.Id || 0}
                             defaultHttps={selected?.IsHTTPS}
                             sendToWebFuzzer={true}
                             // defaultHeight={detailHeight}

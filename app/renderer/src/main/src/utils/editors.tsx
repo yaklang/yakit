@@ -7,11 +7,13 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP";
 import "./monacoSpec/yakEditor";
 import "./monacoSpec/html"
-import {Button, Card, Form, Input, Popover, Space, Spin, Tag, Tooltip} from "antd";
+import {Button, Card, Form, Input, Modal, Popover, Space, Tag, Tooltip} from "antd";
 import {SelectOne} from "./inputUtil";
-import {FullscreenOutlined, SettingOutlined, ThunderboltFilled, EnterOutlined} from "@ant-design/icons";
+import {EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons";
 import {showDrawer} from "./showModal";
 import {
+    execAutoDecode,
+    execCodec,
     MonacoEditorActions,
     MonacoEditorCodecActions,
     MonacoEditorFullCodecActions,
@@ -23,6 +25,7 @@ import ReactResizeDetector from "react-resize-detector";
 import './editors.css'
 import {useMemoizedFn} from "ahooks";
 import {Buffer} from "buffer";
+import {failed} from "./notification";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -488,7 +491,29 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     fontSize={fontSize}
                     actions={[
                         ...(props.actions || []),
-                        ...MonacoEditorCodecActions,
+                        ...[
+                            {
+                                label: "智能自动解码（Inspector）", contextMenuGroupId: "auto-codec",
+                                id: "auto-decode", run: (e) => {
+                                    try {
+                                        // @ts-ignore
+                                        const text = e.getModel()?.getValueInRange(e.getSelection()) || "";
+                                        if (!text) {
+                                            Modal.info({
+                                                title: "自动解码失败", content: (
+                                                    <>{"文本为空，请选择文本再自动解码"}</>
+                                                )
+                                            })
+                                            return
+                                        }
+                                        execAutoDecode(text)
+                                    } catch (e) {
+                                        failed("editor exec codec failed")
+                                    }
+                                }
+                            },
+                            ...MonacoEditorCodecActions,
+                        ],
                         ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
                         ...(props.noPacketModifier ? [] : MonacoEditorFullCodecActions),
                     ]}

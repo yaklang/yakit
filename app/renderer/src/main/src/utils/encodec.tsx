@@ -5,6 +5,7 @@ import {IMonacoActionDescriptor, IMonacoCodeEditor, YakEditor} from "./editors";
 import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "../pages/fuzzer/fuzzerTemplates";
 import {failed} from "./notification";
 import {AutoCard} from "../components/AutoCard";
+import {Buffer} from "buffer";
 
 export type CodecType = |
     "fuzz" | "md5" | "sha1" | "sha256" | "sha512"
@@ -146,6 +147,57 @@ export const MonacoEditorMutateHTTPRequestActions: {
         run: editorMutateHTTPRequestHandlerFactory(i.params)
     }
 })
+
+interface AutoDecodeResult {
+    Type: string
+    TypeVerbose: string
+    Origin: Uint8Array
+    Result: Uint8Array
+}
+
+export const execAutoDecode = async (text: string) => {
+    return ipcRenderer.invoke("AutoDecode", {Data: text}).then((e: { Results: AutoDecodeResult[] }) => {
+        showModal({
+            title: "自动解码（智能解码）",
+            width: "60%",
+            content: (
+                <Space style={{width: "100%"}} direction={"vertical"}>
+                    {e.Results.map((i, index) => {
+                        return <AutoCard
+                            title={`解码步骤[${index + 1}]: ${i.TypeVerbose}(${i.Type})`} size={"small"}
+                            extra={<Button
+                                size={"small"}
+                                onClick={() => {
+                                    showModal({
+                                        title: "原文", width: "50%", content: (
+                                            <div style={{height: 280}}>
+                                                <YakEditor
+                                                    type={"html"}
+                                                    noMiniMap={true}
+                                                    readOnly={true}
+                                                    value={new Buffer(i.Origin).toString("utf-8")}
+                                                />
+                                            </div>
+                                        )
+                                    })
+                                }}
+                            >查看本次编码原文</Button>}
+                        >
+                            <div style={{height: 120}}>
+                                <YakEditor
+                                    noMiniMap={true}
+                                    type={"html"} readOnly={true} value={new Buffer(i.Result).toString("utf-8")}
+                                />
+                            </div>
+                        </AutoCard>
+                    })}
+                </Space>
+            )
+        })
+    }).catch(e => {
+        failed(`自动解码失败：${e}`)
+    })
+}
 
 export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boolean, replaceEditor?: IMonacoCodeEditor, clear?: boolean) => {
     return ipcRenderer.invoke("Codec", {Text: text, Type: typeStr}).then((result: { Result: string }) => {

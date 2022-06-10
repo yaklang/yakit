@@ -5,19 +5,23 @@ const FormData = require("form-data")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("upload-img", async (event, params) => {
-        const {path, type, name} = params
+        const {path, type} = params
         // 创建数据流
-        const readerStream = fs.createReadStream(path)
+        // console.log('time1',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
+        const readerStream = fs.createReadStream(path)// 可以像使用同步接口一样使用它。
         const formData = new FormData()
         formData.append("file_name", readerStream)
         formData.append("type", type)
-        console.log('formData.getBoundary()',formData.getBoundary());
-        return httpApi(
+        const res=httpApi(
             "post",
             "upload/img",
             formData,
             {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
             false
         )
+        // res.then(()=>{
+        //     console.log('time3',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
+        // })
+        return res
     })
 }

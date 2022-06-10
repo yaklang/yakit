@@ -11,8 +11,11 @@ import {HackerPlugin} from "./HackerPlugin"
 import ReactDOM from "react-dom"
 
 import "../main.css"
+import {useHotkeys} from "react-hotkeys-hook";
+import {info} from "../../utils/notification";
 
-export interface HTTPHackerProp {}
+export interface HTTPHackerProp {
+}
 
 const defaultHTTPPacket = `GET / HTTP/1.1
 Host: www.example.com
@@ -51,7 +54,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 hideAdd={true}
                 onTabClick={(key, e) => {
                     const divExisted = document.getElementById("yakit-cursor-menu")
-                    if(divExisted){
+                    if (divExisted) {
                         const div: HTMLDivElement = divExisted as HTMLDivElement
                         const unmountResult = ReactDOM.unmountComponentAtNode(div)
                         if (unmountResult && div.parentNode) {
@@ -62,20 +65,20 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
             >
                 <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
                     <div style={{height: "100%", overflow: "auto"}}>
-                        <MITMPage />
+                        <MITMPage/>
                     </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false} forceRender={true}>
                     <div style={{height: "100%"}}>
-                        <HTTPHistory />
+                        <HTTPHistory/>
                     </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
-                    <YakScriptExecResultTable />
+                    <YakScriptExecResultTable/>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
                     <div style={{height: "100%"}}>
-                        <WebsiteTreeViewer />
+                        <WebsiteTreeViewer/>
                     </div>
                 </Tabs.TabPane>
             </Tabs>
