@@ -80,10 +80,11 @@ const TooltipTitle: React.FC<TooltipTitleProps> = React.memo((props) => {
                 <Statistic
                     valueStyle={{
                         color: idToColor(info.Id),
-                        fontSize:14
+                        fontSize: 14
                     }}
                     key={info.Id}
-                    title={2 > 1 ? info.Id : ""}
+                    title={list.length > 1&&<p className="tooltip-id">{info.Id}</p>}
+                    // title={<p className="tooltip-id">{info.Id}</p>}
                     value={info.Data}
                 />
             ))}
