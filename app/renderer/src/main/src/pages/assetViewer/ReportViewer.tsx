@@ -11,6 +11,7 @@ import {ReportItemRender} from "./reportRenders/render"
 import htmlDocx from "html-docx-js/dist/html-docx"
 import saveAs from "file-saver"
 
+// const juice = window.require("juice")
 export interface ReportViewerProp {
     id?: number
 }
@@ -66,26 +67,38 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             </AutoCard>
         )
     }
+
     const toPdf = () => {
         const targetDom = document.getElementById("toPdf")
         // console.log("targetDom", targetDom?.innerHTML)
         // debugger
         //     var content = ` <h1>This is an about page</h1>
         //   <h2>This is an about page</h2>`
+        // console.log("require", require("http://192.168.101.109:8080/antd.css"))
+
         const content = targetDom?.innerHTML
-        var page =
+        const page =
             '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-            '<link href="./antd.css" rel="stylesheet" type="text/css" />' +
-            '<link href="./index.less" rel="stylesheet/less" type="text/less" />' +
-            "<style> code{ background-color: aliceblue;}</style></head>" +
+            "<style>code{border-radius:3px;font-size:85%;margin:0;padding: 0.2em 0.4em;}</style></head>" +
             "<body>" +
             content +
             "</body></html>"
-        console.log("page", page)
+        // console.log("juice", require("juice"))
+        debugger
+        // const html = juice.inlineContent(page, "./antd.css")
+        // console.log("html", html)
+        // var converted = htmlDocx.asBlob(html)
+        // // 用 FielSaver.js里的保存方法 进行输出
+        // saveAs(converted, "test.docx")
 
-        var converted = htmlDocx.asBlob(page)
-        // 用 FielSaver.js里的保存方法 进行输出
-        saveAs(converted, "test.docx")
+        ipcRenderer
+            .invoke("html-to-word", {page})
+            .then((r) => {
+                console.log("r", r)
+            })
+            .catch((e) => {
+                console.log("错误:" + e)
+            })
     }
 
     return (
