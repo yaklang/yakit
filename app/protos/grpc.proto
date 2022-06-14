@@ -69,6 +69,12 @@ message ExecBatchYakScriptResult {
   int64 ProgressTotal = 11;
   int64 ProgressCount = 12;
 
+  // 正在执行中的进程数
+  int64 ProgressRunning = 17;
+
+  // 正在执行中的扫描任务数量
+  int64 ScanTaskExecutingCount = 18;
+
   // 任务相关内容
   string Target = 13;
   repeated ExecParamItem ExtraParam = 14;

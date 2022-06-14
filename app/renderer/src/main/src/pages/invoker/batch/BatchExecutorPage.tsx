@@ -44,7 +44,7 @@ import "./BatchExecutorPage.css"
 import {CacheStatusCardProps} from "../../../hook/useHoldingIPCRStream";
 import {writeExecResultXTerm} from "../../../utils/xtermUtils";
 import {PluginResultUI, StatusCardInfoProps, StatusCardProps} from "../../yakitStore/viewers/base";
-import { NewTaskHistoryProps } from "./BatchExecuteByFilter";
+import {NewTaskHistoryProps} from "./BatchExecuteByFilter";
 
 export interface BatchExecutorPageProp {
 
@@ -515,8 +515,8 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
 
             <div style={{paddingLeft: 70}}>
                 <Space>
-                    <Tag>并发: {target.concurrent}</Tag>
-                    <Tag>总超时: {target.totalTimeout}</Tag>
+                    <Tag>进程: {target.concurrent}</Tag>
+                    <Tag>总超时: {target.totalTimeout}s</Tag>
                     {target.targetFile &&
                     <Tag color={"geekblue"}>
                         <Space>
@@ -529,7 +529,7 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
                             layout={"horizontal"} size={"small"}
                             onSubmitCapture={e => e.preventDefault()}
                         >
-                            <InputInteger label={"设置并发"} value={target.concurrent}
+                            <InputInteger label={"并发进程"} value={target.concurrent}
                                           setValue={c => setTarget({...target, concurrent: c})}
                                           formItemStyle={{marginBottom: 4}}
                             />
@@ -564,7 +564,7 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
                                                 key={item.time}
                                                 onClick={() => {
                                                     if (executing) return
-                                                    if(!item.simpleQuery){
+                                                    if (!item.simpleQuery) {
                                                         failed("该条历史记录无法使用!")
                                                         return
                                                     }
