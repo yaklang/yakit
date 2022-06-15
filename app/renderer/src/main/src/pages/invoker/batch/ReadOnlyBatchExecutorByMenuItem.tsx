@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {failed, info} from "../../../utils/notification";
 import {MenuItem} from "../../MainOperator";
 import {QueryYakScriptParamSelector, SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
@@ -6,6 +6,7 @@ import {ResizeBox} from "../../../components/ResizeBox";
 import {BatchExecuteByFilter, simpleQueryToFull} from "./BatchExecuteByFilter";
 import {SimplePluginList} from "../../../components/SimplePluginList";
 import {AutoCard} from "../../../components/AutoCard";
+import {randomString} from "../../../utils/randomUtil";
 
 export interface ReadOnlyBatchExecutorByMenuItemProp {
     MenuItemId: number
@@ -33,13 +34,33 @@ export const ReadOnlyBatchExecutorByMenuItem: React.FC<ReadOnlyBatchExecutorByMe
         })
     }, [props.MenuItemId])
 
+    return <ReadOnlyBatchExecutor query={query}/>
+};
+
+export interface ReadOnlyBatchExecutorProp {
+    query: SimpleQueryYakScriptSchema
+    MenuItemId?: any
+}
+
+export const ReadOnlyBatchExecutor: React.FC<ReadOnlyBatchExecutorProp> = React.memo((props: ReadOnlyBatchExecutorProp) => {
+    const [query, setQuery] = useState<SimpleQueryYakScriptSchema>({
+        exclude: [],
+        include: [],
+        tags: "",
+        type: "mitm,port-scan,nuclei"
+    });
+
+    useEffect(() => {
+        setQuery({...props.query})
+    }, [props.query])
+
     return <AutoCard size={"small"} bordered={false} bodyStyle={{paddingLeft: 0, paddingRight: 0, paddingTop: 4}}>
         <ResizeBox
             firstNode={
                 <div style={{height: "100%"}}>
                     <SimplePluginList
                         verbose={"本项包含检测列表"}
-                        key={`batch:menu-item:${props.MenuItemId}`}
+                        key={`batch:menu-item:${props.MenuItemId || randomString(20)}`}
                         pluginTypes={query.type}
                         readOnly={true}
                         initialQuery={{
@@ -57,9 +78,12 @@ export const ReadOnlyBatchExecutorByMenuItem: React.FC<ReadOnlyBatchExecutorByMe
                 allTag={[]}
                 isAll={false}
                 executeHistory={(i) => {
+                    if (!setQuery) {
+                        return
+                    }
                     setQuery(i.simpleQuery)
                 }}
             />}
         />
     </AutoCard>
-};
+});

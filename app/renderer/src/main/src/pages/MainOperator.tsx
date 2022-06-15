@@ -1012,7 +1012,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             </Popover>
                                                             <CloseOutlined
                                                                 className='main-container-cion'
-                                                                onClick={() => removePage(i.route)}
+                                                                onClick={() => removePage(`${i.route}`)}
                                                             />
                                                         </Space>
                                                     }
@@ -1046,7 +1046,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                     removeOtherMultipleNodePage(key, type as Route)
                                                                 }}
                                                                 onAddTab={() => menuAddPage(i.route)}
-                                                            ></MainTabs>
+                                                            />
                                                         )}
                                                     </div>
                                                 </Tabs.TabPane>
@@ -1122,11 +1122,12 @@ const Main: React.FC<MainProp> = (props) => {
                         optValue: "key",
                         value: (bugTestValue || [])[0]?.key,
                         onChange: (value, option: any) => setBugTestValue(value ? [{
+                            filter: option?.filter,
                             key: option?.key,
                             title: option?.title
                         }] : [])
                     }}
-                ></ItemSelects>
+                />
             </Modal>
         </Layout>
     )

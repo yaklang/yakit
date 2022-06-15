@@ -35,9 +35,11 @@ import {ExecBatchYakScriptParams, ExecBatchYakScriptResult, ExecBatchYakScriptTa
 import {AutoSpin} from "../../../components/AutoSpin"
 import debounce from "lodash/debounce"
 import {queryYakScriptList} from "../../yakitStore/network"
-import { ContentUploadInput } from "../../../components/functionTemplate/ContentUploadTextArea"
+import {ContentUploadInput} from "../../../components/functionTemplate/ContentUploadTextArea"
 
 import "./YakBatchExecutors.css"
+import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
+import {ReadOnlyBatchExecutor, ReadOnlyBatchExecutorByMenuItem} from "./ReadOnlyBatchExecutorByMenuItem";
 
 const {ipcRenderer} = window.require("electron")
 export const CustomBugList = "custom-bug-list"
@@ -49,26 +51,46 @@ export interface BugInfoProps {
     key: string
     title: string
     sendTarget?: string
+    filter: SimpleQueryYakScriptSchema
 }
+
+const defaultFilterByTags = (tags: string) => {
+    return {tags, exclude: [], include: [], type: "nuclei,mitm,port-scan"}
+}
+
 export const BugList: BugInfoProps[] = [
-    {key: "struts", title: "Struts"},
-    {key: "thinkphp", title: "ThinkPHP"},
-    {key: "tomcat,Tomcat", title: "Tomcat"},
-    {key: "weblogic,Weblogic", title: "Weblogic"},
-    {key: "spring", title: "Spring"},
-    {key: "jenkins,Jenkins", title: "Jenkins"},
-    {key: "iis,IIS", title: "IIS"},
-    {key: "ElasticSearch", title: "ElasticSearch"},
-    {key: "SeeyouOA,seeyou_oa,seeyouoa,seeyou,Seeyou,致远,Zhiyuan,zhiyuan", title: "致远 OA"},
-    {key: "exchange", title: "Exchange"},
-    {key: "tongdaoa,TongdaOa,TongDa,TongDaOA", title: "通达 OA"},
-    {key: "phpmyadmin,PhpMyAdmin,PHPMyAdmin,Phpmyadmin", title: "PhpMyAdmin"},
-    {key: "Nexus,nexus", title: "Nexus"},
-    {key: "laravel,Laravel", title: "Laravel"},
-    {key: "Jboss,JBoss,jboss", title: "JBoss"},
-    {key: "ColdFusion,coldfusion", title: "ColdFusion"},
-    {key: "activeMQ,ActiveMQ,activemq", title: "ActiveMQ"},
-    {key: "wordpress", title: "Wordpress"}
+    {key: "thinkphp", title: "ThinkPHP", filter: defaultFilterByTags("thinkphp")},
+    {key: "shiro", title: "Shiro", filter: defaultFilterByTags("shiro")},
+    {key: "fastjson", title: "FastJSON", filter: {tags: "fastjson", exclude: [], include: [], type: "mitm,port-scan"}},
+    {key: "struts", title: "Struts", filter: defaultFilterByTags("struts")},
+    {key: "tomcat,Tomcat", title: "Tomcat", filter: defaultFilterByTags("tomcat")},
+    {key: "weblogic,Weblogic", title: "Weblogic", filter: defaultFilterByTags("weblogic")},
+    {key: "spring", title: "Spring", filter: defaultFilterByTags("spring,springboot,springcloud,springframework")},
+    {key: "jenkins,Jenkins", title: "Jenkins", filter: defaultFilterByTags("jenkins")},
+    {key: "iis,IIS", title: "IIS", filter: defaultFilterByTags("iis")},
+    {key: "ElasticSearch", title: "ElasticSearch", filter: defaultFilterByTags("elastic,elasticsearch")},
+    {
+        key: "SeeyouOA,seeyou_oa,seeyouoa,seeyou,Seeyou,致远,Zhiyuan,zhiyuan",
+        title: "致远 OA",
+        filter: defaultFilterByTags("seeyou,seeyon,zhiyuan")
+    },
+    {key: "exchange", title: "Exchange", filter: defaultFilterByTags("exchange")},
+    {key: "tongdaoa,TongdaOa,TongDa,TongDaOA", title: "通达 OA", filter: defaultFilterByTags("tongda")},
+    {
+        key: "phpmyadmin,PhpMyAdmin,PHPMyAdmin,Phpmyadmin",
+        title: "PhpMyAdmin",
+        filter: defaultFilterByTags("phpmyadmin")
+    },
+    {key: "Nexus,nexus", title: "Nexus", filter: defaultFilterByTags("nexus")},
+    {key: "laravel,Laravel", title: "Laravel", filter: defaultFilterByTags("laravel")},
+    {key: "Jboss,JBoss,jboss", title: "JBoss", filter: defaultFilterByTags("jboss")},
+    {key: "ColdFusion,coldfusion", title: "ColdFusion", filter: defaultFilterByTags("coldfusion")},
+    {key: "activeMQ,ActiveMQ,activemq", title: "ActiveMQ", filter: defaultFilterByTags("activemq")},
+    {key: "wordpress", title: "Wordpress", filter: defaultFilterByTags("wordpress")},
+    {key: "java", title: "Java", filter: defaultFilterByTags("java")},
+    {key: "php", title: "PHP", filter: defaultFilterByTags("php")},
+    {key: "python", title: "Python", filter: defaultFilterByTags("python")},
+    {key: "nginx", title: "Nginx", filter: defaultFilterByTags("nginx")},
 ]
 
 const MenuList: MenuInfoProps[] = [
@@ -87,7 +109,8 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
     const [tabList, setTabList] = useState<BugInfoProps[]>([
         {
             key: "struts-0",
-            title: "Struts-1"
+            title: "Struts-1",
+            filter: defaultFilterByTags("struts")
         }
     ])
     const [currentTabKey, setCurrentTabKey] = useState("struts-0")
@@ -99,8 +122,12 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
     const [extendList, setExtendList] = useState<BugInfoProps[]>([])
     // 编辑自定义POC种类弹框
     const [visible, setVisible] = useState<boolean>(false)
-    const [pocParams, setPocParams] = useState<BugInfoProps>({key: "", title: ""})
-    const [pocList, setPocList] = useState<{total: number; data: string[]}>({total: 0, data: []})
+    const [pocParams, setPocParams] = useState<BugInfoProps>({
+        key: "",
+        title: "",
+        filter: defaultFilterByTags("struts")
+    })
+    const [pocList, setPocList] = useState<{ total: number; data: string[] }>({total: 0, data: []})
     const [listLoading, setListLoading] = useState<boolean>(false)
     const [editInfo, setEditInfo] = useState<BugInfoProps>()
 
@@ -152,7 +179,9 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
 
     useEffect(() => {
         ipcRenderer.on("fetch-send-to-bug-test", (e, res: any) => addTab(res))
-        return () => ipcRenderer.removeAllListeners("fetch-send-to-bug-test")
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-send-to-bug-test")
+        }
     }, [])
 
     const searchPoc = debounce(
@@ -177,7 +206,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
     )
     const editPocKind = useMemoizedFn((info: BugInfoProps) => {
         setEditInfo(info)
-        setPocParams({key: info.key, title: info.title})
+        setPocParams({key: info.key, title: info.title, filter: defaultFilterByTags("struts")})
         searchPoc(info.key)
     })
     const delPocKind = useMemoizedFn((index: number) => {
@@ -215,7 +244,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
         clearModal()
     })
     const clearModal = useMemoizedFn(() => {
-        setPocParams({key: "", title: ""})
+        setPocParams({key: "", title: "", filter: defaultFilterByTags("struts")})
         setEditInfo(undefined)
         setPocList({total: 0, data: []})
     })
@@ -230,7 +259,8 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
             .then((res: any) => {
                 setExtendList(res ? JSON.parse(res) : [])
             })
-            .catch(() => {})
+            .catch(() => {
+            })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
             })
@@ -262,12 +292,19 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                                     mode='inline'
                                                     selectedKeys={[]}
                                                     onClick={({key}) => {
-                                                        const title = BugList.concat(extendList).filter(
+                                                        const list = BugList.concat(extendList).filter(
                                                             (item) => item.key === key
-                                                        )[0].title
+                                                        );
+                                                        if (list.length <= 0) {
+                                                            failed("BUG: 预设专项漏洞无法找到定义：" + key)
+                                                            return
+                                                        }
+                                                        const targetSchema = list[0];
+                                                        const title = targetSchema.title
                                                         const tabInfo: BugInfoProps = {
                                                             key: `${key}-${listCount}`,
-                                                            title: `${title}-${listCount}`
+                                                            title: `${title}-${listCount}`,
+                                                            filter: targetSchema.filter,
                                                         }
                                                         setCurrentTabKey(tabInfo.key)
                                                         setTabList(tabList.concat([tabInfo]))
@@ -333,7 +370,16 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                 {tabList.map((item, index) => {
                     return (
                         <TabPane tab={item.title} key={item.key}>
-                            <BugTestExecutor keyword={item.key} verbose={item.title} sendTarget={item?.sendTarget}></BugTestExecutor>
+                            <ReadOnlyBatchExecutor
+                                query={item.filter || {
+                                    tags: "struts",
+                                    exclude: [],
+                                    include: [],
+                                    type: "nuclei,port-scan,mitm"
+                                }}
+                            />
+                            {/*<BugTestExecutor keyword={item.key} verbose={item.title}*/}
+                            {/*                 sendTarget={item?.sendTarget}></BugTestExecutor>*/}
                         </TabPane>
                     )
                 })}
@@ -373,14 +419,14 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                             <Button
                                                 style={{padding: "4px 0"}}
                                                 type='link'
-                                                icon={<EditOutlined />}
+                                                icon={<EditOutlined/>}
                                                 onClick={() => editPocKind(item)}
                                             />
                                             <Button
                                                 style={{padding: "4px 0"}}
                                                 type='link'
                                                 danger
-                                                icon={<DeleteOutlined />}
+                                                icon={<DeleteOutlined/>}
                                                 onClick={() => delPocKind(index)}
                                             />
                                         </div>
@@ -389,7 +435,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                             )}
                         />
                     </div>
-                    <Divider type='vertical' style={{height: "auto"}} />
+                    <Divider type='vertical' style={{height: "auto"}}/>
                     <div className='right-body'>
                         <Form labelCol={{span: 6}}>
                             <Form.Item label='标题'>
@@ -420,12 +466,12 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                         pocList.total === 0
                                             ? false
                                             : {
-                                                  size: "small",
-                                                  total: pocList.total,
-                                                  showTotal: (total) => <span>{`共${total}个`}</span>,
-                                                  showSizeChanger: false,
-                                                  onChange: (page) => searchPoc(pocParams.key, page)
-                                              }
+                                                size: "small",
+                                                total: pocList.total,
+                                                showTotal: (total) => <span>{`共${total}个`}</span>,
+                                                showSizeChanger: false,
+                                                onChange: (page) => searchPoc(pocParams.key, page)
+                                            }
                                     }
                                     rowKey={(row) => row}
                                     renderItem={(item) => (
@@ -718,40 +764,40 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                             return false
                                         }
 
-                                            setUploadLoading(true)
-                                            ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
-                                                setParams({...params, Target: res})
-                                                setTimeout(() => setUploadLoading(false), 100)
-                                            })
-                                            return false
-                                        }}
-                                        item={{
-                                            style: {textAlign: "left"},
-                                            label: "检测的目标",
-                                        }}
-                                        textarea={{
-                                            isBubbing: true,
-                                            setValue: (Target) => setParams({...params, Target}),
-                                            value: params.Target,
-                                            rows: 1,
-                                            placeholder: "可接受输入为：URL / IP / 域名 / 主机:端口，逗号分隔"
-                                        }}
-                                        suffixNode={
-                                            executing ? (
-                                                <Popconfirm
-                                                    title={"确定要停止该漏洞检测？"}
-                                                    onConfirm={(e) => ipcRenderer.invoke("cancel-exec-batch-yak-script", token)}
-                                                >
-                                                    <Button type='primary' danger>
-                                                        强制停止
-                                                    </Button>
-                                                </Popconfirm>
-                                            ) : (
-                                                <Button type='primary' htmlType='submit'>
-                                                    开始检测
+                                        setUploadLoading(true)
+                                        ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
+                                            setParams({...params, Target: res})
+                                            setTimeout(() => setUploadLoading(false), 100)
+                                        })
+                                        return false
+                                    }}
+                                    item={{
+                                        style: {textAlign: "left"},
+                                        label: "检测的目标",
+                                    }}
+                                    textarea={{
+                                        isBubbing: true,
+                                        setValue: (Target) => setParams({...params, Target}),
+                                        value: params.Target,
+                                        rows: 1,
+                                        placeholder: "可接受输入为：URL / IP / 域名 / 主机:端口，逗号分隔"
+                                    }}
+                                    suffixNode={
+                                        executing ? (
+                                            <Popconfirm
+                                                title={"确定要停止该漏洞检测？"}
+                                                onConfirm={(e) => ipcRenderer.invoke("cancel-exec-batch-yak-script", token)}
+                                            >
+                                                <Button type='primary' danger>
+                                                    强制停止
                                                 </Button>
-                                            )
-                                        }
+                                            </Popconfirm>
+                                        ) : (
+                                            <Button type='primary' htmlType='submit'>
+                                                开始检测
+                                            </Button>
+                                        )
+                                    }
                                 ></ContentUploadInput>
                             </Spin>
                             <div style={{width: "100%", textAlign: "left", paddingLeft: 84}}>
@@ -808,7 +854,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                     </div>
                 </Col>
             </Row>
-            <Divider style={{margin: "10px 0"}} />
+            <Divider style={{margin: "10px 0"}}/>
             <div ref={listRef} className='bug-test-list'>
                 {tasks.length === 0 ? (
                     <div>
@@ -825,15 +871,15 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                     <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 260}}>
                                         {ele.data.Id}
                                     </Text>
-                                    <Divider type='vertical' />
+                                    <Divider type='vertical'/>
                                     <div style={{width: 120, textAlign: "center"}}>
                                         {StatusToVerboseTag(ele.data.Status)}
                                     </div>
-                                    <Divider type='vertical' />
+                                    <Divider type='vertical'/>
                                     <div>
-                                        <ExecResultsViewer results={ele.data.Results} oneLine={true} />
+                                        <ExecResultsViewer results={ele.data.Results} oneLine={true}/>
                                     </div>
-                                    <Divider type='vertical' />
+                                    <Divider type='vertical'/>
                                     <div style={{flexGrow: 1, textAlign: "right"}}>
                                         <Space>
                                             <Button
@@ -849,7 +895,8 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                                         width: "75%",
                                                         content: (
                                                             <>
-                                                                <YakScriptOperator script={ele.data.PoC} target={params.Target} />
+                                                                <YakScriptOperator script={ele.data.PoC}
+                                                                                   target={params.Target}/>
                                                             </>
                                                         )
                                                     })
@@ -898,15 +945,15 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                     <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 260}}>
                                         {ele.data.Id}
                                     </Text>
-                                    <Divider type='vertical' />
+                                    <Divider type='vertical'/>
                                     <div style={{width: 120, textAlign: "center"}}>
                                         {StatusToVerboseTag(ele.data.Status)}
                                     </div>
-                                    <Divider type='vertical' />
+                                    <Divider type='vertical'/>
                                     <div>
-                                        <ExecResultsViewer results={ele.data.Results} oneLine={true} />
+                                        <ExecResultsViewer results={ele.data.Results} oneLine={true}/>
                                     </div>
-                                    <Divider type='vertical' />
+                                    <Divider type='vertical'/>
                                     <div style={{flexGrow: 1, textAlign: "right"}}>
                                         <Space>
                                             <Button
@@ -922,7 +969,8 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                                         width: "75%",
                                                         content: (
                                                             <>
-                                                                <YakScriptOperator script={ele.data.PoC} target={params.Target} />
+                                                                <YakScriptOperator script={ele.data.PoC}
+                                                                                   target={params.Target}/>
                                                             </>
                                                         )
                                                     })

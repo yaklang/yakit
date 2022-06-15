@@ -219,7 +219,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
     const [progressRunning, setProgressRunning] = useState(0);
     const [scanTaskExecutingCount, setScanTaskExecutingCount] = useState(0);
 
-    const [jsonRisks, setJsonRisks] = useState<Risk[]>([]);
+    const [jsonRisks, setJsonRisks, getJsonRisks] = useGetState<Risk[]>([]);
 
     const [tableContentHeight, setTableContentHeight] = useState<number>(0);
     const [activeKey, setActiveKey] = useState<string>("executing")
@@ -253,6 +253,16 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                 const info: TaskResultLog = JSON.parse(new Buffer(data.Result.Message).toString())?.content
                 if (info) {
                     info.key = index
+                    if (info.level === "json-risk") {
+                        try {
+                            const risk = JSON.parse(info.data) as Risk;
+                            if (!!risk.RiskType) {
+                                setJsonRisks([...getJsonRisks(), risk])
+                            }
+                        } catch (e) {
+
+                        }
+                    }
                     index += 1
                     logs.push(info)
                     if (logs.length > 20) {
