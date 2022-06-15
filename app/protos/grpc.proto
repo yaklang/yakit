@@ -1210,6 +1210,7 @@ message FuzzerParamItem {
 
 message FuzzerRequest {
   string Request = 1;
+  bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
   repeated FuzzerParamItem Params = 2;
   int64 Concurrent = 3;
   bool IsHTTPS = 4;
