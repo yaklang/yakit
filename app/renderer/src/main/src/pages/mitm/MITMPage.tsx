@@ -393,8 +393,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     currentPacketId: msg.responseId,
                     isHttp: msg.isHttps
                 })
-                // setCurrentPacket(new Buffer(msg.response).toString("utf8"))
-                // setCurrentPacketId(msg.responseId || 0);
             }
         } else {
             if (msg.request) {

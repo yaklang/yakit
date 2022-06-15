@@ -668,7 +668,7 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
         <YakCodeEditor
             originValue={Buffer.from(script.Content)}
             noTitle={true} noHex={true}
-            onChange={value => setParams({...params, Content: new Buffer(value).toString("utf8")})}
+            onChange={value => setParams({...params, Content: new Buffer(value).toString("latin1")})}
             language={props.language || "yak"}
             noHeader={false} disableFullscreen={true} noPacketModifier={true}
             extra={<Space style={{marginRight: 10}}>

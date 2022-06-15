@@ -62,7 +62,7 @@ export const mutateRequest = (params: MutateHTTPRequestParams, editor?: IMonacoC
     ipcRenderer.invoke("HTTPRequestMutate", params).then((result: MutateHTTPRequestResponse) => {
         if (editor) {
             monacoEditorClear(editor)
-            monacoEditorReplace(editor, new Buffer(result.Result).toString("utf8"));
+            monacoEditorReplace(editor, new Buffer(result.Result).toString("latin1"));
             return
         }
     })
@@ -175,7 +175,7 @@ export const execAutoDecode = async (text: string) => {
                                                     type={"html"}
                                                     noMiniMap={true}
                                                     readOnly={true}
-                                                    value={new Buffer(i.Origin).toString("utf-8")}
+                                                    value={new Buffer(i.Origin).toString("latin1")}
                                                 />
                                             </div>
                                         )
@@ -186,7 +186,7 @@ export const execAutoDecode = async (text: string) => {
                             <div style={{height: 120}}>
                                 <YakEditor
                                     noMiniMap={true}
-                                    type={"html"} readOnly={true} value={new Buffer(i.Result).toString("utf-8")}
+                                    type={"html"} readOnly={true} value={new Buffer(i.Result).toString("latin1")}
                                 />
                             </div>
                         </AutoCard>

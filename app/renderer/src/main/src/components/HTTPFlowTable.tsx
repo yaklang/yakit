@@ -1509,7 +1509,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             type: "fuzzer",
                                             data: {
                                                 isHttps: rowData.IsHTTPS,
-                                                request: new Buffer(rowData.Request).toString("utf8")
+                                                request: new Buffer(rowData.Request).toString("latin1")
                                             }
                                         })
                                     }
@@ -1660,7 +1660,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             title: "发送到对比器左侧",
                                             onClick: () => {
                                                 setCompareLeft({
-                                                    content: new Buffer(rowData.Request).toString("utf8"),
+                                                    content: new Buffer(rowData.Request).toString("latin1"),
                                                     language: "http"
                                                 })
                                             },
@@ -1670,7 +1670,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             title: "发送到对比器右侧",
                                             onClick: () => {
                                                 setCompareRight({
-                                                    content: new Buffer(rowData.Request).toString("utf8"),
+                                                    content: new Buffer(rowData.Request).toString("latin1"),
                                                     language: "http"
                                                 })
                                             },

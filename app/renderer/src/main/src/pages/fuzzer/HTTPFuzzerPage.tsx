@@ -51,6 +51,7 @@ import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch";
 import {AutoCard} from "../../components/AutoCard";
 import {callCopyToClipboard} from "../../utils/basic";
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport";
+import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -376,7 +377,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setDroppedCount(droppedCount)
                 return
             }
-            // const response = new Buffer(data.ResponseRaw).toString(fixEncoding(data.GuessResponseEncoding))
             buffer.push({
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
@@ -433,7 +433,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setTimeout(() => {
                 try {
                     const filters = content.filter((item) => {
-                        return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
+                        return Buffer.from(item.ResponseRaw).toString("latin1").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
                 } catch (error) {
@@ -452,7 +452,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         try {
             const reg = new RegExp(keyword)
             for (let info of filterContent) {
-                let str = Buffer.from(info.ResponseRaw).toString('utf8')
+                let str = Buffer.from(info.ResponseRaw).toString('latin1')
                 let temp: any
                 while ((temp = reg.exec(str)) !== null) {
                     // @ts-ignore
@@ -502,7 +502,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         if (keyword && content.length !== 0) {
             const filters = content.filter(item => {
-                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, 'g'))
+                return Buffer.from(item.ResponseRaw).toString("latin1").match(new RegExp(keyword, 'g'))
             })
             setFilterContent(filters)
         }
@@ -746,7 +746,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         ipcRenderer
                                             .invoke("RedirectRequest", {
                                                 Request: request,
-                                                Response: new Buffer(content[0].ResponseRaw).toString("utf8"),
+                                                Response: new Buffer(content[0].ResponseRaw).toString("latin1"),
                                                 IsHttps: isHttps,
                                                 PerRequestTimeoutSeconds: timeout,
                                                 NoFixContentLength: noFixContentLength,
@@ -1032,7 +1032,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     refreshTrigger={refreshTrigger}
                     hideSearch={true}
                     bordered={true}
-                    originValue={new Buffer(request)}
+                    originValue={StringToUint8Array(request)}
                     actions={[
                         {
                             id: "packet-from-url",
@@ -1070,7 +1070,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         },
                     ]}
                     onEditor={setReqEditor}
-                    onChange={(i) => setRequest(new Buffer(i).toString("utf8"))}
+                    onChange={(i) => setRequest(Uint8ArrayToString(i))}
                     extra={
                         <Space size={2}>
                             <Button

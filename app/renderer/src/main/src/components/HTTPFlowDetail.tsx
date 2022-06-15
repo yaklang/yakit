@@ -122,7 +122,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     type: "fuzzer",
                     data: {
                         isHttps: flow?.IsHTTPS,
-                        request: Buffer.from(flow?.Request || []).toString("utf8")
+                        request: Buffer.from(flow?.Request || []).toString("latin1")
                     }
                 })
                 if (props.onClose) props.onClose()
@@ -236,7 +236,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                             <div style={{height: 350}}>
                                 <YakEditor readOnly={true} type={"http"}//theme={"fuzz-http-theme"}
-                                           value={new Buffer(flow.Request).toString("utf-8")}
+                                           value={new Buffer(flow.Request).toString("latin1")}
                                            actions={[...actionFuzzer]}/>
                             </div>
                         </Card>
@@ -245,7 +245,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                             <div style={{height: 350}}>
                                 <YakEditor readOnly={true} type={"http"}// theme={"fuzz-http-theme"}
-                                           value={new Buffer(flow.Response).toString("utf-8")}
+                                           value={new Buffer(flow.Response).toString("latin1")}
                                 />
                             </div>
                         </Card>

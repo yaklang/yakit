@@ -545,7 +545,7 @@ const Main: React.FC<MainProp> = (props) => {
     // 加载补全
     useEffect(() => {
         ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
-            const completionJson = Buffer.from(data.RawJson).toString("utf8")
+            const completionJson = Buffer.from(data.RawJson).toString("latin1")
             setCompletions(JSON.parse(completionJson) as CompletionTotal)
             // success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
         })

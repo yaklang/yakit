@@ -119,7 +119,7 @@ export default function useHoldingIPCRStream(
             if (data.IsMessage) {
                 try {
                     let obj: ExecResultMessage = JSON.parse(
-                        Buffer.from(data.Message).toString("utf8")
+                        Buffer.from(data.Message).toString()
                     )
 
                     // 处理 Process KVPair

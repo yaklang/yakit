@@ -26,6 +26,7 @@ import './editors.css'
 import {useMemoizedFn} from "ahooks";
 import {Buffer} from "buffer";
 import {failed} from "./notification";
+import {StringToUint8Array, Uint8ArrayToString} from "./str";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -70,7 +71,7 @@ export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
     return <YakEditor
         {...props.raw}
         type={props.isRequest ? "http" : (props.isResponse ? "html" : "http")}
-        readOnly={true} value={new Buffer(props.value).toString("utf-8")}
+        readOnly={true} value={new Buffer(props.value).toString("latin1")}
     />
 }
 
@@ -271,15 +272,20 @@ export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
 }
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props) => {
-    const isResponse = props.isResponse || (new Buffer(props.originValue.subarray(0, 5)).toString("utf8")).startsWith("HTTP/")
+    const isResponse = props.isResponse || (new Buffer(props.originValue.subarray(0, 5)).toString("latin1")).startsWith("HTTP/")
     const [mode, setMode] = useState("text");
-    const [strValue, setStrValue] = useState(new Buffer(props.originValue).toString('utf8'));
+    const [strValue, setStrValue] = useState(new Buffer(props.originValue).toString('latin1'));
     const [hexValue, setHexValue] = useState<Uint8Array>(new Buffer(props.originValue))
     const [searchValue, setSearchValue] = useState("");
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
     const [fontSize, setFontSize] = useState(12);
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
     const [noWordwrap, setNoWordwrap] = useState(false);
+
+    useEffect(() => {
+        console.info("STR   LENGTH: ", strValue.length)
+        console.info("HEX   LENGTH: ", hexValue.length)
+    }, [mode, strValue])
 
     const highlightActive = useMemoizedFn((search: string, regexp?: boolean) => {
         if (!monacoEditor) {
@@ -312,7 +318,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
     const handleSetValue = React.useCallback((offset, value) => {
         hexValue[offset] = value;
         setNonce(v => (v + 1));
-        setHexValue(new Buffer(hexValue))
+        setHexValue(new Uint8Array(hexValue))
     }, [hexValue]);
 
     useEffect(() => {
@@ -321,7 +327,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         }
 
         setStrValue(props.defaultStringValue || "")
-        setHexValue(Buffer.from(props.defaultStringValue || ""))
+        setHexValue(StringToUint8Array(props.defaultStringValue || ""))
     }, [props.defaultStringValue])
 
     useEffect(() => {
@@ -336,8 +342,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
     useEffect(() => {
         if (props.readOnly) {
-            setStrValue(new Buffer(props.originValue).toString('utf8'))
-            setHexValue(new Buffer(props.originValue))
+            setStrValue(Uint8ArrayToString(props.originValue))
+            setHexValue(new Uint8Array(props.originValue))
         }
         if (props.readOnly && monacoEditor) {
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
@@ -352,16 +358,16 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         if (props.readOnly) {
             return
         }
-        setStrValue(new Buffer(props.originValue).toString('utf8'))
-        setHexValue(new Buffer(props.originValue))
+        setStrValue(Uint8ArrayToString(props.originValue))
+        setHexValue(new Uint8Array(props.originValue))
     }, [props.refreshTrigger])
 
     useEffect(() => {
-        props.onChange && props.onChange(Buffer.from(strValue))
+        props.onChange && props.onChange(StringToUint8Array(strValue))
     }, [strValue])
 
     useEffect(() => {
-        props.onChange && props.onChange(hexValue)
+        props.onChange && props.onChange(new Uint8Array(hexValue))
     }, [hexValue])
 
     const empty = !!props.emptyOr && props.originValue.length == 0
@@ -379,11 +385,13 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     colon={false} value={mode}
                     setValue={e => {
                         if (mode === "text" && e === "hex") {
-                            setHexValue(new Buffer(strValue))
+                            console.info("切换到 HEX 模式")
+                            setHexValue(StringToUint8Array(strValue))
                         }
 
                         if (mode === "hex" && e === "text") {
-                            setStrValue(Buffer.from(hexValue).toString("utf8"))
+                            console.info("切换到 TEXT 模式")
+                            setStrValue(Uint8ArrayToString(hexValue))
                         }
                         setMode(e)
                     }}
@@ -484,7 +492,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     type={props.language || (isResponse ? "html" : "http")}
                     value={
                         props.readOnly && props.originValue.length > 0 ?
-                            new Buffer(props.originValue).toString() : strValue
+                            new Buffer(props.originValue).toString("latin1") : strValue
                     }
                     readOnly={props.readOnly}
                     setValue={setStrValue} noWordWrap={noWordwrap}

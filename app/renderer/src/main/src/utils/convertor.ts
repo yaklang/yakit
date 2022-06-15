@@ -26,7 +26,8 @@ export const fixEncoding = (encoding?: string) => {
             return "utf16"
         case "utf8":
         case "utf-8":
-        default:
             return "utf8"
+        default:
+            return "latin1"
     }
 }
