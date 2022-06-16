@@ -140,6 +140,8 @@ service Yak {
   rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
   rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
   rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
+  rpc FixUploadPacket(FixUploadPacketRequest) returns (FixUploadPacketResponse);
+  rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
 
   // FuzzerResponse 对象转 HTTPFlow：以便分析和模糊测试
   rpc ConvertFuzzerResponseToHTTPFlow(FuzzerResponse) returns (HTTPFlow);
@@ -261,6 +263,18 @@ service Yak {
 
   // 尝试自动解码
   rpc AutoDecode(AutoDecodeRequest) returns (AutoDecodeResponse);
+}
+
+message FixUploadPacketRequest {
+  bytes Request = 1;
+}
+
+message FixUploadPacketResponse {
+  bytes Request = 1;
+}
+
+message IsMultipartFormDataRequestResult {
+  bool IsMultipartFormData = 1;
 }
 
 message AutoDecodeRequest {
