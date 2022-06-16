@@ -842,6 +842,7 @@ const tableCssString = `
 table {
   border: 1px solid #f0f0f0;
   width: 100%;
+  border-collapse:collapse;
 }
 
 th {
@@ -933,7 +934,8 @@ export const toWord = async (htmlContent) => {
    ${mdCssString}
     </style>
     </head><body>${htmlContent}</body></html>`
-    var converted = htmlDocx.asBlob(page)
+    console.log('page',page);
+    const converted = htmlDocx.asBlob(page)
     // 用 FielSaver.js里的保存方法 进行输出
     saveAs(converted, "test.docx")
 }
