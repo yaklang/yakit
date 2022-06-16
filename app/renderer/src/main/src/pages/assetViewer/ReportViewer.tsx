@@ -99,7 +99,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     >
                         RAW
                     </a>
-                    <Button onClick={toPdf}>md-pdf</Button>
+                    <Button onClick={toPdf}>下载word</Button>
                 </Space>
             }
         >
