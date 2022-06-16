@@ -1,15 +1,4 @@
-/*!
- * 
- * antd v4.17.2
- * 
- * Copyright 2015-present, Alipay, Inc.
- * All rights reserved.
- *       
- */
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
+
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -60,7 +49,6 @@ html {
 [class*= ant-] input::-ms-reveal {
   display: none;
 }
-/* stylelint-disable property-no-vendor-prefix, at-rule-no-vendor-prefix */
 html,
 body {
   width: 100%;
@@ -1836,10 +1824,6 @@ html {
   transition: height 0.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -1886,11 +1870,6 @@ html {
   position: fixed;
   z-index: 10;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -2086,10 +2065,6 @@ html {
   margin-left: 15px;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -2230,10 +2205,6 @@ html {
   padding: 7px 16px 7px 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -2291,10 +2262,6 @@ html {
   right: 13px;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -2456,10 +2423,6 @@ html {
 .ant-select-single.ant-select-lg:not(.ant-select-customize-input) .ant-select-selector {
   padding: 0 11px;
 }
-/**
- * Do not merge `height` & `line-height` under style with `selection` & `search`,
- * since chrome may update to redesign with its align logic.
- */
 .ant-select-selection-overflow {
   position: relative;
   display: flex;
@@ -2654,7 +2617,6 @@ html {
 .ant-select-disabled .ant-select-selection-item-remove {
   display: none;
 }
-/* Reset search input style */
 .ant-select {
   box-sizing: border-box;
   margin: 0;
@@ -2714,7 +2676,6 @@ html {
 }
 .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input::-webkit-search-cancel-button {
   display: none;
-  /* stylelint-disable-next-line property-no-vendor-prefix */
   -webkit-appearance: none;
 }
 .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
@@ -3005,11 +2966,6 @@ html {
   padding-right: 0;
   padding-left: 21px;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -3121,10 +3077,6 @@ html {
   direction: rtl;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -3271,11 +3223,6 @@ html {
   margin-right: 3px;
   margin-left: 0;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -3378,7 +3325,6 @@ html {
 }
 @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
   .ant-popover {
-    /* IE10+ */
   }
   .ant-popover-inner {
     box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
@@ -3620,10 +3566,6 @@ html {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -3720,11 +3662,6 @@ html {
     right: 20px;
   }
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -3988,18 +3925,14 @@ html {
   display: inline-block;
   height: 20px;
   transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-  /* stylelint-disable property-no-vendor-prefix */
   -webkit-transform-style: preserve-3d;
   -webkit-backface-visibility: hidden;
-  /* stylelint-enable property-no-vendor-prefix */
 }
 .ant-scroll-number-only > p.ant-scroll-number-only-unit {
   height: 20px;
   margin: 0;
-  /* stylelint-disable property-no-vendor-prefix */
   -webkit-transform-style: preserve-3d;
   -webkit-backface-visibility: hidden;
-  /* stylelint-enable property-no-vendor-prefix */
 }
 .ant-scroll-number-symbol {
   vertical-align: top;
@@ -4261,11 +4194,6 @@ html {
 .ant-ribbon-rtl.ant-ribbon-placement-start .ant-ribbon-corner::after {
   border-color: currentColor transparent transparent currentColor;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -4375,10 +4303,6 @@ html {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -5330,11 +5254,6 @@ html {
   padding-right: 32px;
   padding-left: 0;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -5623,10 +5542,6 @@ html {
   text-align: right;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -6046,10 +5961,6 @@ html {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -7983,10 +7894,6 @@ a.ant-btn-sm {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -8197,11 +8104,6 @@ html {
 .ant-picker-calendar-rtl.ant-picker-calendar-full .ant-picker-panel .ant-picker-calendar-date-content {
   text-align: right;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -8591,10 +8493,6 @@ span.ant-radio + * {
   border-right-color: #d9d9d9;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -8700,7 +8598,6 @@ html {
   border: 1px solid #d9d9d9;
   border-radius: 2px;
   transition: all 0.3s;
-  /* stylelint-disable-next-line selector-no-vendor-prefix */
   flex: auto;
   min-width: 1px;
   height: auto;
@@ -9517,7 +9414,6 @@ tr > .ant-picker-cell-in-view.ant-picker-cell-range-hover-start:last-child::afte
   background: transparent;
   cursor: not-allowed;
 }
-/* stylelint-disable-next-line selector-type-no-unknown,selector-no-vendor-prefix */
 _:-ms-fullscreen .ant-picker-range-wrapper .ant-picker-month-panel .ant-picker-cell,
 :root .ant-picker-range-wrapper .ant-picker-month-panel .ant-picker-cell,
 _:-ms-fullscreen .ant-picker-range-wrapper .ant-picker-year-panel .ant-picker-cell,
@@ -9656,11 +9552,6 @@ _:-ms-fullscreen .ant-picker-range-wrapper .ant-picker-year-panel .ant-picker-ce
 .ant-picker-panel-rtl .ant-picker-time-panel {
   direction: ltr;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -9947,10 +9838,6 @@ html {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -10300,10 +10187,6 @@ html {
   padding: 12px;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -10951,10 +10834,6 @@ html {
   outline: none;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -16175,10 +16054,6 @@ html {
   direction: rtl;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -16495,11 +16370,6 @@ html {
 .ant-carousel-rtl.ant-carousel-vertical .slick-dots {
   flex-direction: column;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -16846,10 +16716,6 @@ html {
   margin-left: 8px;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -17122,11 +16988,6 @@ html {
 .ant-checkbox-group-rtl .ant-checkbox-group-item + .ant-checkbox-group-item {
   margin-left: 8px;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -17313,10 +17174,6 @@ html {
   padding-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -17468,10 +17325,6 @@ html {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -17514,11 +17367,6 @@ html {
   --ant-info-color-deprecated-bg: #e6f7ff;
   --ant-info-color-deprecated-border: #91d5ff;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -17698,10 +17546,6 @@ html {
   border-left: none;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -17852,10 +17696,6 @@ html {
   width: 95%;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -18109,10 +17949,6 @@ html {
   margin-left: 12px;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -18382,8 +18218,6 @@ html {
   }
 }
 .ant-form-item {
-  /* Some non-status related component style is in `components.less` */
-  /* To support leave along ErrorList. We add additional className to handle explain style */
 }
 .ant-form-item-explain-error {
   color: var(--ant-error-color);
@@ -19039,10 +18873,6 @@ html {
   margin-left: 16px;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -19086,10 +18916,6 @@ html {
   --ant-info-color-deprecated-border: #91d5ff;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -19344,10 +19170,6 @@ html {
   right: 10px;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -19405,7 +19227,6 @@ html {
   background-color: #fff;
   background-image: none;
   transition: all 0.3s;
-  /* stylelint-disable-next-line selector-no-vendor-prefix */
   display: inline-block;
   width: 90px;
   margin: 0;
@@ -19871,7 +19692,6 @@ textarea.ant-input-number {
   -webkit-appearance: textfield !important;
      -moz-appearance: textfield !important;
           appearance: textfield !important;
-  /* stylelint-disable-next-line selector-no-vendor-prefix */
 }
 .ant-input-number-input::-moz-placeholder {
   opacity: 1;
@@ -19900,7 +19720,6 @@ textarea.ant-input-number {
 .ant-input-number-input[type='number']::-webkit-inner-spin-button,
 .ant-input-number-input[type='number']::-webkit-outer-spin-button {
   margin: 0;
-  /* stylelint-disable-next-line property-no-vendor-prefix */
   -webkit-appearance: none;
   appearance: none;
 }
@@ -20016,10 +19835,6 @@ textarea.ant-input-number {
   text-align: right;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -20076,7 +19891,6 @@ html {
   border: 1px solid #d9d9d9;
   border-radius: 2px;
   transition: all 0.3s;
-  /* stylelint-disable-next-line selector-no-vendor-prefix */
   display: inline-flex;
 }
 .ant-input-affix-wrapper::-moz-placeholder {
@@ -20269,7 +20083,6 @@ textarea.ant-input-affix-wrapper {
   border: 1px solid #d9d9d9;
   border-radius: 2px;
   transition: all 0.3s;
-  /* stylelint-disable-next-line selector-no-vendor-prefix */
 }
 .ant-input::-moz-placeholder {
   opacity: 1;
@@ -20816,10 +20629,6 @@ textarea.ant-input {
   }
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -20866,7 +20675,6 @@ html {
   display: flex;
   flex: auto;
   flex-direction: column;
-  /* fix firefox can't set height smaller than content on flex item */
   min-height: 0;
   background: #f0f2f5;
 }
@@ -20900,12 +20708,10 @@ html {
 }
 .ant-layout-content {
   flex: auto;
-  /* fix firefox can't set height smaller than content on flex item */
   min-height: 0;
 }
 .ant-layout-sider {
   position: relative;
-  /* fix firefox can't set width smaller than content on flex item */
   min-width: 0;
   background: #001529;
   transition: all 0.2s;
@@ -20986,11 +20792,6 @@ html {
 .ant-layout-rtl {
   direction: rtl;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -21347,10 +21148,6 @@ html {
   }
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -21564,7 +21361,6 @@ html {
   display: block;
 }
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-  /* IE10+ */
   .ant-spin-blur {
     background: #fff;
     opacity: 0.5;
@@ -21609,10 +21405,6 @@ html {
   }
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -21906,7 +21698,6 @@ html {
   border: 1px solid #d9d9d9;
   border-radius: 2px;
   transition: all 0.3s;
-  /* stylelint-disable-next-line selector-no-vendor-prefix */
   width: 50px;
   height: 32px;
   margin: 0 8px;
@@ -22182,10 +21973,6 @@ textarea.ant-pagination-options-quick-jumper input {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -22229,10 +22016,6 @@ html {
   --ant-info-color-deprecated-border: #91d5ff;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -22291,7 +22074,6 @@ html {
   border: 1px solid #d9d9d9;
   border-radius: 2px;
   transition: all 0.3s;
-  /* stylelint-disable-next-line selector-no-vendor-prefix */
   position: relative;
   display: inline-block;
   height: auto;
@@ -22411,7 +22193,6 @@ textarea.ant-mentions {
   overflow: inherit;
   overflow-x: hidden;
   overflow-y: auto;
-  /* stylelint-disable declaration-block-no-redundant-longhand-properties */
   font-weight: inherit;
   font-size: inherit;
   font-family: inherit;
@@ -22420,7 +22201,6 @@ textarea.ant-mentions {
   font-size-adjust: inherit;
   font-stretch: inherit;
   line-height: inherit;
-  /* stylelint-enable declaration-block-no-redundant-longhand-properties */
   direction: inherit;
   letter-spacing: inherit;
   white-space: inherit;
@@ -22437,7 +22217,6 @@ textarea.ant-mentions {
   border: none;
   outline: none;
   resize: none;
-  /* stylelint-disable-next-line selector-no-vendor-prefix */
 }
 .ant-mentions > textarea::-moz-placeholder {
   opacity: 1;
@@ -22552,10 +22331,6 @@ textarea.ant-mentions {
   direction: rtl;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -22686,11 +22461,6 @@ html {
   margin-right: 0;
   margin-left: 8px;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -22984,10 +22754,6 @@ html {
   text-align: right;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -23286,10 +23052,6 @@ html {
   float: left;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -23484,11 +23246,6 @@ html {
 .ant-page-header-rtl .ant-page-header-footer .ant-tabs-bar .ant-tabs-nav {
   float: right;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -23535,10 +23292,6 @@ html {
   z-index: 1060;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -23784,10 +23537,6 @@ html {
   text-align: right;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -23921,10 +23670,6 @@ html {
   left: auto;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -24031,11 +23776,6 @@ html {
 .ant-result-rtl .ant-result-extra > *:last-child {
   margin-left: 0;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -24362,10 +24102,6 @@ html {
   }
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -24616,10 +24352,6 @@ html {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -24687,10 +24419,6 @@ html {
   direction: rtl;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -24780,10 +24508,6 @@ html {
   margin-left: 0;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -25253,7 +24977,6 @@ html {
   height: 100%;
   border-radius: 100px;
   transition: all 0.3s;
-  /* expand hover area */
 }
 .ant-steps-dot .ant-steps-item-icon .ant-steps-icon-dot::after,
 .ant-steps-dot.ant-steps-small .ant-steps-item-icon .ant-steps-icon-dot::after {
@@ -25505,7 +25228,6 @@ html {
 }
 .ant-steps-dot .ant-steps-item-icon .ant-steps-icon-dot,
 .ant-steps-dot.ant-steps-small .ant-steps-item-icon .ant-steps-icon-dot {
-  /* expand hover area */
 }
 .ant-steps-rtl.ant-steps-dot .ant-steps-item-icon .ant-steps-icon-dot,
 .ant-steps-rtl.ant-steps-dot.ant-steps-small .ant-steps-item-icon .ant-steps-icon-dot {
@@ -25555,11 +25277,6 @@ html {
   bottom: -5px;
   left: -5px;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -25752,10 +25469,6 @@ html {
   right: calc(100% - 12px - 2px);
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -26528,9 +26241,6 @@ tr.ant-table-expanded-row .ant-descriptions-view table {
   }
 }
 .ant-table {
-  /* title + table */
-  /* table */
-  /* table + footer */
 }
 .ant-table-title {
   border-radius: 2px 2px 0 0;
@@ -26629,10 +26339,6 @@ tr.ant-table-expanded-row .ant-descriptions-view table {
   transform: rotate(0deg);
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -27217,10 +26923,6 @@ html {
   margin: 4px 0 0 8px;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -27263,11 +26965,6 @@ html {
   --ant-info-color-deprecated-bg: #e6f7ff;
   --ant-info-color-deprecated-border: #91d5ff;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -27542,11 +27239,6 @@ html {
   right: calc(50% + 14px);
   text-align: right;
 }
-
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -27855,10 +27547,6 @@ html {
   left: auto;
 }
 
-/* stylelint-disable at-rule-empty-line-before,at-rule-name-space-after,at-rule-no-unknown */
-/* stylelint-disable no-duplicate-selectors */
-/* stylelint-disable */
-/* stylelint-disable declaration-bang-space-before,no-duplicate-selectors,string-no-newline */
 html {
   --ant-primary-color: #1890ff;
   --ant-primary-color-hover: #40a9ff;
@@ -29471,6 +29159,3 @@ html {
   margin: 8px 0 0;
   padding: 0;
 }
-
-
-/*# sourceMappingURL=antd.variable.css.map*/
