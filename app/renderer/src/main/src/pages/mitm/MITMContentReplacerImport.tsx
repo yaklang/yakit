@@ -88,7 +88,7 @@ export const MITMContentReplacerImport: React.FC<MITMContentReplacerImportProp> 
             <div style={{height: 400}}>
                 {loading ? <Spin/> : <YakEditor
                     triggerId={loading}
-                    type={"json"} value={new Buffer(params.JsonRaw).toString()}
+                    type={"json"} value={new Buffer(params.JsonRaw).toString("utf8")}
                     setValue={e => {
                         setParams({...params, JsonRaw: Buffer.from(e)})
                     }}
@@ -138,7 +138,7 @@ export const MITMContentReplacerExport: React.FC<MITMContentReplacerExportProps>
         }}>另存为</Button>
     ]}>
         <div style={{height: 530}}>
-            <YakEditor type={"json"} value={new Buffer(value).toString()} readOnly={true}/>
+            <YakEditor type={"json"} value={new Buffer(value).toString("utf8")} readOnly={true}/>
         </div>
     </AutoCard>
 };

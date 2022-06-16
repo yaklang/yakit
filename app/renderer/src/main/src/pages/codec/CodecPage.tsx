@@ -16,7 +16,7 @@ import {
     List
 } from "antd"
 import {DownOutlined, SwapOutlined, ArrowsAltOutlined} from "@ant-design/icons"
-import {YakEditor} from "../../utils/editors"
+import {YakCodeEditor, YakEditor} from "../../utils/editors"
 import {failed} from "../../utils/notification"
 import {LineConversionIcon} from "../../assets/icons"
 import {AutoCard} from "../../components/AutoCard"
@@ -28,6 +28,7 @@ import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {queryYakScriptList} from "../yakitStore/network";
 
 import "./style.css"
+import {Uint8ArrayToString} from "../../utils/str";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -466,18 +467,15 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
             <div className={"codec-content"}>
                 <Row wrap={false} justify='space-between' style={{flexGrow: 1}}>
                     <Col flex={leftWidth ? "0 1 80%" : rightWidth ? "0 1 18%" : "0 1 49%"}>
-                        <AutoCard
-                            className='codec-card-body'
-                            headStyle={{height: 28, minHeight: 28, padding: 0}}
-                            bodyStyle={{padding: 0}}
-                            extra={
-                                <>
-                                    <Button
-                                        size={"small"}
-                                        type={leftLine ? "primary" : "link"}
-                                        icon={<LineConversionIcon/>}
-                                        onClick={() => setLeftLine(!leftLine)}
-                                    />
+                        <YakCodeEditor
+                            noTitle={true}
+                            language={"html"}
+                            originValue={Buffer.from(text, "utf8")} hideSearch={true}
+                            onChange={i => setText(Uint8ArrayToString(i, "utf8"))}
+                            noHex={true}
+                            noHeader={false}
+                            extra={(
+                                <Space>
                                     <Button
                                         size={"small"}
                                         type={leftWidth ? "primary" : "link"}
@@ -487,13 +485,9 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                                             setRightWidth(false)
                                         }}
                                     />
-                                </>
-                            }
-                        >
-                            <div className='editor-body'>
-                                <YakEditor value={text} noWordWrap={!leftLine} setValue={setText}/>
-                            </div>
-                        </AutoCard>
+                                </Space>
+                            )}
+                        />
                     </Col>
                     <Col flex='0 1 2%'>
                         <div className={"exchange-btn"}>
@@ -509,18 +503,15 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                         </div>
                     </Col>
                     <Col flex={rightWidth ? "0 1 80%" : leftWidth ? "0 1 18%" : "0 1 49%"}>
-                        <AutoCard
-                            className='codec-card-body'
-                            headStyle={{height: 28, minHeight: 28, padding: 0}}
-                            bodyStyle={{padding: 0}}
-                            extra={
-                                <>
-                                    <Button
-                                        size={"small"}
-                                        type={rightLine ? "primary" : "link"}
-                                        icon={<LineConversionIcon/>}
-                                        onClick={() => setRightLine(!rightLine)}
-                                    />
+                        <YakCodeEditor
+                            noTitle={true}
+                            language={"html"}
+                            readOnly={true}
+                            originValue={Buffer.from(result, "utf8")} hideSearch={true}
+                            noHex={true}
+                            noHeader={false}
+                            extra={(
+                                <Space>
                                     <Button
                                         size={"small"}
                                         type={rightWidth ? "primary" : "link"}
@@ -530,14 +521,9 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                                             setLeftWidth(false)
                                         }}
                                     />
-                                </>
-                            }
-                        >
-                            <div className='editor-body'>
-                                <YakEditor value={result} noWordWrap={!rightLine} setValue={setResult} readOnly={true}
-                                           type={"http"}/>
-                            </div>
-                        </AutoCard>
+                                </Space>
+                            )}
+                        />
                     </Col>
                 </Row>
             </div>

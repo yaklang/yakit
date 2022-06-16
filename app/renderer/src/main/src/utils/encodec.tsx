@@ -175,7 +175,7 @@ export const execAutoDecode = async (text: string) => {
                                                     type={"html"}
                                                     noMiniMap={true}
                                                     readOnly={true}
-                                                    value={new Buffer(i.Origin).toString("latin1")}
+                                                    value={new Buffer(i.Origin).toString("utf8")}
                                                 />
                                             </div>
                                         )
@@ -186,7 +186,7 @@ export const execAutoDecode = async (text: string) => {
                             <div style={{height: 120}}>
                                 <YakEditor
                                     noMiniMap={true}
-                                    type={"html"} readOnly={true} value={new Buffer(i.Result).toString("latin1")}
+                                    type={"html"} readOnly={true} value={new Buffer(i.Result).toString("utf8")}
                                 />
                             </div>
                         </AutoCard>

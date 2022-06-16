@@ -747,7 +747,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         ipcRenderer
                                             .invoke("RedirectRequest", {
                                                 Request: request,
-                                                Response: new Buffer(content[0].ResponseRaw).toString("latin1"),
+                                                Response: new Buffer(content[0].ResponseRaw).toString("utf8"),
                                                 IsHttps: isHttps,
                                                 PerRequestTimeoutSeconds: timeout,
                                                 NoFixContentLength: noFixContentLength,
@@ -1033,6 +1033,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     refreshTrigger={refreshTrigger}
                     hideSearch={true}
                     bordered={true}
+                    utf8={true}
                     originValue={StringToUint8Array(request)}
                     actions={[
                         {

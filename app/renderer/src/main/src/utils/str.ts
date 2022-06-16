@@ -4,10 +4,11 @@ export function Uint8ArrayToString(fileData: Uint8Array, encoding?: "utf8" | "la
 }
 
 
-export function StringToUint8Array(str: string) {
-    let arr = new Uint8Array(str.length);
-    for (let i = 0, j = str.length; i < j; ++i) {
-        arr[i] = (str.charCodeAt(i));
-    }
-    return arr
+export function StringToUint8Array(str: string, encoding?: "latin1" | "ascii" | "utf8") {
+    return new Uint8Array(Buffer.from(str, encoding));
+    // let arr = new Uint8Array(str.length);
+    // for (let i = 0, j = str.length; i < j; ++i) {
+    //     arr[i] = (str.charCodeAt(i));
+    // }
+    // return arr
 }
