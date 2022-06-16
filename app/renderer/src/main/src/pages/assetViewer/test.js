@@ -931,7 +931,6 @@ export const toWord = async (htmlContent) => {
     <style>
    ${tableCssString}
    ${mdCssString}
-   ${codeCssString}
     </style>
     </head><body>${htmlContent}</body></html>`
     var converted = htmlDocx.asBlob(page)
