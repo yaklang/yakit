@@ -7,11 +7,7 @@ import {showModal} from "../../utils/showModal"
 import {YakEditor} from "../../utils/editors"
 import {ReportItem} from "./reportRenders/schema"
 import {ReportItemRender} from "./reportRenders/render"
-import {toWord} from "./test"
-
-// import styles from './antd.css';
-
-// const juice = require("juice")
+import {toWord} from "../../utils/documentConversion/toWord"
 export interface ReportViewerProp {
     id?: number
 }
