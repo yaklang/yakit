@@ -1,14 +1,3 @@
-export const Uint8ArrayToString = (data: Uint8Array, encoding?: "utf-8" | "gbk") => {
-    if (!data) {
-        return ""
-    }
-    return new Buffer(data).toString(fixEncoding(encoding))
-    // let buffer = new Buffer(data.buffer) // (Buffer).from(data.buffer);
-    // const result = buffer.toString(encoding && "utf-8");
-    // return resultz
-    // return data.reduce((acc, i) => acc += String.fromCharCode.apply(null, [i]), '')
-}
-
 export const fixEncoding = (encoding?: string) => {
     switch ((encoding || "").toLowerCase()) {
         case "gbk":

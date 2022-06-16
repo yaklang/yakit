@@ -267,15 +267,22 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     isResponse?: boolean
 }
 
-export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
+export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props: HTTPPacketEditorProp) => {
     return <HTTPPacketEditor noHeader={true} {...props} noPacketModifier={true} language={"yak"}/>
 }
 
-export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props) => {
-    const isResponse = props.isResponse || (new Buffer(props.originValue.subarray(0, 5)).toString("latin1")).startsWith("HTTP/")
+export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
+    const isResponse = props.isResponse;
+    const getEncoding = (): "utf8" | "latin1" | "ascii" => {
+        if (isResponse || props.readOnly) {
+            return "utf8"
+        }
+        return "ascii"
+    }
+    console.info("isResponse: ", isResponse)
     const [mode, setMode] = useState("text");
-    const [strValue, setStrValue] = useState(new Buffer(props.originValue).toString('latin1'));
-    const [hexValue, setHexValue] = useState<Uint8Array>(new Buffer(props.originValue))
+    const [strValue, setStrValue] = useState(Uint8ArrayToString(props.originValue, getEncoding()));
+    const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array(props.originValue))
     const [searchValue, setSearchValue] = useState("");
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
     const [fontSize, setFontSize] = useState(12);
@@ -342,7 +349,10 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
     useEffect(() => {
         if (props.readOnly) {
-            setStrValue(Uint8ArrayToString(props.originValue))
+            console.info("changed originValue...")
+            const value = Uint8ArrayToString(props.originValue, getEncoding())
+            console.info(value)
+            setStrValue(value);
             setHexValue(new Uint8Array(props.originValue))
         }
         if (props.readOnly && monacoEditor) {
@@ -358,7 +368,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         if (props.readOnly) {
             return
         }
-        setStrValue(Uint8ArrayToString(props.originValue))
+        setStrValue(Uint8ArrayToString(props.originValue, getEncoding()))
         setHexValue(new Uint8Array(props.originValue))
     }, [props.refreshTrigger])
 
@@ -380,7 +390,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             style={{height: "100%", width: "100%"}}
             title={!props.noHeader && <Space>
                 {!props.noTitle && <span>{isResponse ? "Response" : "Request"}</span>}
-                {!props.simpleMode ? (!props.noHex && <SelectOne
+                {(!props.simpleMode) ? (!props.noHex && <SelectOne
                     label={" "}
                     colon={false} value={mode}
                     setValue={e => {
@@ -391,7 +401,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
                         if (mode === "hex" && e === "text") {
                             console.info("切换到 TEXT 模式")
-                            setStrValue(Uint8ArrayToString(hexValue))
+                            setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
                         }
                         setMode(e)
                     }}
@@ -415,14 +425,18 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column"}}
             extra={!props.noHeader && <Space size={2}>
                 {props.extra}
-                {props.sendToWebFuzzer && <Button
+                {props.sendToWebFuzzer && props.readOnly && <Button
                     size={"small"}
                     type={"primary"}
                     icon={<ThunderboltFilled/>}
                     onClick={() => {
                         ipcRenderer.invoke("send-to-tab", {
                             type: "fuzzer",
-                            data: {isHttps: props.defaultHttps || false, request: strValue}
+                            // 这儿的编码为了保证不要乱动
+                            data: {
+                                isHttps: props.defaultHttps || false,
+                                request: Uint8ArrayToString(props.originValue, "latin1")
+                            }
                         })
                     }}
                 >FUZZ</Button>}
@@ -492,7 +506,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     type={props.language || (isResponse ? "html" : "http")}
                     value={
                         props.readOnly && props.originValue.length > 0 ?
-                            new Buffer(props.originValue).toString("latin1") : strValue
+                            new Buffer(props.originValue).toString() : strValue
+                        // Uint8ArrayToString(props.originValue, getEncoding()) : strValue
                     }
                     readOnly={props.readOnly}
                     setValue={setStrValue} noWordWrap={noWordwrap}
@@ -505,7 +520,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 id: "auto-decode", run: (e) => {
                                     try {
                                         // @ts-ignore
-                                        const text = e.getModel()?.getValueInRange(e.getSelection()) || "";
+                                        const text = e.getModel()?.getValueInRange(e.getSelection() as any) || "";
                                         if (!text) {
                                             Modal.info({
                                                 title: "自动解码失败", content: (

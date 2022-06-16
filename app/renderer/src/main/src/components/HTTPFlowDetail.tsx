@@ -354,6 +354,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             secondNode={<HTTPPacketEditor
                 isResponse={true}
                 originValue={(flow?.Response) || new Uint8Array}
+                noHex={true}
                 readOnly={true} defaultHeight={props.defaultHeight}
                 hideSearch={true}
             />}

@@ -23,7 +23,6 @@ import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
 import {InputFloat, InputInteger, InputItem, ManyMultiSelectForString, OneLine, SwitchItem} from "../../utils/inputUtil"
-import {fixEncoding} from "../../utils/convertor"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {
@@ -328,6 +327,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             "HTTPFuzzer",
             {
                 Request: request,
+                RequestRaw: StringToUint8Array(request),
                 ForceFuzz: forceFuzz,
                 IsHTTPS: isHttps,
                 Concurrent: concurrent,
@@ -549,6 +549,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 originValue={rsp.ResponseRaw}
                 bordered={true}
                 hideSearch={true}
+                isResponse={true}
                 emptyOr={
                     !rsp?.Ok && (
                         <Result

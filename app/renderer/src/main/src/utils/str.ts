@@ -1,5 +1,6 @@
-export function Uint8ArrayToString(fileData: Uint8Array) {
-    return Buffer.from(fileData).toString("latin1")
+export function Uint8ArrayToString(fileData: Uint8Array, encoding?: "utf8" | "latin1" | any) {
+    const result = Buffer.from(fileData).toString(encoding ? encoding : "latin1");
+    return result;
 }
 
 
