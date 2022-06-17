@@ -22,7 +22,15 @@ import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {InputFloat, InputInteger, InputItem, ManyMultiSelectForString, OneLine, SwitchItem} from "../../utils/inputUtil"
+import {
+    CopyableField,
+    InputFloat,
+    InputInteger,
+    InputItem,
+    ManyMultiSelectForString,
+    OneLine,
+    SwitchItem
+} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {
@@ -86,7 +94,7 @@ export interface HTTPFuzzerPageProp {
     fuzzerParams?: fuzzerInfoProp
 }
 
-const {Text} = Typography
+const Text = Typography.Text;
 
 export interface FuzzerResponse {
     Method: string
@@ -442,55 +450,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         )
     }
 
-    const downloadContent = useMemoizedFn(() => {
-        if (!keyword) {
-            failed('请先输入需要搜索的关键词')
-            return
-        }
-
-        const strs = []
-        try {
-            const reg = new RegExp(keyword)
-            for (let info of filterContent) {
-                let str = Buffer.from(info.ResponseRaw).toString('latin1')
-                let temp: any
-                while ((temp = reg.exec(str)) !== null) {
-                    // @ts-ignore
-                    if (temp[1]) {
-                        // @ts-ignore
-                        strs.push(temp[1])
-                        str = str.substring(temp['index'] + 1)
-                        reg.lastIndex = 0
-                    } else {
-                        break
-                    }
-                }
-            }
-        } catch (error) {
-            failed("正则有问题，请检查后重新输入")
-            return
-        }
-
-        if (strs.length === 0) {
-            failed('未捕获到关键词信息')
-            return
-        }
-
-        ipcRenderer.invoke("show-save-dialog", 'fuzzer列表命中内容.txt').then((res) => {
-            if (res.canceled) return
-
-            ipcRenderer
-                .invoke("write-file", {
-                    route: res.filePath,
-                    data: strs.join('\n\r')
-                })
-                .then(() => {
-                    success('下载完成')
-                    ipcRenderer.invoke("open-specified-file", res.filePath)
-                })
-        })
-    })
-
     useEffect(() => {
         if (!!keyword) {
             searchContent(keyword)
@@ -654,6 +613,65 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             )
         })
     })
+
+    useEffect(() => {
+        if (!props.request) {
+            return
+        }
+
+        setLoading(true)
+        ipcRenderer.invoke("IsMultipartFormDataRequest", {
+            Request: StringToUint8Array(props.request || "", "utf8")
+        }).then((e: { IsMultipartFormData: boolean }) => {
+            if (e.IsMultipartFormData) {
+                showModal({
+                    title: "潜在的数据包编码问题提示",
+                    content: (
+                        <Space direction={"vertical"}>
+                            <Space>
+                                <Typography>
+                                    <Text>当前数据包包含一个</Text>
+                                    <Text mark={true}>
+                                        原始文件内容 mutlipart/form-data
+                                    </Text>
+                                    <Text>
+                                        文件中的不可见字符进入编辑器将会被编码导致丢失信息。
+                                    </Text>
+                                </Typography>
+                            </Space>
+                            <Space>
+                                <Typography>
+                                    <Button type={"link"} size={"small"} onClick={() => {
+                                        ipcRenderer.invoke(
+                                            "FixUploadPacket", {Request: StringToUint8Array(props.request || "", "utf8")},
+                                        ).then((fixed: { Request: Uint8Array }) => {
+                                            setRequest(Uint8ArrayToString(fixed.Request, "utf8"))
+                                            refreshRequest()
+                                        })
+                                    }}>
+                                        点击替换
+                                    </Button>
+                                    <Text>
+                                        后，会替换掉原始文件内容
+                                    </Text>
+                                </Typography>
+                            </Space>
+                            <br/>
+                            <Space>
+                                <Typography>
+                                    <Text>如需要插入具体文件内容，可右键</Text>
+                                    <Text mark={true}>
+                                        插入文件
+                                    </Text>
+                                </Typography>
+                            </Space>
+                        </Space>
+                    ),
+                    width: "40%",
+                })
+            }
+        }).finally(() => setLoading(false))
+    }, [props.request])
 
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
@@ -933,24 +951,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     setValue: (value) => setProxy(value.join(",")),
                                                     maxTagCount: "responsive",
                                                 }}
-                                            ></ItemSelects>
-                                            {/* <ManyMultiSelectForString
-                                                formItemStyle={{marginBottom: 4}}
-                                                label={<OneLine width={68}>设置代理</OneLine>}
-                                                data={[
-                                                    "http://127.0.0.1:7890",
-                                                    "http://127.0.0.1:8080",
-                                                    "http://127.0.0.1:8082"
-                                                ].map((i) => {
-                                                    return {label: i, value: i}
-                                                })}
-                                                mode={"tags"}
-                                                defaultSep={","}
-                                                value={proxy}
-                                                setValue={(r) => {
-                                                    setProxy(r.split(",").join(","))
-                                                }}
-                                            /> */}
+                                            />
                                         </Col>
                                         <Col span={12} xl={8}>
                                             <InputItem
@@ -977,9 +978,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </Card>
                     </Col>
                     <Col span={8}>
-                        <AutoCard title={<Tooltip title={"通过过滤匹配，丢弃无用数据包，保证界面性能！"}>
-                            设置过滤器
-                        </Tooltip>}
+                        <AutoCard title={(
+                            <Tooltip title={"通过过滤匹配，丢弃无用数据包，保证界面性能！"}>
+                                设置过滤器
+                            </Tooltip>
+                        )}
                                   bordered={false} size={"small"} bodyStyle={{paddingTop: 4}}
                                   style={{marginTop: 0, paddingTop: 0}}
                         >
