@@ -69,6 +69,12 @@ message ExecBatchYakScriptResult {
   int64 ProgressTotal = 11;
   int64 ProgressCount = 12;
 
+  // 正在执行中的进程数
+  int64 ProgressRunning = 17;
+
+  // 正在执行中的扫描任务数量
+  int64 ScanTaskExecutingCount = 18;
+
   // 任务相关内容
   string Target = 13;
   repeated ExecParamItem ExtraParam = 14;
@@ -134,6 +140,8 @@ service Yak {
   rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
   rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
   rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
+  rpc FixUploadPacket(FixUploadPacketRequest) returns (FixUploadPacketResponse);
+  rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
 
   // FuzzerResponse 对象转 HTTPFlow：以便分析和模糊测试
   rpc ConvertFuzzerResponseToHTTPFlow(FuzzerResponse) returns (HTTPFlow);
@@ -255,6 +263,18 @@ service Yak {
 
   // 尝试自动解码
   rpc AutoDecode(AutoDecodeRequest) returns (AutoDecodeResponse);
+}
+
+message FixUploadPacketRequest {
+  bytes Request = 1;
+}
+
+message FixUploadPacketResponse {
+  bytes Request = 1;
+}
+
+message IsMultipartFormDataRequestResult {
+  bool IsMultipartFormData = 1;
 }
 
 message AutoDecodeRequest {
@@ -1204,6 +1224,7 @@ message FuzzerParamItem {
 
 message FuzzerRequest {
   string Request = 1;
+  bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
   repeated FuzzerParamItem Params = 2;
   int64 Concurrent = 3;
   bool IsHTTPS = 4;

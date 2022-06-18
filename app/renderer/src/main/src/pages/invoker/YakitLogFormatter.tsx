@@ -210,9 +210,9 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
             </Space>
     }
     return <Space>
-        {props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
-        <Typography.Text copyable={false}>
-            {props.data}
-        </Typography.Text>
+        {/*{props.timestamp > 0 && <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}*/}
+        <div>
+            [{formatTimestamp(props.timestamp, props.onlyTime)}]: {props.data}
+        </div>
     </Space>
 };

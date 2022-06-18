@@ -755,7 +755,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             }
 
             const offsetId = getNewestId()
-            console.info("触顶：", offsetId)
             // 查询数据
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
@@ -864,14 +863,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             return
         }
 
-        const lastSelected = getLastSelected() as HTTPFlow
-        const up = parseInt(`${lastSelected?.Id}`) < parseInt(`${selected?.Id}`)
-        // if (up) {
-        //     console.info("up")
-        // } else {
-        //     console.info("down")
-        // }
-        // console.info(lastSelected.Id, selected?.Id)
         const screenRowCount = Math.floor(getTableContentHeight() / ROW_HEIGHT) - 1
 
         if (!autoReload) {
@@ -894,8 +885,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             const minHeight = minCount * ROW_HEIGHT
             const maxHeight = minHeight + tableContentHeight
             const maxHeightBottom = minHeight + tableContentHeight + 3 * ROW_HEIGHT
-            // console.info("top: ", minHeight, "maxHeight: ", maxHeight, "maxHeightBottom: ", maxHeightBottom)
-            // console.info("viewTop: ", viewHeightMin, "viewButtom: ", viewHeightMax)
             if (maxHeight < viewHeightMin) {
                 // 往下滚动
                 scrollTableTo(minHeight)
@@ -904,7 +893,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             if (maxHeightBottom > viewHeightMax) {
                 // 上滚动
                 const offset = minHeight - (screenRowCount - 2) * ROW_HEIGHT
-                // console.info(screenRowCount, minHeight, minHeight - (screenRowCount - 1) * ROW_HEIGHT)
                 if (offset > 0) {
                     scrollTableTo(offset)
                 }
@@ -1660,7 +1648,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             title: "发送到对比器左侧",
                                             onClick: () => {
                                                 setCompareLeft({
-                                                    content: new Buffer(rowData.Request).toString("utf8"),
+                                                    content: new Buffer(rowData.Request).toString("latin1"),
                                                     language: "http"
                                                 })
                                             },
@@ -1670,7 +1658,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             title: "发送到对比器右侧",
                                             onClick: () => {
                                                 setCompareRight({
-                                                    content: new Buffer(rowData.Request).toString("utf8"),
+                                                    content: new Buffer(rowData.Request).toString("latin1"),
                                                     language: "http"
                                                 })
                                             },

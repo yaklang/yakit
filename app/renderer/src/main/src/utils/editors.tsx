@@ -26,6 +26,7 @@ import './editors.css'
 import {useMemoizedFn} from "ahooks";
 import {Buffer} from "buffer";
 import {failed} from "./notification";
+import {StringToUint8Array, Uint8ArrayToString} from "./str";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -70,7 +71,7 @@ export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
     return <YakEditor
         {...props.raw}
         type={props.isRequest ? "http" : (props.isResponse ? "html" : "http")}
-        readOnly={true} value={new Buffer(props.value).toString("utf-8")}
+        readOnly={true} value={new Buffer(props.value).toString("utf8")}
     />
 }
 
@@ -238,7 +239,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     readOnly?: boolean
     originValue: Uint8Array
     defaultStringValue?: string
-    onChange?: (i: Uint8Array) => any
+    onChange?: (i: Buffer) => any
     disableFullscreen?: boolean
     defaultHeight?: number
     bordered?: boolean
@@ -264,17 +265,29 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     system?: string
     isResponse?: boolean
+    utf8?: boolean
 }
 
-export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = (props) => {
-    return <HTTPPacketEditor noHeader={true} {...props} noPacketModifier={true} language={"yak"}/>
-}
+export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
+    return <HTTPPacketEditor
+        noHeader={true} {...props}
+        noPacketModifier={true} language={"yak"}
+        utf8={true}
+        isResponse={true}
+    />
+})
 
-export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props) => {
-    const isResponse = props.isResponse || (new Buffer(props.originValue.subarray(0, 5)).toString("utf8")).startsWith("HTTP/")
+export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
+    const isResponse = props.isResponse;
+    const getEncoding = (): "utf8" | "latin1" | "ascii" => {
+        if (isResponse || props.readOnly || props.utf8) {
+            return "utf8"
+        }
+        return "latin1"
+    }
     const [mode, setMode] = useState("text");
-    const [strValue, setStrValue] = useState(new Buffer(props.originValue).toString('utf8'));
-    const [hexValue, setHexValue] = useState<Uint8Array>(new Buffer(props.originValue))
+    const [strValue, setStrValue] = useState(Uint8ArrayToString(props.originValue, getEncoding()));
+    const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array(props.originValue))
     const [searchValue, setSearchValue] = useState("");
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
     const [fontSize, setFontSize] = useState(12);
@@ -312,7 +325,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
     const handleSetValue = React.useCallback((offset, value) => {
         hexValue[offset] = value;
         setNonce(v => (v + 1));
-        setHexValue(new Buffer(hexValue))
+        setHexValue(new Uint8Array(hexValue))
     }, [hexValue]);
 
     useEffect(() => {
@@ -321,7 +334,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         }
 
         setStrValue(props.defaultStringValue || "")
-        setHexValue(Buffer.from(props.defaultStringValue || ""))
+        setHexValue(StringToUint8Array(props.defaultStringValue || "", getEncoding()))
     }, [props.defaultStringValue])
 
     useEffect(() => {
@@ -336,8 +349,9 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
     useEffect(() => {
         if (props.readOnly) {
-            setStrValue(new Buffer(props.originValue).toString('utf8'))
-            setHexValue(new Buffer(props.originValue))
+            const value = Uint8ArrayToString(props.originValue, getEncoding())
+            setStrValue(value);
+            setHexValue(new Uint8Array(props.originValue))
         }
         if (props.readOnly && monacoEditor) {
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
@@ -352,16 +366,16 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         if (props.readOnly) {
             return
         }
-        setStrValue(new Buffer(props.originValue).toString('utf8'))
-        setHexValue(new Buffer(props.originValue))
+        setStrValue(Uint8ArrayToString(props.originValue, getEncoding()))
+        setHexValue(new Uint8Array(props.originValue))
     }, [props.refreshTrigger])
 
     useEffect(() => {
-        props.onChange && props.onChange(Buffer.from(strValue))
+        props.onChange && props.onChange(new Buffer(StringToUint8Array(strValue, getEncoding())))
     }, [strValue])
 
     useEffect(() => {
-        props.onChange && props.onChange(hexValue)
+        props.onChange && props.onChange(new Buffer(hexValue))
     }, [hexValue])
 
     const empty = !!props.emptyOr && props.originValue.length == 0
@@ -374,16 +388,18 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             style={{height: "100%", width: "100%"}}
             title={!props.noHeader && <Space>
                 {!props.noTitle && <span>{isResponse ? "Response" : "Request"}</span>}
-                {!props.simpleMode ? (!props.noHex && <SelectOne
+                {(!props.simpleMode) ? (!props.noHex && <SelectOne
                     label={" "}
                     colon={false} value={mode}
                     setValue={e => {
                         if (mode === "text" && e === "hex") {
-                            setHexValue(new Buffer(strValue))
+                            console.info("切换到 HEX 模式")
+                            setHexValue(StringToUint8Array(strValue, getEncoding()))
                         }
 
                         if (mode === "hex" && e === "text") {
-                            setStrValue(Buffer.from(hexValue).toString("utf8"))
+                            console.info("切换到 TEXT 模式")
+                            setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
                         }
                         setMode(e)
                     }}
@@ -407,14 +423,18 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column"}}
             extra={!props.noHeader && <Space size={2}>
                 {props.extra}
-                {props.sendToWebFuzzer && <Button
+                {props.sendToWebFuzzer && props.readOnly && <Button
                     size={"small"}
                     type={"primary"}
                     icon={<ThunderboltFilled/>}
                     onClick={() => {
                         ipcRenderer.invoke("send-to-tab", {
                             type: "fuzzer",
-                            data: {isHttps: props.defaultHttps || false, request: strValue}
+                            // 这儿的编码为了保证不要乱动
+                            data: {
+                                isHttps: props.defaultHttps || false,
+                                request: Uint8ArrayToString(props.originValue, "utf8")
+                            }
                         })
                     }}
                 >FUZZ</Button>}
@@ -484,7 +504,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     type={props.language || (isResponse ? "html" : "http")}
                     value={
                         props.readOnly && props.originValue.length > 0 ?
-                            new Buffer(props.originValue).toString() : strValue
+                            new Buffer(props.originValue).toString(getEncoding()) : strValue
+                        // Uint8ArrayToString(props.originValue, getEncoding()) : strValue
                     }
                     readOnly={props.readOnly}
                     setValue={setStrValue} noWordWrap={noWordwrap}
@@ -497,7 +518,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 id: "auto-decode", run: (e) => {
                                     try {
                                         // @ts-ignore
-                                        const text = e.getModel()?.getValueInRange(e.getSelection()) || "";
+                                        const text = e.getModel()?.getValueInRange(e.getSelection() as any) || "";
                                         if (!text) {
                                             Modal.info({
                                                 title: "自动解码失败", content: (

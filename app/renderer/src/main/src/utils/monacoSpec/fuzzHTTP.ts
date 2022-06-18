@@ -1,7 +1,113 @@
 import {monaco} from "react-monaco-editor";
+import {editor, languages, Position} from "monaco-editor";
+import {CancellationToken} from "typescript";
 
 // https://microsoft.github.io/monaco-editor/playground.html#extending-language-services-custom-languages
 monaco.languages.register({id: "http"})
+// Register a completion item provider for the new language
+monaco.languages.registerCompletionItemProvider('http', {
+    triggerCharacters: ["{"],
+    // @ts-ignore
+    provideCompletionItems: (model, position) => {
+        var suggestions = [];
+        const line = model.getLineContent(position.lineNumber);
+        if (position.column > 2) {
+            const lastTwo = line.charAt(position.column - 3) + line.charAt(position.column - 2)
+            if (lastTwo === "{{") {
+                return {
+                    suggestions: [
+                        {
+                            label: "int(整数范围)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'int(${1:0}${2:,100})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "int(整数范围-0补位)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'int(${1:0}${2:-100}${3:|3})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "network(拆分网络目标段)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'network(${1:192.168.1.1/24,example.com})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "array(使用‘|’分割数组元素渲染)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'array(${1:abc|def|123})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "x(使用 payload 管理中的数据)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'array(${1:abc|def|123})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "randint(随机生成整数)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'randint(${1:1}${2:,10}${3:10})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "randstr(随机生成字符串)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'randstr(${1:1}${2:,10}${3:10})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "file:line(按行读取文件内容)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'file:line(${1:/tmp/test.txt})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "file(直接插入文件内容)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'file(${1:/tmp/test.txt})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "file:dir(插入文件目录下所有文件-模糊上传)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'file:dir(${1:/tmp/test.txt})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "base64(使用内容 base64 编码)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'base64(${1:testname})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "url(使用 URL 编码)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'url(${1:testname})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "doubleurl(使用双重 URL 编码)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'url(${1:testname})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "hexdec(使用十六进制解码)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'hexdec(${1:testname})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                    ]
+                }
+            }
+        }
+        return {suggestions: suggestions,};
+    }
+});
+
 monaco.languages.setMonarchTokensProvider("http", {
     brackets: [],
     defaultToken: "",

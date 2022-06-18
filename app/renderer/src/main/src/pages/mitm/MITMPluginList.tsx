@@ -13,6 +13,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {MITMPluginTemplateShort} from "../invoker/data/MITMPluginTamplate";
 import {MITMYakScriptLoader} from "./MITMYakScriptLoader";
 import {failed} from "../../utils/notification";
+import {StringToUint8Array} from "../../utils/str";
 
 export const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
 
@@ -146,8 +147,8 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
             <YakCodeEditor
                 refreshTrigger={refreshTrigger}
                 noHeader={true} noPacketModifier={true}
-                originValue={Buffer.from(script || "")}
-                onChange={e => setScript(e.toString())}
+                originValue={Buffer.from(script, "utf8")}
+                onChange={e => setScript(e.toString("utf8"))}
                 language={"yak"}
                 extraEditorProps={{
                     noMiniMap: true, noWordWrap: true,

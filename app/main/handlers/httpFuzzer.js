@@ -173,4 +173,36 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GenerateYakCodeByPacket", async (e, params) => {
         return await asyncGenerateYakCodeByPacket(params)
     })
+
+    // asyncFixUploadPacket wrapper
+    const asyncFixUploadPacket = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().FixUploadPacket(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("FixUploadPacket", async (e, params) => {
+        return await asyncFixUploadPacket(params)
+    })
+
+    // asyncIsMultipartFormDataRequest wrapper
+    const asyncIsMultipartFormDataRequest = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().IsMultipartFormDataRequest(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("IsMultipartFormDataRequest", async (e, params) => {
+        return await asyncIsMultipartFormDataRequest(params)
+    })
 }

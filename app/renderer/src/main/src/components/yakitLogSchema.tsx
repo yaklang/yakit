@@ -45,7 +45,7 @@ export const ExtractExecResultMessageToYakitPort = (msg: ExecResultMessage): Yak
 export const ExtractExecResultMessage = (data: ExecResult): ExecResultLog | ExecResultProgress | undefined => {
     if (data.IsMessage) {
         try {
-            let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString("utf8"));
+            let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString());
             if (obj.type === "log") {
                 return obj.content as ExecResultLog
             } else if (obj.type === "progress") {

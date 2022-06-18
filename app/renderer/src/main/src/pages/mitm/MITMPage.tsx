@@ -393,8 +393,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     currentPacketId: msg.responseId,
                     isHttp: msg.isHttps
                 })
-                // setCurrentPacket(new Buffer(msg.response).toString("utf8"))
-                // setCurrentPacketId(msg.responseId || 0);
             }
         } else {
             if (msg.request) {
@@ -914,6 +912,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         <HTTPPacketEditor
                                                             originValue={currentPacket}
                                                             noHeader={true}
+                                                            isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("latin1").startsWith("HTTP/")}
                                                             bordered={false}
                                                             onChange={setModifiedPacket}
                                                             noPacketModifier={true}

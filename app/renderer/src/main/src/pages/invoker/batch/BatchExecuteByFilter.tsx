@@ -113,7 +113,7 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
         setPercent(0)
 
         //@ts-ignore
-        const time = Date.parse(new Date()) / 1000
+        const time = Date.parse(new Date().toString()) / 1000
         const obj: NewTaskHistoryProps = {
             target: t,
             simpleQuery: props.simpleQuery,
@@ -213,76 +213,18 @@ interface TaskResultLog extends ExecResultLog {
 }
 
 export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterProp> = (props) => {
-    const [activeTask, setActiveTask] = useState<BatchTask[]>([]);
-    const allPluginTasks = useRef<Map<string, ExecBatchYakScriptResult[]>>(new Map<string, ExecBatchYakScriptResult[]>())
-    const [allTasks, setAllTasks] = useState<BatchTask[]>([]);
-    const [hitTasks, setHitTasks] = useState<ExecResultLog[]>([]);
     const [taskLog, setTaskLog, getTaskLog] = useGetState<TaskResultLog[]>([]);
-    const allTasksMap = useCreation<Map<string, BatchTask>>(() => {
-        return new Map<string, BatchTask>()
-    }, [])
-    const [jsonRisks, setJsonRisks] = useState<Risk[]>([]);
+    const [progressFinished, setProgressFinished] = useState(0);
+    const [progressTotal, setProgressTotal] = useState(0);
+    const [progressRunning, setProgressRunning] = useState(0);
+    const [scanTaskExecutingCount, setScanTaskExecutingCount] = useState(0);
+
+    const [jsonRisks, setJsonRisks, getJsonRisks] = useGetState<Risk[]>([]);
 
     const [tableContentHeight, setTableContentHeight] = useState<number>(0);
     const [activeKey, setActiveKey] = useState<string>("executing")
 
     useEffect(() => {
-        if (props.executing && (!!allPluginTasks) && (!!allPluginTasks.current)) allPluginTasks.current.clear()
-    }, [props.executing])
-
-    // 转换task内的result数据
-    const convertTask = (task: BatchTask) => {
-        // @ts-ignore
-        const results: ExecResult[] = task.Results.filter((item) => !!item.Result).map((item) => item.Result)
-
-        const messages: ExecResultMessage[] = []
-        for (let item of results) {
-            if (!item.IsMessage) continue
-
-            try {
-                const raw = item.Message
-                const obj: ExecResultMessage = JSON.parse(Buffer.from(raw).toString("utf8"))
-                messages.push(obj)
-            } catch (e) {
-                console.error(e)
-            }
-        }
-
-        return messages
-    }
-
-    useEffect(() => {
-        const update = () => {
-            const result: BatchTask[] = [];
-            let hitResult: ExecResultLog[] = [];
-            allTasksMap.forEach(value => {
-                if (value.Results[value.Results.length - 1]?.Status === "end") {
-                    result.push(value)
-                    if (value.Results.length !== 0) {
-                        const arr: ExecResultLog[] =
-                            (convertTask(value)
-                                .filter((e) => e.type === "log")
-                                .map((i) => i.content) as ExecResultLog[])
-                                .filter((i) => (i?.level || "").toLowerCase() === "json-risk")
-                        if (arr.length > 0) {
-                            hitResult = hitResult.concat(...arr)
-                        }
-                    }
-                }
-            })
-            setAllTasks(result)
-            setHitTasks(hitResult)
-        }
-        update()
-        const id = setInterval(update, 3000)
-        return () => {
-            clearInterval(id)
-        }
-    }, [])
-
-    useEffect(() => {
-        let index = 0
-        const activeTask = new Map<string, ExecBatchYakScriptResult[]>();
         ipcRenderer.on(`${props.token}-error`, async (e, exception) => {
             if (`${exception}`.includes("Cancelled on client")) {
                 return
@@ -291,140 +233,79 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
             console.info(exception)
         })
 
+        const logs: TaskResultLog[] = []
+        let index = 0
+
         ipcRenderer.on(`${props.token}-data`, async (e, data: ExecBatchYakScriptResult) => {
             // 处理进度信息
             if (data.ProgressMessage) {
+                setProgressTotal(data.ProgressTotal || 0)
+                setProgressRunning(data.ProgressRunning || 0)
+                setProgressFinished(data.ProgressCount || 0)
+                setScanTaskExecutingCount(data.ScanTaskExecutingCount || 0)
                 if (!!props.setPercent) {
                     props.setPercent(data.ProgressPercent || 0)
                 }
                 return
             }
 
-            // 处理其他任务信息
-            const taskId: string = data.TaskId || "";
-            if (taskId === "") return
-
-            // 缓存内容
-            let activeResult = activeTask.get(taskId);
-            if (!activeResult) activeResult = []
-            activeResult.push(data)
-            activeTask.set(taskId, activeResult)
-            // 缓存全部
-            let allresult = allPluginTasks.current.get(taskId);
-            if (!allresult) allresult = []
-            allresult.push(data)
-            allPluginTasks.current.set(taskId, allresult)
-
             if (data.Result && data.Result.IsMessage) {
-                const info: TaskResultLog = JSON.parse(new Buffer(data.Result.Message).toString()).content
+                const info: TaskResultLog = JSON.parse(new Buffer(data.Result.Message).toString())?.content
                 if (info) {
                     info.key = index
+                    if (info.level === "json-risk") {
+                        try {
+                            const risk = JSON.parse(info.data) as Risk;
+                            if (!!risk.RiskType) {
+                                setJsonRisks([...getJsonRisks(), risk])
+                            }
+                        } catch (e) {
+
+                        }
+                    }
                     index += 1
-                    const arr: TaskResultLog[] = [...getTaskLog()]
-                    if (arr.length >= 20) arr.shift()
-                    arr.push(info)
-                    setTaskLog([...arr])
+                    logs.push(info)
+                    if (logs.length > 20) {
+                        logs.shift()
+                    }
                 }
             }
+        })
 
-            // 设置状态
-            if (data.Status === "end") {
-                activeTask.delete(taskId)
+        const syncLogs = () => {
+            const shownLogs = getTaskLog() || [];
+            if (shownLogs.length === 0 && logs.length > 0) {
+                setTaskLog([...logs])
                 return
             }
 
-            // 看一下输出结果
-            // if (data.Result && data.Result.IsMessage) {
-            //     console.info(321,new Buffer(data.Result.Message).toString())
-            // }
-        })
-
-        let cached = "";
-        const syncActiveTask = () => {
-            if (activeTask.size <= 0) setActiveTask([]);
-            if (activeTask.size <= 0 && allPluginTasks.current.size <= 0) return
-
-            const result: BatchTask[] = [];
-            const tasks: string[] = [];
-            activeTask.forEach(value => {
-                if (value.length <= 0) return
-
-                const first = value[0];
-                const task = {
-                    Target: first.Target || "",
-                    ExtraParam: first.ExtraParams || [],
-                    PoC: first.PoC,
-                    TaskId: first.TaskId,
-                    CreatedAt: first.Timestamp,
-                } as BatchTask;
-                task.Results = value;
-                result.push(task)
-                tasks.push(`${value.length}` + task.TaskId)
-            })
-            const allResult: BatchTask[] = [];
-            allPluginTasks.current.forEach(value => {
-                if (value.length <= 0) return
-
-                const task = {
-                    Target: value[0].Target || "",
-                    ExtraParam: value[0].ExtraParams || [],
-                    PoC: value[0].PoC,
-                    TaskId: value[0].TaskId,
-                    CreatedAt: value[0].Timestamp,
-                } as BatchTask;
-                task.Results = value;
-                allResult.push(task)
-            })
-
-            const oldAllResult: BatchTask[] = []
-            allTasksMap.forEach(value => oldAllResult.push(value))
-            if (JSON.stringify(allResult) !== JSON.stringify(oldAllResult)) {
-                allResult.forEach((value) => allTasksMap.set(value.TaskId, value))
-            }
-
-            const tasksRaw = tasks.sort().join("|")
-            if (tasksRaw !== cached) {
-                cached = tasksRaw
-                setActiveTask(result)
+            if (shownLogs.length > 0 && (shownLogs[shownLogs.length - 1].key + 1 < index)) {
+                setTaskLog([...logs])
             }
         }
-
-        let id = setInterval(syncActiveTask, 300);
+        let id = setInterval(() => {
+            syncLogs()
+        }, 500)
         return () => {
             ipcRenderer.removeAllListeners(`${props.token}-data`)
             ipcRenderer.removeAllListeners(`${props.token}-end`)
             ipcRenderer.removeAllListeners(`${props.token}-error`)
-            allTasksMap.clear()
             setTaskLog([])
-            setAllTasks([])
             setActiveKey("executing")
-            clearInterval(id);
+            clearInterval(id)
         }
     }, [props.token])
-
-    useEffect(() => {
-        if (hitTasks.length <= 0) {
-            return
-        }
-        setJsonRisks(hitTasks.map(i => {
-            try {
-                return JSON.parse(i.data)
-            } catch (e) {
-                return undefined
-            }
-        }).filter(i => !!i))
-    }, [hitTasks])
 
     return <div className="batch-executor-result">
         <div className="result-notice-body">
             <div className="notice-body">
-                <div className="notice-body-header notice-font-in-progress">正在执行任务</div>
-                <div className="notice-body-counter">{activeTask.length}</div>
+                <div className="notice-body-header notice-font-in-progress">执行中状态</div>
+                <div className="notice-body-counter">{progressRunning}进程 / {scanTaskExecutingCount}任务</div>
             </div>
             <Divider type="vertical" className="notice-divider"/>
             <div className="notice-body">
-                <div className="notice-body-header notice-font-completed">已完成任务</div>
-                <div className="notice-body-counter">{allTasks.length}</div>
+                <div className="notice-body-header notice-font-completed">已结束/总进程</div>
+                <div className="notice-body-counter">{progressFinished}/{progressTotal}</div>
             </div>
             <Divider type="vertical" className="notice-divider"/>
             <div className="notice-body">
@@ -442,8 +323,10 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                         <Timeline className="body-time-line" pending={props.executing} reverse={true}>
                             {taskLog.map(item => {
                                 return <Timeline.Item key={item.key}>
-                                    <YakitLogFormatter data={item.data} level={item.level}
-                                                       timestamp={item.timestamp} onlyTime={true} isCollapsed={true}/>
+                                    <YakitLogFormatter
+                                        data={item.data} level={item.level}
+                                        timestamp={item.timestamp} onlyTime={true} isCollapsed={true}
+                                    />
                                 </Timeline.Item>
                             })}
                         </Timeline>

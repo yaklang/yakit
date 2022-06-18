@@ -71,6 +71,8 @@ export interface ExecBatchYakScriptResult {
     ProgressPercent?: number
     ProgressTotal?: number
     ProgressCount?: number
+    ProgressRunning?: number
+    ScanTaskExecutingCount?: number
 
     TaskId?: string
     ExtraParams?: { Key: string, Value: string }[]
