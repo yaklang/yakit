@@ -161,6 +161,30 @@ module.exports = (win, getClient) => {
         return await asyncGetYakScriptById(params)
     })
 
+    const streamRecoverExecBatchYakScriptUnfinishedTaskMap = new Map();
+    ipcMain.handle("cancel-RecoverExecBatchYakScriptUnfinishedTask", handlerHelper.cancelHandler(streamRecoverExecBatchYakScriptUnfinishedTaskMap));
+    ipcMain.handle("RecoverExecBatchYakScriptUnfinishedTask", (e, params, token) => {
+        let stream = getClient().RecoverExecBatchYakScriptUnfinishedTask(params);
+        handlerHelper.registerHandler(win, stream, streamRecoverExecBatchYakScriptUnfinishedTaskMap, token)
+    })
+
+    // asyncGetExecBatchYakScriptUnfinishedTask wrapper
+    const asyncGetExecBatchYakScriptUnfinishedTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetExecBatchYakScriptUnfinishedTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetExecBatchYakScriptUnfinishedTask", async (e, params) => {
+        return await asyncGetExecBatchYakScriptUnfinishedTask(params)
+    })
+
+
     // asyncIgnoreYakScript wrapper
     const asyncIgnoreYakScript = (params) => {
         return new Promise((resolve, reject) => {

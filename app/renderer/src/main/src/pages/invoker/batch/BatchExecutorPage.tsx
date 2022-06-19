@@ -45,6 +45,7 @@ import {CacheStatusCardProps} from "../../../hook/useHoldingIPCRStream";
 import {writeExecResultXTerm} from "../../../utils/xtermUtils";
 import {PluginResultUI, StatusCardInfoProps, StatusCardProps} from "../../yakitStore/viewers/base";
 import {NewTaskHistoryProps} from "./BatchExecuteByFilter";
+import {showUnfinishedBatchTaskList, UnfinishedBatchTask} from "./UnfinishedBatchTaskList";
 
 export interface BatchExecutorPageProp {
 
@@ -550,41 +551,47 @@ export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo
                     </div>} trigger={["click"]}>
                         <Button type="link" style={{padding: 4}}> 额外配置 </Button>
                     </Popover>
-                    {history.length !== 0 && (
-                        <Popover
-                            title={"历史任务(选择后可回显目标与poc)"}
-                            trigger={["click"]}
-                            placement='bottom'
-                            content={
-                                <div className='history-list-body'>
-                                    {history.map((item) => {
-                                        return (
-                                            <div
-                                                className='list-opt'
-                                                key={item.time}
-                                                onClick={() => {
-                                                    if (executing) return
-                                                    if (!item.simpleQuery) {
-                                                        failed("该条历史记录无法使用!")
-                                                        return
-                                                    }
-                                                    executeHistory(item)
-                                                    setTarget({...item.target})
-                                                }}
-                                            >
-                                                {item.time}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            }
-                        >
-                            <Button type='link' style={{padding: 4}}>
-                                {" "}
-                                历史任务{" "}
-                            </Button>
-                        </Popover>
-                    )}
+                    <Button type={"link"} onClick={() => {
+                        showUnfinishedBatchTaskList((task: UnfinishedBatchTask) => {
+                            alert("1")
+                        })
+                    }}>
+                        未完成的任务
+                    </Button>
+                    {/*{history.length !== 0 && (*/}
+                    {/*    <Popover*/}
+                    {/*        title={"历史任务(选择后可回显目标与poc)"}*/}
+                    {/*        trigger={["click"]}*/}
+                    {/*        placement='bottom'*/}
+                    {/*        content={*/}
+                    {/*            <div className='history-list-body'>*/}
+                    {/*                {history.map((item) => {*/}
+                    {/*                    return (*/}
+                    {/*                        <div*/}
+                    {/*                            className='list-opt'*/}
+                    {/*                            key={item.time}*/}
+                    {/*                            onClick={() => {*/}
+                    {/*                                if (executing) return*/}
+                    {/*                                if (!item.simpleQuery) {*/}
+                    {/*                                    failed("该条历史记录无法使用!")*/}
+                    {/*                                    return*/}
+                    {/*                                }*/}
+                    {/*                                executeHistory(item)*/}
+                    {/*                                setTarget({...item.target})*/}
+                    {/*                            }}*/}
+                    {/*                        >*/}
+                    {/*                            {item.time}*/}
+                    {/*                        </div>*/}
+                    {/*                    )*/}
+                    {/*                })}*/}
+                    {/*            </div>*/}
+                    {/*        }*/}
+                    {/*    >*/}
+                    {/*        <Button type='link' style={{padding: 4}}>*/}
+                    {/*            历史任务*/}
+                    {/*        </Button>*/}
+                    {/*    </Popover>*/}
+                    {/*)}*/}
                 </Space>
             </div>
         </Form>

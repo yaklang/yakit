@@ -110,6 +110,8 @@ service Yak {
   rpc AutoUpdateYakModule(Empty) returns (stream ExecResult);
   rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
   rpc ExecBatchYakScript(ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
+  rpc GetExecBatchYakScriptUnfinishedTask(Empty) returns (GetExecBatchYakScriptUnfinishedTaskResponse);
+  rpc RecoverExecBatchYakScriptUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecBatchYakScriptResult);
 
   // yakScript
   rpc QueryYakScript(QueryYakScriptRequest) returns (QueryYakScriptResponse);
@@ -263,6 +265,20 @@ service Yak {
 
   // 尝试自动解码
   rpc AutoDecode(AutoDecodeRequest) returns (AutoDecodeResponse);
+}
+
+message RecoverExecBatchYakScriptUnfinishedTaskRequest {
+  string Uid = 1;
+}
+
+message ExecBatchYakScriptUnfinishedTask {
+  double Percent = 1;
+  int64 CreatedAt = 2;
+  string Uid = 3;
+}
+
+message GetExecBatchYakScriptUnfinishedTaskResponse {
+  repeated ExecBatchYakScriptUnfinishedTask Tasks = 1;
 }
 
 message FixUploadPacketRequest {
