@@ -125,6 +125,7 @@ service Yak {
 
   // yakScript
   rpc QueryYakScript(QueryYakScriptRequest) returns (QueryYakScriptResponse);
+  rpc QueryYakScriptByYakScriptName(QueryYakScriptRequest) returns (stream YakScript);
   rpc SaveYakScript(YakScript) returns (YakScript);
   rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc GetYakScriptById(GetYakScriptByIdRequest) returns (YakScript);
