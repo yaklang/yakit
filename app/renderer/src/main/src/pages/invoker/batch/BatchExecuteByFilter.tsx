@@ -31,6 +31,7 @@ export interface BatchExecuteByFilterProp {
     allTag: FieldName[]
     isAll: boolean
     executeHistory: (info: NewTaskHistoryProps) => any
+    initTargetRequest?: TargetRequest
 }
 
 export interface NewTaskHistoryProps {
@@ -50,6 +51,10 @@ export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema,
         Tag: isAll ? [] : i.tags.split(","),
         NoResultReturn: false,
     }
+
+    if (i.tags === "" && i.include.length > 0) {
+        result.Tag = []
+    }
     if (!isAll && i.include.length === 0 && i.exclude.length === 0 && i.tags === "") {
         result.NoResultReturn = true
         return result
@@ -61,6 +66,8 @@ export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema,
 const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryYakScriptRequest, token: string) => {
     const params = {
         Target: target.target,
+        Proxy: target.proxy,
+        ProgressTaskCount: target.progressTaskCount,
         TargetFile: target.targetFile,
         ScriptNames: [], EnablePluginFilter: true, PluginFilter: filter,
         Concurrent: target.concurrent || 5,
@@ -69,7 +76,7 @@ const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryY
     return ipcRenderer.invoke("ExecBatchYakScript", params, token)
 };
 
-export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.memo((props) => {
+export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.memo((props: BatchExecuteByFilterProp) => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [token, setToken] = useState(randomString(20))
@@ -179,6 +186,7 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
     >
         <ExecSelectedPlugins
             disableStartButton={total <= 0}
+            initTargetRequest={props.initTargetRequest}
             onSubmit={run}
             onCancel={cancel}
             executing={executing}

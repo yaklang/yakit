@@ -6,13 +6,60 @@ import {ResizeBox} from "../../../components/ResizeBox";
 import {BatchExecuteByFilter, simpleQueryToFull} from "./BatchExecuteByFilter";
 import {SimplePluginList} from "../../../components/SimplePluginList";
 import {AutoCard} from "../../../components/AutoCard";
+import {Empty, Spin} from "antd";
 import {randomString} from "../../../utils/randomUtil";
+import {TargetRequest} from "./BatchExecutorPage";
+
+const {ipcRenderer} = window.require("electron");
+
+export interface ReadOnlyBatchExecutorByRecoverUidProp {
+    Uid?: string
+}
+
+export const ReadOnlyBatchExecutorByRecoverUid: React.FC<ReadOnlyBatchExecutorByRecoverUidProp> = (props: ReadOnlyBatchExecutorByRecoverUidProp) => {
+    const [target, setTarget] = useState<string>("");
+    const [query, setQuery] = useState<SimpleQueryYakScriptSchema>({
+        tags: "struts", include: [], exclude: [], type: "mitm,port-scan,nuclei"
+    });
+    const [loading, setLoading] = useState(false);
+    useEffect(() => {
+        setLoading(true)
+        ipcRenderer.invoke("GetExecBatchYakScriptUnfinishedTaskByUid", {
+            Uid: props.Uid,
+        }).then((req: {
+            ScriptNames: string[],
+            Target: string,
+        }) => {
+            const {Target, ScriptNames} = req;
+            setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
+            setTarget(Target)
+        }).catch(e => {
+            console.info(e)
+        }).finally(() => setTimeout(() => setLoading(false), 600))
+    }, [props.Uid])
+
+    if (!props.Uid) {
+        return <Empty description={"恢复未完成的批量执行任务需要额外 UID"}>
+
+        </Empty>
+    }
+
+    if (loading) {
+        return <Spin tip={"正在恢复未完成的任务"}/>
+    }
+
+    return <ReadOnlyBatchExecutor query={{...query}} initTargetRequest={{
+        target: target, targetFile: "",
+        allowFuzz: true, concurrent: 5,
+        totalTimeout: 7200,
+        progressTaskCount: 5,
+        proxy: "",
+    } as TargetRequest}/>
+}
 
 export interface ReadOnlyBatchExecutorByMenuItemProp {
     MenuItemId: number
 }
-
-const {ipcRenderer} = window.require("electron");
 
 export const ReadOnlyBatchExecutorByMenuItem: React.FC<ReadOnlyBatchExecutorByMenuItemProp> = (props) => {
     const [query, setQuery] = useState<SimpleQueryYakScriptSchema>({
@@ -40,6 +87,7 @@ export const ReadOnlyBatchExecutorByMenuItem: React.FC<ReadOnlyBatchExecutorByMe
 export interface ReadOnlyBatchExecutorProp {
     query: SimpleQueryYakScriptSchema
     MenuItemId?: any
+    initTargetRequest?: TargetRequest
 }
 
 export const ReadOnlyBatchExecutor: React.FC<ReadOnlyBatchExecutorProp> = React.memo((props: ReadOnlyBatchExecutorProp) => {
@@ -49,6 +97,11 @@ export const ReadOnlyBatchExecutor: React.FC<ReadOnlyBatchExecutorProp> = React.
         tags: "",
         type: "mitm,port-scan,nuclei"
     });
+
+    const fullQuery = simpleQueryToFull(false, query, []);
+    useEffect(() => {
+        console.info("FULLQUERY", fullQuery)
+    }, [fullQuery])
 
     useEffect(() => {
         setQuery({...props.query})
@@ -64,7 +117,7 @@ export const ReadOnlyBatchExecutor: React.FC<ReadOnlyBatchExecutorProp> = React.
                         pluginTypes={query.type}
                         readOnly={true}
                         initialQuery={{
-                            ...simpleQueryToFull(false, query, []),
+                            ...fullQuery,
                             Pagination: {Limit: 10000, Page: 1, Order: "updated_at", OrderBy: "desc"},
                         }}
                     />
@@ -76,6 +129,7 @@ export const ReadOnlyBatchExecutor: React.FC<ReadOnlyBatchExecutorProp> = React.
             secondNode={<BatchExecuteByFilter
                 simpleQuery={query}
                 allTag={[]}
+                initTargetRequest={props.initTargetRequest}
                 isAll={false}
                 executeHistory={(i) => {
                     if (!setQuery) {

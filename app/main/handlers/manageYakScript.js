@@ -184,6 +184,21 @@ module.exports = (win, getClient) => {
         return await asyncGetExecBatchYakScriptUnfinishedTask(params)
     })
 
+    // asyncGetExecBatchYakScriptUnfinishedTaskByUid wrapper
+    const asyncGetExecBatchYakScriptUnfinishedTaskByUid = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetExecBatchYakScriptUnfinishedTaskByUid(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetExecBatchYakScriptUnfinishedTaskByUid", async (e, params) => {
+        return await asyncGetExecBatchYakScriptUnfinishedTaskByUid(params)
+    })
 
     // asyncIgnoreYakScript wrapper
     const asyncIgnoreYakScript = (params) => {

@@ -502,7 +502,7 @@ export interface InputFileNameItem {
 const {ipcRenderer} = window.require("electron");
 export const InputFileNameItem: React.FC<InputFileNameItem> = p => {
     const [uploadLoading, setUploadLoading] = useState(false);
-    return <Item>
+    return <Item label={p.label}>
         <Upload.Dragger
             className='targets-upload-dragger'
             accept={(p.accept || [])?.join(",")}
@@ -527,7 +527,9 @@ export const InputFileNameItem: React.FC<InputFileNameItem> = p => {
             }}>
             <Spin spinning={uploadLoading}>
                 {p.loadContent ? <InputItem
-                    label={p.label} setValue={Targets => p.setContent && p.setContent(Targets)}
+                    // label={p.label}
+                    label={""}
+                    setValue={Targets => p.setContent && p.setContent(Targets)}
                     value={p.content} textarea={true} textareaRow={6}
                     placeholder="请输入绝对路径"
                     isBubbing={true}
@@ -535,7 +537,8 @@ export const InputFileNameItem: React.FC<InputFileNameItem> = p => {
                         可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
                     </div>)}
                 /> : <InputItem
-                    label={p.label} value={p.filename} setValue={f => p.setFileName && p.setFileName(f)}
+                    label={""}
+                    value={p.filename} setValue={f => p.setFileName && p.setFileName(f)}
                     placeholder="请输入绝对路径"
                     isBubbing={true} allowClear={false} help={p.hint ? p.hint : (<div>
                     可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传

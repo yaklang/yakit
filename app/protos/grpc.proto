@@ -39,7 +39,7 @@ message ExecBatchYakScriptRequest {
   // 模块类型，默认为 nuclei
   string Type = 5;
 
-  // 并发
+  // 并发（进程）
   int64 Concurrent = 6;
 
   // 精确使用脚本名称
@@ -49,6 +49,15 @@ message ExecBatchYakScriptRequest {
   // Tags with exclude / include
   QueryYakScriptRequest PluginFilter = 12;
   bool EnablePluginFilter = 13;
+
+  // 设置一个代理
+  string Proxy = 14;
+
+  // 每个进程的任务数量
+  int64 ProgressTaskCount = 15;
+
+  // 基础进度 - 这个默认是 0.1 一般别用，只在 Recover 的时候可能才会有用处
+  double BaseProgress = 16;
 }
 
 message ExecBatchYakScriptResult {
@@ -111,6 +120,7 @@ service Yak {
   rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
   rpc ExecBatchYakScript(ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
   rpc GetExecBatchYakScriptUnfinishedTask(Empty) returns (GetExecBatchYakScriptUnfinishedTaskResponse);
+  rpc GetExecBatchYakScriptUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
   rpc RecoverExecBatchYakScriptUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecBatchYakScriptResult);
 
   // yakScript
@@ -265,6 +275,10 @@ service Yak {
 
   // 尝试自动解码
   rpc AutoDecode(AutoDecodeRequest) returns (AutoDecodeResponse);
+}
+
+message GetExecBatchYakScriptUnfinishedTaskByUidRequest {
+  string Uid = 1;
 }
 
 message RecoverExecBatchYakScriptUnfinishedTaskRequest {
