@@ -467,7 +467,7 @@ export interface TargetRequest {
 export const ExecSelectedPlugins: React.FC<ExecSelectedPluginsProp> = React.memo((props: ExecSelectedPluginsProp) => {
     const [target, setTarget] = useState<TargetRequest>(props.initTargetRequest ? props.initTargetRequest : {
         allowFuzz: true, target: "", targetFile: "",
-        concurrent: 5, totalTimeout: 3600 * 2,
+        concurrent: 3, totalTimeout: 3600 * 2,
         progressTaskCount: 5,
         proxy: "",
     });

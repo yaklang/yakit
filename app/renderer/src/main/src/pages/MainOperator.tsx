@@ -732,7 +732,10 @@ const Main: React.FC<MainProp> = (props) => {
     const addBatchExecRecover = useMemoizedFn((task: UnfinishedBatchTask) => {
         addTabPage(Route.BatchExecutorRecover, {
             hideAdd: true,
-            node: ContentByRoute(Route.BatchExecutorRecover, undefined, {recoverUid: task.Uid})
+            node: ContentByRoute(Route.BatchExecutorRecover, undefined, {
+                recoverUid: task.Uid,
+                recoverBaseProgress: task.Percent
+            })
         })
     })
 
@@ -746,7 +749,6 @@ const Main: React.FC<MainProp> = (props) => {
             if (type === "plugin-store") addYakRunning(data);
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask);
             console.info("send to tab: ", type)
-            console.info("data: ", data)
         })
 
         return () => {

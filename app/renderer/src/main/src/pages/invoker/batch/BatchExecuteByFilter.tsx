@@ -12,7 +12,7 @@ import {
     TargetRequest,
 } from "./BatchExecutorPage";
 import {formatTimestamp} from "../../../utils/timeUtil";
-import {failed} from "../../../utils/notification";
+import {failed, info} from "../../../utils/notification";
 import {ExecBatchYakScriptResult} from "./YakBatchExecutorLegacy";
 import {TableResizableColumn} from "../../../components/TableResizableColumn";
 import {FieldName, RiskDetails, TitleColor} from "../../risks/RiskTable";
@@ -30,8 +30,12 @@ export interface BatchExecuteByFilterProp {
     simpleQuery: SimpleQueryYakScriptSchema
     allTag: FieldName[]
     isAll: boolean
+    total?: number
     executeHistory: (info: NewTaskHistoryProps) => any
     initTargetRequest?: TargetRequest
+    fromRecover?: boolean
+    baseProgress?: number
+    recoverUid?: string
 }
 
 export interface NewTaskHistoryProps {
@@ -63,7 +67,7 @@ export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema,
     return result
 }
 
-const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryYakScriptRequest, token: string) => {
+const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryYakScriptRequest, token: string, fromRecover?: boolean, baseProgress?: number) => {
     const params = {
         Target: target.target,
         Proxy: target.proxy,
@@ -72,6 +76,8 @@ const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryY
         ScriptNames: [], EnablePluginFilter: true, PluginFilter: filter,
         Concurrent: target.concurrent || 5,
         TotalTimeoutSeconds: target.totalTimeout || 3600 * 2,
+        FromRecover: fromRecover,
+        BaseProgress: baseProgress,
     };
     return ipcRenderer.invoke("ExecBatchYakScript", params, token)
 };
@@ -84,10 +90,14 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
     const [percent, setPercent] = useState(0);
 
     // 执行任务历史列表
-    const [taskHistory, setTaskHistory] = useState<NewTaskHistoryProps[]>([])
+    // const [taskHistory, setTaskHistory] = useState<NewTaskHistoryProps[]>([])
 
     // 计算插件数量
     useEffect(() => {
+        if ((props?.total || 0) > 0) {
+            setTotal(props.total as number)
+            return
+        }
         setLoading(true)
         const result = simpleQueryToFull(props.isAll, props.simpleQuery, props.allTag);
 
@@ -97,47 +107,57 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
             .finally(() => setTimeout(() => setLoading(false), 300))
     }, [
         useDebounce(props.simpleQuery, {wait: 500}),
-        useDebounce(props.isAll, {wait: 500})
+        useDebounce(props.isAll, {wait: 500}),
+        useDebounce(props.total, {wait: 500})
     ])
 
-    // 回复缓存
     useEffect(() => {
-        setLoading(true)
-        ipcRenderer
-            .invoke("get-value", ExecuteTaskHistory)
-            .then((res: any) => {
-                setTaskHistory(res ? JSON.parse(res) : [])
-            })
-            .catch(() => {
-            })
-            .finally(() => {
-                setTimeout(() => setLoading(false), 300)
-            })
-    }, [])
+        if (props.baseProgress !== undefined && props.baseProgress > 0) {
+            setPercent(props.baseProgress)
+        }
+    }, [props.baseProgress])
+
+    // // 回复缓存
+    // useEffect(() => {
+    //     setLoading(true)
+    //     ipcRenderer
+    //         .invoke("get-value", ExecuteTaskHistory)
+    //         .then((res: any) => {
+    //             setTaskHistory(res ? JSON.parse(res) : [])
+    //         })
+    //         .catch(() => {
+    //         })
+    //         .finally(() => {
+    //             setTimeout(() => setLoading(false), 300)
+    //         })
+    // }, [])
 
     // 执行批量任务
     const run = useMemoizedFn((t: TargetRequest) => {
         setPercent(0)
 
         //@ts-ignore
-        const time = Date.parse(new Date().toString()) / 1000
-        const obj: NewTaskHistoryProps = {
-            target: t,
-            simpleQuery: props.simpleQuery,
-            isAll: props.isAll,
-            time: formatTimestamp(time)
-        }
-        const arr = [...taskHistory]
-        if (taskHistory.length === 10) arr.pop()
-        arr.unshift(obj)
-        setTaskHistory(arr)
-        ipcRenderer.invoke("set-value", ExecuteTaskHistory, JSON.stringify(arr))
+        // const time = Date.parse(new Date().toString()) / 1000
+        // const obj: NewTaskHistoryProps = {
+        //     target: t,
+        //     simpleQuery: props.simpleQuery,
+        //     isAll: props.isAll,
+        //     time: formatTimestamp(time)
+        // }
+        // const arr = [...taskHistory]
+        // if (taskHistory.length === 10) arr.pop()
+        // arr.unshift(obj)
+        // setTaskHistory(arr)
+        // ipcRenderer.invoke("set-value", ExecuteTaskHistory, JSON.stringify(arr))
 
         const tokens = randomString(40)
         setToken(tokens)
         StartExecBatchYakScriptWithFilter(
             t, simpleQueryToFull(props.isAll, props.simpleQuery, props.allTag),
-            tokens).then(() => {
+            tokens,
+            props.fromRecover,
+            props.baseProgress,
+        ).then(() => {
             setExecuting(true)
         }).catch(e => {
             failed(`启动批量执行插件失败：${e}`)
@@ -176,7 +196,7 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
         </Space>}
         size={"small"} bordered={false}
         extra={<Space>
-            {(percent > 0 || executing) && <div style={{width: 200}}>
+            {(percent > 0 || executing || props.fromRecover) && <div style={{width: 200}}>
                 <Progress status={executing ? "active" : undefined} percent={
                     parseInt((percent * 100).toFixed(0))
                 }/>
@@ -191,12 +211,14 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
             onCancel={cancel}
             executing={executing}
             loading={loading}
-            history={taskHistory}
+            // history={taskHistory}
+            history={[]}
             executeHistory={executeHistory}
         />
         <Divider style={{margin: 4}}/>
         <div style={{flex: '1', overflow: "hidden"}}>
-            <BatchExecutorResultByFilter token={token} executing={executing} setPercent={setPercent}/>
+            <BatchExecutorResultByFilter token={token} executing={executing} setPercent={setPercent}
+                                         recoverUid={props.recoverUid}/>
         </div>
     </AutoCard>
 });
@@ -205,15 +227,7 @@ interface BatchExecutorResultByFilterProp {
     token: string
     executing?: boolean
     setPercent?: (i: number) => any
-}
-
-interface BatchTask {
-    PoC: YakScript
-    Target: string
-    ExtraParam: { Key: string, Value: string }[]
-    TaskId: string
-    Results: ExecBatchYakScriptResult[]
-    CreatedAt: number
+    recoverUid?: string
 }
 
 interface TaskResultLog extends ExecResultLog {
@@ -238,13 +252,25 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                 return
             }
             console.info("call exception")
+            failed(`批量执行失败：${exception}`)
             console.info(exception)
         })
 
         const logs: TaskResultLog[] = []
         let index = 0
+        let removed = false;
 
         ipcRenderer.on(`${props.token}-data`, async (e, data: ExecBatchYakScriptResult) => {
+            // 移除旧的任务进度
+            if (!removed && !!props.recoverUid) {
+                removed = true
+                ipcRenderer.invoke("PopExecBatchYakScriptUnfinishedTaskByUid", {Uid: props.recoverUid}).then(e => {
+                    info("未完成任务进度信息已更新")
+                }).catch(e => {
+                    failed("删除旧任务进度失败")
+                })
+            }
+
             // 处理进度信息
             if (data.ProgressMessage) {
                 setProgressTotal(data.ProgressTotal || 0)

@@ -197,6 +197,7 @@ interface ComponentParams {
     // Route.Mod_Brute 参数
     bruteParams?: string
     recoverUid?: string
+    recoverBaseProgress?: number
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -281,7 +282,10 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.DB_Report:
             return <ReportViewerPage/>
         case Route.BatchExecutorRecover:
-            return <ReadOnlyBatchExecutorByRecoverUid Uid={params?.recoverUid}/>
+            return <ReadOnlyBatchExecutorByRecoverUid
+                Uid={params?.recoverUid}
+                BaseProgress={params?.recoverBaseProgress}
+            />
         default:
             return <div/>
     }

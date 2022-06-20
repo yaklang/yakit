@@ -1,10 +1,10 @@
-import React, {useEffect, useMemo, useState} from "react";
-import {failed, info} from "../../../utils/notification";
+import React, {useEffect, useState} from "react";
+import {info} from "../../../utils/notification";
 import {MenuItem} from "../../MainOperator";
-import {QueryYakScriptParamSelector, SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
+import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
 import {ResizeBox} from "../../../components/ResizeBox";
 import {BatchExecuteByFilter, simpleQueryToFull} from "./BatchExecuteByFilter";
-import {SimplePluginList} from "../../../components/SimplePluginList";
+import {SimplePluginList, SimplePluginListFromYakScriptNames} from "../../../components/SimplePluginList";
 import {AutoCard} from "../../../components/AutoCard";
 import {Empty, Spin} from "antd";
 import {randomString} from "../../../utils/randomUtil";
@@ -14,6 +14,7 @@ const {ipcRenderer} = window.require("electron");
 
 export interface ReadOnlyBatchExecutorByRecoverUidProp {
     Uid?: string
+    BaseProgress?: number
 }
 
 export const ReadOnlyBatchExecutorByRecoverUid: React.FC<ReadOnlyBatchExecutorByRecoverUidProp> = (props: ReadOnlyBatchExecutorByRecoverUidProp) => {
@@ -48,13 +49,39 @@ export const ReadOnlyBatchExecutorByRecoverUid: React.FC<ReadOnlyBatchExecutorBy
         return <Spin tip={"正在恢复未完成的任务"}/>
     }
 
-    return <ReadOnlyBatchExecutor query={{...query}} initTargetRequest={{
-        target: target, targetFile: "",
-        allowFuzz: true, concurrent: 5,
-        totalTimeout: 7200,
-        progressTaskCount: 5,
-        proxy: "",
-    } as TargetRequest}/>
+    return <AutoCard size={"small"} bordered={false} bodyStyle={{paddingLeft: 0, paddingRight: 0, paddingTop: 4}}>
+        <ResizeBox
+            firstNode={
+                <div style={{height: "100%"}}>
+                    <SimplePluginListFromYakScriptNames
+                        names={query.include}
+                    />
+                </div>
+            }
+            firstMinSize={300}
+            firstRatio={"300px"}
+            secondNode={<BatchExecuteByFilter
+                simpleQuery={query}
+                allTag={[]}
+                total={query.include.length}
+                initTargetRequest={{
+                    target: target, targetFile: "", allowFuzz: true,
+                    progressTaskCount: 5, concurrent: 3, proxy: "",
+                    totalTimeout: 7200,
+                }}
+                isAll={false}
+                fromRecover={true}
+                recoverUid={props.Uid}
+                baseProgress={props.BaseProgress}
+                executeHistory={(i) => {
+                    // if (!setQuery) {
+                    //     return
+                    // }
+                    // setQuery(i.simpleQuery)
+                }}
+            />}
+        />
+    </AutoCard>
 }
 
 export interface ReadOnlyBatchExecutorByMenuItemProp {
@@ -99,10 +126,6 @@ export const ReadOnlyBatchExecutor: React.FC<ReadOnlyBatchExecutorProp> = React.
     });
 
     const fullQuery = simpleQueryToFull(false, query, []);
-    useEffect(() => {
-        console.info("FULLQUERY", fullQuery)
-    }, [fullQuery])
-
     useEffect(() => {
         setQuery({...props.query})
     }, [props.query])
