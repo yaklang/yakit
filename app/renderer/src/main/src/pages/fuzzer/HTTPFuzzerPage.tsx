@@ -335,7 +335,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             "HTTPFuzzer",
             {
                 Request: request,
-                RequestRaw: StringToUint8Array(request),
+                RequestRaw: StringToUint8Array(request, "utf8"),
                 ForceFuzz: forceFuzz,
                 IsHTTPS: isHttps,
                 Concurrent: concurrent,

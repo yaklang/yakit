@@ -283,7 +283,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
         }
-        return "latin1"
+        // return "latin1"
+        return "utf8"; // 默认还是 UTF8 吧，不然识别不了
     }
     const [mode, setMode] = useState("text");
     const [strValue, setStrValue] = useState(Uint8ArrayToString(props.originValue, getEncoding()));
