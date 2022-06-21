@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {YakScript} from "../../invoker/schema"
 import {YakitLog} from "../../../components/yakitLogSchema"
-import {Card, Col, Divider, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip} from "antd"
+import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip} from "antd"
 import {LogLevelToCode} from "../../../components/HTTPFlowTable"
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
@@ -12,9 +12,15 @@ import {BasicTable} from "./BasicTable"
 import {XTerm} from "xterm-for-react"
 import {formatDate} from "../../../utils/timeUtil"
 import {xtermFit} from "../../../utils/xtermUtils"
+import {SearchOutlined, CaretUpOutlined, CaretDownOutlined} from "@ant-design/icons"
+import {TableFilterDropdownForm} from "../../../components/HTTPFlowTable"
+import {failed} from "../../../utils/notification"
 import {CVXterm} from "../../../components/CVXterm"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
+import {ExportExcel} from "../../../components/DataExport"
+import {useMemoizedFn} from "ahooks"
+import {queryYakScriptList} from "../network"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -83,7 +89,7 @@ const TooltipTitle: React.FC<TooltipTitleProps> = React.memo((props) => {
                         fontSize: 14
                     }}
                     key={info.Id}
-                    title={list.length > 1&&<p className="tooltip-id">{info.Id}</p>}
+                    title={list.length > 1 && <p className='tooltip-id'>{info.Id}</p>}
                     value={info.Data}
                 />
             ))}
@@ -358,7 +364,197 @@ export const YakitFeatureTabName = (feature: string, params: any) => {
     return feature.toUpperCase
 }
 
+const formatJson = (filterVal, jsonData) => {
+    return jsonData.map((v) => filterVal.map((j) => v[j]))
+}
+
+// 升序
+const compareAsc = (value1: object, value2: object, text: string) => {
+    if (value1[text] < value2[text]) {
+        return -1
+    } else if (value1[text] > value2[text]) {
+        return 1
+    } else {
+        return 0
+    }
+}
+
+// 降序
+const compareDesc = (value1: object, value2: object, text: string) => {
+    if (value1[text] > value2[text]) {
+        return -1
+    } else if (value1[text] < value2[text]) {
+        return 1
+    } else {
+        return 0
+    }
+}
+
 export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
+    const [params, setParams] = useState<any>({}) // 设置表头 排序
+    const [query, setQuery] = useState<any>({}) // 设置表头查询条件
+    const [loading, setLoading] = useState<boolean>(false)
+    const tableData = useRef<any>([])
+    const tableDataOriginal = useRef<any>([])
+    useEffect(() => {
+        tableData.current = (props.execResultsLog || [])
+            .filter((i) => i.level === "feature-table-data")
+            .map((i) => {
+                try {
+                    const originData = JSON.parse(i.data)
+                    return {...originData.data, table_name: originData?.table_name}
+                } catch (e) {
+                    return {} as any
+                }
+            })
+            .filter((i) => {
+                try {
+                    if ((i?.table_name || "") === (props.params?.table_name || "")) {
+                        return true
+                    }
+                } catch (e) {
+                    return false
+                }
+                return false
+            })
+        tableDataOriginal.current = tableData.current
+    }, [])
+
+    useEffect(() => {
+        const item = tableData.current[0] || {}
+        const obj = {}
+        const objQuery = {}
+        props.params["columns"].forEach((ele) => {
+            obj[ele] = {
+                isFilter: !isNaN(Number(item[ele])) // 只有数字类型才排序
+            }
+            objQuery[ele] = ""
+        })
+        setParams(obj)
+        setQuery(objQuery)
+    }, [])
+
+    const getData = useMemoizedFn(() => {
+        return new Promise((resolve) => {
+            const header = props.params["columns"]
+            const exportData = formatJson(header, tableData.current)
+            const params = {
+                header,
+                exportData,
+                response: {
+                    Pagination: {
+                        Page: 1
+                    },
+                    Data: props.execResultsLog,
+                    Total: props.execResultsLog.length
+                }
+            }
+            resolve(params)
+        })
+    })
+
+    // 排序
+    const confirmFilter = useMemoizedFn((text: string) => {
+        if (!params[text]?.isFilter) {
+            failed("该类型不支持排序")
+            return
+        }
+        setLoading(true)
+        const value = params[text].sort === "up" ? "down" : "up"
+        const newParams = {
+            ...params[text],
+            sort: value
+        }
+        if (value === "up") {
+            tableData.current.sort((a, b) => compareAsc(a, b, text))
+        } else {
+            tableData.current.sort((a, b) => compareDesc(a, b, text))
+        }
+        setParams({...params, [text]: {...newParams}})
+        setTimeout(() => {
+            setLoading(false)
+        }, 200)
+    })
+    // 搜索
+    const confirm = useMemoizedFn(() => {
+        setLoading(true)
+        const list: any = []
+        const length = tableDataOriginal.current.length
+        const queryHaveValue = {}
+        // 找出有查询条件
+        for (const key in query) {
+            const objItem = query[key]
+            if (objItem) {
+                queryHaveValue[key] = query[key]
+            }
+        }
+        // 所有查询条件为空时，返回原始数据
+        if (Object.getOwnPropertyNames(queryHaveValue).length == 0) {
+            tableData.current = tableDataOriginal.current
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+            return
+        }
+        // 搜索
+        for (let index = 0; index < length; index++) {
+            const elementArrayItem = tableDataOriginal.current[index]
+            let isAdd: boolean[] = []
+            for (const key in queryHaveValue) {
+                const objItem = queryHaveValue[key]
+                const isHave = `${elementArrayItem[key]}`.includes(objItem)
+                isAdd.push(isHave)
+            }
+            // 所有条件都满足
+            if (!isAdd.includes(false)) {
+                list.push(elementArrayItem)
+            }
+            isAdd = []
+        }
+
+        tableData.current = list
+        setTimeout(() => {
+            setLoading(false)
+        }, 200)
+    })
+
+    const columns = (props.params["columns"] || []).map((i) => ({
+        name: i,
+        title: (
+            <div className='columns-title'>
+                <div className='title'>{i}</div>
+                <div className='icon'>
+                    <Popover
+                        content={
+                            <TableFilterDropdownForm
+                                label={`搜索${i}`}
+                                params={query}
+                                setParams={setQuery}
+                                filterName={i}
+                                pureString={true}
+                                confirm={confirm}
+                            />
+                        }
+                        trigger={["hover", "click"]}
+                    >
+                        <SearchOutlined style={{color: "#1890ff", marginRight: 6}} />
+                    </Popover>
+                    {params[i]?.isFilter && (
+                        <Tooltip title={<span>{params[i]?.sort === "up" ? "点击降序" : "点击升序"}</span>}>
+                            <div className='filter' onClick={() => confirmFilter(i)}>
+                                <CaretUpOutlined
+                                    style={{color: (params[i]?.sort === "up" && "#1890ff") || undefined}}
+                                />
+                                <CaretDownOutlined
+                                    style={{color: (params[i]?.sort === "down" && "#1890ff") || undefined}}
+                                />
+                            </div>
+                        </Tooltip>
+                    )}
+                </div>
+            </div>
+        )
+    }))
     switch (props.feature) {
         case "website-trees":
             return (
@@ -369,29 +565,10 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
         case "fixed-table":
             return (
                 <div style={{height: "100%", display: "flex", flexFlow: "column", overflowY: "auto"}}>
-                    <BasicTable
-                        columns={(props.params["columns"] || []) as string[]}
-                        data={(props.execResultsLog || [])
-                            .filter((i) => i.level === "feature-table-data")
-                            .map((i) => {
-                                try {
-                                    const originData = JSON.parse(i.data)
-                                    return {...originData.data, table_name: originData?.table_name}
-                                } catch (e) {
-                                    return {} as any
-                                }
-                            })
-                            .filter((i) => {
-                                try {
-                                    if ((i?.table_name || "") === (props.params?.table_name || "")) {
-                                        return true
-                                    }
-                                } catch (e) {
-                                    return false
-                                }
-                                return false
-                            })}
-                    />
+                    <div className='btn-body'>
+                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='爆破结果' />
+                    </div>
+                    <BasicTable columns={columns} data={tableData.current} loading={loading} />
                 </div>
             )
     }

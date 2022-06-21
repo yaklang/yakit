@@ -197,7 +197,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 .invoke("QueryDomains", {
                     ...params,
                     Pagination: {
-                       ...query
+                        ...query
                     }
                 })
                 .then((res: QueryGeneralResponse<any>) => {
@@ -217,7 +217,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                     resolve({
                         header,
                         exportData,
-                        response:res
+                        response: res
                     })
                 })
                 .catch((e) => {
@@ -257,7 +257,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                         </Space>
                         <Space>
                             <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
-                            <Popover
+                            {/* <Popover
                                 title={"输入想要导出的域名关键字"}
                                 trigger={["click"]}
                                 content={
@@ -292,7 +292,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                 <Button type={"primary"} size={"small"}>
                                     导出域名
                                 </Button>
-                            </Popover>
+                            </Popover> */}
                             <Popconfirm
                                 title='确定删除所有域名资产吗? 不可恢复'
                                 onConfirm={(e) => {

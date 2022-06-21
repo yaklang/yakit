@@ -39,7 +39,7 @@
   }
 
   .tooltip-id {
-    color:#000;
+    color: #000;
     font-weight: 500;
     margin-bottom: 0;
   }
@@ -50,4 +50,11 @@
     max-height: 200px;
     overflow-y: auto;
   }
+}
+
+.btn-body {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  padding: 12px;
 }

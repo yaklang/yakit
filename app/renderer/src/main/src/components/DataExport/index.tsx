@@ -27,7 +27,7 @@ interface PaginationProps {
 const maxCellNumber = 100000 // 最大单元格10w
 
 export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
-    const {btnProps, getData, fileName = "端口资产", pageSize = 10000} = props
+    const {btnProps, getData, fileName = "端口资产", pageSize = 100000} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     const [frequency, setFrequency] = useState<number>(0)
@@ -43,8 +43,8 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         setLoading(true)
         getData(query)
             .then((res: resProps) => {
+                debugger
                 const {header, exportData, response} = res
-                setPagination(response)
                 const totalCellNumber = header.length * exportData.length
                 if (totalCellNumber < maxCellNumber && response.Total <= pageSize) {
                     // 单元格数量小于最大单元格数量，直接导出
@@ -64,6 +64,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                     setFrequency(frequency)
                     setVisible(true)
                 }
+                setPagination(response)
             })
             .catch((e: any) => {
                 failed("数据导出失败: " + `${e}`)

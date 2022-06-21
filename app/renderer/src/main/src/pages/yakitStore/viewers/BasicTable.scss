@@ -1,0 +1,26 @@
+.columns-title {
+    display: flex;
+    justify-content: space-between;
+
+    .title {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-all;
+        width: 80%;
+    }
+
+    .icon {
+        width: 20%;
+        padding: 0 6px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .filter {
+        font-size: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+}

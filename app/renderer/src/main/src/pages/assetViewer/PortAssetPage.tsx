@@ -318,7 +318,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         <Col span={12} style={{textAlign: "right"}}>
                             <Space>
                                 <ExportExcel getData={getData} btnProps={{size: "small"}} />
-                                <Popover
+                                {/* <Popover
                                     title={"输入想要导出的端口的网段（支持C段等 CIDR 格式，逗号分隔）"}
                                     trigger={["click"]}
                                     content={
@@ -353,7 +353,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     <Button type={"primary"} size={"small"}>
                                         导出端口
                                     </Button>
-                                </Popover>
+                                </Popover> */}
                                 <Popover
                                     title={"选择性删除端口"}
                                     content={
