@@ -1,14 +1,15 @@
 import React, {useEffect, useState} from "react";
-import {Button, Form, Space, Spin} from "antd";
+import {Button, Form, Popconfirm, Space, Spin} from "antd";
 import {ManyMultiSelectForString} from "../../utils/inputUtil";
-import { useMemoizedFn } from "ahooks";
-import { success } from "../../utils/notification";
+import {useMemoizedFn} from "ahooks";
+import {info, success} from "../../utils/notification";
 
 const {ipcRenderer} = window.require("electron");
 
 export interface MITMFiltersProp {
     filter?: MITMFilterSchema
     onFinished?: (filter: MITMFilterSchema) => any
+    onClosed?: () => any
 }
 
 export interface MITMFilterSchema {
@@ -96,6 +97,18 @@ export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
             <Form.Item colon={false} label={" "}>
                 <Space>
                     <Button type="primary" htmlType="submit"> 确认修改 </Button>
+                    <Popconfirm
+                        title={"重置过滤器将导致现有过滤器数据丢失，且无法恢复"}
+                        onConfirm={() => {
+                            ipcRenderer.invoke("mitm-reset-filter").then(() => {
+                                info("MITM 过滤器重置命令已发送")
+                                if (props.onClosed) props.onClosed();
+                            })
+                        }}
+                    >
+
+                        <Button type="link"> 重置过滤器 </Button>
+                    </Popconfirm>
                     {/*<Button type="primary" onClick={saveDefaultFilter}> 确认修改并保存为模板 </Button>*/}
                 </Space>
             </Form.Item>

@@ -1515,6 +1515,9 @@ message MITMRequest {
   // 设置内容替代器
   bool setContentReplacers = 38;
   repeated MITMContentReplacer replacers = 39;
+
+  // 恢复 filter, 防止用户删除了全部的 filter
+  bool setResetFilter = 41;
 }
 
 message MITMContentReplacer {

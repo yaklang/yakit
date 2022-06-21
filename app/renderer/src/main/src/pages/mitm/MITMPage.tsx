@@ -149,7 +149,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
 
     // filter 过滤器
-    const [mitmFilter, setMITMFilter] = useState<MITMFilterSchema>();
+    const [_mitmFilter, setMITMFilter, getMITMFilter] = useGetState<MITMFilterSchema>();
 
     // 内容替代模块
     const [replacers, setReplacers] = useState<MITMContentReplacerRule[]>([]);
@@ -259,6 +259,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             }, 300)
         });
         ipcRenderer.on("client-mitm-filter", (e, msg) => {
+            console.info("client-mitm-filter recv message")
             setMITMFilter({
                 includeSuffix: msg.includeSuffix,
                 excludeMethod: msg.excludeMethod,
@@ -300,6 +301,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         return () => {
             clearInterval(id);
             ipcRenderer.removeAllListeners("client-mitm-error")
+            ipcRenderer.removeAllListeners("client-mitm-filter")
+            ipcRenderer.removeAllListeners("client-mitm-history-update")
+            ipcRenderer.removeAllListeners("mitm-have-current-stream")
+            ipcRenderer.removeAllListeners("client-mitm-message")
             // ipcRenderer.invoke("mitm-close-stream")
         }
     }, [])
@@ -538,18 +543,22 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         </Button>
     })
 
-    const setFilter = useMemoizedFn(() => {
+    const setFilter = (() => {
         return <Button type={"link"} style={{padding: '4px 6px'}}
                        onClick={() => {
                            let m = showDrawer({
                                placement: "top", height: "50%",
                                content: <>
                                    <MITMFilters
-                                       filter={mitmFilter}
+                                       filter={getMITMFilter()}
                                        onFinished={(filter) => {
                                            setMITMFilter({...filter})
                                            m.destroy()
-                                       }}/>
+                                       }}
+                                       onClosed={() => {
+                                           m.destroy()
+                                       }}
+                                   />
                                </>
                            });
                        }}
@@ -803,7 +812,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         value={autoForward}
                                                         formItemStyle={{marginBottom: 0}}
                                                         setValue={(e) => {
-                                                            ipcRenderer.invoke("mitm-filter", {updateFilter: true, ...mitmFilter})
+                                                            ipcRenderer.invoke("mitm-filter", {updateFilter: true, ...getMITMFilter()})
                                                             handleAutoForward(e)
                                                         }}
                                                     />

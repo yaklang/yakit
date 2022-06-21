@@ -36,6 +36,15 @@ module.exports = (win, getClient) => {
         }
     });
 
+    // 发送恢复会话信息，让服务器把上下文发回来
+    ipcMain.handle("mitm-reset-filter", e => {
+        if (stream) {
+            stream.write({
+                setResetFilter: true,
+            })
+        }
+    });
+
     //
     ipcMain.handle("mitm-auto-forward", (e, value) => {
         if (stream) {
@@ -207,6 +216,7 @@ module.exports = (win, getClient) => {
 
         // 设置服务器发回的消息的回调函数
         stream.on("data", data => {
+            console.info(data)
             // 处理第一个消息
             // 第一个消息应该更新状态，第一个消息应该是同步 Filter 的信息。。。
             if (win && isFirstData) {
