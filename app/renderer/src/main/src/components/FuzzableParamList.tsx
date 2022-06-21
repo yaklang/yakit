@@ -35,7 +35,7 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                                         type: "fuzzer",
                                         data:{
                                             isHttps: i.IsHTTPS,
-                                            request: new Buffer(i.AutoTemplate).toString("latin1")
+                                            request: new Buffer(i.AutoTemplate).toString("utf8")
                                         }
                                     })
                                     if (props.sendToWebFuzzer) props.sendToWebFuzzer()

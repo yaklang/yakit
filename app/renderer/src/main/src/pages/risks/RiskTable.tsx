@@ -414,8 +414,9 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                         },
                         {
                             title: "操作",
+                            fixed: "right",
                             render: (i: Risk) => (
-                                <Space>
+                                <Button.Group>
                                     <Button
                                         size='small'
                                         type={"link"}
@@ -436,10 +437,11 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     <Button size='small' type={"link"} danger onClick={() => delRisk(i.Hash)}>
                                         删除
                                     </Button>
-                                </Space>
+                                </Button.Group>
                             )
                         }
                     ]}
+                    scroll={{x: "auto"}}
                     rowKey={(e) => e.Hash}
                     loading={loading}
                     dataSource={response.Data}
@@ -744,7 +746,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
                     <div>{info.Payload || "-"}</div>
                 </Descriptions.Item>
                 <Descriptions.Item label='详情' span={3}>
-                    <div style={{maxHeight: 180, overflow:"auto"}}>{info.Details || "-"}</div>
+                    <div style={{maxHeight: 180, overflow: "auto"}}>{info.Details || "-"}</div>
                 </Descriptions.Item>
             </>}
         </Descriptions>

@@ -912,7 +912,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         <HTTPPacketEditor
                                                             originValue={currentPacket}
                                                             noHeader={true}
-                                                            isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("latin1").startsWith("HTTP/")}
+                                                            isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("utf8").startsWith("HTTP/")}
                                                             bordered={false}
                                                             onChange={setModifiedPacket}
                                                             noPacketModifier={true}

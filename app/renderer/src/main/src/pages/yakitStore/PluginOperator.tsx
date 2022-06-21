@@ -252,7 +252,9 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"源码"} key={"code"}>
                     <div style={{height: "100%"}}>
-                        <YakEditor type={script?.Type || "yak"} value={script?.Content} readOnly={true}/>
+                        <YakEditor
+                            type={script?.Type === "nuclei" ? "yaml" : "yak"} value={script?.Content} readOnly={true}
+                        />
                     </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"历史"} key={"history"}>

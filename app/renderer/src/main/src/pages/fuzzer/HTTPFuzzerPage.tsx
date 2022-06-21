@@ -441,7 +441,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setTimeout(() => {
                 try {
                     const filters = content.filter((item) => {
-                        return Buffer.from(item.ResponseRaw).toString("latin1").match(new RegExp(keyword, "g"))
+                        return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
                 } catch (error) {
@@ -461,7 +461,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         if (keyword && content.length !== 0) {
             const filters = content.filter(item => {
-                return Buffer.from(item.ResponseRaw).toString("latin1").match(new RegExp(keyword, 'g'))
+                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, 'g'))
             })
             setFilterContent(filters)
         }

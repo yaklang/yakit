@@ -62,7 +62,7 @@ export const mutateRequest = (params: MutateHTTPRequestParams, editor?: IMonacoC
     ipcRenderer.invoke("HTTPRequestMutate", params).then((result: MutateHTTPRequestResponse) => {
         if (editor) {
             monacoEditorClear(editor)
-            monacoEditorReplace(editor, new Buffer(result.Result).toString("latin1"));
+            monacoEditorReplace(editor, new Buffer(result.Result).toString("utf8"));
             return
         }
     })
