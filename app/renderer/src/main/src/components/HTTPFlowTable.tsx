@@ -1648,7 +1648,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             title: "发送到对比器左侧",
                                             onClick: () => {
                                                 setCompareLeft({
-                                                    content: new Buffer(rowData.Request).toString("latin1"),
+                                                    content: new Buffer(rowData.Request).toString("utf8"),
                                                     language: "http"
                                                 })
                                             },
@@ -1658,7 +1658,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             title: "发送到对比器右侧",
                                             onClick: () => {
                                                 setCompareRight({
-                                                    content: new Buffer(rowData.Request).toString("latin1"),
+                                                    content: new Buffer(rowData.Request).toString("utf8"),
                                                     language: "http"
                                                 })
                                             },

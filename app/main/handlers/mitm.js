@@ -36,6 +36,15 @@ module.exports = (win, getClient) => {
         }
     });
 
+    // 发送恢复会话信息，让服务器把上下文发回来
+    ipcMain.handle("mitm-reset-filter", e => {
+        if (stream) {
+            stream.write({
+                setResetFilter: true,
+            })
+        }
+    });
+
     //
     ipcMain.handle("mitm-auto-forward", (e, value) => {
         if (stream) {

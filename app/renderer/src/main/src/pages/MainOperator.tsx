@@ -61,6 +61,7 @@ import {MainTabs} from "./MainTabs"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 
 import "./main.css"
+import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList";
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -70,7 +71,7 @@ const {Text} = Typography
 const FuzzerCache = "fuzzer-list-cache"
 const WindowsCloseFlag = "windows-close-flag"
 
-const singletonRoute = [
+const singletonRoute: Route[] = [
     Route.HTTPHacker,
     Route.ShellReceiver,
     Route.ReverseServer,
@@ -132,6 +133,7 @@ interface PageCache {
     singleNode: ReactNode | any
     multipleNode: multipleNodeInfo[] | any[]
     multipleCurrentKey?: string
+    hideAdd?: boolean
 }
 
 export interface fuzzerInfoProp {
@@ -166,7 +168,7 @@ const Main: React.FC<MainProp> = (props) => {
             multipleNode: []
         }
     ])
-    const [currentTabKey, setCurrentTabKey] = useState<string>(Route.HTTPHacker)
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.HTTPHacker)
 
     // 系统类型
     const [system, setSystem] = useState<string>("")
@@ -258,7 +260,10 @@ const Main: React.FC<MainProp> = (props) => {
         return targets.length > 0 ? pageCache.indexOf(targets[0]) : -1
     }
     const addTabPage = useMemoizedFn(
-        (route: Route, nodeParams?: { time?: string; node: ReactNode; isRecord?: boolean }) => {
+        (route: Route, nodeParams?: {
+            time?: string; node: ReactNode; isRecord?: boolean,
+            hideAdd?: boolean
+        }) => {
             const filterPage = pageCache.filter((i) => i.route === route)
             const filterPageLength = filterPage.length
 
@@ -266,21 +271,21 @@ const Main: React.FC<MainProp> = (props) => {
                 if (filterPageLength > 0) {
                     setCurrentTabKey(route)
                 } else {
-                    const tabName = routeKeyToLabel.get(route) || `${route}`
+                    const tabName = routeKeyToLabel.get(`${route}`) || `${route}`
                     setPageCache([
                         ...pageCache,
                         {
                             verbose: tabName,
                             route: route,
                             singleNode: ContentByRoute(route),
-                            multipleNode: []
+                            multipleNode: [],
                         }
                     ])
                     setCurrentTabKey(route)
                 }
             } else {
                 if (filterPageLength > 0) {
-                    const tabName = routeKeyToLabel.get(route) || `${route}`
+                    const tabName = routeKeyToLabel.get(`${route}`) || `${route}`
                     const tabId = `${route}-[${randomString(49)}]`
                     const time = new Date().getTime().toString()
                     const node: multipleNodeInfo = {
@@ -301,7 +306,7 @@ const Main: React.FC<MainProp> = (props) => {
                     setCurrentTabKey(route)
                     if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
                 } else {
-                    const tabName = routeKeyToLabel.get(route) || `${route}`
+                    const tabName = routeKeyToLabel.get(`${route}`) || `${route}`
                     const tabId = `${route}-[${randomString(49)}]`
                     const time = new Date().getTime().toString()
                     const node: multipleNodeInfo = {
@@ -317,7 +322,8 @@ const Main: React.FC<MainProp> = (props) => {
                             route: route,
                             singleNode: undefined,
                             multipleNode: [node],
-                            multipleCurrentKey: tabId
+                            multipleCurrentKey: tabId,
+                            hideAdd: nodeParams?.hideAdd
                         }
                     ])
                     setCurrentTabKey(route)
@@ -352,7 +358,7 @@ const Main: React.FC<MainProp> = (props) => {
             const targetCache = pageCache[targetIndex + 1]
             setCurrentTabKey(targetCache.route)
         }
-        if (targetIndex === 0 && pageCache.length === 1) setCurrentTabKey("")
+        if (targetIndex === 0 && pageCache.length === 1) setCurrentTabKey("" as any)
 
         setPageCache(pageCache.filter((i) => i.route !== route))
 
@@ -390,7 +396,7 @@ const Main: React.FC<MainProp> = (props) => {
         }
 
         if (index === 0 && removeArr.length === 1) {
-            removePage(type)
+            removePage(`${type}`)
             return
         }
 
@@ -464,7 +470,7 @@ const Main: React.FC<MainProp> = (props) => {
             if (pageCache.length === 0) return
 
             setLoading(true)
-            removePage(currentTabKey)
+            removePage(`${currentTabKey}`)
             setTimeout(() => setLoading(false), 300);
             return
         }
@@ -539,13 +545,15 @@ const Main: React.FC<MainProp> = (props) => {
             if (!flag) fetchFuzzerList()
             // fetchFuzzerList()
         })
-        return () => ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
+        }
     }, [])
 
     // 加载补全
     useEffect(() => {
         ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
-            const completionJson = Buffer.from(data.RawJson).toString("latin1")
+            const completionJson = Buffer.from(data.RawJson).toString("utf8")
             setCompletions(JSON.parse(completionJson) as CompletionTotal)
             // success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
         })
@@ -720,14 +728,27 @@ const Main: React.FC<MainProp> = (props) => {
             setCurrentTabKey(Route.YakScript)
         }
     })
+
+    const addBatchExecRecover = useMemoizedFn((task: UnfinishedBatchTask) => {
+        addTabPage(Route.BatchExecutorRecover, {
+            hideAdd: true,
+            node: ContentByRoute(Route.BatchExecutorRecover, undefined, {
+                recoverUid: task.Uid,
+                recoverBaseProgress: task.Percent
+            })
+        })
+    })
+
     useEffect(() => {
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
             const {type, data = {}} = res
-            if (type === "fuzzer") addFuzzer(data)
-            if (type === "scan-port") addScanPort(data)
-            if (type === "brute") addBrute(data)
-            if (type === "bug-test") addBugTest(1, data)
-            if (type === "plugin-store") addYakRunning(data)
+            if (type === "fuzzer") addFuzzer(data);
+            if (type === "scan-port") addScanPort(data);
+            if (type === "brute") addBrute(data);
+            if (type === "bug-test") addBugTest(1, data);
+            if (type === "plugin-store") addYakRunning(data);
+            if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask);
+            console.info("send to tab: ", type)
         })
 
         return () => {
@@ -777,7 +798,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         closeAllCache()
                                         break
                                     case "other":
-                                        closeOtherCache(barNode.key as Route)
+                                        closeOtherCache(`${barNode.key}`)
                                         break
                                     default:
                                         break
@@ -920,11 +941,11 @@ const Main: React.FC<MainProp> = (props) => {
                                                     </Menu.SubMenu>
                                                 )
                                             })}
-                                            {(routeMenuData || []).map((i) => {
+                                            {(routeMenuData || []).filter(e => !e.hidden).map((i) => {
                                                 if (i.subMenuData) {
                                                     return (
                                                         <Menu.SubMenu icon={i.icon} key={i.key} title={i.label}>
-                                                            {(i.subMenuData || []).map((subMenu) => {
+                                                            {(i.subMenuData || []).filter(e => !e.hidden).map((subMenu) => {
                                                                 return (
                                                                     <MenuItem icon={subMenu.icon} key={subMenu.key}
                                                                               disabled={subMenu.disabled}>
@@ -1003,7 +1024,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                         <Input
                                                                             size={"small"}
                                                                             defaultValue={i.verbose}
-                                                                            onBlur={(e) => updateCacheVerbose(i.route, e.target.value)}
+                                                                            onBlur={(e) => updateCacheVerbose(`${i.route}`, e.target.value)}
                                                                         />
                                                                     </>
                                                                 }
@@ -1035,7 +1056,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                 tabType={i.route}
                                                                 pages={i.multipleNode}
                                                                 currentKey={i.multipleCurrentKey || ""}
-                                                                isShowAdd={true}
+                                                                isShowAdd={!i.hideAdd}
                                                                 setCurrentKey={(key, type) => {
                                                                     setMultipleCurrentKey(key, type as Route)
                                                                 }}

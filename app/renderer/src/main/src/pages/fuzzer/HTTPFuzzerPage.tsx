@@ -335,7 +335,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             "HTTPFuzzer",
             {
                 Request: request,
-                RequestRaw: StringToUint8Array(request),
+                // RequestRaw: StringToUint8Array(request, "utf8"),
                 ForceFuzz: forceFuzz,
                 IsHTTPS: isHttps,
                 Concurrent: concurrent,
@@ -441,7 +441,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setTimeout(() => {
                 try {
                     const filters = content.filter((item) => {
-                        return Buffer.from(item.ResponseRaw).toString("latin1").match(new RegExp(keyword, "g"))
+                        return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
                 } catch (error) {
@@ -461,7 +461,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         if (keyword && content.length !== 0) {
             const filters = content.filter(item => {
-                return Buffer.from(item.ResponseRaw).toString("latin1").match(new RegExp(keyword, 'g'))
+                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, 'g'))
             })
             setFilterContent(filters)
         }
@@ -1075,7 +1075,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         },
                     ]}
                     onEditor={setReqEditor}
-                    onChange={(i) => setRequest(Uint8ArrayToString(i))}
+                    onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                     extra={
                         <Space size={2}>
                             <Button

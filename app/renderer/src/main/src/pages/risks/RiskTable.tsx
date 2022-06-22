@@ -516,6 +516,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     size={"small"}
                     bordered={true}
                     columns={columns}
+                    scroll={{x: "auto"}}
                     rowKey={(e) => e.Hash}
                     loading={loading}
                     dataSource={response.Data}

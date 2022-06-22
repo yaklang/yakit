@@ -122,7 +122,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     type: "fuzzer",
                     data: {
                         isHttps: flow?.IsHTTPS,
-                        request: Buffer.from(flow?.Request || []).toString("latin1")
+                        request: Buffer.from(flow?.Request || []).toString("utf8")
                     }
                 })
                 if (props.onClose) props.onClose()

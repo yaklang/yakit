@@ -35,7 +35,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
 
             if (props.onSaveCode) props.onSaveCode(params.HotPatchCode);
             ipcRenderer.invoke("StringFuzzer", {...params}).then((response: { Results: Uint8Array[] }) => {
-                const data: string[] = (response.Results || []).map(buf => new Buffer(buf).toString("latin1"))
+                const data: string[] = (response.Results || []).map(buf => new Buffer(buf).toString("utf8"))
                 showDrawer({
                     title: "HotPatch Tag Result", content: (
                         <AutoCard size={"small"} bordered={false} title={"结果展示"} extra={<Space>

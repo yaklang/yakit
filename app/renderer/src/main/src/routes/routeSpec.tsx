@@ -36,7 +36,10 @@ import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage";
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage";
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage";
 import {BatchExecutorPageEx} from "../pages/invoker/batch/BatchExecutorPageEx";
-import {ReadOnlyBatchExecutorByMenuItem} from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem";
+import {
+    ReadOnlyBatchExecutorByMenuItem,
+    ReadOnlyBatchExecutorByRecoverUid
+} from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -94,6 +97,7 @@ export enum Route {
 
     // 测试
     BatchExecutorPage = "batch-executor-page-ex",
+    BatchExecutorRecover = "batch-executor-recover"
 }
 
 export interface MenuDataProps {
@@ -102,6 +106,7 @@ export interface MenuDataProps {
     label: string
     icon: JSX.Element
     disabled?: boolean
+    hidden?: boolean
 }
 
 export const NoScrollRoutes: Route[] = [
@@ -111,7 +116,6 @@ export const NoScrollRoutes: Route[] = [
 ];
 
 export const RouteMenuData: MenuDataProps[] = [
-    // {key: Route.MITM, label: "HTTP(S) 中间人劫持", icon: <FireOutlined/>},
     {
         key: Route.PenTest, label: "手工渗透测试", icon: <AimOutlined/>,
         subMenuData: [
@@ -175,13 +179,10 @@ export const RouteMenuData: MenuDataProps[] = [
             {key: Route.DB_Report, label: "报告(Beta*)", icon: <FireOutlined/>},
         ],
     },
-    // {
-    //     key: Route.IGNORE, label: "常用工具包", icon: <FireOutlined/>,
-    //     subMenuData: [
-    //         {key: Route.Codec, label: "编码与解码", icon: <EllipsisOutlined/>},
-    //         {key: Route.ShellReceiver, label: "端口开放助手", icon: <FireOutlined/>},
-    //     ],
-    // },
+
+
+    // 隐藏内容
+    {key: Route.BatchExecutorRecover, label: "继续任务：批量执行插件", icon: <FireOutlined/>, disabled: true, hidden: true},
 ]
 
 interface ComponentParams {
@@ -195,6 +196,8 @@ interface ComponentParams {
     scanportParams?: string
     // Route.Mod_Brute 参数
     bruteParams?: string
+    recoverUid?: string
+    recoverBaseProgress?: number
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -228,10 +231,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
     }
 
     switch (r) {
-        // case Route.HistoryRequests:
-        //     return <HistoryPage/>
-        // case Route.MITM:
-        //     return <MITMPage/>
         case Route.ShellReceiver:
             return <ShellReceiverPage/>
         case Route.WebShellManager:
@@ -282,6 +281,11 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <BatchExecutorPageEx/>
         case Route.DB_Report:
             return <ReportViewerPage/>
+        case Route.BatchExecutorRecover:
+            return <ReadOnlyBatchExecutorByRecoverUid
+                Uid={params?.recoverUid}
+                BaseProgress={params?.recoverBaseProgress}
+            />
         default:
             return <div/>
     }

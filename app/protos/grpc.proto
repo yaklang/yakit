@@ -39,7 +39,7 @@ message ExecBatchYakScriptRequest {
   // 模块类型，默认为 nuclei
   string Type = 5;
 
-  // 并发
+  // 并发（进程）
   int64 Concurrent = 6;
 
   // 精确使用脚本名称
@@ -49,6 +49,17 @@ message ExecBatchYakScriptRequest {
   // Tags with exclude / include
   QueryYakScriptRequest PluginFilter = 12;
   bool EnablePluginFilter = 13;
+
+  // 设置一个代理
+  string Proxy = 14;
+
+  // 每个进程的任务数量
+  int64 ProgressTaskCount = 15;
+
+  // 基础进度 - 这个默认是 0.1 一般别用，只在 Recover 的时候可能才会有用处
+  double BaseProgress = 16;
+  // 这个很关键，不然会报错
+  bool FromRecover = 17;
 }
 
 message ExecBatchYakScriptResult {
@@ -88,6 +99,10 @@ message GetYakScriptByIdRequest {
   int64 Id = 1;
 }
 
+message GetYakScriptByNameRequest {
+  string Name = 1;
+}
+
 service Yak {
   // version
   rpc Version(Empty) returns (VersionResponse);
@@ -111,13 +126,17 @@ service Yak {
   rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
   rpc ExecBatchYakScript(ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
   rpc GetExecBatchYakScriptUnfinishedTask(Empty) returns (GetExecBatchYakScriptUnfinishedTaskResponse);
+  rpc GetExecBatchYakScriptUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
+  rpc PopExecBatchYakScriptUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
   rpc RecoverExecBatchYakScriptUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecBatchYakScriptResult);
 
   // yakScript
   rpc QueryYakScript(QueryYakScriptRequest) returns (QueryYakScriptResponse);
+  rpc QueryYakScriptByYakScriptName(QueryYakScriptRequest) returns (stream YakScript);
   rpc SaveYakScript(YakScript) returns (YakScript);
   rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc GetYakScriptById(GetYakScriptByIdRequest) returns (YakScript);
+  rpc GetYakScriptByName(GetYakScriptByNameRequest) returns (YakScript);
   rpc IgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc UnIgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
@@ -265,6 +284,10 @@ service Yak {
 
   // 尝试自动解码
   rpc AutoDecode(AutoDecodeRequest) returns (AutoDecodeResponse);
+}
+
+message GetExecBatchYakScriptUnfinishedTaskByUidRequest {
+  string Uid = 1;
 }
 
 message RecoverExecBatchYakScriptUnfinishedTaskRequest {
@@ -1492,6 +1515,9 @@ message MITMRequest {
   // 设置内容替代器
   bool setContentReplacers = 38;
   repeated MITMContentReplacer replacers = 39;
+
+  // 恢复 filter, 防止用户删除了全部的 filter
+  bool setResetFilter = 41;
 }
 
 message MITMContentReplacer {

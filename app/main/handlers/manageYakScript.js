@@ -17,6 +17,22 @@ module.exports = (win, getClient) => {
         return await asyncQueryYakScript(params)
     })
 
+    // asyncGetYakScriptByName wrapper
+    const asyncGetYakScriptByName = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetYakScriptByName(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetYakScriptByName", async (e, params) => {
+        return await asyncGetYakScriptByName(params)
+    })
+
     ipcMain.handle("update-nuclei-poc", (e) => {
         getClient().LoadNucleiTemplates({}, (err) => {
             if (err) {
@@ -184,6 +200,37 @@ module.exports = (win, getClient) => {
         return await asyncGetExecBatchYakScriptUnfinishedTask(params)
     })
 
+    // asyncGetExecBatchYakScriptUnfinishedTaskByUid wrapper
+    const asyncGetExecBatchYakScriptUnfinishedTaskByUid = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetExecBatchYakScriptUnfinishedTaskByUid(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetExecBatchYakScriptUnfinishedTaskByUid", async (e, params) => {
+        return await asyncGetExecBatchYakScriptUnfinishedTaskByUid(params)
+    })
+
+    // asyncPopExecBatchYakScriptUnfinishedTaskByUid wrapper
+    const asyncPopExecBatchYakScriptUnfinishedTaskByUid = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().PopExecBatchYakScriptUnfinishedTaskByUid(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("PopExecBatchYakScriptUnfinishedTaskByUid", async (e, params) => {
+        return await asyncPopExecBatchYakScriptUnfinishedTaskByUid(params)
+    })
 
     // asyncIgnoreYakScript wrapper
     const asyncIgnoreYakScript = (params) => {
