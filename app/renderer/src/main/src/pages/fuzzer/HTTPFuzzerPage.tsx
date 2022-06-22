@@ -335,7 +335,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             "HTTPFuzzer",
             {
                 Request: request,
-                RequestRaw: StringToUint8Array(request, "utf8"),
+                // RequestRaw: StringToUint8Array(request, "utf8"),
                 ForceFuzz: forceFuzz,
                 IsHTTPS: isHttps,
                 Concurrent: concurrent,
@@ -1075,7 +1075,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         },
                     ]}
                     onEditor={setReqEditor}
-                    onChange={(i) => setRequest(Uint8ArrayToString(i))}
+                    onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                     extra={
                         <Space size={2}>
                             <Button
