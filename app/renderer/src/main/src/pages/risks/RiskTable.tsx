@@ -140,6 +140,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [types, setTypes] = useState<FieldNameSelectItem[]>([])
     const [severities, setSeverities] = useState<FieldNameSelectItem[]>([])
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
     const time = useRef<any>(null)
 
@@ -330,6 +331,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         {
             title: "类型",
             dataIndex: "RiskTypeVerbose",
+            width: 90,
             render: (_, i: Risk) => i?.RiskTypeVerbose || i.RiskType,
             filterIcon: (filtered) => {
                 return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
@@ -456,6 +458,25 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         })
     })
 
+    const onRemove = useMemoizedFn(() => {
+        let newParams = {}
+        if (selectedRowKeys.length === 0) {
+            newParams = {
+                DeleteAll: true, // 删除所有
+                Filter: params // 删除带条件的数据
+            }
+        } else {
+            newParams = {}
+        }
+        // ipcRenderer
+        //     .invoke("DeleteRisk",newParams)
+        //     .then((e) => {
+        //         props.onClose()
+        //     })
+        //     .catch(() => {})
+        //     .finally()
+    })
+
     return (
         <div className='risk-table-container'>
             <div className='container-table'>
@@ -481,7 +502,19 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                             btnProps={{size: "small"}}
                                             fileName='风险与漏洞'
                                         />
-                                        <Button
+                                        <Popconfirm
+                                            title={
+                                                selectedRowKeys.length > 0
+                                                    ? "确定删除选择的风险与漏洞吗？不可恢复"
+                                                    : "确定删除所有风险与漏洞吗? 不可恢复"
+                                            }
+                                            onConfirm={onRemove}
+                                        >
+                                            <Button size='small' danger={true}>
+                                                删除数据
+                                            </Button>
+                                        </Popconfirm>
+                                        {/* <Button
                                             danger={true}
                                             size={"small"}
                                             type={"primary"}
@@ -505,7 +538,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                             }}
                                         >
                                             删除数据
-                                        </Button>
+                                        </Button> */}
                                     </Space>
                                 </div>
                                 {(!!getParams().Severity || !!getParams().RiskType) && (
@@ -540,6 +573,12 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                 update()
                                 return
                         }
+                    }}
+                    rowSelection={{
+                        onChange: (selectedRowKeys) => {
+                            setSelectedRowKeys(selectedRowKeys as string[])
+                        },
+                        selectedRowKeys
                     }}
                 />
             </div>
@@ -683,95 +722,6 @@ export interface DeleteRiskFormProp {
     severities?: FieldNameSelectItem[]
 }
 
-export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
-    const {types, severities} = props
-    const [params, setParams] = useState<QueryRisksParams>({
-        Network: "",
-        Pagination: genDefaultPagination(),
-        RiskType: "",
-        Search: "",
-        Severity: ""
-    })
-    return (
-        <div>
-            <Form
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-                    ipcRenderer
-                        .invoke("DeleteRisk", {Filter: params})
-                        .then((e) => {
-                            props.onClose()
-                        })
-                        .catch(() => {
-                        })
-                        .finally()
-                }}
-                layout={"horizontal"}
-                labelCol={{span: 5}}
-                wrapperCol={{span: 14}}
-            >
-                <InputItem
-                    label={"按目标网络删除"}
-                    value={params.Network}
-                    setValue={(Network) => setParams({...params, Network})}
-                />
-                {types && types.length > 0 && (
-                    <ManyMultiSelectForString
-                        label={"按类型删除"}
-                        value={params.RiskType || ""}
-                        formItemStyle={{minWidth: 280}}
-                        setValue={(RiskType) => setParams({...params, RiskType})}
-                        defaultSep={"|"}
-                        data={types.map((i) => {
-                            return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
-                        })}
-                    />
-                )}
-                {severities && severities.length && (
-                    <ManyMultiSelectForString
-                        label={"按漏洞级别"}
-                        value={params.Severity || ""}
-                        defaultSep={"|"}
-                        formItemStyle={{minWidth: 240}}
-                        setValue={(Severity) => setParams({...params, Severity})}
-                        data={severities.map((i) => {
-                            return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
-                        })}
-                    />
-                )}
-                <InputItem
-                    label={"按关键字删除"}
-                    value={params.Search}
-                    setValue={(Search) => setParams({...params, Search})}
-                />
-                <Form.Item label={" "} colon={false}>
-                    <Space>
-                        <Button danger={true} type={"primary"} htmlType={"submit"}>
-                            删除
-                        </Button>
-                        <Popconfirm
-                            title={"确定要删除全部吗？"}
-                            onConfirm={() => {
-                                ipcRenderer
-                                    .invoke("DeleteRisk", {DeleteAll: true})
-                                    .then((e) => {
-                                        props.onClose()
-                                    })
-                                    .catch((e) => console.info(e))
-                                    .finally()
-                            }}
-                        >
-                            <Button danger={true} htmlType={"submit"}>
-                                删除全部
-                            </Button>
-                        </Popconfirm>
-                    </Space>
-                </Form.Item>
-            </Form>
-        </div>
-    )
-}
-
 interface RiskDetailsProp {
     info: Risk
     isShowTime?: boolean
@@ -799,11 +749,11 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                             <div className={`${title?.tag || "title-background-default"} subtitle-level`}>
                                 {title ? title.name : info.Severity || "-"}
                             </div>
-                            <div style={{maxWidth: 260}} className='subtitle-spacing text-ellipsis'>
+                            <div className='subtitle-spacing subtitle-url'>
                                 Url
-                                <span className='subtitle-font' title={info?.Url || "-"}>
+                                <Paragraph className='subtitle-font text-ellipsis' copyable ellipsis>
                                     {info?.Url || "-"}
-                                </span>
+                                </Paragraph>
                             </div>
                             {isShowTime && (
                                 <div className='subtitle-spacing'>

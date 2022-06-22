@@ -1,5 +1,19 @@
 import React, {useEffect, useState, useRef} from "react"
-import {Button, Card, Col, Descriptions, Form, Modal, Popover, Row, Space, Table, Tag, Typography} from "antd"
+import {
+    Button,
+    Card,
+    Col,
+    Descriptions,
+    Form,
+    Modal,
+    Popover,
+    Row,
+    Space,
+    Table,
+    Tag,
+    Typography,
+    Popconfirm
+} from "antd"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {failed} from "../../utils/notification"
 import {PortAsset} from "./models"
@@ -295,6 +309,31 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 })
         })
     })
+    const onRemove = useMemoizedFn(() => {
+        console.log("params", params)
+        let newParams = {}
+        if (selectedRowKeys.length === 0) {
+            // 删除所有
+            newParams = {
+                All: true,
+                ...newParams,
+                ...params
+            }
+        } else {
+            // 删除所选择的数据
+            newParams = {
+                All: false,
+                ...newParams
+            }
+        }
+        // ipcRenderer
+        //     .invoke("DeletePorts", {All: false, ...params})
+        //     .then(() => {})
+        //     .catch((e: any) => {
+        //         failed(`DeletePorts failed: ${e}`)
+        //     })
+        //     .finally(() => {})
+    })
     return (
         <Table<PortAsset>
             title={() => {
@@ -318,43 +357,20 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         <Col span={12} style={{textAlign: "right"}}>
                             <Space>
                                 <ExportExcel getData={getData} btnProps={{size: "small"}} />
-                                {/* <Popover
-                                    title={"输入想要导出的端口的网段（支持C段等 CIDR 格式，逗号分隔）"}
-                                    trigger={["click"]}
-                                    content={
-                                        <div>
-                                            <Form
-                                                layout={"inline"}
-                                                size={"small"}
-                                                onSubmitCapture={(e) => {
-                                                    e.preventDefault()
-
-                                                    startExecYakCode("Output Ports", {
-                                                        Script: OutputAsset.outputPortByNetwork,
-                                                        Params: [{Key: "network", Value: outputByNetwork}]
-                                                    })
-                                                }}
-                                            >
-                                                <InputItem
-                                                    label={"网段"}
-                                                    value={outputByNetwork}
-                                                    setValue={setOutputByNetwork}
-                                                />
-                                                <Form.Item colon={false} label={" "}>
-                                                    <Button size={"small"} type='primary' htmlType='submit'>
-                                                        {" "}
-                                                        导出{" "}
-                                                    </Button>
-                                                </Form.Item>
-                                            </Form>
-                                        </div>
+                                <Popconfirm
+                                    title={
+                                        selectedRowKeys.length > 0
+                                            ? "确定删除选择的端口资产吗？不可恢复"
+                                            : "确定删除所有端口资产吗? 不可恢复"
                                     }
+                                    onConfirm={onRemove}
                                 >
-                                    <Button type={"primary"} size={"small"}>
-                                        导出端口
+                                    <Button size='small' danger={true}>
+                                        删除端口
                                     </Button>
-                                </Popover> */}
-                                <Popover
+                                </Popconfirm>
+
+                                {/* <Popover
                                     title={"选择性删除端口"}
                                     content={
                                         <PortDeleteForm
@@ -369,7 +385,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     <Button size={"small"} danger={true}>
                                         删除端口
                                     </Button>
-                                </Popover>
+                                </Popover> */}
                                 <DropdownMenu
                                     menu={{
                                         data: [
@@ -510,7 +526,6 @@ export const PortDeleteForm: React.FC<PortDeleteFormProp> = (props) => {
         Hosts: "",
         Ports: ""
     })
-
     return (
         <Form
             onClickCapture={(e) => {

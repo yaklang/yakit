@@ -1,16 +1,18 @@
 import React, {useEffect, useState} from "react"
-import {Empty, List, PageHeader, Space, Spin, Tag, Tooltip} from "antd"
+import {Empty, List, PageHeader, Space, Spin, Tag, Tooltip, Popconfirm, message} from "antd"
 import {ResizeBox} from "../../components/ResizeBox"
 import {AutoCard} from "../../components/AutoCard"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {failed} from "../../utils/notification"
 import {formatTimestamp} from "../../utils/timeUtil"
-import {QuestionOutlined, ReloadOutlined} from "@ant-design/icons"
+import {QuestionOutlined, ReloadOutlined, DeleteOutlined} from "@ant-design/icons"
 import {Report} from "./models"
 import {ReportViewer} from "./ReportViewer"
 import {SelectIcon} from "../../assets/icons"
 import {report} from "process"
+
+import "./ReportViewerPage.scss"
 
 export interface ReportViewerPageProp {}
 
@@ -46,7 +48,7 @@ interface QueryReports extends QueryGeneralRequest {
 
 const {ipcRenderer} = window.require("electron")
 
-export const ReportList: React.FC<ReportListProp> = React.memo((props) => {
+export const ReportList: React.FC<ReportListProp> = (props) => {
     const [response, setResponse] = useState<QueryGeneralResponse<Report>>({
         Data: [],
         Pagination: genDefaultPagination(20),
@@ -59,6 +61,7 @@ export const ReportList: React.FC<ReportListProp> = React.memo((props) => {
         Pagination: genDefaultPagination(),
         Title: ""
     })
+    const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
     const [loading, setLoading] = useState(false)
     const pagination = params.Pagination
     const total = response.Total
@@ -78,13 +81,55 @@ export const ReportList: React.FC<ReportListProp> = React.memo((props) => {
                 Pagination: pagination
             })
             .then((rsp: QueryGeneralResponse<Report>) => {
-                if (rsp) setResponse(rsp)
+                if (rsp) {
+                    setResponse(rsp)
+                    setSelectedRowKeys([])
+                }
             })
             .catch((e) => {
                 failed("Query Reports Failed")
                 console.info(e)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+
+    const onSelect = useMemoizedFn((item: Report) => {
+        const index = selectedRowKeys.findIndex((ele) => ele === item.Id)
+        if (index === -1) {
+            selectedRowKeys.push(item.Id)
+        } else {
+            selectedRowKeys.splice(index, 1)
+        }
+        setSelectedRowKeys([...selectedRowKeys])
+    })
+
+    const onRemove = useMemoizedFn(() => {
+        let newParams = {}
+        if (selectedRowKeys.length === 0) {
+            // 删除所有
+            newParams = {
+                ...newParams,
+                DeleteAll: true
+            }
+        } else {
+            // 删除所选择的数据
+            newParams = {
+                ...newParams,
+                DeleteAll: false
+            }
+        }
+        message.info("开发中")
+        setSelectedRowKeys([])
+        // setLoading(true)
+        // ipcRenderer
+        //     .invoke("DeleteReport", params)
+        //     .then(() => {
+        //         update(1)
+        //     })
+        //     .catch((e) => {
+        //         failed(`DeleteReport failed: ${e}`)
+        //     })
+        //     .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
     useEffect(() => {
@@ -112,11 +157,24 @@ export const ReportList: React.FC<ReportListProp> = React.memo((props) => {
                     >
                         <ReloadOutlined />
                     </a>
+                    <Popconfirm
+                        title={
+                            selectedRowKeys.length > 0
+                                ? "确定删除选择的报告吗？不可恢复"
+                                : "确定删除所有报告吗? 不可恢复"
+                        }
+                        onConfirm={onRemove}
+                    >
+                        {/* @ts-ignore */}
+                        <DeleteOutlined className='icon-color' />
+                    </Popconfirm>
                 </Space>
             }
         >
             <List
                 renderItem={(item: Report) => {
+                    let iconClassName = "icon-select"
+
                     return (
                         <AutoCard
                             onClick={() => {
@@ -131,7 +189,20 @@ export const ReportList: React.FC<ReportListProp> = React.memo((props) => {
                             extra={<Tag>{formatTimestamp(item.PublishedAt)}</Tag>}
                             hoverable={true}
                         >
-                            <SelectIcon />
+                            <Tooltip title='点击选中后，可删除'>
+                                <SelectIcon
+                                    //  @ts-ignore
+                                    className={`icon-select  ${
+                                        selectedRowKeys.findIndex((ele) => ele === item.Id) !== -1 &&
+                                        "icon-select-active"
+                                    }`}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onSelect(item)
+                                    }}
+                                />
+                            </Tooltip>
+
                             <Space>
                                 {item.Id && <Tag color={"red"}>ID:{item.Id}</Tag>}
                                 {item.Owner && <Tag color={"green"}>发起人:{item.Owner}</Tag>}
@@ -154,4 +225,4 @@ export const ReportList: React.FC<ReportListProp> = React.memo((props) => {
             ></List>
         </AutoCard>
     )
-})
+}

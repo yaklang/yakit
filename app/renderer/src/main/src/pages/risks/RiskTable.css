@@ -119,8 +119,7 @@
     padding: 6px 10px;
 }
 
-.risk-table-container .container-filter-body .filter-body-opt {
-}
+.risk-table-container .container-filter-body .filter-body-opt {}
 
 .risk-table-container .container-filter-body .filter-body-opt .opt-header {
     height: 30px;
@@ -215,4 +214,15 @@
 .container-title-body .title-header .header-subtitle .subtitle-font {
     color: #999EA8;
     margin-left: 8px;
+}
+
+.container-title-body .title-header .header-subtitle .subtitle-url {
+    max-width: 260px;
+    display: flex;
+    align-items: center;
+}
+
+.container-title-body .title-header .header-subtitle div.ant-typography,
+.ant-typography p {
+    margin-bottom: 0;
 }
