@@ -94,7 +94,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 DeleteAll: true
             }
         } else {
-            // 删除所有选择的数据
+            // 删除所选择的数据
             newParams = {
                 ...newParams
             }
