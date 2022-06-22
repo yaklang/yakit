@@ -399,6 +399,7 @@ message DeleteReportRequest {
   int64 Id = 1;
   string Hash = 2;
   QueryReportsRequest Filter = 3;
+  repeated int64 IDs = 4;
 }
 
 message QueryReportsResponse {
@@ -797,6 +798,8 @@ message DeleteDomainsRequest {
   string DomainKeyword = 2;
   string Network = 3;
   int64 ID = 4;
+  QueryDomainsRequest Filter = 5;
+  repeated int64 IDs = 6;
 }
 
 message QueryDomainsResponse {

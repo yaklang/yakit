@@ -41,9 +41,8 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     })
     const toExcel = useMemoizedFn((query = {Limit: pageSize, Page: 1}) => {
         setLoading(true)
-        getData(query)
+        getData(query as any)
             .then((res: resProps) => {
-                debugger
                 const {header, exportData, response} = res
                 const totalCellNumber = header.length * exportData.length
                 if (totalCellNumber < maxCellNumber && response.Total <= pageSize) {
