@@ -207,6 +207,9 @@ service Yak {
   rpc RemoveFromMenu(RemoveFromMenuRequest) returns (Empty);
   rpc YakScriptIsInMenu(YakScriptIsInMenuRequest) returns (Empty);
   rpc GetAllMenuItem(Empty) returns (MenuByGroup);
+  rpc DeleteAllMenuItem(Empty) returns (Empty);
+  rpc ImportMenuItem(ImportMenuItemRequest) returns (Empty);
+  rpc ExportMenuItem(Empty) returns (ExportMenuItemResult);
   rpc GetMenuItemById(GetMenuItemByIdRequest) returns (MenuItem);
   rpc QueryGroupsByYakScriptId(QueryGroupsByYakScriptIdRequest) returns (GroupNames);
 
@@ -284,6 +287,35 @@ service Yak {
 
   // 尝试自动解码
   rpc AutoDecode(AutoDecodeRequest) returns (AutoDecodeResponse);
+
+  rpc GetSystemProxy(Empty) returns (GetSystemProxyResult);
+  rpc SetSystemProxy(SetSystemProxyRequest) returns (Empty);
+
+  // 设置通用存储
+  rpc GetKey(GetKeyRequest) returns (GetKeyResult);
+  rpc SetKey(SetKeyRequest) returns (Empty);
+}
+
+message SetKeyRequest {
+  string Key = 1;
+  string Value = 2;
+  int64 TTL = 3;
+}
+
+message GetKeyRequest {
+  string Key = 1;
+}
+
+message GetKeyResult {
+  string Value = 1;
+}
+
+message SetSystemProxyRequest {
+  string HttpProxy = 1;
+}
+
+message GetSystemProxyResult {
+  string CurrentProxy = 1;
 }
 
 message GetExecBatchYakScriptUnfinishedTaskByUidRequest {
@@ -968,6 +1000,15 @@ message AddToMenuRequest {
   int64 YakScriptId = 1;
   string Group = 2;
   string Verbose = 3;
+}
+
+message ImportMenuItemRequest {
+  string RawJson = 1;
+  string JsonFileName = 2;
+}
+
+message ExportMenuItemResult {
+  string RawJson = 1;
 }
 
 message UpdateFromYakitResourceRequest {

@@ -18,16 +18,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("cancel-global-reverse-server-status", (e) => {
         if (globalConfigServer) {
             globalConfigServer.cancel();
+            console.info("取消全局反连配置")
             globalConfigServer = null;
         }
     })
     ipcMain.handle("ConfigGlobalReverse", (e, params) => {
         if (globalConfigServer) {
+            console.info("已经存在全局反连配置")
             // 一般就配置本地 IP
             let stream = getClient().ConfigGlobalReverse(params)
             setTimeout(() => stream.cancel(), 3000)
             return
         }
+        console.info("开始配置全局反连")
         globalConfigServer = getClient().ConfigGlobalReverse(params);
         globalConfigServer.on("data", data => {
             if (!win) {
@@ -39,9 +42,12 @@ module.exports = (win, getClient) => {
             if (!win) {
                 return
             }
+            console.info("配置全局反连失败")
+            console.info(error)
             win.webContents.send(`global-reverse-error`, error && error.details)
         })
         globalConfigServer.on("end", () => {
+            console.info("配置全局反连结束，清除缓存")
             globalConfigServer = null
             if (!win) {
                 return
@@ -77,7 +83,7 @@ module.exports = (win, getClient) => {
                     }
                     resolve(data)
                 })
-            }catch (e) {
+            } catch (e) {
                 reject(e)
             }
         })

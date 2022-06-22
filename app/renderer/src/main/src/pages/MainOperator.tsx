@@ -1,45 +1,39 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {
     Button,
+    Checkbox,
     Col,
+    Divider,
+    Dropdown,
     Image,
+    Input,
     Layout,
     Menu,
     Modal,
     Popover,
     Row,
     Space,
-    Tabs,
-    Input,
-    Divider,
-    Tag,
     Spin,
-    Dropdown,
-    Typography,
-    Checkbox
+    Tabs,
+    Tag,
+    Typography
 } from "antd"
 import {ContentByRoute, MenuDataProps, NoScrollRoutes, Route, RouteMenuData} from "../routes/routeSpec"
 import {
     CloseOutlined,
     EditOutlined,
     EllipsisOutlined,
+    ExclamationCircleOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    ReloadOutlined,
     PoweroffOutlined,
+    ReloadOutlined,
     SettingOutlined,
-    ExclamationCircleOutlined,
 } from "@ant-design/icons"
-import {failed, success} from "../utils/notification"
+import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {YakLogoBanner} from "../utils/logo"
-import {
-    AutoUpdateYakModuleButton,
-    ConfigGlobalReverseButton,
-    ReversePlatformStatus,
-    YakitVersion,
-    YakVersion
-} from "../utils/basic"
+import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
 import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema"
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
@@ -51,7 +45,6 @@ import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import {AutoSpin} from "../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
-import {Fields} from "./risks/RiskTable";
 import {RiskStatsTag} from "../utils/RiskStatsTag";
 import {ItemSelects} from "../components/baseTemplate/FormItemUtil"
 import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
@@ -62,6 +55,9 @@ import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 
 import "./main.css"
 import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList";
+import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage";
+import {showConfigSystemProxyForm} from "../utils/ConfigSystemProxy";
+import {showConfigMenuItems} from "../utils/ConfigMenuItems";
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -857,11 +853,38 @@ const Main: React.FC<MainProp> = (props) => {
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
                                 <ReversePlatformStatus/>
                                 <Dropdown forceRender={true} overlay={<Menu>
-                                    <Menu.Item key={"update"}>
-                                        <AutoUpdateYakModuleButton/>
+                                    <Menu.Item key={"update"} onClick={() => {
+                                        showModal({
+                                            title: "更新插件源",
+                                            width: 800,
+                                            content: <div style={{width: 800}}>
+                                                <LoadYakitPluginForm onFinished={() => {
+                                                    info("更新进程执行完毕")
+                                                }}/>
+                                            </div>
+                                        })
+                                    }}>
+                                        <Button type={"link"}>更新 Yakit 插件源</Button>
                                     </Menu.Item>
-                                    <Menu.Item key={"reverse-global"}>
-                                        <ConfigGlobalReverseButton/>
+                                    <Menu.Item key={"reverse-global"} onClick={() => {
+                                        showModal({
+                                            title: "更新插件源",
+                                            width: 800,
+                                            content: <div style={{width: 800}}>
+                                                <ConfigGlobalReverse/>
+                                            </div>
+                                        })
+                                    }}>
+                                        <Button type={"link"}>配置全局反连</Button>
+                                        {/*<ConfigGlobalReverseButton/>*/}
+                                    </Menu.Item>
+                                    {/*<Menu.Item key={"config-system-proxy"} onClick={() => {*/}
+                                    {/*    showConfigSystemProxyForm()*/}
+                                    {/*}}>*/}
+                                    {/*    <Button type={"link"}>配置系统代理</Button>*/}
+                                    {/*</Menu.Item>*/}
+                                    <Menu.Item key={"config-menu"} onClick={() => showConfigMenuItems()}>
+                                        <Button type={"link"}>配置菜单栏</Button>
                                     </Menu.Item>
                                 </Menu>} trigger={["click"]}>
                                     <Button icon={<SettingOutlined/>}>

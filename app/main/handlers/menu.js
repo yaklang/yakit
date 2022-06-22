@@ -96,4 +96,52 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryGroupsByYakScriptId", async (e, params) => {
         return await asyncQueryGroupsByYakScriptId(params)
     })
+
+    // asyncDeleteAllMenuItem wrapper
+    const asyncDeleteAllMenuItem = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAllMenuItem(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteAllMenuItem", async (e, params) => {
+        return await asyncDeleteAllMenuItem(params)
+    })
+
+    // asyncImportMenuItem wrapper
+    const asyncImportMenuItem = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ImportMenuItem(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ImportMenuItem", async (e, params) => {
+        return await asyncImportMenuItem(params)
+    })
+
+    // asyncExportMenuItem wrapper
+    const asyncExportMenuItem = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExportMenuItem(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExportMenuItem", async (e, params) => {
+        return await asyncExportMenuItem(params)
+    })
 }
