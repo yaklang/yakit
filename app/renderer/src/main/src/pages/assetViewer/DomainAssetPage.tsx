@@ -76,9 +76,34 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             })
     })
 
-    const delDomain = useMemoizedFn((host?: string) => {
-        const params = !!host ? {DomainKeyword: host} : {DeleteAll: true}
+    // 单个删除
+    const delDomainSingle = useMemoizedFn((host: string) => {
+        const newParams = {
+            DomainKeyword: host
+        }
+        delDomain(newParams)
+    })
 
+    // 批量删除
+    const delDomainBatch = useMemoizedFn(() => {
+        let newParams = {}
+        if (selectedRowKeys.length === 0) {
+            // 删除所有
+            newParams = {
+                ...newParams,
+                DeleteAll: true
+            }
+        } else {
+            // 删除所有选择的数据
+            newParams = {
+                ...newParams
+            }
+        }
+
+        // delDomain(newParams)
+    })
+
+    const delDomain = useMemoizedFn((params) => {
         setLoading(true)
         ipcRenderer
             .invoke("DeleteDomains", params)
@@ -180,7 +205,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                         type={"link"}
                         danger
                         onClick={() => {
-                            delDomain(i.DomainName)
+                            delDomainSingle(i.DomainName)
                             setSelectedRowKeys([])
                             setCheckedURL([])
                         }}
@@ -202,7 +227,6 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 })
                 .then((res: QueryGeneralResponse<any>) => {
                     const {Data} = res
-                    console.log("res", res)
                     //    数据导出
                     let exportData: any = []
                     const header: string[] = []
@@ -257,51 +281,19 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                         </Space>
                         <Space>
                             <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
-                            {/* <Popover
-                                title={"输入想要导出的域名关键字"}
-                                trigger={["click"]}
-                                content={
-                                    <div>
-                                        <Form
-                                            layout={"inline"}
-                                            size={"small"}
-                                            onSubmitCapture={(e) => {
-                                                e.preventDefault()
-
-                                                startExecYakCode("Output Domains", {
-                                                    Script: OutputAsset.outputDomainByKeyword,
-                                                    Params: [{Key: "keyword", Value: outputDomainKeyword}]
-                                                })
-                                            }}
-                                        >
-                                            <InputItem
-                                                label={"域名关键字"}
-                                                value={outputDomainKeyword}
-                                                setValue={setOutputDomainKeyword}
-                                            />
-                                            <Form.Item colon={false} label={" "}>
-                                                <Button size={"small"} type='primary' htmlType='submit'>
-                                                    {" "}
-                                                    导出{" "}
-                                                </Button>
-                                            </Form.Item>
-                                        </Form>
-                                    </div>
-                                }
-                            >
-                                <Button type={"primary"} size={"small"}>
-                                    导出域名
-                                </Button>
-                            </Popover> */}
                             <Popconfirm
-                                title='确定删除所有域名资产吗? 不可恢复'
+                                title={
+                                    selectedRowKeys.length > 0
+                                        ? "确定删除选择的域名资产吗？不可恢复"
+                                        : "确定删除所有域名资产吗? 不可恢复"
+                                }
                                 onConfirm={(e) => {
-                                    delDomain()
+                                    delDomainBatch()
                                     setSelectedRowKeys([])
                                     setCheckedURL([])
                                 }}
                             >
-                                <Button type='link' danger size='small'>
+                                <Button danger size='small'>
                                     删除全部
                                 </Button>
                             </Popconfirm>
