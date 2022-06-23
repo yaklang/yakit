@@ -29,7 +29,9 @@ export const onRemoveToolFC = (props: removeProps<any>) => {
     } else if (Object.getOwnPropertyNames(queryHaveValue).length > 0) {
         // 删除带查询条件的数据
         newParams = {
-            ...params
+            Filter: {
+                ...params
+            }
         }
     } else {
         // 删除所有
