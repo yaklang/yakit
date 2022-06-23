@@ -22,4 +22,8 @@ export interface Risk {
     UpdatedAt?: number
 
     Severity?: string
+
+    Request?: Uint8Array
+    Response?: Uint8Array
+    RuntimeId?: string
 }

@@ -18,6 +18,7 @@ import debugImg from "../../assets/riskDetails/debug.png"
 
 import "./RiskTable.css"
 import {ExportExcel} from "../../components/DataExport/index"
+import {HTTPPacketEditor} from "../../utils/editors";
 
 export interface RiskTableProp {
     severity?: string
@@ -307,7 +308,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             ),
             width: 400,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -331,7 +332,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             dataIndex: "RiskTypeVerbose",
             render: (_, i: Risk) => i?.RiskTypeVerbose || i.RiskType,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -364,7 +365,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             dataIndex: "IP",
             render: (_, i: Risk) => i?.IP || "-",
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -404,7 +405,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     title: "详情",
                                     content: (
                                         <div style={{overflow: "auto"}}>
-                                            <RiskDetails info={i} />
+                                            <RiskDetails info={i}/>
                                         </div>
                                     )
                                 })
@@ -446,7 +447,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     resolve({
                         header,
                         exportData,
-                        response:res
+                        response: res
                     })
                 })
                 .catch((e) => {
@@ -471,7 +472,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                             onClick={() => {
                                                 update()
                                             }}
-                                            icon={<ReloadOutlined />}
+                                            icon={<ReloadOutlined/>}
                                         />
                                     </Space>
                                     <Space>
@@ -701,7 +702,8 @@ export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
                         .then((e) => {
                             props.onClose()
                         })
-                        .catch(() => {})
+                        .catch(() => {
+                        })
                         .finally()
                 }}
                 layout={"horizontal"}
@@ -776,7 +778,7 @@ interface RiskDetailsProp {
     shrink?: boolean
 }
 
-export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
+export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDetailsProp) => {
     const {info, isShowTime = true} = props
     const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
 
@@ -785,7 +787,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
             title={
                 <div className='container-title-body'>
                     <div className='title-icon'>
-                        <img src={title?.img || infoImg} className='icon-img' />
+                        <img src={title?.img || infoImg} className='icon-img'/>
                     </div>
 
                     <div className='title-header'>
@@ -866,6 +868,22 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
                     <Descriptions.Item label='Payload' span={3}>
                         <div>{info.Payload || "-"}</div>
                     </Descriptions.Item>
+                    {(info?.Request || []).length > 0 && <Descriptions.Item label='Request' span={3}>
+                        <div style={{height: 300}}>
+                            <HTTPPacketEditor
+                                originValue={(info?.Request || new Uint8Array)}
+                                readOnly={true} noHeader={true}
+                            />
+                        </div>
+                    </Descriptions.Item>}
+                    {(info?.Response || []).length > 0 && <Descriptions.Item label='Response' span={3}>
+                        <div style={{height: 300}}>
+                            <HTTPPacketEditor
+                                originValue={(info?.Response ||  new Uint8Array)}
+                                readOnly={true} noHeader={true}
+                            />
+                        </div>
+                    </Descriptions.Item>}
                     <Descriptions.Item label='详情' span={3}>
                         <div style={{maxHeight: 180, overflow: "auto"}}>{info.Details || "-"}</div>
                     </Descriptions.Item>
