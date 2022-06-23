@@ -189,6 +189,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                 .then((r: QueryGeneralResponse<any>) => {
                     setResponse(r)
                     updateRiskAndLevel()
+                    setSelectedRowKeys([])
                 })
                 .catch((e) => {
                     failed(`QueryRisks failed: ${e}`)
@@ -478,7 +479,6 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             params,
             interfaceName: "DeleteRisk"
         }
-        debugger
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
@@ -496,7 +496,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             update()
         }, 10)
     })
-
+    
     return (
         <div className='risk-table-container'>
             <div className='container-table'>
@@ -546,7 +546,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     bordered={true}
                     columns={columns}
                     scroll={{x: "auto"}}
-                    rowKey={(e) => e.Hash}
+                    rowKey={(e) => e.Id}
                     loading={loading}
                     dataSource={response.Data}
                     pagination={{

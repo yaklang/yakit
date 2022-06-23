@@ -30,7 +30,7 @@ export const onRemoveToolFC = (props: removeProps<any>) => {
         // 删除带查询条件的数据
         newParams = {
             Filter: {
-                ...params
+                ...queryHaveValue
             }
         }
     } else {
