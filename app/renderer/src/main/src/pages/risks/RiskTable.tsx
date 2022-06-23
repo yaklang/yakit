@@ -19,6 +19,7 @@ import debugImg from "../../assets/riskDetails/debug.png"
 import "./RiskTable.css"
 import {ExportExcel} from "../../components/DataExport/index"
 import {HTTPPacketEditor} from "../../utils/editors";
+import {onRemoveToolFC} from "../../utils/deleteTool"
 
 export interface RiskTableProp {
     severity?: string
@@ -459,22 +460,53 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     })
 
     const onRemove = useMemoizedFn(() => {
-        let newParams = {}
-        if (selectedRowKeys.length === 0) {
-            newParams = {
-                DeleteAll: true, // 删除所有
-                Filter: params // 删除带条件的数据
-            }
-        } else {
-            newParams = {}
+        const transferParams = {
+            selectedRowKeys,
+            params,
+            interfaceName: "DeleteRisk"
         }
+        debugger
+        setLoading(true)
+        onRemoveToolFC(transferParams)
+            .then(() => {
+                update()
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+        // let newParams = {}
+        // const queryHaveValue = {}
+        // // 找出有查询条件
+        // for (const key in params) {
+        //     const objItem = params[key]
+        //     if (key !== "Pagination" && objItem) {
+        //         queryHaveValue[key] = params[key]
+        //     }
+        // }
+        // if (selectedRowKeys.length > 0) {
+        //     // 删除选择的数据
+        //     newParams = {
+        //         Ids: selectedRowKeys
+        //     }
+        // } else if (Object.getOwnPropertyNames(queryHaveValue).length > 0) {
+        //     // 删除带查询条件的数据
+        //     newParams = {
+        //         ...params
+        //     }
+        // } else {
+        //     // 删除所有
+        //     newParams = {
+        //         DeleteAll: true
+        //     }
+        // }
+        // setLoading(true)
         // ipcRenderer
-        //     .invoke("DeleteRisk",newParams)
-        //     .then((e) => {
-        //         props.onClose()
+        //     .invoke("DeleteRisk", newParams)
+        //     .then(() => {
+        //         update()
         //     })
-        //     .catch(() => {})
-        //     .finally()
+        //     .catch((e: any) => {
+        //         failed(`DeleteRisk failed: ${e}`)
+        //     })
+        //     .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
     return (
