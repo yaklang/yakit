@@ -432,6 +432,7 @@ message DeleteReportRequest {
   string Hash = 2;
   QueryReportsRequest Filter = 3;
   repeated int64 IDs = 4;
+  bool DeleteAll = 5;
 }
 
 message QueryReportsResponse {
@@ -1072,6 +1073,9 @@ message DeletePortsRequest {
   string Ports = 2;
   repeated int64 Id = 3;
   bool All = 4;
+  repeated int64 Ids = 5;
+  bool DeleteAll = 6;
+  QueryPortsRequest Filter = 7;
 }
 
 message QueryPortsRequest {
