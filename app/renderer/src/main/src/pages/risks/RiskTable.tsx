@@ -333,25 +333,6 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             dataIndex: "RiskTypeVerbose",
             width: 90,
             render: (_, i: Risk) => i?.RiskTypeVerbose || i.RiskType,
-            filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
-            },
-            filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
-                return (
-                    params &&
-                    setParams && (
-                        <TableFilterDropdownString
-                            label={"搜索类型关键字"}
-                            params={params}
-                            setParams={setParams}
-                            filterName={"RiskType"}
-                            confirm={confirm}
-                            setSelectedKeys={setSelectedKeys}
-                            update={update}
-                        />
-                    )
-                )
-            }
         },
         {
             title: "等级",
