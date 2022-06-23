@@ -323,41 +323,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 update()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
-        // let newParams = {}
-        // const queryHaveValue = {}
-        // // 找出有查询条件
-        // for (const key in params) {
-        //     const objItem = params[key]
-        //     if (key !== "Pagination" && key !== "State" && objItem) {
-        //         queryHaveValue[key] = params[key]
-        //     }
-        // }
-        // if (selectedRowKeys.length > 0) {
-        //     // 删除选择的数据
-        //     newParams = {
-        //         Id: selectedRowKeys
-        //     }
-        // } else if (Object.getOwnPropertyNames(queryHaveValue).length > 0) {
-        //     // 删除带查询条件的数据
-        //     newParams = {
-        //         ...params
-        //     }
-        // } else {
-        //     // 删除所有
-        //     newParams = {
-        //         All: true
-        //     }
-        // }
-        // setLoading(true)
-        // ipcRenderer
-        //     .invoke("DeletePorts", newParams)
-        //     .then(() => {
-        //         update()
-        //     })
-        //     .catch((e: any) => {
-        //         failed(`DeletePorts failed: ${e}`)
-        //     })
-        //     .finally(() => setTimeout(() => setLoading(false), 300))
     })
     return (
         <Table<PortAsset>

@@ -716,7 +716,6 @@ export interface DeleteRiskFormProp {
     types?: FieldNameSelectItem[]
     severities?: FieldNameSelectItem[]
 }
-
 interface RiskDetailsProp {
     info: Risk
     isShowTime?: boolean
