@@ -30,6 +30,7 @@ import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/index"
 import {useMemoizedFn} from "ahooks"
+import {onRemoveToolFC} from "../../utils/deleteTool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -100,6 +101,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 }
             })
             .then((data) => {
+                setSelectedRowKeys([])
                 setResponse(data)
             })
             .catch((e: any) => {
@@ -310,29 +312,52 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         })
     })
     const onRemove = useMemoizedFn(() => {
-        console.log("params", params)
-        let newParams = {}
-        if (selectedRowKeys.length === 0) {
-            // 删除所有
-            newParams = {
-                All: true,
-                ...newParams,
-                ...params
-            }
-        } else {
-            // 删除所选择的数据
-            newParams = {
-                All: false,
-                ...newParams
-            }
+        const transferParams = {
+            selectedRowKeys,
+            params,
+            interfaceName: "DeletePorts"
         }
+        setLoading(true)
+        onRemoveToolFC(transferParams)
+            .then(() => {
+                update()
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+        // let newParams = {}
+        // const queryHaveValue = {}
+        // // 找出有查询条件
+        // for (const key in params) {
+        //     const objItem = params[key]
+        //     if (key !== "Pagination" && key !== "State" && objItem) {
+        //         queryHaveValue[key] = params[key]
+        //     }
+        // }
+        // if (selectedRowKeys.length > 0) {
+        //     // 删除选择的数据
+        //     newParams = {
+        //         Id: selectedRowKeys
+        //     }
+        // } else if (Object.getOwnPropertyNames(queryHaveValue).length > 0) {
+        //     // 删除带查询条件的数据
+        //     newParams = {
+        //         ...params
+        //     }
+        // } else {
+        //     // 删除所有
+        //     newParams = {
+        //         All: true
+        //     }
+        // }
+        // setLoading(true)
         // ipcRenderer
-        //     .invoke("DeletePorts", {All: false, ...params})
-        //     .then(() => {})
+        //     .invoke("DeletePorts", newParams)
+        //     .then(() => {
+        //         update()
+        //     })
         //     .catch((e: any) => {
         //         failed(`DeletePorts failed: ${e}`)
         //     })
-        //     .finally(() => {})
+        //     .finally(() => setTimeout(() => setLoading(false), 300))
     })
     return (
         <Table<PortAsset>
