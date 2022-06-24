@@ -122,7 +122,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
     useEffect(() => {
         update()
     }, [])
-    
+
     return (
         <AutoCard
             title={<Space>报告列表</Space>}
