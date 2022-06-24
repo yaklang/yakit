@@ -108,7 +108,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
         const transferParams = {
             selectedRowKeys,
             params,
-            interfaceName: "QueryReports",
+            interfaceName: "DeleteReport",
             selectedRowKeysNmae: "IDs"
         }
         setLoading(true)

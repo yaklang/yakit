@@ -1,11 +1,11 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Space, Table, Tag, Form, Typography, Descriptions, Popconfirm, Tooltip} from "antd"
+import {Button, Space, Table, Tag, Form, Typography, Descriptions, Popconfirm, Tooltip, Menu} from "antd"
 import {Risk} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
-import {failed} from "../../utils/notification"
+import {failed, success} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
 import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
 
@@ -18,8 +18,9 @@ import debugImg from "../../assets/riskDetails/debug.png"
 
 import "./RiskTable.css"
 import {ExportExcel} from "../../components/DataExport/index"
-import {HTTPPacketEditor} from "../../utils/editors";
+import {HTTPPacketEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
+import {showByContextMenu} from "../../components/functionTemplate/showByContext"
 
 export interface RiskTableProp {
     severity?: string
@@ -142,6 +143,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const [types, setTypes] = useState<FieldNameSelectItem[]>([])
     const [severities, setSeverities] = useState<FieldNameSelectItem[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+
+    const [selected, setSelected, getSelected] = useGetState<Risk>()
 
     const time = useRef<any>(null)
 
@@ -495,6 +498,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             update()
         }, 10)
     })
+    console.log('response.Data',response.Data);
     
     return (
         <div className='risk-table-container'>
@@ -505,7 +509,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             <div>
                                 <div className='table-title'>
                                     <Space>
-                                        {"风险与漏洞"}
+                                        风险与漏洞
                                         <Tooltip title='刷新会重置所有查询条件'>
                                             <Button
                                                 size={"small"}
@@ -573,6 +577,34 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             setSelectedRowKeys(selectedRowKeys as string[])
                         },
                         selectedRowKeys
+                    }}
+                    onRow={(record) => {
+                        return {
+                            onContextMenu: (event) => {
+                                showByContextMenu({
+                                    data: [{key: "delect-repeat", title: "删除重复标题数据"}],
+                                    onClick: ({key}) => {
+                                        if (key === "delect-repeat") {
+                                            const newParams = {
+                                                DeleteRepetition: true,
+                                                Filter: {
+                                                    Id: record.Id,
+                                                    Search: record?.TitleVerbose || record.Title
+                                                }
+                                            }
+                                            ipcRenderer
+                                                .invoke("DeleteRisk", newParams)
+                                                .then(() => {
+                                                    update()
+                                                })
+                                                .catch((e: any) => {
+                                                    failed(`DeleteRisk failed: ${e}`)
+                                                })
+                                        }
+                                    }
+                                })
+                            }
+                        }
                     }}
                 />
             </div>
