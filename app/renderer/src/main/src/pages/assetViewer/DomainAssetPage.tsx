@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react"
-import {Button, Form, Popconfirm, Popover, Space, Table, Tag, Typography} from "antd"
+import {Button, Form, Popconfirm, Popover, Space, Table, Tag, Typography, Tooltip} from "antd"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {failed} from "../../utils/notification"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {TableFilterDropdownString} from "../risks/RiskTable"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {showModal} from "../../utils/showModal"
 import {InputItem} from "../../utils/inputUtil"
 import {startExecYakCode} from "../../utils/basic"
@@ -41,7 +41,7 @@ const formatJson = (filterVal, jsonData) => {
 }
 
 export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAssetPageProps) => {
-    const [params, setParams] = useState<QueryDomainsRequest>({
+    const [params, setParams, getParams] = useGetState<QueryDomainsRequest>({
         Pagination: genDefaultPagination(20)
     })
     const [response, setResponse] = useState<QueryGeneralResponse<Domain>>({
@@ -58,7 +58,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
 
     const update = useMemoizedFn((page?: number, limit?: number) => {
         const newParams = {
-            ...params
+            ...getParams()
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
@@ -240,9 +240,17 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                update()
+                refList()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const refList = useMemoizedFn(() => {
+        setParams({
+            Pagination: genDefaultPagination(20)
+        })
+        setTimeout(() => {
+            update(1)
+        }, 10)
     })
     return (
         <Table<Domain>
@@ -263,16 +271,16 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                     <div style={{display: "flex", justifyContent: "space-between"}}>
                         <Space>
                             <div>域名资产</div>
-                            <Button
-                                type={"link"}
-                                onClick={() => {
-                                    update(1)
-                                    setSelectedRowKeys([])
-                                    setCheckedURL([])
-                                }}
-                                size={"small"}
-                                icon={<ReloadOutlined />}
-                            />
+                            <Tooltip title='刷新会重置所有查询条件'>
+                                <Button
+                                    type={"link"}
+                                    onClick={() => {
+                                        refList()
+                                    }}
+                                    size={"small"}
+                                    icon={<ReloadOutlined />}
+                                />
+                            </Tooltip>
                         </Space>
                         <Space>
                             <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />

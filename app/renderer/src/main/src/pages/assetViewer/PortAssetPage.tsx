@@ -12,7 +12,8 @@ import {
     Table,
     Tag,
     Typography,
-    Popconfirm
+    Popconfirm,
+    Tooltip
 } from "antd"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {failed} from "../../utils/notification"
@@ -29,7 +30,7 @@ import {OutputAsset} from "./outputAssetYakCode"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/index"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 
 const {ipcRenderer} = window.require("electron")
@@ -71,7 +72,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         } as PaginationSchema,
         Total: 0
     })
-    const [params, setParams] = useState<QueryPortsRequest>({
+    const [params, setParams, getParams] = useGetState<QueryPortsRequest>({
         Hosts: "",
         Ports: "",
         Service: "",
@@ -92,7 +93,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setLoading(true)
         ipcRenderer
             .invoke("QueryPorts", {
-                ...params,
+                ...getParams(),
                 Pagination: {
                     Limit: pageSize || response.Pagination.Limit,
                     Page: current || response.Pagination.Page,
@@ -321,9 +322,27 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                update()
+                refList()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const refList = useMemoizedFn(() => {
+        setParams({
+            Hosts: "",
+            Ports: "",
+            Service: "",
+            State: props.closed ? "closed" : "open",
+            Pagination: {
+                Limit: 15,
+                Page: 1,
+                OrderBy: "desc",
+                Order: "updated_at"
+            }
+        })
+
+        setTimeout(() => {
+            update()
+        }, 10)
     })
     return (
         <Table<PortAsset>
@@ -332,15 +351,17 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     <Row>
                         <Col span={12}>
                             <Space>
-                                端口资产列表{" "}
-                                <Button
-                                    icon={<ReloadOutlined />}
-                                    size={"small"}
-                                    type={"link"}
-                                    onClick={() => {
-                                        update(1)
-                                    }}
-                                />
+                                端口资产列表
+                                <Tooltip title='刷新会重置所有查询条件'>
+                                    <Button
+                                        icon={<ReloadOutlined />}
+                                        size={"small"}
+                                        type={"link"}
+                                        onClick={() => {
+                                            refList()
+                                        }}
+                                    />
+                                </Tooltip>
                             </Space>
                         </Col>
                         <Col span={12} style={{textAlign: "right"}}>
@@ -479,79 +500,5 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
                 </Descriptions.Item>
             )}
         </Descriptions>
-    )
-}
-
-export interface PortDeleteFormProp {
-    onFinished: () => any
-}
-
-interface DeletePortRequest {
-    Hosts: string
-    Ports: string
-}
-
-export const PortDeleteForm: React.FC<PortDeleteFormProp> = (props) => {
-    const [params, setParams] = useState<DeletePortRequest>({
-        Hosts: "",
-        Ports: ""
-    })
-    return (
-        <Form
-            onClickCapture={(e) => {
-                e.preventDefault()
-                ipcRenderer
-                    .invoke("DeletePorts", {All: false, ...params})
-                    .then(() => {})
-                    .catch((e: any) => {
-                        failed("删除失败")
-                    })
-                    .finally(() => {
-                        props.onFinished()
-                    })
-            }}
-            layout={"vertical"}
-            size={"small"}
-        >
-            <InputItem
-                label={"想要删除的网段/IP"}
-                setValue={(Hosts) => setParams({...params, Hosts})}
-                value={params.Hosts}
-            />
-            <InputItem
-                label={"想要删除的端口段"}
-                setValue={(Ports) => setParams({...params, Ports})}
-                value={params.Ports}
-            />
-            <Form.Item>
-                <Button type='primary' htmlType='submit' danger={true}>
-                    {" "}
-                    删除指定内容{" "}
-                </Button>
-                <Button
-                    type='dashed'
-                    danger={true}
-                    onClick={() => {
-                        Modal.confirm({
-                            title: "确定要删除全部吗？不可恢复",
-                            onOk: () => {
-                                ipcRenderer
-                                    .invoke("DeletePorts", {All: true})
-                                    .then(() => {})
-                                    .catch((e: any) => {
-                                        failed("删除失败")
-                                    })
-                                    .finally(() => {
-                                        props.onFinished()
-                                    })
-                            }
-                        })
-                    }}
-                >
-                    {" "}
-                    删除全部{" "}
-                </Button>
-            </Form.Item>
-        </Form>
     )
 }

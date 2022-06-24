@@ -184,7 +184,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             setLoading(true)
             ipcRenderer
                 .invoke("QueryRisks", {
-                    ...params,
+                    ...getParams(),
                     ...(extraParam ? extraParam : {}),
                     Pagination: paginationProps
                 })
@@ -484,7 +484,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                update()
+                refList()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
