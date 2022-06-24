@@ -639,6 +639,7 @@ message DeleteRiskRequest {
   repeated int64 Ids = 4;
   QueryRisksRequest Filter = 3;
   bool DeleteAll = 5;
+  bool DeleteRepetition = 6;
 }
 
 message QueryRiskRequest {
