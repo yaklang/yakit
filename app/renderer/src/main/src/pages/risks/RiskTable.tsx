@@ -588,6 +588,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                             const newParams = {
                                                 DeleteRepetition: true,
                                                 Filter: {
+                                                    
                                                     Id: record.Id,
                                                     Search: record?.TitleVerbose || record.Title
                                                 }
