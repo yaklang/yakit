@@ -498,8 +498,6 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             update()
         }, 10)
     })
-    console.log('response.Data',response.Data);
-    
     return (
         <div className='risk-table-container'>
             <div className='container-table'>
@@ -587,9 +585,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                         if (key === "delect-repeat") {
                                             const newParams = {
                                                 DeleteRepetition: true,
+                                                Id: record.Id,
                                                 Filter: {
-                                                    
-                                                    Id: record.Id,
                                                     Search: record?.TitleVerbose || record.Title
                                                 }
                                             }
