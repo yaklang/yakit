@@ -11,6 +11,7 @@ import {Report} from "./models"
 import {ReportViewer} from "./ReportViewer"
 import {SelectIcon} from "../../assets/icons"
 import {report} from "process"
+import {onRemoveToolFC} from "../../utils/deleteTool"
 
 import "./ReportViewerPage.scss"
 
@@ -104,38 +105,24 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
     })
 
     const onRemove = useMemoizedFn(() => {
-        let newParams = {}
-        if (selectedRowKeys.length === 0) {
-            // 删除所有
-            newParams = {
-                ...newParams,
-                DeleteAll: true
-            }
-        } else {
-            // 删除所选择的数据
-            newParams = {
-                ...newParams,
-                DeleteAll: false
-            }
+        const transferParams = {
+            selectedRowKeys,
+            params,
+            interfaceName: "QueryReports",
+            selectedRowKeysNmae: "IDs"
         }
-        message.info("开发中")
-        setSelectedRowKeys([])
-        // setLoading(true)
-        // ipcRenderer
-        //     .invoke("DeleteReport", params)
-        //     .then(() => {
-        //         update(1)
-        //     })
-        //     .catch((e) => {
-        //         failed(`DeleteReport failed: ${e}`)
-        //     })
-        //     .finally(() => setTimeout(() => setLoading(false), 300))
+        setLoading(true)
+        onRemoveToolFC(transferParams)
+            .then(() => {
+                update()
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
     useEffect(() => {
         update()
     }, [])
-
+    
     return (
         <AutoCard
             title={<Space>报告列表</Space>}
@@ -173,8 +160,6 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
         >
             <List
                 renderItem={(item: Report) => {
-                    let iconClassName = "icon-select"
-
                     return (
                         <AutoCard
                             onClick={() => {

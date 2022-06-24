@@ -12,6 +12,7 @@ import {OutputAsset} from "./outputAssetYakCode"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport"
+import {onRemoveToolFC} from "../../utils/deleteTool"
 
 export interface Domain {
     ID?: number
@@ -67,6 +68,8 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             .invoke("QueryDomains", newParams)
             .then((data) => {
                 setResponse(data)
+                setSelectedRowKeys([])
+                setCheckedURL([])
             })
             .catch((e: any) => {
                 failed("QueryExecHistory failed: " + `${e}`)
@@ -81,32 +84,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         const newParams = {
             DomainKeyword: host
         }
-        delDomain(newParams)
-    })
-
-    // 批量删除
-    const delDomainBatch = useMemoizedFn(() => {
-        let newParams = {}
-        if (selectedRowKeys.length === 0) {
-            // 删除所有
-            newParams = {
-                ...newParams,
-                DeleteAll: true
-            }
-        } else {
-            // 删除所选择的数据
-            newParams = {
-                ...newParams
-            }
-        }
-
-        // delDomain(newParams)
-    })
-
-    const delDomain = useMemoizedFn((params) => {
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteDomains", params)
+            .invoke("DeleteDomains", newParams)
             .then(() => {
                 update(1)
             })
@@ -249,6 +229,21 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 })
         })
     })
+
+    const onRemove = useMemoizedFn(() => {
+        const transferParams = {
+            selectedRowKeys,
+            params,
+            interfaceName: "DeleteDomains",
+            selectedRowKeysNmae: "IDs"
+        }
+        setLoading(true)
+        onRemoveToolFC(transferParams)
+            .then(() => {
+                update()
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
     return (
         <Table<Domain>
             loading={loading}
@@ -287,13 +282,14 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                         ? "确定删除选择的域名资产吗？不可恢复"
                                         : "确定删除所有域名资产吗? 不可恢复"
                                 }
-                                onConfirm={(e) => {
-                                    delDomainBatch()
-                                    setSelectedRowKeys([])
-                                    setCheckedURL([])
-                                }}
+                                // onConfirm={(e) => {
+                                //     delDomainBatch()
+                                //     setSelectedRowKeys([])
+                                //     setCheckedURL([])
+                                // }}
+                                onConfirm={onRemove}
                             >
-                                <Button danger size='small'>
+                                <Button size='small' danger={true}>
                                     删除全部
                                 </Button>
                             </Popconfirm>

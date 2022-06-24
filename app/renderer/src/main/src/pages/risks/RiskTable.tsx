@@ -20,7 +20,6 @@ import "./RiskTable.css"
 import {ExportExcel} from "../../components/DataExport/index"
 import {HTTPPacketEditor} from "../../utils/editors";
 import {onRemoveToolFC} from "../../utils/deleteTool"
-import {HTTPPacketEditor} from "../../utils/editors";
 
 export interface RiskTableProp {
     severity?: string

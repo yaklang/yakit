@@ -102,6 +102,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             })
             .then((data) => {
                 setSelectedRowKeys([])
+                setCheckedURL([])
                 setResponse(data)
             })
             .catch((e: any) => {
@@ -338,8 +339,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     type={"link"}
                                     onClick={() => {
                                         update(1)
-                                        setSelectedRowKeys([])
-                                        setCheckedURL([])
                                     }}
                                 />
                             </Space>
@@ -359,23 +358,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                         删除端口
                                     </Button>
                                 </Popconfirm>
-
-                                {/* <Popover
-                                    title={"选择性删除端口"}
-                                    content={
-                                        <PortDeleteForm
-                                            onFinished={() => {
-                                                update(1)
-                                                setSelectedRowKeys([])
-                                                setCheckedURL([])
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Button size={"small"} danger={true}>
-                                        删除端口
-                                    </Button>
-                                </Popover> */}
                                 <DropdownMenu
                                     menu={{
                                         data: [
@@ -435,8 +417,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     update(paging.current, paging.pageSize, sorter.order, `${sorter.columnKey}`)
                 } else {
                     update(paging.current, paging.pageSize)
-                    setSelectedRowKeys([])
-                    setCheckedURL([])
                 }
             }}
             rowSelection={{

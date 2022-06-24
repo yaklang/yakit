@@ -7,10 +7,11 @@ interface removeProps<T> {
     interfaceName: string
     isShowError?: boolean
     noEnterQuery?: string[] // 查询条件不需要添加
+    selectedRowKeysNmae?:string
 }
 
 export const onRemoveToolFC = (props: removeProps<any>) => {
-    const {params, selectedRowKeys = [], interfaceName, isShowError = true, noEnterQuery = []} = props
+    const {params, selectedRowKeys = [], interfaceName, isShowError = true, noEnterQuery = [],selectedRowKeysNmae='Ids'} = props
     let newParams = {}
     let newNoEnterQuery = ["Pagination", ...noEnterQuery]
     const queryHaveValue = {}
@@ -24,7 +25,7 @@ export const onRemoveToolFC = (props: removeProps<any>) => {
     if (selectedRowKeys.length > 0) {
         // 删除选择的数据
         newParams = {
-            Ids: selectedRowKeys
+            [selectedRowKeysNmae]: selectedRowKeys
         }
     } else if (Object.getOwnPropertyNames(queryHaveValue).length > 0) {
         // 删除带查询条件的数据
@@ -39,8 +40,7 @@ export const onRemoveToolFC = (props: removeProps<any>) => {
             DeleteAll: true
         }
     }
-    console.log("newParams", newParams)
-
+    // console.log("newParams", interfaceName,newParams)
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke(interfaceName, newParams)
