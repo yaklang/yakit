@@ -34,7 +34,7 @@ import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {YakLogoBanner} from "../utils/logo"
 import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
-import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema"
+import {CompletionTotal, getGlobalCompletions, setCompletions} from "../utils/monacoSpec/yakCompletionSchema"
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "./invoker/schema"
@@ -58,6 +58,7 @@ import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList";
 import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage";
 import {showConfigSystemProxyForm} from "../utils/ConfigSystemProxy";
 import {showConfigMenuItems} from "../utils/ConfigMenuItems";
+import {YakCodeEditor} from "../utils/editors";
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item

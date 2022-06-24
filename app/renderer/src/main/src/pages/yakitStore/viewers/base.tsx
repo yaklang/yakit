@@ -16,7 +16,7 @@ import {CVXterm} from "../../../components/CVXterm"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport"
-import {useMemoizedFn} from "ahooks"
+import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useThrottle} from "ahooks"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -393,7 +393,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const tableData = useRef<any>([])
     const tableDataOriginal = useRef<any>([])
-    useEffect(() => {
+    useDebounceEffect(() => {
         tableData.current = (props.execResultsLog || [])
             .filter((i) => i.level === "feature-table-data")
             .map((i) => {
@@ -415,7 +415,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
                 return false
             })
         tableDataOriginal.current = tableData.current
-    }, [])
+    }, [props.execResultsLog], {wait: 300, leading: true, trailing: true})
 
     useEffect(() => {
         const item = tableData.current[0] || {}

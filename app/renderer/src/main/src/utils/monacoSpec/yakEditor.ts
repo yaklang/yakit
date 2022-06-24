@@ -205,7 +205,16 @@ monaco.languages.setMonarchTokensProvider(YaklangMonacoSpec, {
 })
 
 monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
-    // @ts-ignore
-    provideCompletionItems: yaklangCompletionHandlerProvider,
-    triggerCharacters: ["."],
-})
+    provideCompletionItems: (editor, position, context, token) => {
+        try {
+            const data = yaklangCompletionHandlerProvider(editor, position, context, token as any);
+            if (data.suggestions) {
+                return {suggestions: data.suggestions}
+            }
+            return {suggestions: []}
+        } catch (e) {
+            return {suggestions: []}
+        }
+    },
+    triggerCharacters: ["."]
+});
