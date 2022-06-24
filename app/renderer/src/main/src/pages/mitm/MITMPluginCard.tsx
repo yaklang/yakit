@@ -43,7 +43,7 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                 simple={true}
                 onTotal={setTotal}
                 filter={{
-                    SearchURL: "",
+                    SearchURL: "", SourceType: "mitm",
                     Pagination: {...genDefaultPagination(), Page: 1, Limit: 20}
                 }}
                 source={""}
