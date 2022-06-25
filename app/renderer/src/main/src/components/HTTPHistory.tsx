@@ -30,7 +30,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 }
                 firstMinSize={160}
                 isVer={true}
-                secondMinSize={300}
+                secondMinSize={50}
                 secondNode={
                     <div style={{width: "100%", height: "100%"}}>
                         <HTTPFlowDetailMini

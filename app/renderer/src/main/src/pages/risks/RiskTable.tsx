@@ -1,11 +1,11 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Space, Table, Tag, Form, Typography, Descriptions, Popconfirm} from "antd"
+import {Button, Space, Table, Tag, Form, Typography, Descriptions, Popconfirm, Tooltip, Menu} from "antd"
 import {Risk} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
-import {failed} from "../../utils/notification"
+import {failed, success} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
 import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
 
@@ -18,6 +18,9 @@ import debugImg from "../../assets/riskDetails/debug.png"
 
 import "./RiskTable.css"
 import {ExportExcel} from "../../components/DataExport/index"
+import {HTTPPacketEditor} from "../../utils/editors"
+import {onRemoveToolFC} from "../../utils/deleteTool"
+import {showByContextMenu} from "../../components/functionTemplate/showByContext"
 
 export interface RiskTableProp {
     severity?: string
@@ -139,6 +142,9 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [types, setTypes] = useState<FieldNameSelectItem[]>([])
     const [severities, setSeverities] = useState<FieldNameSelectItem[]>([])
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+
+    const [selected, setSelected, getSelected] = useGetState<Risk>()
 
     const time = useRef<any>(null)
 
@@ -178,13 +184,14 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             setLoading(true)
             ipcRenderer
                 .invoke("QueryRisks", {
-                    ...params,
+                    ...getParams(),
                     ...(extraParam ? extraParam : {}),
                     Pagination: paginationProps
                 })
                 .then((r: QueryGeneralResponse<any>) => {
                     setResponse(r)
                     updateRiskAndLevel()
+                    setSelectedRowKeys([])
                 })
                 .catch((e) => {
                     failed(`QueryRisks failed: ${e}`)
@@ -241,58 +248,66 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     }, [])
 
     const showSelectedTag = () => {
-        const risktypes = getParams().RiskType ? getParams().RiskType?.split("|") : []
-        const severitys = getParams().Severity ? getParams().Severity?.split("|") : []
+        const risktypes: string[] = (getParams().RiskType && getParams().RiskType?.split("|")) || []
+        const severitys: string[] = (getParams().Severity && getParams().Severity?.split("|")) || []
 
-        const typekind = types.map((item) => {
+        const typekind = types.filter((item) => {
             item.Names = item.Names || []
-            return item
+            const type = risktypes.find((t) => {
+                return item.Names.includes(t) && t
+            })
+            return !!type
         })
-        const severitykind = severities.map((item) => {
+        const severitykind = severities.filter((item) => {
             item.Names = item.Names || []
-            return item
+            const severity = severitys.find((t) => {
+                return item.Names.includes(t) && t
+            })
+            return !!severity
         })
-
         return (
-            <>
-                {risktypes?.map((type) => (
-                    <div className='title-selected-tag' key={type}>
-                        <div className='tag-name-style' key={type}>
-                            {(() => {
-                                const result = typekind.filter((item) => {
-                                    return item.Names.join(",").startsWith(type)
-                                })
-                                if (result.length > 0) {
-                                    return result[0] && result[0].Verbose
-                                }
-                                return ""
-                            })()}
-                        </div>
-                        <div className='tag-del-style' onClick={() => filterSelect("type", type)}>
-                            x
-                        </div>
-                    </div>
-                ))}
-                {severitys?.map((severity) => (
-                    <div className='title-selected-tag' key={severity}>
-                        <div className='tag-name-style' key={severity}>
-                            {(() => {
-                                const result = severitykind.filter((item) => {
-                                    return item.Names.join(",").startsWith(severity)
-                                })
-                                if (result.length > 0) {
-                                    return result[0] && result[0].Verbose
-                                }
-                                return severity
-                            })()}
-                            {/*{severitykind.filter((item) => item.Names.join(",").startsWith(severity))[0].Verbose}*/}
-                        </div>
-                        <div className='tag-del-style' onClick={() => filterSelect("severity", severity)}>
-                            x
-                        </div>
-                    </div>
-                ))}
-            </>
+            (typekind.length > 0 || severitykind.length > 0) && (
+                <div className='title-header'>
+                    {typekind.map((ele) => {
+                        const type =
+                            risktypes.find((t) => {
+                                ele.Names.includes(t)
+                            }) || ""
+                        return (
+                            <div className='title-selected-tag' key={type}>
+                                <div className='tag-name-style' key={type}>
+                                    {ele.Verbose}
+                                </div>
+                                <div
+                                    className='tag-del-style'
+                                    onClick={() => filterSelect("type", ele.Names.join(","))}
+                                >
+                                    x
+                                </div>
+                            </div>
+                        )
+                    })}
+                    {severitykind?.map((ele) => {
+                        const severity =
+                            severitys.find((t) => {
+                                ele.Names.includes(t)
+                            }) || ""
+                        return (
+                            <div className='title-selected-tag' key={severity}>
+                                <div className='tag-name-style' key={severity}>
+                                    {ele.Verbose}
+                                </div>
+                                <div
+                                    className='tag-del-style'
+                                    onClick={() => filterSelect("severity", ele.Names.join(","))}
+                                >
+                                    x
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            )
         )
     }
 
@@ -329,9 +344,14 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         {
             title: "类型",
             dataIndex: "RiskTypeVerbose",
+            width: 90,
             render: (_, i: Risk) => i?.RiskTypeVerbose || i.RiskType,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return (
+                    params && (
+                        <SearchOutlined style={{color: filtered || getParams()["RiskType"] ? "#1890ff" : undefined}} />
+                    )
+                )
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -446,7 +466,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     resolve({
                         header,
                         exportData,
-                        response:res
+                        response: res
                     })
                 })
                 .catch((e) => {
@@ -455,6 +475,29 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         })
     })
 
+    const onRemove = useMemoizedFn(() => {
+        const transferParams = {
+            selectedRowKeys,
+            params,
+            interfaceName: "DeleteRisk"
+        }
+        setLoading(true)
+        onRemoveToolFC(transferParams)
+            .then(() => {
+                refList()
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+
+    const refList = useMemoizedFn(() => {
+        setParams({
+            Severity: props.severity,
+            Pagination: genDefaultPagination(20)
+        })
+        setTimeout(() => {
+            update()
+        }, 10)
+    })
     return (
         <div className='risk-table-container'>
             <div className='container-table'>
@@ -464,15 +507,17 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             <div>
                                 <div className='table-title'>
                                     <Space>
-                                        {"风险与漏洞"}
-                                        <Button
-                                            size={"small"}
-                                            type={"link"}
-                                            onClick={() => {
-                                                update()
-                                            }}
-                                            icon={<ReloadOutlined />}
-                                        />
+                                        风险与漏洞
+                                        <Tooltip title='刷新会重置所有查询条件'>
+                                            <Button
+                                                size={"small"}
+                                                type={"link"}
+                                                onClick={() => {
+                                                    refList()
+                                                }}
+                                                icon={<ReloadOutlined />}
+                                            />
+                                        </Tooltip>
                                     </Space>
                                     <Space>
                                         <ExportExcel
@@ -480,36 +525,21 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                             btnProps={{size: "small"}}
                                             fileName='风险与漏洞'
                                         />
-                                        <Button
-                                            danger={true}
-                                            size={"small"}
-                                            type={"primary"}
-                                            onClick={() => {
-                                                let m = showModal({
-                                                    title: "删除数据选项",
-                                                    width: "50%",
-                                                    content: (
-                                                        <div>
-                                                            <DeleteRiskForm
-                                                                types={types}
-                                                                severities={severities}
-                                                                onClose={() => {
-                                                                    m.destroy()
-                                                                    update(1)
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    )
-                                                })
-                                            }}
+                                        <Popconfirm
+                                            title={
+                                                selectedRowKeys.length > 0
+                                                    ? "确定删除选择的风险与漏洞吗？不可恢复"
+                                                    : "确定删除所有风险与漏洞吗? 不可恢复"
+                                            }
+                                            onConfirm={onRemove}
                                         >
-                                            删除数据
-                                        </Button>
+                                            <Button size='small' danger={true}>
+                                                删除数据
+                                            </Button>
+                                        </Popconfirm>
                                     </Space>
                                 </div>
-                                {(!!getParams().Severity || !!getParams().RiskType) && (
-                                    <div className='title-header'>{showSelectedTag()}</div>
-                                )}
+                                {showSelectedTag()}
                             </div>
                         )
                     }}
@@ -517,7 +547,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     bordered={true}
                     columns={columns}
                     scroll={{x: "auto"}}
-                    rowKey={(e) => e.Hash}
+                    rowKey={(e) => e.Id}
                     loading={loading}
                     dataSource={response.Data}
                     pagination={{
@@ -538,6 +568,40 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             case "filter":
                                 update()
                                 return
+                        }
+                    }}
+                    rowSelection={{
+                        onChange: (selectedRowKeys) => {
+                            setSelectedRowKeys(selectedRowKeys as string[])
+                        },
+                        selectedRowKeys
+                    }}
+                    onRow={(record) => {
+                        return {
+                            onContextMenu: (event) => {
+                                showByContextMenu({
+                                    data: [{key: "delect-repeat", title: "删除重复标题数据"}],
+                                    onClick: ({key}) => {
+                                        if (key === "delect-repeat") {
+                                            const newParams = {
+                                                DeleteRepetition: true,
+                                                Id: record.Id,
+                                                Filter: {
+                                                    Search: record?.TitleVerbose || record.Title
+                                                }
+                                            }
+                                            ipcRenderer
+                                                .invoke("DeleteRisk", newParams)
+                                                .then(() => {
+                                                    update()
+                                                })
+                                                .catch((e: any) => {
+                                                    failed(`DeleteRisk failed: ${e}`)
+                                                })
+                                        }
+                                    }
+                                })
+                            }
                         }
                     }}
                 />
@@ -681,102 +745,13 @@ export interface DeleteRiskFormProp {
     types?: FieldNameSelectItem[]
     severities?: FieldNameSelectItem[]
 }
-
-export const DeleteRiskForm: React.FC<DeleteRiskFormProp> = (props) => {
-    const {types, severities} = props
-    const [params, setParams] = useState<QueryRisksParams>({
-        Network: "",
-        Pagination: genDefaultPagination(),
-        RiskType: "",
-        Search: "",
-        Severity: ""
-    })
-    return (
-        <div>
-            <Form
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-                    ipcRenderer
-                        .invoke("DeleteRisk", {Filter: params})
-                        .then((e) => {
-                            props.onClose()
-                        })
-                        .catch(() => {})
-                        .finally()
-                }}
-                layout={"horizontal"}
-                labelCol={{span: 5}}
-                wrapperCol={{span: 14}}
-            >
-                <InputItem
-                    label={"按目标网络删除"}
-                    value={params.Network}
-                    setValue={(Network) => setParams({...params, Network})}
-                />
-                {types && types.length > 0 && (
-                    <ManyMultiSelectForString
-                        label={"按类型删除"}
-                        value={params.RiskType || ""}
-                        formItemStyle={{minWidth: 280}}
-                        setValue={(RiskType) => setParams({...params, RiskType})}
-                        defaultSep={"|"}
-                        data={types.map((i) => {
-                            return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
-                        })}
-                    />
-                )}
-                {severities && severities.length && (
-                    <ManyMultiSelectForString
-                        label={"按漏洞级别"}
-                        value={params.Severity || ""}
-                        defaultSep={"|"}
-                        formItemStyle={{minWidth: 240}}
-                        setValue={(Severity) => setParams({...params, Severity})}
-                        data={severities.map((i) => {
-                            return {value: (i.Names || []).join(","), label: `${i.Verbose}(${i.Total})`}
-                        })}
-                    />
-                )}
-                <InputItem
-                    label={"按关键字删除"}
-                    value={params.Search}
-                    setValue={(Search) => setParams({...params, Search})}
-                />
-                <Form.Item label={" "} colon={false}>
-                    <Space>
-                        <Button danger={true} type={"primary"} htmlType={"submit"}>
-                            删除
-                        </Button>
-                        <Popconfirm
-                            title={"确定要删除全部吗？"}
-                            onConfirm={() => {
-                                ipcRenderer
-                                    .invoke("DeleteRisk", {DeleteAll: true})
-                                    .then((e) => {
-                                        props.onClose()
-                                    })
-                                    .catch((e) => console.info(e))
-                                    .finally()
-                            }}
-                        >
-                            <Button danger={true} htmlType={"submit"}>
-                                删除全部
-                            </Button>
-                        </Popconfirm>
-                    </Space>
-                </Form.Item>
-            </Form>
-        </div>
-    )
-}
-
 interface RiskDetailsProp {
     info: Risk
     isShowTime?: boolean
     shrink?: boolean
 }
 
-export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
+export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDetailsProp) => {
     const {info, isShowTime = true} = props
     const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
 
@@ -797,11 +772,11 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
                             <div className={`${title?.tag || "title-background-default"} subtitle-level`}>
                                 {title ? title.name : info.Severity || "-"}
                             </div>
-                            <div style={{maxWidth: 260}} className='subtitle-spacing text-ellipsis'>
+                            <div className='subtitle-spacing subtitle-url'>
                                 Url
-                                <span className='subtitle-font' title={info?.Url || "-"}>
+                                <Paragraph className='subtitle-font text-ellipsis' copyable ellipsis>
                                     {info?.Url || "-"}
-                                </span>
+                                </Paragraph>
                             </div>
                             {isShowTime && (
                                 <div className='subtitle-spacing'>
@@ -866,6 +841,28 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props) => {
                     <Descriptions.Item label='Payload' span={3}>
                         <div>{info.Payload || "-"}</div>
                     </Descriptions.Item>
+                    {(info?.Request || []).length > 0 && (
+                        <Descriptions.Item label='Request' span={3}>
+                            <div style={{height: 300}}>
+                                <HTTPPacketEditor
+                                    originValue={info?.Request || new Uint8Array()}
+                                    readOnly={true}
+                                    noHeader={true}
+                                />
+                            </div>
+                        </Descriptions.Item>
+                    )}
+                    {(info?.Response || []).length > 0 && (
+                        <Descriptions.Item label='Response' span={3}>
+                            <div style={{height: 300}}>
+                                <HTTPPacketEditor
+                                    originValue={info?.Response || new Uint8Array()}
+                                    readOnly={true}
+                                    noHeader={true}
+                                />
+                            </div>
+                        </Descriptions.Item>
+                    )}
                     <Descriptions.Item label='详情' span={3}>
                         <div style={{maxHeight: 180, overflow: "auto"}}>{info.Details || "-"}</div>
                     </Descriptions.Item>

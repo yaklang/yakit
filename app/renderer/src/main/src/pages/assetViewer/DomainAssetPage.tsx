@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react"
-import {Button, Form, Popconfirm, Popover, Space, Table, Tag, Typography} from "antd"
+import {Button, Form, Popconfirm, Popover, Space, Table, Tag, Typography, Tooltip} from "antd"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {failed} from "../../utils/notification"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {TableFilterDropdownString} from "../risks/RiskTable"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {showModal} from "../../utils/showModal"
 import {InputItem} from "../../utils/inputUtil"
 import {startExecYakCode} from "../../utils/basic"
@@ -12,6 +12,7 @@ import {OutputAsset} from "./outputAssetYakCode"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport"
+import {onRemoveToolFC} from "../../utils/deleteTool"
 
 export interface Domain {
     ID?: number
@@ -40,7 +41,7 @@ const formatJson = (filterVal, jsonData) => {
 }
 
 export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAssetPageProps) => {
-    const [params, setParams] = useState<QueryDomainsRequest>({
+    const [params, setParams, getParams] = useGetState<QueryDomainsRequest>({
         Pagination: genDefaultPagination(20)
     })
     const [response, setResponse] = useState<QueryGeneralResponse<Domain>>({
@@ -57,7 +58,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
 
     const update = useMemoizedFn((page?: number, limit?: number) => {
         const newParams = {
-            ...params
+            ...getParams()
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
@@ -67,6 +68,8 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             .invoke("QueryDomains", newParams)
             .then((data) => {
                 setResponse(data)
+                setSelectedRowKeys([])
+                setCheckedURL([])
             })
             .catch((e: any) => {
                 failed("QueryExecHistory failed: " + `${e}`)
@@ -76,12 +79,14 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             })
     })
 
-    const delDomain = useMemoizedFn((host?: string) => {
-        const params = !!host ? {DomainKeyword: host} : {DeleteAll: true}
-
+    // 单个删除
+    const delDomainSingle = useMemoizedFn((host: string) => {
+        const newParams = {
+            DomainKeyword: host
+        }
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteDomains", params)
+            .invoke("DeleteDomains", newParams)
             .then(() => {
                 update(1)
             })
@@ -180,7 +185,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                         type={"link"}
                         danger
                         onClick={() => {
-                            delDomain(i.DomainName)
+                            delDomainSingle(i.DomainName)
                             setSelectedRowKeys([])
                             setCheckedURL([])
                         }}
@@ -202,7 +207,6 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 })
                 .then((res: QueryGeneralResponse<any>) => {
                     const {Data} = res
-                    console.log("res", res)
                     //    数据导出
                     let exportData: any = []
                     const header: string[] = []
@@ -225,6 +229,29 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                 })
         })
     })
+
+    const onRemove = useMemoizedFn(() => {
+        const transferParams = {
+            selectedRowKeys,
+            params,
+            interfaceName: "DeleteDomains",
+            selectedRowKeysNmae: "IDs"
+        }
+        setLoading(true)
+        onRemoveToolFC(transferParams)
+            .then(() => {
+                refList()
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const refList = useMemoizedFn(() => {
+        setParams({
+            Pagination: genDefaultPagination(20)
+        })
+        setTimeout(() => {
+            update(1)
+        }, 10)
+    })
     return (
         <Table<Domain>
             loading={loading}
@@ -244,64 +271,33 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                     <div style={{display: "flex", justifyContent: "space-between"}}>
                         <Space>
                             <div>域名资产</div>
-                            <Button
-                                type={"link"}
-                                onClick={() => {
-                                    update(1)
-                                    setSelectedRowKeys([])
-                                    setCheckedURL([])
-                                }}
-                                size={"small"}
-                                icon={<ReloadOutlined />}
-                            />
+                            <Tooltip title='刷新会重置所有查询条件'>
+                                <Button
+                                    type={"link"}
+                                    onClick={() => {
+                                        refList()
+                                    }}
+                                    size={"small"}
+                                    icon={<ReloadOutlined />}
+                                />
+                            </Tooltip>
                         </Space>
                         <Space>
                             <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
-                            {/* <Popover
-                                title={"输入想要导出的域名关键字"}
-                                trigger={["click"]}
-                                content={
-                                    <div>
-                                        <Form
-                                            layout={"inline"}
-                                            size={"small"}
-                                            onSubmitCapture={(e) => {
-                                                e.preventDefault()
-
-                                                startExecYakCode("Output Domains", {
-                                                    Script: OutputAsset.outputDomainByKeyword,
-                                                    Params: [{Key: "keyword", Value: outputDomainKeyword}]
-                                                })
-                                            }}
-                                        >
-                                            <InputItem
-                                                label={"域名关键字"}
-                                                value={outputDomainKeyword}
-                                                setValue={setOutputDomainKeyword}
-                                            />
-                                            <Form.Item colon={false} label={" "}>
-                                                <Button size={"small"} type='primary' htmlType='submit'>
-                                                    {" "}
-                                                    导出{" "}
-                                                </Button>
-                                            </Form.Item>
-                                        </Form>
-                                    </div>
-                                }
-                            >
-                                <Button type={"primary"} size={"small"}>
-                                    导出域名
-                                </Button>
-                            </Popover> */}
                             <Popconfirm
-                                title='确定删除所有域名资产吗? 不可恢复'
-                                onConfirm={(e) => {
-                                    delDomain()
-                                    setSelectedRowKeys([])
-                                    setCheckedURL([])
-                                }}
+                                title={
+                                    selectedRowKeys.length > 0
+                                        ? "确定删除选择的域名资产吗？不可恢复"
+                                        : "确定删除所有域名资产吗? 不可恢复"
+                                }
+                                // onConfirm={(e) => {
+                                //     delDomainBatch()
+                                //     setSelectedRowKeys([])
+                                //     setCheckedURL([])
+                                // }}
+                                onConfirm={onRemove}
                             >
-                                <Button type='link' danger size='small'>
+                                <Button size='small' danger={true}>
                                     删除全部
                                 </Button>
                             </Popconfirm>

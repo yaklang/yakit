@@ -1,0 +1,21 @@
+$primary-color: #1890ff;
+
+.icon-select {
+    color: #bfbfbf;
+    position: absolute;
+    right: 0;
+    top: 0;
+
+    svg {
+        width: 1.5em;
+        height: 1.5em;
+    }
+}
+
+.icon-select-active {
+    color: $primary-color;
+}
+
+.icon-color {
+    color: $primary-color;
+}

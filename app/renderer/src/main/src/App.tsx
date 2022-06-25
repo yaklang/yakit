@@ -6,7 +6,9 @@ import {yakEcho} from "./utils/yakEcho";
 import {failed, info, success} from "./utils/notification";
 import {AutoSpin} from "./components/AutoSpin";
 import {useHotkeys} from "react-hotkeys-hook";
-import {testExportData} from "./utils/exporter";
+import {getCompletions} from "./utils/monacoSpec/yakCompletionSchema";
+import {showModal} from "./utils/showModal";
+import {YakCodeEditor} from "./utils/editors";
 
 const InterceptKeyword = [
     // "KeyA",
@@ -106,6 +108,21 @@ function App() {
         }).catch(() => {
         }).finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
+
+    useHotkeys("alt+a", (e) => {
+        const a = getCompletions();
+        const data = JSON.stringify(a);
+        console.info(data)
+        showModal({
+            title: "补全内容",
+            width: "100%",
+            content: (
+                <div style={{height: 600}}>
+                    <YakCodeEditor readOnly={true} originValue={Buffer.from(JSON.stringify(a), "utf8")}/>
+                </div>
+            ),
+        })
+    })
 
     useEffect(() => {
         let second = readingSeconds;

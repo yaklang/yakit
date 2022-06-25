@@ -191,7 +191,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
 
 
     const update = () => {
-        ipcRenderer.invoke("QueryHTTPFlows", props.filter).then((data: QueryGeneralResponse<HTTPFlow>) => {
+        ipcRenderer.invoke("QueryHTTPFlows", {...props.filter}).then((data: QueryGeneralResponse<HTTPFlow>) => {
             // if ((data.Data || []).length > 0 && (response.Data || []).length > 0) {
             //     if (data.Data[0].Id === response.Data[0].Id) {
             //         props.onTotal(data.Total)

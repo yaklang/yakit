@@ -432,6 +432,7 @@ message DeleteReportRequest {
   string Hash = 2;
   QueryReportsRequest Filter = 3;
   repeated int64 IDs = 4;
+  bool DeleteAll = 5;
 }
 
 message QueryReportsResponse {
@@ -638,6 +639,7 @@ message DeleteRiskRequest {
   repeated int64 Ids = 4;
   QueryRisksRequest Filter = 3;
   bool DeleteAll = 5;
+  bool DeleteRepetition = 6;
 }
 
 message QueryRiskRequest {
@@ -672,6 +674,13 @@ message Risk {
   int64 UpdatedAt = 17;
 
   string Severity = 19;
+
+  // 数据包提取出来！
+  bytes Request = 20;
+  bytes Response = 21;
+
+  // 这个一般用于生成报告追踪报告中产生的漏洞
+  string RuntimeId = 22;
 }
 
 message QueryRisksRequest {
@@ -1072,6 +1081,9 @@ message DeletePortsRequest {
   string Ports = 2;
   repeated int64 Id = 3;
   bool All = 4;
+  repeated int64 Ids = 5;
+  bool DeleteAll = 6;
+  QueryPortsRequest Filter = 7;
 }
 
 message QueryPortsRequest {
