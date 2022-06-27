@@ -486,7 +486,7 @@ export interface SwitchItemProps extends InputBase {
     setValue(b: boolean): any
 }
 
-export interface InputFileNameItem {
+export interface InputFileNameItemProps {
     label?: string
     content?: string
     loadContent?: boolean
@@ -500,7 +500,7 @@ export interface InputFileNameItem {
 }
 
 const {ipcRenderer} = window.require("electron");
-export const InputFileNameItem: React.FC<InputFileNameItem> = p => {
+export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
     const [uploadLoading, setUploadLoading] = useState(false);
     return <Item label={p.label}>
         <Upload.Dragger

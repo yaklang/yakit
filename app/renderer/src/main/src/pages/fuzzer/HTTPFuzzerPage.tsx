@@ -20,7 +20,7 @@ import {
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {monacoEditorWrite} from "./fuzzerTemplates"
+import {monacoEditorReplace, monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
 import {
     CopyableField,
@@ -59,6 +59,7 @@ import {AutoCard} from "../../components/AutoCard";
 import {callCopyToClipboard} from "../../utils/basic";
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport";
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str";
+import {insertFileFuzzTag} from "./InsertFileFuzzTag";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1071,6 +1072,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             contextMenuGroupId: "1_urlPacket",
                             run: (editor) => {
                                 hotPatchTrigger()
+                            }
+                        },
+                        {
+                            id: "insert-fuzzfile-tag",
+                            label: "插入文件标签",
+                            contextMenuGroupId: "1_urlPacket",
+                            run: (editor) => {
+                                insertFileFuzzTag(i => monacoEditorWrite(editor, i))
                             }
                         },
                     ]}

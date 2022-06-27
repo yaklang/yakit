@@ -20,8 +20,8 @@ import {
 } from "antd";
 import {AutoCard} from "../../../components/AutoCard";
 import {
-    CopyableField,
-    InputFileNameItem,
+    CopyableField, InputFileNameItem,
+    InputFileNameItemProps,
     InputInteger,
     InputItem,
     OneLine,

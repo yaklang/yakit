@@ -3,7 +3,7 @@ import {Button, Form, Popconfirm, Space, Spin} from "antd";
 import {YakCodeEditor} from "./editors";
 import {StringToUint8Array, Uint8ArrayToString} from "./str";
 import {info} from "./notification";
-import {InputFileNameItem, SelectOne} from "./inputUtil";
+import {InputFileNameItem, InputFileNameItemProps, SelectOne} from "./inputUtil";
 import {showModal} from "./showModal";
 import {saveABSFileToOpen} from "./openWebsite";
 import {randomString} from "./randomUtil";
