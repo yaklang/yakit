@@ -539,6 +539,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
                                 filterName={i}
                                 pureString={true}
                                 confirm={() => confirm()}
+                                restSearch={() => confirm()}
                             />
                         }
                         trigger={["click"]}
