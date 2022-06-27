@@ -107,26 +107,26 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         if (props.onXtermRef) props.onXtermRef(xtermRef)
     }, [xtermRef])
 
-    let progressBars: { id: string; node: React.ReactNode }[] = []
+    let progressBars: {id: string; node: React.ReactNode}[] = []
     progress.forEach((v) => {
         progressBars.push({
             id: v.id,
             node: (
                 <Card size={"small"} hoverable={false} bordered={true} title={`任务进度ID：${v.id}`}>
-                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active'/>
+                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active' />
                 </Card>
             )
         })
     })
     // progressBars = progressBars.sort((a, b) => a.id.localeCompare(b.id));
 
-    const features: { feature: string; params: any; key: string }[] = featureType
+    const features: {feature: string; params: any; key: string}[] = featureType
         .filter((i) => {
             return i.level === "json-feature"
         })
         .map((i) => {
             try {
-                let res = JSON.parse(i.data) as { feature: string; params: any; key: string }
+                let res = JSON.parse(i.data) as {feature: string; params: any; key: string}
                 if (!res.key) {
                     res.key = randomString(50)
                 }
@@ -152,7 +152,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         {infoList.length > 0 && (
                             <Tooltip
                                 color='#fff'
-                                title={<TooltipTitle list={infoList}/>}
+                                title={<TooltipTitle list={infoList} />}
                                 overlayClassName='status-cards-info'
                                 placement='topLeft'
                             >
@@ -270,7 +270,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 {(finalFeatures || []).map((i, index) => {
                     return (
                         <Tabs.TabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
-                            <YakitFeatureRender params={i.params} feature={i.feature} execResultsLog={feature || []}/>
+                            <YakitFeatureRender params={i.params} feature={i.feature} execResultsLog={feature || []} />
                         </Tabs.TabPane>
                     )
                 })}
@@ -314,7 +314,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 {!props.debugMode && props.onXtermRef && (
                     <Tabs.TabPane tab={"Console"} key={"console"}>
                         <div style={{width: "100%", height: "100%"}}>
-                            <CVXterm ref={xtermRef} options={{convertEol: true}}/>
+                            <CVXterm ref={xtermRef} options={{convertEol: true}} />
                             {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
                         onResize={(r) => {
                             xtermFit(xtermRef, 50, 18)
@@ -393,42 +393,51 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const tableData = useRef<any>([])
     const tableDataOriginal = useRef<any>([])
-    useDebounceEffect(() => {
-        tableData.current = (props.execResultsLog || [])
-            .filter((i) => i.level === "feature-table-data")
-            .map((i) => {
-                try {
-                    const originData = JSON.parse(i.data)
-                    return {...originData.data, table_name: originData?.table_name}
-                } catch (e) {
-                    return {} as any
-                }
-            })
-            .filter((i) => {
-                try {
-                    if ((i?.table_name || "") === (props.params?.table_name || "")) {
-                        return true
+    const tableDataPreProps = useRef<any>([])
+    useDebounceEffect(
+        () => {
+            if (tableDataPreProps.current.length === props.execResultsLog.length) return
+            tableDataPreProps.current = props.execResultsLog
+            tableData.current = (props.execResultsLog || [])
+                .filter((i) => i.level === "feature-table-data")
+                .map((i) => {
+                    try {
+                        const originData = JSON.parse(i.data)
+                        return {...originData.data, table_name: originData?.table_name}
+                    } catch (e) {
+                        return {} as any
                     }
-                } catch (e) {
+                })
+                .filter((i) => {
+                    try {
+                        if ((i?.table_name || "") === (props.params?.table_name || "")) {
+                            return true
+                        }
+                    } catch (e) {
+                        return false
+                    }
                     return false
-                }
-                return false
-            })
-        tableDataOriginal.current = tableData.current
-    }, [props.execResultsLog], {wait: 300, leading: true, trailing: true})
+                })
+            tableDataOriginal.current = tableData.current
+        },
+        [props.execResultsLog],
+        {wait: 300, leading: true, trailing: true}
+    )
 
     useEffect(() => {
-        const item = tableData.current[0] || {}
-        const obj = {}
-        const objQuery = {};
-        (props.params["columns"] || []).forEach((ele) => {
-            obj[ele] = {
-                isFilter: !isNaN(Number(item[ele])) // 只有数字类型才排序
-            }
-            objQuery[ele] = ""
-        })
-        setParams(obj)
-        setQuery(objQuery)
+        setTimeout(() => {
+            const item = tableData.current[0] || {}
+            const obj = {}
+            const objQuery = {}
+            ;(props.params["columns"] || []).forEach((ele) => {
+                obj[ele] = {
+                    isFilter: !isNaN(Number(item[ele])) // 只有数字类型才排序
+                }
+                objQuery[ele] = ""
+            })
+            setParams(obj)
+            setQuery(objQuery)
+        }, 400)
     }, [])
 
     const getData = useMemoizedFn(() => {
@@ -529,12 +538,12 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
                                 setParams={setQuery}
                                 filterName={i}
                                 pureString={true}
-                                confirm={confirm}
+                                confirm={() => confirm()}
                             />
                         }
-                        trigger={["hover", "click"]}
+                        trigger={["click"]}
                     >
-                        <SearchOutlined style={{color: "#1890ff", marginRight: 6}}/>
+                        <SearchOutlined style={{color: query[i] ? "#1890ff" : undefined, marginRight: 6}} />
                     </Popover>
                     {params[i]?.isFilter && (
                         <Tooltip title={<span>{params[i]?.sort === "up" ? "点击降序" : "点击升序"}</span>}>
@@ -563,9 +572,9 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
             return (
                 <div style={{height: "100%", display: "flex", flexFlow: "column", overflowY: "auto"}}>
                     <div className='btn-body'>
-                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='爆破结果'/>
+                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='爆破结果' />
                     </div>
-                    <BasicTable columns={columns} data={tableData.current} loading={loading}/>
+                    <BasicTable columns={columns} data={tableData.current} loading={loading} />
                 </div>
             )
     }
