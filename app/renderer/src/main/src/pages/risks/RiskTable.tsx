@@ -21,6 +21,7 @@ import {ExportExcel} from "../../components/DataExport/index"
 import {HTTPPacketEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"
+import {ColumnType} from "antd/lib/table"
 
 export interface RiskTableProp {
     severity?: string
@@ -321,6 +322,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                 </Paragraph>
             ),
             width: 400,
+            filteredValue: (getParams()["Search"] && ["TitleVerbose"]) || null,
             filterIcon: (filtered) => {
                 return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
             },
@@ -345,13 +347,10 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             title: "类型",
             dataIndex: "RiskTypeVerbose",
             width: 90,
+            filteredValue: (getParams()["RiskType"] && ["RiskTypeVerbose"]) || null,
             render: (_, i: Risk) => i?.RiskTypeVerbose || i.RiskType,
             filterIcon: (filtered) => {
-                return (
-                    params && (
-                        <SearchOutlined style={{color: filtered || getParams()["RiskType"] ? "#1890ff" : undefined}} />
-                    )
-                )
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -383,6 +382,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             title: "IP",
             dataIndex: "IP",
             render: (_, i: Risk) => i?.IP || "-",
+            filteredValue: (getParams()["Network"] && ["IP"]) || null,
             filterIcon: (filtered) => {
                 return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
             },

@@ -22,7 +22,7 @@ import {CopyableField, InputItem} from "../../utils/inputUtil"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {HTTPFlow, TableFilterDropdownForm} from "../../components/HTTPFlowTable"
 import {SearchOutlined, ReloadOutlined} from "@ant-design/icons"
-import {SorterResult} from "antd/lib/table/interface"
+import {ColumnsType, SorterResult} from "antd/lib/table/interface"
 import {YakEditor} from "../../utils/editors"
 import {openExternalWebsite} from "../../utils/openWebsite"
 import {startExecYakCode} from "../../utils/basic"
@@ -119,6 +119,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         {
             title: "网络地址",
             dataIndex: "Host",
+            filteredValue: (getParams()["Hosts"] && ["Host"]) || null,
             render: (_, i: PortAsset) => <CopyableField text={`${i.Host}:${i.Port}`} />,
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -145,6 +146,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             title: "端口",
             width: 70,
             dataIndex: "Port",
+            filteredValue: (getParams()["Ports"] && ["Port"]) || null,
             render: (_, i: PortAsset) => <Tag color={"geekblue"}>{i.Port}</Tag>,
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -164,7 +166,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 )
             },
             filterIcon: (filtered) => {
-                return params && !!setParams && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return (
+                    params &&
+                    !!setParams && <SearchOutlined style={{color: !!params["Ports"] ? "#1890ff" : undefined}} />
+                )
             }
         }
     ]
@@ -203,6 +208,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         ""
                     ),
                 width: 250,
+                filteredValue: (getParams()["Service"] && ["ServiceType"]) || null,
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return (
                         params &&
@@ -236,6 +242,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         ""
                     ),
                 width: 170,
+                filteredValue: (getParams()["Title"] && ["HtmlTitle"]) || null,
                 filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                     return (
                         params &&

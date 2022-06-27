@@ -103,6 +103,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         {
             title: "域名",
             dataIndex: "DomainName",
+            filteredValue: (getParams()["DomainKeyword"] && ["DomainName"]) || null,
             render: (_, i: Domain) => (
                 <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
                     {i.DomainName}
@@ -132,6 +133,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             title: "IP",
             dataIndex: "IPAddr",
             width: 160,
+            filteredValue: (getParams()["Network"] && ["IPAddr"]) || null,
             filterIcon: (filtered) => {
                 return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
             },
@@ -155,6 +157,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         {
             title: "HTMLTitle",
             dataIndex: "HTTPTitle",
+            filteredValue: (getParams()["Title"] && ["HTTPTitle"]) || null,
             filterIcon: (filtered) => {
                 return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
             },
