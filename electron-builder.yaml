@@ -21,7 +21,7 @@ mac:
       arch:
         - x64
         - arm64
-  icon: "app/assets/yakitlogo.icns"
+  icon: "app/assets/telecom_logo_small.png"
 
 linux:
   artifactName: ${productName}-${version}-linux-amd64.${ext}
