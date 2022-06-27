@@ -1,5 +1,5 @@
 appId: 'io.yaklang.yakit'
-productName: 'Yakit'
+productName: '单兵武器装备库'
 copyright: Copyright © 2021 v1ll4n
 
 directories:
@@ -37,7 +37,7 @@ win:
     - target: nsis
       arch:
         - x64
-  icon: "app/assets/yakitlogo.ico"
+  icon: "app/assets/telecom_logo_small.png"
 
 #publish:
 #  - provider: generic

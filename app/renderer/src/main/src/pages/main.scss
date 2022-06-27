@@ -5,7 +5,7 @@
 .main-content-tabs .ant-tabs-content.ant-tabs-content-top {
     height: 100%;
 }
-.main-home-svg-icon{
+.main-home-svg-icon {
     position: relative;
     top: 2px;
 }
@@ -260,4 +260,11 @@
 }
 .yakit-layout-tabs .no-theme-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
     transition: none;
+}
+.img-banner {
+    margin-left: 18px;
+    text-align: center;
+    height: 50px;
+    display: flex;
+    align-items: center;
 }
