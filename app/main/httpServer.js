@@ -2,7 +2,8 @@ const axios = require("axios")
 const {USER_INFO} = require("./state")
 
 const service = axios.create({
-    baseURL: "http://onlinecs.vaiwan.cn/api/",
+    // baseURL: "http://onlinecs.vaiwan.cn/api/",
+    baseURL: "http://192.168.101.104:8080/api/",
     timeout: 30 * 1000, // 请求超时时间
     maxBodyLength: Infinity //设置适当的大小
 })
