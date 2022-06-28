@@ -1,6 +1,6 @@
 import React, {useRef, useState} from "react"
 import {Button, ButtonProps, Modal, Space, Tag, Pagination} from "antd"
-import {export_json_to_excel} from "./toExcel"
+import {export_json_to_excel, CellSetting} from "./toExcel"
 import {failed} from "../../utils/notification"
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "../../pages/invoker/schema"
 import {useMemoizedFn} from "ahooks"
@@ -13,10 +13,6 @@ interface ExportExcelProps {
     pageSize?: number
 }
 
-interface CellSetting {
-    c: number
-    colorObj?: any
-}
 interface resProps {
     header: string[]
     exportData: Array<any>
@@ -36,9 +32,9 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     const [frequency, setFrequency] = useState<number>(0)
-    const exportDataBatch = useRef<Array<any>>() // 保存导出的数据
+    const exportDataBatch = useRef<Array<string[]>>([]) // 保存导出的数据
     const exportNumber = useRef<number>() // 导出次数
-    const headerExcel = useRef<string[]>() // excel的头部
+    const headerExcel = useRef<string[]>([]) // excel的头部
     const optsCell = useRef<CellSetting>() // excel的头部
     const [pagination, setPagination] = useState<QueryGeneralResponse<any>>({
         Data: [],
@@ -92,7 +88,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         const name = `${fileName}(第${pagination.Pagination.Page}页${
             exportNumber.current && firstIndx + 1
         }-${lastIndex})`
-        const list = exportDataBatch.current?.slice(firstIndx, lastIndex + 1)
+        const list:Array<string[]> = exportDataBatch.current?.slice(firstIndx, lastIndex + 1)
         export_json_to_excel({
             header: headerExcel.current,
             data: list,
