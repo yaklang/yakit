@@ -1,6 +1,7 @@
 /* eslint-disable */
 import {saveAs} from "file-saver"
 import * as XLSX from "xlsx"
+import * as XLSXStyle from "xlsx-style"
 
 function generateArray(table) {
     var out = []
@@ -57,7 +58,7 @@ function datenum(v, date1904) {
     return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000)
 }
 
-function sheet_from_array_of_arrays(data, opts) {
+function sheet_from_array_of_arrays(data, optsSingleCellSetting) {
     var ws = {}
     var range = {
         s: {
@@ -79,6 +80,10 @@ function sheet_from_array_of_arrays(data, opts) {
                 v: data[R][C]
             }
             if (cell.v == null) continue
+            // 根据单元格内容设置单元格样式
+            if (R > 0 && C === optsSingleCellSetting.c) {
+                cell.s = optsSingleCellSetting.colorObj[cell.v]
+            }
             var cell_ref = XLSX.utils.encode_cell({
                 c: C,
                 r: R
@@ -153,7 +158,9 @@ export function export_json_to_excel({
     filename,
     merges = [],
     autoWidth = true,
-    bookType = "xlsx"
+    bookType = "xlsx",
+    optsSingleCellSetting = {},
+    optsUnifiedCellSetting = {}
 } = {}) {
     /* original data */
     filename = filename || "excel-list"
@@ -166,7 +173,7 @@ export function export_json_to_excel({
 
     var ws_name = "SheetJS"
     var wb = new Workbook(),
-        ws = sheet_from_array_of_arrays(data)
+        ws = sheet_from_array_of_arrays(data, optsSingleCellSetting)
 
     if (merges.length > 0) {
         if (!ws["!merges"]) ws["!merges"] = []
@@ -212,7 +219,7 @@ export function export_json_to_excel({
     wb.SheetNames.push(ws_name)
     wb.Sheets[ws_name] = ws
 
-    var wbout = XLSX.write(wb, {
+    var wbout = XLSXStyle.write(wb, {
         bookType: bookType,
         bookSST: false,
         type: "binary"

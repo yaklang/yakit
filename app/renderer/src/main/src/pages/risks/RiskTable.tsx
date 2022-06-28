@@ -74,6 +74,28 @@ const mergeFieldNames = (f: Fields) => {
     return items
 }
 
+const cellColorFontSetting = {
+    '调试信息': {
+        font: {
+            color: {rgb: "000000"}
+        }
+    },
+    "信息/指纹": {
+        font: {
+            color: {rgb: "8c8c8c"}
+        }
+    },
+    '中危': {
+        font: {
+            color: {rgb: "ff7a45"}
+        }
+    },
+    '严重': {
+        font: {
+            color: {rgb: "a8071a"}
+        }
+    },
+}
 export const TitleColor = [
     {
         key: ["trace", "debug", "note"],
@@ -462,11 +484,17 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             filterVal.push(item.dataIndex)
                         }
                     })
+                    console.log("header", header)
+                    console.log("filterVal", filterVal)
                     exportData = formatJson(filterVal, Data)
                     resolve({
                         header,
                         exportData,
-                        response: res
+                        response: res,
+                        optsSingleCellSetting: {
+                            c: 2, // 第三列，
+                            colorObj: cellColorFontSetting // 字体颜色设置
+                        }
                     })
                 })
                 .catch((e) => {
