@@ -28,7 +28,7 @@ function sheet_from_array_of_arrays(data, optsSingleCellSetting) {
             }
             if (cell.v == null) continue
             // 根据单元格内容设置单元格样式
-            if (R > 0 && C === optsSingleCellSetting.c) {
+            if (optsSingleCellSetting&&R > 0 && C === optsSingleCellSetting.c) {
                 if (typeof cell.v === "string" || typeof cell.v === "number") {
                     cell.s = optsSingleCellSetting.colorObj[cell.v]
                 }

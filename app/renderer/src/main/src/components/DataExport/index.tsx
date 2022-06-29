@@ -47,9 +47,6 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
             .then((res: resProps) => {
                 const {header, exportData, response, optsSingleCellSetting} = res
                 const totalCellNumber = header.length * exportData.length
-                console.log("res.exportData", res.exportData)
-                console.log("res.header", res.header)
-
                 if (totalCellNumber < maxCellNumber && response.Total <= pageSize) {
                     // 单元格数量小于最大单元格数量，直接导出
                     export_json_to_excel({
