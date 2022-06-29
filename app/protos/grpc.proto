@@ -294,6 +294,45 @@ service Yak {
   // 设置通用存储
   rpc GetKey(GetKeyRequest) returns (GetKeyResult);
   rpc SetKey(SetKeyRequest) returns (Empty);
+
+  // Online
+  rpc GetOnlineProfile(Empty) returns (OnlineProfile);
+  rpc SetOnlineProfile(OnlineProfile) returns (Empty);
+  rpc DownloadOnlinePluginById(DownloadOnlinePluginByIdRequest) returns (Empty);
+  rpc DownloadOnlinePluginByIds(DownloadOnlinePluginByIdsRequest) returns (Empty);
+  rpc DownloadOnlinePluginByToken(DownloadOnlinePluginByTokenRequest) returns (Empty);
+  rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
+  rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
+  rpc DeleteAllLocalPlugins(Empty) returns (Empty);
+}
+
+message DeletePluginByUserIDRequest {
+  int64 UserID = 1;
+}
+
+message DownloadOnlinePluginProgress {
+  // 进度
+  double Progress = 1;
+  string Log = 2;
+}
+
+message DownloadOnlinePluginByTokenRequest {
+  string Token = 1;
+}
+
+message DownloadOnlinePluginByIdRequest {
+  int64 OnlineID = 1;
+  string Token = 2;
+}
+
+message DownloadOnlinePluginByIdsRequest {
+  repeated int64 OnlineIDs = 1;
+  string Token = 2;
+}
+
+message OnlineProfile {
+  string BaseUrl = 1;
+  string Password = 2;
 }
 
 message SetKeyRequest {
