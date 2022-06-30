@@ -259,7 +259,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             }, 300)
         });
         ipcRenderer.on("client-mitm-filter", (e, msg) => {
-            console.info("client-mitm-filter recv message")
+            info("更新 MITM 过滤器状态")
             setMITMFilter({
                 includeSuffix: msg.includeSuffix,
                 excludeMethod: msg.excludeMethod,
@@ -360,26 +360,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     // 自动转发劫持，进行的操作
     const forwardHandler = useMemoizedFn((e: any, msg: MITMResponse) => {
-        setMITMFilter({
-            includeSuffix: msg.includeSuffix,
-            excludeMethod: msg.excludeMethod,
-            excludeSuffix: msg.excludeSuffix,
-            includeHostname: msg.includeHostname,
-            excludeHostname: msg.excludeHostname,
-            excludeContentTypes: msg.excludeContentTypes,
-        })
-
-        // passive 模式是 mitm 插件模式
-        //    在这个模式下，应该直接转发，不应该操作数据包
-        // if (passiveMode) {
-        //     if (msg.forResponse) {
-        //         forwardResponse(msg.responseId || 0)
-        //     } else {
-        //         forwardRequest(msg.id || 0)
-        //     }
-        //     return
-        // }
-
         if (msg.forResponse) {
             if (!msg.response || !msg.responseId) {
                 failed("BUG: MITM 错误，未能获取到正确的 Response 或 Response ID")
@@ -552,7 +532,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                    <MITMFilters
                                        filter={getMITMFilter()}
                                        onFinished={(filter) => {
-                                           setMITMFilter({...filter})
                                            m.destroy()
                                        }}
                                        onClosed={() => {
@@ -812,7 +791,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                                                         value={autoForward}
                                                         formItemStyle={{marginBottom: 0}}
                                                         setValue={(e) => {
-                                                            ipcRenderer.invoke("mitm-filter", {updateFilter: true, ...getMITMFilter()})
                                                             handleAutoForward(e)
                                                         }}
                                                     />
