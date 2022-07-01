@@ -300,7 +300,6 @@ service Yak {
   rpc SetOnlineProfile(OnlineProfile) returns (Empty);
   rpc DownloadOnlinePluginById(DownloadOnlinePluginByIdRequest) returns (Empty);
   rpc DownloadOnlinePluginByIds(DownloadOnlinePluginByIdsRequest) returns (Empty);
-  rpc DownloadOnlinePluginByToken(DownloadOnlinePluginByTokenRequest) returns (Empty);
   rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
   rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
   rpc DeleteAllLocalPlugins(Empty) returns (Empty);
@@ -1259,6 +1258,8 @@ message YakScript {
   string FromGit = 16;
   bool EnablePluginSelector = 17;
   string PluginSelectorTypes = 18;
+  int64 OnlineId = 19;
+  int64 UserId = 20;
 }
 
 message CodecRequest {
