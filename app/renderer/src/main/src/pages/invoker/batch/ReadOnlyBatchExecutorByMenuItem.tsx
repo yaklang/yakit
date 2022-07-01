@@ -131,7 +131,8 @@ export const ReadOnlyBatchExecutor: React.FC<ReadOnlyBatchExecutorProp> = React.
         setQuery({...props.query})
     }, [props.query])
 
-    return <AutoCard size={"small"} bordered={false} bodyStyle={{paddingLeft: 0, paddingRight: 0, paddingTop: 4}}>
+    return <AutoCard size={"small"} bordered={false}
+                     bodyStyle={{paddingLeft: 0, paddingRight: 0, paddingTop: 4, overflow: "hidden"}}>
         <ResizeBox
             firstNode={
                 <div style={{height: "100%"}}>
