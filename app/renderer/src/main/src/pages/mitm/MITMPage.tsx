@@ -546,10 +546,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
         if (!isManual) {
-            info("切换为手动放行模式（可修改劫持）")
             setHijackAllResponse(false)
-        } else {
-            info("切换为劫持自动放行模式（仅记录）")
         }
         setAutoForward(e)
         if (currentPacket && currentPacketId) {
