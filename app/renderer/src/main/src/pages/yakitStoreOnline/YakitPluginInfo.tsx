@@ -27,6 +27,7 @@ import InfiniteScroll from "react-infinite-scroll-component"
 import "./YakitPluginInfo.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
+import { useCommenStore} from "@/store/comment"
 
 const {ipcRenderer} = window.require("electron")
 const limit = 20
@@ -36,10 +37,6 @@ export interface YakitPluginInfoProp {
     index: number
     isAdmin: boolean
     isLogin: boolean
-}
-interface CommentResponsesProps {
-    data: CommentListData[]
-    pagemeta: PagemetaProps | null
 }
 
 interface SearchPluginDetailRequest {
@@ -52,13 +49,14 @@ interface SearchCommentRequest {
     page: number
 }
 
-interface CommentListData extends API.CommentListData {
-    is_stars?: boolean
-}
-
 interface AuditParameters {
     id: number
     status: boolean
+}
+
+interface CommentStarsProps {
+    comment_id: number
+    operation: string
 }
 
 export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
@@ -84,12 +82,12 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
 
     const [commentShow, setCommentShow] = useState<boolean>(false)
     const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
-    const [currentComment, setCurrentComment] = useState<CommentListData | null>()
+    const [currentComment, setCurrentComment] = useState<API.CommentListData | null>()
     const [commentInputText, setCommentInputText] = useState<string>("")
     const [commentFiles, setCommentFiles] = useState<string[]>([])
 
     const [commentChildVisible, setCommentChildVisible] = useState<boolean>(false)
-    const [parentComment, setParentComment] = useState<CommentListData>()
+    const [parentComment, setParentComment] = useState<API.CommentListData>()
 
     useEffect(() => {
         getPluginDetail()
@@ -110,6 +108,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             }
         })
             .then((res) => {
+                console.log("插件详情", res)
                 setPlugin(res.data)
             })
             .catch((err) => {
@@ -132,7 +131,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             params
         })
             .then((res) => {
-                console.log("评论", res)
                 const item = res
                 const newCommentResponses = {
                     data: page === 1 ? item.data : commentResponses.data.concat(item.data),
@@ -218,16 +216,27 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
         addComment(params)
     })
 
-    const addComment = useMemoizedFn((params: any) => {
+    // 全局监听是否刷新子评论列表状态
+    const {setCommenData} = useCommenStore()
+    const addComment = useMemoizedFn((data: API.NewComment) => {
         if (!isLogin) {
             warn("请先登录")
             return
         }
-        setCommentLoading(true)
-        ipcRenderer
-            .invoke("add-plugin-comment", params)
+        NetWorkApi<API.NewComment, API.ActionSucceeded>({
+            method: "post",
+            url: "comment",
+            data
+        })
             .then((res) => {
-                if (params.parent_id === 0) getComment(1)
+                console.log("res", res)
+                if (data.by_user_id && data.by_user_id > 0) {
+                    // 刷新modal中子评论列表
+                    setCommenData({
+                        isRefChildCommentList: true
+                    })
+                }
+                if (data.parent_id === 0) getComment(1)
                 if (commentText) setCommentText("")
                 if (files.length > 0) setFiles([])
                 if (commentInputText) setCommentInputText("")
@@ -235,15 +244,15 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                 if (commentFiles.length > 0) setCommentFiles([])
                 if (commentShow) setCommentShow(false)
             })
-            .catch((e: any) => {
-                failed("评论错误" + e)
+            .catch((err) => {
+                failed("评论错误" + err)
             })
             .finally(() => {
                 setTimeout(() => setCommentLoading(false), 200)
             })
     })
 
-    const pluginReply = useMemoizedFn((item: CommentListData) => {
+    const pluginReply = useMemoizedFn((item: API.CommentListData) => {
         setCurrentComment(item)
         setCommentShow(true)
     })
@@ -274,27 +283,31 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
         setCommentSencondShow(false)
     })
 
-    const pluginCommentStar = useMemoizedFn((item: CommentListData) => {
+    const pluginCommentStar = useMemoizedFn((item: API.CommentListData) => {
         if (!isLogin) {
             warn("请先登录")
             return
         }
-        const params = {
+        const params: CommentStarsProps = {
             comment_id: item.id,
             operation: item.is_stars ? "remove" : "add"
         }
-        ipcRenderer
-            .invoke("add-plugin-comment-stars", params)
+        NetWorkApi<CommentStarsProps, API.ActionSucceeded>({
+            method: "post",
+            url: "comment/stars",
+            params: params
+        })
             .then((res) => {
+                console.log("res", res)
                 if (!commentResponses) return
-                const index: number = commentResponses.data.findIndex((ele: CommentListData) => ele.id === item.id)
+                const index: number = commentResponses.data.findIndex((ele: API.CommentListData) => ele.id === item.id)
                 if (index !== -1) {
                     if (item.is_stars) {
                         commentResponses.data[index].like_num -= 1
-                        // commentResponses.data[index].is_stars = false
+                        commentResponses.data[index].is_stars = false
                     } else {
                         commentResponses.data[index].like_num += 1
-                        // commentResponses.data[index].is_stars = true
+                        commentResponses.data[index].is_stars = true
                     }
                     setCommentResponses({
                         ...commentResponses,
@@ -302,10 +315,12 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                     })
                 }
             })
-            .catch((e: any) => {
-                failed("点赞失败" + e)
+            .catch((err) => {
+                failed("点赞失败:" + err)
             })
-            .finally(() => {})
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
+            })
     })
 
     const pluginExamine = useMemoizedFn((status: number) => {
@@ -479,7 +494,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                         ></PluginCommentInput>
                     </div>
                     <div className='info-comment-content'>
-                        {commentResponses?.data?.map((item: CommentListData, index) => (
+                        {commentResponses?.data?.map((item: API.CommentListData, index) => (
                             <>
                                 <PluginCommentInfo
                                     key={item.id}
@@ -495,7 +510,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                         ))}
                         {!hasFetchComment && hasMore && <Skeleton avatar paragraph={{rows: 1}} active />}
                         {!hasMore && (commentResponses?.pagemeta?.total || 0) > 0 && (
-                            <div className='no-more-text padding-bottom-12'>It is all, nothing more 🤐</div>
+                            <div className='no-more-text padding-bottom-12'>暂无更多数据</div>
                         )}
                     </div>
                 </div>
@@ -562,6 +577,7 @@ interface PluginCommentInputProps {
     setFiles: (files: string[]) => any
     onSubmit: (callback?) => any
 }
+
 // 评论功能的部分组件-输入组件、展示图片组件、上传和提交按钮组件
 const PluginCommentInput = (props: PluginCommentInputProps) => {
     const {value, loading, isLogin, setValue, files, setFiles, onSubmit} = props
@@ -571,7 +587,7 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
         ipcRenderer
             .invoke("upload-img", {path: file.path, type: file.type})
             .then((res) => {
-                setFiles(files.concat(res.from))
+                setFiles(files.concat(res.data))
             })
             .finally(() => {
                 setTimeout(() => setFilesLoading(false), 1)
@@ -657,7 +673,7 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                     </Upload>
                 )}
                 <Button
-                    disabled={isLogin || !value}
+                    disabled={!isLogin || !value}
                     type={value ? "primary" : undefined}
                     className={value || files.length !== 0 ? "" : "btn-submit"}
                     onClick={onSubmit}
@@ -710,13 +726,13 @@ const PluginMaskImage = memo((props: PluginMaskImageProps) => {
 })
 
 interface PluginCommentInfoProps {
-    info: CommentListData
+    info: API.CommentListData
     key: number
     isStarChange?: boolean
-    onReply: (name: CommentListData) => any
-    onStar: (name: CommentListData) => any
+    onReply: (name: API.CommentListData) => any
+    onStar: (name: API.CommentListData) => any
     openCommentChildModel?: (visible: boolean) => any
-    setParentComment?: (name: CommentListData) => any
+    setParentComment?: (name: API.CommentListData) => any
 }
 // 评论内容单条组件
 const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
@@ -808,8 +824,8 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
 
 interface PluginCommentChildModalProps {
     visible: boolean
-    parentInfo?: CommentListData
-    onReply: (info: CommentListData) => any
+    parentInfo?: API.CommentListData
+    onReply: (info: API.CommentListData) => any
     onCancel: (visible: boolean) => any
 }
 
@@ -867,16 +883,6 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
         })
             .then((res) => {
                 const item = res
-                // const item: API.CommentListResponse = (res?.from && JSON.parse(res.from)) || {
-                //     data: [],
-                //     pagemeta: {
-                //         page: 1,
-                //         limit,
-                //         total: 0,
-                //         total_page: 0
-                //     }
-                // }
-                // if (!item.data) return
                 const newCommentChildResponses = {
                     data: page === 1 ? item.data : commentChildResponses.data.concat(item.data),
                     pagemeta: item.pagemeta
@@ -895,25 +901,28 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                 setTimeout(() => setLoadingChild(false), 200)
             })
     })
-    const onCommentChildStar = useMemoizedFn((childItem: CommentListData) => {
+    const onCommentChildStar = useMemoizedFn((childItem: API.CommentListData) => {
         const params = {
             comment_id: childItem.id,
             operation: childItem.is_stars ? "remove" : "add"
         }
-
-        ipcRenderer
-            .invoke("add-plugin-comment-stars", params)
+        NetWorkApi<CommentStarsProps, API.ActionSucceeded>({
+            method: "post",
+            url: "comment/stars",
+            params: params
+        })
             .then((res) => {
+                console.log("res", res)
                 const index: number = commentChildResponses.data.findIndex(
-                    (ele: CommentListData) => ele.id === childItem.id
+                    (ele: API.CommentListData) => ele.id === childItem.id
                 )
                 if (index !== -1) {
                     if (childItem.is_stars) {
                         commentChildResponses.data[index].like_num -= 1
-                        // commentChildResponses.data[index].is_stars = false
+                        commentChildResponses.data[index].is_stars = false
                     } else {
                         commentChildResponses.data[index].like_num += 1
-                        // commentChildResponses.data[index].is_stars = true
+                        commentChildResponses.data[index].is_stars = true
                     }
                     setCommentChildResponses({
                         ...commentChildResponses,
@@ -921,27 +930,22 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     })
                 }
             })
-            .catch((e: any) => {
-                failed("点赞失败" + e)
+            .catch((err) => {
+                failed("点赞失败:" + err)
             })
             .finally(() => {})
     })
-
+    // 全局监听是否刷新子评论列表状态
+    const {commenData} = useCommenStore()
     useEffect(() => {
-        // 接收
-        ipcRenderer.on("ref-comment-child-list", (_, data) => {
-            if (!parentInfo) return
-            const refParams = {
-                root_id: parentInfo?.id,
-                plugin_id: parentInfo?.plugin_id
-            }
-            getChildComment(1, refParams)
-        })
-
-        return () => {
-            ipcRenderer.removeAllListeners("ref-comment-child-list")
+        if (!commenData.isRefChildCommentList) return
+        if (!parentInfo) return
+        const refParams = {
+            root_id: parentInfo?.id,
+            plugin_id: parentInfo?.plugin_id
         }
-    }, [parentInfo])
+        getChildComment(1, refParams)
+    }, [commenData.isRefChildCommentList])
     useEffect(() => {
         if (visible) {
             setLoadingChild(true)
@@ -960,7 +964,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     loader={<Skeleton avatar paragraph={{rows: 1}} active />}
                     endMessage={
                         (commentChildResponses?.pagemeta?.total || 0) > 0 && (
-                            <div className='no-more-text'>It is all, nothing more 🤐</div>
+                            <div className='no-more-text'>暂无更多数据</div>
                         )
                     }
                     scrollableTarget='scroll-able-div'
@@ -975,7 +979,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                                     info={childItem}
                                     onReply={onReply}
                                     onStar={onCommentChildStar}
-                                    // isStarChange={childItem.is_stars}
+                                    isStarChange={childItem.is_stars}
                                 ></PluginCommentInfo>
                                 <div className='comment-separator'></div>
                             </>

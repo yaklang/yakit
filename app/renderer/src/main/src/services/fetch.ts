@@ -43,8 +43,7 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
         failed("请求超时，请重试")
         return
     }
-    console.log('返回',res);
-
+    // console.log('返回',res);
     switch (code) {
         case 200:
             resolve(data)
