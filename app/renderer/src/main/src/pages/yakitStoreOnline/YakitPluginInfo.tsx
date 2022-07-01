@@ -56,6 +56,11 @@ interface CommentListData extends API.CommentListData {
     is_stars?: boolean
 }
 
+interface AuditParameters {
+    id: number
+    status: boolean
+}
+
 export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     const {info, onBack, index, isAdmin, isLogin} = props
     const listRef = useRef<any>({current: null})
@@ -304,33 +309,27 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginExamine = useMemoizedFn((status: number) => {
-        NetWorkApi<SearchCommentRequest, API.CommentListResponse>({
+        const auditParams: AuditParameters = {
+            id: plugin?.id || 0,
+            status: status === 1
+        }
+        if (auditParams.id === 0) return
+        NetWorkApi<AuditParameters, API.ActionSucceeded>({
             method: "post",
-            url: "yakit/plugin/audit"
-            // data:{id: plugin?.id, status}
+            url: "yakit/plugin/audit",
+            params: auditParams
         })
             .then((res) => {
                 console.log("审核", res)
+                if (plugin) setPlugin({...plugin, status})
+                success(`插件审核${status === 1 ? "通过" : "不通过"}`)
             })
             .catch((err) => {
-                failed("评论查询失败:" + err)
+                failed("审核失败:" + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
             })
-        // setLoading(true)
-        // ipcRenderer
-        //     .invoke("fetch-plugin-audit", {id: plugin?.id, status})
-        //     .then((res) => {
-        //         if (plugin) setPlugin({...plugin, status})
-        //         success(`插件审核${status === 1 ? "通过" : "不通过"}`)
-        //     })
-        //     .catch((e: any) => {
-        //         failed("审核失败" + e)
-        //     })
-        //     .finally(() => {
-        //         setTimeout(() => setLoading(false), 200)
-        //     })
     })
 
     const onScrollCapture = (e) => {
