@@ -49,7 +49,8 @@ export const ReadOnlyBatchExecutorByRecoverUid: React.FC<ReadOnlyBatchExecutorBy
         return <Spin tip={"正在恢复未完成的任务"}/>
     }
 
-    return <AutoCard size={"small"} bordered={false} bodyStyle={{paddingLeft: 0, paddingRight: 0, paddingTop: 4}}>
+    return <AutoCard size={"small"} bordered={false}
+                     bodyStyle={{paddingLeft: 0, paddingRight: 0, paddingTop: 4, overflow: "hidden"}}>
         <ResizeBox
             firstNode={
                 <div style={{height: "100%"}}>
