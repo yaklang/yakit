@@ -17,6 +17,7 @@ module.exports = {
     webpack: function (config, env) {
         config.output.path = OUTPUT_PATH
         config.output.publicPath = "./"
+        config.externals = [{"./cptable": "var cptable"}]
         config.plugins.push(
             new MonacoWebpackPlugin({
                 languages: ["json", "javascript", "go", "markdown", "html", "yaml", "java"]
