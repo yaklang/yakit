@@ -204,7 +204,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                         >
 
                         </ManySelectOne>
-                        {/* {buildTemp && <Form.Item label={" "} colon={false}>
+                        {buildTemp && <Form.Item label={" "} colon={false}>
                             <Card bordered={true} title={"基础标签"} size={"small"} extra={[
                                 <Button
                                     danger={true}
@@ -224,7 +224,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                                     }
                                 })()}
                             </Card>
-                        </Form.Item>} */}
+                        </Form.Item>}
                         <ManySelectOne
                             disabled={!!encodeTemp}
                             label={"Payload 编码 / 编码标签"}
