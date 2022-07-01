@@ -89,8 +89,8 @@ export interface MonacoEditorActions extends IMonacoActionDescriptor {
 }
 
 export const MonacoEditorCodecActions: MonacoEditorActions[] = [
-    {id: "md5", label: "MD5"},
-    {id: "sha1", label: "SHA1"},
+    // {id: "md5", label: "MD5"},
+    // {id: "sha1", label: "SHA1"},
     {id: "base64", label: "Base64 编码"},
     {id: "base64-decode", label: "Base64 解码"},
     {id: "htmlencode", label: "HTML 编码"},

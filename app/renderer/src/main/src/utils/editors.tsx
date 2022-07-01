@@ -13,7 +13,6 @@ import {EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled} f
 import {showDrawer} from "./showModal";
 import {
     execAutoDecode,
-    execCodec,
     MonacoEditorActions,
     MonacoEditorCodecActions,
     MonacoEditorFullCodecActions,
@@ -25,8 +24,9 @@ import ReactResizeDetector from "react-resize-detector";
 import './editors.css'
 import {useMemoizedFn} from "ahooks";
 import {Buffer} from "buffer";
-import {failed} from "./notification";
+import {failed, info} from "./notification";
 import {StringToUint8Array, Uint8ArrayToString} from "./str";
+import {newWebFuzzerTab} from "../pages/fuzzer/HTTPFuzzerPage";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -515,7 +515,30 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                         ...(props.actions || []),
                         ...[
                             {
-                                label: "智能自动解码（Inspector）", contextMenuGroupId: "auto-codec",
+                                label: "新建 WebFuzzer", contextMenuGroupId: "auto-suggestion",
+                                id: "new-web-fuzzer-tab", run: (e) => {
+                                    try {
+                                        // @ts-ignore
+                                        const text = e.getModel()?.getValue() || "";
+                                        if (!text) {
+                                            info("数据包为空")
+                                            return
+                                        }
+                                        newWebFuzzerTab(false, text).finally(() => {
+                                            Modal.info({
+                                                title: "注意",
+                                                content: (
+                                                    <>创建的新 WebFuzzer Tab 需用户自行判断是否开启 HTTPS</>
+                                                )
+                                            })
+                                        })
+                                    } catch (e) {
+                                        failed("editor exec codec failed")
+                                    }
+                                }
+                            },
+                            {
+                                label: "智能自动解码（Inspector）", contextMenuGroupId: "auto-suggestion",
                                 id: "auto-decode", run: (e) => {
                                     try {
                                         // @ts-ignore
