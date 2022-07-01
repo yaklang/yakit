@@ -106,7 +106,7 @@ monaco.languages.registerCompletionItemProvider('http', {
         }
         return {suggestions: suggestions,};
     }
-});
+} as any);
 
 monaco.languages.setMonarchTokensProvider("http", {
     brackets: [],

@@ -17,7 +17,7 @@ import {
     Typography,
     Empty,
     List,
-    Switch
+    Switch, Tooltip
 } from "antd"
 import {DownCircleTwoTone, UpCircleTwoTone, EditOutlined, DeleteOutlined} from "@ant-design/icons"
 import {InputInteger} from "../../../utils/inputUtil"
@@ -320,15 +320,18 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                             </AutoSpin>
                                         </div>
                                         <div style={{textAlign: "center"}}>
-                                            <Button
-                                                style={{height: 30}}
-                                                type='link'
-                                                onClick={() => {
-                                                    setVisible(true)
-                                                }}
-                                            >
-                                                配置自定义类型
-                                            </Button>
+                                            <Tooltip title={"重构中... 临时可用【插件批量执行】代替"}>
+                                                <Button
+                                                    style={{height: 30}}
+                                                    type='link'
+                                                    onClick={() => {
+                                                        setVisible(true)
+                                                    }}
+                                                    disabled={true}
+                                                >
+                                                    配置自定义类型
+                                                </Button>
+                                            </Tooltip>
                                         </div>
                                     </div>
                                 }
