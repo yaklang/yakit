@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Checkbox, Col, Divider, Form, Input, Row, Space, Spin, Tabs, Tag, Tooltip} from "antd"
+import {Button, Checkbox, Col, Divider, Form, Input, InputNumber, Row, Space, Spin, Tabs, Tag, Tooltip} from "antd"
 import {InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
 import {ExecResult, YakScript} from "../invoker/schema"
@@ -49,6 +49,11 @@ export interface PortScanParams {
 
     SkippedHostAliveScan?: boolean
     HostAlivePorts?: string
+
+    ExcludeHosts?: string
+    ExcludePorts?: string
+    EnableBasicCrawler?: boolean
+    BasicCrawlerRequestMax?: number
 }
 
 const ScanKind: { [key: string]: string } = {
@@ -78,6 +83,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         ProbeMax: 3,
         EnableCClassScan: false,
         HostAlivePorts: "22,80,443",
+        EnableBasicCrawler: true,
+        BasicCrawlerRequestMax: 5,
     })
     const [token, setToken] = useState(randomString(40))
     const xtermRef = useRef(null)
@@ -481,6 +488,25 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             >
 
             </SelectOne>}
+            <InputItem
+                label={"排除主机"} setValue={ExcludeHosts => setParams({...params, ExcludeHosts})}
+                value={params.ExcludeHosts}
+            />
+            <InputItem
+                label={"排除端口"} setValue={ExcludePorts => setParams({...params, ExcludePorts})}
+                value={params.ExcludePorts}
+            />
+            <Form.Item label={"爬虫设置"}>
+                <Space>
+                    <Checkbox onChange={e => setParams({...params, EnableBasicCrawler: e.target.value})}
+                              checked={params.EnableBasicCrawler}>启用爬虫</Checkbox>
+                    <InputNumber
+                        addonBefore={"爬虫请求数"}
+                        value={params.BasicCrawlerRequestMax}
+                        onChange={e => setParams({...params, BasicCrawlerRequestMax: e})}
+                    />
+                </Space>
+            </Form.Item>
             <InputInteger
                 label={"并发"}
                 help={"最多同时扫描200个端口"}
@@ -532,7 +558,7 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                     label={"高级指纹选项"}
                     data={[
                         {value: "web", text: "仅web指纹"},
-                        {value: "service", text: "仅nmap指纹"},
+                        {value: "service", text: "服务指纹"},
                         {value: "all", text: "全部指纹"}
                     ]}
                     setValue={(FingerprintMode) => setParams({...params, FingerprintMode})}

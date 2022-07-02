@@ -1112,6 +1112,15 @@ message PortScanRequest {
   double HostAliveTimeout = 17;
   int32 HostAliveConcurrent = 18;
   string HostAlivePorts = 19;
+
+  // 排除端口与主机
+  string ExcludeHosts = 20;
+  string ExcludePorts = 21;
+
+  // EnableBasicCrawler
+  // 是否启用基础爬虫，以及基础爬虫最多几个请求？
+  bool EnableBasicCrawler = 22;
+  int64 BasicCrawlerRequestMax = 23;
 }
 
 message DeletePortsRequest {
