@@ -31,7 +31,7 @@ export const ConfigPrivateDomain = React.memo(() => {
                 ...values
             } as OnlineProfileProps)
             .then((data) => {
-                console.log("私有域", data) // setMenuItems(data.Groups)
+                console.log("私有域", data)
             })
             .catch((e: any) => failed("设置私有域失败:" + e))
             .finally(() => setTimeout(() => setLoading(false), 300))
@@ -45,15 +45,17 @@ export const ConfigPrivateDomain = React.memo(() => {
                 })
             })
             .catch((e) => {
-                failed(`保存失败:${e}`)
+                failed(`获取失败:${e}`)
             })
     }, [])
     return (
         <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
-            <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"}]}>
+            {/* rules={[{required: true, message: "该项为必填"}]} */}
+            <Form.Item name='BaseUrl' label='私有域地址'>
                 <Input placeholder='请输入你的私有域地址' allowClear />
             </Form.Item>
-            <Form.Item name='Password' label='密码' rules={[{required: true, message: "该项为必填"}]}>
+            {/* rules={[{required: true, message: "该项为必填"}]} */}
+            <Form.Item name='Password' label='密码'>
                 <Input placeholder='请输入你的密码' allowClear />
             </Form.Item>
             <Form.Item {...tailLayout}>

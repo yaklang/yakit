@@ -1,5 +1,6 @@
 const {ipcMain} = require("electron")
 const OS = require("os")
+const {USER_INFO} = require("../state")
 
 module.exports = (win, getClient) => {
     const cpuData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -142,6 +143,7 @@ module.exports = (win, getClient) => {
     }
     // 下载插件
     ipcMain.handle("DownloadOnlinePluginById", async (e, params) => {
+        params.Token = USER_INFO.token
         return await asyncDownloadOnlinePluginById(params)
     })
     const asyncDownloadOnlinePluginByIds = (params) => {
@@ -157,6 +159,7 @@ module.exports = (win, getClient) => {
     }
     // 下载插件
     ipcMain.handle("DownloadOnlinePluginByIds", async (e, params) => {
+        params.Token = USER_INFO.token
         return await asyncDownloadOnlinePluginByIds(params)
     })
     const asyncDownloadOnlinePluginAll = (params) => {
@@ -172,6 +175,7 @@ module.exports = (win, getClient) => {
     }
     // 下载插件
     ipcMain.handle("DownloadOnlinePluginAll", async (e, params) => {
+        params.Token = USER_INFO.token
         return await asyncDownloadOnlinePluginAll(params)
     })
     const asyncDeletePluginByUserID = (params) => {

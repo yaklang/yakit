@@ -31,7 +31,6 @@ const options = {
 function newClient() {
     const md = new grpc.Metadata()
     md.set("authorization", `bearer ${global.password}`)
-
     if (global.caPem !== "") {
         const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
             return callback(null, md)

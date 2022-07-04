@@ -43,6 +43,10 @@ export interface StarsOperation {
     operation: string
 }
 
+interface DownloadOnlinePluginProps {
+    OnlineID: number
+}
+
 export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
@@ -86,8 +90,6 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             params
         })
             .then((res) => {
-                console.log("列表", res)
-
                 setResponse(res)
             })
             .catch((err) => {
@@ -109,7 +111,15 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     })
 
     const AddAllPlugin = useMemoizedFn(() => {
-        setAddLoading(true)
+        ipcRenderer
+            .invoke("DownloadOnlinePluginAll", {})
+            .then((data) => {
+                console.log("添加全部", data)
+                setAddLoading(true)
+            })
+            .catch((e) => {
+                failed(`添加失败:${e}`)
+            })
     })
     const StopAllPlugin = () => {
         setAddLoading(false)
@@ -120,7 +130,17 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             warn("请先登录")
             return
         }
-        success("添加成功")
+        ipcRenderer
+            .invoke("DownloadOnlinePluginById", {
+                OnlineID: info.id
+            } as DownloadOnlinePluginProps)
+            .then((data) => {
+                console.log("添加", data)
+                success("添加成功")
+            })
+            .catch((e) => {
+                failed(`添加失败:${e}`)
+            })
     })
 
     const starredPlugin = useMemoizedFn((info: API.YakitPluginDetail) => {
