@@ -1,6 +1,7 @@
 const {ipcMain} = require("electron")
 const OS = require("os")
 const {USER_INFO} = require("../state")
+const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
     const cpuData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -162,22 +163,15 @@ module.exports = (win, getClient) => {
         params.Token = USER_INFO.token
         return await asyncDownloadOnlinePluginByIds(params)
     })
-    const asyncDownloadOnlinePluginAll = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().DownloadOnlinePluginAll(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    // 下载插件
-    ipcMain.handle("DownloadOnlinePluginAll", async (e, params) => {
+    // 全部添加
+    const streamDownloadOnlinePluginAll = new Map()
+    ipcMain.handle("cancel-DownloadOnlinePluginAll", handlerHelper.cancelHandler(streamDownloadOnlinePluginAll))
+    ipcMain.handle("DownloadOnlinePluginAll", (e, params, token) => {
         params.Token = USER_INFO.token
-        return await asyncDownloadOnlinePluginAll(params)
+        let stream = getClient().DownloadOnlinePluginAll(params)
+        handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
     })
+
     const asyncDeletePluginByUserID = (params) => {
         return new Promise((resolve, reject) => {
             getClient().DeletePluginByUserID(params, (err, data) => {

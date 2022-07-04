@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react"
 import {Button, Form, Input, Row} from "antd"
 import "./index.scss"
 import {NetWorkApi} from "@/services/fetch"
-import {failed} from "@/utils/notification"
+import {failed, success} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
 
 const {ipcRenderer} = window.require("electron")
@@ -24,14 +24,14 @@ export const ConfigPrivateDomain = React.memo(() => {
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const onFinish = useMemoizedFn((values: OnlineProfileProps) => {
-        console.log(values)
+        console.log("values", values)
         setLoading(true)
         ipcRenderer
             .invoke("SetOnlineProfile", {
                 ...values
             } as OnlineProfileProps)
             .then((data) => {
-                console.log("私有域", data)
+                success('设置成功')
             })
             .catch((e: any) => failed("设置私有域失败:" + e))
             .finally(() => setTimeout(() => setLoading(false), 300))

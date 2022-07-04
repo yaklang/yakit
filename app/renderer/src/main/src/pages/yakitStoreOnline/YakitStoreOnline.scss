@@ -281,6 +281,9 @@
     }
 }
 
+.grid-container-admin {
+    grid-template-columns: 220px 150px 190px auto;
+}
 
 @media(max-width: 1350px) {
     .grid-container {
@@ -314,5 +317,3 @@
         min-width: 300px;
     }
 }
-
-

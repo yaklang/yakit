@@ -8,13 +8,14 @@ import {
     DownloadOutlined,
     PictureOutlined,
     ZoomInOutlined,
-    ZoomOutOutlined
+    ZoomOutOutlined,
+    LoadingOutlined
 } from "@ant-design/icons"
 import {useGetState, useMemoizedFn} from "ahooks"
 import throttle from "lodash/throttle"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, warn, success} from "../../utils/notification"
-import {StarsOperation, TagColor} from "./YakitStoreOnline"
+import {DownloadOnlinePluginProps, StarsOperation, TagColor} from "./YakitStoreOnline"
 import {CollapseParagraph} from "./CollapseParagraph"
 import {OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon} from "@/assets/icons"
 import {PluginStoreProps, PagemetaProps} from "./YakitPluginInfo.d"
@@ -27,7 +28,7 @@ import InfiniteScroll from "react-infinite-scroll-component"
 import "./YakitPluginInfo.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
-import { useCommenStore} from "@/store/comment"
+import {useCommenStore} from "@/store/comment"
 
 const {ipcRenderer} = window.require("electron")
 const limit = 20
@@ -63,6 +64,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     const {info, onBack, index, isAdmin, isLogin} = props
     const listRef = useRef<any>({current: null})
     const [loading, setLoading] = useState<boolean>(false)
+    const [addLoading, setAddLoading] = useState<boolean>(false)
     const [commentLoading, setCommentLoading] = useState<boolean>(false)
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
     const [hasMore, setHasMore] = useState<boolean>(false)
@@ -192,11 +194,25 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginAdd = useMemoizedFn(() => {
+        if (!plugin) return
         if (!isLogin) {
             warn("请先登录")
             return
         }
-        alert("添加成功")
+        setAddLoading(true)
+        ipcRenderer
+            .invoke("DownloadOnlinePluginById", {
+                OnlineID: plugin.id
+            } as DownloadOnlinePluginProps)
+            .then(() => {
+                success("添加成功")
+            })
+            .catch((e) => {
+                failed(`添加失败:${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => setAddLoading(false), 200)
+            })
     })
     // 新增评论
     const pluginComment = useMemoizedFn(() => {
@@ -419,7 +435,11 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             >
                                 喜欢
                             </Button>
-                            <Button className='btn-add' icon={<PlusCircleOutlined />} onClick={pluginAdd}>
+                            <Button
+                                className='btn-add'
+                                icon={(addLoading && <LoadingOutlined />) || <PlusCircleOutlined />}
+                                onClick={pluginAdd}
+                            >
                                 添加
                             </Button>
                         </div>
@@ -460,7 +480,9 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
 
                         <div className='preface-star-and-download'>
                             <div className='vertical-center'>
-                                <DownloadOutlined className='star-download-icon' />
+                                {(addLoading && <LoadingOutlined />) || (
+                                    <DownloadOutlined className='star-download-icon' onClick={pluginAdd} />
+                                )}
                             </div>
                             <div className='vertical-center'>
                                 <span className='star-download-num'>{plugin.downloaded_total}</span>

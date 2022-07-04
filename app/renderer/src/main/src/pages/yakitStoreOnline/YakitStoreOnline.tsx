@@ -1,8 +1,8 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {Row, Col, Input, Button, Pagination, List, Space, Card, Tooltip, Progress} from "antd"
-import {StarOutlined, StarFilled} from "@ant-design/icons"
-import {useMemoizedFn} from "ahooks"
-import {failed, warn, success} from "../../utils/notification"
+import {StarOutlined, StarFilled, LoadingOutlined} from "@ant-design/icons"
+import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
+import {failed, warn, success, info} from "../../utils/notification"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {YakitPluginInfo} from "./YakitPluginInfo"
 import {OfficialYakitLogoIcon} from "../../assets/icons"
@@ -13,6 +13,8 @@ import numeral from "numeral"
 import "./YakitStoreOnline.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {randomString} from "@/utils/randomUtil"
+import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
 
 const {ipcRenderer} = window.require("electron")
 const {Search} = Input
@@ -43,13 +45,19 @@ export interface StarsOperation {
     operation: string
 }
 
-interface DownloadOnlinePluginProps {
+export interface DownloadOnlinePluginProps {
     OnlineID: number
+}
+
+interface DownloadOnlinePluginAllResProps {
+    Progress: number
+    Log: string
 }
 
 export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
+    const [taskToken, setTaskToken] = useState(randomString(40))
     const [params, setParams] = useState<SearchPluginOnlineRequest>({
         keywords: "",
         order_by: "stars",
@@ -70,7 +78,6 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     })
     // 全部添加进度条
     const [addLoading, setAddLoading] = useState<boolean>(false)
-    const [percent, setPercent] = useState<number>(0)
 
     const [pluginInfo, setPluginInfo] = useState<API.YakitPluginDetail>()
     const [index, setIndex] = useState<number>(-1)
@@ -109,23 +116,46 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             search()
         }, 400)
     })
-
+    const [percent, setPercent, getPercent] = useGetState<number>(0)
+    useEffect(() => {
+        if (!taskToken) {
+            return
+        }
+        ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
+            const p = data.Progress * 100
+            setPercent(p)
+        })
+        ipcRenderer.on(`${taskToken}-end`, () => {
+            console.log("完", getPercent())
+            setTimeout(() => {
+                setAddLoading(false)
+                setPercent(0)
+            }, 500)
+            success("全部添加成功")
+        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+            failed("全部添加失败")
+        })
+        return () => {
+            ipcRenderer.removeAllListeners(`${taskToken}-data`)
+            ipcRenderer.removeAllListeners(`${taskToken}-error`)
+            ipcRenderer.removeAllListeners(`${taskToken}-end`)
+        }
+    }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("DownloadOnlinePluginAll", {})
-            .then((data) => {
-                console.log("添加全部", data)
-                setAddLoading(true)
-            })
-            .catch((e) => {
-                failed(`添加失败:${e}`)
-            })
+        setAddLoading(true)
+        ipcRenderer.invoke("DownloadOnlinePluginAll", {}, taskToken).catch((e) => {
+            failed(`添加失败:${e}`)
+        })
     })
     const StopAllPlugin = () => {
         setAddLoading(false)
+        ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
+            failed(`停止添加失败:${e}`)
+        })
     }
 
-    const addLocalLab = useMemoizedFn((info: API.YakitPluginDetail) => {
+    const addLocalLab = useMemoizedFn((info: API.YakitPluginDetail, callback) => {
         if (!userInfo.isLogin) {
             warn("请先登录")
             return
@@ -134,12 +164,14 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             .invoke("DownloadOnlinePluginById", {
                 OnlineID: info.id
             } as DownloadOnlinePluginProps)
-            .then((data) => {
-                console.log("添加", data)
+            .then(() => {
                 success("添加成功")
             })
             .catch((e) => {
                 failed(`添加失败:${e}`)
+            })
+            .finally(() => {
+                if (callback) callback()
             })
     })
 
@@ -204,7 +236,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     ) : (
         <AutoSpin spinning={loading}>
             <div className='plugin-list-container'>
-                <div className='grid-container'>
+                <div className={`grid-container  ${(!isAdmin || !userInfo.isLogin) && "grid-container-admin "}`}>
                     <div className='grid-item'>
                         <Search
                             placeholder='搜索商店内插件'
@@ -279,12 +311,12 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                         </div>
                     )}
                     <div className='grid-item btn'>
-                        {(addLoading || percent !== 0) && (
+                        {(addLoading || getPercent() !== 0) && (
                             <div className='filter-opt-progress'>
                                 <Progress
                                     size='small'
-                                    status={!addLoading && percent !== 0 ? "exception" : undefined}
-                                    percent={percent}
+                                    status={!addLoading && getPercent() !== 0 ? "exception" : undefined}
+                                    percent={getPercent()}
                                 />
                             </div>
                         )}
@@ -369,11 +401,12 @@ interface PluginListOptProps {
     isAdmin: boolean
     info: API.YakitPluginDetail
     onClick: (info: API.YakitPluginDetail) => any
-    onDownload: (info: API.YakitPluginDetail) => any
+    onDownload: (info: API.YakitPluginDetail, callback) => any
     onStarred: (info: API.YakitPluginDetail) => any
 }
 
 const PluginListOpt = memo((props: PluginListOptProps) => {
+    const [loading, setLoading] = useState<boolean>(false)
     const {isAdmin, info, onClick, onDownload, onStarred, index} = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const tagList = useRef(null)
@@ -399,7 +432,12 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
             }
         }, 50)
     }, [])
-
+    const add = useMemoizedFn(async () => {
+        setLoading(true)
+        onDownload(info, () => {
+            setLoading(false)
+        })
+    })
     return (
         <Card
             size={"small"}
@@ -437,18 +475,20 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                     </div>
 
                     <div className='vertical-center'>
-                        <Tooltip title={"添加到插件仓库"}>
-                            <Button
-                                className='title-add'
-                                type='link'
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onDownload(info)
-                                }}
-                            >
-                                添加
-                            </Button>
-                        </Tooltip>
+                        {(loading && <LoadingOutlined />) || (
+                            <Tooltip title={"添加到插件仓库"}>
+                                <Button
+                                    className='title-add'
+                                    type='link'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        add()
+                                    }}
+                                >
+                                    添加
+                                </Button>
+                            </Tooltip>
+                        )}
                     </div>
                 </div>
 
@@ -464,9 +504,11 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                             const tagClass = RandomTagColor[index]
                             if (flag !== -1 && index > flag) return ""
                             return (
-                                <div key={`${info.id}-${item}`} className={`tag-text ${tagClass}`}>
-                                    {item}
-                                </div>
+                                (item && (
+                                    <div key={`${info.id}-${item}`} className={`tag-text ${tagClass}`}>
+                                        {item}
+                                    </div>
+                                )) || <div className='tag-empty'></div>
                             )
                         })
                     ) : (
