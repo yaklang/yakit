@@ -7,6 +7,7 @@ import {failed, warn} from "@/utils/notification"
 import "./Login.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {randomString} from "@/utils/randomUtil"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -17,6 +18,10 @@ export interface LoginProp {
 
 interface LoginParamsProp {
     source: string
+}
+
+interface DownloadOnlinePluginAllRequestProps {
+    isAddToken: boolean
 }
 
 const Login: React.FC<LoginProp> = (props) => {
@@ -41,15 +46,30 @@ const Login: React.FC<LoginProp> = (props) => {
                 setTimeout(() => setLoading(false), 200)
             })
     }
-
+    const [taskToken, setTaskToken] = useState(randomString(40))
     // 全局监听登录状态
     useEffect(() => {
         ipcRenderer.on("fetch-signin-data", (e, res: any) => {
             const {ok, info} = res
-            if (ok) props.onCancel()
-            else failed(info || "请求异常，请重试！")
+            if (ok) {
+                ipcRenderer
+                    .invoke(
+                        "DownloadOnlinePluginAll",
+                        {isAddToken: true} as DownloadOnlinePluginAllRequestProps,
+                        taskToken
+                    )
+                    .then(() => {
+                        console.log("拉取全部插件")
+                    })
+                    .catch((e) => {
+                        failed(`拉取全部插件失败:${e}`)
+                    })
+                props.onCancel()
+            } else failed(info || "请求异常，请重试！")
         })
-        return () => ipcRenderer.removeAllListeners("fetch-signin-data")
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-signin-data")
+        }
     }, [])
 
     return (

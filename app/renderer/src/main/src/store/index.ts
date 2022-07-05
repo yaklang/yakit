@@ -1,3 +1,4 @@
+import {API} from "@/services/swagger/resposeType"
 import create from "zustand"
 
 export interface UserInfoProps {
@@ -10,6 +11,7 @@ export interface UserInfoProps {
     qqName: string | null
     qqHeadImg: string | null
     role: string | null
+    user_id: number | null
 }
 interface StoreProps {
     /**@name 登录用户信息 */
@@ -27,7 +29,8 @@ export const useStore = create<StoreProps>((set, get) => ({
         wechatHeadImg: null,
         qqName: null,
         qqHeadImg: null,
-        role: null
+        role: null,
+        user_id: null
     },
     setStoreUserInfo: (info) => set({userInfo: info})
 }))

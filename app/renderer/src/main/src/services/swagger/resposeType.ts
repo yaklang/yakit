@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  */
 
-export declare namespace API {
+ export declare namespace API {
   export interface YakitPluginParam {
     field: string;
     default_value: string;
@@ -112,6 +112,7 @@ export declare namespace API {
     name: string;
     token: string;
     role: string;
+    user_id: number;
   }
   export interface UserAurh {
     from_platform: string;

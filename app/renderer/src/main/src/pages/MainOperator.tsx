@@ -107,7 +107,8 @@ const defaultUserInfo: UserInfoProps = {
     wechatHeadImg: null,
     qqName: null,
     qqHeadImg: null,
-    role: null
+    role: null,
+    user_id: null
 }
 
 
@@ -968,6 +969,9 @@ const Main: React.FC<MainProp> = (props) => {
                                                 if (key === "sign-out") {
                                                     setStoreUserInfo(defaultUserInfo)
                                                     ipcRenderer.send("user-sign-out")
+                                                    ipcRenderer.invoke("DeletePluginByUserID", {
+                                                        UserID: userInfo.user_id
+                                                    })
                                                     setTimeout(() => success("已成功退出账号"), 500)
                                                 }
                                                 if (key === "trust-list") setTrustShow(true)

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Alert, Button, Card, Col, Empty, Form, Input, List, Popover, Row, Space, Tag, Tooltip} from "antd"
+import {Alert, Button, Card, Col, Empty, Form, Input, List, Popconfirm, Popover, Row, Space, Tag, Tooltip} from "antd"
 import {
     DownloadOutlined,
     PlusOutlined,
@@ -8,7 +8,8 @@ import {
     SettingOutlined,
     GithubOutlined,
     UploadOutlined,
-    LoadingOutlined
+    LoadingOutlined,
+    DeleteOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {AutoUpdateYakModuleViewer, startExecYakCode} from "../../utils/basic"
@@ -65,6 +66,18 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         }, 200)
     }, [script])
 
+    const onRemoveLocalPlugin = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("DeleteAllLocalPlugins", {})
+            .then(() => {
+                refresh()
+                success("删除成功")
+            })
+            .catch((e) => {
+                failed(`删除所有本地插件错误:${e}`)
+            })
+    })
+
     return (
         <div style={{height: "100%", display: "flex", flexDirection: "row"}}>
             <div style={{width: 470}}>
@@ -118,6 +131,14 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             >
                                 <SearchOutlined />
                             </Button>
+                            <Popconfirm
+                                title='是否删除本地所有插件?数据不可恢复'
+                                onConfirm={() => onRemoveLocalPlugin()}
+                            >
+                                <Button size='small' type='link'>
+                                    <DeleteOutlined />
+                                </Button>
+                            </Popconfirm>
                         </Space>
                     }
                     size={"small"}
@@ -361,7 +382,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     }
 
     const uploadOnline = (item: YakScript) => {
-        // console.log("插件", item)
         if (!userInfo.isLogin) {
             warn("未登录，请先登录!")
             return
@@ -394,7 +414,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             data: params
         })
             .then((res) => {
-                if(res.ok){
+                if (res.ok) {
                     success("插件上传成功")
                     setCurrentPlugin(null)
                 }

@@ -126,12 +126,10 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             setPercent(p)
         })
         ipcRenderer.on(`${taskToken}-end`, () => {
-            console.log("完", getPercent())
             setTimeout(() => {
                 setAddLoading(false)
                 setPercent(0)
             }, 500)
-            success("全部添加成功")
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
             failed("全部添加失败")
@@ -144,7 +142,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
         setAddLoading(true)
-        ipcRenderer.invoke("DownloadOnlinePluginAll", {}, taskToken).catch((e) => {
+        ipcRenderer.invoke("DownloadOnlinePluginAll", {isAddToken: true}, taskToken).catch((e) => {
             failed(`添加失败:${e}`)
         })
     })
@@ -156,10 +154,6 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     }
 
     const addLocalLab = useMemoizedFn((info: API.YakitPluginDetail, callback) => {
-        if (!userInfo.isLogin) {
-            warn("请先登录")
-            return
-        }
         ipcRenderer
             .invoke("DownloadOnlinePluginById", {
                 OnlineID: info.id
@@ -311,12 +305,12 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                         </div>
                     )}
                     <div className='grid-item btn'>
-                        {(addLoading || getPercent() !== 0) && (
+                        {(addLoading || percent !== 0) && (
                             <div className='filter-opt-progress'>
                                 <Progress
                                     size='small'
-                                    status={!addLoading && getPercent() !== 0 ? "exception" : undefined}
-                                    percent={getPercent()}
+                                    status={!addLoading && percent !== 0 ? "exception" : undefined}
+                                    percent={percent}
                                 />
                             </div>
                         )}

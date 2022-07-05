@@ -484,8 +484,6 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             filterVal.push(item.dataIndex)
                         }
                     })
-                    console.log("header", header)
-                    console.log("filterVal", filterVal)
                     exportData = formatJson(filterVal, Data)
                     resolve({
                         header,

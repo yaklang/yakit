@@ -167,8 +167,12 @@ module.exports = (win, getClient) => {
     const streamDownloadOnlinePluginAll = new Map()
     ipcMain.handle("cancel-DownloadOnlinePluginAll", handlerHelper.cancelHandler(streamDownloadOnlinePluginAll))
     ipcMain.handle("DownloadOnlinePluginAll", (e, params, token) => {
-        params.Token = USER_INFO.token
-        let stream = getClient().DownloadOnlinePluginAll(params)
+        // params传Token，登录时调用：添加该用户名下的所有插件；不传Token：添加所有的
+        const newParams = {}
+        if (params.isAddToken) {
+            newParams.Token = USER_INFO.token
+        }
+        let stream = getClient().DownloadOnlinePluginAll(newParams)
         handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
     })
 

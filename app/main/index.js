@@ -155,7 +155,6 @@ ipcMain.on("user-sign-in", (event, arg) => {
         const params = geturlparam(url)
         httpApi("get", typeApi[type], {code: params.get("code")})
             .then((res) => {
-                console.log("login-scan", res)
                 if (!authWindow) return
                 if (res.code !== 200) {
                     authWindow.webContents.session.clearStorageData()
@@ -174,7 +173,8 @@ ipcMain.on("user-sign-in", (event, arg) => {
                     wechatHeadImg: info.from_platform === "wechat" ? info.head_img : null,
                     qqName: info.from_platform === "qq" ? info.name : null,
                     qqHeadImg: info.from_platform === "qq" ? info.head_img : null,
-                    role: info.role
+                    role: info.role,
+                    user_id: info.user_id
                 }
 
                 USER_INFO.isLogin = user.isLogin
@@ -187,6 +187,7 @@ ipcMain.on("user-sign-in", (event, arg) => {
                 USER_INFO.qqHeadImg = user.qqHeadImg
                 USER_INFO.role = user.role
                 USER_INFO.token = info.token
+                USER_INFO.user_id = user.user_id
 
                 win.webContents.send("fetch-signin-token", user)
                 authWindow.webContents.session.clearStorageData()
@@ -213,4 +214,5 @@ ipcMain.on("user-sign-out", (event) => {
     USER_INFO.qqHeadImg = null
     USER_INFO.role = null
     USER_INFO.token = null
+    USER_INFO.user_id = ""
 })

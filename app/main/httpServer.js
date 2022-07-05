@@ -22,7 +22,6 @@ service.interceptors.request.use(
 // respone拦截器 拦截到所有的response，然后先做一些判断
 service.interceptors.response.use(
     (response) => {
-        console.log("response_1", response)
         const res = {
             code: response.status,
             data: response.data

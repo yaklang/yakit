@@ -24,7 +24,6 @@ export const ConfigPrivateDomain = React.memo(() => {
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const onFinish = useMemoizedFn((values: OnlineProfileProps) => {
-        console.log("values", values)
         setLoading(true)
         ipcRenderer
             .invoke("SetOnlineProfile", {

@@ -110,7 +110,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("插件详情", res)
                 setPlugin(res.data)
             })
             .catch((err) => {
@@ -167,14 +166,12 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             id: plugin?.id,
             operation: plugin.is_stars ? "remove" : "add"
         }
-        console.log("plugin.is_stars", plugin.is_stars, prams)
         NetWorkApi<StarsOperation, API.ActionSucceeded>({
             method: "post",
             url: "yakit/plugin/stars",
             params: prams
         })
             .then((res) => {
-                // console.log("点赞", res)
                 if (!res.ok) return
                 if (plugin.is_stars) {
                     plugin.is_stars = false
@@ -245,7 +242,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             data
         })
             .then((res) => {
-                console.log("res", res)
                 if (data.by_user_id && data.by_user_id > 0) {
                     // 刷新modal中子评论列表
                     setCommenData({
@@ -300,10 +296,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginCommentStar = useMemoizedFn((item: API.CommentListData) => {
-        if (!isLogin) {
-            warn("请先登录")
-            return
-        }
+        // if (!isLogin) {
+        //     warn("请先登录")
+        //     return
+        // }
         const params: CommentStarsProps = {
             comment_id: item.id,
             operation: item.is_stars ? "remove" : "add"
@@ -314,7 +310,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             params: params
         })
             .then((res) => {
-                console.log("res", res)
                 if (!commentResponses) return
                 const index: number = commentResponses.data.findIndex((ele: API.CommentListData) => ele.id === item.id)
                 if (index !== -1) {
@@ -351,7 +346,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             params: auditParams
         })
             .then((res) => {
-                console.log("审核", res)
                 if (plugin) setPlugin({...plugin, status})
                 success(`插件审核${status === 1 ? "通过" : "不通过"}`)
             })
@@ -934,7 +928,6 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             params: params
         })
             .then((res) => {
-                console.log("res", res)
                 const index: number = commentChildResponses.data.findIndex(
                     (ele: API.CommentListData) => ele.id === childItem.id
                 )
