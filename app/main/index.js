@@ -4,7 +4,7 @@ const path = require("path")
 const {extrakvpairs, getExtraKVPair, setExtraKVPair} = require("./handlers/upgradeUtil")
 const {registerIPC, clearing} = require("./ipc")
 const {service, httpApi} = require("./httpServer")
-const {USER_INFO} = require("./state")
+const {USER_INFO, HttpSetting} = require("./state")
 
 const process = require("process")
 

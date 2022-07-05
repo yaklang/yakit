@@ -1,9 +1,14 @@
 const axios = require("axios")
-const {USER_INFO} = require("./state")
+const {ipcMain} = require("electron")
+const {USER_INFO, HttpSetting} = require("./state")
+
+ipcMain.on("edit-baseUrl", (event, arg) => {
+    HttpSetting.httpBaseURL = arg.baseUrl
+})
 
 const service = axios.create({
     // baseURL: "http://onlinecs.vaiwan.cn/api/",
-    baseURL: "http://192.168.101.104:3000/api/",
+    baseURL: `${HttpSetting.httpBaseURL}/api/`,
     timeout: 30 * 1000, // 请求超时时间
     maxBodyLength: Infinity //设置适当的大小
 })
@@ -11,6 +16,7 @@ const service = axios.create({
 // request拦截器,拦截每一个请求加上请求头
 service.interceptors.request.use(
     (config) => {
+        config.baseURL = `${HttpSetting.httpBaseURL}/api/`
         if (USER_INFO.isLogin && USER_INFO.token) config.headers["Authorization"] = USER_INFO.token
         return config
     },

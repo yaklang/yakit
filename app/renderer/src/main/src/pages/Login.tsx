@@ -64,6 +64,7 @@ const Login: React.FC<LoginProp> = (props) => {
                     .catch((e) => {
                         failed(`拉取全部插件失败:${e}`)
                     })
+                    
                 props.onCancel()
             } else failed(info || "请求异常，请重试！")
         })

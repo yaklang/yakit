@@ -4,12 +4,13 @@ import "./index.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
     BaseUrl: string
-    Password: string
+    Password?: string
 }
 
 const layout = {
@@ -20,7 +21,12 @@ const tailLayout = {
     wrapperCol: {offset: 5, span: 16}
 }
 
-export const ConfigPrivateDomain = React.memo(() => {
+interface ConfigPrivateDomainProps {
+    onClose: () => void
+}
+
+export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
+    const {onClose} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const onFinish = useMemoizedFn((values: OnlineProfileProps) => {
@@ -30,27 +36,25 @@ export const ConfigPrivateDomain = React.memo(() => {
                 ...values
             } as OnlineProfileProps)
             .then((data) => {
-                success('设置成功')
+                ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
+                setRemoteValue("httpSetting", JSON.stringify(values))
+                success("设置成功")
+                onClose()
             })
             .catch((e: any) => failed("设置私有域失败:" + e))
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
     useEffect(() => {
-        ipcRenderer
-            .invoke("GetOnlineProfile", {})
-            .then((data: OnlineProfileProps) => {
-                form.setFieldsValue({
-                    ...data
-                })
+        getRemoteValue("httpSetting").then((setting) => {
+            const value = JSON.parse(setting)
+            form.setFieldsValue({
+                ...value
             })
-            .catch((e) => {
-                failed(`获取失败:${e}`)
-            })
+        })
     }, [])
     return (
         <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
-            {/* rules={[{required: true, message: "该项为必填"}]} */}
-            <Form.Item name='BaseUrl' label='私有域地址'>
+            <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"}]}>
                 <Input placeholder='请输入你的私有域地址' allowClear />
             </Form.Item>
             {/* rules={[{required: true, message: "该项为必填"}]} */}

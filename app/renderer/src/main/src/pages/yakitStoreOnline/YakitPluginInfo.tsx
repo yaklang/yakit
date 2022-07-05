@@ -598,7 +598,7 @@ interface PluginCommentInputProps {
 const PluginCommentInput = (props: PluginCommentInputProps) => {
     const {value, loading, isLogin, setValue, files, setFiles, onSubmit} = props
     const [filesLoading, setFilesLoading] = useState<boolean>(false)
-    const uploadFiles = (file: any) => {
+    const uploadFiles = (file) => {
         setFilesLoading(true)
         ipcRenderer
             .invoke("upload-img", {path: file.path, type: file.type})
@@ -661,8 +661,7 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                 {isLogin && (
                     <Upload
                         accept='image/jpeg,image/png,image/jpg,image/gif'
-                        method='post'
-                        multiple={true}
+                        multiple={false}
                         disabled={files.length >= 3}
                         showUploadList={false}
                         beforeUpload={(file: any) => {
@@ -677,7 +676,7 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                             if (file) {
                                 uploadFiles(file)
                             }
-                            return false
+                            return true
                         }}
                     >
                         <Button

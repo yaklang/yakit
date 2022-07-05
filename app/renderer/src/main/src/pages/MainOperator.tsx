@@ -936,12 +936,13 @@ const Main: React.FC<MainProp> = (props) => {
                                             </Menu.Item>
                                             <Menu.Item
                                                 key={"config-private-domain"}
-                                                onClick={() =>
-                                                    showModal({
+                                                onClick={() => {
+                                                    const m = showModal({
                                                         title: "配置私有域",
-                                                        content: <ConfigPrivateDomain />
+                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()} />
                                                     })
-                                                }
+                                                    return m
+                                                }}
                                             >
                                                 <Button type={"link"}>配置私有域</Button>   
                                             </Menu.Item>

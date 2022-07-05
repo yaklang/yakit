@@ -11,7 +11,11 @@ const USER_INFO = {
     role: null,
     token: null
 }
+const HttpSetting={
+    httpBaseURL:'http://192.168.101.104:3000'
+}
 
 module.exports = {
-    USER_INFO
+    USER_INFO,
+    HttpSetting
 }

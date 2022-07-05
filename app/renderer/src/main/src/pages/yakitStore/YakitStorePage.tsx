@@ -477,7 +477,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     if (props.onYakScriptRender) {
                         return props.onYakScriptRender(i, maxWidth)
                     }
-
                     return (
                         <List.Item style={{marginLeft: 0}} key={i.Id}>
                             <Card
@@ -517,9 +516,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                     {i.Tags && (
                                         <Col span={24}>
                                             <div style={{width: "100%", textAlign: "right", color: "#888888"}}>
-                                                {/*{(i.Tags.split(",")).map(word => {*/}
-                                                {/*    return <Tag>{word}</Tag>*/}
-                                                {/*})}*/}
+                                                {/* {i.Tags.split(",").map((word) => {
+                                                    return <Tag>{word}</Tag>
+                                                })} */}
                                                 TAG:{i.Tags}
                                             </div>
                                         </Col>
