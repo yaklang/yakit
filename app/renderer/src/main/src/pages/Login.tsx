@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react"
 import {Modal} from "antd"
-import {GithubOutlined, QqOutlined, WechatOutlined} from "@ant-design/icons"
+import {GithubOutlined, QqOutlined, RightOutlined, WechatOutlined} from "@ant-design/icons"
 import {AutoSpin} from "@/components/AutoSpin"
 import {failed, warn} from "@/utils/notification"
 
@@ -64,7 +64,7 @@ const Login: React.FC<LoginProp> = (props) => {
                     .catch((e) => {
                         failed(`拉取全部插件失败:${e}`)
                     })
-                    
+
                 props.onCancel()
             } else failed(info || "请求异常，请重试！")
         })
@@ -74,15 +74,36 @@ const Login: React.FC<LoginProp> = (props) => {
     }, [])
 
     return (
-        <Modal visible={props.visible} closable={false} footer={null} onCancel={() => props.onCancel()}>
+        <Modal
+            visible={props.visible}
+            closable={false}
+            footer={null}
+            onCancel={() => props.onCancel()}
+            bodyStyle={{padding: 0}}
+            width={409}
+            style={{ top: '25%' }}
+        >
             <AutoSpin spinning={loading}>
                 <div className='login-type-body'>
-                    <h2>登录</h2>
-                    <div className='login-subtitle'>第三方帐号登录方式</div>
-                    <div className='login-type-icon'>
-                        <GithubOutlined className='type-icon' onClick={() => fetchLogin("github")} />
-                        <WechatOutlined className='type-icon' onClick={() => fetchLogin("wechat")} />
-                        {/* <QqOutlined className='type-icon' onClick={() => fetchLogin("qq")} /> */}
+                    <h2 className='login-text'>登录</h2>
+                    <div className='login-icon-body'>
+                        <div className='login-icon'>
+                            <div className='login-icon-text'>
+                                <GithubOutlined className='type-icon' onClick={() => fetchLogin("github")} />
+                                使用 GitHub 账号登录
+                            </div>
+                            <RightOutlined className='icon-right' />
+                        </div>
+                        <div className='login-icon'>
+                            <div className='login-icon-text'>
+                                <WechatOutlined
+                                    className='type-icon icon-wx'
+                                    onClick={() => fetchLogin("wechat")}
+                                />
+                                使用微信账号登录
+                            </div>
+                            <RightOutlined className='icon-right' />
+                        </div>
                     </div>
                 </div>
             </AutoSpin>
