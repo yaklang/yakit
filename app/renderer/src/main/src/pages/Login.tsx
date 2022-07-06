@@ -5,6 +5,8 @@ import {AutoSpin} from "@/components/AutoSpin"
 import {failed, warn} from "@/utils/notification"
 
 import "./Login.scss"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -13,18 +15,31 @@ export interface LoginProp {
     onCancel: () => any
 }
 
+interface LoginParamsProp {
+    source: string
+}
+
 const Login: React.FC<LoginProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
 
     const fetchLogin = (type: string) => {
         setLoading(true)
-        ipcRenderer
-            .invoke("fetch-login-url", {source: type})
+        NetWorkApi<LoginParamsProp, string>({
+            method: "get",
+            url: "auth/from",
+            params: {
+                source: type
+            }
+        })
             .then((res) => {
-                if (res.ok) ipcRenderer.send("user-sign-in", {url: res.from, type: type})
+                if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
             })
-            .catch((err) => warn("请求超时，请重新操作"))
-            .finally(() => setTimeout(() => setLoading(false), 300))
+            .catch((err) => {
+                warn("请求超时，请重新操作")
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
+            })
     }
 
     // 全局监听登录状态

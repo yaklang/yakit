@@ -28,7 +28,7 @@ const createWindow = () => {
         autoHideMenuBar: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
-            nodeIntegration: false,
+            nodeIntegration: true,
             contextIsolation: false,
             sandbox: true
         }
@@ -155,24 +155,25 @@ ipcMain.on("user-sign-in", (event, arg) => {
         const params = geturlparam(url)
         httpApi("get", typeApi[type], {code: params.get("code")})
             .then((res) => {
+                console.log("login-scan", res)
                 if (!authWindow) return
-                if (!res.from || !res.ok) {
+                if (res.code !== 200) {
                     authWindow.webContents.session.clearStorageData()
                     win.webContents.send("fetch-signin-data", {ok: false, info: res.reason || "请求异常，请重新登录！"})
                     authWindow.close()
                     return
                 }
 
-                const info = JSON.parse(res.from)
+                const info = res.data
                 const user = {
                     isLogin: true,
-                    platform: info.userFromPlatform,
-                    githubName: info.userFromPlatform === "github" ? info.name : null,
-                    githubHeadImg: info.userFromPlatform === "github" ? info.head_img : null,
-                    wechatName: info.userFromPlatform === "wechat" ? info.name : null,
-                    wechatHeadImg: info.userFromPlatform === "wechat" ? info.head_img : null,
-                    qqName: info.userFromPlatform === "qq" ? info.name : null,
-                    qqHeadImg: info.userFromPlatform === "qq" ? info.head_img : null,
+                    platform: info.from_platform,
+                    githubName: info.from_platform === "github" ? info.name : null,
+                    githubHeadImg: info.from_platform === "github" ? info.head_img : null,
+                    wechatName: info.from_platform === "wechat" ? info.name : null,
+                    wechatHeadImg: info.from_platform === "wechat" ? info.head_img : null,
+                    qqName: info.from_platform === "qq" ? info.name : null,
+                    qqHeadImg: info.from_platform === "qq" ? info.head_img : null,
                     role: info.role
                 }
 
