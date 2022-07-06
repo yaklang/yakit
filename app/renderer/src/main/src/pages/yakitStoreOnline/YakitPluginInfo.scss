@@ -448,6 +448,13 @@ $active-color:#036ffe;
     overflow: auto;
     margin-top: 16px;
     padding: 0 16px;
+
+    .child-comment-list {
+        background-color: #F9FAFB;
+        padding: 24px;
+        margin: 0 64px;
+        margin-top: 16px;
+    }
 }
 
 .comment-body-time-func {

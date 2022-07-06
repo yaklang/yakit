@@ -192,10 +192,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
 
     const pluginAdd = useMemoizedFn(() => {
         if (!plugin) return
-        if (!isLogin) {
-            warn("请先登录")
-            return
-        }
+        // if (!isLogin) {
+        //     warn("请先登录")
+        //     return
+        // }
         setAddLoading(true)
         ipcRenderer
             .invoke("DownloadOnlinePluginById", {
@@ -296,10 +296,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginCommentStar = useMemoizedFn((item: API.CommentListData) => {
-        // if (!isLogin) {
-        //     warn("请先登录")
-        //     return
-        // }
+        if (!isLogin) {
+            warn("请先登录")
+            return
+        }
         const params: CommentStarsProps = {
             comment_id: item.id,
             operation: item.is_stars ? "remove" : "add"
@@ -497,7 +497,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                     <div className='info-comment-box'>
                         <div className='box-header'>
                             <span className='header-title'>用户评论</span>
-                            <span className='header-subtitle'>{commentResponses?.pagemeta?.total || 0}</span>
+                            <span className='header-subtitle'>{plugin.comment_num || 0}</span>
                         </div>
                         <PluginCommentInput
                             value={commentText}
@@ -559,6 +559,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                     setParentComment(undefined)
                     setCommentChildVisible(val)
                 }}
+                isLogin={isLogin}
             />
             <Modal
                 wrapClassName='comment-reply-dialog'
@@ -744,6 +745,7 @@ interface PluginCommentInfoProps {
     info: API.CommentListData
     key: number
     isStarChange?: boolean
+    isOperation?: boolean
     onReply: (name: API.CommentListData) => any
     onStar: (name: API.CommentListData) => any
     openCommentChildModel?: (visible: boolean) => any
@@ -751,7 +753,16 @@ interface PluginCommentInfoProps {
 }
 // 评论内容单条组件
 const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
-    const {info, onReply, onStar, key, isStarChange, openCommentChildModel, setParentComment} = props
+    const {
+        info,
+        onReply,
+        onStar,
+        key,
+        isStarChange,
+        openCommentChildModel,
+        setParentComment,
+        isOperation = true
+    } = props
 
     const message_img: string[] = (info.message_img && JSON.parse(info.message_img)) || []
     return (
@@ -777,26 +788,28 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                     <div>
                         <span>{moment.unix(info.created_at).format("YYYY-MM-DD HH:mm")}</span>
                     </div>
-                    <div className='func-comment-and-star'>
-                        <div className='comment-and-star' onClick={() => onReply(info)}>
-                            {/* @ts-ignore */}
-                            <OnlineCommentIcon className='icon-style-comment hover-active' />
+                    {isOperation && (
+                        <div className='func-comment-and-star'>
+                            <div className='comment-and-star' onClick={() => onReply(info)}>
+                                {/* @ts-ignore */}
+                                <OnlineCommentIcon className='icon-style-comment hover-active' />
+                            </div>
+                            <div
+                                style={{marginLeft: 18}}
+                                className='hover-active  comment-and-star'
+                                onClick={() => onStar(info)}
+                            >
+                                {/* @ts-ignore */}
+                                {(isStarChange && <OnlineSurfaceIcon className='hover-active icon-style-start' />) || (
+                                    // @ts-ignore
+                                    <OnlineThumbsUpIcon className='hover-active  icon-style' />
+                                )}
+                                <span className={`hover-active  num-style ${isStarChange && "num-style-active"}`}>
+                                    {numeral(info.like_num).format("0,0")}
+                                </span>
+                            </div>
                         </div>
-                        <div
-                            style={{marginLeft: 18}}
-                            className='hover-active  comment-and-star'
-                            onClick={() => onStar(info)}
-                        >
-                            {/* @ts-ignore */}
-                            {(isStarChange && <OnlineSurfaceIcon className='hover-active icon-style-start' />) || (
-                                // @ts-ignore
-                                <OnlineThumbsUpIcon className='hover-active  icon-style' />
-                            )}
-                            <span className={`hover-active  num-style ${isStarChange && "num-style-active"}`}>
-                                {numeral(info.like_num).format("0,0")}
-                            </span>
-                        </div>
-                    </div>
+                    )}
                 </div>
                 <div>
                     {message_img.map((url) => (
@@ -817,7 +830,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                         />
                     ))}
                 </div>
-                {info.reply_num > 0 && (
+                {isOperation && info.reply_num > 0 && (
                     <a
                         className='comment-reply'
                         onClick={() => {
@@ -839,6 +852,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
 
 interface PluginCommentChildModalProps {
     visible: boolean
+    isLogin: boolean
     parentInfo?: API.CommentListData
     onReply: (info: API.CommentListData) => any
     onCancel: (visible: boolean) => any
@@ -850,7 +864,7 @@ interface CommentQueryProps extends API.PageMeta {
 }
 
 const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
-    const {parentInfo, visible, onReply, onCancel} = props
+    const {parentInfo, visible, onReply, onCancel, isLogin} = props
 
     const [hasMore, setHasMore] = useState<boolean>(false)
     const [loadingChild, setLoadingChild] = useState<boolean>(false)
@@ -881,6 +895,8 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             getChildComment(commentChildResponses?.pagemeta?.page + 1)
         }
     })
+    // 全局监听是否刷新子评论列表状态
+    const {commenData, setCommenData} = useCommenStore()
     // 获取子评论列表
     const getChildComment = useMemoizedFn((page: number = 1, payload: any = {}) => {
         const params = {
@@ -908,6 +924,10 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     data: [...newCommentChildResponses.data],
                     pagemeta: item.pagemeta
                 })
+                // 刷新modal中子评论列表
+                setCommenData({
+                    isRefChildCommentList: false
+                })
             })
             .catch((err) => {
                 failed("评论查询失败:" + err)
@@ -917,6 +937,10 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             })
     })
     const onCommentChildStar = useMemoizedFn((childItem: API.CommentListData) => {
+        if (!isLogin) {
+            warn("请先登录")
+            return
+        }
         const params = {
             comment_id: childItem.id,
             operation: childItem.is_stars ? "remove" : "add"
@@ -949,8 +973,6 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             })
             .finally(() => {})
     })
-    // 全局监听是否刷新子评论列表状态
-    const {commenData} = useCommenStore()
     useEffect(() => {
         if (!commenData.isRefChildCommentList) return
         if (!parentInfo) return
@@ -966,40 +988,50 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             getChildComment(1)
         }
     }, [visible])
+    if (!parentInfo) return <></>
     return (
         <Modal visible={visible} onCancel={onCommentChildCancel} footer={null} width='70%' centered>
             <div id='scroll-able-div' className='comment-child-body'>
-                {/* @ts-ignore */}
-                <InfiniteScroll
-                    dataLength={commentChildResponses?.pagemeta?.total || 0}
-                    key={commentChildResponses?.pagemeta?.page}
-                    next={loadMoreData}
-                    hasMore={hasMore}
-                    loader={<Skeleton avatar paragraph={{rows: 1}} active />}
-                    endMessage={
-                        (commentChildResponses?.pagemeta?.total || 0) > 0 && (
-                            <div className='no-more-text'>暂无更多数据</div>
-                        )
-                    }
-                    scrollableTarget='scroll-able-div'
-                >
-                    <List
-                        dataSource={commentChildResponses.data || []}
-                        loading={loadingChild}
-                        renderItem={(childItem) => (
-                            <>
-                                <PluginCommentInfo
-                                    key={childItem.id}
-                                    info={childItem}
-                                    onReply={onReply}
-                                    onStar={onCommentChildStar}
-                                    isStarChange={childItem.is_stars}
-                                ></PluginCommentInfo>
-                                <div className='comment-separator'></div>
-                            </>
-                        )}
-                    />
-                </InfiniteScroll>
+                <PluginCommentInfo
+                    key={parentInfo.id}
+                    info={parentInfo}
+                    isOperation={false}
+                    onStar={() => {}}
+                    onReply={() => {}}
+                />
+                <div className="child-comment-list">
+                    {/* @ts-ignore */}
+                    <InfiniteScroll
+                        dataLength={commentChildResponses?.pagemeta?.total || 0}
+                        key={commentChildResponses?.pagemeta?.page}
+                        next={loadMoreData}
+                        hasMore={hasMore}
+                        loader={<Skeleton avatar paragraph={{rows: 1}} active />}
+                        endMessage={
+                            (commentChildResponses?.pagemeta?.total || 0) > 0 && (
+                                <div className='no-more-text'>暂无更多数据</div>
+                            )
+                        }
+                        scrollableTarget='scroll-able-div'
+                    >
+                        <List
+                            dataSource={commentChildResponses.data || []}
+                            loading={loadingChild}
+                            renderItem={(childItem) => (
+                                <>
+                                    <PluginCommentInfo
+                                        key={childItem.id}
+                                        info={childItem}
+                                        onReply={onReply}
+                                        onStar={onCommentChildStar}
+                                        isStarChange={childItem.is_stars}
+                                    ></PluginCommentInfo>
+                                    <div className='comment-separator'></div>
+                                </>
+                            )}
+                        />
+                    </InfiniteScroll>
+                </div>
             </div>
         </Modal>
     )

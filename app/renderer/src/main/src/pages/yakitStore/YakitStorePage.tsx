@@ -409,7 +409,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             script_name: item.ScriptName,
             // authors: item.Author,
             content: item.Content,
-            tags: item.Tags ? item.Tags.split(",") : [],
+            tags: item.Tags ? item.Tags.split(",") : undefined,
             params: item.Params.map((p) => ({
                 field: p.Field,
                 default_value: p.DefaultValue,

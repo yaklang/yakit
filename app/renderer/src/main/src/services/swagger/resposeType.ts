@@ -56,6 +56,7 @@
     enable_plugin_selector?: boolean;
     plugin_selector_types?: string;
     is_general_module?: boolean;
+    comment_num: number;
   }
   export interface UserResponse {
     data: UserDetail;

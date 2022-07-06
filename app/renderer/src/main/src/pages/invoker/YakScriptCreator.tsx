@@ -5,7 +5,7 @@ import {YakScript, YakScriptParam} from "./schema"
 import {YakCodeEditor, YakEditor} from "../../utils/editors"
 import {PlusOutlined, QuestionCircleOutlined} from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {failed, info} from "../../utils/notification"
+import {failed, info, success} from "../../utils/notification"
 import {YakScriptParamsSetter} from "./YakScriptParamsSetter"
 import {YakScriptRunner} from "./ExecYakScript"
 import {FullscreenOutlined, DeleteOutlined} from "@ant-design/icons"
@@ -221,7 +221,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             type: params.Type,
             script_name: params.ScriptName,
             content: params.Content,
-            tags: params.Tags ? params.Tags.split(",") : [],
+            tags: params.Tags ? params.Tags.split(",") : undefined,
             params: params.Params.map((p) => ({
                 field: p.Field,
                 default_value: p.DefaultValue,
@@ -241,6 +241,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             data: onlineParams
         })
             .then((id) => {
+                success("创建 / 保存 Yak 脚本成功")
+                props.onCreated && props.onCreated(params)
+                props.onChanged && props.onChanged(params)
+                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
                 ipcRenderer
                     .invoke("DownloadOnlinePluginById", {
                         OnlineID: id
