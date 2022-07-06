@@ -11,8 +11,8 @@ import {DocumentEditor} from "./DocumentEditor"
 import MDEditor from "@uiw/react-md-editor"
 import {PluginHistoryTable} from "./PluginHistory"
 import {openABSFile} from "../../utils/openWebsite"
-import {EditOutlined, QuestionOutlined, SettingOutlined} from "@ant-design/icons"
 import {BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, YakScriptCreatorForm} from "../invoker/YakScriptCreator"
+import {EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined} from "@ant-design/icons"
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
 import {getValue} from "../../utils/kv";
 import {useGetState, useMemoizedFn} from "ahooks";
@@ -210,6 +210,96 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     >
 
                     </ResizeBox>}
+                    {script && (
+                        <PluginExecutor
+                            subTitle={
+                                <Space>
+                                    <Tooltip title={'12312312'}><FieldNumberOutlined style={{fontSize: 20}} /></Tooltip>
+                                    
+                                    {script.Help && (
+                                        <Tooltip title={script.Help}>
+                                            <Button type={"link"} icon={<QuestionOutlined/>}/>
+                                        </Tooltip>
+                                    )}
+                                    <Space size={8}>
+                                        {/*{script?.ScriptName && (*/}
+                                        {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
+                                        {/*)}*/}
+                                        <p style={{color: "#999999", marginBottom: 0}}>作者:{script?.Author}</p>
+                                        {script?.Tags
+                                            ? (script?.Tags || "")
+                                                .split(",")
+                                                .filter((i) => !!i)
+                                                .map((i) => {
+                                                    return (
+                                                        <Tag
+                                                            style={{marginLeft: 2, marginRight: 0}}
+                                                            key={`${i}`}
+                                                            color={"geekblue"}
+                                                        >
+                                                            {i}
+                                                        </Tag>
+                                                    )
+                                                })
+                                            : "No Tags"}
+                                    </Space>
+                                </Space>
+                            }
+                            extraNode={
+                                !props.fromMenu && (
+                                    <Space>
+                                        <Tooltip placement='top' title={"插件管理"}>
+                                            <Button
+                                                type={"link"}
+                                                icon={<SettingOutlined/>}
+                                                onClick={() => setSettingShow(!settingShow)}
+                                            ></Button>
+                                        </Tooltip>
+                                        <Tooltip placement='top' title={"编辑插件"}>
+                                            <Button
+                                                type={"link"}
+                                                icon={<EditOutlined/>}
+                                                style={{color: "#a7a7a7"}}
+                                                onClick={(e) => {
+                                                    let m = showDrawer({
+                                                        title: `修改插件: ${script?.ScriptName}`,
+                                                        width: "100%",
+                                                        content: (
+                                                            <>
+                                                                <YakScriptCreatorForm
+                                                                    modified={script}
+                                                                    onChanged={(i) => update()}
+                                                                    onCreated={() => {
+                                                                        m.destroy()
+                                                                    }}
+                                                                />
+                                                            </>
+                                                        ),
+                                                        keyboard: false
+                                                    })
+                                                }}
+                                            ></Button>
+                                        </Tooltip>
+                                    </Space>
+                                )
+                            }
+                            script={script}
+                            size={props.size}
+                            settingShow={settingShow}
+                            settingNode={
+                                <PluginManagement
+                                    style={{marginBottom: 10}}
+                                    script={script}
+                                    groups={groups}
+                                    update={() => {
+                                        setTimeout(() => props.setTrigger!(), 300)
+                                    }}
+                                    updateGroups={updateGroups}
+                                    setScript={props.setScript}
+                                />
+                            }
+                        />
+                    )}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文档"} key={"docs"}>
                     {script && (

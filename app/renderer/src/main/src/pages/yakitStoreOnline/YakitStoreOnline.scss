@@ -91,9 +91,7 @@
             margin: 9px 0 8px 0;
             .content-style {
                 font-size: 12px;
-                font-weight: 400;
                 color: #999ea8;
-                margin-bottom: 0;
             }
         }
         .info-tag {
@@ -175,12 +173,6 @@
 .horizontal-divide-aside {
     display: flex;
     justify-content: space-between;
-}
-/* 内容过长省略样式 */
-.content-ellipsis {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
 }
 
 /* 字体颜色和背景颜色(透明度为0.08) */

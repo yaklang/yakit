@@ -1,0 +1,46 @@
+.second-confirm-dialog {
+    .ant-modal-content {
+        border-radius: 10px;
+        .ant-modal-header {
+            border-radius: 10px;
+        }
+        .ant-modal-body {
+            padding: 0;
+            .second-confirm-container {
+                .container-title {
+                    height: 70px;
+                    line-height: 70px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #1e1f23;
+                    text-align: center;
+                }
+                .container-subtitle {
+                    height: 20px;
+                    line-height: 20px;
+                    text-align: center;
+                }
+                .container-btn {
+                    height: 72px;
+                    padding: 20px 0;
+                    text-align: center;
+                    .btn-base {
+                        border: 0;
+                        border-radius: 20px;
+                    }
+                    .btn-cancel {
+                        background-color: #f6f7f9;
+                        color: #686c78;
+                    }
+                    .btn-confirm {
+                        background-color: #52a6fa;
+                        color: #ffffff;
+                    }
+                    .btn-cancel + .btn-confirm {
+                        margin-left: 20px;
+                    }
+                }
+            }
+        }
+    }
+}

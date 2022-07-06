@@ -6,7 +6,8 @@ import {
     ReloadOutlined,
     SearchOutlined,
     SettingOutlined,
-    GithubOutlined
+    GithubOutlined,
+    UploadOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {AutoUpdateYakModuleViewer, startExecYakCode} from "../../utils/basic"
@@ -335,6 +336,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             })
     }
 
+    const uploadOnline = (i: YakScript) => {
+        alert(`上传插件${i.ScriptName}`)
+    }
+
     useEffect(() => {
         setParams({
             ...params,
@@ -395,10 +400,11 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                 hoverable={true}
                                 title={
                                     <Space>
-                                        <div>{i.ScriptName}</div>
+                                        <div title={i.ScriptName}>{i.ScriptName}</div>
                                         {gitUrlIcon(i.FromGit)}
                                     </Space>
                                 }
+                                extra={<UploadOutlined style={{marginLeft: 6,fontSize: 16, cursor: "pointer"}}  onClick={() => uploadOnline(i)}/>}
                                 style={{
                                     width: "100%",
                                     backgroundColor: props.currentId === i.Id ? "rgba(79,188,255,0.26)" : "#fff"
@@ -624,9 +630,10 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
     const [gitUrl, setGitUrl] = useState("https://github.com/yaklang/yakit-store")
     const [nucleiGitUrl, setNucleiGitUrl] = useState("https://github.com/projectdiscovery/nuclei-templates")
     const [proxy, setProxy] = useState("")
-    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei">("official")
+    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei" | "uploadId">("official")
     const [localPath, setLocalPath] = useState("");
     const [localNucleiPath, setLocalNucleiPath] = useState("");
+    const [localId, setLocalId] = useState<string>("")
 
     useEffect(() => {
         getValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH).then(e => {
@@ -666,7 +673,7 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
     return (
         <Form
             labelCol={{span: 5}}
-            wrapperCol={{span: 14}}
+            wrapperCol={{span: 16}}
             onSubmitCapture={(e) => {
                 e.preventDefault()
 
@@ -721,6 +728,7 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
                     {text: "第三方仓库源", value: "giturl"},
                     {text: "本地仓库", value: "local"},
                     {text: "本地 Yaml PoC", value: "local-nuclei"},
+                    {text: "使用ID", value: "uploadId"}
                 ]}
                 value={loadMode}
                 setValue={setLoadMode}
@@ -770,6 +778,9 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
             </>}
             {loadMode === "local-nuclei" && <>
                 <InputItem label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath}/>
+            </>}
+            {loadMode === "uploadId" && <>
+                <InputItem label={"插件ID"} value={localId} setValue={setLocalId}/>
             </>}
             <Form.Item colon={false} label={" "}>
                 <Button type='primary' htmlType='submit'>

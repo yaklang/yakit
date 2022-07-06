@@ -60,6 +60,12 @@ import {showConfigSystemProxyForm} from "../utils/ConfigSystemProxy";
 import {showConfigMenuItems} from "../utils/ConfigMenuItems";
 import {YakCodeEditor} from "../utils/editors";
 
+import Login from "./Login"
+import { TrustList } from "./TrustList"
+
+import "./main.css"
+import "./GlobalClass.scss"
+
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
 const {Header, Content, Sider} = Layout
@@ -90,8 +96,10 @@ const singletonRoute: Route[] = [
     Route.BatchExecutorPage,
     Route.ICMPSizeLog,
     Route.TCPPortLog,
+    Route.ModStoreOnline
 ]
-import Login from "./Login"
+
+
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -146,25 +154,8 @@ export interface fuzzerInfoProp {
     request?: string
 }
 
-const singletonRoute = [
-    Route.HTTPHacker,
-    Route.ShellReceiver,
-    Route.ReverseServer,
-    Route.PayloadManager,
-    Route.ModManager, Route.ModManagerLegacy, Route.YakScript,
 
-    // database
-    Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
-    Route.DB_Risk,
 
-    Route.PoC, Route.DNSLog, Route.BatchExecutorPage, Route.ICMPSizeLog, Route.TCPPortLog,
-    Route.ModStoreOnline
-]
-
-interface RiskStats {
-    RiskTypeStats: Fields
-    RiskLevelStats: Fields
-}
 
 const Main: React.FC<MainProp> = (props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
@@ -193,6 +184,9 @@ const Main: React.FC<MainProp> = (props) => {
     useEffect(() => {
         ipcRenderer.invoke('fetch-system-name').then((res) => setSystem(res))
     }, [])
+    // 信任用户弹框
+    const [trustShow, setTrustShow] = useState<boolean>(false)
+
     // 登录框状态
     const [loginshow, setLoginShow] = useState<boolean>(false)
 
@@ -916,6 +910,29 @@ const Main: React.FC<MainProp> = (props) => {
                                     </Button>
                                 </Dropdown>
                                 <Button type="link" onClick={() => setLoginShow(true)}>登录</Button>
+                                <div>
+                                    <DropdownMenu
+                                        menu={{
+                                            data: [
+                                                {key: "sign-out", title: "退出登录"},
+                                                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                                                {key: "trust-list", title: "信任用户管理"}
+                                            ]
+                                        }}
+                                        dropdown={{
+                                            placement: "bottomCenter",
+                                            trigger: ["click"]
+                                        }}
+                                        onClick={(key) => {
+                                            if(key === "trust-list") setTrustShow(true)
+                                        }}
+                                    >
+                                        <img
+                                            src='https://profile-avatar.csdnimg.cn/87dc7bdc769b44fd9b82afb51946be1a_freeb1rd.jpg'
+                                            style={{width: 32, height: 32, borderRadius: "50%", cursor: "pointer"}}
+                                        />
+                                    </DropdownMenu>
+                                </div>
                                 <Button type={"link"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
                                     if (winCloseFlag) setWinCloseShow(true)
                                     else {
@@ -1202,6 +1219,18 @@ const Main: React.FC<MainProp> = (props) => {
                 visible={loginshow}
                 onCancel={() => setLoginShow(!loginshow)}
             ></Login>
+            <Modal
+                visible={trustShow}
+                title={"信任用户管理"}
+                destroyOnClose={true}
+                maskClosable={false}
+                bodyStyle={{padding: "10px 24px 24px 24px"}}
+                width={800}
+                onCancel={() => setTrustShow(false)}
+                footer={null}
+            >
+                <TrustList info={""}></TrustList>
+            </Modal>
         </Layout>
     )
 };
