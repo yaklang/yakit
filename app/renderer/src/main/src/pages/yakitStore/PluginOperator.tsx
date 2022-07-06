@@ -114,7 +114,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                 {/*{script?.ScriptName && (*/}
                                 {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
                                 {/*)}*/}
-                                <Tooltip title='插件id:111'>
+                                <Tooltip title={`插件id:${script.OnlineId}`}>
                                     <p style={{color: "#999999", marginBottom: 0}}>作者:{script?.Author}</p>
                                 </Tooltip>
                                 {script?.Tags

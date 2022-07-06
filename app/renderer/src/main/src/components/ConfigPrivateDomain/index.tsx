@@ -47,6 +47,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     useEffect(() => {
         getRemoteValue("httpSetting").then((setting) => {
             const value = JSON.parse(setting)
+            // console.log('私有域地址——2',value);
             form.setFieldsValue({
                 ...value
             })

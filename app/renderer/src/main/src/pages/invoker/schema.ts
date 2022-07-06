@@ -1,14 +1,14 @@
 export interface ExecHistoryRecord {
-    Script: string;
-    ScriptId: string;
-    Timestamp: number;
-    DurationMs: number;
-    Params: string;
-    Ok: boolean;
-    Reason: string;
-    Id: string;
-    Stdout: Uint8Array;
-    Stderr: Uint8Array;
+    Script: string
+    ScriptId: string
+    Timestamp: number
+    DurationMs: number
+    Params: string
+    Ok: boolean
+    Reason: string
+    Id: string
+    Stdout: Uint8Array
+    Stderr: Uint8Array
     StderrLen: number
     StdoutLen: number
     Messages: Uint8Array
@@ -17,18 +17,18 @@ export interface ExecHistoryRecord {
 }
 
 export interface PaginationSchema {
-    Page: number;
-    Limit: number;
-    OrderBy: string;
-    Order: string;
+    Page: number
+    Limit: number
+    OrderBy: string
+    Order: string
 }
 
 export type ExecHistoryRecordResponse = QueryGeneralResponse<ExecHistoryRecord>
 
 export interface QueryGeneralResponse<T> {
-    Data: T[];
-    Pagination: PaginationSchema;
-    Total: number;
+    Data: T[]
+    Pagination: PaginationSchema
+    Total: number
 }
 
 export interface QueryGeneralRequest {
@@ -37,8 +37,10 @@ export interface QueryGeneralRequest {
 
 export const genDefaultPagination = (limit?: number, page?: number) => {
     return {
-        Limit: limit || 10, Page: page || 1,
-        OrderBy: "updated_at", Order: "desc",
+        Limit: limit || 10,
+        Page: page || 1,
+        OrderBy: "updated_at",
+        Order: "desc"
     } as PaginationSchema
 }
 
@@ -108,6 +110,7 @@ export interface YakScript {
     FromGit?: string
     EnablePluginSelector?: boolean
     PluginSelectorTypes?: string
+    OnlineId?: number
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

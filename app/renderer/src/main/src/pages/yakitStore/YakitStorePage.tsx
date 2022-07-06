@@ -1,5 +1,21 @@
 import React, {useEffect, useState} from "react"
-import {Alert, Button, Card, Col, Empty, Form, Input, List, Popconfirm, Popover, Row, Space, Tag, Tooltip} from "antd"
+import {
+    Alert,
+    Button,
+    Card,
+    Col,
+    Empty,
+    Form,
+    Input,
+    List,
+    Popconfirm,
+    Popover,
+    Row,
+    Space,
+    Tag,
+    Tooltip,
+    InputNumber
+} from "antd"
 import {
     DownloadOutlined,
     PlusOutlined,
@@ -15,7 +31,7 @@ import {showDrawer, showModal} from "../../utils/showModal"
 import {AutoUpdateYakModuleViewer, startExecYakCode} from "../../utils/basic"
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript, YakScriptParam} from "../invoker/schema"
 import {failed, success, warn} from "../../utils/notification"
-import {CopyableField, InputItem, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {CopyableField, InputFloat, InputItem, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
 import {PluginManagement, PluginOperator} from "./PluginOperator"
 import {YakScriptCreatorForm} from "../invoker/YakScriptCreator"
@@ -29,6 +45,7 @@ import {getValue, saveValue} from "../../utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -392,7 +409,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             script_name: item.ScriptName,
             // authors: item.Author,
             content: item.Content,
-            tags: [item.Tags],
+            tags: item.Tags ? item.Tags.split(",") : [],
             params: item.Params.map((p) => ({
                 field: p.Field,
                 default_value: p.DefaultValue,
@@ -408,13 +425,24 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         setCurrentPlugin(item)
         setUploadLoading(true)
-        NetWorkApi<API.NewYakitPlugin, API.ActionSucceeded>({
+        NetWorkApi<API.NewYakitPlugin, number>({
             method: "post",
             url: "yakit/plugin",
             data: params
         })
-            .then((res) => {
-                if (res.ok) {
+            .then((id: number) => {
+                if (id) {
+                    // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
+                    ipcRenderer
+                        .invoke("DownloadOnlinePluginById", {
+                            OnlineID: id
+                        } as DownloadOnlinePluginProps)
+                        // .then((res) => {
+                        //     console.log("本地成功", res)
+                        // })
+                        .catch((err) => {
+                            failed("插件下载本地失败:" + err)
+                        })
                     success("插件上传成功")
                     setCurrentPlugin(null)
                 }
@@ -437,6 +465,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         })
         update(1, undefined, props.Keyword || "", props.Type, props.isIgnored, props.isHistory)
     }, [props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, trigger, userInfo.isLogin])
+    console.log('response.Data',response.Data);
+    
     return (
         <div>
             <ReactResizeDetector
@@ -769,7 +799,6 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
             wrapperCol={{span: 16}}
             onSubmitCapture={(e) => {
                 e.preventDefault()
-
                 if (proxy !== "") {
                     saveValue(YAKIT_DEFAULT_LOAD_GIT_PROXY, proxy)
                 }
@@ -808,6 +837,23 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                         Script: loadNucleiPoCFromLocal,
                         Params: [{Key: "local-path", Value: localNucleiPath}]
                     })
+                }
+
+                if (loadMode === "uploadId") {
+                    const id = parseInt(localId)
+                    if (isNaN(id) || parseFloat(localId) != id) {
+                        failed("该值应为整数")
+                    }
+                    ipcRenderer
+                        .invoke("DownloadOnlinePluginById", {
+                            OnlineID: id
+                        } as DownloadOnlinePluginProps)
+                        .then(() => {
+                            success("导入成功")
+                        })
+                        .catch((e: any) => {
+                            failed(`插件导入失败: ${e}`)
+                        })
                 }
             }}
         >

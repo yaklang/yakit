@@ -162,6 +162,7 @@ function App() {
             return
         }
         getRemoteValue("httpSetting").then((setting) => {
+            // console.log("私有域地址——1", setting)
             if (!setting) {
                 ipcRenderer
                     .invoke("GetOnlineProfile", {})
@@ -173,8 +174,17 @@ function App() {
                         failed(`获取失败:${e}`)
                     })
             } else {
-                const value = JSON.parse(setting)
-                ipcRenderer.send("edit-baseUrl", {baseUrl: value.BaseUrl})
+                const values = JSON.parse(setting)
+                ipcRenderer
+                    .invoke("SetOnlineProfile", {
+                        ...values
+                    } as OnlineProfileProps)
+                    .then((data) => {
+                        ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
+                        setRemoteValue("httpSetting", JSON.stringify(values))
+                    })
+                    .catch((e: any) => failed("设置私有域失败:" + e))
+                    .finally(() => setTimeout(() => setLoading(false), 300))
             }
         })
         setLoading(true)
