@@ -10,7 +10,7 @@ import {YakitPluginInfo} from "./YakitPluginInfo"
 import {OfficialYakitLogoIcon} from "../../assets/icons"
 import {AutoSpin} from "../../components/AutoSpin"
 
-import "./YakitStoreOnline.css"
+import "./YakitStoreOnline.scss"
 
 const {ipcRenderer} = window.require("electron")
 const {Paragraph} = Typography
@@ -58,6 +58,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     const [percent, setPercent] = useState<number>(0)
 
     const [pluginInfo, setPluginInfo] = useState<YakScript>()
+    const [index, setIndex] = useState<number>(-1)
 
     const search = useMemoizedFn(() => {
         const paramss = {
@@ -114,7 +115,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     }, [])
 
     return !!pluginInfo ? (
-        <YakitPluginInfo info={pluginInfo} onBack={() => setPluginInfo(undefined)} />
+        <YakitPluginInfo info={pluginInfo} index={index} isAdmin={isAdmin} onBack={() => setPluginInfo(undefined)} />
     ) : (
         <AutoSpin spinning={loading}>
             <div className='plugin-list-container'>
@@ -255,7 +256,10 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                                             index={index}
                                             isAdmin={isAdmin}
                                             info={i}
-                                            onClick={setPluginInfo}
+                                            onClick={(info) => {
+                                                setPluginInfo(info)
+                                                setIndex(index)
+                                            }}
                                             onDownload={addLocalLab}
                                             onStarred={starredPlugin}
                                         />
@@ -285,17 +289,17 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     )
 }
 
-const TagColor: {[key: string]: string} = {
-    failed: "plugin-tag-red|审核不通过",
-    success: "plugin-tag-green|审核通过",
-    not: "plugin-tag-blue|未审核"
+export const TagColor: {[key: string]: string} = {
+    failed: "color-bgColor-red|审核不通过",
+    success: "color-bgColor-green|审核通过",
+    not: "color-bgColor-blue|未审核"
 }
-const RandomTagColor: string[] = [
-    "plugin-tag-orange",
-    "plugin-tag-purple",
-    "plugin-tag-blue",
-    "plugin-tag-green",
-    "plugin-tag-red"
+export const RandomTagColor: string[] = [
+    "color-bgColor-orange",
+    "color-bgColor-purple",
+    "color-bgColor-blue",
+    "color-bgColor-green",
+    "color-bgColor-red"
 ]
 
 interface PluginListOptProps {
