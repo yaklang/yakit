@@ -81,25 +81,22 @@ const Login: React.FC<LoginProp> = (props) => {
             onCancel={() => props.onCancel()}
             bodyStyle={{padding: 0}}
             width={409}
-            style={{ top: '25%' }}
+            style={{top: "25%"}}
         >
             <AutoSpin spinning={loading}>
                 <div className='login-type-body'>
                     <h2 className='login-text'>登录</h2>
                     <div className='login-icon-body'>
-                        <div className='login-icon'>
+                        <div className='login-icon' onClick={() => fetchLogin("github")}>
                             <div className='login-icon-text'>
-                                <GithubOutlined className='type-icon' onClick={() => fetchLogin("github")} />
+                                <GithubOutlined className='type-icon' />
                                 使用 GitHub 账号登录
                             </div>
                             <RightOutlined className='icon-right' />
                         </div>
-                        <div className='login-icon'>
+                        <div className='login-icon' onClick={() => fetchLogin("wechat")}>
                             <div className='login-icon-text'>
-                                <WechatOutlined
-                                    className='type-icon icon-wx'
-                                    onClick={() => fetchLogin("wechat")}
-                                />
+                                <WechatOutlined className='type-icon icon-wx' />
                                 使用微信账号登录
                             </div>
                             <RightOutlined className='icon-right' />
