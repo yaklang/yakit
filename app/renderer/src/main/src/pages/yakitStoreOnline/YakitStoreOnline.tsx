@@ -12,7 +12,7 @@ import numeral from "numeral"
 
 import "./YakitStoreOnline.scss"
 import {NetWorkApi} from "@/services/fetch"
-import { API } from "@/services/swagger/resposeType"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 const {Search} = Input
@@ -38,10 +38,10 @@ interface SearchPluginOnlineRequest {
     limit?: number
 }
 
-// export interface ListReturnType {
-//     data: API.YakitPluginDetail[]
-//     pagemeta: null | PagemetaProps
-// }
+export interface StarsOperation {
+    id: number
+    operation: string
+}
 
 export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
@@ -86,6 +86,8 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             params
         })
             .then((res) => {
+                console.log("列表", res)
+
                 setResponse(res)
             })
             .catch((err) => {
@@ -126,13 +128,17 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             warn("请先登录")
             return
         }
-        const prams = {
+        const prams: StarsOperation = {
             id: info?.id,
             operation: info.is_stars ? "remove" : "add"
         }
-        ipcRenderer
-            .invoke("fetch-plugin-stars", prams)
+        NetWorkApi<StarsOperation, API.ActionSucceeded>({
+            method: "post",
+            url: "yakit/plugin/stars",
+            params: prams
+        })
             .then((res) => {
+                if (!res.ok) return
                 const index: number = response.data.findIndex((ele: API.YakitPluginDetail) => ele.id === info.id)
                 if (index !== -1) {
                     if (info.is_stars) {
@@ -148,8 +154,11 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
                     })
                 }
             })
-            .catch((e: any) => {
-                failed("点星" + e)
+            .catch((err) => {
+                failed("点星:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
             })
     })
 

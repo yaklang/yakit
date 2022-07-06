@@ -12,7 +12,7 @@ import {
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {AutoUpdateYakModuleViewer, startExecYakCode} from "../../utils/basic"
-import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
+import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript, YakScriptParam} from "../invoker/schema"
 import {failed, success, warn} from "../../utils/notification"
 import {CopyableField, InputItem, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
@@ -26,6 +26,8 @@ import {useStore} from "@/store"
 import "./YakitStorePage.css"
 import {getValue, saveValue} from "../../utils/kv"
 import {useMemoizedFn} from "ahooks"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -364,28 +366,41 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             warn("未登录，请先登录!")
             return
         }
-        const params = {
+        const params: API.NewYakitPlugin = {
             // id: Number(item.Id),
             type: item.Type,
             script_name: item.ScriptName,
-            authors: item.Author,
+            // authors: item.Author,
             content: item.Content,
             tags: [item.Tags],
-            params: item.Params,
+            params: item.Params.map((p) => ({
+                field: p.Field,
+                default_value: p.DefaultValue,
+                type_verbose: p.TypeVerbose,
+                field_verbose: p.FieldVerbose,
+                help: p.Help,
+                required: p.Required,
+                group: p.Group,
+                extra_setting: p.ExtraSetting
+            })),
             help: item.Help,
             default_open: false
         }
-        // console.log("params", params)
         setCurrentPlugin(item)
         setUploadLoading(true)
-        ipcRenderer
-            .invoke("upload-plugin", params)
-            .then((data) => {
-                success("插件上传成功")
-                setCurrentPlugin(null)
+        NetWorkApi<API.NewYakitPlugin, API.ActionSucceeded>({
+            method: "post",
+            url: "yakit/plugin",
+            data: params
+        })
+            .then((res) => {
+                if(res.ok){
+                    success("插件上传成功")
+                    setCurrentPlugin(null)
+                }
             })
-            .catch((e: any) => {
-                failed("插件上传失败:" + `${e}`)
+            .catch((err) => {
+                failed("插件上传失败:" + err)
             })
             .finally(() => {
                 setTimeout(() => setUploadLoading(false), 200)

@@ -14,7 +14,7 @@ import {useGetState, useMemoizedFn} from "ahooks"
 import throttle from "lodash/throttle"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, warn, success} from "../../utils/notification"
-import {TagColor} from "./YakitStoreOnline"
+import {StarsOperation, TagColor} from "./YakitStoreOnline"
 import {CollapseParagraph} from "./CollapseParagraph"
 import {OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon} from "@/assets/icons"
 import {PluginStoreProps, PagemetaProps} from "./YakitPluginInfo.d"
@@ -105,7 +105,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("插件详情", res)
                 setPlugin(res.data)
             })
             .catch((err) => {
@@ -159,13 +158,19 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             return
         }
         if (!plugin) return
-        const prams = {
+        const prams: StarsOperation = {
             id: plugin?.id,
             operation: plugin.is_stars ? "remove" : "add"
         }
-        ipcRenderer
-            .invoke("fetch-plugin-stars", prams)
+        console.log("plugin.is_stars", plugin.is_stars, prams)
+        NetWorkApi<StarsOperation, API.ActionSucceeded>({
+            method: "post",
+            url: "yakit/plugin/stars",
+            params: prams
+        })
             .then((res) => {
+                // console.log("点赞", res)
+                if (!res.ok) return
                 if (plugin.is_stars) {
                     plugin.is_stars = false
                     plugin.stars -= 1
@@ -175,8 +180,11 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                 }
                 setPlugin({...plugin})
             })
-            .catch((e: any) => {
-                failed("点星" + e)
+            .catch((err) => {
+                failed("点星:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
             })
     })
 
@@ -296,19 +304,33 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginExamine = useMemoizedFn((status: number) => {
-        setLoading(true)
-        ipcRenderer
-            .invoke("fetch-plugin-audit", {id: plugin?.id, status})
+        NetWorkApi<SearchCommentRequest, API.CommentListResponse>({
+            method: "post",
+            url: "yakit/plugin/audit"
+            // data:{id: plugin?.id, status}
+        })
             .then((res) => {
-                if (plugin) setPlugin({...plugin, status})
-                success(`插件审核${status === 1 ? "通过" : "不通过"}`)
+                console.log("审核", res)
             })
-            .catch((e: any) => {
-                failed("审核失败" + e)
+            .catch((err) => {
+                failed("评论查询失败:" + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
             })
+        // setLoading(true)
+        // ipcRenderer
+        //     .invoke("fetch-plugin-audit", {id: plugin?.id, status})
+        //     .then((res) => {
+        //         if (plugin) setPlugin({...plugin, status})
+        //         success(`插件审核${status === 1 ? "通过" : "不通过"}`)
+        //     })
+        //     .catch((e: any) => {
+        //         failed("审核失败" + e)
+        //     })
+        //     .finally(() => {
+        //         setTimeout(() => setLoading(false), 200)
+        //     })
     })
 
     const onScrollCapture = (e) => {

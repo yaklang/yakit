@@ -25,8 +25,7 @@ interface requestConfig<T = any> extends AxiosRequestConfig<T> {
 
 export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
     return new Promise((resolve, reject) => {
-        // console.log("查询params", params)
-
+        // console.log("request-params", params)
         ipcRenderer
             .invoke("axios-api", params)
             .then((res) => {
