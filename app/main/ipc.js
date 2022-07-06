@@ -174,5 +174,7 @@ module.exports = {
         api.forEach(item=>{
             require(path.join(__dirname, `./api/${item}`))(win, getClient);
         })
+        // start chrome manager
+        require("./handlers/chromelauncher")(win, getClient);
     }
 }
