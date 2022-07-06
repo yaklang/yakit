@@ -91,6 +91,7 @@ const singletonRoute: Route[] = [
     Route.ICMPSizeLog,
     Route.TCPPortLog,
 ]
+import Login from "./Login"
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -145,6 +146,26 @@ export interface fuzzerInfoProp {
     request?: string
 }
 
+const singletonRoute = [
+    Route.HTTPHacker,
+    Route.ShellReceiver,
+    Route.ReverseServer,
+    Route.PayloadManager,
+    Route.ModManager, Route.ModManagerLegacy, Route.YakScript,
+
+    // database
+    Route.DB_Ports, Route.DB_HTTPHistory, Route.DB_ExecResults, Route.DB_Domain,
+    Route.DB_Risk,
+
+    Route.PoC, Route.DNSLog, Route.BatchExecutorPage, Route.ICMPSizeLog, Route.TCPPortLog,
+    Route.ModStoreOnline
+]
+
+interface RiskStats {
+    RiskTypeStats: Fields
+    RiskLevelStats: Fields
+}
+
 const Main: React.FC<MainProp> = (props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
     const [status, setStatus] = useState<{ addr: string; isTLS: boolean }>()
@@ -172,6 +193,8 @@ const Main: React.FC<MainProp> = (props) => {
     useEffect(() => {
         ipcRenderer.invoke('fetch-system-name').then((res) => setSystem(res))
     }, [])
+    // 登录框状态
+    const [loginshow, setLoginShow] = useState<boolean>(false)
 
     // yakit页面关闭是否二次确认提示
     const [winCloseFlag, setWinCloseFlag] = useState<boolean>(true)
@@ -892,6 +915,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         配置
                                     </Button>
                                 </Dropdown>
+                                <Button type="link" onClick={() => setLoginShow(true)}>登录</Button>
                                 <Button type={"link"} danger={true} icon={<PoweroffOutlined/>} onClick={() => {
                                     if (winCloseFlag) setWinCloseShow(true)
                                     else {
@@ -1174,6 +1198,10 @@ const Main: React.FC<MainProp> = (props) => {
                     }}
                 />
             </Modal>
+            <Login
+                visible={loginshow}
+                onCancel={() => setLoginShow(!loginshow)}
+            ></Login>
         </Layout>
     )
 };

@@ -40,6 +40,7 @@ import {
     ReadOnlyBatchExecutorByMenuItem,
     ReadOnlyBatchExecutorByRecoverUid
 } from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem";
+import { YakitStoreOnline } from "../pages/yakitStoreOnline/YakitStoreOnline";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"));
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"));
@@ -53,6 +54,7 @@ export enum Route {
     IGNORE = "ignore",
     DataCompare = "dataCompare",
 
+    ModStoreOnline = "mod-store-online",
     ModManagerDetail = "mod-manager-detail",
     ModManager = "mod-manager",
     ModManagerLegacy = "mod-manager-legacy",
@@ -141,6 +143,7 @@ export const RouteMenuData: MenuDataProps[] = [
     {
         key: Route.ModManagerDetail, label: "插件管理", icon: <AppstoreOutlined/>,
         subMenuData: [
+            {key: Route.ModStoreOnline, label: "插件商店", icon: <AppstoreOutlined/>},
             {key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined/>},
             {key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined/>},
         ]
@@ -248,6 +251,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                                    order={params?.order} fuzzerParams={params?.fuzzerParams}/>
         case Route.Codec:
             return <CodecPage/>
+        case Route.ModStoreOnline:
+            return <YakitStoreOnline/>
         case Route.ModManager:
             return <YakitStorePage/>
         case Route.PayloadManager:
