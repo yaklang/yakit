@@ -5,13 +5,14 @@ import {useMemoizedFn} from "ahooks"
 import {failed, warn, success} from "../../utils/notification"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {YakitPluginInfo} from "./YakitPluginInfo"
-import {PluginStoreProps, PagemetaProps} from "./YakitPluginInfo.d"
 import {OfficialYakitLogoIcon} from "../../assets/icons"
 import {AutoSpin} from "../../components/AutoSpin"
 import {useStore} from "@/store"
 import numeral from "numeral"
 
 import "./YakitStoreOnline.scss"
+import {NetWorkApi} from "@/services/fetch"
+import { API } from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 const {Search} = Input
@@ -37,10 +38,10 @@ interface SearchPluginOnlineRequest {
     limit?: number
 }
 
-export interface ListReturnType {
-    data: PluginStoreProps[]
-    pagemeta: null | PagemetaProps
-}
+// export interface ListReturnType {
+//     data: API.YakitPluginDetail[]
+//     pagemeta: null | PagemetaProps
+// }
 
 export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
@@ -54,7 +55,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
         limit: 12,
         status: null
     })
-    const [response, setResponse] = useState<ListReturnType>({
+    const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
         pagemeta: {
             limit: 12,
@@ -67,26 +68,28 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     const [addLoading, setAddLoading] = useState<boolean>(false)
     const [percent, setPercent] = useState<number>(0)
 
-    const [pluginInfo, setPluginInfo] = useState<PluginStoreProps>()
+    const [pluginInfo, setPluginInfo] = useState<API.YakitPluginDetail>()
     const [index, setIndex] = useState<number>(-1)
 
     // 全局登录状态
     const {userInfo} = useStore()
 
     const search = useMemoizedFn(() => {
-        let url = "fetch-plugin-list-unlogged"
+        let url = "yakit/plugin/unlogged"
         if (userInfo.isLogin) {
-            url = "fetch-plugin-list-logged"
+            url = "yakit/plugin"
         }
         setLoading(true)
-        ipcRenderer
-            .invoke(url, params)
+        NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
+            method: "get",
+            url,
+            params
+        })
             .then((res) => {
-                const pluginRes = (res?.from && JSON.parse(res.from)) || {data: [], pagemeta: null}
-                setResponse(pluginRes)
+                setResponse(res)
             })
-            .catch((e: any) => {
-                failed("插件列表获取失败" + e)
+            .catch((err) => {
+                failed("插件列表获取失败:" + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
@@ -110,7 +113,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
         setAddLoading(false)
     }
 
-    const addLocalLab = useMemoizedFn((info: PluginStoreProps) => {
+    const addLocalLab = useMemoizedFn((info: API.YakitPluginDetail) => {
         if (!userInfo.isLogin) {
             warn("请先登录")
             return
@@ -118,7 +121,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
         success("添加成功")
     })
 
-    const starredPlugin = useMemoizedFn((info: PluginStoreProps) => {
+    const starredPlugin = useMemoizedFn((info: API.YakitPluginDetail) => {
         if (!userInfo.isLogin) {
             warn("请先登录")
             return
@@ -130,7 +133,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
         ipcRenderer
             .invoke("fetch-plugin-stars", prams)
             .then((res) => {
-                const index: number = response.data.findIndex((ele: PluginStoreProps) => ele.id === info.id)
+                const index: number = response.data.findIndex((ele: API.YakitPluginDetail) => ele.id === info.id)
                 if (index !== -1) {
                     if (info.is_stars) {
                         response.data[index].stars -= 1
@@ -163,7 +166,10 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             info={pluginInfo}
             index={index}
             isAdmin={isAdmin}
-            onBack={() => {setPluginInfo(undefined);search()}}
+            onBack={() => {
+                setPluginInfo(undefined)
+                search()
+            }}
             isLogin={userInfo.isLogin}
         />
     ) : (
@@ -273,10 +279,10 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
 
                 <div className='list-body'>
                     <div className='list-content'>
-                        <List<PluginStoreProps>
+                        <List<API.YakitPluginDetail>
                             grid={{gutter: 16, column: 4}}
                             dataSource={response.data || []}
-                            renderItem={(i: PluginStoreProps, index: number) => {
+                            renderItem={(i: API.YakitPluginDetail, index: number) => {
                                 return (
                                     <List.Item style={{marginLeft: 0}} key={i.id}>
                                         <PluginListOpt
@@ -332,10 +338,10 @@ export const RandomTagColor: string[] = [
 interface PluginListOptProps {
     index: number
     isAdmin: boolean
-    info: PluginStoreProps
-    onClick: (info: PluginStoreProps) => any
-    onDownload: (info: PluginStoreProps) => any
-    onStarred: (info: PluginStoreProps) => any
+    info: API.YakitPluginDetail
+    onClick: (info: API.YakitPluginDetail) => any
+    onDownload: (info: API.YakitPluginDetail) => any
+    onStarred: (info: API.YakitPluginDetail) => any
 }
 
 const PluginListOpt = memo((props: PluginListOptProps) => {

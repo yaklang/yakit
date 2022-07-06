@@ -10,9 +10,9 @@ module.exports = (win, getClient) => {
         return res
     })
     // 查询主评论
-    ipcMain.handle("fetch-plugin-comment", async (e, params) => {
-        return httpApi("get", "comment", params)
-    })
+    // ipcMain.handle("fetch-plugin-comment", async (e, params) => {
+    //     return httpApi("get", "comment", params)
+    // })
     ipcMain.handle("fetch-plugin-comment-reply", async (e, params) => {
         return httpApi("get", "comment/reply", params)
     })

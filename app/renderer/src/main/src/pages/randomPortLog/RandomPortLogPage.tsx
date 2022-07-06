@@ -100,7 +100,7 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
                 {externalAddr !== "" && !loading ? <Space direction={"vertical"}>
                     <CopyableField text={externalAddr}/>
                     <Space>
-                        使用 NC 命令<CopyableField mark={true} text={`nc ${externalAddr.replaceAll(":", " ")}`}/>
+                        {/* 使用 NC 命令<CopyableField mark={true} text={`nc ${externalAddr.replaceAll(":", " ")}`}/> */}
                     </Space>
                 </Space> : <Spin/>}
                 {randomPort > 0 && !loading ? <CopyableField text={`${randomPort}`}/> : <Spin/>}
