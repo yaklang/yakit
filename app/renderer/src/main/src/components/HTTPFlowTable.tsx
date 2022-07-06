@@ -869,6 +869,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             return
         }
 
+        const lastSelected = getLastSelected() as HTTPFlow
+        const up = parseInt(`${lastSelected?.Id}`) < parseInt(`${selected?.Id}`)
+        // if (up) {
+        //     console.info("up")
+        // } else {
+        //     console.info("down")
+        // }
+        // console.info(lastSelected.Id, selected?.Id)
         const screenRowCount = Math.floor(getTableContentHeight() / ROW_HEIGHT) - 1
 
         if (!autoReload) {
@@ -899,6 +907,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             if (maxHeightBottom > viewHeightMax) {
                 // 上滚动
                 const offset = minHeight - (screenRowCount - 2) * ROW_HEIGHT
+                // console.info(screenRowCount, minHeight, minHeight - (screenRowCount - 1) * ROW_HEIGHT)
                 if (offset > 0) {
                     scrollTableTo(offset)
                 }

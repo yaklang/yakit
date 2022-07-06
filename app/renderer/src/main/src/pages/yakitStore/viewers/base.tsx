@@ -5,6 +5,8 @@ import {LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPF
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
 import {randomString} from "../../../utils/randomUtil"
+import {YakitLog} from "../../../components/yakitLogSchema"
+import {ConvertWebsiteForestToTreeData} from "../../../components/WebsiteTree"
 import {WebsiteTreeViewer} from "./WebsiteTree"
 import {BasicTable} from "./BasicTable"
 import {XTerm} from "xterm-for-react"
@@ -17,6 +19,7 @@ import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport"
 import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useThrottle} from "ahooks"
+import "./base.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,6 +57,9 @@ export interface TooltipTitleProps {
     list: StatusCardProps[]
 }
 
+export interface TooltipTitleProps {
+    list: StatusCardProps[]
+}
 const idToColor = (id: string) => {
     switch (true) {
         case id.includes("success"):
