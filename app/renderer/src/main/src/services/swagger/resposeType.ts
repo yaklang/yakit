@@ -57,6 +57,7 @@
     plugin_selector_types?: string;
     is_general_module?: boolean;
     comment_num: number;
+    contributors?: string;
   }
   export interface UserResponse {
     data: UserDetail;
@@ -174,6 +175,7 @@
      * true 为保存不上传
      */
     is_private: boolean;
+    contributors?: string;
   }
   export interface Principle {
     user: string;
@@ -214,6 +216,7 @@
      * true 为私有
      */
     is_private: boolean;
+    contributors?: string;
   }
   export interface PluginDownloadResponse {
     data: PluginDownloadDetail[];
@@ -273,6 +276,7 @@
     plugin_selector_types?: string;
     is_general_module?: boolean;
     download_total?: number;
+    contributors?: string;
   }
   export interface NewOperation {
     type: string;

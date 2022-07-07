@@ -112,7 +112,7 @@ export interface YakScript {
     PluginSelectorTypes?: string
     OnlineId: string
     OnlineScriptName:string
-    UserId?:string
+    UserId:number
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

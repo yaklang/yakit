@@ -129,6 +129,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             Author: "",
             Level: "",
             IsHistory: false,
+            IsIgnore: false,
             CreatedAt: 0,
             Help: "",
             Id: 0,
@@ -137,8 +138,12 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             Type: "yak",
             IsGeneralModule: false,
             PluginSelectorTypes: "mitm,port-scan",
+            UserId:0,
             OnlineId: "",
-            OnlineScriptName: ""
+            OnlineScriptName: "",
+            GeneralModuleVerbose:'',
+            GeneralModuleKey:'',
+            FromGit:'',
         }
     )
     const [paramsLoading, setParamsLoading] = useState(false)
@@ -554,12 +559,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 <Form.Item colon={false} label={" "}>
                     <Space>
                         <Button type='primary' htmlType='submit'>
-                            {" "}
-                            {modified ? "修改当前" : "创建新的"} Yak 模块 (仅保存本地)
+                            保存
                         </Button>
                         <Button onClick={() => upOnlinePlugin(params)} disabled={!userInfo.isLogin}>
-                            {" "}
-                            {modified ? "修改当前" : "创建新的"} Yak 模块{" "}
+                            保存并上传
                         </Button>
                         <Button
                             // type={primary ? "primary" : undefined}
@@ -587,8 +590,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                     })
                             }}
                         >
-                            {" "}
-                            调试：创建(修改)并立即执行{" "}
+                            保存并调试
                         </Button>
                     </Space>
                 </Form.Item>
