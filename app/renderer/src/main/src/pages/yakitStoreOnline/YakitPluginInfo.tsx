@@ -166,7 +166,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             id: plugin?.id,
             operation: plugin.is_stars ? "remove" : "add"
         }
-        console.log("plugin", plugin)
+
         console.log("prams", prams)
 
         NetWorkApi<StarsOperation, API.ActionSucceeded>({
@@ -268,6 +268,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
     })
 
     const pluginReply = useMemoizedFn((item: API.CommentListData) => {
+        if (!isLogin) {
+            warn("请先登录")
+            return
+        }
         setCurrentComment(item)
         setCommentShow(true)
     })
@@ -385,6 +389,9 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             </div>
         )
     }
+
+    console.log("plugin-详情", plugin)
+
     return (
         <AutoSpin spinning={loading}>
             {/* @ts-ignore */}
@@ -396,11 +403,10 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                     onScroll={onScrollCapture}
                     ref={listRef}
                 >
-                    <div className='vertical-center info-back' onClick={onBack}>
+                    <div className='info-back' onClick={onBack}>
                         <ArrowLeftOutlined />
                         <span style={{marginLeft: 4}}>返回首页</span>
                     </div>
-
                     <div className='info-header'>
                         <div className='header-title-body'>
                             <span className='content-ellipsis title-body-text' title={plugin.script_name}>
@@ -493,7 +499,11 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                             <div className='introduce-title'>概述</div>
 
                             <div className='introduce-content'>
-                                <CollapseParagraph value={plugin.content} isLine={true} rows={3}></CollapseParagraph>
+                                <CollapseParagraph
+                                    value={plugin.help || "暂无"}
+                                    isLine={true}
+                                    rows={3}
+                                ></CollapseParagraph>
                             </div>
                         </div>
                     </div>

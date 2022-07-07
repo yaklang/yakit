@@ -221,8 +221,8 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     useEffect(() => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
-    console.log('response.data ',response.data );
-    
+    console.log("response.data ", response.data)
+
     return !!pluginInfo ? (
         <YakitPluginInfo
             info={pluginInfo}

@@ -137,7 +137,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             Type: "yak",
             IsGeneralModule: false,
             PluginSelectorTypes: "mitm,port-scan",
-            OnlineId: ""
+            OnlineId: "",
+            OnlineScriptName: ""
         }
     )
     const [paramsLoading, setParamsLoading] = useState(false)
@@ -220,9 +221,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const upOnlinePlugin = useMemoizedFn((params: YakScript) => {
         const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
-            script_name: params.ScriptName,
+            script_name: params.OnlineScriptName ? params.OnlineScriptName : params.ScriptName,
             content: params.Content,
-            tags: params.Tags ? params.Tags.split(",") : undefined,
+            tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
             params: params.Params.map((p) => ({
                 field: p.Field,
                 default_value: p.DefaultValue,
@@ -237,12 +238,17 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             default_open: false,
             is_private: true
         }
+        if (params.OnlineId) {
+            onlineParams.id = parseInt(params.OnlineId)
+        }
         NetWorkApi<API.SaveYakitPlugin, number>({
             method: "post",
             url: "yakit/plugin/save",
             data: onlineParams
         })
             .then((id) => {
+                console.log("id", id)
+
                 success("创建 / 保存 Yak 脚本成功")
                 props.onCreated && props.onCreated(params)
                 props.onChanged && props.onChanged(params)
@@ -268,22 +274,17 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             <Form
                 onSubmitCapture={(e) => {
                     e.preventDefault()
-                    // 未登录只走本地，登录了，本地和插件商店都走
-                    if (userInfo.isLogin) {
-                        upOnlinePlugin(params)
-                    } else {
-                        ipcRenderer
-                            .invoke("SaveYakScript", params)
-                            .then((data) => {
-                                info("创建 / 保存 Yak 脚本成功")
-                                props.onCreated && props.onCreated(data)
-                                props.onChanged && props.onChanged(data)
-                                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
-                            })
-                            .catch((e: any) => {
-                                failed(`保存 Yak 模块失败: ${e}`)
-                            })
-                    }
+                    ipcRenderer
+                        .invoke("SaveYakScript", params)
+                        .then((data) => {
+                            info("创建 / 保存 Yak 脚本成功")
+                            props.onCreated && props.onCreated(data)
+                            props.onChanged && props.onChanged(data)
+                            setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+                        })
+                        .catch((e: any) => {
+                            failed(`保存 Yak 模块失败: ${e}`)
+                        })
                 }}
                 labelCol={{span: 5}}
                 wrapperCol={{span: 14}}
@@ -553,6 +554,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 <Form.Item colon={false} label={" "}>
                     <Space>
                         <Button type='primary' htmlType='submit'>
+                            {" "}
+                            {modified ? "修改当前" : "创建新的"} Yak 模块 (仅保存本地)
+                        </Button>
+                        <Button onClick={() => upOnlinePlugin(params)} disabled={!userInfo.isLogin}>
                             {" "}
                             {modified ? "修改当前" : "创建新的"} Yak 模块{" "}
                         </Button>

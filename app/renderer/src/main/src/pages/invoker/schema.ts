@@ -111,6 +111,8 @@ export interface YakScript {
     EnablePluginSelector?: boolean
     PluginSelectorTypes?: string
     OnlineId: string
+    OnlineScriptName:string
+    UserId?:string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

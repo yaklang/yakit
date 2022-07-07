@@ -403,14 +403,15 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             warn("未登录，请先登录!")
             return
         }
-        // console.log('item',item);
-        
+        if (item.UserId && userInfo.user_id !== parseInt(item.UserId)) {
+            warn("只能上传本人创建的插件!")
+            return
+        }
         const params: API.NewYakitPlugin = {
             type: item.Type,
-            script_name: item.ScriptName,
-            // authors: item.Author,
+            script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
             content: item.Content,
-            tags: item.Tags ? item.Tags.split(",") : undefined,
+            tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
             params: item.Params.map((p) => ({
                 field: p.Field,
                 default_value: p.DefaultValue,
@@ -423,13 +424,24 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             })),
             help: item.Help,
             default_open: false
+
+            // level:item.Level,
+            // authors: item.Author,
+            // isHistory: item.IsHistory,
+            // isIgnore: item.IsIgnore,
+            // isGeneralModule: item.IsGeneralModule,
+            // generalModuleVerbose: item.GeneralModuleVerbose,
+            // generalModuleKey: item.GeneralModuleKey,
+            // fromGit: item.FromGit,
+            // enablePluginSelector: item.EnablePluginSelector,
+            // pluginSelectorTypes: item.PluginSelectorTypes,
         }
-        if(item.OnlineId){
-            params.id=parseInt(item.OnlineId)
+        if (item.OnlineId) {
+            params.id = parseInt(item.OnlineId)
         }
         setCurrentPlugin(item)
         setUploadLoading(true)
-        console.log('params',params);
+        console.log("params", params)
         NetWorkApi<API.NewYakitPlugin, number>({
             method: "post",
             url: "yakit/plugin",
@@ -470,8 +482,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         })
         update(1, undefined, props.Keyword || "", props.Type, props.isIgnored, props.isHistory)
     }, [props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, trigger, userInfo.isLogin])
-    console.log('response.Data',response.Data);
-    
+    console.log("response.Data", response.Data)
+
     return (
         <div>
             <ReactResizeDetector
@@ -548,7 +560,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                     </Col>
                                 </Row>
                                 <Row style={{marginBottom: 4}}>
-                                    {i.Tags&&i.Tags!=='null' && (
+                                    {i.Tags && i.Tags !== "null" && (
                                         <Col span={24}>
                                             <div style={{width: "100%", textAlign: "right", color: "#888888"}}>
                                                 {/* {i.Tags.split(",").map((word) => {

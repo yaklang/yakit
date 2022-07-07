@@ -511,10 +511,8 @@ const Main: React.FC<MainProp> = (props) => {
     ])
 
     useEffect(() => {
-        console.log("userInfo", userInfo)
-        if (userInfo.role === "admin") {
-            userMenu.push({key: "trust-list", title: "信任用户管理"})
-            setUserMenu([...userMenu])
+        if (userInfo.role === "admin"&&userMenu.findIndex(ele=>ele.key==='trust-list')===-1) {
+            setUserMenu([...userMenu,{key: "trust-list", title: "信任用户管理"}])
         }
     }, [userInfo.role])
 
@@ -857,8 +855,6 @@ const Main: React.FC<MainProp> = (props) => {
             />
         )
     }
-    console.log("userInfo", userInfo)
-
     return (
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
