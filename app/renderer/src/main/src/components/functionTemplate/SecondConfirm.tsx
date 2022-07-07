@@ -30,10 +30,10 @@ export const SecondConfirm: React.FC<SecondConfirmProps> = memo((props) => {
                 <div className='container-subtitle'>关闭之后将不可恢复</div>
 
                 <div className='container-btn'>
-                    <Button className='btn-base btn-cancel' onClick={() => kindClick(1)}>
+                    <Button onClick={() => kindClick(1)}>
                         取消
                     </Button>
-                    <Button className='btn-base btn-confirm' onClick={() => kindClick(2)}>
+                    <Button type="primary" onClick={() => kindClick(2)}>
                         确认
                     </Button>
                 </div>

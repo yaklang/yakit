@@ -136,7 +136,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             ScriptName: "",
             Type: "yak",
             IsGeneralModule: false,
-            PluginSelectorTypes: "mitm,port-scan"
+            PluginSelectorTypes: "mitm,port-scan",
+            OnlineId: ""
         }
     )
     const [paramsLoading, setParamsLoading] = useState(false)
@@ -217,7 +218,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 
     // 上传到插件商店后，如果没有插件id，需要下载到本地
     const upOnlinePlugin = useMemoizedFn((params: YakScript) => {
-        const onlineParams: API.NewYakitPlugin = {
+        const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
             script_name: params.ScriptName,
             content: params.Content,
@@ -233,11 +234,12 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 extra_setting: p.ExtraSetting
             })),
             help: params.Help,
-            default_open: false
+            default_open: false,
+            is_private: true
         }
-        NetWorkApi<API.NewYakitPlugin, number>({
+        NetWorkApi<API.SaveYakitPlugin, number>({
             method: "post",
-            url: "yakit/plugin",
+            url: "yakit/plugin/save",
             data: onlineParams
         })
             .then((id) => {

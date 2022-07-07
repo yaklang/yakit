@@ -403,8 +403,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             warn("未登录，请先登录!")
             return
         }
+        // console.log('item',item);
+        
         const params: API.NewYakitPlugin = {
-            // id: Number(item.Id),
             type: item.Type,
             script_name: item.ScriptName,
             // authors: item.Author,
@@ -423,8 +424,12 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             help: item.Help,
             default_open: false
         }
+        if(item.OnlineId){
+            params.id=parseInt(item.OnlineId)
+        }
         setCurrentPlugin(item)
         setUploadLoading(true)
+        console.log('params',params);
         NetWorkApi<API.NewYakitPlugin, number>({
             method: "post",
             url: "yakit/plugin",
@@ -543,7 +548,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                                     </Col>
                                 </Row>
                                 <Row style={{marginBottom: 4}}>
-                                    {i.Tags && (
+                                    {i.Tags&&i.Tags!=='null' && (
                                         <Col span={24}>
                                             <div style={{width: "100%", textAlign: "right", color: "#888888"}}>
                                                 {/* {i.Tags.split(",").map((word) => {
@@ -849,7 +854,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                             OnlineID: id
                         } as DownloadOnlinePluginProps)
                         .then(() => {
-                            success("导入成功")
+                            success("插件导入成功")
                         })
                         .catch((e: any) => {
                             failed(`插件导入失败: ${e}`)

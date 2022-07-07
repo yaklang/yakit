@@ -110,7 +110,7 @@ export interface YakScript {
     FromGit?: string
     EnablePluginSelector?: boolean
     PluginSelectorTypes?: string
-    OnlineId?: number
+    OnlineId: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

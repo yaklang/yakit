@@ -166,6 +166,9 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             id: plugin?.id,
             operation: plugin.is_stars ? "remove" : "add"
         }
+        console.log("plugin", plugin)
+        console.log("prams", prams)
+
         NetWorkApi<StarsOperation, API.ActionSucceeded>({
             method: "post",
             url: "yakit/plugin/stars",
@@ -183,7 +186,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                 setPlugin({...plugin})
             })
             .catch((err) => {
-                failed("点星:" + err)
+                failed("插件点星:" + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
@@ -304,6 +307,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             comment_id: item.id,
             operation: item.is_stars ? "remove" : "add"
         }
+
         NetWorkApi<CommentStarsProps, API.ActionSucceeded>({
             method: "post",
             url: "comment/stars",
@@ -999,7 +1003,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     onStar={() => {}}
                     onReply={() => {}}
                 />
-                <div className="child-comment-list">
+                <div className='child-comment-list'>
                     {/* @ts-ignore */}
                     <InfiniteScroll
                         dataLength={commentChildResponses?.pagemeta?.total || 0}

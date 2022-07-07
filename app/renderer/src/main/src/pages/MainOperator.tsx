@@ -57,14 +57,13 @@ import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import "./main.css"
-import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList";
-import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage";
-import {showConfigMenuItems} from "../utils/ConfigMenuItems";
+import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
+import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
+import {showConfigMenuItems} from "../utils/ConfigMenuItems"
 import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain"
 import "./main.css"
 import "./GlobalClass.scss"
 import "./GlobalClass.scss"
-
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -110,8 +109,6 @@ const defaultUserInfo: UserInfoProps = {
     role: null,
     user_id: null
 }
-
-
 
 export interface MainProp {
     tlsGRPC?: boolean
@@ -166,8 +163,14 @@ export interface fuzzerInfoProp {
     request?: string
 }
 
-
-
+export interface MenuItemType {
+    key: string
+    label?: ReactNode
+    title: string
+    icon?: ReactNode
+    danger?: boolean
+    disabled?: boolean
+}
 
 const Main: React.FC<MainProp> = (props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
@@ -501,6 +504,19 @@ const Main: React.FC<MainProp> = (props) => {
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
+
+    const [userMenu, setUserMenu] = useState<MenuItemType[]>([
+        {key: "sign-out", title: "退出登录"},
+        {key: "account-bind", title: "帐号绑定(监修)", disabled: true}
+    ])
+
+    useEffect(() => {
+        console.log("userInfo", userInfo)
+        if (userInfo.role === "admin") {
+            userMenu.push({key: "trust-list", title: "信任用户管理"})
+            setUserMenu([...userMenu])
+        }
+    }, [userInfo.role])
 
     // 全局注册快捷键功能
     const documentKeyDown = useMemoizedFn((e: any) => {
@@ -841,6 +857,7 @@ const Main: React.FC<MainProp> = (props) => {
             />
         )
     }
+    console.log("userInfo", userInfo)
 
     return (
         <Layout className='yakit-main-layout'>
@@ -956,11 +973,7 @@ const Main: React.FC<MainProp> = (props) => {
                                     <div>
                                         <DropdownMenu
                                             menu={{
-                                                data: [
-                                                    {key: "sign-out", title: "退出登录"},
-                                                    {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                                                    {key: "trust-list", title: "信任用户管理"}
-                                                ]
+                                                data: userMenu
                                             }}
                                             dropdown={{
                                                 placement: "bottomCenter",

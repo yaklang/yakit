@@ -174,10 +174,16 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             warn("请先登录")
             return
         }
+        console.log("response.data", response.data)
+
+        console.log("info", info)
+
         const prams: StarsOperation = {
             id: info?.id,
             operation: info.is_stars ? "remove" : "add"
         }
+        console.log("prams", prams)
+
         NetWorkApi<StarsOperation, API.ActionSucceeded>({
             method: "post",
             url: "yakit/plugin/stars",
@@ -215,6 +221,8 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     useEffect(() => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
+    console.log('response.data ',response.data );
+    
     return !!pluginInfo ? (
         <YakitPluginInfo
             info={pluginInfo}
@@ -492,7 +500,7 @@ const PluginListOpt = memo((props: PluginListOptProps) => {
                 </div>
 
                 <div ref={tagList} className='info-tag'>
-                    {tags.length !== 0 ? (
+                    {tags && tags.length !== 0 ? (
                         tags.map((item, index) => {
                             const tagClass = RandomTagColor[index]
                             if (flag !== -1 && index > flag) return ""
