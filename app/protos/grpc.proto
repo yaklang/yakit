@@ -1269,6 +1269,7 @@ message YakScript {
   string PluginSelectorTypes = 18;
   int64 OnlineId = 19;
   int64 UserId = 20;
+  string OnlineScriptName = 21;
 }
 
 message CodecRequest {
