@@ -1270,6 +1270,7 @@ message YakScript {
   int64 OnlineId = 19;
   int64 UserId = 20;
   string OnlineScriptName = 21;
+  string OnlineContributors = 22;
 }
 
 message CodecRequest {
