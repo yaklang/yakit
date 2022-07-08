@@ -5,7 +5,7 @@ import {YakScript, YakScriptParam} from "./schema"
 import {YakCodeEditor, YakEditor} from "../../utils/editors"
 import {PlusOutlined, QuestionCircleOutlined} from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {failed, info, success} from "../../utils/notification"
+import {failed, info, success, warn} from "../../utils/notification"
 import {YakScriptParamsSetter} from "./YakScriptParamsSetter"
 import {YakScriptRunner} from "./ExecYakScript"
 import {FullscreenOutlined, DeleteOutlined} from "@ant-design/icons"
@@ -224,7 +224,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     }, [props.modified])
 
     // 上传到插件商店后，如果没有插件id，需要下载到本地
-    const upOnlinePlugin = useMemoizedFn((params: YakScript) => {
+    const upOnlinePlugin = useMemoizedFn(() => {
         const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
             script_name: params.OnlineScriptName ? params.OnlineScriptName : params.ScriptName,
@@ -244,7 +244,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             default_open: false
         }
         if (params.OnlineId) {
-            onlineParams.id = params.OnlineId
+            onlineParams.id = params.OnlineId as number
         }
         NetWorkApi<API.SaveYakitPlugin, number>({
             method: "post",
@@ -274,28 +274,87 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             })
     })
 
+    // 仅保存本地
+    const onSaveLocal = useMemoizedFn(() => {
+        if(!params.ScriptName){
+            warn('请输入插件模块名!');
+            return
+        }
+        ipcRenderer
+            .invoke("SaveYakScript", params)
+            .then((data) => {
+                info("创建 / 保存 Yak 脚本成功")
+                props.onCreated && props.onCreated(data)
+                props.onChanged && props.onChanged(data)
+                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+            })
+            .catch((e: any) => {
+                failed(`保存 Yak 模块失败: ${e}`)
+            })
+    })
+    // 上传
+    const uploadOnline = (item: YakScript) => {
+        if (!userInfo.isLogin) {
+            warn("未登录，请先登录!")
+            return
+        }
+        if (!item.UserId && item.UserId > 0 && userInfo.user_id !== item.UserId) {
+            warn("只能上传本人创建的插件!")
+            return
+        }
+
+        const params: API.NewYakitPlugin = {
+            type: item.Type,
+            script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
+            content: item.Content,
+            tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
+            params: item.Params.map((p) => ({
+                field: p.Field,
+                default_value: p.DefaultValue,
+                type_verbose: p.TypeVerbose,
+                field_verbose: p.FieldVerbose,
+                help: p.Help,
+                required: p.Required,
+                group: p.Group,
+                extra_setting: p.ExtraSetting
+            })),
+            help: item.Help,
+            default_open: false,
+            contributors: item.Author
+        }
+        if (item.OnlineId) {
+            params.id = parseInt(`${item.OnlineId}`)
+        }
+        NetWorkApi<API.NewYakitPlugin, number>({
+            method: "post",
+            url: "yakit/plugin",
+            data: params
+        })
+            .then((id: number) => {
+                if (id) {
+                    // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
+                    ipcRenderer
+                        .invoke("DownloadOnlinePluginById", {
+                            OnlineID: id
+                        } as DownloadOnlinePluginProps)
+                        // .then((res) => {
+                        //     console.log("本地成功", res)
+                        // })
+                        .catch((err) => {
+                            failed("插件下载本地失败:" + err)
+                        })
+                    success("插件上传成功")
+                }
+            })
+            .catch((err) => {
+                failed("插件上传失败:" + err)
+            })
+            .finally(() => {})
+    }
+
     return (
         <div>
-            <Form
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-                    console.log('params',params);
-                    
-                    ipcRenderer
-                        .invoke("SaveYakScript", params)
-                        .then((data) => {
-                            info("创建 / 保存 Yak 脚本成功")
-                            props.onCreated && props.onCreated(data)
-                            props.onChanged && props.onChanged(data)
-                            setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
-                        })
-                        .catch((e: any) => {
-                            failed(`保存 Yak 模块失败: ${e}`)
-                        })
-                }}
-                labelCol={{span: 5}}
-                wrapperCol={{span: 14}}
-            >
+            <Form labelCol={{span: 5}} wrapperCol={{span: 14}}>
                 <SelectOne
                     disabled={!!modified}
                     label={"模块类型"}
@@ -560,12 +619,24 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 </Form.Item>
                 <Form.Item colon={false} label={" "}>
                     <Space>
-                        <Button type='primary' htmlType='submit'>
-                            保存
-                        </Button>
-                        <Button onClick={() => upOnlinePlugin(params)} disabled={!userInfo.isLogin}>
-                            保存并上传
-                        </Button>
+                        {(userInfo.isLogin && (
+                            <>
+                                <Popconfirm
+                                    title='请选择保存方式'
+                                    onCancel={onSaveLocal}
+                                    onConfirm={upOnlinePlugin}
+                                    cancelText='仅保存本地'
+                                    okText='保存'
+                                >
+                                    <Button type='primary'>保存</Button>
+                                </Popconfirm>
+                                <Button onClick={() => uploadOnline(params)}>上传</Button>
+                            </>
+                        )) || (
+                            <Button type='primary' onClick={onSaveLocal}>
+                                保存
+                            </Button>
+                        )}
                         <Button
                             // type={primary ? "primary" : undefined}
                             disabled={[
@@ -581,7 +652,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                         setModified(data)
                                         setParams(data)
                                         props.onChanged && props.onChanged(data)
-                                        // YakScriptParamsSetter
                                         executeYakScriptByParams(data)
                                     })
                                     .catch((e: any) => {

@@ -34,6 +34,7 @@ export const CollapseParagraph: React.FC<CollapseParagraphProps> = (props) => {
                     symbol: !!isLine ? <div className='collapse-paragraph-expand-btn'>展开</div> : "展开"
                 }}
                 {...valueConfig}
+                className="paragraph"
             >
                 {children}
                 {value}

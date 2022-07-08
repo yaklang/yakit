@@ -789,7 +789,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                 <div className='comment-body-name'>{info.user_name || "anonymous"}</div>
 
                 <div className='comment-body-content'>
-                    <CollapseParagraph value={info.message} rows={2} valueConfig={{className: "content-style"}}>
+                    <CollapseParagraph value={`${info.message}`} rows={2} valueConfig={{className: "content-style"}}>
                         {info.by_user_name && (
                             <span>
                                 回复<span className='content-by-name'>{info.by_user_name}</span>:

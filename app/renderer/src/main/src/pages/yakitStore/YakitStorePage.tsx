@@ -39,13 +39,14 @@ import {startExecuteYakScript} from "../invoker/ExecYakScript"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {AutoCard} from "../../components/AutoCard"
 import ReactResizeDetector from "react-resize-detector"
-import {useStore} from "@/store"
+import {UserInfoProps, useStore} from "@/store"
 import "./YakitStorePage.css"
 import {getValue, saveValue} from "../../utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
+import InfiniteScroll from "react-infinite-scroll-component"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -351,7 +352,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         IsIgnore: props.isIgnored
     })
     const [loading, setLoading] = useState(false)
-    const [uploadLoading, setUploadLoading] = useState(false)
+
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
         Data: [],
         Pagination: {
@@ -364,7 +365,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     })
     const [trigger, setTrigger] = useState(false)
     const [maxWidth, setMaxWidth] = useState<number>(260)
-    const [currentPlugin, setCurrentPlugin] = useState<YakScript | null>()
 
     const update = (
         page?: number,
@@ -398,70 +398,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             })
     }
 
-    const uploadOnline = (item: YakScript) => {
-        if (!userInfo.isLogin) {
-            warn("未登录，请先登录!")
-            return
-        }
-        if (!item.UserId && userInfo.user_id !== item.UserId) {
-            warn("只能上传本人创建的插件!")
-            return
-        }
-        const params: API.NewYakitPlugin = {
-            type: item.Type,
-            script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
-            content: item.Content,
-            tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
-            params: item.Params.map((p) => ({
-                field: p.Field,
-                default_value: p.DefaultValue,
-                type_verbose: p.TypeVerbose,
-                field_verbose: p.FieldVerbose,
-                help: p.Help,
-                required: p.Required,
-                group: p.Group,
-                extra_setting: p.ExtraSetting
-            })),
-            help: item.Help,
-            default_open: false,
-            contributors: item.Author
-        }
-        if (item.OnlineId) {
-            params.id = item.OnlineId
-        }
-        setCurrentPlugin(item)
-        setUploadLoading(true)
-        console.log("params", params)
-        NetWorkApi<API.NewYakitPlugin, number>({
-            method: "post",
-            url: "yakit/plugin",
-            data: params
-        })
-            .then((id: number) => {
-                if (id) {
-                    // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
-                    ipcRenderer
-                        .invoke("DownloadOnlinePluginById", {
-                            OnlineID: id
-                        } as DownloadOnlinePluginProps)
-                        // .then((res) => {
-                        //     console.log("本地成功", res)
-                        // })
-                        .catch((err) => {
-                            failed("插件下载本地失败:" + err)
-                        })
-                    success("插件上传成功")
-                    setCurrentPlugin(null)
-                }
-            })
-            .catch((err) => {
-                failed("插件上传失败:" + err)
-            })
-            .finally(() => {
-                setTimeout(() => setUploadLoading(false), 200)
-            })
-    }
-
     useEffect(() => {
         setParams({
             ...params,
@@ -472,8 +408,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         })
         update(1, undefined, props.Keyword || "", props.Type, props.isIgnored, props.isHistory)
     }, [props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, trigger, userInfo.isLogin])
-    console.log("response.Data", response.Data)
-
+    // console.log("response.Data", response.Data)
     return (
         <div>
             <ReactResizeDetector
@@ -506,82 +441,158 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     }
                 }}
                 renderItem={(i: YakScript) => {
-                    let isAnonymous = false
-                    if (i.Author === "" || i.Author === "anonymous") {
-                        isAnonymous = true
-                    }
-
-                    if (props.onYakScriptRender) {
-                        return props.onYakScriptRender(i, maxWidth)
-                    }
                     return (
                         <List.Item style={{marginLeft: 0}} key={i.Id}>
-                            <Card
-                                size={"small"}
-                                bordered={true}
-                                hoverable={true}
-                                title={
-                                    <Space>
-                                        <div title={i.ScriptName}>{i.ScriptName}</div>
-                                        {gitUrlIcon(i.FromGit)}
-                                    </Space>
-                                }
-                                extra={
-                                    (currentPlugin?.Id === i.Id && uploadLoading && <LoadingOutlined />) || (
-                                        <UploadOutlined
-                                            style={{marginLeft: 6, fontSize: 16, cursor: "pointer"}}
-                                            onClick={() => uploadOnline(i)}
-                                        />
-                                    )
-                                }
-                                style={{
-                                    width: "100%",
-                                    backgroundColor: props.currentId === i.Id ? "rgba(79,188,255,0.26)" : "#fff"
-                                }}
-                                onClick={() => props.onClicked(i)}
-                            >
-                                <Row>
-                                    <Col span={24}>
-                                        <CopyableField
-                                            style={{width: 430, color: "#5f5f5f", marginBottom: 5}}
-                                            text={i.Help || "No Description about it."}
-                                            noCopy={true}
-                                        />
-                                    </Col>
-                                </Row>
-                                <Row style={{marginBottom: 4}}>
-                                    {i.Tags && i.Tags !== "null" && (
-                                        <Col span={24}>
-                                            <div style={{width: "100%", textAlign: "right", color: "#888888"}}>
-                                                {/* {i.Tags.split(",").map((word) => {
-                                                    return <Tag>{word}</Tag>
-                                                })} */}
-                                                TAG:{i.Tags}
-                                            </div>
-                                        </Col>
-                                    )}
-                                </Row>
-                                <Row>
-                                    <Col span={12}>
-                                        <Space style={{width: "100%"}}>
-                                            <Tag color={isAnonymous ? "gray" : "geekblue"}>
-                                                {i.Author || "anonymous"}
-                                            </Tag>
-                                        </Space>
-                                    </Col>
-                                    <Col span={12} style={{textAlign: "right"}}>
-                                        <Space size={2}>
-                                            <CopyableField noCopy={true} text={formatDate(i.CreatedAt)} />
-                                            {gitUrlIcon(i.FromGit, true)}
-                                        </Space>
-                                    </Col>
-                                </Row>
-                            </Card>
+                            <PluginListLocalItem
+                                plugin={i}
+                                userInfo={userInfo}
+                                onClicked={props.onClicked}
+                                currentId={props.currentId}
+                                onYakScriptRender={props.onYakScriptRender}
+                                maxWidth={maxWidth}
+                            />
                         </List.Item>
                     )
                 }}
             />
         </div>
+    )
+}
+
+interface PluginListLocalProps {
+    plugin: YakScript
+    userInfo: UserInfoProps
+    onClicked: (y: YakScript) => any
+    currentId?: number
+    onYakScriptRender?: (i: YakScript, maxWidth?: number) => any
+    maxWidth: number
+}
+export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
+    const {plugin, userInfo, maxWidth} = props
+    const [uploadLoading, setUploadLoading] = useState(false)
+    const uploadOnline = (item: YakScript) => {
+        if (!userInfo.isLogin) {
+            warn("未登录，请先登录!")
+            return
+        }
+        if (!item.UserId&&item.UserId>0 && userInfo.user_id !== item.UserId) {
+            warn("只能上传本人创建的插件!")
+            return
+        }
+        const params: API.NewYakitPlugin = {
+            type: item.Type,
+            script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
+            content: item.Content,
+            tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
+            params: item.Params.map((p) => ({
+                field: p.Field,
+                default_value: p.DefaultValue,
+                type_verbose: p.TypeVerbose,
+                field_verbose: p.FieldVerbose,
+                help: p.Help,
+                required: p.Required,
+                group: p.Group,
+                extra_setting: p.ExtraSetting
+            })),
+            help: item.Help,
+            default_open: false,
+            contributors: item.Author
+        }
+        if (item.OnlineId) {
+            params.id = parseInt(`${item.OnlineId}`)
+        }
+        setUploadLoading(true)
+        NetWorkApi<API.NewYakitPlugin, number>({
+            method: "post",
+            url: "yakit/plugin",
+            data: params
+        })
+            .then((id: number) => {
+                if (id) {
+                    // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
+                    ipcRenderer
+                        .invoke("DownloadOnlinePluginById", {
+                            OnlineID: id
+                        } as DownloadOnlinePluginProps)
+                        // .then((res) => {
+                        //     console.log("本地成功", res)
+                        // })
+                        .catch((err) => {
+                            failed("插件下载本地失败:" + err)
+                        })
+                    success("插件上传成功")
+                }
+            })
+            .catch((err) => {
+                failed("插件上传失败:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => setUploadLoading(false), 200)
+            })
+    }
+    let isAnonymous = false
+    if (plugin.Author === "" || plugin.Author === "anonymous") {
+        isAnonymous = true
+    }
+
+    if (props.onYakScriptRender) {
+        return props.onYakScriptRender(plugin, maxWidth)
+    }
+    return (
+        <Card
+            size={"small"}
+            bordered={true}
+            hoverable={true}
+            title={
+                <Space>
+                    <div title={plugin.ScriptName}>{plugin.ScriptName}</div>
+                    {gitUrlIcon(plugin.FromGit)}
+                </Space>
+            }
+            extra={
+                (uploadLoading && <LoadingOutlined />) || (
+                    <UploadOutlined
+                        style={{marginLeft: 6, fontSize: 16, cursor: "pointer"}}
+                        onClick={() => uploadOnline(plugin)}
+                    />
+                )
+            }
+            style={{
+                width: "100%",
+                backgroundColor: props.currentId === plugin.Id ? "rgba(79,188,255,0.26)" : "#fff"
+            }}
+            onClick={() => props.onClicked(plugin)}
+        >
+            <Row>
+                <Col span={24}>
+                    <CopyableField
+                        style={{width: 430, color: "#5f5f5f", marginBottom: 5}}
+                        text={plugin.Help || "No Description about it."}
+                        noCopy={true}
+                    />
+                </Col>
+            </Row>
+            <Row style={{marginBottom: 4}}>
+                {plugin.Tags && plugin.Tags !== "null" && (
+                    <Col span={24}>
+                        <div style={{width: "100%", textAlign: "right", color: "#888888"}}>TAG:{plugin.Tags}</div>
+                    </Col>
+                )}
+            </Row>
+            <Row>
+                <Col span={12}>
+                    <Space style={{width: "100%"}}>
+                        <Tag color={isAnonymous ? "gray" : "geekblue"}>{plugin.Author || "anonymous"}</Tag>
+                    </Space>
+                </Col>
+                <Col span={12} style={{textAlign: "right"}}>
+                    <Space size={2}>
+                        <CopyableField noCopy={true} text={formatDate(plugin.CreatedAt)} />
+                        {gitUrlIcon(plugin.FromGit, true)}
+                    </Space>
+                </Col>
+            </Row>
+        </Card>
     )
 }
 

@@ -13,6 +13,7 @@
     required?: boolean;
     group?: string;
     extra_setting?: string;
+    buildIn_param?: boolean;
   }
   export interface YakitPluginListResponse extends Paging {
     data: YakitPluginDetail[];
@@ -58,9 +59,7 @@
     is_general_module?: boolean;
     comment_num: number;
     contributors?: string;
-  }
-  export interface UserResponse {
-    data: UserDetail;
+    uuid: string;
   }
   export interface UserOrdinaryResponse {
     data: UserList[];
@@ -79,33 +78,6 @@
     appid: string;
     head_img: string;
   }
-  export interface UserHead {
-    user_id: number;
-    user_name: string;
-    head_img: string;
-    follow_num: number;
-    fans: number;
-  }
-  export interface UserFollows extends UserFollow {}
-  export interface UserFollowResponse extends Paging {
-    data: UserFollows[];
-  }
-  export interface UserFollow {
-    follow_user_id: number;
-    follow_user_name: string;
-    follow_head_img: string;
-    dynamic_id: number;
-    content: string;
-    content_img: string;
-    content_video: string;
-  }
-  export interface UserDetail {
-    id: number;
-    phone: string;
-    name: string;
-    head_img: string;
-    child?: UserAurh[];
-  }
   export interface UserData {
     from_platform: string;
     email: string;
@@ -116,46 +88,9 @@
     role: string;
     user_id: number;
   }
-  export interface UserAurh {
-    from_platform: string;
-    auth_id: number;
-    name: string;
-  }
-  export interface UpdateUser {
-    user_id: number;
-    name?: string;
-    head_img?: string;
-  }
-  export interface UpdateDynamic {
-    /**
-     * 动态id
-     */
-    id: number;
-    content?: string;
-    content_img?: string[];
-    content_video?: string[];
-    /**
-     * 话题id
-     */
-    topic_id?: number;
-    topics?: string;
-    title?: string;
-    cover?: string;
-    /**
-     * true允许下载，false不允许
-     */
-    download?: boolean;
-  }
-  export interface TopicSearchResponse {
-    data: TopicList[];
-  }
-  export interface TopicResponse extends Paging {
-    data: TopicList[];
-  }
-  export interface TopicList extends GormBaseModel, TopicData {}
-  export interface TopicData {
-    topics: string;
-    hot_num: number;
+  export interface UpdateUserRole {
+    appid: string;
+    operation: string;
   }
   export interface SaveYakitPlugin {
     id?: number;
@@ -212,9 +147,11 @@
      * true 为私有
      */
     is_private: boolean;
-    contributors?: string;
+    authors: string;
+    contributors: string;
+    uuid: string;
   }
-  export interface PluginDownloadResponse {
+  export interface PluginDownloadResponse extends Paging {
     data: PluginDownloadDetail[];
   }
   export interface PluginDownloadDetail
@@ -226,9 +163,9 @@
      */
     type?: string;
     /**
-     * 单个，批量下载传id
+     * 单个，批量下载传uuid
      */
-    id?: number[];
+    uuid?: string[];
     token?: string;
     page?: number;
     limit?: number;
@@ -280,39 +217,6 @@
     operation_plugin_id: string;
     extra?: string;
   }
-  export interface NewDynamicComment {
-    dynamic_id: number;
-    message_img?: string[];
-    parent_id?: number;
-    /**
-     * 根评论传动态发布作者id,回复评论传根评论作者ID
-     */
-    by_user_id: number;
-    /**
-     * 回复评论传值，主评论根为0
-     */
-    root_id?: number;
-    message: string;
-  }
-  export interface NewDynamic {
-    user_id?: number;
-    user_name?: string;
-    head_img?: string;
-    content?: string;
-    content_img?: string[];
-    content_video?: string[];
-    /**
-     * 话题id
-     */
-    topic_id?: number;
-    topics?: string;
-    title?: string;
-    cover?: string;
-    /**
-     * true允许下载，false不允许
-     */
-    download: boolean;
-  }
   export interface NewComment {
     plugin_id: number;
     by_user_id?: number;
@@ -321,158 +225,10 @@
     root_id?: number;
     message: string;
   }
-  export interface MessageCenterStarsResponse extends Paging {
-    data: MessageCenterStars[];
-  }
-  export interface MessageCenterStars {
-    id: number;
-    created_at: number;
-    updated_at: number;
-    action_user_id: number;
-    action_user_name: string;
-    action_head_img: string;
-    dynamic_id: number;
-    dynamic_user_id: number;
-    /**
-     * 动态发布人
-     */
-    dynamic_user_name: string;
-    /**
-     * 动态内容
-     */
-    dynamic_content: string;
-    /**
-     * 动态图片
-     */
-    dynamic_content_img: string;
-    /**
-     * 动态视频-封面图
-     */
-    dynamic_cover: string;
-  }
-  export interface MessageCenterFollowResponse extends Paging {
-    data: MessageCenterFollow[];
-  }
-  export interface MessageCenterFollow {
-    id: number;
-    created_at: number;
-    updated_at: number;
-    action_user_id: number;
-    action_user_name: string;
-    action_head_img: string;
-    follow_user_id: number;
-  }
-  export interface MessageCenterCommentResponse extends Paging {
-    data: MessageCenterComment[];
-  }
-  export interface MessageCenterComment {
-    id: number;
-    created_at: number;
-    updated_at: number;
-    dynamic_id: number;
-    user_id: number;
-    user_name: string;
-    head_img: string;
-    /**
-     * 评论内容
-     */
-    message: string;
-    /**
-     * 评论图片
-     */
-    message_img: string;
-    /**
-     * 回复用户id
-     */
-    by_user_id: number;
-    /**
-     * 回复的用户头像
-     */
-    by_head_img: string;
-    /**
-     * 回复的用户
-     */
-    by_user_name: string;
-    /**
-     * 回复的内容
-     */
-    by_message: string;
-    /**
-     * 回复的内容图片
-     */
-    by_message_img: string;
-    /**
-     * 动态发布人
-     */
-    dynamic_user_name: string;
-    /**
-     * 动态内容
-     */
-    dynamic_content: string;
-    /**
-     * 动态图片
-     */
-    dynamic_content_img: string;
-    /**
-     * 动态视频-封面图
-     */
-    dynamic_cover: string;
-  }
   export interface GormBaseModel {
     id: number;
     created_at: number;
     updated_at: number;
-  }
-  export interface DynamicLists extends GormBaseModel, DynamicList {}
-  export interface DynamicListResponse extends Paging {
-    data: DynamicLists[];
-  }
-  export interface DynamicListDetailResponse {
-    data: DynamicLists;
-  }
-  export interface DynamicList {
-    user_id: number;
-    user_name: string;
-    head_img: string;
-    content: string;
-    content_img: string;
-    content_video: string;
-    /**
-     * 话题id
-     */
-    topic_id: number;
-    topics: string;
-    title: string;
-    cover: string;
-    /**
-     * true允许下载，false不允许
-     */
-    download: boolean;
-    stars: number;
-    collect: number;
-    is_stars: boolean;
-    is_collect: boolean;
-  }
-  export interface DynamicCommentList {
-    id: number;
-    created_at: number;
-    updated_at: number;
-    dynamic_id: number;
-    root_id: number;
-    parent_id: number;
-    user_id: number;
-    user_name: string;
-    head_img: string;
-    message: string;
-    message_img: string;
-    like_num: number;
-    by_user_id: number;
-    by_user_name: string;
-    by_head_img: string;
-    reply_num: number;
-  }
-  export interface DynamicComment extends Paging {
-    data: DynamicCommentList[];
   }
   export interface CommentListResponse extends Paging {
     data: CommentListData[];
@@ -495,13 +251,6 @@
     by_head_img: string;
     reply_num: number;
     is_stars?: boolean;
-  }
-  export interface AuthResponse {
-    user_id: number;
-    token: string;
-    auth_id: number;
-    head_img: string;
-    name: string;
   }
   export interface ActionSucceeded {
     /**
