@@ -120,7 +120,6 @@ export const TrustList: React.FC = memo(() => {
             params: param
         })
             .then((res) => {
-                console.log("res", res)
                 setTrustUserData(res)
             })
             .catch((err) => {

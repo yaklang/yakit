@@ -167,8 +167,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             operation: plugin.is_stars ? "remove" : "add"
         }
 
-        console.log("prams", prams)
-
         NetWorkApi<StarsOperation, API.ActionSucceeded>({
             method: "post",
             url: "yakit/plugin/stars",
@@ -202,7 +200,8 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
         setAddLoading(true)
         ipcRenderer
             .invoke("DownloadOnlinePluginById", {
-                OnlineID: plugin.id
+                OnlineID: plugin.id,
+                UUID: plugin.uuid,
             } as DownloadOnlinePluginProps)
             .then(() => {
                 success("添加成功")
@@ -389,9 +388,6 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
             </div>
         )
     }
-
-    console.log("plugin-详情", plugin)
-
     return (
         <AutoSpin spinning={loading}>
             {/* @ts-ignore */}

@@ -114,6 +114,7 @@ export interface YakScript {
     OnlineScriptName: string
     OnlineContributors: string
     UserId: number
+    UUID: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react"
 import {Modal} from "antd"
-import {GithubOutlined, QqOutlined, RightOutlined, WechatOutlined} from "@ant-design/icons"
+import {ExclamationCircleOutlined, GithubOutlined, QqOutlined, RightOutlined, WechatOutlined} from "@ant-design/icons"
 import {AutoSpin} from "@/components/AutoSpin"
 import {failed, warn} from "@/utils/notification"
 
@@ -52,21 +52,36 @@ const Login: React.FC<LoginProp> = (props) => {
         ipcRenderer.on("fetch-signin-data", (e, res: any) => {
             const {ok, info} = res
             if (ok) {
-                ipcRenderer
-                    .invoke(
-                        "DownloadOnlinePluginAll",
-                        {isAddToken: true} as DownloadOnlinePluginAllRequestProps,
-                        taskToken
-                    )
-                    .then(() => {
-                        console.log("拉取全部插件")
-                    })
-                    .catch((e) => {
-                        failed(`拉取全部插件失败:${e}`)
-                    })
+                Modal.confirm({
+                    title: "数据同步",
+                    icon: <ExclamationCircleOutlined />,
+                    content: "是否选择将远端的数据同步本地",
+                    onOk() {
+                        ipcRenderer
+                            .invoke(
+                                "DownloadOnlinePluginAll",
+                                {isAddToken: true, BindMe: true} as DownloadOnlinePluginAllRequestProps,
+                                taskToken
+                            )
+                            // .then(() => {
+                            //     console.log("拉取全部插件")
+                            // })
+                            .catch((e) => {
+                                failed(`拉取全部插件失败:${e}`)
+                            })
+                        setTimeout(() => setLoading(false), 200)
+                        props.onCancel()
+                    },
+                    onCancel() {
+                        setTimeout(() => setLoading(false), 200)
+                        props.onCancel()
+                    }
+                })
+            } else {
+                failed(info || "请求异常，请重试！")
                 setTimeout(() => setLoading(false), 200)
                 props.onCancel()
-            } else failed(info || "请求异常，请重试！")
+            }
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-signin-data")

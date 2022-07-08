@@ -46,7 +46,8 @@ export interface StarsOperation {
 }
 
 export interface DownloadOnlinePluginProps {
-    OnlineID: number
+    OnlineID?: number
+    UUID: string
 }
 
 interface DownloadOnlinePluginAllResProps {
@@ -142,7 +143,7 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
         setAddLoading(true)
-        ipcRenderer.invoke("DownloadOnlinePluginAll", {isAddToken: true}, taskToken).catch((e) => {
+        ipcRenderer.invoke("DownloadOnlinePluginAll", {isAddToken: true, BindMe: false}, taskToken).catch((e) => {
             failed(`添加失败:${e}`)
         })
     })
@@ -154,10 +155,12 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     }
 
     const addLocalLab = useMemoizedFn((info: API.YakitPluginDetail, callback) => {
+        const params: DownloadOnlinePluginProps = {
+            OnlineID: info.id,
+            UUID: info.uuid
+        }
         ipcRenderer
-            .invoke("DownloadOnlinePluginById", {
-                OnlineID: info.id
-            } as DownloadOnlinePluginProps)
+            .invoke("DownloadOnlinePluginById", params)
             .then(() => {
                 success("添加成功")
             })
@@ -174,16 +177,10 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
             warn("请先登录")
             return
         }
-        console.log("response.data", response.data)
-
-        console.log("info", info)
-
         const prams: StarsOperation = {
             id: info?.id,
             operation: info.is_stars ? "remove" : "add"
         }
-        console.log("prams", prams)
-
         NetWorkApi<StarsOperation, API.ActionSucceeded>({
             method: "post",
             url: "yakit/plugin/stars",
@@ -221,7 +218,6 @@ export const YakitStoreOnline: React.FC<YakitStoreOnlineProp> = (props) => {
     useEffect(() => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
-    console.log("response.data ", response.data)
 
     return !!pluginInfo ? (
         <YakitPluginInfo

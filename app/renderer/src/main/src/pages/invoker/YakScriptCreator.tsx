@@ -144,7 +144,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             OnlineContributors: "",
             GeneralModuleVerbose: "",
             GeneralModuleKey: "",
-            FromGit: ""
+            FromGit: "",
+            UUID: ""
         }
     )
     const [paramsLoading, setParamsLoading] = useState(false)
@@ -244,23 +245,22 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             default_open: false
         }
         if (params.OnlineId) {
-            onlineParams.id = params.OnlineId as number
+            onlineParams.id = parseInt(`${params.OnlineId}`)
         }
-        NetWorkApi<API.SaveYakitPlugin, number>({
+        NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
             method: "post",
             url: "yakit/plugin/save",
             data: onlineParams
         })
-            .then((id) => {
-                console.log("id", id)
-
+            .then((res) => {
                 success("创建 / 保存 Yak 脚本成功")
                 props.onCreated && props.onCreated(params)
                 props.onChanged && props.onChanged(params)
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
                 ipcRenderer
                     .invoke("DownloadOnlinePluginById", {
-                        OnlineID: id
+                        OnlineID: res.id,
+                        UUID: res.uuid
                     } as DownloadOnlinePluginProps)
                     // .then((res) => {
                     //     console.log("本地成功",res)
@@ -276,8 +276,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 
     // 仅保存本地
     const onSaveLocal = useMemoizedFn(() => {
-        if(!params.ScriptName){
-            warn('请输入插件模块名!');
+        if (!params.ScriptName) {
+            warn("请输入插件模块名!")
             return
         }
         ipcRenderer
@@ -325,26 +325,25 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         if (item.OnlineId) {
             params.id = parseInt(`${item.OnlineId}`)
         }
-        NetWorkApi<API.NewYakitPlugin, number>({
+        NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
             method: "post",
             url: "yakit/plugin",
             data: params
         })
-            .then((id: number) => {
-                if (id) {
-                    // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
-                    ipcRenderer
-                        .invoke("DownloadOnlinePluginById", {
-                            OnlineID: id
-                        } as DownloadOnlinePluginProps)
-                        // .then((res) => {
-                        //     console.log("本地成功", res)
-                        // })
-                        .catch((err) => {
-                            failed("插件下载本地失败:" + err)
-                        })
-                    success("插件上传成功")
-                }
+            .then((res) => {
+                // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
+                ipcRenderer
+                    .invoke("DownloadOnlinePluginById", {
+                        OnlineID: res.id,
+                        UUID: res.uuid
+                    } as DownloadOnlinePluginProps)
+                    // .then((res) => {
+                    //     console.log("本地成功", res)
+                    // })
+                    .catch((err) => {
+                        failed("插件下载本地失败:" + err)
+                    })
+                success("插件上传成功")
             })
             .catch((err) => {
                 failed("插件上传失败:" + err)

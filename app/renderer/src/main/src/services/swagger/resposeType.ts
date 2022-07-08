@@ -4,6 +4,10 @@
  */
 
  export declare namespace API {
+  export interface YakitPluginResponse {
+    id: number;
+    uuid: string;
+  }
   export interface YakitPluginParam {
     field: string;
     default_value: string;

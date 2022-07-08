@@ -146,7 +146,6 @@ ipcMain.on("user-sign-in", (event, arg) => {
 
     authWindow.show()
     authWindow.loadURL(url)
-
     authWindow.webContents.on("will-navigate", (event, url) => {
         if (!url) return
         if (!typeApi[type]) return
@@ -203,7 +202,10 @@ ipcMain.on("user-sign-in", (event, arg) => {
             })
     })
 
-    authWindow.on("close", () => (authWindow = null))
+    authWindow.on("close", () => {
+        authWindow.webContents.session.clearStorageData()
+        authWindow = null
+    })
 })
 ipcMain.on("user-sign-out", (event) => {
     USER_INFO.isLogin = false

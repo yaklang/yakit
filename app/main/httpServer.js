@@ -9,7 +9,7 @@ ipcMain.on("edit-baseUrl", (event, arg) => {
 const service = axios.create({
     // baseURL: "http://onlinecs.vaiwan.cn/api/",
     baseURL: `${HttpSetting.httpBaseURL}/api/`,
-    // timeout: 30 * 1000, // 请求超时时间
+    timeout: 30 * 1000, // 请求超时时间
     maxBodyLength: Infinity //设置适当的大小
 })
 
