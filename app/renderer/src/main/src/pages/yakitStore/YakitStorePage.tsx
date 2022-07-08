@@ -268,40 +268,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         isHistory={history}
                         isIgnored={ignored}
                     />
-                    {/*<Tabs*/}
-                    {/*    className='yak-store-list'*/}
-                    {/*    tabPosition={"left"}*/}
-                    {/*    size={"small"}*/}
-                    {/*    tabBarStyle={{*/}
-                    {/*        padding: 0,*/}
-                    {/*        margin: 0,*/}
-                    {/*        width: 70,*/}
-                    {/*        marginLeft: -20*/}
-                    {/*    }}*/}
-                    {/*    direction={"ltr"}*/}
-                    {/*>*/}
-                    {/*    {[*/}
-                    {/*        {tab: "YAK", key: "yak"},*/}
-                    {/*        {tab: "YAML", key: "nuclei"},*/}
-                    {/*        {tab: "MITM", key: "mitm"},*/}
-                    {/*        {tab: "Packet", key: "packet-hack"},*/}
-                    {/*        {tab: "CODEC", key: "codec"},*/}
-                    {/*    ].map((e) => {*/}
-                    {/*        return (*/}
-                    {/*            <Tabs.TabPane tab={e.tab} key={e.key}>*/}
-                    {/*                <YakModuleList*/}
-                    {/*                    currentId={script?.Id}*/}
-                    {/*                    Keyword={keyword}*/}
-                    {/*                    Type={e.key as any}*/}
-                    {/*                    onClicked={setScript}*/}
-                    {/*                    trigger={trigger}*/}
-                    {/*                    isHistory={history}*/}
-                    {/*                    isIgnored={ignored}*/}
-                    {/*                />*/}
-                    {/*            </Tabs.TabPane>*/}
-                    {/*        )*/}
-                    {/*    })}*/}
-                    {/*</Tabs>*/}
                 </AutoCard>
             </div>
             <div style={{flex: 1, overflowX: "hidden"}}>
@@ -409,8 +375,12 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         update(1, undefined, props.Keyword || "", props.Type, props.isIgnored, props.isHistory)
     }, [props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, trigger, userInfo.isLogin])
     // console.log("response.Data", response.Data)
+    // const [hasMore, setHasMore] = useState<boolean>(false)
+    // const loadMoreData = useMemoizedFn(() => {
+    //     console.log("response", response)
+    // })
     return (
-        <div>
+        <div id='scroll-div-plugin'>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
@@ -455,6 +425,52 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     )
                 }}
             />
+            {/* @ts-ignore */}
+            {/* <InfiniteScroll
+                dataLength={response.Total}
+                key={response.Pagination.Page}
+                next={loadMoreData}
+                hasMore={true}
+                // hasMore={hasMore}
+                // loader={<Skeleton avatar paragraph={{rows: 1}} active />}
+                endMessage={response.Total > 0 && <div className='no-more-text'>暂无更多数据</div>}
+                scrollableTarget='scroll-div-plugin'
+            >
+                <List<YakScript>
+                    loading={loading}
+                    style={{width: "100%", marginBottom: 16}}
+                    dataSource={response.Data}
+                    split={false}
+                    // pagination={{
+                    //     size: "small",
+                    //     pageSize: response.Pagination.Limit || 10,
+                    //     total: response.Total,
+                    //     showSizeChanger: true,
+                    //     defaultPageSize: 10,
+                    //     showTotal: (i) => <Tag>Total:{i}</Tag>,
+                    //     onChange: (page, size) => {
+                    //         update(page, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
+                    //     },
+                    //     onShowSizeChange: (current, size) => {
+                    //         update(1, size, props.Keyword, props.Type, props.isIgnored, props.isHistory)
+                    //     }
+                    // }}
+                    renderItem={(i: YakScript) => {
+                        return (
+                            <List.Item style={{marginLeft: 0}} key={i.Id}>
+                                <PluginListLocalItem
+                                    plugin={i}
+                                    userInfo={userInfo}
+                                    onClicked={props.onClicked}
+                                    currentId={props.currentId}
+                                    onYakScriptRender={props.onYakScriptRender}
+                                    maxWidth={maxWidth}
+                                />
+                            </List.Item>
+                        )
+                    }}
+                />
+            </InfiniteScroll> */}
         </div>
     )
 }
@@ -475,7 +491,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             warn("未登录，请先登录!")
             return
         }
-        if (!item.UserId&&item.UserId>0 && userInfo.user_id !== item.UserId) {
+        if (!item.UserId && item.UserId > 0 && userInfo.user_id !== item.UserId) {
             warn("只能上传本人创建的插件!")
             return
         }

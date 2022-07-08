@@ -9,3 +9,7 @@
 .yak-store-list.ant-tabs .ant-tabs-content-holder .ant-tabs-tabpane {
     padding: 0 10px;
 }
+
+.no-more-text {
+    text-align: center;
+}
