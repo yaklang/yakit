@@ -283,6 +283,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             return
         }
 
+        console.info(historyTask)
         setRequest(historyTask.Request)
         setIsHttps(historyTask.IsHTTPS)
         setProxy(historyTask.Proxy)

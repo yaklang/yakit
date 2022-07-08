@@ -317,16 +317,19 @@ message DownloadOnlinePluginProgress {
 
 message DownloadOnlinePluginByTokenRequest {
   string Token = 1;
+  bool BindMe = 2;
 }
 
 message DownloadOnlinePluginByIdRequest {
   int64 OnlineID = 1;
   string Token = 2;
+  string UUID = 3;
 }
 
 message DownloadOnlinePluginByIdsRequest {
   repeated int64 OnlineIDs = 1;
   string Token = 2;
+  repeated string UUID = 3;
 }
 
 message OnlineProfile {
@@ -1271,6 +1274,7 @@ message YakScript {
   int64 UserId = 20;
   string OnlineScriptName = 21;
   string OnlineContributors = 22;
+  string UUID = 23;
 }
 
 message CodecRequest {
