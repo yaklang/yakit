@@ -138,12 +138,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             Type: "yak",
             IsGeneralModule: false,
             PluginSelectorTypes: "mitm,port-scan",
-            UserId:0,
-            OnlineId: "",
+            UserId: 0,
+            OnlineId: 0,
             OnlineScriptName: "",
-            GeneralModuleVerbose:'',
-            GeneralModuleKey:'',
-            FromGit:'',
+            OnlineContributors: "",
+            GeneralModuleVerbose: "",
+            GeneralModuleKey: "",
+            FromGit: ""
         }
     )
     const [paramsLoading, setParamsLoading] = useState(false)
@@ -240,11 +241,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 extra_setting: p.ExtraSetting
             })),
             help: params.Help,
-            default_open: false,
-            is_private: true
+            default_open: false
         }
         if (params.OnlineId) {
-            onlineParams.id = parseInt(params.OnlineId)
+            onlineParams.id = params.OnlineId
         }
         NetWorkApi<API.SaveYakitPlugin, number>({
             method: "post",
@@ -279,6 +279,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             <Form
                 onSubmitCapture={(e) => {
                     e.preventDefault()
+                    console.log('params',params);
+                    
                     ipcRenderer
                         .invoke("SaveYakScript", params)
                         .then((data) => {

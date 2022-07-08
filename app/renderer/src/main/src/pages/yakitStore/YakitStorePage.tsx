@@ -425,19 +425,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             help: item.Help,
             default_open: false,
             contributors: item.Author
-
-            // level:item.Level,
-            // isHistory: item.IsHistory,
-            // isIgnore: item.IsIgnore,
-            // isGeneralModule: item.IsGeneralModule,
-            // generalModuleVerbose: item.GeneralModuleVerbose,
-            // generalModuleKey: item.GeneralModuleKey,
-            // fromGit: item.FromGit,
-            // enablePluginSelector: item.EnablePluginSelector,
-            // pluginSelectorTypes: item.PluginSelectorTypes,
         }
         if (item.OnlineId) {
-            params.id = parseInt(item.OnlineId)
+            params.id = item.OnlineId
         }
         setCurrentPlugin(item)
         setUploadLoading(true)

@@ -171,10 +171,6 @@
     plugin_selector_types?: string;
     is_general_module?: boolean;
     download_total?: number;
-    /**
-     * true 为保存不上传
-     */
-    is_private: boolean;
     contributors?: string;
   }
   export interface Principle {
