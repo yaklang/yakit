@@ -28,7 +28,7 @@ import {
     InputInteger,
     InputItem,
     ManyMultiSelectForString,
-    OneLine,
+    OneLine, SelectOne,
     SwitchItem
 } from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
@@ -133,6 +133,7 @@ const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 
 interface HistoryHTTPFuzzerTask {
     Request: string
+    RequestRaw: Uint8Array
     Proxy: string
     IsHTTPS: boolean
 }
@@ -211,6 +212,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         Regexps: [],
         StatusCode: []
     });
+    const [_filterMode, setFilterMode, getFilterMode] = useGetState<"drop" | "match">("drop");
     const [droppedCount, setDroppedCount] = useState(0);
 
     // state
@@ -283,8 +285,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             return
         }
 
-        console.info(historyTask)
-        setRequest(historyTask.Request)
+        if (historyTask.Request === "") {
+            setRequest(Uint8ArrayToString(historyTask.RequestRaw, "utf8"))
+        } else {
+            setRequest(historyTask.Request)
+        }
         setIsHttps(historyTask.IsHTTPS)
         setProxy(historyTask.Proxy)
         refreshRequest()
@@ -324,6 +329,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             {HistoryWebFuzzerId: id}, fuzzToken
         ).then(() => {
             ipcRenderer.invoke("GetHistoryHTTPFuzzerTask", {Id: id}).then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+                console.info(data.OriginRequest)
                 setHistoryTask(data.OriginRequest)
             })
         })
@@ -390,11 +396,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
-            if (data["MatchedByFilter"] !== true && !filterIsEmpty(getFilter())) {
-                // 不匹配的
-                droppedCount++
-                setDroppedCount(droppedCount)
-                return
+            if (!filterIsEmpty(getFilter())) {
+                // 设置了 Filter
+                const hit = data["MatchedByFilter"] === true;
+                // 丢包的条件：
+                //   1. 命中过滤器，同时过滤模式设置为丢弃
+                //   2. 未命中过滤器，过滤模式设置为保留
+                if (
+                    (hit && getFilterMode() === "drop") ||
+                    (!hit && getFilterMode() === "match")
+                ) {
+                    // 丢弃不匹配的内容
+                    droppedCount++
+                    setDroppedCount(droppedCount)
+                    return
+                }
             }
             buffer.push({
                 StatusCode: data.StatusCode,
@@ -990,9 +1006,19 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     </Col>
                     <Col span={8}>
                         <AutoCard title={(
-                            <Tooltip title={"通过过滤匹配，丢弃无用数据包，保证界面性能！"}>
-                                设置过滤器
-                            </Tooltip>
+                            <Space>
+                                <Tooltip title={"通过过滤匹配，丢弃无用数据包，保证界面性能！"}>
+                                    过滤器模式：
+                                </Tooltip>
+                                <Form onSubmitCapture={e => e.preventDefault()}>
+                                    <SelectOne
+                                        formItemStyle={{marginBottom: 0}}
+                                        label={""} colon={false} size={"small"}
+                                        data={[{value: "drop", text: "丢弃"}, {value: "match", text: "保留"},]}
+                                        value={getFilterMode()} setValue={e => setFilterMode(e)}
+                                    />
+                                </Form>
+                            </Space>
                         )}
                                   bordered={false} size={"small"} bodyStyle={{paddingTop: 4}}
                                   style={{marginTop: 0, paddingTop: 0}}
