@@ -36,6 +36,8 @@ export interface HTTPFlow {
     StatusCode: number
     BodyLength: number
     BodySizeVerbose?: string
+    RequestLength?: number
+    RequestSizeVerbose?: string
     ContentType: string
     SourceType: string
     RequestHeader: HTTPHeaderItem[]
@@ -322,7 +324,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed}/>
         </div>
     )
 }
@@ -834,7 +836,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             const a = originOffsetLength - offsetDeltaData.length
                             scrollTableTo(
                                 (originDataLength + 1 + MAX_ROW_COUNT - originOffsetLength) * ROW_HEIGHT -
-                                    tableClientHeight
+                                tableClientHeight
                             )
                         }
                     }, 50)
@@ -960,7 +962,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         <Space>
                             {"所有相关请求都在这里"}
                             <Button
-                                icon={<ReloadOutlined />}
+                                icon={<ReloadOutlined/>}
                                 type={"link"}
                                 onClick={(e) => {
                                     update(1)
@@ -1010,7 +1012,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     <Space>
                         <span>HTTP History</span>
                         <Button
-                            icon={<ReloadOutlined />}
+                            icon={<ReloadOutlined/>}
                             type={"link"}
                             size={"small"}
                             onClick={(e) => {
@@ -1122,7 +1124,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.Methods ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined />}
+                                            icon={<SearchOutlined/>}
                                         />
                                     </Popover>
                                 </div>
@@ -1179,7 +1181,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.StatusCode ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined />}
+                                            icon={<SearchOutlined/>}
                                         />
                                     </Popover>
                                 </div>
@@ -1226,7 +1228,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.SearchURL ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined />}
+                                            icon={<SearchOutlined/>}
                                         />
                                     </Popover>
                                 </div>
@@ -1267,9 +1269,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return rowData[dataKey]
                                 ? `${rowData[dataKey]}`
-                                      .split("|")
-                                      .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                                      .join(", ")
+                                    .split("|")
+                                    .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                                    .join(", ")
                                 : ""
                         }
                     },
@@ -1318,7 +1320,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.HaveBody ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined />}
+                                            icon={<SearchOutlined/>}
                                         />
                                     </Popover>
                                 </div>
@@ -1384,7 +1386,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.HaveCommonParams ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined />}
+                                            icon={<SearchOutlined/>}
                                         />
                                     </Popover>
                                 </div>
@@ -1393,7 +1395,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return (
                                 <Space>
-                                    {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && <CheckOutlined />}
+                                    {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && <CheckOutlined/>}
                                 </Space>
                             )
                         }
@@ -1436,6 +1438,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         }
                     },
                     {
+                        dataKey: "请求大小",
+                        width: 80,
+                        headRender: () => {
+                            return "请求大小"
+                        },
+                        cellRender: ({rowData, dataKey, ...props}: any) => {
+                            return (
+                                <div>{rowData?.RequestSizeVerbose || "-"}</div>
+                            )
+                        }
+                    },
+                    {
                         dataKey: "operate",
                         width: 90,
                         headRender: () => "操作",
@@ -1471,10 +1485,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                            ? TableRowColor(
-                                                  rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                              )
-                                            : "#ffffff"
+                                                ? TableRowColor(
+                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                                )
+                                                : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
@@ -1531,7 +1545,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 },
                                 {
                                     title: "复制为 Yak PoC 模版",
-                                    onClick: () => {},
+                                    onClick: () => {
+                                    },
                                     subMenuItems: [
                                         {
                                             title: "数据包 PoC 模版",
@@ -1579,8 +1594,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
                                                 const existedTags = flow.Tags
                                                     ? flow.Tags.split("|").filter(
-                                                          (i) => !!i && !i.startsWith("YAKIT_COLOR_")
-                                                      )
+                                                        (i) => !!i && !i.startsWith("YAKIT_COLOR_")
+                                                    )
                                                     : []
                                                 existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
                                                 ipcRenderer
@@ -1606,7 +1621,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }
                                         }
                                     }),
-                                    onClick: () => {}
+                                    onClick: () => {
+                                    }
                                 },
                                 {
                                     title: "移除颜色",
@@ -1643,7 +1659,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 },
                                 {
                                     title: "发送到对比器",
-                                    onClick: () => {},
+                                    onClick: () => {
+                                    },
                                     subMenuItems: [
                                         {
                                             title: "发送到对比器左侧",
