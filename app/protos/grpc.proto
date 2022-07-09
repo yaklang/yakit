@@ -1527,6 +1527,8 @@ message HTTPFlow {
   string Method = 10;
   int64 BodyLength = 11;
   string BodySizeVerbose = 19;
+  int64 RequestLength = 31; // 设置 Request Body 长度
+  string RequestSizeVerbose = 32; // 设置 Request
   string ContentType = 12;
   int64 StatusCode = 13;
   int64 GetParamsTotal = 14;
@@ -1658,6 +1660,11 @@ message MITMContentReplacer {
 
   // 额外标签，用于标注 flow
   repeated string ExtraTag = 8;
+
+  // 一键禁用启用全部
+  bool Disabled = 11;
+
+  string VerboseName = 12;
 }
 
 message RemoveHookParams {

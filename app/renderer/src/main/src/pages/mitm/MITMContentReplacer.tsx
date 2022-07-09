@@ -5,6 +5,7 @@ import {failed, info} from "../../utils/notification";
 import {InputInteger, InputItem, ManyMultiSelectForString, ManySelectOne, SwitchItem} from "../../utils/inputUtil";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {MITMContentReplacerExport} from "./MITMContentReplacerImport";
+import {randomString} from "../../utils/randomUtil";
 
 export interface MITMContentReplacerProp {
     rules: MITMContentReplacerRule[]
@@ -23,6 +24,8 @@ export interface MITMContentReplacerRule {
     EnableForBody: boolean
     EnableForHeader: boolean
     ExtraTag: string[]
+    Disabled: boolean
+    VerboseName: string
 }
 
 const {Text} = Typography;
@@ -74,6 +77,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
             dataSource={rules}
             pagination={false}
             bordered={true}
+            scroll={{x: 1200}}
             size={"small"}
             rowKey={i => `${i.Index}`}
             columns={[
@@ -95,12 +99,31 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             setRules([...rules].sort((a, b) => a.Index - b.Index))
                         }}
                         formItemStyle={{marginBottom: 0}} size={"small"}
-                    />,
+                    />, fixed: "left",
                 },
                 {
-                    title: "规则内容", width: 380, render: (i: MITMContentReplacerRule) => <div
-                        style={{maxWidth: 380}}
-
+                    title: "规则名称", width: 150, render: (i: MITMContentReplacerRule) => <div
+                        style={{maxWidth: 128}}
+                    >
+                        <Text
+                            editable={{
+                                onChange: newResult => {
+                                    rules.forEach(target => {
+                                        if (target.Index != i.Index) {
+                                            return
+                                        }
+                                        target.VerboseName = newResult
+                                    })
+                                    setRules([...rules])
+                                }
+                            }} ellipsis={true}
+                            code={false}
+                        >{i.VerboseName}</Text>
+                    </div>, fixed: "left",
+                },
+                {
+                    title: "规则内容", width: 240, render: (i: MITMContentReplacerRule) => <div
+                        style={{maxWidth: 240}}
                     >
                         <Text
                             editable={{
@@ -113,16 +136,15 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                                     })
                                     setRules([...rules])
                                 }
-                            }}
-
+                            }} ellipsis={true}
                         >{i.Rule}</Text>
                     </div>
                 },
                 {
                     title: "替换结果",
-                    width: 200,
+                    width: 120,
                     render: (i: MITMContentReplacerRule) => <div
-                        style={{maxWidth: 200}}
+                        style={{maxWidth: 120}}
                     >
                         <Text
                             editable={i.NoReplace ? false : {
@@ -141,7 +163,22 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     </div>
                 },
                 {
+                    title: "完全禁用", render: (i: MITMContentReplacerRule) => <Checkbox
+                        checked={i.Disabled}
+                        onChange={() => {
+                            rules.forEach(target => {
+                                if (target.Index != i.Index) {
+                                    return
+                                }
+                                target.Disabled = !target.Disabled
+                            })
+                            setRules([...rules])
+                        }}
+                    />
+                },
+                {
                     title: "不替换内容", render: (i: MITMContentReplacerRule) => <Checkbox
+                        disabled={i.Disabled}
                         checked={i.NoReplace}
                         onChange={() => {
                             rules.forEach(target => {
@@ -157,6 +194,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                 {
                     title: "对请求生效", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.EnableForRequest}
+                        disabled={i.Disabled}
                         onChange={() => {
                             rules.forEach(target => {
                                 if (target.Index != i.Index) {
@@ -171,6 +209,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                 {
                     title: "对响应生效", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.EnableForResponse}
+                        disabled={i.Disabled}
                         onChange={() => {
                             rules.forEach(target => {
                                 if (target.Index != i.Index) {
@@ -185,6 +224,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                 {
                     title: "对 Header 生效", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.EnableForHeader}
+                        disabled={i.Disabled}
                         onChange={() => {
                             rules.forEach(target => {
                                 if (target.Index != i.Index) {
@@ -199,6 +239,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                 {
                     title: "对 Body 生效", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.EnableForBody}
+                        disabled={i.Disabled}
                         onChange={() => {
                             rules.forEach(target => {
                                 if (target.Index != i.Index) {
@@ -212,6 +253,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                 },
                 {
                     title: "命中颜色", render: (i: MITMContentReplacerRule) => <ManySelectOne
+                        disabled={i.Disabled}
                         formItemStyle={{marginBottom: 0}}
                         data={["red", "blue", "cyan", "green", "grey", "purple", "yellow", "orange"].map(i => {
                             return {value: i, text: i}
@@ -229,11 +271,12 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     />
                 },
                 {
-                    title: "追加 Tag", render: (i: MITMContentReplacerRule) => <ManyMultiSelectForString
+                    title: "追加 Tag", width: 200, render: (i: MITMContentReplacerRule) => <ManyMultiSelectForString
                         data={["敏感信息", "疑似漏洞", "KEY泄漏"].map(i => {
                             return {value: i, label: i}
                         })}
                         label={""} mode={"tags"}
+                        disabled={i.Disabled}
                         setValue={tagSTr => {
                             rules.forEach(target => {
                                 if (target.Index != i.Index) {
@@ -279,7 +322,9 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
         NoReplace: false,
         Result: "",
         Rule: "",
-        ExtraTag: []
+        ExtraTag: [],
+        Disabled: false,
+        VerboseName: "RULE:" + randomString(10),
     })
     return <Form
         style={{marginBottom: 20}}
@@ -296,6 +341,8 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
         }}
     >
         <InputInteger label={"执行顺序"} setValue={Index => setParams({...params, Index})} value={params.Index}/>
+        <InputItem label={"规则名称"} setValue={VerboseName => setParams({...params, VerboseName})}
+                   value={params.VerboseName}/>
         <InputItem label={"规则内容"} setValue={Rule => setParams({...params, Rule})} value={params.Rule} required={true}/>
         <InputItem label={"替换结果"} setValue={Result => setParams({...params, Result})} value={params.Result}
                    placeholder={"想要替换成的内容，可以为空~"}/>

@@ -299,22 +299,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         if (!monacoEditor) {
             return
         }
-
-        // @ts-ignore
-        // let range = monacoEditor?.getModel().findMatches(search, false, !!regexp, false, null, false)
-        // if (range && range.length > 0) {
-        //     const decs = monacoEditor.deltaDecorations(highlightDecorations, range.map(i => {
-        //         return {
-        //             id: `highlight[${searchValue}]`,
-        //             range: i.range,
-        //             options: {
-        //                 isWholeLine: false,
-        //                 inlineClassName: 'monacoInlineHighlight'
-        //             }
-        //         } as any
-        //     }))
-        //     setHighlightDecorations(decs)
-        // }
     })
 
     /*如何实现 monaco editor 高亮？*/
@@ -502,6 +486,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                 {empty && props.emptyOr}
                 {mode === "text" && !empty && <YakEditor
                     loading={props.loading}
+                    // type={"html"}
                     type={props.language || (isResponse ? "html" : "http")}
                     value={
                         props.readOnly && props.originValue.length > 0 ?
