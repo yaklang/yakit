@@ -1,0 +1,46 @@
+.yak-store-list {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.yak-store-list.ant-tabs .ant-tabs-content-holder {
+    overflow: auto;
+}
+
+.yak-store-list.ant-tabs .ant-tabs-content-holder .ant-tabs-tabpane {
+    padding: 0 10px;
+}
+
+.no-more-text {
+    text-align: center;
+}
+
+.flex-align-center {
+    display: flex;
+    align-items: center;
+}
+
+.row-body {
+    padding-top: 12px;
+
+    .col-flex-end {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+
+        .col-icon {
+            color: #1890ff;
+            cursor: pointer;
+        }
+
+        button {
+            margin-left: 12px;
+        }
+    }
+}
+
+.filter-opt-progress {
+    flex: 1;
+    max-width: 300px;
+}

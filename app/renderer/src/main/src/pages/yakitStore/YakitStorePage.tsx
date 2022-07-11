@@ -40,7 +40,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {AutoCard} from "../../components/AutoCard"
 import ReactResizeDetector from "react-resize-detector"
 import {UserInfoProps, useStore} from "@/store"
-import "./YakitStorePage.css"
+import "./YakitStorePage.scss"
 import {getValue, saveValue} from "../../utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -530,9 +530,11 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                         OnlineID: res.id,
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
-                    // .then((res) => {
-                    //     console.log("本地成功", res)
-                    // })
+                    .then(() => {
+                        ipcRenderer.invoke("delete-yak-script", item.Id).then(()=>{console.log('删除成功')}).catch((err) => {
+                            failed("删除本地失败:" + err)
+                        })
+                    })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
                     })
