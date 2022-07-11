@@ -17,6 +17,7 @@ message GeneralResponse {
 
 message DeleteYakScriptRequest {
   int64  Id = 3;
+  repeated int64 Ids = 4;
 }
 
 message ExecBatchYakScriptRequest {
@@ -103,6 +104,11 @@ message GetYakScriptByNameRequest {
   string Name = 1;
 }
 
+message GetYakScriptByOnlineIDRequest {
+  string UUID = 1;
+  int64 OnlineID = 2;
+}
+
 service Yak {
   // version
   rpc Version(Empty) returns (VersionResponse);
@@ -137,6 +143,7 @@ service Yak {
   rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc GetYakScriptById(GetYakScriptByIdRequest) returns (YakScript);
   rpc GetYakScriptByName(GetYakScriptByNameRequest) returns (YakScript);
+  rpc GetYakScriptByOnlineID(GetYakScriptByOnlineIDRequest) returns (YakScript);
   rpc IgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc UnIgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
