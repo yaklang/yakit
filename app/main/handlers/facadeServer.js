@@ -91,4 +91,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetGlobalReverseServer", async (e, params) => {
         return await asyncGetGlobalReverseServer(params)
     })
+
+    // asyncSetYakBridgeLogServer wrapper
+    const asyncSetYakBridgeLogServer = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetYakBridgeLogServer(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetYakBridgeLogServer", async (e, params) => {
+        return await asyncSetYakBridgeLogServer(params)
+    })
 }

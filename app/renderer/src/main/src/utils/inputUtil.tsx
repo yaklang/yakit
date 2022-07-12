@@ -482,6 +482,7 @@ export interface SwitchItemProps extends InputBase {
     size?: "small" | "default"
     value?: boolean
     help?: string
+    disabled?: boolean
 
     setValue(b: boolean): any
 }
@@ -553,7 +554,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
 
 export const SwitchItem: React.FC<SwitchItemProps> = p => {
     return <Item label={p.label} help={p.help} style={p.formItemStyle}>
-        <Switch checked={p.value} onChange={e => p.setValue(e)} size={p.size}/>
+        <Switch checked={p.value} onChange={e => p.setValue(e)} size={p.size} disabled={p.disabled}/>
     </Item>
 }
 

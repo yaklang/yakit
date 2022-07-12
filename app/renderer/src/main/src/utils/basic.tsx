@@ -5,11 +5,17 @@ import {showDrawer, showModal} from "./showModal";
 import {ExecResultLog, ExecResultMessage} from "../pages/invoker/batch/ExecMessageViewer";
 import {LogLevelToCode} from "../components/HTTPFlowTable";
 import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter";
-import {InputItem} from "./inputUtil";
+import {InputItem, SwitchItem} from "./inputUtil";
 import {useGetState, useMemoizedFn} from "ahooks";
 import {ReloadOutlined} from "@ant-design/icons";
 import {getRemoteValue, setRemoteValue} from "./kv";
-import {BRIDGE_ADDR, BRIDGE_SECRET} from "../pages/reverse/ReverseServerPage";
+import {
+    BRIDGE_ADDR,
+    BRIDGE_SECRET,
+    DNSLOG_ADDR,
+    DNSLOG_INHERIT_BRIDGE,
+    DNSLOG_SECRET
+} from "../pages/reverse/ReverseServerPage";
 import {failed, info} from "./notification";
 import {RiskTable} from "../pages/risks/RiskTable";
 import {YakExecutorParam} from "../pages/invoker/YakExecutorParams";
@@ -88,8 +94,38 @@ export const ReversePlatformStatus = React.memo(() => {
                 }).catch(e => {
                     console.info(e)
                 })
+
+                getRemoteValue(DNSLOG_INHERIT_BRIDGE).then(data => {
+                    switch (`${data}`) {
+                        case "true":
+                            ipcRenderer.invoke("SetYakBridgeLogServer", {
+                                DNSLogAddr: addr, DNSLogSecret: `${secret}`,
+                            }).then(() => {
+                                info("配置全局 DNSLog 生效")
+                            }).catch(e => {
+                                failed(`配置全局 DNSLog 失败：${e}`)
+                            })
+                            break
+                        case "false":
+                            getRemoteValue(DNSLOG_ADDR).then((dnslogAddr: string) => {
+                                if (!!dnslogAddr) {
+                                    getRemoteValue(DNSLOG_SECRET).then((secret: string) => {
+                                        ipcRenderer.invoke("SetYakBridgeLogServer", {
+                                            DNSLogAddr: addr, DNSLogSecret: `${secret}`,
+                                        }).then(() => {
+                                            info("配置全局 DNSLog 生效")
+                                        }).catch(e => {
+                                            failed(`配置全局 DNSLog 失败：${e}`)
+                                        })
+                                    })
+                                }
+                            })
+                            break
+                    }
+                })
             })
         })
+
     }, [])
 
     const flag = (ok && !!details.PublicReverseIP && !!details.PublicReversePort);
@@ -304,6 +340,11 @@ export const ConfigGlobalReverse = React.memo(() => {
     const [ifaces, setIfaces] = useState<NetInterface[]>([]);
     const [ok, setOk] = useState(false)
 
+    // dnslog 配置
+    const [inheritBridge, setInheritBridge] = useState(false);
+    const [dnslogAddr, setDNSLogAddr] = useState("ns1.cybertunnel.run:64333");
+    const [dnslogPassword, setDNSLogPassword] = useState("");
+
     const getStatus = useMemoizedFn(() => {
         ipcRenderer.invoke("get-global-reverse-server-status").then((r) => {
             setOk(r)
@@ -322,6 +363,13 @@ export const ConfigGlobalReverse = React.memo(() => {
         }
     }, [])
 
+    useEffect(() => {
+        if (!inheritBridge) {
+            setDNSLogPassword("")
+            setDNSLogAddr("ns1.cybertunnel.run:64333")
+        }
+    }, [inheritBridge])
+
     const cancel = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-global-reverse-server-status").finally(() => {
             getStatus()
@@ -333,7 +381,25 @@ export const ConfigGlobalReverse = React.memo(() => {
             LocalAddr: localIP,
         }).then(() => {
             getStatus()
-            // setVisible(false)
+            if (inheritBridge) {
+                ipcRenderer.invoke("SetYakBridgeLogServer", {
+                    DNSLogAddr: addr, DNSLogSecret: password,
+                }).then(() => {
+                    info("配置全局 DNSLog 生效")
+                }).catch(e => {
+                    failed(`配置全局 DNSLog 失败：${e}`)
+                })
+            } else {
+                setRemoteValue(DNSLOG_ADDR, dnslogAddr)
+                setRemoteValue(DNSLOG_SECRET, dnslogPassword)
+                ipcRenderer.invoke("SetYakBridgeLogServer", {
+                    DNSLogAddr: dnslogAddr, DNSLogSecret: dnslogPassword,
+                }).then(() => {
+                    info("配置全局 DNSLog 生效")
+                }).catch(e => {
+                    failed(`配置全局 DNSLog 失败：${e}`)
+                })
+            }
         }).catch(e => {
             failed(`Config Global Reverse Server failed: ${e}`)
         })
@@ -341,21 +407,38 @@ export const ConfigGlobalReverse = React.memo(() => {
 
     // 设置 Bridge
     useEffect(() => {
-        if (!addr) {
-            getRemoteValue(BRIDGE_ADDR).then((data: string) => {
-                if (!!data) {
-                    setAddr(`${data}`)
-                }
-            })
-        }
+        getRemoteValue(BRIDGE_ADDR).then((data: string) => {
+            if (!!data) {
+                setAddr(`${data}`)
+            }
+        })
 
-        if (!password) {
-            getRemoteValue(BRIDGE_SECRET).then((data: string) => {
-                if (!!data) {
-                    setPassword(`${data}`)
-                }
-            })
-        }
+        getRemoteValue(BRIDGE_SECRET).then((data: string) => {
+            if (!!data) {
+                setPassword(`${data}`)
+            }
+        })
+
+        getRemoteValue(DNSLOG_INHERIT_BRIDGE).then(data => {
+            switch (`${data}`) {
+                case "true":
+                    setInheritBridge(true)
+                    return
+                case "false":
+                    setInheritBridge(false)
+                    getRemoteValue(DNSLOG_ADDR).then((data: string) => {
+                        if (!!data) {
+                            setDNSLogAddr(`${data}`)
+                        }
+                    })
+                    getRemoteValue(DNSLOG_SECRET).then((data: string) => {
+                        if (!!data) {
+                            setDNSLogPassword(`${data}`)
+                        }
+                    })
+                    return
+            }
+        })
 
         return () => {
             // cancel()
@@ -393,6 +476,15 @@ export const ConfigGlobalReverse = React.memo(() => {
         }
     }, [ifaces])
 
+    useEffect(() => {
+        ipcRenderer.on("global-reverse-error", (e, data) => {
+            failed(`全局反连配置失败：${data}`)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("global-reverse-error")
+        }
+    }, [])
+
     return <div>
         <Form
             style={{marginTop: 20}}
@@ -400,6 +492,7 @@ export const ConfigGlobalReverse = React.memo(() => {
                 e.preventDefault()
 
                 login()
+                setRemoteValue(DNSLOG_INHERIT_BRIDGE, `${inheritBridge}`)
             }} labelCol={{span: 5}} wrapperCol={{span: 14}}>
             <InputItem
                 label={"本地反连 IP"}
@@ -437,6 +530,21 @@ export const ConfigGlobalReverse = React.memo(() => {
                 type={"password"} disable={ok}
                 help={`yak bridge 命令的 --secret 参数值`}
             />
+            <Divider orientation={"left"}>Yakit 全局 DNSLog 配置</Divider>
+            <SwitchItem
+                label={"复用 Yak Bridge 配置"} disabled={ok}
+                value={inheritBridge} setValue={setInheritBridge}/>
+            {!inheritBridge && <InputItem
+                label={"DNSLog 配置"} disable={ok}
+                value={dnslogAddr}
+                help={"配置好 Yak Bridge 的 DNSLog 系统的地址：[ip]:[port]"}
+                setValue={setDNSLogAddr}
+            />}
+            {!inheritBridge && <InputItem
+                label={"DNSLog 密码"} disable={ok}
+                value={dnslogPassword}
+                setValue={setDNSLogPassword}
+            />}
             <Form.Item colon={false} label={" "}>
                 <Button type="primary" htmlType="submit" disabled={ok}> 配置反连 </Button>
                 {ok && <Button type="primary" danger={true} onClick={() => {
