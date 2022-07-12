@@ -3,6 +3,11 @@ const isDev = require("electron-is-dev");
 const path = require("path");
 const { extrakvpairs, getExtraKVPair, setExtraKVPair } = require("./handlers/upgradeUtil");
 const {registerIPC, clearing} = require("./ipc");
+const process = require("process");
+
+process.on("uncaughtException", error => {
+    console.info(error)
+})
 
 // 性能优化：https://juejin.cn/post/6844904029231775758
 
