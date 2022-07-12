@@ -869,7 +869,7 @@ const Main: React.FC<MainProp> = (props) => {
                                     </Menu.Item>
                                     <Menu.Item key={"reverse-global"} onClick={() => {
                                         showModal({
-                                            title: "更新插件源",
+                                            title: "配置反连与全局 DNSLog",
                                             width: 800,
                                             content: <div style={{width: 800}}>
                                                 <ConfigGlobalReverse/>

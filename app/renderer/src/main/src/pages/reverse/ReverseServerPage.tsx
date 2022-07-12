@@ -10,7 +10,7 @@ import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
 import {useGetState, useMemoizedFn} from "ahooks";
 import {ReverseNotificationTable} from "./ReverseNotificationTable";
 import {AutoSpin} from "../../components/AutoSpin";
-import {getValue, saveValue} from "../../utils/kv";
+import {getRemoteValue, setRemoteValue} from "../../utils/kv";
 
 export interface ReverseServerPageProp {
 
@@ -31,6 +31,9 @@ const {Text} = Typography;
 
 export const BRIDGE_ADDR = "yak-bridge-addr";
 export const BRIDGE_SECRET = "yak-bridge-secret";
+export const DNSLOG_INHERIT_BRIDGE = "yakit-DNSLOG_INHERIT_BRIDGE";
+export const DNSLOG_ADDR = "yak-dnslog-addr";
+export const DNSLOG_SECRET = "yak-dnslog-secret";
 
 export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
     const [bridge, setBridge] = useState(false);
@@ -121,8 +124,8 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
         ipcRenderer.invoke("GetTunnelServerExternalIP", {
             Addr: bridgeAddr, Secret: bridgeSecret,
         }).then((data: { IP: string }) => {
-            saveValue(BRIDGE_ADDR, bridgeAddr)
-            saveValue(BRIDGE_SECRET, bridgeSecret)
+            setRemoteValue(BRIDGE_ADDR, bridgeAddr)
+            setRemoteValue(BRIDGE_SECRET, bridgeSecret)
             setBridgeIP(data.IP)
         }).finally(() => {
             setBridgeLoading(false)
@@ -132,7 +135,7 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
     // 设置 Bridge
     useEffect(() => {
         if (!bridgeAddr) {
-            getValue(BRIDGE_ADDR).then((data: string) => {
+            getRemoteValue(BRIDGE_ADDR).then((data: string) => {
                 if (!!data) {
                     setBridgeAddr(`${data}`)
                 }
@@ -140,7 +143,7 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
         }
 
         if (!bridgeSecret) {
-            getValue(BRIDGE_SECRET).then((data: string) => {
+            getRemoteValue(BRIDGE_SECRET).then((data: string) => {
                 if (!!data) {
                     setBridgeSecret(`${data}`)
                 }
