@@ -218,6 +218,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                                         return
                                     }
                                     const res = fuzzOperators.filter(i => i.name === buildTemp);
+                                    // @ts-ignore
                                     if (res.length > 0 && res[0].optionsRender) {
                                         return res[0].optionsRender(template, setTemplate)
                                     }
@@ -255,6 +256,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                                     }
 
                                     const res = encodeOperators.filter(i => i.name === encodeTemp);
+                                    // @ts-ignore
                                     if (res.length > 0 && res[0].optionsRender) {
                                         return res[0].optionsRender(template, setTemplate)
                                     }
