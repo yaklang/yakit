@@ -95,7 +95,6 @@ const singletonRoute: Route[] = [
     Route.BatchExecutorPage,
     Route.ICMPSizeLog,
     Route.TCPPortLog,
-    Route.ModStoreOnline
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
