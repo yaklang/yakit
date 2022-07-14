@@ -118,7 +118,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     })
 
     // 是否第一次使用yakit  第一次使用默认展示线上，后面默认展示本地
-    const [plugSource, setPlugSource] = useState<string>("online")
+    const [plugSource, setPlugSource] = useState<string>("local")
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [batchAddLoading, setBatchAddLoading] = useState<boolean>(false)
