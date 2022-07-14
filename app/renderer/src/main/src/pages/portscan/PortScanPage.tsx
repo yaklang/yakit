@@ -57,7 +57,7 @@ export interface PortScanParams {
     BasicCrawlerRequestMax?: number
 }
 
-const ScanKind: { [key: string]: string } = {
+const ScanKind: {[key: string]: string} = {
     syn: "SYN",
     fingerprint: "指纹",
     all: "SYN+指纹"
@@ -104,10 +104,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         "scan-port",
         "PortScan",
         token,
-        () => {
-        },
-        () => {
-        },
+        () => {},
+        () => {},
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
@@ -123,8 +121,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                     // }, 300)
                 }
             })
-            .catch(() => {
-            })
+            .catch(() => {})
             .finally(() => {
                 setTimeout(() => setLoading(false), 100)
             })
@@ -189,7 +186,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                 onSelected={(l) => {
                                     setParams({...params, ScriptNames: [...l]})
                                 }}
-                                sourceType="PORT_SCAN_PAGE"
+                                sourceType='PORT_SCAN_PAGE'
                             />
                         </div>
 
@@ -335,7 +332,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                         setParams({...params, Ports: defaultPorts})
                                                     }}
                                                 >
-                                                    <ReloadOutlined/>
+                                                    <ReloadOutlined />
                                                 </a>
                                             </Tooltip>
                                         </Space>
@@ -380,14 +377,14 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     </Form.Item>
                                 </Form>
                             </div>
-                            <Divider style={{margin: "5px 0"}}/>
+                            <Divider style={{margin: "5px 0"}} />
                             <div style={{flex: 1, overflow: "hidden"}}>
                                 <Tabs className='scan-port-tabs' tabBarStyle={{marginBottom: 5}}>
                                     <Tabs.TabPane tab={"扫描端口列表"} key={"scanPort"} forceRender>
                                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                                             <Row style={{marginTop: 6}} gutter={6}>
                                                 <Col span={24}>
-                                                    <OpenPortTableViewer data={openPorts}/>
+                                                    <OpenPortTableViewer data={openPorts} />
                                                 </Col>
                                                 {/*<Col span={8}>*/}
                                                 {/*    <ClosedPortTableViewer data={closedPorts}/>*/}
@@ -409,8 +406,16 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         </div>
                                     </Tabs.TabPane>
                                     <Tabs.TabPane tab={"Console"} key={"console"} forceRender>
-                                        <div style={{width: "100%", height: "100%", overflow: "hidden auto",display:"flex",flexDirection:"column"}}>
-                                        <div style={{textAlign: "right", marginBottom: 8}}>
+                                        <div
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                                overflow: "hidden auto",
+                                                display: "flex",
+                                                flexDirection: "column"
+                                            }}
+                                        >
+                                            <div style={{textAlign: "right", marginBottom: 8}}>
                                                 {loading ? (
                                                     <Tag color={"green"}>正在执行...</Tag>
                                                 ) : (
@@ -418,7 +423,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 )}
                                             </div>
 
-                                            <div style={{width: "100%", flex:1, overflow: "hidden"}}>
+                                            <div style={{width: "100%", flex: 1, overflow: "hidden"}}>
                                                 <CVXterm
                                                     ref={xtermRef}
                                                     options={{
@@ -516,18 +521,6 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         setValue={(Active) => setParams({...params, Active})}
                         value={params.Active}
                     />
-                    <SelectOne
-                        label={"服务指纹级别"}
-                        help={"级别越高探测的详细程度越多，主动发包越多，时间越长"}
-                        data={[
-                            {value: 1, text: "基础"},
-                            {value: 3, text: "适中"},
-                            {value: 7, text: "详细"},
-                            {value: 100, text: "全部"}
-                        ]}
-                        value={params.ProbeMax}
-                        setValue={(ProbeMax) => setParams({...params, ProbeMax})}
-                    />
                     <InputInteger
                         label={"主动发包超时时间"}
                         help={"某些指纹的检测需要检查目标针对某一个探针请求的响应，需要主动发包"}
@@ -549,15 +542,12 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         mode={"tags"}
                         setValue={(e) => setParams({...params, Proxy: (e || "").split(",").filter((i) => !!i)})}
                     />
-                    <SelectOne
-                        label={"高级指纹选项"}
-                        data={[
-                            {value: "web", text: "仅web指纹"},
-                            {value: "service", text: "服务指纹"},
-                            {value: "all", text: "全部指纹"}
-                        ]}
-                        setValue={(FingerprintMode) => setParams({...params, FingerprintMode})}
-                        value={params.FingerprintMode}
+                    <SwitchItem
+                        label={"扫描结果入库"}
+                        setValue={(SaveToDB) => {
+                            setParams({...params, SaveToDB, SaveClosedPorts: false})
+                        }}
+                        value={params.SaveToDB}
                     />
                     <Divider orientation={"left"}>基础爬虫配置</Divider>
                     <Form.Item
@@ -580,15 +570,6 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                     </Form.Item>
                 </>
             )}
-
-            <Divider orientation={"left"}>其他配置</Divider>
-            <SwitchItem
-                label={"扫描结果入库"}
-                setValue={(SaveToDB) => {
-                    setParams({...params, SaveToDB, SaveClosedPorts: false})
-                }}
-                value={params.SaveToDB}
-            />
             {params.SaveToDB && (
                 <SwitchItem
                     label={"保存关闭的端口"}
