@@ -48,5 +48,29 @@
     "request-progress": "^3.0.0",
     "sudo-prompt": "^9.2.1",
     "tree-kill": "^1.2.2"
+  },
+  "build": {
+    "directories": {
+      "output": "release"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "app/assets/telecom_logo_small.ico",
+      "uninstallerIcon": "app/assets/telecom_logo_small.ico"
+    },
+    "productName": "单兵武器装备库",
+    "win": {
+      "icon": "app/assets/telecom_logo_small.ico",
+      "artifactName": "${productName}-${version}-windows-amd64.${ext}"
+    },
+    "mac": {
+      "icon": "app/assets/telecom_logo_small.ico",
+      "artifactName": "${productName}-${version}-darwin-${arch}.${ext}"
+    },
+    "linux": {
+      "icon": "app/assets/telecom_logo_small.ico",
+      "artifactName": "${productName}-${version}-linux-amd64.${ext}"
+    }
   }
 }
