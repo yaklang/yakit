@@ -42,6 +42,7 @@ wizard/palm-server/
 wizard/dist/
 *.mmdb
 release/
+build/
 package-lock.json
 .bashrc
 yarn.lock
