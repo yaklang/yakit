@@ -123,7 +123,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [batchAddLoading, setBatchAddLoading] = useState<boolean>(false)
-    const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
     const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
     const [selectedRowKeysRecord, setSelectedRowKeysRecord] = useState<API.YakitPluginDetail[]>([])
     const [fullScreen, setFullScreen] = useState<boolean>(false)
@@ -170,16 +169,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setKeyword(publicKeyword)
     })
 
-    const onSelectAll = useMemoizedFn((e) => {
-        setIsSelectAll(e.target.checked)
-        if (!e.target.checked) {
-            setSelectedRowKeysRecord([])
-        }
-    })
-
     const onSelectItem = useMemoizedFn((datas) => {
         setSelectedRowKeysRecord(datas)
-        setIsSelectAll(false)
     })
     const [scrollHeight, setScrollHeight] = useState<number>(0)
     const onFullScreen = useMemoizedFn(() => {
@@ -250,10 +241,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         </Row>
                         <Row className='row-body' gutter={12}>
                             <Col span={12}>
-                                {plugSource === "online" && (
-                                    <Checkbox checked={isSelectAll} onChange={onSelectAll}>
-                                        全选
-                                    </Checkbox>
+                                {plugSource === "online" && selectedRowKeysRecord.length > 0 && (
+                                    <Tag color='blue'>已选{selectedRowKeysRecord.length}条</Tag>
                                 )}
                                 <Tag>Total:{total}</Tag>
                             </Col>
@@ -285,7 +274,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             selectedRowKeysRecord={selectedRowKeysRecord}
                                             setBatchAddLoading={setBatchAddLoading}
                                             setSelectedRowKeysRecord={setSelectedRowKeysRecord}
-                                            isSelectAll={isSelectAll}
                                         />
                                     </>
                                 )) || (
@@ -360,9 +348,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             queryOnline={queryOnline}
                             selectedRowKeysRecord={selectedRowKeysRecord}
                             onSelectItem={onSelectItem}
-                            onSelectAll={setSelectedRowKeysRecord}
                             setTotal={setTotal}
-                            isSelectAll={isSelectAll}
                             onClicked={setPlugin}
                             userInfo={userInfo}
                         />
@@ -1012,7 +998,6 @@ interface AddAllPluginProps {
     setBatchAddLoading: (a: boolean) => void
     setSelectedRowKeysRecord: (a: API.YakitPluginDetail[]) => void
     selectedRowKeysRecord: API.YakitPluginDetail[]
-    isSelectAll: boolean
 }
 
 interface DownloadOnlinePluginByIdsRequest {
@@ -1021,7 +1006,7 @@ interface DownloadOnlinePluginByIdsRequest {
 }
 
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
-    const {selectedRowKeysRecord, setBatchAddLoading, setSelectedRowKeysRecord, isSelectAll} = props
+    const {selectedRowKeysRecord, setBatchAddLoading, setSelectedRowKeysRecord} = props
     const [taskToken, setTaskToken] = useState(randomString(40))
     // 全部添加进度条
     const [addLoading, setAddLoading] = useState<boolean>(false)
@@ -1050,17 +1035,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
         }
     }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
-        if (selectedRowKeysRecord.length === 0) {
-            warn("请选择需要添加到本地的数据")
-            return
-        }
-        if (isSelectAll) {
-            // 全部添加
-            setAddLoading(true)
-            ipcRenderer.invoke("DownloadOnlinePluginAll", {isAddToken: true, BindMe: false}, taskToken).catch((e) => {
-                failed(`添加失败:${e}`)
-            })
-        } else {
+        if (selectedRowKeysRecord.length > 0) {
             // 批量添加
             const uuIds: string[] = []
             const onlineIDs: number[] = []
@@ -1075,7 +1050,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     OnlineIDs: onlineIDs
                 } as DownloadOnlinePluginByIdsRequest)
                 .then(() => {
-                    success("添加到本地成功")
+                    success(`共添加${selectedRowKeysRecord.length}条数据到本地`)
                     setSelectedRowKeysRecord([])
                 })
                 .catch((e) => {
@@ -1085,6 +1060,19 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     setTimeout(() => {
                         setBatchAddLoading(false)
                     }, 200)
+                })
+        } else {
+            // 全部添加
+            setAddLoading(true)
+            ipcRenderer
+                .invoke("DownloadOnlinePluginAll", {isAddToken: true, BindMe: false}, taskToken)
+                .then(() => {
+                    setTimeout(() => {
+                        success("全部添加成功")
+                    }, 500)
+                })
+                .catch((e) => {
+                    failed(`添加失败:${e}`)
                 })
         }
     })
@@ -1110,9 +1098,11 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     停止
                 </Button>
             ) : (
-                <Button className='filter-opt-btn' size='small' type='primary' onClick={AddAllPlugin}>
-                    添加
-                </Button>
+                <Tooltip title='没有选择数据默认全部添加'>
+                    <Button className='filter-opt-btn' size='small' type='primary' onClick={AddAllPlugin}>
+                        添加
+                    </Button>
+                </Tooltip>
             )}
         </>
     )
@@ -1139,24 +1129,12 @@ interface YakModuleOnlineListProps {
     setTotal: (m: number) => void
     selectedRowKeysRecord: API.YakitPluginDetail[]
     onSelectItem: (m: API.YakitPluginDetail[]) => void
-    onSelectAll: (m: API.YakitPluginDetail[]) => void
-    isSelectAll: boolean
     onClicked: (m: API.YakitPluginDetail) => void
     userInfo: UserInfoProps
 }
 
 const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
-    const {
-        queryOnline,
-        setTotal,
-        selectedRowKeysRecord,
-        onSelectItem,
-        onSelectAll,
-        isSelectAll,
-        onClicked,
-        currentId,
-        userInfo
-    } = props
+    const {queryOnline, setTotal, selectedRowKeysRecord, onSelectItem, onClicked, currentId, userInfo} = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
         pagemeta: {
@@ -1171,12 +1149,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const [pluginInfo, setPluginInfo] = useState<API.YakitPluginDetail>()
     const [index, setIndex] = useState<number>(-1)
     const [hasMore, setHasMore] = useState(false)
-    useEffect(() => {
-        if (isSelectAll) {
-            const data = response.data.filter((ele) => ele.status === 1)
-            onSelectAll([...data])
-        }
-    }, [isSelectAll])
     useEffect(() => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
@@ -1206,10 +1178,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                     ...res,
                     data: [...data]
                 })
-                if (isSelectAll) {
-                    onSelectAll([...data])
-                }
-
                 setTotal(res.pagemeta.total)
             })
             .catch((err) => {
@@ -1328,7 +1296,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                                     }}
                                     onDownload={addLocalLab}
                                     onStarred={starredPlugin}
-                                    isSelectAll={isSelectAll}
                                 />
                             </List.Item>
                         )
@@ -1349,7 +1316,6 @@ interface PluginListOptProps {
     index: number
     currentId: number
     isAdmin: boolean
-    isSelectAll: boolean
     info: API.YakitPluginDetail
     onClick: (info: API.YakitPluginDetail) => any
     onDownload: (info: API.YakitPluginDetail, callback) => any
@@ -1368,18 +1334,7 @@ export const RandomTagColor: string[] = [
 
 const PluginItemOnline = (props: PluginListOptProps) => {
     const [loading, setLoading] = useState<boolean>(false)
-    const {
-        isAdmin,
-        info,
-        onClick,
-        onDownload,
-        onStarred,
-        index,
-        onSelect,
-        selectedRowKeysRecord,
-        currentId,
-        isSelectAll
-    } = props
+    const {isAdmin, info, onClick, onDownload, onStarred, index, onSelect, selectedRowKeysRecord, currentId} = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const tagList = useRef(null)
     const [status, setStatus] = useState<number>(info.status)
@@ -1481,11 +1436,9 @@ const PluginItemOnline = (props: PluginListOptProps) => {
             }}
         >
             <SelectIcon
-                //  @ts-ignore  isSelectAll:true  全选状态下：不能选择除审核通过外的；   isSelectAll:false  非全选  可以选择所有状态
+                //  @ts-ignore
                 className={`icon-select  ${
-                    !(isSelectAll && info.status !== 1) &&
-                    selectedRowKeysRecord.findIndex((ele) => ele.id === info.id) !== -1 &&
-                    "icon-select-active"
+                    selectedRowKeysRecord.findIndex((ele) => ele.id === info.id) !== -1 && "icon-select-active"
                 }`}
                 onClick={(e) => {
                     e.stopPropagation()
