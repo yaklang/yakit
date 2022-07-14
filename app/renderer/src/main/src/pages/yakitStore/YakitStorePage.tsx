@@ -43,14 +43,12 @@ import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
 import InfiniteScroll from "react-infinite-scroll-component"
-import Checkbox from "antd/lib/checkbox/Checkbox"
 import {randomString} from "@/utils/randomUtil"
-import {OfficialYakitLogoIcon, SelectIcon} from "../../assets/icons"
+import {OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon} from "../../assets/icons"
 import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/index"
 import moment from "moment"
 import {findDOMNode} from "react-dom"
 import {usePluginStore} from "@/store/plugin"
-import {ResizeBox} from "@/components/ResizeBox"
 
 const {Search} = Input
 const {Option} = Select
@@ -659,7 +657,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     <div title={plugin.ScriptName}>
                         {plugin.OnlineScriptName ? plugin.OnlineScriptName : plugin.ScriptName}
                     </div>
-                    {plugin.OnlineId > 0 && <Tag color='blue'>插件商店</Tag>}
+                    {plugin.OnlineId > 0 && <OnlineCloudIcon />}
                     {gitUrlIcon(plugin.FromGit)}
                 </Space>
             }
