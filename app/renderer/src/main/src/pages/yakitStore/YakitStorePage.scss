@@ -183,8 +183,13 @@
 .query-form-body {
     width: 200px;
 
+    .ant-form-item {
+        margin-bottom: 6px !important;
+    }
+
     .form-btns {
         display: flex;
         justify-content: space-around;
+        margin-top: 12px;
     }
 }

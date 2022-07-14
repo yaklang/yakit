@@ -206,4 +206,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteAllLocalPlugins", async (e, params) => {
         return await asyncDeleteAllLocalPlugins(params)
     })
+    const asyncGetYakScriptByOnlineID = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetYakScriptByOnlineID(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    //通过OnlineID 查询本地插件数据
+    ipcMain.handle("GetYakScriptByOnlineID", async (e, params) => {
+        return await asyncGetYakScriptByOnlineID(params)
+    })
+    
 }

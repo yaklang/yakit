@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Checkbox, Col, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip} from "antd"
+import {Button, Checkbox, Col, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio} from "antd"
 import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {YakScript, YakScriptParam} from "./schema"
 import {YakCodeEditor, YakEditor} from "../../utils/editors"
@@ -23,6 +23,7 @@ import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
 import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
+import Modal from "antd/lib/modal/Modal"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -152,6 +153,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const [modified, setModified] = useState<YakScript | undefined>(props.modified)
     const [fullscreen, setFullscreen] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
     const {userInfo} = useStore()
 
     const isNucleiPoC = params.Type === "nuclei"
@@ -224,7 +226,33 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         if (props.modified) setParams({...props.modified})
     }, [props.modified])
 
-    // 上传到插件商店后，如果没有插件id，需要下载到本地
+    // 仅保存本地
+    const onSaveLocal = useMemoizedFn(() => {
+        if (!params.ScriptName) {
+            warn("请输入插件模块名!")
+            return
+        }
+        ipcRenderer
+            .invoke("SaveYakScript", params)
+            .then((data) => {
+                info("创建 / 保存 Yak 脚本成功")
+                props.onCreated && props.onCreated(data)
+                props.onChanged && props.onChanged(data)
+                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+            })
+            .catch((e: any) => {
+                failed(`保存 Yak 模块失败: ${e}`)
+            })
+    })
+    const onSyncSelect = useMemoizedFn((type) => {
+        // 1 私密：个人账号 2公开：审核后同步云端
+        if (type === 1) {
+            upOnlinePlugin()
+        } else {
+            uploadOnline(params)
+        }
+    })
+    // 保存在个人账号
     const upOnlinePlugin = useMemoizedFn(() => {
         const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
@@ -253,7 +281,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             data: onlineParams
         })
             .then((res) => {
-                success("创建 / 保存 Yak 脚本成功")
+                success("同步成功")
                 props.onCreated && props.onCreated(params)
                 props.onChanged && props.onChanged(params)
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
@@ -262,34 +290,15 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         OnlineID: res.id,
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
-                    // .then((res) => {
-                    //     console.log("本地成功",res)
-                    // })
+                    .then((res) => {
+                        setVisibleSyncSelect(false)
+                    })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
                     })
             })
             .catch((err) => {
                 failed("插件上传失败:" + err)
-            })
-    })
-
-    // 仅保存本地
-    const onSaveLocal = useMemoizedFn(() => {
-        if (!params.ScriptName) {
-            warn("请输入插件模块名!")
-            return
-        }
-        ipcRenderer
-            .invoke("SaveYakScript", params)
-            .then((data) => {
-                info("创建 / 保存 Yak 脚本成功")
-                props.onCreated && props.onCreated(data)
-                props.onChanged && props.onChanged(data)
-                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
-            })
-            .catch((e: any) => {
-                failed(`保存 Yak 模块失败: ${e}`)
             })
     })
     // 上传
@@ -331,15 +340,18 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             data: params
         })
             .then((res) => {
+                success("同步成功")
+                props.onCreated && props.onCreated(item)
+                props.onChanged && props.onChanged(item)
                 // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
                 ipcRenderer
                     .invoke("DownloadOnlinePluginById", {
                         OnlineID: res.id,
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
-                    // .then((res) => {
-                    //     console.log("本地成功", res)
-                    // })
+                    .then((res) => {
+                        setVisibleSyncSelect(false)
+                    })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
                     })
@@ -380,7 +392,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     label={"Yak 模块名"}
                     required={true}
                     setValue={(ScriptName) => setParams({...params, ScriptName})}
-                    value={params.ScriptName}
+                    value={params.OnlineScriptName ? params.OnlineScriptName :params.ScriptName}
                 />
                 <InputItem label={"简要描述"} setValue={(Help) => setParams({...params, Help})} value={params.Help} />
                 <InputItem
@@ -393,7 +405,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     data={[{value: "教程", label: "教程"}]}
                     mode={"tags"}
                     setValue={(Tags) => setParams({...params, Tags})}
-                    value={params.Tags}
+                    value={params.Tags && params.Tags !== "null" ? params.Tags : ""}
                 />
                 {["yak", "mitm"].includes(params.Type) && (
                     <Form.Item label={"增加参数"}>
@@ -618,24 +630,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 </Form.Item>
                 <Form.Item colon={false} label={" "}>
                     <Space>
-                        {(userInfo.isLogin && (
-                            <>
-                                <Popconfirm
-                                    title='请选择保存方式'
-                                    onCancel={onSaveLocal}
-                                    onConfirm={upOnlinePlugin}
-                                    cancelText='仅保存本地'
-                                    okText='保存'
-                                >
-                                    <Button type='primary'>保存</Button>
-                                </Popconfirm>
-                                <Button onClick={() => uploadOnline(params)}>上传</Button>
-                            </>
-                        )) || (
-                            <Button type='primary' onClick={onSaveLocal}>
-                                保存
-                            </Button>
-                        )}
+                        <Button type='primary' onClick={onSaveLocal}>
+                            保存
+                        </Button>
+                        {userInfo.isLogin && <Button onClick={() => setVisibleSyncSelect(true)}>同步至云端</Button>}
                         <Button
                             // type={primary ? "primary" : undefined}
                             disabled={[
@@ -661,12 +659,47 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                     })
                             }}
                         >
-                            保存并调试
+                            调试
                         </Button>
                     </Space>
                 </Form.Item>
             </Form>
+            <ModalSyncSelect
+                visible={visibleSyncSelect}
+                handleOk={onSyncSelect}
+                handleCancel={() => setVisibleSyncSelect(false)}
+            />
         </div>
+    )
+}
+
+interface ModalSyncSelect {
+    visible: boolean
+    handleOk: (type: number) => void
+    handleCancel: () => void
+}
+const ModalSyncSelect: React.FC<ModalSyncSelect> = (props) => {
+    const {visible, handleOk, handleCancel} = props
+    const [type, setType] = useState<number>(1)
+    const onChange = useMemoizedFn((e) => {
+        setType(e.target.value)
+    })
+    return (
+        <Modal
+            title='同步至云端'
+            visible={visible}
+            onOk={() => handleOk(type)}
+            onCancel={handleCancel}
+            okText='确定'
+            cancelText='取消'
+        >
+            <Radio.Group onChange={onChange} value={type}>
+                <Space direction='vertical'>
+                    <Radio value={1}>私密(仅自己可见)</Radio>
+                    <Radio value={2}>公开(审核通过后，将上架到插件商店)</Radio>
+                </Space>
+            </Radio.Group>
+        </Modal>
     )
 }
 

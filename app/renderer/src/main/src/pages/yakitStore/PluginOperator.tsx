@@ -62,7 +62,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             return
         }
         updateGroups()
-
+        
         setLoading(true)
         ipcRenderer
             .invoke("GetYakScriptById", {Id: props.yakScriptId})
@@ -153,7 +153,11 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                         style={{color: "#a7a7a7"}}
                                         onClick={(e) => {
                                             let m = showDrawer({
-                                                title: `修改插件: ${script?.ScriptName}`,
+                                                title: `修改插件: ${
+                                                    script.OnlineScriptName
+                                                        ? script.OnlineScriptName
+                                                        : script?.ScriptName
+                                                }`,
                                                 width: "100%",
                                                 content: (
                                                     <>
@@ -277,7 +281,11 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                                 style={{color: "#a7a7a7"}}
                                                 onClick={(e) => {
                                                     let m = showDrawer({
-                                                        title: `修改插件: ${script?.ScriptName}`,
+                                                        title: `修改插件: ${
+                                                            script.OnlineScriptName
+                                                                ? script.OnlineScriptName
+                                                                : script?.ScriptName
+                                                        }`,
                                                         width: "100%",
                                                         content: (
                                                             <>

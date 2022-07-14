@@ -19,7 +19,6 @@ import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
 import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager"
 import {PortScanPage} from "../pages/portscan/PortScanPage"
 import {YakitStorePage} from "../pages/yakitStore/YakitStorePage"
-import {YakitStoreAndOnlinePage} from "../pages/yakitStore/YakitStoreAndOnlinePage"
 
 import {PluginOperator} from "../pages/yakitStore/PluginOperator"
 import {failed} from "../utils/notification"
@@ -57,7 +56,6 @@ export enum Route {
 
     ModManagerDetail = "mod-manager-detail",
     ModManager = "mod-manager",
-    ModManagerAndStoreOnline = "mod-manager-and-store-online",
     ModManagerLegacy = "mod-manager-legacy",
 
     PenTest = "pen-test",
@@ -148,7 +146,6 @@ export const RouteMenuData: MenuDataProps[] = [
         icon: <AppstoreOutlined />,
         subMenuData: [
             {key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined />},
-            {key: Route.ModManagerAndStoreOnline, label: "插件仓库/商店", icon: <AppstoreOutlined />},
             {key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined />}
         ]
     },
@@ -272,8 +269,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <CodecPage />
         case Route.ModManager:
             return <YakitStorePage />
-        case Route.ModManagerAndStoreOnline:
-            return <YakitStoreAndOnlinePage />
         case Route.PayloadManager:
             return <PayloadManagerPage />
         case Route.Mod_ScanPort:
