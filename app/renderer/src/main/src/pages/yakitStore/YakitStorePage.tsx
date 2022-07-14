@@ -129,11 +129,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [scrollHeight, setScrollHeight] = useState<number>(0)
     // 全局登录状态
     const {userInfo} = useStore()
-    useEffect(()=>{
-        if(selectedRowKeysRecord.length===0){
+    useEffect(() => {
+        if (selectedRowKeysRecord.length === 0) {
             setIsSelectAll(false)
         }
-    },[selectedRowKeysRecord.length])
+    }, [selectedRowKeysRecord.length])
     useEffect(() => {
         ipcRenderer
             .invoke("get-value", userInitUse)
@@ -1119,11 +1119,24 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     停止
                 </Button>
             ) : (
-                <Tooltip title='没有选择数据默认全部添加'>
-                    <Button className='filter-opt-btn' size='small' type='primary' onClick={AddAllPlugin}>
-                        添加
-                    </Button>
-                </Tooltip>
+                <>
+                    {(selectedRowKeysRecord.length === 0 && (
+                        <Popconfirm
+                            title='确定将插件商店所有数据导入到本地吗?'
+                            onConfirm={AddAllPlugin}
+                            okText='Yes'
+                            cancelText='No'
+                        >
+                            <Button className='filter-opt-btn' size='small' type='primary'>
+                                添加
+                            </Button>
+                        </Popconfirm>
+                    )) || (
+                        <Button className='filter-opt-btn' size='small' type='primary' onClick={AddAllPlugin}>
+                                添加
+                        </Button>
+                    )}
+                </>
             )}
         </>
     )
