@@ -94,7 +94,7 @@ const singletonRoute: Route[] = [
     Route.DNSLog,
     Route.BatchExecutorPage,
     Route.ICMPSizeLog,
-    Route.TCPPortLog,
+    Route.TCPPortLog
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -510,8 +510,17 @@ const Main: React.FC<MainProp> = (props) => {
     ])
 
     useEffect(() => {
-        if (userInfo.role === "admin"&&userMenu.findIndex(ele=>ele.key==='trust-list')===-1) {
-            setUserMenu([...userMenu,{key: "trust-list", title: "信任用户管理"}])
+        if (userInfo.role === "admin") {
+            setUserMenu([
+                {key: "sign-out", title: "退出登录"},
+                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "trust-list", title: "信任用户管理"}
+            ])
+        } else {
+            setUserMenu([
+                {key: "sign-out", title: "退出登录"},
+                {key: "account-bind", title: "帐号绑定(监修)", disabled: true}
+            ])
         }
     }, [userInfo.role])
 

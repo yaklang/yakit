@@ -15,7 +15,8 @@ import {
     Tooltip,
     Progress,
     Spin,
-    Select
+    Select,
+    Checkbox
 } from "antd"
 import {
     ReloadOutlined,
@@ -124,8 +125,15 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
     const [selectedRowKeysRecord, setSelectedRowKeysRecord] = useState<API.YakitPluginDetail[]>([])
     const [fullScreen, setFullScreen] = useState<boolean>(false)
+    const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
+    const [scrollHeight, setScrollHeight] = useState<number>(0)
     // 全局登录状态
     const {userInfo} = useStore()
+    useEffect(()=>{
+        if(selectedRowKeysRecord.length===0){
+            setIsSelectAll(false)
+        }
+    },[selectedRowKeysRecord.length])
     useEffect(() => {
         ipcRenderer
             .invoke("get-value", userInitUse)
@@ -170,7 +178,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const onSelectItem = useMemoizedFn((datas) => {
         setSelectedRowKeysRecord(datas)
     })
-    const [scrollHeight, setScrollHeight] = useState<number>(0)
+
     const onFullScreen = useMemoizedFn(() => {
         const localDom = document.getElementById("scroll-div-plugin-local")
         const onlineDom = document.getElementById("scroll-div-plugin-online")
@@ -197,7 +205,12 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         }
         setFullScreen(!fullScreen)
     })
-
+    const onSelectAll = useMemoizedFn((e) => {
+        setIsSelectAll(e.target.checked)
+        if (!e.target.checked) {
+            setSelectedRowKeysRecord([])
+        }
+    })
     return (
         <div style={{height: "100%", display: "flex", flexDirection: "row"}}>
             <Card
@@ -239,8 +252,16 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         </Row>
                         <Row className='row-body' gutter={12}>
                             <Col span={12}>
-                                {plugSource === "online" && selectedRowKeysRecord.length > 0 && (
+                                {/* {plugSource === "online" && selectedRowKeysRecord.length > 0 && (
                                     <Tag color='blue'>已选{selectedRowKeysRecord.length}条</Tag>
+                                )} */}
+                                {plugSource === "online" && (
+                                    <Checkbox checked={isSelectAll} onChange={onSelectAll}>
+                                        全选&emsp;
+                                        {selectedRowKeysRecord.length > 0 && (
+                                            <Tag color='blue'>已选{selectedRowKeysRecord.length}条</Tag>
+                                        )}
+                                    </Checkbox>
                                 )}
                                 <Tag>Total:{total}</Tag>
                             </Col>
@@ -346,6 +367,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             queryOnline={queryOnline}
                             selectedRowKeysRecord={selectedRowKeysRecord}
                             onSelectItem={onSelectItem}
+                            isSelectAll={isSelectAll}
+                            onSelectAll={setSelectedRowKeysRecord}
                             setTotal={setTotal}
                             onClicked={setPlugin}
                             userInfo={userInfo}
@@ -1129,10 +1152,22 @@ interface YakModuleOnlineListProps {
     onSelectItem: (m: API.YakitPluginDetail[]) => void
     onClicked: (m: API.YakitPluginDetail) => void
     userInfo: UserInfoProps
+    onSelectAll: (m: API.YakitPluginDetail[]) => void
+    isSelectAll: boolean
 }
 
 const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
-    const {queryOnline, setTotal, selectedRowKeysRecord, onSelectItem, onClicked, currentId, userInfo} = props
+    const {
+        queryOnline,
+        setTotal,
+        selectedRowKeysRecord,
+        onSelectItem,
+        onSelectAll,
+        isSelectAll,
+        onClicked,
+        currentId,
+        userInfo
+    } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
         pagemeta: {
@@ -1144,9 +1179,13 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     })
     const [loading, setLoading] = useState(false)
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
-    const [pluginInfo, setPluginInfo] = useState<API.YakitPluginDetail>()
-    const [index, setIndex] = useState<number>(-1)
     const [hasMore, setHasMore] = useState(false)
+    useEffect(() => {
+        if (isSelectAll) {
+            const data = response.data.filter((ele) => ele.status === 1)
+            onSelectAll([...data])
+        }
+    }, [isSelectAll])
     useEffect(() => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
@@ -1289,8 +1328,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                                     selectedRowKeysRecord={selectedRowKeysRecord}
                                     onSelect={onSelect}
                                     onClick={(info) => {
-                                        setPluginInfo(info)
-                                        setIndex(index)
+                                        onClicked(info)
                                     }}
                                     onDownload={addLocalLab}
                                     onStarred={starredPlugin}
@@ -1529,7 +1567,7 @@ const QueryComponent: React.FC<QueryComponentProps> = (props) => {
         }
     }
     const onReset = () => {
-        setQueryOnline({...queryOnline, order_by: "stars", type: "", status: null})
+        setQueryOnline({...queryOnline, order_by: "stars", type: "", status: null, user: false})
         form.setFieldsValue({
             order_by: "stars",
             type: "",
