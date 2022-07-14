@@ -1174,7 +1174,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     useEffect(() => {
         if (isSelectAll) {
             const data = response.data.filter((ele) => ele.status === 1)
-            console.log("data", data)
             onSelectAll([...data])
         }
     }, [isSelectAll])

@@ -87,7 +87,6 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             }
         })
             .then((res) => {
-                console.log("res-插件详情", res)
                 setPlugin(res.data)
             })
             .catch((err) => {
@@ -348,7 +347,6 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
             params
         })
             .then((res) => {
-                console.log("res_评论", res)
                 if (!res.data) {
                     res.data = []
                 }
@@ -490,7 +488,6 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
         setCommentChildVisible(visible)
     }
     const loadMoreData = useMemoizedFn(() => {
-        console.log("loadMoreData")
         getComment(commentResponses.pagemeta.page + 1)
     })
     const pluginCancelComment = useMemoizedFn((flag: number) => {
