@@ -16,7 +16,8 @@ import {
     Progress,
     Spin,
     Select,
-    Checkbox
+    Checkbox,
+    Switch
 } from "antd"
 import {
     ReloadOutlined,
@@ -82,6 +83,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [keyword, setKeyword] = useState("")
     const [ignored, setIgnored] = useState(false)
     const [history, setHistory] = useState(false)
+    const [isFilter, setIsFilter] = useState(false)
     const [total, setTotal] = useState<number>(0)
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         keywords: "",
@@ -93,6 +95,20 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         status: null,
         user: false
     })
+
+    useEffect(() => {
+        if (
+            queryOnline.order_by === "stars" &&
+            queryOnline.order === "desc" &&
+            queryOnline.type === "" &&
+            queryOnline.status === null &&
+            queryOnline.user === false
+        ) {
+            setIsFilter(false)
+        } else {
+            setIsFilter(true)
+        }
+    }, [queryOnline])
 
     const [loading, setLoading] = useState(false)
     const [pluginType, setPluginType] = useState<
@@ -111,6 +127,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .invoke("DeleteAllLocalPlugins", {})
             .then(() => {
                 getLocalList()
+                ipcRenderer.invoke("change-main-menu")
                 success("删除成功")
             })
             .catch((e) => {
@@ -182,8 +199,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     })
 
     const onFullScreen = useMemoizedFn(() => {
-        console.log("refTest", refTest)
-
         const localDom = document.getElementById("scroll-div-plugin-local")
         const onlineDom = document.getElementById("scroll-div-plugin-online")
         if (fullScreen) {
@@ -215,17 +230,16 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             setSelectedRowKeysRecord([])
         }
     })
-    const onSelectAllYAMLPOC = useMemoizedFn((e) => {
-        if (e.target.checked) {
+    const onSelectAllYAMLPOC = useMemoizedFn((checked) => {
+        if (checked) {
             setPluginType("yak,mitm,codec,packet-hack,port-scan,nuclei")
         } else {
             setPluginType("yak,mitm,codec,packet-hack,port-scan")
         }
-        setIsShowYAMLPOC(e.target.checked)
+        setIsShowYAMLPOC(checked)
     })
-    const refTest = useRef<any>()
     return (
-        <div style={{height: "100%", display: "flex", flexDirection: "row"}} ref={refTest}>
+        <div style={{height: "100%", display: "flex", flexDirection: "row"}}>
             <Card
                 bodyStyle={{padding: 0, height: "calc(100% - 82px)"}}
                 bordered={false}
@@ -264,7 +278,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             </Col>
                         </Row>
                         <Row className='row-body' gutter={12}>
-                            <Col span={12}>
+                            <Col span={12} className="col">
                                 {plugSource === "online" && (
                                     <Checkbox checked={isSelectAll} onChange={onSelectAll}>
                                         全选&emsp;
@@ -275,9 +289,13 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 )}
                                 <Tag>Total:{total}</Tag>
                                 {plugSource === "local" && (
-                                    <Checkbox checked={isShowYAMLPOC} onChange={onSelectAllYAMLPOC}>
-                                        展示YAML POC
-                                    </Checkbox>
+                                    <div className="show-yaml-poc">
+                                        <Switch checked={isShowYAMLPOC} onChange={onSelectAllYAMLPOC} size='small' />
+                                        &nbsp;展示YAML POC
+                                    </div>
+                                    // <Checkbox checked={isShowYAMLPOC} onChange={onSelectAllYAMLPOC}>
+
+                                    // </Checkbox>
                                 )}
                             </Col>
                             <Col span={12} className='col-flex-end'>
@@ -300,7 +318,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             visible={visibleQuery}
                                         >
                                             <FilterOutlined
-                                                className='col-icon'
+                                                // className='col-icon'
+                                                className={`col-icon ${isFilter && "col-icon-active"}`}
                                                 onClick={() => setVisibleQuery(true)}
                                             />
                                         </Popconfirm>
@@ -348,26 +367,28 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         </Button>
                                     </>
                                 )}
-                                <Button
-                                    size={"small"}
-                                    type={"primary"}
-                                    // icon={<DownloadOutlined />}
-                                    onClick={() => {
-                                        showModal({
-                                            width: 800,
-                                            title: "导入插件方式",
-                                            content: (
-                                                <>
-                                                    <div style={{width: 800}}>
-                                                        <LoadYakitPluginForm onFinished={triggerSearch} />
-                                                    </div>
-                                                </>
-                                            )
-                                        })
-                                    }}
-                                >
-                                    导入
-                                </Button>
+                                {plugSource === "local" && (
+                                    <Button
+                                        size={"small"}
+                                        type={"primary"}
+                                        // icon={<DownloadOutlined />}
+                                        onClick={() => {
+                                            showModal({
+                                                width: 800,
+                                                title: "导入插件方式",
+                                                content: (
+                                                    <>
+                                                        <div style={{width: 800}}>
+                                                            <LoadYakitPluginForm onFinished={triggerSearch} />
+                                                        </div>
+                                                    </>
+                                                )
+                                            })
+                                        }}
+                                    >
+                                        导入
+                                    </Button>
+                                )}
                             </Col>
                         </Row>
                     </div>
@@ -690,9 +711,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             hoverable={true}
             title={
                 <Space wrap>
-                    <div title={plugin.ScriptName}>
-                        {plugin.ScriptName}
-                    </div>
+                    <div title={plugin.ScriptName}>{plugin.ScriptName}</div>
                     {plugin.OnlineId > 0 && <OnlineCloudIcon />}
                     {gitUrlIcon(plugin.FromGit)}
                 </Space>
@@ -809,6 +828,7 @@ go func{
         }
     }
     
+    if !str.HasPrefix(gitUrl, "http") { return }
     yakit.Info("Start to load Yak Plugin!")
     
     if proxy != "" {
@@ -935,7 +955,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                 }
                 if (["official", "giturl"].includes(loadMode)) {
                     const params: YakExecutorParam[] = [
-                        {Key: "giturl", Value: gitUrl},
+                        {Key: "giturl", Value: ""},
                         {Key: "nuclei-templates-giturl", Value: nucleiGitUrl}
                     ]
                     if (proxy.trim() !== "") {
@@ -1122,18 +1142,16 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
             return
         }
         ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
-            const p = data.Progress * 100
+            const p =Math.floor(data.Progress * 100)
             setPercent(p)
         })
         ipcRenderer.on(`${taskToken}-end`, () => {
             setTimeout(() => {
-                success("全部添加成功")
                 setAddLoading(false)
                 setPercent(0)
             }, 500)
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-            failed("全部添加失败")
         })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
@@ -1678,7 +1696,7 @@ const QueryComponent: React.FC<QueryComponentProps> = (props) => {
         const query: SearchPluginOnlineRequest = {
             ...queryOnline,
             ...value,
-            status: value.status === "all" ? null : value.status,
+            status: value.status === "all" ? null : value.status || null,
             user: value.user === "true" ? true : false
         }
         setQueryOnline({...query})

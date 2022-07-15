@@ -24,12 +24,21 @@
 .row-body {
     padding-top: 8px;
 
+    .col {
+        display: flex;
+    }
+
     .col-flex-end {
         display: flex;
         align-items: center;
         justify-content: flex-end;
 
         .col-icon {
+            color: rgba(0, 0, 0, 0.45);
+            cursor: pointer;
+        }
+
+        .col-icon-active {
             color: #1890ff;
             cursor: pointer;
         }
@@ -38,12 +47,18 @@
             margin-left: 12px;
         }
     }
+
+    .show-yaml-poc {
+        display: flex;
+        align-items: center;
+    }
 }
 
 .filter-opt-progress {
     flex: 1;
     min-width: 100px;
     max-width: 300px;
+    margin-left: 6px;
 }
 
 .loading-center {
