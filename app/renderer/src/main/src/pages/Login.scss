@@ -1,0 +1,65 @@
+.ant-modal-content {
+    border-radius: 8px
+}
+
+.login-type-body {
+    width: 409px;
+    padding: 56px 40px;
+    border-radius: 8px;
+    text-align: center;
+    background-color: #fff;
+
+    .login-text {
+        color: #1E1F23;
+        line-height: 40px;
+        font-size: 36px;
+        margin-bottom: 48px;
+    }
+
+    .login-subtitle {
+        height: 30px;
+        line-height: 30px;
+    }
+
+    .login-icon-body {
+
+        cursor: pointer;
+
+        .login-icon {
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fafafa;
+            border-radius: 4px;
+
+            &:hover {
+                background-color: #ffffff;
+                box-shadow: 0px 2px 4px #1E1F2320;
+
+                .icon-right {
+                    color: #1890ff;
+                }
+            }
+
+            .login-icon-text {
+                font-size: 14px;
+                font-weight: 500;
+                color: #1E1F23;
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        .icon-wx {
+            color: #50cb70
+        }
+
+        .type-icon {
+            font-size: 32px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+    }
+}

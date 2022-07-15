@@ -1,4 +1,14 @@
-.right-context-menu .ant-menu-item{
+.right-context-menu .ant-menu-item {
     height: 30px;
     line-height: 30px;
+}
+
+.full-screen-mask {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 99999;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45);
 }

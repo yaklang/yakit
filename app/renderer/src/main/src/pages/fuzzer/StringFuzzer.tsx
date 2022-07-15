@@ -218,6 +218,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                                         return
                                     }
                                     const res = fuzzOperators.filter(i => i.name === buildTemp);
+                                    // @ts-ignore
                                     if (res.length > 0 && res[0].optionsRender) {
                                         return res[0].optionsRender(template, setTemplate)
                                     }
@@ -237,7 +238,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                         >
 
                         </ManySelectOne>
-                        {encodeTemp && <Form.Item
+                        {/* {encodeTemp && <Form.Item
                             label={" "} colon={false}
                             help={"本标签一般负责对 Payload 进行编码等处理，可以嵌套在一个普通(基础)标签外部"}
                         >
@@ -255,12 +256,13 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                                     }
 
                                     const res = encodeOperators.filter(i => i.name === encodeTemp);
+                                    // @ts-ignore
                                     if (res.length > 0 && res[0].optionsRender) {
                                         return res[0].optionsRender(template, setTemplate)
                                     }
                                 })()}
                             </Card>
-                        </Form.Item>}
+                        </Form.Item>} */}
                         <Form.Item label={" "} colon={false}>
                             <Space>
                                 <Button htmlType={"submit"}>查看生成后的 Payload</Button>

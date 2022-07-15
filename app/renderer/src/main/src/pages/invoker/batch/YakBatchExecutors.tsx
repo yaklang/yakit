@@ -17,7 +17,8 @@ import {
     Typography,
     Empty,
     List,
-    Switch, Tooltip
+    Switch,
+    Tooltip
 } from "antd"
 import {DownCircleTwoTone, UpCircleTwoTone, EditOutlined, DeleteOutlined} from "@ant-design/icons"
 import {InputInteger} from "../../../utils/inputUtil"
@@ -38,8 +39,8 @@ import {queryYakScriptList} from "../../yakitStore/network"
 import {ContentUploadInput} from "../../../components/functionTemplate/ContentUploadTextArea"
 
 import "./YakBatchExecutors.css"
-import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
-import {ReadOnlyBatchExecutor, ReadOnlyBatchExecutorByMenuItem} from "./ReadOnlyBatchExecutorByMenuItem";
+import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam"
+import {ReadOnlyBatchExecutor, ReadOnlyBatchExecutorByMenuItem} from "./ReadOnlyBatchExecutorByMenuItem"
 
 const {ipcRenderer} = window.require("electron")
 export const CustomBugList = "custom-bug-list"
@@ -90,7 +91,7 @@ export const BugList: BugInfoProps[] = [
     {key: "java", title: "Java", filter: defaultFilterByTags("java")},
     {key: "php", title: "PHP", filter: defaultFilterByTags("php")},
     {key: "python", title: "Python", filter: defaultFilterByTags("python")},
-    {key: "nginx", title: "Nginx", filter: defaultFilterByTags("nginx")},
+    {key: "nginx", title: "Nginx", filter: defaultFilterByTags("nginx")}
 ]
 
 const MenuList: MenuInfoProps[] = [
@@ -127,7 +128,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
         title: "",
         filter: defaultFilterByTags("struts")
     })
-    const [pocList, setPocList] = useState<{ total: number; data: string[] }>({total: 0, data: []})
+    const [pocList, setPocList] = useState<{total: number; data: string[]}>({total: 0, data: []})
     const [listLoading, setListLoading] = useState<boolean>(false)
     const [editInfo, setEditInfo] = useState<BugInfoProps>()
 
@@ -167,12 +168,16 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
     const addTab = useMemoizedFn((res: any) => {
         const {type = [], data = ""} = res
 
-        setTabList(tabList.concat(type.map((item, index) => {
-            item.key = `${item.key}-${listCount + index}`
-            item.title = `${item.title}-${listCount + index}`
-            item.sendTarget = data
-            return item
-        })))
+        setTabList(
+            tabList.concat(
+                type.map((item, index) => {
+                    item.key = `${item.key}-${listCount + index}`
+                    item.title = `${item.title}-${listCount + index}`
+                    item.sendTarget = data
+                    return item
+                })
+            )
+        )
         setListCount(listCount + type.length)
         setCurrentTabKey(`${type[type.length - 1].key}`)
     })
@@ -259,8 +264,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
             .then((res: any) => {
                 setExtendList(res ? JSON.parse(res) : [])
             })
-            .catch(() => {
-            })
+            .catch(() => {})
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
             })
@@ -294,17 +298,17 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                                     onClick={({key}) => {
                                                         const list = BugList.concat(extendList).filter(
                                                             (item) => item.key === key
-                                                        );
+                                                        )
                                                         if (list.length <= 0) {
                                                             failed("BUG: 预设专项漏洞无法找到定义：" + key)
                                                             return
                                                         }
-                                                        const targetSchema = list[0];
+                                                        const targetSchema = list[0]
                                                         const title = targetSchema.title
                                                         const tabInfo: BugInfoProps = {
                                                             key: `${key}-${listCount}`,
                                                             title: `${title}-${listCount}`,
-                                                            filter: targetSchema.filter,
+                                                            filter: targetSchema.filter
                                                         }
                                                         setCurrentTabKey(tabInfo.key)
                                                         setTabList(tabList.concat([tabInfo]))
@@ -374,12 +378,14 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                     return (
                         <TabPane tab={item.title} key={item.key}>
                             <ReadOnlyBatchExecutor
-                                query={item.filter || {
-                                    tags: "struts",
-                                    exclude: [],
-                                    include: [],
-                                    type: "nuclei,port-scan,mitm"
-                                }}
+                                query={
+                                    item.filter || {
+                                        tags: "struts",
+                                        exclude: [],
+                                        include: [],
+                                        type: "nuclei,port-scan,mitm"
+                                    }
+                                }
                             />
                             {/*<BugTestExecutor keyword={item.key} verbose={item.title}*/}
                             {/*                 sendTarget={item?.sendTarget}></BugTestExecutor>*/}
@@ -422,14 +428,14 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                             <Button
                                                 style={{padding: "4px 0"}}
                                                 type='link'
-                                                icon={<EditOutlined/>}
+                                                icon={<EditOutlined />}
                                                 onClick={() => editPocKind(item)}
                                             />
                                             <Button
                                                 style={{padding: "4px 0"}}
                                                 type='link'
                                                 danger
-                                                icon={<DeleteOutlined/>}
+                                                icon={<DeleteOutlined />}
                                                 onClick={() => delPocKind(index)}
                                             />
                                         </div>
@@ -438,7 +444,7 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                             )}
                         />
                     </div>
-                    <Divider type='vertical' style={{height: "auto"}}/>
+                    <Divider type='vertical' style={{height: "auto"}} />
                     <div className='right-body'>
                         <Form labelCol={{span: 6}}>
                             <Form.Item label='标题'>
@@ -469,12 +475,12 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                         pocList.total === 0
                                             ? false
                                             : {
-                                                size: "small",
-                                                total: pocList.total,
-                                                showTotal: (total) => <span>{`共${total}个`}</span>,
-                                                showSizeChanger: false,
-                                                onChange: (page) => searchPoc(pocParams.key, page)
-                                            }
+                                                  size: "small",
+                                                  total: pocList.total,
+                                                  showTotal: (total) => <span>{`共${total}个`}</span>,
+                                                  showSizeChanger: false,
+                                                  onChange: (page) => searchPoc(pocParams.key, page)
+                                              }
                                     }
                                     rowKey={(row) => row}
                                     renderItem={(item) => (
@@ -760,7 +766,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                         <Space style={{width: "80%"}} direction={"vertical"}>
                             <Spin spinning={uploadLoading}>
                                 <ContentUploadInput
-                                    type="textarea"
+                                    type='textarea'
                                     beforeUpload={(f) => {
                                         if (f.type !== "text/plain") {
                                             failed(`${f.name}非txt文件，请上传txt格式文件！`)
@@ -776,7 +782,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                     }}
                                     item={{
                                         style: {textAlign: "left"},
-                                        label: "检测的目标",
+                                        label: "检测的目标"
                                     }}
                                     textarea={{
                                         isBubbing: true,
@@ -789,7 +795,9 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                         executing ? (
                                             <Popconfirm
                                                 title={"确定要停止该漏洞检测？"}
-                                                onConfirm={(e) => ipcRenderer.invoke("cancel-exec-batch-yak-script", token)}
+                                                onConfirm={(e) =>
+                                                    ipcRenderer.invoke("cancel-exec-batch-yak-script", token)
+                                                }
                                             >
                                                 <Button type='primary' danger>
                                                     强制停止
@@ -857,7 +865,7 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                     </div>
                 </Col>
             </Row>
-            <Divider style={{margin: "10px 0"}}/>
+            <Divider style={{margin: "10px 0"}} />
             <div ref={listRef} className='bug-test-list'>
                 {tasks.length === 0 ? (
                     <div>
@@ -874,15 +882,15 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                     <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 260}}>
                                         {ele.data.Id}
                                     </Text>
-                                    <Divider type='vertical'/>
+                                    <Divider type='vertical' />
                                     <div style={{width: 120, textAlign: "center"}}>
                                         {StatusToVerboseTag(ele.data.Status)}
                                     </div>
-                                    <Divider type='vertical'/>
+                                    <Divider type='vertical' />
                                     <div>
-                                        <ExecResultsViewer results={ele.data.Results} oneLine={true}/>
+                                        <ExecResultsViewer results={ele.data.Results} oneLine={true} />
                                     </div>
-                                    <Divider type='vertical'/>
+                                    <Divider type='vertical' />
                                     <div style={{flexGrow: 1, textAlign: "right"}}>
                                         <Space>
                                             <Button
@@ -898,8 +906,10 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                                         width: "75%",
                                                         content: (
                                                             <>
-                                                                <YakScriptOperator script={ele.data.PoC}
-                                                                                   target={params.Target}/>
+                                                                <YakScriptOperator
+                                                                    script={ele.data.PoC}
+                                                                    target={params.Target}
+                                                                />
                                                             </>
                                                         )
                                                     })
@@ -948,15 +958,15 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                     <Text ellipsis={{tooltip: true}} copyable={true} style={{width: 260}}>
                                         {ele.data.Id}
                                     </Text>
-                                    <Divider type='vertical'/>
+                                    <Divider type='vertical' />
                                     <div style={{width: 120, textAlign: "center"}}>
                                         {StatusToVerboseTag(ele.data.Status)}
                                     </div>
-                                    <Divider type='vertical'/>
+                                    <Divider type='vertical' />
                                     <div>
-                                        <ExecResultsViewer results={ele.data.Results} oneLine={true}/>
+                                        <ExecResultsViewer results={ele.data.Results} oneLine={true} />
                                     </div>
-                                    <Divider type='vertical'/>
+                                    <Divider type='vertical' />
                                     <div style={{flexGrow: 1, textAlign: "right"}}>
                                         <Space>
                                             <Button
@@ -972,8 +982,10 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                                         width: "75%",
                                                         content: (
                                                             <>
-                                                                <YakScriptOperator script={ele.data.PoC}
-                                                                                   target={params.Target}/>
+                                                                <YakScriptOperator
+                                                                    script={ele.data.PoC}
+                                                                    target={params.Target}
+                                                                />
                                                             </>
                                                         )
                                                     })

@@ -57,4 +57,55 @@
   justify-content: flex-end;
   width: 100%;
   padding: 12px;
+    margin: 8px 4px;
+
+    .status-cards-tag {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .ant-statistic-content-value {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+    }
+}
+
+.font-color-000 {
+    color: #000;
+}
+
+.tooltip-title {
+    .ant-statistic {
+        border-bottom: 1px solid #e5e5e5;
+        padding-bottom: 6px;
+        margin-top: 6px;
+
+        &:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+    }
+
+    .ant-statistic-content-value {
+        word-break: break-word;
+    }
+
+    .tooltip-id {
+        color:#000;
+        font-weight: 500;
+        margin-bottom: 0;
+    }
+}
+
+.status-cards-info {
+    .ant-tooltip-inner {
+        max-height: 200px;
+        overflow-y: auto;
+    }
 }
