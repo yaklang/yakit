@@ -137,6 +137,9 @@ export enum Route {
     // Payload 管理
     PayloadManager = "payload-manager",
 
+    // Web安全
+    webSecurity='webSecurity',
+
     // 通用模块
     GeneralModule = "general-module",
     Mod_ScanPort = "scan-port",
