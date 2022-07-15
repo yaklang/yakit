@@ -175,7 +175,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 
     useEffect(() => {
         //创建插件才会有模块类型的修改
-        // params.ScriptName=params.OnlineScriptName?params.OnlineScriptName:params.ScriptName
         switch (params.Type) {
             case "mitm":
                 setParams({...params, Content: MITMPluginTemplate})
@@ -227,10 +226,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     useEffect(() => {
         if (props.modified)
             setParams({
-                ...props.modified,
-                ScriptName: props.modified.OnlineScriptName
-                    ? props.modified.OnlineScriptName
-                    : props.modified.ScriptName
+                ...props.modified
             })
     }, [props.modified])
 

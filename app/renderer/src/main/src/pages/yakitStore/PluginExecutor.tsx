@@ -55,7 +55,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     return (
         <div style={{height: "100%", display: "flex", flexFlow: "column"}}>
             <PageHeader
-                title={script.OnlineScriptName ? script.OnlineScriptName : script.ScriptName}
+                title={script.ScriptName}
                 style={{marginBottom: 0, paddingBottom: 0}}
                 subTitle={props.subTitle}
                 extra={props.extraNode}

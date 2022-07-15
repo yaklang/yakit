@@ -472,14 +472,14 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
         Data: [],
         Pagination: {
-            Limit: 10,
+            Limit: 20,
             Page: 0,
             Order: "desc",
             OrderBy: "updated_at"
         },
         Total: 0
     })
-    const [loading, setLoading] = useState(false)
+    // const [loading, setLoading] = useState(false)
     const [trigger, setTrigger] = useState(false)
     const [maxWidth, setMaxWidth] = useState<number>(260)
     const update = (
@@ -500,7 +500,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         newParams.Type = Type
         newParams.IsIgnore = isIgnore
         newParams.IsHistory = isHistory
-        setLoading(true)
+        // setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
@@ -517,7 +517,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 failed("Query Local Yak Script failed: " + `${e}`)
             })
             .finally(() => {
-                setTimeout(() => setLoading(false), 200)
+                // setTimeout(() => setLoading(false), 200)
             })
     }
 
@@ -558,9 +558,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 }
                 endMessage={response.Total > 0 && <div className='loading-center'>暂无更多数据</div>}
                 scrollableTarget='scroll-div-plugin-local'
+                scrollThreshold='100px'
             >
                 <List<YakScript>
-                    loading={loading}
+                    // loading={loading}
                     className='plugin-list'
                     dataSource={response.Data || []}
                     split={false}
@@ -690,7 +691,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             title={
                 <Space wrap>
                     <div title={plugin.ScriptName}>
-                        {plugin.OnlineScriptName ? plugin.OnlineScriptName : plugin.ScriptName}
+                        {plugin.ScriptName}
                     </div>
                     {plugin.OnlineId > 0 && <OnlineCloudIcon />}
                     {gitUrlIcon(plugin.FromGit)}
@@ -1126,6 +1127,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
         })
         ipcRenderer.on(`${taskToken}-end`, () => {
             setTimeout(() => {
+                success("全部添加成功")
                 setAddLoading(false)
                 setPercent(0)
             }, 500)
@@ -1173,7 +1175,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 .invoke("DownloadOnlinePluginAll", {isAddToken: true, BindMe: false}, taskToken)
                 .then(() => {
                     setTimeout(() => {
-                        success("全部添加成功")
+                        // success("全部添加成功")
                     }, 500)
                 })
                 .catch((e) => {
@@ -1268,7 +1270,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
         pagemeta: {
-            limit: 12,
+            limit: 20,
             page: 1,
             total: 0,
             total_page: 1
@@ -1276,7 +1278,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     })
     const [loading, setLoading] = useState(false)
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
-    const [hasMore, setHasMore] = useState(false)
+    const [hasMore, setHasMore] = useState(true)
     useEffect(() => {
         if (isSelectAll) {
             const data = response.data.filter((ele) => ele.status === 1)
@@ -1294,7 +1296,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         if (userInfo.isLogin) {
             url = "yakit/plugin"
         }
-        setLoading(true)
+        // setLoading(true)
         if (page) queryOnline.page = page
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -1318,7 +1320,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 failed("插件列表获取失败:" + err)
             })
             .finally(() => {
-                setTimeout(() => setLoading(false), 200)
+                // setTimeout(() => setLoading(false), 200)
             })
     })
     const loadMoreData = useMemoizedFn(() => {
@@ -1406,7 +1408,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 scrollableTarget='scroll-div-plugin-online'
             >
                 <List<API.YakitPluginDetail>
-                    loading={loading}
+                    // loading={loading}
                     className='plugin-list'
                     dataSource={response.data || []}
                     split={false}

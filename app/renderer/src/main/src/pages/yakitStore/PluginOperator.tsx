@@ -153,11 +153,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                         style={{color: "#a7a7a7"}}
                                         onClick={(e) => {
                                             let m = showDrawer({
-                                                title: `修改插件: ${
-                                                    script.OnlineScriptName
-                                                        ? script.OnlineScriptName
-                                                        : script?.ScriptName
-                                                }`,
+                                                title: `修改插件: ${script?.ScriptName}`,
                                                 width: "100%",
                                                 content: (
                                                     <>
@@ -281,11 +277,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                                 style={{color: "#a7a7a7"}}
                                                 onClick={(e) => {
                                                     let m = showDrawer({
-                                                        title: `修改插件: ${
-                                                            script.OnlineScriptName
-                                                                ? script.OnlineScriptName
-                                                                : script?.ScriptName
-                                                        }`,
+                                                        title: `修改插件: ${script?.ScriptName}`,
                                                         width: "100%",
                                                         content: (
                                                             <>
@@ -438,14 +430,14 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
         Verbose: string
     }>({
         Group: "社区组件",
-        Verbose: props.script.OnlineScriptName ? props.script.OnlineScriptName : props.script.ScriptName,
+        Verbose: props.script.ScriptName,
         YakScriptId: props.script.Id
     })
 
     useEffect(() => {
         setParams({
             Group: "社区组件",
-            Verbose: props.script.OnlineScriptName ? props.script.OnlineScriptName : props.script.ScriptName,
+            Verbose: props.script.ScriptName,
             YakScriptId: props.script.Id
         })
     }, [props.script])

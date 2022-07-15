@@ -65,7 +65,7 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
             size={"small"}
             title={() => {
                 return <Space>
-                    <div>{props.script.OnlineScriptName ? props.script.OnlineScriptName : props.script.ScriptName} 的执行历史记录</div>
+                    <div>{props.script.ScriptName} 的执行历史记录</div>
                     <Button type={"link"} ghost={true} onClick={() => {
                         update()
                     }}><ReloadOutlined/> </Button>
