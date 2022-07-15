@@ -1,4 +1,4 @@
-.paragraph{
+.paragraph {
     white-space: pre-line;
 }
 
@@ -8,10 +8,15 @@
     line-height: 20px;
     color: #036ffe;
 }
+
 .collapse-paragraph-collapse-btn {
     margin-top: 8px;
     height: 20px;
     line-height: 20px;
     color: #036ffe;
     cursor: pointer;
+}
+
+.ant-typography {
+    margin-bottom: 0px !important;
 }

@@ -62,7 +62,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             return
         }
         updateGroups()
-        
+
         setLoading(true)
         ipcRenderer
             .invoke("GetYakScriptById", {Id: props.yakScriptId})
@@ -436,12 +436,16 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
         Group: string
         YakScriptId: number
         Verbose: string
-    }>({Group: "社区组件", Verbose: props.script.ScriptName, YakScriptId: props.script.Id})
+    }>({
+        Group: "社区组件",
+        Verbose: props.script.OnlineScriptName ? props.script.OnlineScriptName : props.script.ScriptName,
+        YakScriptId: props.script.Id
+    })
 
     useEffect(() => {
         setParams({
             Group: "社区组件",
-            Verbose: props.script.ScriptName,
+            Verbose: props.script.OnlineScriptName ? props.script.OnlineScriptName : props.script.ScriptName,
             YakScriptId: props.script.Id
         })
     }, [props.script])

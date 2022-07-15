@@ -174,6 +174,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     }, [paramsLoading])
 
     useEffect(() => {
+        //创建插件才会有模块类型的修改
+        // params.ScriptName=params.OnlineScriptName?params.OnlineScriptName:params.ScriptName
         switch (params.Type) {
             case "mitm":
                 setParams({...params, Content: MITMPluginTemplate})
@@ -223,7 +225,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     }, [params.Type])
 
     useEffect(() => {
-        if (props.modified) setParams({...props.modified})
+        if (props.modified)
+            setParams({
+                ...props.modified,
+                ScriptName: props.modified.OnlineScriptName
+                    ? props.modified.OnlineScriptName
+                    : props.modified.ScriptName
+            })
     }, [props.modified])
 
     // 仅保存本地
@@ -392,7 +400,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     label={"Yak 模块名"}
                     required={true}
                     setValue={(ScriptName) => setParams({...params, ScriptName})}
-                    value={params.OnlineScriptName ? params.OnlineScriptName :params.ScriptName}
+                    value={params.ScriptName}
                 />
                 <InputItem label={"简要描述"} setValue={(Help) => setParams({...params, Help})} value={params.Help} />
                 <InputItem

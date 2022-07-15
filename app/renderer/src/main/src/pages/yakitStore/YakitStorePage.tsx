@@ -95,9 +95,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     })
 
     const [loading, setLoading] = useState(false)
-    const [pluginType, setPluginType] = useState<"yak" | "mitm" | "nuclei" | "codec" | "packet-hack" | "port-scan">(
-        "yak"
-    )
+    const [pluginType, setPluginType] = useState<
+        "yak" | "mitm" | "nuclei" | "codec" | "packet-hack" | "port-scan" | string
+    >("yak,mitm,codec,packet-hack,port-scan")
 
     useEffect(() => {
         setLoading(true)
@@ -127,6 +127,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [selectedRowKeysRecord, setSelectedRowKeysRecord] = useState<API.YakitPluginDetail[]>([])
     const [fullScreen, setFullScreen] = useState<boolean>(false)
     const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
+    const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
     const [scrollHeight, setScrollHeight] = useState<number>(0)
     // 全局登录状态
     const {userInfo} = useStore()
@@ -214,6 +215,14 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             setSelectedRowKeysRecord([])
         }
     })
+    const onSelectAllYAMLPOC = useMemoizedFn((e) => {
+        if (e.target.checked) {
+            setPluginType("yak,mitm,codec,packet-hack,port-scan,nuclei")
+        } else {
+            setPluginType("yak,mitm,codec,packet-hack,port-scan")
+        }
+        setIsShowYAMLPOC(e.target.checked)
+    })
     const refTest = useRef<any>()
     return (
         <div style={{height: "100%", display: "flex", flexDirection: "row"}} ref={refTest}>
@@ -256,9 +265,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         </Row>
                         <Row className='row-body' gutter={12}>
                             <Col span={12}>
-                                {/* {plugSource === "online" && selectedRowKeysRecord.length > 0 && (
-                                    <Tag color='blue'>已选{selectedRowKeysRecord.length}条</Tag>
-                                )} */}
                                 {plugSource === "online" && (
                                     <Checkbox checked={isSelectAll} onChange={onSelectAll}>
                                         全选&emsp;
@@ -268,6 +274,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     </Checkbox>
                                 )}
                                 <Tag>Total:{total}</Tag>
+                                {plugSource === "local" && (
+                                    <Checkbox checked={isShowYAMLPOC} onChange={onSelectAllYAMLPOC}>
+                                        展示YAML POC
+                                    </Checkbox>
+                                )}
                             </Col>
                             <Col span={12} className='col-flex-end'>
                                 {(plugSource === "online" && (
@@ -590,10 +601,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             warn("未登录，请先登录!")
             return
         }
-        if (!item.UserId && item.UserId > 0 && userInfo.user_id !== item.UserId) {
-            warn("只能上传本人创建的插件!")
-            return
-        }
+
         const params: API.NewYakitPlugin = {
             type: item.Type,
             script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
@@ -637,9 +645,10 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                                 UUID: res.uuid
                             } as GetYakScriptByOnlineIDRequest)
                             .then((newSrcipt: YakScript) => {
-                                onClicked(newSrcipt)
-                                setPlugin(newSrcipt)
-
+                                if (item.Id === plugin.Id) {
+                                    onClicked(newSrcipt)
+                                    setPlugin(newSrcipt)
+                                }
                                 ipcRenderer
                                     .invoke("delete-yak-script", item.Id)
                                     .then(() => {
@@ -673,7 +682,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
     if (props.onYakScriptRender) {
         return props.onYakScriptRender(plugin, maxWidth)
     }
-
     return (
         <Card
             size={"small"}
@@ -690,10 +698,14 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             }
             extra={
                 (uploadLoading && <LoadingOutlined />) || (
-                    <UploadOutlined
-                        style={{marginLeft: 6, fontSize: 16, cursor: "pointer"}}
-                        onClick={() => uploadOnline(plugin)}
-                    />
+                    <>
+                        {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
+                            <UploadOutlined
+                                style={{marginLeft: 6, fontSize: 16, cursor: "pointer"}}
+                                onClick={() => uploadOnline(plugin)}
+                            />
+                        )}
+                    </>
                 )
             }
             style={{
