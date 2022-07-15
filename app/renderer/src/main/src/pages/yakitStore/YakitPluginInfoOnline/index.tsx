@@ -333,6 +333,8 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
     useEffect(() => {
         getComment(1)
+        setFiles([])
+        setCommentText("")
     }, [plugin.id])
     const getComment = useMemoizedFn((page: number = 1) => {
         const params: SearchCommentRequest = {
@@ -730,43 +732,6 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                     onChange={(e) => setValue(e.target.value)}
                 ></Input.TextArea>
             </div>
-
-            {files.length !== 0 && (
-                <div className='box-upload'>
-                    {files.map((item, index) => {
-                        return (
-                            <div key={item} className='upload-img-opt'>
-                                <img
-                                    key={item}
-                                    src={item as any}
-                                    className='opt-pic'
-                                    onClick={() => {
-                                        let m = showFullScreenMask(
-                                            <PluginMaskImage info={item} />,
-                                            "mask-img-display",
-                                            undefined,
-                                            (e) => {
-                                                if ((e.target as any).className === "mask-img-display") m.destroy()
-                                            }
-                                        )
-                                    }}
-                                />
-                                <div
-                                    className='opt-del'
-                                    onClick={() => {
-                                        const arr = cloneDeep(files)
-                                        arr.splice(index, 1)
-                                        setFiles(arr)
-                                    }}
-                                >
-                                    x
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
-            )}
-
             <div className='box-btn'>
                 {isLogin && (
                     <Upload
@@ -807,6 +772,41 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                     评论
                 </Button>
             </div>
+            {files.length !== 0 && (
+                <div className='box-upload'>
+                    {files.map((item, index) => {
+                        return (
+                            <div key={item} className='upload-img-opt'>
+                                <img
+                                    key={item}
+                                    src={item as any}
+                                    className='opt-pic'
+                                    onClick={() => {
+                                        let m = showFullScreenMask(
+                                            <PluginMaskImage info={item} />,
+                                            "mask-img-display",
+                                            undefined,
+                                            (e) => {
+                                                if ((e.target as any).className === "mask-img-display") m.destroy()
+                                            }
+                                        )
+                                    }}
+                                />
+                                <div
+                                    className='opt-del'
+                                    onClick={() => {
+                                        const arr = cloneDeep(files)
+                                        arr.splice(index, 1)
+                                        setFiles(arr)
+                                    }}
+                                >
+                                    x
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }
