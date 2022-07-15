@@ -138,7 +138,28 @@ export enum Route {
     PayloadManager = "payload-manager",
 
     // Web安全
-    webSecurity='webSecurity',
+    webSecurity = "webSecurity",
+
+    // 主机安全
+    hostSecurity = "hostSecurity",
+
+    // 路由安全
+    routingSecurity = "routingSecurity",
+
+    // 物联网
+    wlwSecurity = "wlwSecurity",
+
+    // 云平台
+    cloudPlatformSecurity = "cloudPlatformSecurity",
+
+    // 密码安全
+    passwordSecurity = "passwordSecurity",
+
+    // 自动化漏洞检测模块
+    automatedModule = "automatedModule",
+
+    // 专家模式
+    expertMode = "expertMode",
 
     // 通用模块
     GeneralModule = "general-module",
