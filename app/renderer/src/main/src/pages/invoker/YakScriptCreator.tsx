@@ -60,7 +60,7 @@ export const getPluginTypeVerbose = (t: "yak" | "mitm" | "port-scan" | "nuclei" 
 
 const {ipcRenderer} = window.require("electron")
 
-const executeYakScriptByParams = (data: YakScript) => {
+const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) => {
     const exec = (extraParams?: YakExecutorParam[]) => {
         if (data.Params.length <= 0) {
             showModal({
@@ -68,7 +68,7 @@ const executeYakScriptByParams = (data: YakScript) => {
                 width: 1000,
                 content: (
                     <>
-                        <YakScriptRunner debugMode={true} script={data} params={[...(extraParams || [])]} />
+                        <YakScriptRunner debugMode={true} script={data} params={[...(extraParams || [])]}/>
                     </>
                 )
             })
@@ -80,6 +80,7 @@ const executeYakScriptByParams = (data: YakScript) => {
                     <>
                         <YakScriptParamsSetter
                             {...data}
+                            saveDebugParams={saveDebugParams}
                             onParamsConfirm={(params) => {
                                 m.destroy()
                                 showModal({
@@ -364,7 +365,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             .catch((err) => {
                 failed("插件上传失败:" + err)
             })
-            .finally(() => {})
+            .finally(() => {
+            })
     }
 
     return (
@@ -398,7 +400,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     setValue={(ScriptName) => setParams({...params, ScriptName})}
                     value={params.ScriptName}
                 />
-                <InputItem label={"简要描述"} setValue={(Help) => setParams({...params, Help})} value={params.Help} />
+                <InputItem label={"简要描述"} setValue={(Help) => setParams({...params, Help})} value={params.Help}/>
                 <InputItem
                     label={"模块作者"}
                     setValue={(Author) => setParams({...params, Author})}
@@ -446,7 +448,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 })
                             }}
                         >
-                            添加 / 设置一个参数 <PlusOutlined />
+                            添加 / 设置一个参数 <PlusOutlined/>
                         </Button>
                     </Form.Item>
                 )}
@@ -559,7 +561,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         <>
                             <Space>
                                 <Button
-                                    icon={<FullscreenOutlined />}
+                                    icon={<FullscreenOutlined/>}
                                     onClick={() => {
                                         setFullscreen(true)
                                         let m = showDrawer({
@@ -614,7 +616,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                                 "设置默认启动后，将在恰当时候启动该插件(Yak插件不会自动启动，但会自动增加在左侧基础安全工具菜单栏)"
                                             }
                                         >
-                                            <Button type={"link"} icon={<QuestionCircleOutlined />} />
+                                            <Button type={"link"} icon={<QuestionCircleOutlined/>}/>
                                         </Tooltip>
                                     </Checkbox>
                                 )}
@@ -649,14 +651,14 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 ipcRenderer
                                     .invoke("SaveYakScript", params)
                                     .then((data: YakScript) => {
-                                        info("创建 / 保存 Yak 脚本成功")
+                                        info("调试前保存插件成功")
                                         setModified(data)
                                         setParams(data)
                                         props.onChanged && props.onChanged(data)
-                                        executeYakScriptByParams(data)
+                                        executeYakScriptByParams(data, true)
                                     })
                                     .catch((e: any) => {
-                                        failed(`保存 Yak 模块失败: ${e}`)
+                                        failed(`保存 Yak 模块失败: ${e} 无法调试`)
                                     })
                                     .finally(() => {
                                         setTimeout(() => setLoading(false), 400)
@@ -682,6 +684,7 @@ interface ModalSyncSelect {
     handleOk: (type: number) => void
     handleCancel: () => void
 }
+
 const ModalSyncSelect: React.FC<ModalSyncSelect> = (props) => {
     const {visible, handleOk, handleCancel} = props
     const [type, setType] = useState<number>(1)
@@ -722,7 +725,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
             TypeVerbose: ""
         }
     )
-    const [extraSetting, setExtraSetting] = useState<{[key: string]: any}>(
+    const [extraSetting, setExtraSetting] = useState<{ [key: string]: any }>(
         props.modifiedParam?.ExtraSetting ? JSON.parse(props.modifiedParam.ExtraSetting) : {}
     )
     // 选择类型时的转换
@@ -806,7 +809,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
         }
     })
 
-    const selectOptSetting = (item: {key: string; value: string}, index: number) => {
+    const selectOptSetting = (item: { key: string; value: string }, index: number) => {
         return (
             <div key={index} className='select-type-opt'>
                 <span className='opt-hint-title'>选项名称</span>
@@ -830,7 +833,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 <Button
                     type='link'
                     danger
-                    icon={<DeleteOutlined />}
+                    icon={<DeleteOutlined/>}
                     onClick={() => updateExtraSetting("select", "del", "", "", index)}
                 />
             </div>
@@ -856,7 +859,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                                     setExtraSetting({...extraSetting})
                                 }}
                             >
-                                新增选项 <PlusOutlined />
+                                新增选项 <PlusOutlined/>
                             </Button>
                         </Form.Item>
                         <Form.Item label={" "} colon={false} className='creator-form-item-margin'>
