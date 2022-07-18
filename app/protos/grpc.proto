@@ -729,6 +729,8 @@ message Risk {
 
   // 这个一般用于生成报告追踪报告中产生的漏洞
   string RuntimeId = 22;
+
+  string CVE = 23;
 }
 
 message QueryRisksRequest {

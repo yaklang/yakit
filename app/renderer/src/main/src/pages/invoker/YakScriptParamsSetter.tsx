@@ -17,12 +17,13 @@ import {
 } from "antd";
 import {QuestionOutlined} from "@ant-design/icons";
 import {YakExecutorParam} from "./YakExecutorParams";
-import {useMemoizedFn} from "ahooks";
+import {useMemoizedFn, useUpdate} from "ahooks";
 import {HTTPPacketEditor, YakCodeEditor} from "../../utils/editors";
 import cloneDeep from "lodash/cloneDeep"
 import {ContentUploadInput} from "../../components/functionTemplate/ContentUploadTextArea";
-import {failed} from "../../utils/notification";
+import {failed, info} from "../../utils/notification";
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil";
+import {getRemoteValue, setRemoteValue} from "@/utils/kv";
 
 const {Title} = Typography;
 
@@ -35,10 +36,13 @@ export interface YakScriptParamsSetterProps {
     submitVerbose?: string
     cancelVerbose?: string
     hideClearButton?: boolean
+    saveDebugParams?: boolean
 
     styleSize?: "big" | "small"
     loading?: boolean
 }
+
+const YAKIT_PLUGIN_DEBUG_PARAMS = "YAKIT_PLUGIN_DEBUG_PARAMS"
 
 export const getValueFromParams = (params: YakExecutorParam[], key: string): any => {
     let res = params.filter(i => i.Key === key);
@@ -74,6 +78,7 @@ export const removeRepeatedParams = (params: YakExecutorParam[]): YakExecutorPar
 export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (props) => {
     // 新参数组件标记数组
     const newParamCom: string[] = ["upload-path", "select"]
+    const [propsOriginParams, setPropsOriginParams] = useState<YakScriptParam[]>(props.Params);
     const [originParams, setOriginParams] = useState<YakScriptParam[]>(props.Params || []);
     const [groupStates, setGroupStates] = useState<{ group: string, hidden: boolean }[]>([]);
 
@@ -95,10 +100,37 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
             item.Value = item.DefaultValue ? item.DefaultValue : undefined
             return item
         })
-        setOriginParams(cloneParams)
-        form.resetFields()
-        form.setFieldsValue({originParams: cloneParams})
-    }, [props.Params])
+
+        if (!props.saveDebugParams) {
+            setOriginParams(cloneParams)
+            form.resetFields()
+            form.setFieldsValue({originParams: cloneParams})
+        } else {
+            getRemoteValue(YAKIT_PLUGIN_DEBUG_PARAMS).then(data => {
+                try {
+                    const debugParams = JSON.parse(data) as { Key: string, Value: string }[];
+                    debugParams.forEach(value => {
+                        cloneParams.forEach(origin => {
+                            if (origin.Field !== value.Key) {
+                                return
+                            }
+
+                            origin.DefaultValue = value.Value
+                            origin.Value = value.Value
+                        })
+                    })
+                    info("加载调试参数成功")
+                } catch (e) {
+                    failed("加载调试参数失败")
+                }
+            }).finally(() => {
+                setOriginParams(cloneParams)
+                form.resetFields()
+                form.setFieldsValue({originParams: cloneParams})
+            })
+        }
+
+    }, [props.Params, props.saveDebugParams])
 
     useEffect(() => {
         const groupToParam = new Map<string, YakScriptParam[]>();
@@ -384,9 +416,15 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
             // 处理其他参数的情况
             return true
         })
-        props.onParamsConfirm(params.map(i => {
+        const finalParams = params.map(i => {
             return {Key: i.Field, Value: i.Value || i.DefaultValue}
-        }))
+        });
+
+        if (props.saveDebugParams) {
+            setRemoteValue(YAKIT_PLUGIN_DEBUG_PARAMS, JSON.stringify(finalParams))
+        }
+
+        props.onParamsConfirm(finalParams)
     }
 
     const isGroupHidden = useMemoizedFn((group: string, defaultValue: boolean) => {
