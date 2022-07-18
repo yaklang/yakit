@@ -188,6 +188,7 @@ service Yak {
   rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
   rpc DeletePayload(DeletePayloadRequest) returns (Empty);
   rpc SavePayload(SavePayloadRequest) returns (Empty);
+  rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
 
   // 自动生成补全
@@ -310,6 +311,16 @@ service Yak {
   rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
   rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
   rpc DeleteAllLocalPlugins(Empty) returns (Empty);
+}
+
+message SavePayloadProgress {
+  double Progress = 1;
+  int64 HandledBytes = 2;
+  string HandledBytesVerbose = 3;
+  int64 TotalBytes = 4;
+  string TotalBytesVerbose = 5;
+  double CostDuration = 6;
+  string CostDurationVerbose = 7;
 }
 
 message DeletePluginByUserIDRequest {

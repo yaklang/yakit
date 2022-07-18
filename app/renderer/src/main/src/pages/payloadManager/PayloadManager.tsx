@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Typography, Select} from "antd"
+import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Typography, Select, Space} from "antd"
 import {DeleteOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
@@ -12,6 +12,7 @@ import {AutoCard} from "../../components/AutoCard"
 import "./PayloadManager.css"
 import {useMemoizedFn} from "ahooks"
 import {AutoSpin} from "../../components/AutoSpin"
+import {randomString} from "@/utils/randomUtil";
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -333,8 +334,8 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                     title: "操作",
                                     fixed: "right",
                                     render: (e: Payload) => (
-                                        <Button danger onClick={() => delDictContent(e.Id)}>
-                                            删除
+                                        <Button danger onClick={() => delDictContent(e.Id)} size={"small"}>
+                                            删除{" "}
                                         </Button>
                                     )
                                 }
@@ -380,6 +381,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         IsFile: false
     })
     const [groups, setGroups] = useState<string[]>([])
+    const [token, setToken] = useState("");
 
     const updateGroup = () => {
         ipcRenderer
@@ -396,30 +398,58 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         updateGroup()
     }, [])
 
+    useEffect(() => {
+        const token = randomString(40);
+        ipcRenderer.on(`${token}-data`, async (e, data: any) => {
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            failed(`字典上传失败:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e, data) => {
+            info("字典上传完毕")
+        })
+        setToken(token)
+        return () => {
+            ipcRenderer.invoke("cancel-SavePayloadStream", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [])
+
     return (
         <div>
             <Form
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
-                    if(params.Content.length > 2097152){
+                    if (params.Content.length > 2097152) {
                         failed("字典内容过大，请使用上传功能的字典路径上传")
                         return
                     }
 
-                    props.onLoading && props.onLoading()
-                    ipcRenderer
-                        .invoke("SavePayload", params)
-                        .then(() => {
-                            props.onFinished && props.onFinished(params.Group)
+
+                    if (!!token) {
+                        ipcRenderer.invoke("SavePayloadStream", {...params}, token).then(e => {
+                            info("开始上传字典")
                         })
-                        .catch((e: any) => {
-                            failed("创建 Payload 失败 / 字典")
-                        })
-                        .finally(() => {
-                            props.onFinally && props.onFinally()
-                            props.onLoadingFinished && props.onLoadingFinished()
-                        })
+                    } else {
+                        props.onLoading && props.onLoading()
+                        ipcRenderer
+                            .invoke("SavePayload", params)
+                            .then(() => {
+                                props.onFinished && props.onFinished(params.Group)
+                            })
+                            .catch((e: any) => {
+                                failed("创建 Payload 失败 / 字典")
+                            })
+                            .finally(() => {
+                                props.onFinally && props.onFinally()
+                                props.onLoadingFinished && props.onLoadingFinished()
+                            })
+                    }
+
+
                 }}
                 wrapperCol={{span: 14}}
                 labelCol={{span: 6}}
@@ -458,6 +488,13 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
 // 可上传文件类型
 const FileType = ["text/plain", "text/csv", "application/vnd.ms-excel"]
 
+interface SavePayloadProgress {
+    Progress: number
+    CostDurationVerbose: string
+    HandledBytesVerbose: string
+    TotalBytesVerbose: string
+}
+
 export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     const [params, setParams] = useState<SavePayloadParams>({
         Group: "",
@@ -469,7 +506,9 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     const [groups, setGroups] = useState<string[]>([])
     // 防抖
     const routes = useRef<{ path: string, type: string }[]>([])
+    const [token, setToken] = useState("");
     const timer = useRef<any>()
+    const [progress, setProgress] = useState<SavePayloadProgress>();
 
     const updateGroup = () => {
         ipcRenderer
@@ -484,6 +523,29 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     }
     useEffect(() => {
         updateGroup()
+    }, [])
+
+    useEffect(() => {
+        const token = randomString(40);
+        ipcRenderer.on(`${token}-data`, async (e, data: any) => {
+            setProgress(data)
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            failed(`字典上传失败:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e, data) => {
+            info("字典上传完毕")
+            setTimeout(() => {
+                setUploadLoading(false)
+            }, 200)
+        })
+        setToken(token)
+        return () => {
+            ipcRenderer.invoke("cancel-SavePayloadStream", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
     }, [])
 
     const fetchContent = useMemoizedFn(async () => {
@@ -526,29 +588,43 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
 
     return (
         <div>
-            <AutoSpin spinning={uploadLoading}>
+            <AutoSpin spinning={uploadLoading} tip={<div>
+                {progress && <Space direction={"vertical"}>
+                    <div>进度：{((progress?.Progress || 0) * 100).toFixed(4)} %</div>
+                    <div>已处理大小：{progress.HandledBytesVerbose}</div>
+                    <div>文件总大小：{progress.TotalBytesVerbose}</div>
+                    <div>耗时：{progress.CostDurationVerbose}</div>
+                </Space>}
+            </div>}>
                 <Form
                     onSubmitCapture={(e) => {
                         e.preventDefault()
 
-                        if(params.Content.length > 2097152){
+                        if (params.Content.length > 2097152) {
                             failed("字典内容过大，请使用字典路径方式上传")
                             return
                         }
 
-                        setUploadLoading(true)
-                        ipcRenderer
-                            .invoke("SavePayload", params)
-                            .then(() => {
-                                setTimeout(() => {
-                                    setUploadLoading(false)
-                                    props.onFinished && props.onFinished(params.Group)
-                                }, 300)
+                        if (!!token) {
+                            setUploadLoading(true)
+                            ipcRenderer.invoke("SavePayloadStream", {...params}, token).then(e => {
+                                info("开始上传字典")
                             })
-                            .catch((e: any) => {
-                                setTimeout(() => setUploadLoading(false), 100)
-                                failed("创建 Payload 失败 / 字典")
-                            })
+                        } else {
+                            setUploadLoading(true)
+                            ipcRenderer
+                                .invoke("SavePayload", params)
+                                .then(() => {
+                                    setTimeout(() => {
+                                        setUploadLoading(false)
+                                        props.onFinished && props.onFinished(params.Group)
+                                    }, 300)
+                                })
+                                .catch((e: any) => {
+                                    setTimeout(() => setUploadLoading(false), 100)
+                                    failed("创建 Payload 失败 / 字典")
+                                })
+                        }
                     }}
                     wrapperCol={{span: 14}}
                     labelCol={{span: 6}}
@@ -581,7 +657,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                                 failed(`${f.name}非txt或csv文件，请上传txt、csv格式文件！`)
                                 return false
                             }
-                            if(f.size > (2 * 1024 * 1024)){
+                            if (f.size > (2 * 1024 * 1024)) {
                                 failed(`字典文件过大，请使用字典路径方式上传`)
                                 return false
                             }

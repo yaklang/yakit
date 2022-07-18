@@ -63,6 +63,15 @@ module.exports = (win, getClient) => {
     return await asyncSavePayload(params);
   });
 
+  const handlerHelper = require("./handleStreamWithContext");
+
+  const streamSavePayloadStreamMap = new Map();
+  ipcMain.handle("cancel-SavePayloadStream", handlerHelper.cancelHandler(streamSavePayloadStreamMap));
+  ipcMain.handle("SavePayloadStream", (e, params, token) => {
+    let stream = getClient().SavePayloadStream(params);
+    handlerHelper.registerHandler(win, stream, streamSavePayloadStreamMap, token)
+  })
+
   // asyncGetAllPayloadGroup wrapper
   const asyncGetAllPayloadGroup = (params) => {
     return new Promise((resolve, reject) => {
