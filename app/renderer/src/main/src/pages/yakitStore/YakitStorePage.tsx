@@ -278,7 +278,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             </Col>
                         </Row>
                         <Row className='row-body' gutter={12}>
-                            <Col span={12} className="col">
+                            <Col span={12} className='col'>
                                 {plugSource === "online" && (
                                     <Checkbox checked={isSelectAll} onChange={onSelectAll}>
                                         全选&emsp;
@@ -289,7 +289,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 )}
                                 <Tag>Total:{total}</Tag>
                                 {plugSource === "local" && (
-                                    <div className="show-yaml-poc">
+                                    <div className='show-yaml-poc'>
                                         <Switch checked={isShowYAMLPOC} onChange={onSelectAllYAMLPOC} size='small' />
                                         &nbsp;展示YAML POC
                                     </div>
@@ -419,6 +419,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             isHistory={history}
                             isIgnored={ignored}
                             setTotal={setTotal}
+                            idScroll='scroll-div-plugin-local'
                         />
                     )}
                 </Spin>
@@ -469,6 +470,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
 }
 
 export interface YakModuleListProp {
+    idScroll: string
     Type: "yak" | "mitm" | "nuclei" | string
     Keyword: string
     onClicked: (y: YakScript) => any
@@ -486,7 +488,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [params, setParams] = useState<QueryYakScriptRequest>({
         IsHistory: props.isHistory,
         Keyword: props.Keyword,
-        Pagination: {Limit: 10, Order: "desc", Page: 1, OrderBy: "updated_at"},
+        Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
         Type: props.Type,
         IsIgnore: props.isIgnored
     })
@@ -527,6 +529,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             .then((item: QueryYakScriptsResponse) => {
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit
+                console.log("isMore", isMore)
+
                 setHasMore(!isMore)
                 setResponse({
                     ...item,
@@ -563,9 +567,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             props.isHistory
         )
     })
-
     return (
-        <div id='scroll-div-plugin-local' className='plugin-list-body'>
+        <div className='plugin-list-body' id={props.idScroll}>
             {/* @ts-ignore */}
             <InfiniteScroll
                 dataLength={response.Total}
@@ -578,7 +581,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     </div>
                 }
                 endMessage={response.Total > 0 && <div className='loading-center'>暂无更多数据</div>}
-                scrollableTarget='scroll-div-plugin-local'
+                scrollableTarget={props.idScroll}
                 scrollThreshold='100px'
             >
                 <List<YakScript>
@@ -1142,7 +1145,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
             return
         }
         ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
-            const p =Math.floor(data.Progress * 100)
+            const p = Math.floor(data.Progress * 100)
             setPercent(p)
         })
         ipcRenderer.on(`${taskToken}-end`, () => {
@@ -1151,8 +1154,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 setPercent(0)
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)

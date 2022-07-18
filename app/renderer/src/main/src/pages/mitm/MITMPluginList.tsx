@@ -84,7 +84,6 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
             ipcRenderer.removeAllListeners("client-mitm-hooks")
         }
     }, [])
-
     return (
         <AutoCard
             bordered={false}
@@ -178,6 +177,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
             {mode === "all" && (
                 <>
                     <YakModuleList
+                        idScroll='scroll-mitm-plugin-list'
                         Type={"mitm,port-scan"}
                         onClicked={(script: YakScript) => {}}
                         Keyword={""}
