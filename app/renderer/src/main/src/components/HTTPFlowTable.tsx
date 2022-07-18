@@ -335,6 +335,7 @@ export interface HTTPFlowTableProp {
     tableHeight?: number
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
+    inViewport?: boolean
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -941,13 +942,22 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     useEffect(() => {
         if (autoReload) {
             const id = setInterval(() => {
+                if (!props.inViewport) {
+                    return
+                }
                 update(1, undefined, "desc", undefined, undefined, true)
             }, 1000)
             return () => {
                 clearInterval(id)
             }
         }
-    }, [autoReload])
+    }, [autoReload, props.inViewport])
+
+    useEffect(() => {
+        if (props.inViewport) {
+            scrollTableTo(getScrollY())
+        }
+    }, [props.inViewport])
 
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
@@ -1485,6 +1495,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 height={tableContentHeight}
                 sortFilter={sortFilter}
                 renderRow={(children: ReactNode, rowData: any) => {
+                    if (!props.inViewport) {
+                        return <div style={{height: ROW_HEIGHT}}>...</div>
+                    }
                     if (rowData)
                         return (
                             <div
@@ -1494,10 +1507,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                                ? TableRowColor(
-                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                                )
-                                                : "#ffffff"
+                                            ? TableRowColor(
+                                                rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                            )
+                                            : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
@@ -1724,6 +1737,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     }
                 }}
                 onScroll={(scrollX, scrollY) => {
+                    if (!props.inViewport) {
+                        return
+                    }
                     setScrollY(scrollY)
                     // 防止无数据触发加载
                     if (data.length === 0 && !getAutoReload()) {
