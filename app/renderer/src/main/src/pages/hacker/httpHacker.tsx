@@ -68,7 +68,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                         <MITMPage/>
                     </div>
                 </Tabs.TabPane>
-                <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false} forceRender={true}>
+                <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false} forceRender={false}>
                     <div style={{height: "100%"}}>
                         <HTTPHistory/>
                     </div>

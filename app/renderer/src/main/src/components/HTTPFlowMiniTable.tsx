@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow";
 import {genDefaultPagination, QueryGeneralResponse} from "../pages/invoker/schema";
 import {HTTPFlow, onExpandHTTPFlow, StatusCodeToColor} from "./HTTPFlowTable";
@@ -8,7 +8,7 @@ import {BaseTable, features, useTablePipeline} from "../alibaba/ali-react-table-
 import {CopyableField} from "../utils/inputUtil";
 import {showDrawer} from "../utils/showModal";
 import ReactResizeDetector from "react-resize-detector";
-import {useThrottleFn} from "ahooks";
+import {useInViewport, useThrottleFn} from "ahooks";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -30,7 +30,10 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
     });
     const findHTTPFlowById = (Hash: string) => {
         return response.Data.filter(i => i.Hash === Hash).shift()
-    }
+    };
+
+    const ref = useRef(null);
+    const [inViewport] = useInViewport(ref);
 
     const pipeline = useTablePipeline({
         components: antd,
@@ -191,6 +194,9 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
 
 
     const update = () => {
+        if (!inViewport) {
+            return
+        }
         ipcRenderer.invoke("QueryHTTPFlows", {...props.filter}).then((data: QueryGeneralResponse<HTTPFlow>) => {
             // if ((data.Data || []).length > 0 && (response.Data || []).length > 0) {
             //     if (data.Data[0].Id === response.Data[0].Id) {
@@ -224,7 +230,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
         }
     }, [props.simple, props.autoUpdate])
 
-    return <div style={{width: "100%", height: "100%", overflow: "auto"}}>
+    return <div style={{width: "100%", height: "100%", overflow: "auto"}} ref={ref}>
         <ReactResizeDetector
             onResize={(width, height) => {
                 if (!width || !height) {
