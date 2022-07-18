@@ -14,6 +14,7 @@ import {MITMPluginTemplateShort} from "../invoker/data/MITMPluginTamplate"
 import {MITMYakScriptLoader} from "./MITMYakScriptLoader"
 import {failed} from "../../utils/notification"
 import {StringToUint8Array} from "../../utils/str"
+import "./MITMPluginList.scss"
 
 export const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
 
@@ -175,7 +176,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
                 </>
             )}
             {mode === "all" && (
-                <>
+                <div className='mitm-http-list'>
                     <YakModuleList
                         idScroll='scroll-mitm-plugin-list'
                         Type={"mitm,port-scan"}
@@ -196,7 +197,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
                             )
                         }}
                     />
-                </>
+                </div>
             )}
             {mode === "loaded" && (
                 <>
