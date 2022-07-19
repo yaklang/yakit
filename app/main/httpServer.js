@@ -18,6 +18,7 @@ service.interceptors.request.use(
     (config) => {
         config.baseURL = `${HttpSetting.httpBaseURL}/api/`
         if (USER_INFO.isLogin && USER_INFO.token) config.headers["Authorization"] = USER_INFO.token
+        console.log('config-request',config);
         return config
     },
     (error) => {
