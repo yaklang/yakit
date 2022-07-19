@@ -53,6 +53,7 @@ import {findDOMNode} from "react-dom"
 import {usePluginStore} from "@/store/plugin"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import ReactResizeDetector from "react-resize-detector"
+import {RollingLoadList} from "@/components/RollingLoadList"
 
 const {Search} = Input
 const {Option} = Select
@@ -128,6 +129,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .invoke("DeleteAllLocalPlugins", {})
             .then(() => {
                 getLocalList()
+                setScript(undefined)
                 ipcRenderer.invoke("change-main-menu")
                 success("删除成功")
             })
@@ -479,6 +481,7 @@ export interface YakModuleListProp {
     trigger?: boolean
     isIgnored?: boolean
     isHistory?: boolean
+    isRef?: boolean
     onYakScriptRender?: (i: YakScript, maxWidth?: number) => any
     setTotal?: (n: number) => void
 }
@@ -503,9 +506,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         },
         Total: 0
     })
-    // const [loading, setLoading] = useState(false)
-    const [trigger, setTrigger] = useState(false)
     const [maxWidth, setMaxWidth] = useState<number>(260)
+    const [loading, setLoading] = useState(false)
     const update = (
         page?: number,
         limit?: number,
@@ -524,14 +526,13 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         newParams.Type = Type
         newParams.IsIgnore = isIgnore
         newParams.IsHistory = isHistory
-        // setLoading(true)
+        setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit
                 setHasMore(!isMore)
-
                 setResponse({
                     ...item,
                     Data: [...data]
@@ -542,10 +543,12 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 failed("Query Local Yak Script failed: " + `${e}`)
             })
             .finally(() => {
-                setTimeout(() => setLoading(true), 200)
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
             })
     }
-
+    const [isRef, setIsRef] = useState(false)
     useEffect(() => {
         setParams({
             ...params,
@@ -554,10 +557,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             IsHistory: props.isHistory,
             IsIgnore: props.isIgnored
         })
+        setIsRef(!isRef)
         update(1, undefined, props.Keyword || "", props.Type, props.isIgnored, props.isHistory)
-    }, [props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, trigger, userInfo.isLogin])
+    }, [props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, userInfo.isLogin])
     const [hasMore, setHasMore] = useState<boolean>(true)
-    const [loading, setLoading] = useState<boolean>(true)
     const loadMoreData = useMemoizedFn(() => {
         update(
             parseInt(`${response.Pagination.Page}`) + 1,
@@ -568,117 +571,29 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             props.isHistory
         )
     })
-    const containerRef = useRef(null)
-    const wrapperRef = useRef(null)
-    const [list] = useVirtualList(response.Data || [], {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 113,
-        overscan: 10
-    })
-    const [vlistHeigth, setVListHeight] = useState(600)
-    const onScrollCapture = useThrottleFn(
-        () => {
-            if (containerRef && loading && hasMore) {
-                const dom = containerRef.current || {
-                    scrollTop: 0,
-                    clientHeight: 0,
-                    scrollHeight: 0
-                }
-                const contentScrollTop = dom.scrollTop //滚动条距离顶部
-                const clientHeight = dom.clientHeight //可视区域
-                const scrollHeight = dom.scrollHeight //滚动条内容的总高度
-                const scrollBottom = scrollHeight - contentScrollTop - clientHeight
-
-                if (scrollBottom <= 500) {
-                    setLoading(false)
-                    loadMoreData() // 获取数据的方法
-                }
-            }
-        },
-        {wait: 200}
-    ).run()
     return (
         <>
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!height) {
-                        return
-                    }
-                    setVListHeight(height)
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
-            <div
-                className='plugin-list-body'
-                style={{height: vlistHeigth}}
-                id={props.idScroll}
-                ref={containerRef}
-                onScroll={onScrollCapture}
-            >
-                <div ref={wrapperRef}>
-                    {list.map((i) => (
-                        <div key={i.data.Id}>
-                            <PluginListLocalItem
-                                plugin={i.data}
-                                userInfo={userInfo}
-                                onClicked={props.onClicked}
-                                currentId={props.currentId}
-                                onYakScriptRender={props.onYakScriptRender}
-                                maxWidth={maxWidth}
-                            />
-                        </div>
-                    ))}
-                    {!loading && hasMore && (
-                        <div className='loading-center'>
-                            <LoadingOutlined />
-                        </div>
-                    )}
-                    {!hasMore && (response.Pagination.Page || 0) > 0 && (
-                        <div className='no-more-text padding-bottom-12'>暂无更多数据</div>
-                    )}
-                </div>
-
-                {/* @ts-ignore */}
-                {/* <InfiniteScroll
-                dataLength={response.Total}
-                key={response.Pagination.Page}
-                next={loadMoreData}
+            <RollingLoadList<YakScript>
+                isRef={isRef}
+                data={response.Data}
+                page={response.Pagination.Page}
                 hasMore={hasMore}
-                loader={
-                    <div className='loading-center'>
-                        <LoadingOutlined />
-                    </div>
-                }
-                endMessage={response.Total > 0 && <div className='loading-center'>暂无更多数据</div>}
-                scrollableTarget={props.idScroll}
-                scrollThreshold='100px'
-            >
-                <List<YakScript>
-                    // loading={loading}
-                    className='plugin-list'
-                    dataSource={response.Data || []}
-                    split={false}
-                    renderItem={(i: YakScript, index: number) => {
-                        return (
-                            <List.Item style={{marginLeft: 0}} key={i.Id}>
-                                <PluginListLocalItem
-                                    plugin={i}
-                                    userInfo={userInfo}
-                                    onClicked={props.onClicked}
-                                    currentId={props.currentId}
-                                    onYakScriptRender={props.onYakScriptRender}
-                                    maxWidth={maxWidth}
-                                />
-                            </List.Item>
-                        )
-                    }}
-                />
-            </InfiniteScroll> */}
-            </div>
+                loading={loading}
+                loadMoreData={loadMoreData}
+                classNameRow='plugin-list'
+                classNameList='plugin-list-body'
+                itemHeight={135}
+                renderRow={(data: YakScript) => (
+                    <PluginListLocalItem
+                        plugin={data}
+                        userInfo={userInfo}
+                        onClicked={props.onClicked}
+                        currentId={props.currentId}
+                        onYakScriptRender={props.onYakScriptRender}
+                        maxWidth={maxWidth}
+                    />
+                )}
+            />
         </>
     )
 }
@@ -1374,6 +1289,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const [loading, setLoading] = useState(false)
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
     const [hasMore, setHasMore] = useState(true)
+    const [isRef, setIsRef] = useState(false)
     useEffect(() => {
         if (isSelectAll) {
             const data = response.data.filter((ele) => ele.status === 1)
@@ -1385,6 +1301,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     }, [userInfo.role])
     useEffect(() => {
         search(1)
+        setIsRef(!isRef)
     }, [queryOnline])
     const search = useMemoizedFn((page: number) => {
         let url = "yakit/plugin/unlogged"
@@ -1487,52 +1404,32 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     })
 
     return (
-        <div id='scroll-div-plugin-online' className='plugin-list-body'>
-            {/* @ts-ignore */}
-            <InfiniteScroll
-                dataLength={response?.pagemeta?.total || 0}
-                key={response?.pagemeta?.page || 1}
-                next={loadMoreData}
-                hasMore={hasMore}
-                loader={
-                    <div className='loading-center'>
-                        <LoadingOutlined />
-                    </div>
-                }
-                endMessage={response?.pagemeta?.total > 0 && <div className='no-more-text'>暂无更多数据</div>}
-                scrollableTarget='scroll-div-plugin-online'
-            >
-                <List<API.YakitPluginDetail>
-                    // loading={loading}
-                    className='plugin-list'
-                    dataSource={response.data || []}
-                    split={false}
-                    renderItem={(i: API.YakitPluginDetail, index: number) => {
-                        return (
-                            <List.Item
-                                style={{marginLeft: 0, position: "relative"}}
-                                key={i.id}
-                                onClick={() => onClicked(i)}
-                            >
-                                <PluginItemOnline
-                                    index={index}
-                                    currentId={currentId}
-                                    isAdmin={isAdmin}
-                                    info={i}
-                                    selectedRowKeysRecord={selectedRowKeysRecord}
-                                    onSelect={onSelect}
-                                    onClick={(info) => {
-                                        onClicked(info)
-                                    }}
-                                    onDownload={addLocalLab}
-                                    onStarred={starredPlugin}
-                                />
-                            </List.Item>
-                        )
+        <RollingLoadList<API.YakitPluginDetail>
+            isRef={isRef}
+            data={response.data}
+            page={response.pagemeta.page}
+            hasMore={hasMore}
+            loading={loading}
+            loadMoreData={loadMoreData}
+            key='id'
+            classNameRow='plugin-list'
+            classNameList='plugin-list-body'
+            renderRow={(data: API.YakitPluginDetail, index: number) => (
+                <PluginItemOnline
+                    index={index}
+                    currentId={currentId}
+                    isAdmin={isAdmin}
+                    info={data}
+                    selectedRowKeysRecord={selectedRowKeysRecord}
+                    onSelect={onSelect}
+                    onClick={(info) => {
+                        onClicked(info)
                     }}
+                    onDownload={addLocalLab}
+                    onStarred={starredPlugin}
                 />
-            </InfiniteScroll>
-        </div>
+            )}
+        />
     )
 }
 
@@ -1662,6 +1559,7 @@ const PluginItemOnline = (props: PluginListOptProps) => {
             }
             style={{
                 width: "100%",
+                marginBottom: 12,
                 backgroundColor: currentId === info.id ? "rgba(79,188,255,0.26)" : "#fff"
             }}
         >

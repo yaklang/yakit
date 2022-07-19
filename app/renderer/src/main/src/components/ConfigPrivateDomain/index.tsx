@@ -59,9 +59,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 <Input placeholder='请输入你的私有域地址' allowClear />
             </Form.Item>
             {/* rules={[{required: true, message: "该项为必填"}]} */}
-            <Form.Item name='Password' label='密码'>
+            {/* <Form.Item name='Password' label='密码'>
                 <Input placeholder='请输入你的密码' allowClear />
-            </Form.Item>
+            </Form.Item> */}
             <Form.Item {...tailLayout}>
                 <Button type='primary' htmlType='submit' className='btn-sure' loading={loading}>
                     确定
