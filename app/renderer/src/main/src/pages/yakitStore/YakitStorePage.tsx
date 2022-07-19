@@ -40,7 +40,7 @@ import {AutoCard} from "../../components/AutoCard"
 import {UserInfoProps, useStore} from "@/store"
 import "./YakitStorePage.scss"
 import {getValue, saveValue} from "../../utils/kv"
-import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
@@ -52,6 +52,7 @@ import moment from "moment"
 import {findDOMNode} from "react-dom"
 import {usePluginStore} from "@/store/plugin"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
+import ReactResizeDetector from "react-resize-detector"
 
 const {Search} = Input
 const {Option} = Select
@@ -529,9 +530,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             .then((item: QueryYakScriptsResponse) => {
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit
-                console.log("isMore", isMore)
-
                 setHasMore(!isMore)
+
                 setResponse({
                     ...item,
                     Data: [...data]
@@ -542,7 +542,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 failed("Query Local Yak Script failed: " + `${e}`)
             })
             .finally(() => {
-                // setTimeout(() => setLoading(false), 200)
+                setTimeout(() => setLoading(true), 200)
             })
     }
 
@@ -557,6 +557,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         update(1, undefined, props.Keyword || "", props.Type, props.isIgnored, props.isHistory)
     }, [props.trigger, props.Keyword, props.Type, props.isHistory, props.isIgnored, trigger, userInfo.isLogin])
     const [hasMore, setHasMore] = useState<boolean>(true)
+    const [loading, setLoading] = useState<boolean>(true)
     const loadMoreData = useMemoizedFn(() => {
         update(
             parseInt(`${response.Pagination.Page}`) + 1,
@@ -567,10 +568,82 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             props.isHistory
         )
     })
+    const containerRef = useRef(null)
+    const wrapperRef = useRef(null)
+    const [list] = useVirtualList(response.Data || [], {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 113,
+        overscan: 10
+    })
+    const [vlistHeigth, setVListHeight] = useState(600)
+    const onScrollCapture = useThrottleFn(
+        () => {
+            if (containerRef && loading && hasMore) {
+                const dom = containerRef.current || {
+                    scrollTop: 0,
+                    clientHeight: 0,
+                    scrollHeight: 0
+                }
+                const contentScrollTop = dom.scrollTop //滚动条距离顶部
+                const clientHeight = dom.clientHeight //可视区域
+                const scrollHeight = dom.scrollHeight //滚动条内容的总高度
+                const scrollBottom = scrollHeight - contentScrollTop - clientHeight
+
+                if (scrollBottom <= 500) {
+                    setLoading(false)
+                    loadMoreData() // 获取数据的方法
+                }
+            }
+        },
+        {wait: 200}
+    ).run()
     return (
-        <div className='plugin-list-body' id={props.idScroll}>
-            {/* @ts-ignore */}
-            <InfiniteScroll
+        <>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!height) {
+                        return
+                    }
+                    setVListHeight(height)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+            <div
+                className='plugin-list-body'
+                style={{height: vlistHeigth}}
+                id={props.idScroll}
+                ref={containerRef}
+                onScroll={onScrollCapture}
+            >
+                <div ref={wrapperRef}>
+                    {list.map((i) => (
+                        <div key={i.data.Id}>
+                            <PluginListLocalItem
+                                plugin={i.data}
+                                userInfo={userInfo}
+                                onClicked={props.onClicked}
+                                currentId={props.currentId}
+                                onYakScriptRender={props.onYakScriptRender}
+                                maxWidth={maxWidth}
+                            />
+                        </div>
+                    ))}
+                    {!loading && hasMore && (
+                        <div className='loading-center'>
+                            <LoadingOutlined />
+                        </div>
+                    )}
+                    {!hasMore && (response.Pagination.Page || 0) > 0 && (
+                        <div className='no-more-text padding-bottom-12'>暂无更多数据</div>
+                    )}
+                </div>
+
+                {/* @ts-ignore */}
+                {/* <InfiniteScroll
                 dataLength={response.Total}
                 key={response.Pagination.Page}
                 next={loadMoreData}
@@ -604,8 +677,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                         )
                     }}
                 />
-            </InfiniteScroll>
-        </div>
+            </InfiniteScroll> */}
+            </div>
+        </>
     )
 }
 
@@ -626,7 +700,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             warn("未登录，请先登录!")
             return
         }
-
+        setUploadLoading(true)
         const params: API.NewYakitPlugin = {
             type: item.Type,
             script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
@@ -649,7 +723,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         if (item.OnlineId) {
             params.id = parseInt(`${item.OnlineId}`)
         }
-        setUploadLoading(true)
         NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
             method: "post",
             url: "yakit/plugin",
@@ -674,6 +747,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                                     onClicked(newSrcipt)
                                     setPlugin(newSrcipt)
                                 }
+                                // console.log('newSrcipt',newSrcipt);
                                 ipcRenderer
                                     .invoke("delete-yak-script", item.Id)
                                     .then(() => {
@@ -733,6 +807,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             }
             style={{
                 width: "100%",
+                marginBottom: 12,
                 backgroundColor: props.currentId === plugin.Id ? "rgba(79,188,255,0.26)" : "#fff"
             }}
             onClick={() => props.onClicked(plugin)}
