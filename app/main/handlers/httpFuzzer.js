@@ -37,6 +37,7 @@ module.exports = (win, getClient) => {
     const streamHTTPFuzzerMap = new Map();
     ipcMain.handle("cancel-HTTPFuzzer", handlerHelper.cancelHandler(streamHTTPFuzzerMap));
     ipcMain.handle("HTTPFuzzer", (e, params, token) => {
+        console.info(params)
         let stream = getClient().HTTPFuzzer(params);
         stream.on("data", data => {
             if (win && data) win.webContents.send(`fuzzer-data-${token}`, data)

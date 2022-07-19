@@ -1420,6 +1420,10 @@ message FuzzerRequest {
 
   // 设置 Fuzzer
   FuzzerResponseFilter Filter = 15;
+
+  // 随时
+  double DelayMinSeconds = 17;
+  double DelayMaxSeconds = 18;
 }
 
 message FuzzerResponseFilter {

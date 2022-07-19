@@ -16,7 +16,7 @@ import {
     Typography,
     Dropdown,
     Menu,
-    Popover, Checkbox, Tooltip
+    Popover, Checkbox, Tooltip, InputNumber
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -197,6 +197,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
     const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
     const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
+    const [minDelaySeconds, setMinDelaySeconds] = useState(0);
+    const [maxDelaySeconds, setMaxDelaySeconds] = useState(0);
     const [proxy, setProxy] = useState(props.fuzzerParams?.proxy || "")
     const [actualHost, setActualHost] = useState(props.fuzzerParams?.actualHost || "")
     const [advancedConfig, setAdvancedConfig] = useState(false)
@@ -362,6 +364,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 ActualAddr: actualHost,
                 HotPatchCode: hotPatchCode,
                 Filter: getFilter(),
+                DelayMinSeconds: minDelaySeconds,
+                DelayMaxSeconds: maxDelaySeconds,
             },
             fuzzToken
         )
@@ -622,6 +626,19 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             />
         )
     })
+
+    // 设置最大延迟最小延迟
+    useEffect(() => {
+        if (minDelaySeconds > maxDelaySeconds) {
+            setMaxDelaySeconds(minDelaySeconds)
+        }
+    }, [minDelaySeconds])
+
+    useEffect(() => {
+        if (maxDelaySeconds < minDelaySeconds) {
+            setMinDelaySeconds(maxDelaySeconds)
+        }
+    }, [maxDelaySeconds])
 
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showModal({
@@ -998,6 +1015,38 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 setValue={setParamTimeout}
                                                 value={timeout}
                                             />
+                                        </Col>
+                                        <Col span={12} xl={8}>
+                                            <Form.Item
+                                                label={<OneLine width={68}>随机延迟</OneLine>}
+                                                style={{marginBottom: 4}}
+                                            >
+                                                <Input.Group>
+                                                    <InputNumber
+                                                        style={{width: 95}}
+                                                        precision={1}
+                                                        value={minDelaySeconds}
+                                                        onChange={e => {
+                                                            setMinDelaySeconds(e)
+                                                        }}
+                                                        min={0} step={0.5}
+                                                        formatter={e => {
+                                                            return `min: ${e} s`
+                                                        }}
+                                                    />
+                                                    <InputNumber
+                                                        style={{width: 96}}
+                                                        precision={1} min={0} step={0.5}
+                                                        value={maxDelaySeconds}
+                                                        onChange={e => {
+                                                            setMaxDelaySeconds(e)
+                                                        }}
+                                                        formatter={e => {
+                                                            return `max: ${e} s`
+                                                        }}
+                                                    />
+                                                </Input.Group>
+                                            </Form.Item>
                                         </Col>
                                     </Row>
                                 </Form>
