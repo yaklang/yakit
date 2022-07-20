@@ -1233,7 +1233,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 </Button>
             ) : (
                 <>
-                    {/* 未选择数据 并且 我的插件登录的情况下 */}
+                    {/* 未选择数据 并且 我的插件未登录的情况下 */}
                     {(selectedRowKeysRecord.length === 0 && !(user && !userInfo.isLogin) && (
                         <Popconfirm
                             title={user ? "确定将我的插件所有数据导入到本地吗" : "确定将插件商店所有数据导入到本地吗?"}
