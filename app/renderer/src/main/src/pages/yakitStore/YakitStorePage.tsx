@@ -360,6 +360,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             setBatchAddLoading={setBatchAddLoading}
                                             setSelectedRowKeysRecord={setSelectedRowKeysRecord}
                                             user={user}
+                                            userInfo={userInfo}
                                         />
                                     </>
                                 )) || (
@@ -620,7 +621,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptById", {Id: oldItem.Id})
             .then((item: YakScript) => {
-                console.log('item',item);
+                console.log("item", item)
                 const params: API.NewYakitPlugin = {
                     type: item.Type,
                     script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
@@ -1127,6 +1128,7 @@ interface AddAllPluginProps {
     setSelectedRowKeysRecord: (a: API.YakitPluginDetail[]) => void
     selectedRowKeysRecord: API.YakitPluginDetail[]
     user: boolean
+    userInfo: UserInfoProps
 }
 
 interface DownloadOnlinePluginByIdsRequest {
@@ -1135,7 +1137,7 @@ interface DownloadOnlinePluginByIdsRequest {
 }
 
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
-    const {selectedRowKeysRecord, setBatchAddLoading, setSelectedRowKeysRecord, user} = props
+    const {selectedRowKeysRecord, setBatchAddLoading, setSelectedRowKeysRecord, user, userInfo} = props
     const [taskToken, setTaskToken] = useState(randomString(40))
     // 全部添加进度条
     const [addLoading, setAddLoading] = useState<boolean>(false)
@@ -1162,6 +1164,10 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
         }
     }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
+        if (user && !userInfo.isLogin) {
+            warn("请先登录")
+            return
+        }
         if (selectedRowKeysRecord.length > 0) {
             // 批量添加
             const uuIds: string[] = []
@@ -1227,9 +1233,10 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 </Button>
             ) : (
                 <>
-                    {(selectedRowKeysRecord.length === 0 && (
+                    {/* 未选择数据 并且 我的插件登录的情况下 */}
+                    {(selectedRowKeysRecord.length === 0 && !(user && !userInfo.isLogin) && (
                         <Popconfirm
-                            title={user?'确定将我的插件所有数据导入到本地吗':'确定将插件商店所有数据导入到本地吗?'}
+                            title={user ? "确定将我的插件所有数据导入到本地吗" : "确定将插件商店所有数据导入到本地吗?"}
                             onConfirm={AddAllPlugin}
                             okText='Yes'
                             cancelText='No'
