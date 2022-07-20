@@ -611,83 +611,91 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
     const {userInfo, maxWidth, onClicked} = props
     const [plugin, setPlugin] = useState(props.plugin)
     const [uploadLoading, setUploadLoading] = useState(false)
-    const uploadOnline = (item: YakScript) => {
+    const uploadOnline = (oldItem: YakScript) => {
         if (!userInfo.isLogin) {
             warn("未登录，请先登录!")
             return
         }
         setUploadLoading(true)
-        const params: API.NewYakitPlugin = {
-            type: item.Type,
-            script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
-            content: item.Content,
-            tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
-            params: item.Params.map((p) => ({
-                field: p.Field,
-                default_value: p.DefaultValue,
-                type_verbose: p.TypeVerbose,
-                field_verbose: p.FieldVerbose,
-                help: p.Help,
-                required: p.Required,
-                group: p.Group,
-                extra_setting: p.ExtraSetting
-            })),
-            help: item.Help,
-            default_open: false,
-            contributors: item.Author
-        }
-        if (item.OnlineId) {
-            params.id = parseInt(`${item.OnlineId}`)
-        }
-        NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
-            method: "post",
-            url: "yakit/plugin",
-            data: params
-        })
-            .then((res) => {
-                // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
-                ipcRenderer
-                    .invoke("DownloadOnlinePluginById", {
-                        OnlineID: res.id,
-                        UUID: res.uuid
-                    } as DownloadOnlinePluginProps)
-                    .then(() => {
-                        // 查询本地数据
+        ipcRenderer
+            .invoke("GetYakScriptById", {Id: oldItem.Id})
+            .then((item: YakScript) => {
+                console.log('item',item);
+                const params: API.NewYakitPlugin = {
+                    type: item.Type,
+                    script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
+                    content: item.Content,
+                    tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
+                    params: item.Params.map((p) => ({
+                        field: p.Field,
+                        default_value: p.DefaultValue,
+                        type_verbose: p.TypeVerbose,
+                        field_verbose: p.FieldVerbose,
+                        help: p.Help,
+                        required: p.Required,
+                        group: p.Group,
+                        extra_setting: p.ExtraSetting
+                    })),
+                    help: item.Help,
+                    default_open: false,
+                    contributors: item.Author
+                }
+                if (item.OnlineId) {
+                    params.id = parseInt(`${item.OnlineId}`)
+                }
+                NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
+                    method: "post",
+                    url: "yakit/plugin",
+                    data: params
+                })
+                    .then((res) => {
+                        // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
                         ipcRenderer
-                            .invoke("GetYakScriptByOnlineID", {
+                            .invoke("DownloadOnlinePluginById", {
                                 OnlineID: res.id,
                                 UUID: res.uuid
-                            } as GetYakScriptByOnlineIDRequest)
-                            .then((newSrcipt: YakScript) => {
-                                if (item.Id === plugin.Id) {
-                                    onClicked(newSrcipt)
-                                    setPlugin(newSrcipt)
-                                }
-                                // console.log('newSrcipt',newSrcipt);
+                            } as DownloadOnlinePluginProps)
+                            .then(() => {
+                                // 查询本地数据
                                 ipcRenderer
-                                    .invoke("delete-yak-script", item.Id)
-                                    .then(() => {
-                                        // console.log("删除成功")
+                                    .invoke("GetYakScriptByOnlineID", {
+                                        OnlineID: res.id,
+                                        UUID: res.uuid
+                                    } as GetYakScriptByOnlineIDRequest)
+                                    .then((newSrcipt: YakScript) => {
+                                        if (item.Id === plugin.Id) {
+                                            onClicked(newSrcipt)
+                                            setPlugin(newSrcipt)
+                                        }
+                                        ipcRenderer
+                                            .invoke("delete-yak-script", item.Id)
+                                            .then(() => {
+                                                console.log("删除成功")
+                                            })
+                                            .catch((err) => {
+                                                failed("删除本地失败:" + err)
+                                            })
                                     })
-                                    .catch((err) => {
-                                        failed("删除本地失败:" + err)
+                                    .catch((e) => {
+                                        failed(`查询本地插件错误:${e}`)
                                     })
                             })
-                            .catch((e) => {
-                                failed(`查询本地插件错误:${e}`)
+                            .catch((err) => {
+                                failed("插件下载本地失败:" + err)
                             })
+                        success("插件上传成功")
                     })
                     .catch((err) => {
-                        failed("插件下载本地失败:" + err)
+                        failed("插件上传失败:" + err)
                     })
-                success("插件上传成功")
+                    .finally(() => {
+                        setTimeout(() => setUploadLoading(false), 200)
+                    })
             })
-            .catch((err) => {
-                failed("插件上传失败:" + err)
+            .catch((e: any) => {
+                failed("Query YakScript By ID failed")
             })
-            .finally(() => {
-                setTimeout(() => setUploadLoading(false), 200)
-            })
+            .finally(() => {})
     }
     let isAnonymous = false
     if (plugin.Author === "" || plugin.Author === "anonymous") {
