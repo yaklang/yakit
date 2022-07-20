@@ -246,8 +246,8 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
     const isAdmin = userInfo.role === "admin"
     return (
-        <Spin spinning={loading}>
-            <div className='plugin-info'>
+        <div className='plugin-info'>
+            <Spin spinning={loading} style={{height: "100%"}}>
                 {/* PageHeader */}
                 <PageHeader
                     title={plugin?.script_name}
@@ -350,8 +350,8 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         </TabPane>
                     </Tabs>
                 </div>
-            </div>
-        </Spin>
+            </Spin>
+        </div>
     )
 }
 

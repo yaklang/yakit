@@ -387,8 +387,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 onOk() {
                     setLoginShow(true)
                 },
-                onCancel() {
-                }
+                onCancel() {}
             })
         }
     })
