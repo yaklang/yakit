@@ -12,6 +12,7 @@ export interface YakQueryHTTPFlowRequest {
     HaveCommonParams?: boolean
     HaveBody?: boolean
     SearchContentType?: string
+    Keyword?: string
 }
 
 export interface Paging {

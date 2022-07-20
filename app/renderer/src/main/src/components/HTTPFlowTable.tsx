@@ -1043,13 +1043,13 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             <Switch size={"small"} checked={autoReload} onChange={setAutoReload}/>
                         </Space> */}
                         <Input.Search
-                            placeholder={"URL关键字"}
+                            placeholder={"全局搜索"}
                             enterButton={true}
                             size={"small"}
                             style={{width: 170}}
-                            value={params.SearchURL}
+                            value={params.Keyword}
                             onChange={(e) => {
-                                setParams({...params, SearchURL: e.target.value})
+                                setParams({...params, Keyword: e.target.value})
                             }}
                             onSearch={(v) => {
                                 update(1)
