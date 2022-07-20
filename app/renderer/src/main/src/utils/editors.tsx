@@ -27,6 +27,8 @@ import {Buffer} from "buffer";
 import {failed, info} from "./notification";
 import {StringToUint8Array, Uint8ArrayToString} from "./str";
 import {newWebFuzzerTab} from "../pages/fuzzer/HTTPFuzzerPage";
+import {getRemoteValue, setRemoteValue} from "@/utils/kv";
+import {IPosition, IRange} from "monaco-editor";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -266,6 +268,8 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     system?: string
     isResponse?: boolean
     utf8?: boolean
+
+    defaultSearchKeyword?: string
 }
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
@@ -364,6 +368,49 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
     }, [hexValue])
 
     const empty = !!props.emptyOr && props.originValue.length == 0
+
+    // 如果这个不为空的话，默认直接打开搜索功能
+    useEffect(() => {
+        if (!props.defaultSearchKeyword) {
+            return
+        }
+
+        if (!monacoEditor) {
+            return
+        }
+
+        try {
+            const model = monacoEditor.getModel();
+            // @ts-ignore
+            const range: IRange = model.findNextMatch(
+                props.defaultSearchKeyword,
+                {lineNumber: 0, column: 0} as IPosition,
+                false, false, null, false,
+            ).range;
+            monacoEditor.setSelection(range)
+            monacoEditor.revealRangeNearTop(range);
+            monacoEditor.trigger("", "actions.find", undefined)
+        } catch (e) {
+            console.info("加载默认搜索字符串失败", props.defaultSearchKeyword)
+        }
+    }, [props.defaultSearchKeyword, monacoEditor])
+
+    // 缓存 fontSize
+    useEffect(() => {
+        if (fontSize <= 0) {
+            return
+        }
+        setRemoteValue("MONACO_EDITOR_FONTSIZE", `${fontSize}`)
+    }, [fontSize])
+    // 第一次加载的时候，读区 FONTSIZE
+    useEffect(() => {
+        getRemoteValue("MONACO_EDITOR_FONTSIZE").then(e => {
+            const fontSizeFetched = parseInt(e);
+            if (fontSize > 0) {
+                setFontSize(fontSizeFetched)
+            }
+        })
+    }, [])
 
     return <div style={{width: "100%", height: "100%"}}>
         <Card

@@ -45,6 +45,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     isFront?: boolean
     isBehind?: boolean
     fetchRequest?: (kind: number) => any
+    search?: string
 }
 
 const {Text} = Typography;
@@ -347,15 +348,19 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 originValue={(flow?.Request) || new Uint8Array} readOnly={true}
                 sendToWebFuzzer={!!props.sendToWebFuzzer}
                 defaultHeight={props.defaultHeight}
+                loading={loading}
                 defaultHttps={props.defaultHttps}
                 hideSearch={true}
+                defaultSearchKeyword={props.search}
             />}
             firstMinSize={300}
             secondNode={<HTTPPacketEditor
                 isResponse={true}
+                loading={loading}
                 originValue={(flow?.Response) || new Uint8Array}
                 readOnly={true} defaultHeight={props.defaultHeight}
                 hideSearch={true}
+                defaultSearchKeyword={props.search}
             />}
             secondMinSize={300}
         >

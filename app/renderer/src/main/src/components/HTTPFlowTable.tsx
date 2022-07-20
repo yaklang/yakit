@@ -336,6 +336,7 @@ export interface HTTPFlowTableProp {
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
     inViewport?: boolean
+    onSearch?: (i: string) => any
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -1048,10 +1049,19 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             size={"small"}
                             style={{width: 170}}
                             value={params.Keyword}
+                            // 这个事件很关键哈，不要用 onChange
+                            onBlur={(e) => {
+                                if (props.onSearch) {
+                                    props.onSearch(e.target.value)
+                                }
+                            }}
                             onChange={(e) => {
                                 setParams({...params, Keyword: e.target.value})
                             }}
                             onSearch={(v) => {
+                                // if (props.onSearch) {
+                                //     props.onSearch(params.Keyword || "")
+                                // }
                                 update(1)
                             }}
                         />
@@ -1507,10 +1517,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                            ? TableRowColor(
-                                                rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                            )
-                                            : "#ffffff"
+                                                ? TableRowColor(
+                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                                )
+                                                : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
