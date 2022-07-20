@@ -1523,6 +1523,8 @@ message QueryHTTPFlowRequest {
   int64 AfterUpdatedAt = 11;
   int64 AfterId = 12;
   int64 BeforeId = 13;
+
+  string Keyword = 14;
 }
 
 message DeleteHTTPFlowRequest {
