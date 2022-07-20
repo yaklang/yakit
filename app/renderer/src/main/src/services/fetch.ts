@@ -32,6 +32,7 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
                 handleAxios(res, resolve, reject)
             })
             .catch((err: any) => {
+                // console.log("request-err", err)
                 reject(err)
             })
     })
@@ -43,7 +44,7 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
         failed("请求超时，请重试")
         return
     }
-    // console.log('返回',res);
+    // console.log("返回", res)
     switch (code) {
         case 200:
             resolve(data)

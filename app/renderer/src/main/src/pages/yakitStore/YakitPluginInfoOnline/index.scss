@@ -225,6 +225,11 @@ $active-color:#036ffe;
             background-color: #f9fafb;
             color: #cbd1da;
             border-radius: 4px;
+            border-color: initial;
+
+            &:hover {
+                border-color: initial
+            }
         }
     }
 }

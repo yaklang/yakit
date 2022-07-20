@@ -241,7 +241,7 @@
     /**
      * 审核状态,0待审核，1通过审核，2审核不通过
      */
-    status?: number;
+    status?: string;
     type?: string;
     user: boolean;
     is_private?: boolean;

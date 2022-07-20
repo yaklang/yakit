@@ -4,7 +4,7 @@ import React, {useState, useEffect, memo} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "../../../utils/notification"
-import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal} from "antd"
+import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal, Spin} from "antd"
 import {
     StarOutlined,
     StarFilled,
@@ -15,7 +15,8 @@ import {
     ZoomInOutlined,
     ZoomOutOutlined,
     QuestionOutlined,
-    LoadingOutlined
+    LoadingOutlined,
+    ExclamationCircleOutlined
 } from "@ant-design/icons"
 import numeral from "numeral"
 import "./index.scss"
@@ -29,6 +30,9 @@ import {OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon} from "@/assets
 import {SecondConfirm} from "@/components/functionTemplate/SecondConfirm"
 import {YakEditor} from "@/utils/editors"
 import {usePluginStore} from "@/store/plugin"
+import {YakScript} from "@/pages/invoker/schema"
+import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
+import Login from "@/pages/Login"
 
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
@@ -36,6 +40,8 @@ const limit = 5
 
 interface YakitPluginInfoOnlineProps {
     info: API.YakitPluginDetail
+    user?: boolean
+    deletePlugin: (i: API.YakitPluginDetail) => void
 }
 
 interface SearchPluginDetailRequest {
@@ -64,7 +70,7 @@ export const TagColor: {[key: string]: string} = {
 }
 
 export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (props) => {
-    const {info} = props
+    const {info, user, deletePlugin} = props
     // 全局登录状态
     const {userInfo} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
@@ -73,6 +79,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     useEffect(() => {
         getPluginDetail()
     }, [info.id])
+
     const getPluginDetail = useMemoizedFn(() => {
         let url = "yakit/plugin/detail-unlogged"
         if (userInfo.isLogin) {
@@ -132,10 +139,6 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     })
     const pluginAdd = useMemoizedFn(() => {
         if (!plugin) return
-        // if (!isLogin) {
-        //     warn("请先登录")
-        //     return
-        // }
         setAddLoading(true)
         ipcRenderer
             .invoke("DownloadOnlinePluginById", {
@@ -163,6 +166,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             status: status === 1
         }
         if (auditParams.id === 0) return
+        setLoading(true)
         NetWorkApi<AuditParameters, API.ActionSucceeded>({
             method: "post",
             url: "yakit/plugin/audit",
@@ -183,7 +187,55 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 setTimeout(() => setLoading(false), 200)
             })
     })
-
+    const onRemove = useMemoizedFn(() => {
+        if (!plugin) return
+        if (userInfo.role === "admin" || plugin?.user_id === userInfo.user_id) {
+            const deletedParams: API.DeletePluginUuid = {
+                uuid: plugin.uuid || ""
+            }
+            setLoading(true)
+            // 查询本地数据
+            let currentScript: YakScript | undefined = undefined
+            ipcRenderer
+                .invoke("GetYakScriptByOnlineID", {
+                    OnlineID: plugin.id,
+                    UUID: plugin.uuid
+                } as GetYakScriptByOnlineIDRequest)
+                .then((newSrcipt: YakScript) => {
+                    currentScript = newSrcipt
+                })
+                .finally(() => {
+                    onRemoveOnline(plugin, deletedParams, currentScript)
+                })
+        }
+    })
+    const onRemoveOnline = useMemoizedFn((plugin, deletedParams, newSrcipt) => {
+        // 删除线上的
+        NetWorkApi<API.DeletePluginUuid, API.ActionSucceeded>({
+            method: "delete",
+            url: "yakit/plugin",
+            data: deletedParams
+        })
+            .then((res) => {
+                // 删除本地的
+                deletePlugin(plugin)
+                if (!newSrcipt) return
+                ipcRenderer
+                    .invoke("delete-yak-script", newSrcipt.Id)
+                    .then(() => {
+                        console.log("删除成功")
+                    })
+                    .catch((err) => {
+                        failed("删除本地失败:" + err)
+                    })
+            })
+            .catch((err) => {
+                failed("删除失败:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
+            })
+    })
     if (!plugin) {
         return (
             <div className='yakit-plugin-info-container'>
@@ -194,101 +246,112 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
     const isAdmin = userInfo.role === "admin"
     return (
-        <div className='plugin-info'>
-            {/* PageHeader */}
-            <PageHeader
-                title={plugin?.script_name}
-                style={{marginBottom: 0, paddingBottom: 0}}
-                subTitle={
-                    <Space>
-                        {isAdmin && (
-                            <div className='plugin-status vertical-center'>
-                                <div
-                                    className={`${
-                                        TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
-                                    } title-body-admin-tag`}
-                                >
-                                    {TagColor[["not", "success", "failed"][plugin.status]].split("|")[1]}
+        <Spin spinning={loading}>
+            <div className='plugin-info'>
+                {/* PageHeader */}
+                <PageHeader
+                    title={plugin?.script_name}
+                    style={{marginBottom: 0, paddingBottom: 0}}
+                    subTitle={
+                        <Space>
+                            {isAdmin && (
+                                <div className='plugin-status vertical-center'>
+                                    <div
+                                        className={`${
+                                            TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
+                                        } title-body-admin-tag`}
+                                    >
+                                        {TagColor[["not", "success", "failed"][plugin.status]].split("|")[1]}
+                                    </div>
+                                </div>
+                            )}
+                            {plugin?.help && (
+                                <Tooltip title={plugin.help}>
+                                    <Button type={"link"} icon={<QuestionOutlined />} />
+                                </Tooltip>
+                            )}
+                            <Tooltip title={`插件id:${plugin?.uuid || "-"}`}>
+                                <p className='plugin-author'>作者:{plugin.authors}</p>
+                            </Tooltip>
+                            {(tags &&
+                                tags.length > 0 &&
+                                tags.map((i) => (
+                                    <Tag style={{marginLeft: 2, marginRight: 0}} key={`${i}`} color={"geekblue"}>
+                                        {i}
+                                    </Tag>
+                                ))) ||
+                                "No Tags"}
+                        </Space>
+                    }
+                    extra={
+                        <div className='plugin-heard-extra'>
+                            <div className='preface-star-and-download'>
+                                <div onClick={pluginStar}>
+                                    {plugin.is_stars ? (
+                                        <StarFilled className='solid-star' />
+                                    ) : (
+                                        <StarOutlined className='star-download-icon' />
+                                    )}
+                                </div>
+                                <div className='vertical-center'>
+                                    <span
+                                        className={`star-download-num ${plugin.is_stars && `star-download-num-active`}`}
+                                    >
+                                        {plugin.stars > 10000000 ? "10,000,000+" : numeral(plugin.stars).format("0,0")}
+                                    </span>
                                 </div>
                             </div>
-                        )}
-                        {plugin?.help && (
-                            <Tooltip title={plugin.help}>
-                                <Button type={"link"} icon={<QuestionOutlined />} />
-                            </Tooltip>
-                        )}
-                        <Tooltip title={`插件id:${plugin?.uuid || "-"}`}>
-                            <p className='plugin-author'>作者:{plugin.authors}</p>
-                        </Tooltip>
-                        {(tags &&
-                            tags.length > 0 &&
-                            tags.map((i) => (
-                                <Tag style={{marginLeft: 2, marginRight: 0}} key={`${i}`} color={"geekblue"}>
-                                    {i}
-                                </Tag>
-                            ))) ||
-                            "No Tags"}
-                    </Space>
-                }
-                extra={
-                    <div className='plugin-heard-extra'>
-                        <div className='preface-star-and-download'>
-                            <div onClick={pluginStar}>
-                                {plugin.is_stars ? (
-                                    <StarFilled className='solid-star' />
-                                ) : (
-                                    <StarOutlined className='star-download-icon' />
-                                )}
+                            <div className='preface-star-and-download'>
+                                <div className='vertical-center'>
+                                    {(addLoading && <LoadingOutlined />) || (
+                                        <DownloadOutlined className='star-download-icon' onClick={pluginAdd} />
+                                    )}
+                                </div>
+                                <div className='vertical-center'>
+                                    <span className='star-download-num'>{plugin.downloaded_total}</span>
+                                </div>
                             </div>
-                            <div className='vertical-center'>
-                                <span className={`star-download-num ${plugin.is_stars && `star-download-num-active`}`}>
-                                    {plugin.stars > 10000000 ? "10,000,000+" : numeral(plugin.stars).format("0,0")}
+                        </div>
+                    }
+                />
+                <div className='plugin-body'>
+                    <div className='flex-space-between'>
+                        <div className='vertical-center'>
+                            <div className='preface-time'>
+                                <span className='time-title'>最新更新时间</span>
+                                <span className='time-style'>
+                                    {plugin?.updated_at && moment.unix(info.updated_at).format("YYYY年MM月DD日")}
                                 </span>
                             </div>
                         </div>
-                        <div className='preface-star-and-download'>
-                            <div className='vertical-center'>
-                                {(addLoading && <LoadingOutlined />) || (
-                                    <DownloadOutlined className='star-download-icon' onClick={pluginAdd} />
-                                )}
-                            </div>
-                            <div className='vertical-center'>
-                                <span className='star-download-num'>{plugin.downloaded_total}</span>
-                            </div>
-                        </div>
-                    </div>
-                }
-            />
-            <div className='plugin-body'>
-                <div className='flex-space-between'>
-                    <div className='vertical-center'>
-                        <div className='preface-time'>
-                            <span className='time-title'>最新更新时间</span>
-                            <span className='time-style'>
-                                {plugin?.updated_at && moment.unix(info.updated_at).format("YYYY年MM月DD日")}
-                            </span>
-                        </div>
-                    </div>
-                    {isAdmin && (
                         <div className='plugin-info-examine'>
-                            <Button onClick={() => pluginExamine(2)}>不通过</Button>
-                            <Button type='primary' onClick={() => pluginExamine(1)}>
-                                通过
-                            </Button>
+                            {(isAdmin || user) && (
+                                <Button type='primary' danger onClick={onRemove}>
+                                    删除
+                                </Button>
+                            )}
+                            {isAdmin && (
+                                <>
+                                    <Button onClick={() => pluginExamine(2)}>不通过</Button>
+                                    <Button type='primary' onClick={() => pluginExamine(1)}>
+                                        通过
+                                    </Button>
+                                </>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </div>
 
-                <Tabs defaultActiveKey='1'>
-                    <TabPane tab='源码' key='1'>
-                        <YakEditor type={"yak"} value={plugin.content} readOnly={true} />
-                    </TabPane>
-                    <TabPane tab='评论' key='2'>
-                        <PluginComment isLogin={userInfo.isLogin} plugin={plugin} />
-                    </TabPane>
-                </Tabs>
+                    <Tabs defaultActiveKey='1'>
+                        <TabPane tab='源码' key='1'>
+                            <YakEditor type={"yak"} value={plugin.content} readOnly={true} />
+                        </TabPane>
+                        <TabPane tab='评论' key='2'>
+                            <PluginComment isLogin={userInfo.isLogin} plugin={plugin} />
+                        </TabPane>
+                    </Tabs>
+                </div>
             </div>
-        </div>
+        </Spin>
     )
 }
 
@@ -370,11 +433,28 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 setTimeout(() => setLoading(false), 200)
             })
     })
+    const isLoading = useMemoizedFn(() => {
+        Modal.confirm({
+            title: "未登录",
+            icon: <ExclamationCircleOutlined />,
+            content: "登录后才可评论",
+            cancelText: "取消",
+            okText: "登录",
+            onOk() {
+                setLoginShow(true)
+            },
+            onCancel() {}
+        })
+    })
     // 新增评论
     const pluginComment = useMemoizedFn(() => {
         if (!plugin) return
-        if (!commentText) {
-            failed("请输入评论内容")
+        if (!isLogin) {
+            isLoading()
+            return
+        }
+        if (!commentText && files.length === 0) {
+            failed("请输入评论内容或者上传图片")
             return
         }
         const params = {
@@ -390,11 +470,9 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
 
     // 全局监听是否刷新子评论列表状态
     const {setCommenData} = useCommenStore()
+    // 登录框状态
+    const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
     const addComment = useMemoizedFn((data: API.NewComment) => {
-        if (!isLogin) {
-            warn("请先登录")
-            return
-        }
         NetWorkApi<API.NewComment, API.ActionSucceeded>({
             method: "post",
             url: "comment",
@@ -432,9 +510,13 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
     })
     const pluginReplyComment = useMemoizedFn(() => {
         if (!plugin) return
+        if (!isLogin) {
+            isLoading()
+            return
+        }
         if (!currentComment?.id) return
-        if (!commentInputText) {
-            failed("请输入评论内容")
+        if (!commentInputText && commentFiles.length === 0) {
+            failed("请输入评论内容或者上传图片")
             return
         }
         const params = {
@@ -501,8 +583,16 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
         }
         setCommentSencondShow(false)
     })
+    const onSetValue = useMemoizedFn((value) => {
+        if (!isLogin) {
+            isLoading()
+            return
+        }
+        setCommentText(value)
+    })
     return (
         <>
+            <Login visible={loginshow} onCancel={() => setLoginShow(!getLoginShow())}></Login>
             <div className='info-comment-box'>
                 <div className='box-header'>
                     <span className='header-title'>用户评论</span>
@@ -510,7 +600,7 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 </div>
                 <PluginCommentInput
                     value={commentText}
-                    setValue={setCommentText}
+                    setValue={onSetValue}
                     files={files}
                     setFiles={setFiles}
                     onSubmit={pluginComment}
@@ -763,9 +853,9 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                     </Upload>
                 )}
                 <Button
-                    disabled={!isLogin || !value}
-                    type={value ? "primary" : undefined}
-                    className={value || files.length !== 0 ? "" : "btn-submit"}
+                    // disabled={value || files.length !== 0 }
+                    type='primary'
+                    className={(value || files.length !== 0) && isLogin ? "" : "btn-submit"}
                     onClick={onSubmit}
                     loading={loading}
                 >

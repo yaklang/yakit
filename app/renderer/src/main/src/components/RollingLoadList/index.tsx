@@ -31,7 +31,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         hasMore,
         key = "Id",
         loading,
-        scrollToNumber,
         isRef,
         classNameRow,
         classNameList,
@@ -46,9 +45,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         itemHeight,
         overscan
     })
-    useEffect(() => {
-        if (scrollToNumber) scrollTo(scrollToNumber)
-    }, [scrollToNumber])
     useEffect(() => {
         scrollTo(0)
     }, [isRef])
@@ -98,7 +94,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                             <LoadingOutlined />
                         </div>
                     )}
-                    {!hasMore && (page || 0) > 0 && <div className='no-more-text padding-bottom-12'>暂无更多数据</div>}
+                    {!hasMore && (page || 0) > 0 && <div className='no-more-text'>暂无更多数据</div>}
                 </div>
             </div>
         </>
