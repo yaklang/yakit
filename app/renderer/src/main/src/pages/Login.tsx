@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useState, useRef} from "react"
 import {Modal} from "antd"
 import {ExclamationCircleOutlined, GithubOutlined, QqOutlined, RightOutlined, WechatOutlined} from "@ant-design/icons"
 import {AutoSpin} from "@/components/AutoSpin"
@@ -26,7 +26,6 @@ interface DownloadOnlinePluginAllRequestProps {
 
 const Login: React.FC<LoginProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
-
     const fetchLogin = (type: string) => {
         setLoading(true)
         NetWorkApi<LoginParamsProp, string>({
@@ -87,7 +86,6 @@ const Login: React.FC<LoginProp> = (props) => {
             ipcRenderer.removeAllListeners("fetch-signin-data")
         }
     }, [])
-
     return (
         <Modal
             visible={props.visible}

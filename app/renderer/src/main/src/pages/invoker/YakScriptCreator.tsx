@@ -286,9 +286,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             data: onlineParams
         })
             .then((res) => {
-                success("同步成功")
-                props.onCreated && props.onCreated(params)
-                props.onChanged && props.onChanged(params)
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
                 ipcRenderer
                     .invoke("DownloadOnlinePluginById", {
@@ -296,6 +293,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
                     .then((res) => {
+                        success("同步成功")
+                        props.onCreated && props.onCreated(params)
+                        props.onChanged && props.onChanged(params)
                         setVisibleSyncSelect(false)
                     })
                     .catch((err) => {
@@ -345,9 +345,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             data: params
         })
             .then((res) => {
-                success("同步成功")
-                props.onCreated && props.onCreated(item)
-                props.onChanged && props.onChanged(item)
                 // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
                 ipcRenderer
                     .invoke("DownloadOnlinePluginById", {
@@ -355,6 +352,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
                     .then((res) => {
+                        success("同步成功")
+                        props.onCreated && props.onCreated(item)
+                        props.onChanged && props.onChanged(item)
                         setVisibleSyncSelect(false)
                     })
                     .catch((err) => {
@@ -369,11 +369,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     }
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
-    // useEffect(() => {
-    //     if (userInfo.isLogin) {
-    //         setVisibleSyncSelect(true)
-    //     }
-    // }, [userInfo.isLogin])
     const onSyncCloud = useMemoizedFn(() => {
         if (userInfo.isLogin) {
             setVisibleSyncSelect(true)
@@ -697,7 +692,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 handleOk={onSyncSelect}
                 handleCancel={() => setVisibleSyncSelect(false)}
             />
-            <Login visible={loginshow} onCancel={() => setLoginShow(!getLoginShow())}></Login>
+            <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>
         </div>
     )
 }

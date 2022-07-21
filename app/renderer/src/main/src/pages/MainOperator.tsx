@@ -64,6 +64,7 @@ import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain"
 import "./main.css"
 import "./GlobalClass.scss"
 import "./GlobalClass.scss"
+import {loginOut} from "@/utils/login"
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -502,6 +503,13 @@ const Main: React.FC<MainProp> = (props) => {
             setStoreUserInfo(res)
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
+    }, [])
+
+    useEffect(() => {
+        ipcRenderer.on("login-out", (e) => {
+            setStoreUserInfo(defaultUserInfo)
+        })
+        return () => ipcRenderer.removeAllListeners("login-out")
     }, [])
 
     const [userMenu, setUserMenu] = useState<MenuItemType[]>([
@@ -986,10 +994,7 @@ const Main: React.FC<MainProp> = (props) => {
                                             onClick={(key) => {
                                                 if (key === "sign-out") {
                                                     setStoreUserInfo(defaultUserInfo)
-                                                    ipcRenderer.send("user-sign-out")
-                                                    ipcRenderer.invoke("DeletePluginByUserID", {
-                                                        UserID: userInfo.user_id
-                                                    })
+                                                    loginOut(userInfo)
                                                     setTimeout(() => success("已成功退出账号"), 500)
                                                 }
                                                 if (key === "trust-list") setTrustShow(true)
@@ -1336,7 +1341,7 @@ const Main: React.FC<MainProp> = (props) => {
                     }}
                 />
             </Modal>
-            <Login visible={loginshow} onCancel={() => setLoginShow(!getLoginShow())}></Login>
+            <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>
             <Modal
                 visible={trustShow}
                 title={"信任用户管理"}

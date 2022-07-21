@@ -4,7 +4,7 @@ import React, {useState, useEffect, memo} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "../../../utils/notification"
-import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal, Spin} from "antd"
+import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal, Spin, Image} from "antd"
 import {
     StarOutlined,
     StarFilled,
@@ -75,11 +75,14 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const {userInfo} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
     const [addLoading, setAddLoading] = useState<boolean>(false)
+    const [isAdmin, setIsAdmin] = useState<boolean>(userInfo.role === "admin")
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
     useEffect(() => {
         getPluginDetail()
     }, [info.id])
-
+    useEffect(() => {
+        setIsAdmin(userInfo.role === "admin")
+    }, [userInfo.role])
     const getPluginDetail = useMemoizedFn(() => {
         let url = "yakit/plugin/detail-unlogged"
         if (userInfo.isLogin) {
@@ -223,7 +226,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 ipcRenderer
                     .invoke("delete-yak-script", newSrcipt.Id)
                     .then(() => {
-                        console.log("删除成功")
+                        // console.log("删除成功")
                     })
                     .catch((err) => {
                         failed("删除本地失败:" + err)
@@ -244,7 +247,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         )
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
-    const isAdmin = userInfo.role === "admin"
+
     return (
         <div className='plugin-info'>
             <Spin spinning={loading} style={{height: "100%"}}>
@@ -325,7 +328,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             </div>
                         </div>
                         <div className='plugin-info-examine'>
-                            {(isAdmin || user) && (
+                            {(isAdmin || userInfo.user_id === plugin.user_id) && (
                                 <Button type='primary' danger onClick={onRemove}>
                                     删除
                                 </Button>
@@ -592,7 +595,7 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
     })
     return (
         <>
-            <Login visible={loginshow} onCancel={() => setLoginShow(!getLoginShow())}></Login>
+            <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>
             <div className='info-comment-box'>
                 <div className='box-header'>
                     <span className='header-title'>用户评论</span>
@@ -749,21 +752,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                 </div>
                 <Space>
                     {message_img.map((url) => (
-                        <img
-                            key={url + info.id}
-                            src={url as any}
-                            className='comment-pic'
-                            onClick={() => {
-                                let m = showFullScreenMask(
-                                    <PluginMaskImage info={url} />,
-                                    "mask-img-display",
-                                    undefined,
-                                    (e) => {
-                                        if ((e.target as any).className === "mask-img-display") m.destroy()
-                                    }
-                                )
-                            }}
-                        />
+                        <Image key={url + info.id} src={url as any} className='comment-pic' />
                     ))}
                 </Space>
                 {isOperation && info.reply_num > 0 && (
@@ -867,21 +856,7 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                     {files.map((item, index) => {
                         return (
                             <div key={item} className='upload-img-opt'>
-                                <img
-                                    key={item}
-                                    src={item as any}
-                                    className='opt-pic'
-                                    onClick={() => {
-                                        let m = showFullScreenMask(
-                                            <PluginMaskImage info={item} />,
-                                            "mask-img-display",
-                                            undefined,
-                                            (e) => {
-                                                if ((e.target as any).className === "mask-img-display") m.destroy()
-                                            }
-                                        )
-                                    }}
-                                />
+                                <Image key={item} src={item as any} className='opt-pic' />
                                 <div
                                     className='opt-del'
                                     onClick={() => {
@@ -900,45 +875,6 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
         </div>
     )
 }
-
-interface PluginMaskImageProps {
-    info: string
-}
-// 全屏预览图功能组件
-const PluginMaskImage = memo((props: PluginMaskImageProps) => {
-    const {info} = props
-
-    const [imgSize, setImgSize] = useState<number>(0)
-    const [width, setWidth, getWidth] = useGetState<number>(540)
-    const [height, setHeight, getHeight] = useGetState<number>(330)
-
-    const expandSize = useMemoizedFn(() => {
-        if (imgSize >= 3) return false
-        setWidth(width + 160)
-        setHeight(height + 130)
-        setImgSize(imgSize + 1)
-    })
-    const narrowSize = useMemoizedFn(() => {
-        if (imgSize <= 0) return false
-        setWidth(width - 160)
-        setHeight(height - 130)
-        setImgSize(imgSize - 1)
-    })
-    const downloadImg = () => {
-        alert(`图片下载成功`)
-    }
-
-    return (
-        <>
-            <div className='mask-display-icon-body'>
-                <ZoomInOutlined className='display-icon' onClick={expandSize} />
-                <ZoomOutOutlined className='display-icon display-icon-middle' onClick={narrowSize} />
-                <DownloadOutlined className='display-icon' onClick={downloadImg} />
-            </div>
-            <img className='mask-disply-image' style={{width: getWidth(), height: getHeight()}} src={info as any} />
-        </>
-    )
-})
 
 interface PluginCommentChildModalProps {
     visible: boolean

@@ -219,4 +219,5 @@ ipcMain.on("user-sign-out", (event) => {
     USER_INFO.role = null
     USER_INFO.token = null
     USER_INFO.user_id = ""
+    win.webContents.send("login-out")
 })

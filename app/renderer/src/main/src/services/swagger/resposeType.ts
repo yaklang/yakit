@@ -244,7 +244,7 @@
     status?: string;
     type?: string;
     user: boolean;
-    is_private?: boolean;
+    is_private?: string;
   }
   export interface DeletePluginUuid {
     uuid: string;

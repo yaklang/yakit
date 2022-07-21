@@ -9,7 +9,9 @@ $active-color:#036ffe;
         margin-bottom: 0
     }
 
-
+    .ant-spin-nested-loading {
+        height: 100%;
+    }
 
     .plugin-heard-extra {
         display: flex;
@@ -185,6 +187,7 @@ $active-color:#036ffe;
                 width: 90px;
                 height: 90px;
                 border-radius: 10px;
+                object-fit: cover;
             }
 
             .opt-del {
@@ -310,6 +313,7 @@ $active-color:#036ffe;
             width: 90px;
             height: 90px;
             border-radius: 10px;
+            object-fit: cover;
         }
 
         .comment-reply {

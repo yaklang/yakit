@@ -3,8 +3,10 @@ import {Button, Form, Input, Row} from "antd"
 import "./index.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success} from "@/utils/notification"
+import {loginOut} from "@/utils/login"
 import {useMemoizedFn} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {useStore} from "@/store"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -29,6 +31,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const {onClose} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
+    // 全局监听登录状态
+    const {userInfo} = useStore()
     const onFinish = useMemoizedFn((values: OnlineProfileProps) => {
         setLoading(true)
         ipcRenderer
@@ -38,6 +42,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             .then((data) => {
                 ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
                 setRemoteValue("httpSetting", JSON.stringify(values))
+                loginOut(userInfo)
                 success("设置成功")
                 onClose()
             })

@@ -183,7 +183,8 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
                             Keyword: "",
                             Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
                         }}
-                        onClicked={(script: YakScript) => {}}
+                        itemHeight={43}
+                        onClicked={(script) => {}}
                         onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                             return (
                                 <MITMYakScriptLoader
