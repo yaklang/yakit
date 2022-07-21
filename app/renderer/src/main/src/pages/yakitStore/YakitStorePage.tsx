@@ -46,7 +46,6 @@ import {useDebounceFn, useGetState, useMemoizedFn, useThrottleFn, useVirtualList
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
-import InfiniteScroll from "react-infinite-scroll-component"
 import {randomString} from "@/utils/randomUtil"
 import {OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon} from "../../assets/icons"
 import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/index"
@@ -54,7 +53,6 @@ import moment from "moment"
 import {findDOMNode} from "react-dom"
 import {usePluginStore} from "@/store/plugin"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
-import ReactResizeDetector from "react-resize-detector"
 import {RollingLoadList} from "@/components/RollingLoadList"
 
 const {Search} = Input
@@ -186,6 +184,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .catch(() => {})
             .finally(() => {})
     }, [])
+    useEffect(() => {
+        if (!userInfo.isLogin) onResetPluginDetails()
+    }, [userInfo.isLogin])
     const realSearch = useDebounceFn(
         useMemoizedFn(() => {
             triggerSearch()
@@ -517,17 +518,23 @@ export interface YakModuleListProp {
     isRef?: boolean
     onYakScriptRender?: (i: YakScript, maxWidth?: number) => any
     setTotal?: (n: number) => void
-    queryLocal: QueryYakScriptRequest
+    queryLocal?: QueryYakScriptRequest
     refresh?: boolean
     deletePluginRecordLocal?: YakScript
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
-    const {deletePluginRecordLocal, itemHeight = 143} = props
+    const {
+        deletePluginRecordLocal,
+        itemHeight = 143,
+        queryLocal = {Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}}
+    } = props
     // 全局登录状态
     const {userInfo} = useStore()
     const [params, setParams] = useState<QueryYakScriptRequest>({
-        ...props.queryLocal
+        Type: "mitm,port-scan",
+        Keyword: "",
+        ...queryLocal
     })
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
         Data: [],
@@ -575,11 +582,11 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     useEffect(() => {
         setParams({
             ...params,
-            ...props.queryLocal
+            ...queryLocal
         })
         setIsRef(!isRef)
-        update(1, undefined, props.queryLocal)
-    }, [props.queryLocal, userInfo.isLogin, props.refresh])
+        update(1, undefined, queryLocal)
+    }, [queryLocal, userInfo.isLogin, props.refresh])
     useEffect(() => {
         if (!deletePluginRecordLocal) return
         response.Data.splice(numberLocal.current, 1)
@@ -1372,7 +1379,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         if (!user) {
             delete payload.is_private
         }
-        // console.log("payload", payload)
+        console.log("payload", payload.page)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
             url,
@@ -1386,7 +1393,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             data: payload
         })
             .then((res) => {
-                // console.log("res", res)
                 if (!res.data) {
                     res.data = []
                 }
@@ -1489,7 +1495,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             page={response.pagemeta.page}
             hasMore={hasMore}
             loading={loading}
-            loadMoreData={loadMoreData}
+            loadMoreData={() => loadMoreData()}
             key='id'
             classNameRow='plugin-list'
             classNameList='plugin-list-body'
@@ -1588,7 +1594,7 @@ const PluginItemOnline = (props: PluginListOptProps) => {
                             {info.script_name}
                         </span>
                         <div className='text-icon'>
-                            {isAdmin || user ? (
+                            {(isAdmin && !user) || (user && !info.is_private) ? (
                                 <div
                                     className={`text-icon-admin ${
                                         TagColor[["not", "success", "failed"][status]].split("|")[0]
@@ -1597,6 +1603,7 @@ const PluginItemOnline = (props: PluginListOptProps) => {
                                     {TagColor[["not", "success", "failed"][status]].split("|")[1]}
                                 </div>
                             ) : (
+                                !user &&
                                 info.official && (
                                     <Tooltip title='官方插件'>
                                         {/* @ts-ignore */}
@@ -1710,6 +1717,7 @@ const PluginType: {text: string; value: string}[] = [
 
 const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
     const {onClose, userInfo, queryOnline, setQueryOnline, user} = props
+    const [isShowStatus, setIsShowStatus] = useState<boolean>(queryOnline.is_private === "true")
     const [isAdmin, setIsAdmin] = useState(userInfo.role === "admin")
     const [form] = Form.useForm()
     const refTest = useRef<any>()
@@ -1726,7 +1734,8 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
         form.setFieldsValue({
             order_by: queryOnline.order_by,
             type: queryOnline.type ? queryOnline.type.split(",") : [],
-            status: !queryOnline.status ? "all" : queryOnline.status
+            status: !queryOnline.status ? "all" : queryOnline.status,
+            is_private: queryOnline.is_private === "" ? "" : `${queryOnline.is_private === "true"}`
         })
     }, [queryOnline])
     const handleClickOutside = (e) => {
@@ -1752,9 +1761,13 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
             ...queryOnline,
             ...value,
             status: value.status === "all" ? "" : value.status,
-            type: value.type.join(",")
+            type: value.type.join(","),
+            is_private: `${isShowStatus === true}`
         }
         setQueryOnline({...query})
+    })
+    const onSelect = useMemoizedFn((key) => {
+        setIsShowStatus(key === "false")
     })
     return (
         <div ref={refTest} className='query-form-body'>
@@ -1778,13 +1791,13 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                 </Form.Item>
                 {user && (
                     <Form.Item name='is_private' label='私密/公开'>
-                        <Select size='small' getPopupContainer={() => refTest.current}>
+                        <Select size='small' getPopupContainer={() => refTest.current} onSelect={onSelect}>
                             <Option value='true'>私密</Option>
                             <Option value='false'>公开</Option>
                         </Select>
                     </Form.Item>
                 )}
-                {(isAdmin || user) && (
+                {((!user && isAdmin) || (user && isShowStatus)) && (
                     <Form.Item name='status' label='审核状态'>
                         <Select size='small' getPopupContainer={() => refTest.current}>
                             <Option value='all'>全部</Option>

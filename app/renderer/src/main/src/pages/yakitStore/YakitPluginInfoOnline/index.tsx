@@ -333,7 +333,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                     删除
                                 </Button>
                             )}
-                            {isAdmin && (
+                            {isAdmin && !user && (
                                 <>
                                     <Button onClick={() => pluginExamine(2)}>不通过</Button>
                                     <Button type='primary' onClick={() => pluginExamine(1)}>
@@ -402,6 +402,12 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
         setFiles([])
         setCommentText("")
     }, [plugin.id])
+    useEffect(() => {
+        if (!isLogin) {
+            setFiles([])
+            setCommentText("")
+        }
+    }, [isLogin])
     const getComment = useMemoizedFn((page: number = 1) => {
         const params: SearchCommentRequest = {
             plugin_id: plugin.id,

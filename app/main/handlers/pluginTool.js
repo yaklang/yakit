@@ -168,7 +168,9 @@ module.exports = (win, getClient) => {
     ipcMain.handle("cancel-DownloadOnlinePluginAll", handlerHelper.cancelHandler(streamDownloadOnlinePluginAll))
     ipcMain.handle("DownloadOnlinePluginAll", (e, params, token) => {
         // params传Token，登录时调用：添加该用户名下的所有插件；不传Token：添加所有的
-        const newParams = {}
+        const newParams = {
+            BindMe: params.BindMe
+        }
         if (params.isAddToken) {
             newParams.Token = USER_INFO.token
         }
@@ -221,5 +223,4 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetYakScriptByOnlineID", async (e, params) => {
         return await asyncGetYakScriptByOnlineID(params)
     })
-    
 }

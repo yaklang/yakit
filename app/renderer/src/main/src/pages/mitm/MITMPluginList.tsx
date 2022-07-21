@@ -178,11 +178,6 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
             {mode === "all" && (
                 <div className='mitm-http-list'>
                     <YakModuleList
-                        queryLocal={{
-                            Type: "mitm,port-scan",
-                            Keyword: "",
-                            Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
-                        }}
                         itemHeight={43}
                         onClicked={(script) => {}}
                         onYakScriptRender={(i: YakScript, maxWidth?: number) => {

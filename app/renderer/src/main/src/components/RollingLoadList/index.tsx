@@ -51,7 +51,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const [vlistHeigth, setVListHeight] = useState(600)
     const onScrollCapture = useThrottleFn(
         () => {
-            if (containerRef && !loading && hasMore) {
+            if (wrapperRef && containerRef && !loading && hasMore) {
                 const dom = containerRef.current || {
                     scrollTop: 0,
                     clientHeight: 0,
@@ -66,7 +66,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 }
             }
         },
-        {wait: 200}
+        {wait: 200, leading: false}
     ).run()
     return (
         <>
