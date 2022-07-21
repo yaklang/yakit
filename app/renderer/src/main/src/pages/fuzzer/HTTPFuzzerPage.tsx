@@ -48,7 +48,7 @@ import {failed, info, success} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
 import {useGetState, useMemoizedFn} from "ahooks";
-import {getValue, saveValue} from "../../utils/kv";
+import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv";
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
 import {PayloadManagerPage} from "../payloadManager/PayloadManager";
 import {HackerPlugin} from "../hacker/HackerPlugin"
@@ -130,6 +130,7 @@ Host: www.example.com
 
 const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
+const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 
 interface HistoryHTTPFuzzerTask {
     Request: string
@@ -205,6 +206,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>();
     const [hotPatchCode, setHotPatchCode] = useState<string>("");
+    const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("");
 
     // filter
     const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
@@ -244,9 +246,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         getValue(WEB_FUZZ_HOTPATCH_CODE).then((data: any) => {
             if (!data) {
+                getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then(remoteData => {
+                    if (!remoteData) {
+                        return
+                    }
+                    setHotPatchCode(`${remoteData}`)
+                })
                 return
             }
             setHotPatchCode(`${data}`)
+        })
+
+        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then(remoteData => {
+            if (!!remoteData) {
+                setHotPatchCodeWithParamGetter(`${remoteData}`)
+            }
         })
     }, [])
 
@@ -363,6 +377,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Proxy: proxy,
                 ActualAddr: actualHost,
                 HotPatchCode: hotPatchCode,
+                HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
                 Filter: getFilter(),
                 DelayMinSeconds: minDelaySeconds,
                 DelayMaxSeconds: maxDelaySeconds,
@@ -646,13 +661,23 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             width: "60%",
             content: (
                 <div>
-                    <HTTPFuzzerHotPatch initialHotPatchCode={hotPatchCode || ""} onInsert={tag => {
-                        if (reqEditor) monacoEditorWrite(reqEditor, tag);
-                        m.destroy()
-                    }} onSaveCode={code => {
-                        setHotPatchCode(code)
-                        saveValue(WEB_FUZZ_HOTPATCH_CODE, code)
-                    }}/>
+                    <HTTPFuzzerHotPatch
+                        initialHotPatchCode={hotPatchCode}
+                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                        onInsert={tag => {
+                            if (reqEditor) monacoEditorWrite(reqEditor, tag);
+                            m.destroy()
+                        }}
+                        onSaveCode={code => {
+                            setHotPatchCode(code)
+                            saveValue(WEB_FUZZ_HOTPATCH_CODE, code)
+                            setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
+                        }}
+                        onSaveHotPatchCodeWithParamGetterCode={code => {
+                            setHotPatchCodeWithParamGetter(code)
+                            setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                        }}
+                    />
                 </div>
             )
         })

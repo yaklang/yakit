@@ -1361,6 +1361,7 @@ message ExecHistoryRecord {
 message StringFuzzerRequest {
   string Template = 1;
   string HotPatchCode = 2;
+  string HotPatchCodeWithParamGetter = 3;
 }
 
 
@@ -1416,6 +1417,7 @@ message FuzzerRequest {
   // 如果不想自动修复 Content-Length
   bool NoFixContentLength = 13;
 
+  // 热加载代码
   string HotPatchCode = 14;
 
   // 设置 Fuzzer
@@ -1424,6 +1426,9 @@ message FuzzerRequest {
   // 随时
   double DelayMinSeconds = 17;
   double DelayMaxSeconds = 18;
+
+  // 获取模版数据
+  string HotPatchCodeWithParamGetter = 19;
 }
 
 message FuzzerResponseFilter {
