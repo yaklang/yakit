@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from "react"
+import React, {useEffect, useState, useRef, memo} from "react"
 import {
     Alert,
     Button,

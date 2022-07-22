@@ -198,7 +198,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
             {props.debugMode && props.onXtermRef && (
                 <>
-                    <div style={{width: "100%", height: 240}}>
+                    <div style={{width: "100%", height: '100%'}}>
                         <XTerm
                             ref={xtermRef}
                             options={{convertEol: true, rows: 8}}

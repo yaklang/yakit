@@ -257,17 +257,18 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                     style={{marginBottom: 0, paddingBottom: 0}}
                     subTitle={
                         <Space>
-                            {isAdmin && (
-                                <div className='plugin-status vertical-center'>
-                                    <div
-                                        className={`${
-                                            TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
-                                        } title-body-admin-tag`}
-                                    >
-                                        {TagColor[["not", "success", "failed"][plugin.status]].split("|")[1]}
+                            {(isAdmin && !user) ||
+                                (user && !info.is_private && (
+                                    <div className='plugin-status vertical-center'>
+                                        <div
+                                            className={`${
+                                                TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
+                                            } title-body-admin-tag`}
+                                        >
+                                            {TagColor[["not", "success", "failed"][plugin.status]].split("|")[1]}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                ))}
                             {plugin?.help && (
                                 <Tooltip title={plugin.help}>
                                     <Button type={"link"} icon={<QuestionOutlined />} />
