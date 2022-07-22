@@ -742,7 +742,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 handleOk={onSyncSelect}
                 handleCancel={() => setVisibleSyncSelect(false)}
             />
-            <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>
+            {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
         </div>
     )
 }

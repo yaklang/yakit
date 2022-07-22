@@ -36,6 +36,7 @@ const Login: React.FC<LoginProp> = (props) => {
             }
         })
             .then((res) => {
+                console.log("auth/from-----------")
                 if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
             })
             .catch((err) => {

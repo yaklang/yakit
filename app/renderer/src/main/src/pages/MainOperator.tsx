@@ -1341,7 +1341,7 @@ const Main: React.FC<MainProp> = (props) => {
                     }}
                 />
             </Modal>
-            <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>
+            {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
             <Modal
                 visible={trustShow}
                 title={"信任用户管理"}

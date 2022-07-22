@@ -187,16 +187,18 @@ ipcMain.on("user-sign-in", (event, arg) => {
                 USER_INFO.qqHeadImg = user.qqHeadImg
                 USER_INFO.role = user.role
                 USER_INFO.token = info.token
-                USER_INFO.user_id = user.user_id
 
-                win.webContents.send("fetch-signin-token", user)
+                USER_INFO.user_id = user.user_id
                 authWindow.webContents.session.clearStorageData()
+                win.webContents.send("fetch-signin-token", user)
+                console.log('fetch-signin-data-success');
                 win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
                 setTimeout(() => authWindow.close(), 200)
             })
             .catch((err) => {
                 console.log("loginerror", err)
                 authWindow.webContents.session.clearStorageData()
+                console.log('fetch-signin-data-error');
                 win.webContents.send("fetch-signin-data", {ok: false, info: "请求异常，请重新登录！"})
                 authWindow.close()
             })

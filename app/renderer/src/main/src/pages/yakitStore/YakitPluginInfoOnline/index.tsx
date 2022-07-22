@@ -601,7 +601,7 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
     })
     return (
         <>
-            <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>
+            {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
             <div className='info-comment-box'>
                 <div className='box-header'>
                     <span className='header-title'>用户评论</span>
