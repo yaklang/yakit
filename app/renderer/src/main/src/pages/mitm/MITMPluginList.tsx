@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {memo, useEffect, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
 import {Button, Empty, Form, List, Popconfirm, Space} from "antd"
 import {SelectOne} from "../../utils/inputUtil"
@@ -36,7 +36,7 @@ const updateHooks = () => {
     })
 }
 
-export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
+export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     const [initialed, setInitialed] = useState(false)
     const [script, setScript] = useState(MITMPluginTemplateShort)
     // const [userDefined, setUserDefined] = useState(false);
@@ -178,10 +178,8 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
             {mode === "all" && (
                 <div className='mitm-http-list'>
                     <YakModuleList
-                        idScroll='scroll-mitm-plugin-list'
-                        Type={"mitm,port-scan"}
-                        onClicked={(script: YakScript) => {}}
-                        Keyword={""}
+                        itemHeight={43}
+                        onClicked={(script) => {}}
                         onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                             return (
                                 <MITMYakScriptLoader
@@ -231,4 +229,4 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = (props) => {
             )}
         </AutoCard>
     )
-}
+})

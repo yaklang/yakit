@@ -6,7 +6,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams";
 import {QuestionCircleOutlined, ThunderboltFilled, UserOutlined} from "@ant-design/icons";
 import {StatusCardProps} from "../yakitStore/viewers/base";
 import {YakScript} from "../invoker/schema";
-import {failed} from "../../utils/notification";
+import {failed, warn} from "../../utils/notification";
 import {OneLine} from "../../utils/inputUtil";
 
 const {ipcRenderer} = window.require("electron");
@@ -84,6 +84,10 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         disabled={!p.onSendToPatch}
                         title={"发送到【热加载】中调试代码？"}
                         onConfirm={() => {
+                            if (!script.Content) {
+                                warn("暂无数据")
+                                return
+                            }
                             let _ = p.onSendToPatch && p.onSendToPatch(script.Content);
                         }}
                     >

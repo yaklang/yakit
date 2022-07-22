@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from "react"
-import {Button, Checkbox, Col, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio} from "antd"
+import {Button, Checkbox, Col, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal} from "antd"
 import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {YakScript, YakScriptParam} from "./schema"
 import {YakCodeEditor, YakEditor} from "../../utils/editors"
-import {PlusOutlined, QuestionCircleOutlined} from "@ant-design/icons"
+import {PlusOutlined, QuestionCircleOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {failed, info, success, warn} from "../../utils/notification"
 import {YakScriptParamsSetter} from "./YakScriptParamsSetter"
@@ -13,7 +13,7 @@ import {MITMPluginTemplate} from "./data/MITMPluginTamplate"
 import {PacketHackPluginTemplate} from "./data/PacketHackPluginTemplate"
 import {CodecPluginTemplate} from "./data/CodecPluginTemplate"
 import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 
 import "./YakScriptCreator.css"
@@ -23,7 +23,8 @@ import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
 import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
-import Modal from "antd/lib/modal/Modal"
+import Login from "../Login"
+import {GetYakScriptByOnlineIDRequest} from "../yakitStore/YakitStorePage"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -68,7 +69,7 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
                 width: 1000,
                 content: (
                     <>
-                        <YakScriptRunner debugMode={true} script={data} params={[...(extraParams || [])]}/>
+                        <YakScriptRunner debugMode={true} script={data} params={[...(extraParams || [])]} />
                     </>
                 )
             })
@@ -240,6 +241,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         ipcRenderer
             .invoke("SaveYakScript", params)
             .then((data) => {
+                // console.log("data_保存本地", data)
                 info("创建 / 保存 Yak 脚本成功")
                 props.onCreated && props.onCreated(data)
                 props.onChanged && props.onChanged(data)
@@ -261,7 +263,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const upOnlinePlugin = useMemoizedFn(() => {
         const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
-            script_name: params.OnlineScriptName ? params.OnlineScriptName : params.ScriptName,
+            script_name: params.ScriptName,
             content: params.Content,
             tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
             params: params.Params.map((p) => ({
@@ -275,7 +277,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 extra_setting: p.ExtraSetting
             })),
             help: params.Help,
-            default_open: false
+            default_open: false,
+            // contributors: params.Author
+            contributors: params.OnlineContributors || ""
         }
         if (params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
@@ -286,17 +290,36 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             data: onlineParams
         })
             .then((res) => {
-                success("同步成功")
-                props.onCreated && props.onCreated(params)
-                props.onChanged && props.onChanged(params)
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
                 ipcRenderer
                     .invoke("DownloadOnlinePluginById", {
                         OnlineID: res.id,
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
-                    .then((res) => {
-                        setVisibleSyncSelect(false)
+                    .then(() => {
+                        ipcRenderer
+                            .invoke("GetYakScriptByOnlineID", {
+                                OnlineID: res.id,
+                                UUID: res.uuid
+                            } as GetYakScriptByOnlineIDRequest)
+                            .then((newSrcipt: YakScript) => {
+                                setParams(newSrcipt)
+                                success("同步成功")
+                                props.onCreated && props.onCreated(newSrcipt)
+                                props.onChanged && props.onChanged(newSrcipt)
+                                setVisibleSyncSelect(false)
+                                ipcRenderer
+                                    .invoke("delete-yak-script", params.Id)
+                                    .then(() => {
+                                        // console.log("删除成功")
+                                    })
+                                    .catch((err) => {
+                                        failed("删除本地失败:" + err)
+                                    })
+                            })
+                            .catch((e) => {
+                                failed(`查询本地插件错误:${e}`)
+                            })
                     })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
@@ -319,7 +342,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 
         const params: API.NewYakitPlugin = {
             type: item.Type,
-            script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
+            script_name: item.ScriptName,
             content: item.Content,
             tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
             params: item.Params.map((p) => ({
@@ -334,7 +357,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             })),
             help: item.Help,
             default_open: false,
-            contributors: item.Author
+            // contributors: item.OnlineContributors ? item.OnlineContributors : item.Author
+            contributors: item.OnlineContributors || ""
         }
         if (item.OnlineId) {
             params.id = parseInt(`${item.OnlineId}`)
@@ -345,17 +369,36 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             data: params
         })
             .then((res) => {
-                success("同步成功")
-                props.onCreated && props.onCreated(item)
-                props.onChanged && props.onChanged(item)
                 // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
                 ipcRenderer
                     .invoke("DownloadOnlinePluginById", {
                         OnlineID: res.id,
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
-                    .then((res) => {
-                        setVisibleSyncSelect(false)
+                    .then(() => {
+                        ipcRenderer
+                            .invoke("GetYakScriptByOnlineID", {
+                                OnlineID: res.id,
+                                UUID: res.uuid
+                            } as GetYakScriptByOnlineIDRequest)
+                            .then((newSrcipt: YakScript) => {
+                                setParams(newSrcipt)
+                                success("同步成功")
+                                props.onCreated && props.onCreated(newSrcipt)
+                                props.onChanged && props.onChanged(newSrcipt)
+                                setVisibleSyncSelect(false)
+                                ipcRenderer
+                                    .invoke("delete-yak-script", item.Id)
+                                    .then(() => {
+                                        // console.log("删除成功")
+                                    })
+                                    .catch((err) => {
+                                        failed("删除本地失败:" + err)
+                                    })
+                            })
+                            .catch((e) => {
+                                failed(`查询本地插件错误:${e}`)
+                            })
                     })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
@@ -365,10 +408,35 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             .catch((err) => {
                 failed("插件上传失败:" + err)
             })
-            .finally(() => {
-            })
+            .finally(() => {})
     }
-
+    // 登录框状态
+    const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
+    const onSyncCloud = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            Modal.confirm({
+                title: "未登录",
+                icon: <ExclamationCircleOutlined />,
+                content: "登录后才可同步至云端",
+                cancelText: "取消",
+                okText: "登录",
+                onOk() {
+                    setLoginShow(true)
+                },
+                onCancel() {}
+            })
+            return
+        }
+        if ((params.OnlineId as number) > 0) {
+            if (params.OnlineIsPrivate) {
+                upOnlinePlugin()
+            } else {
+                uploadOnline(params)
+            }
+        } else {
+            setVisibleSyncSelect(true)
+        }
+    })
     return (
         <div>
             <Form labelCol={{span: 5}} wrapperCol={{span: 14}}>
@@ -400,7 +468,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     setValue={(ScriptName) => setParams({...params, ScriptName})}
                     value={params.ScriptName}
                 />
-                <InputItem label={"简要描述"} setValue={(Help) => setParams({...params, Help})} value={params.Help}/>
+                <InputItem label={"简要描述"} setValue={(Help) => setParams({...params, Help})} value={params.Help} />
                 <InputItem
                     label={"模块作者"}
                     setValue={(Author) => setParams({...params, Author})}
@@ -448,7 +516,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 })
                             }}
                         >
-                            添加 / 设置一个参数 <PlusOutlined/>
+                            添加 / 设置一个参数 <PlusOutlined />
                         </Button>
                     </Form.Item>
                 )}
@@ -561,7 +629,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         <>
                             <Space>
                                 <Button
-                                    icon={<FullscreenOutlined/>}
+                                    icon={<FullscreenOutlined />}
                                     onClick={() => {
                                         setFullscreen(true)
                                         let m = showDrawer({
@@ -616,7 +684,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                                 "设置默认启动后，将在恰当时候启动该插件(Yak插件不会自动启动，但会自动增加在左侧基础安全工具菜单栏)"
                                             }
                                         >
-                                            <Button type={"link"} icon={<QuestionCircleOutlined/>}/>
+                                            <Button type={"link"} icon={<QuestionCircleOutlined />} />
                                         </Tooltip>
                                     </Checkbox>
                                 )}
@@ -639,7 +707,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         <Button type='primary' onClick={onSaveLocal}>
                             保存
                         </Button>
-                        {userInfo.isLogin && <Button onClick={() => setVisibleSyncSelect(true)}>同步至云端</Button>}
+                        <Button onClick={() => onSyncCloud()}>同步至云端</Button>
                         <Button
                             // type={primary ? "primary" : undefined}
                             disabled={[
@@ -675,6 +743,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 handleOk={onSyncSelect}
                 handleCancel={() => setVisibleSyncSelect(false)}
             />
+            {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
         </div>
     )
 }
@@ -725,7 +794,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
             TypeVerbose: ""
         }
     )
-    const [extraSetting, setExtraSetting] = useState<{ [key: string]: any }>(
+    const [extraSetting, setExtraSetting] = useState<{[key: string]: any}>(
         props.modifiedParam?.ExtraSetting ? JSON.parse(props.modifiedParam.ExtraSetting) : {}
     )
     // 选择类型时的转换
@@ -809,7 +878,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
         }
     })
 
-    const selectOptSetting = (item: { key: string; value: string }, index: number) => {
+    const selectOptSetting = (item: {key: string; value: string}, index: number) => {
         return (
             <div key={index} className='select-type-opt'>
                 <span className='opt-hint-title'>选项名称</span>
@@ -833,7 +902,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 <Button
                     type='link'
                     danger
-                    icon={<DeleteOutlined/>}
+                    icon={<DeleteOutlined />}
                     onClick={() => updateExtraSetting("select", "del", "", "", index)}
                 />
             </div>
@@ -859,7 +928,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                                     setExtraSetting({...extraSetting})
                                 }}
                             >
-                                新增选项 <PlusOutlined/>
+                                新增选项 <PlusOutlined />
                             </Button>
                         </Form.Item>
                         <Form.Item label={" "} colon={false} className='creator-form-item-margin'>

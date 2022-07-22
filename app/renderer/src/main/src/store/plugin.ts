@@ -28,7 +28,8 @@ export const usePluginStore = create<StoreProps>((set, get) => ({
             is_stars: false,
             official: false,
             uuid: "",
-            comment_num: 0
+            comment_num: 0,
+            is_private: false
         }
     },
     setCurrentPlugin: (info) => set({pluginData: info})

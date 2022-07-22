@@ -540,7 +540,7 @@ export const YakitPluginInfo: React.FC<YakitPluginInfoProp> = (props) => {
                         )}
                     </div>
                 </div>
-
+                
                 {isAdmin && (
                     <div className='plugin-info-examine'>
                         <div className='plugin-info-width info-examine-body'>

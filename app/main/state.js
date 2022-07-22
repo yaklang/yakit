@@ -12,7 +12,7 @@ const USER_INFO = {
     token: null
 }
 const HttpSetting={
-    httpBaseURL:'http://192.168.101.104:3000'
+    httpBaseURL:'http://www.yaklang.com'
 }
 
 module.exports = {

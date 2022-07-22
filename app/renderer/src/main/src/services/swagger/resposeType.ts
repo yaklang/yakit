@@ -64,6 +64,7 @@
     comment_num: number;
     contributors?: string;
     uuid: string;
+    is_private: boolean;
   }
   export interface UserOrdinaryResponse {
     data: UserList[];
@@ -171,6 +172,7 @@
      */
     uuid?: string[];
     token?: string;
+    bind_me?: boolean;
     page?: number;
     limit?: number;
   }
@@ -227,12 +229,25 @@
     message_img?: string[];
     parent_id?: number;
     root_id?: number;
-    message: string;
+    message?: string;
   }
   export interface GormBaseModel {
     id: number;
     created_at: number;
     updated_at: number;
+  }
+  export interface GetPluginWhere {
+    keywords?: string;
+    /**
+     * 审核状态,0待审核，1通过审核，2审核不通过
+     */
+    status?: string;
+    type?: string;
+    user: boolean;
+    is_private?: string;
+  }
+  export interface DeletePluginUuid {
+    uuid: string;
   }
   export interface CommentListResponse extends Paging {
     data: CommentListData[];

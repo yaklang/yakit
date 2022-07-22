@@ -29,6 +29,7 @@ export interface YakScriptOperatorProp {
 
     setTrigger?: () => void
     setScript?: (item: any) => any
+    deletePluginLocal?: (i: YakScript) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -159,7 +160,11 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                                     <>
                                                         <YakScriptCreatorForm
                                                             modified={script}
-                                                            onChanged={(i) => update()}
+                                                            onChanged={(i) => {
+                                                                if (props.setScript) props.setScript(i)
+                                                                if (props.setTrigger) props.setTrigger()
+                                                                // update()
+                                                            }}
                                                             onCreated={() => {
                                                                 m.destroy()
                                                             }}
@@ -188,6 +193,9 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             }}
                             updateGroups={updateGroups}
                             setScript={props.setScript}
+                            deletePluginLocal={(value) => {
+                                if (props.deletePluginLocal) props.deletePluginLocal(value)
+                            }}
                         />
                     }
                 />
@@ -496,6 +504,7 @@ interface PluginManagementProps {
     style?: React.CSSProperties
 
     setScript?: (item: any) => any
+    deletePluginLocal?: (i: YakScript) => void
 }
 
 export const PluginManagement: React.FC<PluginManagementProps> = React.memo<PluginManagementProps>((props) => {
@@ -621,11 +630,10 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                 onConfirm={() => {
                     ipcRenderer.invoke("delete-yak-script", script.Id).then(() => {
                         ipcRenderer.invoke("change-main-menu")
+                        if (props.deletePluginLocal) props.deletePluginLocal(script)
                         if (props.setScript) props.setScript(undefined)
                     })
                     update()
-                    // setLoading(true)
-                    // setTimeout(() => setTrigger(!trigger), 300)
                 }}
             >
                 <Button size={"small"} danger={true}>

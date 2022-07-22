@@ -154,7 +154,7 @@ ipcMain.on("user-sign-in", (event, arg) => {
         const params = geturlparam(url)
         httpApi("get", typeApi[type], {code: params.get("code")})
             .then((res) => {
-                console.log("loginres", res)
+                // console.log("loginres", res)
                 if (!authWindow) return
                 if (res.code !== 200) {
                     authWindow.webContents.session.clearStorageData()
@@ -187,15 +187,14 @@ ipcMain.on("user-sign-in", (event, arg) => {
                 USER_INFO.qqHeadImg = user.qqHeadImg
                 USER_INFO.role = user.role
                 USER_INFO.token = info.token
-                USER_INFO.user_id = user.user_id
 
-                win.webContents.send("fetch-signin-token", user)
+                USER_INFO.user_id = user.user_id
                 authWindow.webContents.session.clearStorageData()
+                win.webContents.send("fetch-signin-token", user)
                 win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
                 setTimeout(() => authWindow.close(), 200)
             })
             .catch((err) => {
-                console.log("loginerror", err)
                 authWindow.webContents.session.clearStorageData()
                 win.webContents.send("fetch-signin-data", {ok: false, info: "请求异常，请重新登录！"})
                 authWindow.close()
@@ -219,4 +218,5 @@ ipcMain.on("user-sign-out", (event) => {
     USER_INFO.role = null
     USER_INFO.token = null
     USER_INFO.user_id = ""
+    win.webContents.send("login-out")
 })
