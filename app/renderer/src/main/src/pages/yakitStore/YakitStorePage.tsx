@@ -1196,7 +1196,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
     }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
         if (user && !userInfo.isLogin) {
-            warn("请先登录")
+            warn("我的插件需要先登录才能下载，请先登录")
             return
         }
         if (selectedRowKeysRecord.length > 0) {
@@ -1737,6 +1737,9 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
             status: !queryOnline.status ? "all" : queryOnline.status,
             is_private: queryOnline.is_private === "" ? "" : `${queryOnline.is_private === "true"}`
         })
+        if (queryOnline.is_private !== "") {
+            setIsShowStatus(queryOnline.is_private === "false")
+        }
     }, [queryOnline])
     const handleClickOutside = (e) => {
         // 组件已挂载且事件触发对象不在div内
@@ -1761,8 +1764,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
             ...queryOnline,
             ...value,
             status: value.status === "all" ? "" : value.status,
-            type: value.type.join(","),
-            is_private: `${isShowStatus === true}`
+            type: value.type.join(",")
         }
         setQueryOnline({...query})
     })
