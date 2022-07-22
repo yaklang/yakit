@@ -370,21 +370,23 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
     const onSyncCloud = useMemoizedFn(() => {
-        if (userInfo.isLogin) {
-            setVisibleSyncSelect(true)
-        } else {
-            Modal.confirm({
-                title: "未登录",
-                icon: <ExclamationCircleOutlined />,
-                content: "登录后才可同步至云端",
-                cancelText: "取消",
-                okText: "登录",
-                onOk() {
-                    setLoginShow(true)
-                },
-                onCancel() {}
-            })
-        }
+        console.log('params',params);
+        
+        // if (userInfo.isLogin) {
+        //     setVisibleSyncSelect(true)
+        // } else {
+        //     Modal.confirm({
+        //         title: "未登录",
+        //         icon: <ExclamationCircleOutlined />,
+        //         content: "登录后才可同步至云端",
+        //         cancelText: "取消",
+        //         okText: "登录",
+        //         onOk() {
+        //             setLoginShow(true)
+        //         },
+        //         onCancel() {}
+        //     })
+        // }
     })
     return (
         <div>
