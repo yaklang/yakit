@@ -4,7 +4,22 @@ import React, {useState, useEffect, memo} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "../../../utils/notification"
-import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal, Spin, Image} from "antd"
+import {
+    PageHeader,
+    Space,
+    Tooltip,
+    Button,
+    Empty,
+    Tag,
+    Tabs,
+    Upload,
+    Input,
+    List,
+    Modal,
+    Spin,
+    Image,
+    Popconfirm
+} from "antd"
 import {
     StarOutlined,
     StarFilled,
@@ -330,9 +345,11 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         </div>
                         <div className='plugin-info-examine'>
                             {(isAdmin || userInfo.user_id === plugin.user_id) && (
-                                <Button type='primary' danger onClick={onRemove}>
-                                    删除
-                                </Button>
+                                <Popconfirm title='是否删除插件?不可恢复' onConfirm={() => onRemove()}>
+                                    <Button type='primary' danger>
+                                        删除
+                                    </Button>
+                                </Popconfirm>
                             )}
                             {isAdmin && !user && (
                                 <>

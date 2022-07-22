@@ -42,7 +42,7 @@ import {AutoCard} from "../../components/AutoCard"
 import {UserInfoProps, useStore} from "@/store"
 import "./YakitStorePage.scss"
 import {getValue, saveValue} from "../../utils/kv"
-import {useDebounceFn, useGetState, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
+import {useCreation, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
@@ -529,10 +529,16 @@ export interface YakModuleListProp {
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
+    const defaultQuery = useCreation(() => {
+        return {Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}}
+    }, [])
+    const defItemHeight = useCreation(() => {
+        return 143
+    }, [])
     const {
         deletePluginRecordLocal,
-        itemHeight = 143,
-        queryLocal = {Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}},
+        itemHeight = defItemHeight,
+        queryLocal = defaultQuery,
         currentId,
         currentScript
     } = props
@@ -604,7 +610,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         })
         setIsRef(!isRef)
         update(1, undefined, queryLocal)
-    }, [queryLocal, userInfo.isLogin, props.refresh])
+        console.log("queryLocal, userInfo.isLogin, props.refresh", queryLocal, userInfo.isLogin, props.refresh)
+    }, [userInfo.isLogin, props.refresh, queryLocal])
     useEffect(() => {
         if (!deletePluginRecordLocal) return
         response.Data.splice(numberLocal.current, 1)
@@ -763,8 +770,16 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             title={
                 <Space wrap>
                     <div title={plugin.ScriptName}>{plugin.ScriptName}</div>
-                    {plugin.OnlineId > 0 && <OnlineCloudIcon />}
-                    {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
+                    {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && (
+                        <Tooltip title='线上的公开插件'>
+                            <OnlineCloudIcon />
+                        </Tooltip>
+                    )}
+                    {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && (
+                        <Tooltip title='线上的私密插件'>
+                            <LockOutlined />
+                        </Tooltip>
+                    )}
                     {gitUrlIcon(plugin.FromGit)}
                 </Space>
             }
@@ -773,6 +788,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     <>
                         {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
                             <UploadOutlined
+                                className='upload-outline'
                                 style={{marginLeft: 6, fontSize: 16, cursor: "pointer"}}
                                 onClick={() => uploadOnline(plugin)}
                             />
@@ -1793,7 +1809,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
     })
     return (
         <div ref={refTest} className='query-form-body'>
-            <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
+            <Form layout='vertical' form={form} name='control-hooks' onFinish={onFinish}>
                 {!user && (
                     <Form.Item name='order_by' label='排序顺序'>
                         <Select size='small' getPopupContainer={() => refTest.current}>
@@ -1888,7 +1904,7 @@ const QueryComponentLocal: React.FC<QueryComponentLocalProps> = (props) => {
     })
     return (
         <div ref={refTest} className='query-form-body'>
-            <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
+            <Form layout='vertical' form={form} name='control-hooks' onFinish={onFinish}>
                 <Form.Item name='Type' label='插件类型'>
                     <Select size='small' getPopupContainer={() => refTest.current} mode='multiple'>
                         {PluginType.map((item) => (

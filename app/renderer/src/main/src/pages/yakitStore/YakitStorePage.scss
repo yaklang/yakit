@@ -206,3 +206,13 @@
     }
 
 }
+
+.upload-outline {
+    margin-left: 6px;
+    font-size: 16px;
+    cursor: pointer;
+
+    &:hover {
+        color: #1890ff;
+    }
+}

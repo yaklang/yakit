@@ -241,6 +241,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         ipcRenderer
             .invoke("SaveYakScript", params)
             .then((data) => {
+                console.log("data_保存本地", data)
                 info("创建 / 保存 Yak 脚本成功")
                 props.onCreated && props.onCreated(data)
                 props.onChanged && props.onChanged(data)

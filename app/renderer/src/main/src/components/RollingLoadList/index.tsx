@@ -49,25 +49,25 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         scrollTo(0)
     }, [isRef])
     const [vlistHeigth, setVListHeight] = useState(600)
-    const onScrollCapture = useThrottleFn(
-        () => {
-            if (wrapperRef && containerRef && !loading && hasMore) {
-                const dom = containerRef.current || {
-                    scrollTop: 0,
-                    clientHeight: 0,
-                    scrollHeight: 0
-                }
-                const contentScrollTop = dom.scrollTop //滚动条距离顶部
-                const clientHeight = dom.clientHeight //可视区域
-                const scrollHeight = dom.scrollHeight //滚动条内容的总高度
-                const scrollBottom = scrollHeight - contentScrollTop - clientHeight
-                if (scrollBottom <= 500) {
-                    loadMoreData() // 获取数据的方法
-                }
-            }
-        },
-        {wait: 200, leading: false}
-    ).run()
+    // const onScrollCapture = useThrottleFn(
+    //     () => {
+    //         if (wrapperRef && containerRef && !loading && hasMore) {
+    //             const dom = containerRef.current || {
+    //                 scrollTop: 0,
+    //                 clientHeight: 0,
+    //                 scrollHeight: 0
+    //             }
+    //             const contentScrollTop = dom.scrollTop //滚动条距离顶部
+    //             const clientHeight = dom.clientHeight //可视区域
+    //             const scrollHeight = dom.scrollHeight //滚动条内容的总高度
+    //             const scrollBottom = scrollHeight - contentScrollTop - clientHeight
+    //             if (scrollBottom <= 500) {
+    //                 loadMoreData() // 获取数据的方法
+    //             }
+    //         }
+    //     },
+    //     {wait: 200, leading: false}
+    // ).run()
     return (
         <>
             <ReactResizeDetector
@@ -82,7 +82,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <div className={classNameList} style={{height: vlistHeigth}} ref={containerRef} onScroll={onScrollCapture}>
+            <div className={classNameList} style={{height: vlistHeigth}} ref={containerRef}>
                 <div ref={wrapperRef}>
                     {list.map((i) => (
                         <div key={i.data[key]} className={classNameRow}>
