@@ -24,6 +24,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
 import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
 import Login from "../Login"
+import {GetYakScriptByOnlineIDRequest} from "../yakitStore/YakitStorePage"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -261,7 +262,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const upOnlinePlugin = useMemoizedFn(() => {
         const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
-            script_name: params.OnlineScriptName ? params.OnlineScriptName : params.ScriptName,
+            script_name: params.ScriptName,
             content: params.Content,
             tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
             params: params.Params.map((p) => ({
@@ -275,7 +276,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 extra_setting: p.ExtraSetting
             })),
             help: params.Help,
-            default_open: false
+            default_open: false,
+            // contributors: params.Author
+            contributors: params.OnlineContributors || ""
         }
         if (params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
@@ -292,11 +295,30 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         OnlineID: res.id,
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
-                    .then((res) => {
-                        success("同步成功")
-                        props.onCreated && props.onCreated(params)
-                        props.onChanged && props.onChanged(params)
-                        setVisibleSyncSelect(false)
+                    .then(() => {
+                        ipcRenderer
+                            .invoke("GetYakScriptByOnlineID", {
+                                OnlineID: res.id,
+                                UUID: res.uuid
+                            } as GetYakScriptByOnlineIDRequest)
+                            .then((newSrcipt: YakScript) => {
+                                setParams(newSrcipt)
+                                success("同步成功")
+                                props.onCreated && props.onCreated(newSrcipt)
+                                props.onChanged && props.onChanged(newSrcipt)
+                                setVisibleSyncSelect(false)
+                                ipcRenderer
+                                    .invoke("delete-yak-script", params.Id)
+                                    .then(() => {
+                                        console.log("删除成功")
+                                    })
+                                    .catch((err) => {
+                                        failed("删除本地失败:" + err)
+                                    })
+                            })
+                            .catch((e) => {
+                                failed(`查询本地插件错误:${e}`)
+                            })
                     })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
@@ -319,7 +341,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 
         const params: API.NewYakitPlugin = {
             type: item.Type,
-            script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
+            script_name: item.ScriptName,
             content: item.Content,
             tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
             params: item.Params.map((p) => ({
@@ -334,7 +356,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             })),
             help: item.Help,
             default_open: false,
-            contributors: item.Author
+            // contributors: item.OnlineContributors ? item.OnlineContributors : item.Author
+            contributors: item.OnlineContributors || ""
         }
         if (item.OnlineId) {
             params.id = parseInt(`${item.OnlineId}`)
@@ -352,10 +375,29 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
                     .then((res) => {
-                        success("同步成功")
-                        props.onCreated && props.onCreated(item)
-                        props.onChanged && props.onChanged(item)
-                        setVisibleSyncSelect(false)
+                        ipcRenderer
+                            .invoke("GetYakScriptByOnlineID", {
+                                OnlineID: res.id,
+                                UUID: res.uuid
+                            } as GetYakScriptByOnlineIDRequest)
+                            .then((newSrcipt: YakScript) => {
+                                setParams(newSrcipt)
+                                success("同步成功")
+                                props.onCreated && props.onCreated(newSrcipt)
+                                props.onChanged && props.onChanged(newSrcipt)
+                                setVisibleSyncSelect(false)
+                                ipcRenderer
+                                    .invoke("delete-yak-script", item.Id)
+                                    .then(() => {
+                                        console.log("删除成功")
+                                    })
+                                    .catch((err) => {
+                                        failed("删除本地失败:" + err)
+                                    })
+                            })
+                            .catch((e) => {
+                                failed(`查询本地插件错误:${e}`)
+                            })
                     })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
@@ -370,23 +412,29 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
     const onSyncCloud = useMemoizedFn(() => {
-        console.log('params',params);
-        
-        // if (userInfo.isLogin) {
-        //     setVisibleSyncSelect(true)
-        // } else {
-        //     Modal.confirm({
-        //         title: "未登录",
-        //         icon: <ExclamationCircleOutlined />,
-        //         content: "登录后才可同步至云端",
-        //         cancelText: "取消",
-        //         okText: "登录",
-        //         onOk() {
-        //             setLoginShow(true)
-        //         },
-        //         onCancel() {}
-        //     })
-        // }
+        if (!userInfo.isLogin) {
+            Modal.confirm({
+                title: "未登录",
+                icon: <ExclamationCircleOutlined />,
+                content: "登录后才可同步至云端",
+                cancelText: "取消",
+                okText: "登录",
+                onOk() {
+                    setLoginShow(true)
+                },
+                onCancel() {}
+            })
+            return
+        }
+        if ((params.OnlineId as number) > 0) {
+            if (params.OnlineIsPrivate) {
+                upOnlinePlugin()
+            } else {
+                uploadOnline(params)
+            }
+        } else {
+            setVisibleSyncSelect(true)
+        }
     })
     return (
         <div>

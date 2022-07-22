@@ -160,7 +160,11 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                                     <>
                                                         <YakScriptCreatorForm
                                                             modified={script}
-                                                            onChanged={(i) => update()}
+                                                            onChanged={(i) => {
+                                                                if (props.setScript) props.setScript(i)
+                                                                if (props.setTrigger) props.setTrigger()
+                                                                // update()
+                                                            }}
                                                             onCreated={() => {
                                                                 m.destroy()
                                                             }}

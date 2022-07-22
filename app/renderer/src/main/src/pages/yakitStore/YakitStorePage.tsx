@@ -270,6 +270,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     })
     const [deletePluginRecord, setDeletePluginRecord] = useState<API.YakitPluginDetail>()
     const [deletePluginRecordLocal, setDeletePluginRecordLocal] = useState<YakScript>()
+    const [refLocalListItem, setRefLocalListItem] = useState<boolean>(false)
     const onDeletePlugin = useMemoizedFn((p: API.YakitPluginDetail) => {
         setDeletePluginRecord(p)
     })
@@ -435,6 +436,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 <Spin spinning={batchAddLoading}>
                     {(plugSource === "local" && (
                         <YakModuleList
+                            currentScript={script}
                             currentId={script?.Id}
                             onClicked={(info, index) => {
                                 setScript(info)
@@ -443,6 +445,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             queryLocal={queryLocal}
                             refresh={refresh}
                             deletePluginRecordLocal={deletePluginRecordLocal}
+                            trigger={trigger}
                         />
                     )) || (
                         <YakModuleOnlineList
@@ -521,13 +524,17 @@ export interface YakModuleListProp {
     queryLocal?: QueryYakScriptRequest
     refresh?: boolean
     deletePluginRecordLocal?: YakScript
+    currentScript?: YakScript
+    trigger?: boolean // 目前更新使用
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const {
         deletePluginRecordLocal,
         itemHeight = 143,
-        queryLocal = {Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}}
+        queryLocal = {Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}},
+        currentId,
+        currentScript
     } = props
     // 全局登录状态
     const {userInfo} = useStore()
@@ -549,6 +556,17 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [maxWidth, setMaxWidth] = useState<number>(260)
     const [loading, setLoading] = useState(false)
     const numberLocal = useRef<number>(0) // 本地 选择的插件index
+    useEffect(() => {
+        if (!currentScript) return
+        const index = response.Data.findIndex((ele) => ele.OnlineId === currentScript.OnlineId)
+        if (index !== -1) {
+            response.Data[index] = currentScript
+        }
+        setResponse({
+            ...response,
+            Data: [...response.Data]
+        })
+    }, [props.trigger])
     const update = (page?: number, limit?: number, query?: QueryYakScriptRequest) => {
         const newParams = {
             ...params,
@@ -651,10 +669,10 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptById", {Id: oldItem.Id})
             .then((item: YakScript) => {
-                console.log("item", item)
+                // console.log("item", item)
                 const params: API.NewYakitPlugin = {
                     type: item.Type,
-                    script_name: item.OnlineScriptName ? item.OnlineScriptName : item.ScriptName,
+                    script_name: item.ScriptName,
                     content: item.Content,
                     tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
                     params: item.Params.map((p) => ({
@@ -669,7 +687,8 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     })),
                     help: item.Help,
                     default_open: false,
-                    contributors: item.Author
+                    // contributors: item.Author
+                    contributors: item.OnlineContributors || ""
                 }
                 if (item.OnlineId) {
                     params.id = parseInt(`${item.OnlineId}`)
@@ -745,6 +764,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                 <Space wrap>
                     <div title={plugin.ScriptName}>{plugin.ScriptName}</div>
                     {plugin.OnlineId > 0 && <OnlineCloudIcon />}
+                    {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
                     {gitUrlIcon(plugin.FromGit)}
                 </Space>
             }

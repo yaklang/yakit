@@ -115,6 +115,7 @@ export interface YakScript {
     OnlineContributors: string
     UserId: number
     UUID: string
+    OnlineIsPrivate?: boolean
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
