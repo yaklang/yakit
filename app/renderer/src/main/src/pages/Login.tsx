@@ -36,7 +36,7 @@ const Login: React.FC<LoginProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("auth/from-----------")
+                // console.log("auth/from-----------")
                 if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
             })
             .catch((err) => {
@@ -50,10 +50,10 @@ const Login: React.FC<LoginProp> = (props) => {
     // 全局监听登录状态
     useEffect(() => {
         ipcRenderer.on("fetch-signin-data", (e, res: any) => {
-            console.log("登录------------")
+            // console.log("登录------------")
             const {ok, info} = res
             if (ok) {
-                console.log("登录成功")
+                // console.log("登录成功")
                 Modal.confirm({
                     title: "数据同步",
                     icon: <ExclamationCircleOutlined />,
@@ -80,7 +80,7 @@ const Login: React.FC<LoginProp> = (props) => {
                     }
                 })
             } else {
-                console.log("登录失败")
+                // console.log("登录失败")
                 failed(info || "请求异常，请重试！")
                 setTimeout(() => setLoading(false), 200)
                 props.onCancel()

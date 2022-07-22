@@ -154,7 +154,7 @@ ipcMain.on("user-sign-in", (event, arg) => {
         const params = geturlparam(url)
         httpApi("get", typeApi[type], {code: params.get("code")})
             .then((res) => {
-                console.log("loginres", res)
+                // console.log("loginres", res)
                 if (!authWindow) return
                 if (res.code !== 200) {
                     authWindow.webContents.session.clearStorageData()
@@ -191,14 +191,11 @@ ipcMain.on("user-sign-in", (event, arg) => {
                 USER_INFO.user_id = user.user_id
                 authWindow.webContents.session.clearStorageData()
                 win.webContents.send("fetch-signin-token", user)
-                console.log('fetch-signin-data-success');
                 win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
                 setTimeout(() => authWindow.close(), 200)
             })
             .catch((err) => {
-                console.log("loginerror", err)
                 authWindow.webContents.session.clearStorageData()
-                console.log('fetch-signin-data-error');
                 win.webContents.send("fetch-signin-data", {ok: false, info: "请求异常，请重新登录！"})
                 authWindow.close()
             })

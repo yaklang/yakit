@@ -610,7 +610,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         })
         setIsRef(!isRef)
         update(1, undefined, queryLocal)
-        console.log("queryLocal, userInfo.isLogin, props.refresh", queryLocal, userInfo.isLogin, props.refresh)
     }, [userInfo.isLogin, props.refresh, queryLocal])
     useEffect(() => {
         if (!deletePluginRecordLocal) return
@@ -727,7 +726,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                                         ipcRenderer
                                             .invoke("delete-yak-script", item.Id)
                                             .then(() => {
-                                                console.log("删除成功")
+                                                // console.log("删除成功")
                                             })
                                             .catch((err) => {
                                                 failed("删除本地失败:" + err)

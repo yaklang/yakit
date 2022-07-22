@@ -89,13 +89,17 @@
     width: 200px;
 
     .ant-form-item {
-        margin-bottom: 6px !important;
+        margin-bottom: 12px;
     }
 
     .form-btns {
         display: flex;
         justify-content: space-around;
         margin-top: 12px;
+    }
+
+    .ant-form-vertical .ant-form-item-label {
+        padding: 0px;
     }
 }
 

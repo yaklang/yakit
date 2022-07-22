@@ -241,7 +241,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         ipcRenderer
             .invoke("SaveYakScript", params)
             .then((data) => {
-                console.log("data_保存本地", data)
+                // console.log("data_保存本地", data)
                 info("创建 / 保存 Yak 脚本成功")
                 props.onCreated && props.onCreated(data)
                 props.onChanged && props.onChanged(data)
@@ -311,7 +311,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 ipcRenderer
                                     .invoke("delete-yak-script", params.Id)
                                     .then(() => {
-                                        console.log("删除成功")
+                                        // console.log("删除成功")
                                     })
                                     .catch((err) => {
                                         failed("删除本地失败:" + err)
@@ -375,7 +375,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         OnlineID: res.id,
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
-                    .then((res) => {
+                    .then(() => {
                         ipcRenderer
                             .invoke("GetYakScriptByOnlineID", {
                                 OnlineID: res.id,
@@ -390,7 +390,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 ipcRenderer
                                     .invoke("delete-yak-script", item.Id)
                                     .then(() => {
-                                        console.log("删除成功")
+                                        // console.log("删除成功")
                                     })
                                     .catch((err) => {
                                         failed("删除本地失败:" + err)
