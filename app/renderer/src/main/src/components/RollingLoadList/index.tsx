@@ -1,7 +1,7 @@
-import React, {useEffect, useState, useRef, ReactNode} from "react"
+import React, { useEffect, useState, useRef, ReactNode } from "react"
 import ReactResizeDetector from "react-resize-detector"
-import {useThrottleFn, useVirtualList} from "ahooks"
-import {LoadingOutlined} from "@ant-design/icons"
+import { useThrottleFn, useVirtualList } from "ahooks"
+import { LoadingOutlined } from "@ant-design/icons"
 import "./index.scss"
 
 interface RollingLoadListProps<T> {
@@ -34,16 +34,16 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         isRef,
         classNameRow,
         classNameList,
-        itemHeight = 113,
-        overscan = 10
+        itemHeight,
+        overscan
     } = props
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
     const [list, scrollTo] = useVirtualList(data || [], {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight,
-        overscan
+        itemHeight: itemHeight || 113,
+        overscan: overscan || 10
     })
     useEffect(() => {
         scrollTo(0)
@@ -66,8 +66,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 }
             }
         },
-        {wait: 200, leading: false}
-    ).run()
+        { wait: 200, leading: false }
+    ).run
     return (
         <>
             <ReactResizeDetector
@@ -82,19 +82,19 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <div className={classNameList} style={{height: vlistHeigth}} ref={containerRef} onScroll={onScrollCapture}>
+            <div className={classNameList} style={{ height: vlistHeigth }} ref={containerRef} onScroll={onScrollCapture}>
                 <div ref={wrapperRef}>
                     {list.map((i) => (
                         <div key={i.data[key]} className={classNameRow}>
                             {renderRow(i.data, i.index)}
                         </div>
                     ))}
-                    {!loading && hasMore && (
+                    {loading && hasMore && (
                         <div className='loading-center'>
                             <LoadingOutlined />
                         </div>
                     )}
-                    {!hasMore && (page || 0) > 0 && <div className='no-more-text'>暂无更多数据</div>}
+                    {loading && !hasMore && (page || 0) > 0 && <div className='no-more-text'>暂无更多数据</div>}
                 </div>
             </div>
         </>
