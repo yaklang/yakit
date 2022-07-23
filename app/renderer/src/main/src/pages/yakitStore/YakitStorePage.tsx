@@ -54,6 +54,7 @@ import { findDOMNode } from "react-dom"
 import { usePluginStore } from "@/store/plugin"
 import { YakExecutorParam } from "../invoker/YakExecutorParams"
 import { RollingLoadList } from "@/components/RollingLoadList"
+import { setTimeout } from "timers"
 
 const { Search } = Input
 const { Option } = Select
@@ -241,9 +242,12 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         if (value === "online") {
             setUser(false)
         }
-        setPlugSource(value)
-        onResetQuery()
-        onResetPluginDetails()
+        setTotal(0)
+        setTimeout(()=>{
+            setPlugSource(value)
+            onResetQuery()
+            onResetPluginDetails()
+        },100)
     }, { wait: 200 }).run
     const onResetQuery = useMemoizedFn(() => {
         // 重置查询条件
@@ -1416,7 +1420,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 total_page: 1
             }
         })
-        if (props.setTotal) props.setTotal(0)
         if (!userInfo.isLogin && user) {
             setTotal(0)
         } else {
