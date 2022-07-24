@@ -94,7 +94,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                             <LoadingOutlined />
                         </div>
                     )}
-                    {loading && !hasMore && (page || 0) > 0 && <div className='no-more-text'>暂无更多数据</div>}
+                    {!loading && !hasMore && (page || 0) > 0 && <div className='no-more-text'>暂无更多数据</div>}
                 </div>
             </div>
         </>

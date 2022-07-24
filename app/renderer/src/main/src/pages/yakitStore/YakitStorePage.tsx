@@ -99,7 +99,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [script, setScript] = useState<YakScript>()
     const [trigger, setTrigger] = useState(false)
     const [isFilter, setIsFilter] = useState(false)
-    const [total, setTotal] = useState<number>(0)
+    const [total, setTotal, getTotal] = useGetState<number>(0)
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
     })
@@ -165,7 +165,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [user, setUser] = useState(false)
     // 全局登录状态
     const { userInfo } = useStore()
-    useEffect(() => { }, [userInfo.isLogin])
     useEffect(() => {
         if (selectedRowKeysRecord.length === 0) {
             setIsSelectAll(false)
@@ -243,11 +242,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             setUser(false)
         }
         setTotal(0)
-        setTimeout(()=>{
+        setTimeout(() => {
             setPlugSource(value)
             onResetQuery()
             onResetPluginDetails()
-        },100)
+        }, 100)
     }, { wait: 200 }).run
     const onResetQuery = useMemoizedFn(() => {
         // 重置查询条件
@@ -327,7 +326,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         )}
                                     </Checkbox>
                                 )}
-                                <Tag>Total:{total}</Tag>
+                                <Tag>Total:{getTotal()}</Tag>
                             </Col>
                             <Col span={12} className='col-flex-end'>
                                 <Popconfirm
@@ -1420,17 +1419,14 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 total_page: 1
             }
         })
+        setIsRef(!isRef)
+        onSelectAll([])
         if (!userInfo.isLogin && user) {
             setTotal(0)
         } else {
             search(1)
         }
-    }, [user], { wait: 200, leading: true })
-    useEffect(() => {
-        search(1)
-        setIsRef(!isRef)
-        onSelectAll([])
-    }, [userInfo.isLogin, queryOnline.is_private, queryOnline.keywords, queryOnline.status, queryOnline.type, queryOnline.order_by])
+    }, [user, userInfo.isLogin, queryOnline.is_private, queryOnline.keywords, queryOnline.status, queryOnline.type, queryOnline.order_by], { wait: 200 })
     const search = useMemoizedFn((page: number) => {
         let url = "yakit/plugin/unlogged"
         if (userInfo.isLogin) {
