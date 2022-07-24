@@ -284,6 +284,9 @@ service Yak {
   // GenerateYakCodeByPacket
   rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
 
+  // CSRF Generator
+  rpc GenerateCSRFPocByPacket(GenerateCSRFPocByPacketRequest) returns (GenerateCSRFPocByPacketResponse);
+
   // MITM 衍生功能：
   // Replacers 管理
   rpc ExportMITMReplacerRules(Empty) returns (ExportMITMReplacerRulesResponse);
@@ -477,6 +480,15 @@ message GenerateYakCodeByPacketRequest {
   Template CodeTemplate = 3;
 }
 
+message GenerateCSRFPocByPacketRequest {
+  bool IsHttps = 1;
+  bytes Request = 2;
+}
+
+message GenerateCSRFPocByPacketResponse {
+  bytes Code = 1;
+}
+
 message GenerateYakCodeByPacketResponse {
   bytes Code = 1;
 }
@@ -615,6 +627,8 @@ message HistoryHTTPFuzzerTask {
   int32 HTTPFlowTotal = 3;
   int32 HTTPFlowSuccessCount = 4;
   int32 HTTPFlowFailedCount = 5;
+  string Host = 6;
+  int32  Port = 7;
 }
 
 message HistoryHTTPFuzzerTasks {

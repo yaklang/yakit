@@ -17,6 +17,8 @@ interface HTTPFuzzerTask {
     HTTPFlowTotal: number
     HTTPFlowSuccessCount: number
     HTTPFlowFailedCount: number
+    Host?: string
+    Port?: number
     onReload?: () => any
 }
 
@@ -24,12 +26,12 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     const [tasks, setTasks] = useState<HTTPFuzzerTask[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const deleteAll = useMemoizedFn(()=>{
+    const deleteAll = useMemoizedFn(() => {
         setLoading(true)
-        ipcRenderer.invoke("DeleteHistoryHTTPFuzzerTask", {}).then(()=>{
+        ipcRenderer.invoke("DeleteHistoryHTTPFuzzerTask", {}).then(() => {
             info("Delete History")
             reload()
-        }).finally(()=>setTimeout(()=>setLoading(false), 300))
+        }).finally(() => setTimeout(() => setLoading(false), 300))
     })
 
     const reload = useMemoizedFn(() => {
@@ -47,11 +49,11 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
         <Button type={"link"} size={"small"} icon={<ReloadOutlined/>} onClick={e => {
             reload()
         }}/>
-        <Popconfirm title={"确定删除吗？"} onConfirm={()=>{
+        <Popconfirm title={"确定删除吗？"} onConfirm={() => {
             deleteAll()
         }}>
             <Button type={"link"} size={"small"} danger={true}
-                    icon={<DeleteOutlined />}
+                    icon={<DeleteOutlined/>}
             />
         </Popconfirm>
     </Space>}>
@@ -64,10 +66,11 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
 
                     props.onSelect(i.Id)
                 }}>
-                    <Space>
+                    <Space size={4}>
                         <div>
-                            {`ID:${i.Id} ${formatTimestamp(i.CreatedAt)}`}
+                            {`ID:${i.Id}`}
                         </div>
+                        <Tag color={"geekblue"}>{!!i.Host ? i.Host : formatTimestamp(i.CreatedAt)}</Tag>
                         <Tag>共{i.HTTPFlowTotal}个</Tag>
                         {i.HTTPFlowSuccessCount != i.HTTPFlowTotal && <Tag>成功:{i.HTTPFlowSuccessCount}个</Tag>}
                     </Space>

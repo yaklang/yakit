@@ -15,7 +15,11 @@ import {useHotkeys} from "react-hotkeys-hook"
 import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../utils/basic"
-import {generateYakCodeByRequest, RequestToYakCodeTemplate} from "../pages/invoker/fromPacketToYakCode"
+import {
+    generateCSRFPocByRequest,
+    generateYakCodeByRequest,
+    RequestToYakCodeTemplate
+} from "../pages/invoker/fromPacketToYakCode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1573,6 +1577,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     title: "复制 URL",
                                     onClick: () => {
                                         callCopyToClipboard(rowData.Url)
+                                    }
+                                },
+                                {
+                                    title: "复制为 CSRF Poc",
+                                    onClick: () => {
+                                        const flow = rowData as HTTPFlow
+                                        if (!flow) return
+                                        generateCSRFPocByRequest(flow.Request, e => {
+                                            callCopyToClipboard(e)
+                                        })
                                     }
                                 },
                                 {

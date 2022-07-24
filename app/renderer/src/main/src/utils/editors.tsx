@@ -29,6 +29,8 @@ import {StringToUint8Array, Uint8ArrayToString} from "./str";
 import {newWebFuzzerTab} from "../pages/fuzzer/HTTPFuzzerPage";
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
 import {IPosition, IRange} from "monaco-editor";
+import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode";
+import {callCopyToClipboard} from "@/utils/basic";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -586,6 +588,24 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         execAutoDecode(text)
                                     } catch (e) {
                                         failed("editor exec codec failed")
+                                    }
+                                }
+                            },
+                            {
+                                label: "复制为 CSRF PoC", contextMenuGroupId: "auto-suggestion",
+                                id: "csrfpoc", run: (e) => {
+                                    try {
+                                        // @ts-ignore
+                                        const text = e.getModel()?.getValue() || "";
+                                        if (!text) {
+                                            info("数据包为空")
+                                            return
+                                        }
+                                        generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), code => {
+                                            callCopyToClipboard(code)
+                                        })
+                                    } catch (e) {
+                                        failed("自动生成 CSRF 失败")
                                     }
                                 }
                             },
