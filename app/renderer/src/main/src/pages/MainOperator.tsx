@@ -65,6 +65,7 @@ import "./main.css"
 import "./GlobalClass.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
+import {setRemoteValue} from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -107,7 +108,8 @@ const defaultUserInfo: UserInfoProps = {
     qqName: null,
     qqHeadImg: null,
     role: null,
-    user_id: null
+    user_id: null,
+    token: ""
 }
 
 export interface MainProp {
@@ -207,8 +209,7 @@ const Main: React.FC<MainProp> = (props) => {
     }, [])
     useEffect(() => {
         ipcRenderer.on("refresh-token", (e, res: any) => {
-            console.log(111)
-
+            console.log("refresh-token",res)
             refreshToken(userInfo)
         })
         return () => {
@@ -511,8 +512,8 @@ const Main: React.FC<MainProp> = (props) => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
             // 刷新用户信息
             setStoreUserInfo(res)
-            // 刷新引擎数据
-            
+            // 刷新引擎
+            setRemoteValue("token-online", res.token)
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])

@@ -1,4 +1,5 @@
 import {UserInfoProps, useStore} from "@/store"
+import {loginOut, loginOutLocal} from "@/utils/login"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
 
@@ -7,6 +8,7 @@ const {ipcRenderer} = window.require("electron")
 interface AxiosResponseInfoProps {
     message?: string
     reason?: string
+    userInfo?: UserInfoProps
 }
 
 // 批量覆盖
@@ -54,10 +56,16 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
             reject(data.reason)
             break
         case 401:
-            // loginOut()
+            tokenOverdue(res)
             break
         default:
             reject(message)
             break
     }
+}
+
+// token过期，退出
+const tokenOverdue = (res) => {
+    if (res.userInfo) loginOutLocal(res.userInfo)
+    failed("用户登录已过期，请重新登录")
 }

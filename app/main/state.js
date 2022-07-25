@@ -9,10 +9,11 @@ const USER_INFO = {
     qqName: null,
     qqHeadImg: null,
     role: null,
-    token: null
+    token: null,
+    user_id: 0
 }
-const HttpSetting={
-    httpBaseURL:'http://www.yaklang.com'
+const HttpSetting = {
+    httpBaseURL: "http://www.yaklang.com"
 }
 
 module.exports = {

@@ -25,7 +25,7 @@ const createWindow = () => {
     win = new BrowserWindow({
         width: 1600,
         height: 1000,
-        autoHideMenuBar: false,
+        autoHideMenuBar: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: true,
@@ -179,7 +179,8 @@ ipcMain.on("user-sign-in", (event, arg) => {
                     qqName: info.from_platform === "qq" ? info.name : null,
                     qqHeadImg: info.from_platform === "qq" ? info.head_img : null,
                     role: info.role,
-                    user_id: info.user_id
+                    user_id: info.user_id,
+                    token: info.token
                 }
 
                 USER_INFO.isLogin = user.isLogin
@@ -224,4 +225,18 @@ ipcMain.on("user-sign-out", (event) => {
     USER_INFO.token = null
     USER_INFO.user_id = ""
     win.webContents.send("login-out")
+})
+
+ipcMain.on("update-user", (event, user) => {
+    USER_INFO.isLogin = user.isLogin
+    USER_INFO.platform = user.platform
+    USER_INFO.githubName = user.githubName
+    USER_INFO.githubHeadImg = user.githubHeadImg
+    USER_INFO.wechatName = user.wechatName
+    USER_INFO.wechatHeadImg = user.wechatHeadImg
+    USER_INFO.qqName = user.qqName
+    USER_INFO.qqHeadImg = user.qqHeadImg
+    USER_INFO.role = user.role
+    USER_INFO.token = info.token
+    USER_INFO.user_id = user.user_id
 })

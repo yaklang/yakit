@@ -22,6 +22,14 @@ export const loginOut = (userInfo: UserInfoProps) => {
         })
 }
 
+export const loginOutLocal = (userInfo: UserInfoProps) => {
+    if (!userInfo.isLogin) return
+    ipcRenderer.send("user-sign-out")
+    ipcRenderer.invoke("DeletePluginByUserID", {
+        UserID: userInfo.user_id
+    })
+}
+
 export const refreshToken = (userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
     NetWorkApi<null, API.ActionSucceeded>({
