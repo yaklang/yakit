@@ -1,3 +1,4 @@
+import {UserInfoProps, useStore} from "@/store"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
 
@@ -51,6 +52,9 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
             break
         case 209:
             reject(data.reason)
+            break
+        case 401:
+            // loginOut()
             break
         default:
             reject(message)

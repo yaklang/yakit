@@ -251,6 +251,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             if (!userInfo.isLogin && value === "user") {
                 setTotalOnlineUser(0)
             }
+            if (value === "user") {
+                setUser(true)
+            } else {
+                setUser(false)
+            }
             setPlugSource(value)
             onResetQuery()
             onResetPluginDetails()
@@ -272,7 +277,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setPlugin(undefined)
     })
     const onSetPlugin = useMemoizedFn((item) => {
-        if (plugSource==='user') {
+        if (plugSource === "user") {
             setUserPlugin(item)
         } else {
             setPlugin(item)
@@ -774,8 +779,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                                         }
                                         ipcRenderer
                                             .invoke("delete-yak-script", item.Id)
-                                            .then(() => {
-                                            })
+                                            .then(() => {})
                                             .catch((err) => {
                                                 failed("删除本地失败:" + err)
                                             })

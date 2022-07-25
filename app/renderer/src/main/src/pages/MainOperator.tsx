@@ -64,7 +64,7 @@ import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain"
 import "./main.css"
 import "./GlobalClass.scss"
 import "./GlobalClass.scss"
-import {loginOut} from "@/utils/login"
+import {loginOut, refreshToken} from "@/utils/login"
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -205,7 +205,16 @@ const Main: React.FC<MainProp> = (props) => {
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
+    useEffect(() => {
+        ipcRenderer.on("refresh-token", (e, res: any) => {
+            console.log(111)
 
+            refreshToken(userInfo)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("refresh-token")
+        }
+    }, [])
     // yakit页面关闭是否二次确认提示
     const [winCloseFlag, setWinCloseFlag] = useState<boolean>(true)
     const [winCloseShow, setWinCloseShow] = useState<boolean>(false)
@@ -500,7 +509,10 @@ const Main: React.FC<MainProp> = (props) => {
     const {userInfo, setStoreUserInfo} = useStore()
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
+            // 刷新用户信息
             setStoreUserInfo(res)
+            // 刷新引擎数据
+            
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
@@ -871,6 +883,7 @@ const Main: React.FC<MainProp> = (props) => {
             />
         )
     }
+
     return (
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
@@ -1018,8 +1031,10 @@ const Main: React.FC<MainProp> = (props) => {
                                     danger={true}
                                     icon={<PoweroffOutlined />}
                                     onClick={() => {
-                                        if (winCloseFlag) setWinCloseShow(true)
-                                        else {
+                                        if (winCloseFlag) {
+                                            setWinCloseShow(true)
+                                        } else {
+                                            refreshToken(userInfo)
                                             success("退出当前 Yak 服务器成功")
                                             setEngineStatus("error")
                                         }

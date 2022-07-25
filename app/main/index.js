@@ -25,7 +25,7 @@ const createWindow = () => {
     win = new BrowserWindow({
         width: 1600,
         height: 1000,
-        autoHideMenuBar: true,
+        autoHideMenuBar: false,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: true,
@@ -83,7 +83,12 @@ const createWindow = () => {
             app.exit()
         }
     })
-
+    win.on("minimize", (e) => {
+        win.webContents.send("refresh-token")
+    })
+    win.on("maximize", (e) => {
+        win.webContents.send("refresh-token")
+    })
     // 阻止内部react页面的链接点击跳转
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
