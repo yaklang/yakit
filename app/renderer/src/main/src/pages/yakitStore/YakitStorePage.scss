@@ -106,6 +106,7 @@
 .plugin-list-body {
     height: 100%;
     overflow-y: auto;
+    overflow-x: hidden;
 
     .plugin-tag {
         width: 100%;
@@ -219,4 +220,8 @@
     &:hover {
         color: #1890ff;
     }
+}
+
+.text-icon-local {
+    margin-left: 4px;
 }
