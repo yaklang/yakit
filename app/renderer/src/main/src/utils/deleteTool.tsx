@@ -40,7 +40,6 @@ export const onRemoveToolFC = (props: removeProps<any>) => {
             DeleteAll: true
         }
     }
-    // console.log("newParams", interfaceName,newParams)
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke(interfaceName, newParams)

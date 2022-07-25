@@ -725,7 +725,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptById", {Id: oldItem.Id})
             .then((item: YakScript) => {
-                // console.log("item", item)
                 const params: API.NewYakitPlugin = {
                     type: item.Type,
                     script_name: item.ScriptName,
@@ -776,7 +775,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                                         ipcRenderer
                                             .invoke("delete-yak-script", item.Id)
                                             .then(() => {
-                                                // console.log("删除成功")
                                             })
                                             .catch((err) => {
                                                 failed("删除本地失败:" + err)
