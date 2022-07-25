@@ -1158,6 +1158,10 @@ message PortScanRequest {
   // 是否启用基础爬虫，以及基础爬虫最多几个请求？
   bool EnableBasicCrawler = 22;
   int64 BasicCrawlerRequestMax = 23;
+
+  // SYN Concurrent
+  // 简易设置 SYN 每秒并发
+  int64 SynConcurrent = 24;
 }
 
 message DeletePortsRequest {
