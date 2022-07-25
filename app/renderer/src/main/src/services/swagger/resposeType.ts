@@ -246,6 +246,10 @@
     user: boolean;
     is_private?: string;
   }
+  export interface GetPluginUnloggedWhere {
+    keywords?: string;
+    type?: string;
+  }
   export interface DeletePluginUuid {
     uuid: string;
   }

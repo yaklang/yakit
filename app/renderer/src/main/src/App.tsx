@@ -162,7 +162,6 @@ function App() {
             return
         }
         getRemoteValue("httpSetting").then((setting) => {
-            // console.log("私有域地址——1", setting)
             if (!setting) {
                 ipcRenderer
                     .invoke("GetOnlineProfile", {})
