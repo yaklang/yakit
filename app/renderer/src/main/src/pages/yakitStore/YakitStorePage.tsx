@@ -272,7 +272,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setPlugin(undefined)
     })
     const onSetPlugin = useMemoizedFn((item) => {
-        if (user) {
+        if (plugSource==='user') {
             setUserPlugin(item)
         } else {
             setPlugin(item)
@@ -351,7 +351,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                                     <QueryComponentLocal
                                                         onClose={() => setVisibleQuery(false)}
                                                         queryLocal={queryLocal}
-                                                        setQueryLocal={(e)=>{
+                                                        setQueryLocal={(e) => {
                                                             setQueryLocal(e)
                                                             setRefresh(!refresh)
                                                         }}
@@ -361,7 +361,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                                         onClose={() => setVisibleQuery(false)}
                                                         userInfo={userInfo}
                                                         queryOnline={queryOnline}
-                                                        setQueryOnline={(e)=>{
+                                                        setQueryOnline={(e) => {
                                                             setQueryOnline(e)
                                                             setRefresh(!refresh)
                                                         }}

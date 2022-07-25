@@ -112,6 +112,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             }
         })
             .then((res) => {
+                console.log("res.data", res.data)
                 setPlugin(res.data)
             })
             .catch((err) => {
