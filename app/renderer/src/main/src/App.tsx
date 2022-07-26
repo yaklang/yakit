@@ -14,6 +14,7 @@ import {useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
+import {refreshToken} from "./utils/login"
 
 const InterceptKeyword = [
     // "KeyA",
@@ -169,6 +170,7 @@ function App() {
             return
         }
         getRemoteValue("httpSetting").then((setting) => {
+            console.log("获取基础配置", setting)
             if (!setting) {
                 ipcRenderer
                     .invoke("GetOnlineProfile", {})
@@ -201,40 +203,51 @@ function App() {
     }
 
     const refreshLogin = useMemoizedFn(() => {
+        console.log("获取引擎的token")
         // 获取引擎中的token
         getRemoteValue("token-online")
             .then((resToken) => {
-                console.log("getRemoteValue-resToken", resToken)
+                console.log("获取引擎的token成功", resToken)
                 if (!resToken) {
                     return
                 }
-                // 通过token获取用户信息,前端不需要刷新token
+                // 通过token获取用户信息
                 NetWorkApi<API.UserInfoByToken, API.UserData>({
                     method: "post",
                     url: "auth/user",
                     data: {
                         token: resToken
                     }
-                }).then((res) => {
-                    setRemoteValue("token-online", resToken)
-                    const user = {
-                        isLogin: true,
-                        platform: res.from_platform,
-                        githubName: res.from_platform === "github" ? res.name : null,
-                        githubHeadImg: res.from_platform === "github" ? res.head_img : null,
-                        wechatName: res.from_platform === "wechat" ? res.name : null,
-                        wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
-                        qqName: res.from_platform === "qq" ? res.name : null,
-                        qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
-                        role: res.role,
-                        user_id: res.user_id,
-                        token: resToken
-                    }
-                    ipcRenderer.send("update-user", user)
-                    setStoreUserInfo(user)
                 })
+                    .then((res) => {
+                        console.log("获取最新用户信息成功")
+                        setRemoteValue("token-online", resToken)
+                        const user = {
+                            isLogin: true,
+                            platform: res.from_platform,
+                            githubName: res.from_platform === "github" ? res.name : null,
+                            githubHeadImg: res.from_platform === "github" ? res.head_img : null,
+                            wechatName: res.from_platform === "wechat" ? res.name : null,
+                            wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
+                            qqName: res.from_platform === "qq" ? res.name : null,
+                            qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
+                            role: res.role,
+                            user_id: res.user_id,
+                            token: resToken
+                        }
+                        ipcRenderer.sendSync("sync-update-user", user)
+                        setStoreUserInfo(user)
+                        refreshToken(user)
+                    })
+                    .catch((e) => {
+                        console.log("获取最新用户信息失败", e)
+                        setRemoteValue("token-online", "")
+                    })
             })
-            .catch((e) => {})
+            .catch((e) => {
+                console.log("获取引擎的token失败", "")
+                setRemoteValue("token-online", "")
+            })
     })
 
     useEffect(() => {

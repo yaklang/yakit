@@ -227,7 +227,7 @@ ipcMain.on("user-sign-out", (event) => {
     win.webContents.send("login-out")
 })
 
-ipcMain.on("update-user", (event, user) => {
+ipcMain.on("sync-update-user", (event, user) => {
     USER_INFO.isLogin = user.isLogin
     USER_INFO.platform = user.platform
     USER_INFO.githubName = user.githubName
@@ -237,6 +237,7 @@ ipcMain.on("update-user", (event, user) => {
     USER_INFO.qqName = user.qqName
     USER_INFO.qqHeadImg = user.qqHeadImg
     USER_INFO.role = user.role
-    USER_INFO.token = info.token
+    USER_INFO.token = user.token
     USER_INFO.user_id = user.user_id
+    event.returnValue = user
 })

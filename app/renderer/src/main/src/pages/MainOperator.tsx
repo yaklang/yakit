@@ -512,6 +512,8 @@ const Main: React.FC<MainProp> = (props) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
+            console.log("用户res.token", res.token)
+
             setRemoteValue("token-online", res.token)
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
