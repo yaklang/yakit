@@ -170,7 +170,6 @@ function App() {
             return
         }
         getRemoteValue("httpSetting").then((setting) => {
-            console.log("获取基础配置", setting)
             if (!setting) {
                 ipcRenderer
                     .invoke("GetOnlineProfile", {})
@@ -203,11 +202,9 @@ function App() {
     }
 
     const refreshLogin = useMemoizedFn(() => {
-        console.log("获取引擎的token")
         // 获取引擎中的token
         getRemoteValue("token-online")
             .then((resToken) => {
-                console.log("获取引擎的token成功", resToken)
                 if (!resToken) {
                     return
                 }
@@ -220,7 +217,6 @@ function App() {
                     }
                 })
                     .then((res) => {
-                        console.log("获取最新用户信息成功")
                         setRemoteValue("token-online", resToken)
                         const user = {
                             isLogin: true,
@@ -240,12 +236,10 @@ function App() {
                         refreshToken(user)
                     })
                     .catch((e) => {
-                        console.log("获取最新用户信息失败", e)
                         setRemoteValue("token-online", "")
                     })
             })
             .catch((e) => {
-                console.log("获取引擎的token失败", "")
                 setRemoteValue("token-online", "")
             })
     })

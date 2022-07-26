@@ -36,10 +36,6 @@ export const refreshToken = (userInfo: UserInfoProps) => {
         method: "get",
         url: "refresh/token/online"
     })
-        .then((res) => {
-            console.log('token刷新成功');
-        })
-        .catch((e) => {
-            console.log('token刷新失败');
-        })
+        .then((res) => {})
+        .catch((e) => {})
 }
