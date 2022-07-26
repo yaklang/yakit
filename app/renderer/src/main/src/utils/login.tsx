@@ -7,9 +7,12 @@ const {ipcRenderer} = window.require("electron")
 
 export const loginOut = (userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
-    NetWorkApi<null, API.ActionSucceeded>({
+    NetWorkApi<API.UserInfoByToken, API.ActionSucceeded>({
         method: "get",
-        url: "logout/online"
+        url: "logout/online",
+        data: {
+            token: userInfo.token
+        }
     })
         .then((res) => {
             ipcRenderer.send("user-sign-out")
