@@ -581,6 +581,75 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 label={"排除端口"} setValue={ExcludePorts => setParams({...params, ExcludePorts})}
                 value={params.ExcludePorts}
             />
+            <Form.Item label={"爬虫设置"}>
+                <Space>
+                    <Checkbox onChange={e => setParams({...params, EnableBasicCrawler: e.target.value})}
+                              checked={params.EnableBasicCrawler}>启用爬虫</Checkbox>
+                    <InputNumber
+                        addonBefore={"爬虫请求数"}
+                        value={params.BasicCrawlerRequestMax}
+                        onChange={e => setParams({...params, BasicCrawlerRequestMax: e})}
+                    />
+                </Space>
+            </Form.Item>
+            <InputInteger
+                label={"并发"}
+                // help={"最多同时扫描200个端口"}
+                value={params.Concurrent}
+                min={1}
+                // max={200}
+                setValue={(e) => setParams({...params, Concurrent: e})}
+            />
+            <SwitchItem
+                label={"主动模式"}
+                help={"允许指纹探测主动发包"}
+                setValue={(Active) => setParams({...params, Active})}
+                value={params.Active}
+            />
+            <InputInteger
+                label={"主动发包超时时间"}
+                help={"某些指纹的检测需要检查目标针对某一个探针请求的响应，需要主动发包"}
+                value={params.ProbeTimeout} setValue={ProbeTimeout => setParams({...params, ProbeTimeout})}
+            />
+            <ManyMultiSelectForString
+                label={"TCP 代理"}
+                help={"支持 HTTP/Sock4/Sock4a/Socks5 协议，例如 http://127.0.0.1:7890  socks5://127.0.0.1:7890"}
+                data={[
+                    "http://127.0.0.1:7890", "http://127.0.0.1:8082",
+                    "socks5://127.0.0.1:8082", "http://127.0.0.1:8083",
+                ].map(i => {
+                    return {value: i, label: i}
+                })}
+                value={(params.Proxy || []).join(",")}
+                mode={"tags"}
+                setValue={e => setParams({...params, Proxy: (e || "").split(",").filter(i => !!i)})}
+            />
+            <SwitchItem
+                label={"扫描结果入库"}
+                setValue={(SaveToDB) => {
+                    setParams({...params, SaveToDB, SaveClosedPorts: false})
+                }}
+                value={params.SaveToDB}
+            />
+            {params.SaveToDB && (
+                <SwitchItem
+                    label={"保存关闭的端口"}
+                    setValue={(SaveClosedPorts) => setParams({...params, SaveClosedPorts})}
+                    value={params.SaveClosedPorts}
+                />
+            )}
+            {params.Mode !== "syn" && (
+                <SelectOne
+                    label={"高级指纹选项"}
+                    data={[
+                        {value: "web", text: "仅web指纹"},
+                        {value: "service", text: "服务指纹"},
+                        {value: "all", text: "全部指纹"}
+                    ]}
+                    setValue={(FingerprintMode) => setParams({...params, FingerprintMode})}
+                    value={params.FingerprintMode}
+                />
+            )}
         </Form>
     )
 }
