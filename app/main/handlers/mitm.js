@@ -4,15 +4,6 @@ const DNS = require("dns");
 
 // module.exports = (win, originGetClient) => {
 module.exports = (win, getClient) => {
-    // let mitmClient = undefined;
-    // function getClient() {
-    //     if (!mitmClient) {
-    //         mitmClient = originGetClient(true)
-    //         return mitmClient
-    //     }
-    //     return mitmClient
-    // }
-
     let stream;
     let currentPort;
     let currentHost;
@@ -272,6 +263,10 @@ module.exports = (win, getClient) => {
                         return;
                 }
             }
+        })
+        stream.on("end", () => {
+            stream.cancel()
+            stream = undefined
         })
         currentHost = host
         currentPort = port

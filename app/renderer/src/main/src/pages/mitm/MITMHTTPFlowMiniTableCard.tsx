@@ -22,26 +22,13 @@ export interface MITMPluginCardProp extends MITMPluginListProp {
 
 const {ipcRenderer} = window.require("electron");
 
-export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
-    const [tab, setTab] = useState("history");
-
-    // history
-    const [total, setTotal] = useState(0);
-
-    useEffect(() => {
-        let id = setInterval(() => {
-            ipcRenderer.invoke("mitm-get-current-hook")
-        }, 1000)
-        return () => {
-            clearInterval(id)
-        }
-    }, [])
-
+export const MITMHTTPFlowMiniTableCard: React.FC<MITMPluginCardProp> = React.memo((props) => {
     return <div style={{height: "100%"}}>
         <div style={{height: "100%", overflow: "hidden"}}>
             <HTTPFlowMiniTable
+                onTotal={() => {
+                }}
                 simple={true}
-                onTotal={setTotal}
                 filter={{
                     SearchURL: "", SourceType: "mitm",
                     Pagination: {...genDefaultPagination(), Page: 1, Limit: 20}
@@ -50,10 +37,8 @@ export const MITMPluginCard: React.FC<MITMPluginCardProp> = (props) => {
                 autoUpdate={true}
             />
         </div>
-        {/* </Tabs.TabPane>
-        </Tabs> */}
     </div>
-};
+});
 
 export interface YakScriptHooksViewerProp {
     hooks: YakScriptHooks
