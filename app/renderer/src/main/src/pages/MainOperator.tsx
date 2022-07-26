@@ -209,7 +209,6 @@ const Main: React.FC<MainProp> = (props) => {
     }, [])
     useEffect(() => {
         ipcRenderer.on("refresh-token", (e, res: any) => {
-            console.log("refresh-token",res)
             refreshToken(userInfo)
         })
         return () => {

@@ -1456,8 +1456,12 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         setHasMore(true)
         setIsRef(!isRef)
         onSelectAll([])
-        search(1)
         setListBodyLoading(true)
+        if (!userInfo.isLogin) {
+            setTotal(0)
+        } else {
+            search(1)
+        }
     }, [
         user,
         refresh,

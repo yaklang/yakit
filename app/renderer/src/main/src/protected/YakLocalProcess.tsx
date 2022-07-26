@@ -40,8 +40,6 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
 
     // 检查默认数据库是不是又问题？
     const [databaseError, setDatabaseError] = useState("")
-    // 全局监听登录状态
-    const {userInfo, setStoreUserInfo} = useStore()
     let databaseErrorVerbose: React.ReactNode = databaseError
     switch (databaseError) {
         case "not allow to write":
@@ -157,37 +155,6 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
             })
     }
 
-    const refreshLogin = useMemoizedFn(() => {
-        // 获取引擎中的token
-        getRemoteValue("token-online").then((resToken) => {
-            // 通过token获取用户信息,前端不需要刷新token
-            NetWorkApi<API.UserInfoByToken, API.UserData>({
-                method: "post",
-                url: "auth/user",
-                data: {
-                    token: resToken
-                }
-            }).then((res) => {
-                setRemoteValue("token-online", res.token)
-                const user = {
-                    isLogin: true,
-                    platform: res.from_platform,
-                    githubName: res.from_platform === "github" ? res.name : null,
-                    githubHeadImg: res.from_platform === "github" ? res.head_img : null,
-                    wechatName: res.from_platform === "wechat" ? res.name : null,
-                    wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
-                    qqName: res.from_platform === "qq" ? res.name : null,
-                    qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
-                    role: res.role,
-                    user_id: res.user_id,
-                    token: resToken
-                }
-                ipcRenderer.send("update-user", user)
-                setStoreUserInfo(user)
-            })
-        })
-    })
-
     const databaseMeetError = notWindows && installed && databaseError !== ""
 
     return (
@@ -293,7 +260,6 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                                             disabled={!props.onConnected}
                                                                             loading={i.port <= 0}
                                                                             onClick={() => {
-                                                                                refreshLogin()
                                                                                 props.onConnected &&
                                                                                     props.onConnected(
                                                                                         i.port,

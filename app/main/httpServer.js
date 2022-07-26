@@ -6,6 +6,11 @@ ipcMain.on("edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
 })
 
+ipcMain.on("sync-edit-baseUrl", (event, arg) => {
+    HttpSetting.httpBaseURL = arg.baseUrl
+    event.returnValue = arg
+})
+
 const service = axios.create({
     // baseURL: "http://onlinecs.vaiwan.cn/api/",
     baseURL: `${HttpSetting.httpBaseURL}/api/`,
@@ -18,7 +23,6 @@ service.interceptors.request.use(
     (config) => {
         config.baseURL = `${HttpSetting.httpBaseURL}/api/`
         if (USER_INFO.isLogin && USER_INFO.token) config.headers["Authorization"] = USER_INFO.token
-        console.log("config-request", config)
         return config
     },
     (error) => {
@@ -36,11 +40,19 @@ service.interceptors.response.use(
         return res
     },
     (error) => {
-        console.log("error_1", error)
+        // console.log("error_1", error)
         if (error.response && error.response.data && error.response.data.message === "token过期") {
             const res = {
                 code: 401,
                 message: error.response.data.message,
+                userInfo: USER_INFO
+            }
+            return Promise.resolve(res)
+        }
+        if (error.response && error.response.status === 401) {
+            const res = {
+                code: 401,
+                message: error.response.data.reason,
                 userInfo: USER_INFO
             }
             return Promise.resolve(res)

@@ -1,6 +1,7 @@
 import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {setRemoteValue} from "./kv"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -15,11 +16,9 @@ export const loginOut = (userInfo: UserInfoProps) => {
             ipcRenderer.invoke("DeletePluginByUserID", {
                 UserID: userInfo.user_id
             })
-            console.log("退出", res)
+            setRemoteValue("token-online", "")
         })
-        .catch((e) => {
-            console.log("退出", e)
-        })
+        .catch((e) => {})
 }
 
 export const loginOutLocal = (userInfo: UserInfoProps) => {
@@ -28,6 +27,7 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
     ipcRenderer.invoke("DeletePluginByUserID", {
         UserID: userInfo.user_id
     })
+    setRemoteValue("token-online", "")
 }
 
 export const refreshToken = (userInfo: UserInfoProps) => {
@@ -36,10 +36,6 @@ export const refreshToken = (userInfo: UserInfoProps) => {
         method: "get",
         url: "refresh/token/online"
     })
-        .then((res) => {
-            console.log("刷新", res)
-        })
-        .catch((e) => {
-            console.log("刷新", e)
-        })
+        .then((res) => {})
+        .catch((e) => {})
 }

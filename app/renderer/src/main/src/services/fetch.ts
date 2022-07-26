@@ -43,11 +43,11 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
 
 export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, resolve, reject) => {
     const {code, message, data} = res
+    // console.log("返回", res)
     if (!code) {
         failed("请求超时，请重试")
         return
     }
-    // console.log("返回", res)
     switch (code) {
         case 200:
             resolve(data)
@@ -67,5 +67,5 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
 // token过期，退出
 const tokenOverdue = (res) => {
     if (res.userInfo) loginOutLocal(res.userInfo)
-    failed("用户登录已过期，请重新登录")
+    failed("登录过期，请重新登录")
 }
