@@ -13,7 +13,7 @@ import {MITMPluginTemplate} from "./data/MITMPluginTamplate"
 import {PacketHackPluginTemplate} from "./data/PacketHackPluginTemplate"
 import {CodecPluginTemplate} from "./data/CodecPluginTemplate"
 import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useCreation, useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 
 import "./YakScriptCreator.css"
@@ -32,6 +32,7 @@ export interface YakScriptCreatorFormProp {
     onCreated?: (i: YakScript) => any
     modified?: YakScript
     onChanged?: (i: YakScript) => any
+    fromLayout?: FromLayoutProps
 }
 
 /*
@@ -124,7 +125,20 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
     }
 }
 
+export interface FromLayoutProps {
+    labelCol: object
+    wrapperCol: object
+}
+
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
+    const defFromLayout = useCreation(() => {
+        const col: FromLayoutProps = {
+            labelCol: {span: 5},
+            wrapperCol: {span: 14}
+        }
+        return col
+    }, [])
+    const [fromLayout, setFromLayout] = useState<FromLayoutProps>(defFromLayout)
     const [params, setParams] = useState<YakScript>(
         props.modified || {
             Content: "",
@@ -166,6 +180,12 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         }
         return
     }
+
+    useEffect(() => {
+        if (props.fromLayout) {
+            setFromLayout(props.fromLayout)
+        }
+    }, [])
 
     useEffect(() => {
         if (paramsLoading) {
@@ -309,8 +329,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 setVisibleSyncSelect(false)
                                 ipcRenderer
                                     .invoke("delete-yak-script", params.Id)
-                                    .then(() => {
-                                    })
+                                    .then(() => {})
                                     .catch((err) => {
                                         failed("删除本地失败:" + err)
                                     })
@@ -387,8 +406,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 setVisibleSyncSelect(false)
                                 ipcRenderer
                                     .invoke("delete-yak-script", item.Id)
-                                    .then(() => {
-                                    })
+                                    .then(() => {})
                                     .catch((err) => {
                                         failed("删除本地失败:" + err)
                                     })
@@ -436,7 +454,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     })
     return (
         <div>
-            <Form labelCol={{span: 5}} wrapperCol={{span: 14}}>
+            <Form {...fromLayout}>
                 <SelectOne
                     disabled={!!modified}
                     label={"模块类型"}

@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef, ReactNode } from "react"
+import React, {useEffect, useState, useRef, ReactNode} from "react"
 import ReactResizeDetector from "react-resize-detector"
-import { useThrottleFn, useVirtualList } from "ahooks"
-import { LoadingOutlined } from "@ant-design/icons"
+import {useThrottleFn, useVirtualList} from "ahooks"
+import {LoadingOutlined} from "@ant-design/icons"
 import "./index.scss"
 
 interface RollingLoadListProps<T> {
@@ -66,7 +66,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 }
             }
         },
-        { wait: 200, leading: false }
+        {wait: 200, leading: false}
     ).run
     return (
         <>
@@ -82,7 +82,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <div className={classNameList} style={{ height: vlistHeigth }} ref={containerRef} onScroll={onScrollCapture}>
+            <div className={classNameList} style={{height: vlistHeigth}} ref={containerRef} onScroll={onScrollCapture}>
                 <div ref={wrapperRef}>
                     {list.map((i) => (
                         <div key={i.data[key]} className={classNameRow}>

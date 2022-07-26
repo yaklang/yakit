@@ -7,3 +7,12 @@
     color: #999999;
     margin-bottom: 0
 }
+
+.edit-plugin-body {
+    position: relative;
+
+    .close-icon {
+        position: absolute;
+        right: 0;
+    }
+}

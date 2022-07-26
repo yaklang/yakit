@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Divider, Empty, Form, PageHeader, Popconfirm, Popover, Row, Space, Tabs, Tag, Tooltip} from "antd"
+import {Button, Divider, Empty, Form, PageHeader, Popconfirm, Popover, Row, Space, Tabs, Tag, Tooltip, Card} from "antd"
 import {YakScript} from "../invoker/schema"
 import {failed, success} from "../../utils/notification"
 import {formatTimestamp} from "../../utils/timeUtil"
@@ -12,12 +12,12 @@ import MDEditor from "@uiw/react-md-editor"
 import {PluginHistoryTable} from "./PluginHistory"
 import {openABSFile} from "../../utils/openWebsite"
 import {BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, YakScriptCreatorForm} from "../invoker/YakScriptCreator"
-import {EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined} from "@ant-design/icons"
+import {EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined, CloseOutlined} from "@ant-design/icons"
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
 import {getValue} from "../../utils/kv"
 import {useGetState, useMemoizedFn} from "ahooks"
 
-import "./PluginOperator.css"
+import "./PluginOperator.scss"
 import {ResizeBox} from "../../components/ResizeBox"
 import {SimplePluginList} from "../../components/SimplePluginList"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
@@ -43,6 +43,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [trigger, setTrigger] = useState(false)
     const [extraParams, setExtraParams] = useState<YakExecutorParam[]>()
     const [details, setDetails] = useState(true)
+    const [isEdit, setIsEdit] = useState(false)
 
     const [settingShow, setSettingShow] = useState<boolean>(false)
 
@@ -103,102 +104,122 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const executor = useMemoizedFn(() => {
         return (
             script && (
-                <PluginExecutor
-                    subTitle={
-                        <Space>
-                            {script.Help && (
-                                <Tooltip title={script.Help}>
-                                    <Button type={"link"} icon={<QuestionOutlined />} />
-                                </Tooltip>
-                            )}
-                            <Space size={8}>
-                                {/*{script?.ScriptName && (*/}
-                                {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
-                                {/*)}*/}
-                                <Tooltip title={`插件id:${script.UUID || "-"}`}>
-                                    <p className='script-author'>作者:{script?.Author}</p>
-                                </Tooltip>
-                                {script?.Tags && script?.Tags !== "null"
-                                    ? (script?.Tags || "")
-                                          .split(",")
-                                          .filter((i) => !!i)
-                                          .map((i) => {
-                                              return (
-                                                  <Tag
-                                                      style={{marginLeft: 2, marginRight: 0}}
-                                                      key={`${i}`}
-                                                      color={"geekblue"}
-                                                  >
-                                                      {i}
-                                                  </Tag>
-                                              )
-                                          })
-                                    : "No Tags"}
-                            </Space>
-                        </Space>
-                    }
-                    extraNode={
-                        !props.fromMenu && (
-                            <Space>
-                                <Tooltip placement='top' title={"插件管理"}>
-                                    <Button
-                                        type={"link"}
-                                        icon={<SettingOutlined />}
-                                        onClick={() => setSettingShow(!settingShow)}
-                                    />
-                                </Tooltip>
-                                <Tooltip placement='top' title={"编辑插件"}>
-                                    <Button
-                                        type={"link"}
-                                        icon={<EditOutlined />}
-                                        style={{color: "#a7a7a7"}}
-                                        onClick={(e) => {
-                                            let m = showDrawer({
-                                                title: `修改插件: ${script?.ScriptName}`,
-                                                width: "100%",
-                                                content: (
-                                                    <>
-                                                        <YakScriptCreatorForm
-                                                            modified={script}
-                                                            onChanged={(i) => {
-                                                                if (props.setScript) props.setScript(i)
-                                                                if (props.setTrigger) props.setTrigger()
-                                                                // update()
-                                                            }}
-                                                            onCreated={() => {
-                                                                m.destroy()
-                                                            }}
-                                                        />
-                                                    </>
-                                                ),
-                                                keyboard: false
-                                            })
-                                        }}
-                                    />
-                                </Tooltip>
-                            </Space>
-                        )
-                    }
-                    script={script}
-                    size={props.size}
-                    extraYakExecutorParams={extraParams}
-                    settingShow={settingShow}
-                    settingNode={
-                        <PluginManagement
-                            style={{marginBottom: 10}}
+                <>
+                    {(isEdit && (
+                        <div className='edit-plugin-body'>
+                            <CloseOutlined className='close-icon' onClick={() => setIsEdit(false)} />
+                            <YakScriptCreatorForm
+                                modified={script}
+                                onChanged={(i) => {
+                                    if (props.setScript) props.setScript(i)
+                                    if (props.setTrigger) props.setTrigger()
+                                }}
+                                fromLayout={{
+                                    labelCol: {span: 4},
+                                    wrapperCol: {span: 18}
+                                }}
+                            />
+                        </div>
+                    )) || (
+                        <PluginExecutor
+                            subTitle={
+                                <Space>
+                                    {script.Help && (
+                                        <Tooltip title={script.Help}>
+                                            <Button type={"link"} icon={<QuestionOutlined />} />
+                                        </Tooltip>
+                                    )}
+                                    <Space size={8}>
+                                        {/*{script?.ScriptName && (*/}
+                                        {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
+                                        {/*)}*/}
+                                        <Tooltip title={`插件id:${script.UUID || "-"}`}>
+                                            <p className='script-author'>作者:{script?.Author}</p>
+                                        </Tooltip>
+                                        {script?.Tags && script?.Tags !== "null"
+                                            ? (script?.Tags || "")
+                                                  .split(",")
+                                                  .filter((i) => !!i)
+                                                  .map((i) => {
+                                                      return (
+                                                          <Tag
+                                                              style={{marginLeft: 2, marginRight: 0}}
+                                                              key={`${i}`}
+                                                              color={"geekblue"}
+                                                          >
+                                                              {i}
+                                                          </Tag>
+                                                      )
+                                                  })
+                                            : "No Tags"}
+                                    </Space>
+                                </Space>
+                            }
+                            extraNode={
+                                !props.fromMenu && (
+                                    <Space>
+                                        <Tooltip placement='top' title={"插件管理"}>
+                                            <Button
+                                                type={"link"}
+                                                icon={<SettingOutlined />}
+                                                onClick={() => setSettingShow(!settingShow)}
+                                            />
+                                        </Tooltip>
+                                        <Tooltip placement='top' title={"编辑插件"}>
+                                            <Button
+                                                type={"link"}
+                                                icon={<EditOutlined />}
+                                                style={{color: "#a7a7a7"}}
+                                                onClick={(e) => {
+                                                    setIsEdit(true)
+                                                    // let m = showDrawer({
+                                                    //     title: `修改插件: ${script?.ScriptName}`,
+                                                    //     width: "100%",
+                                                    //     content: (
+                                                    //         <>
+                                                    // <YakScriptCreatorForm
+                                                    //     modified={script}
+                                                    //     onChanged={(i) => {
+                                                    //         if (props.setScript) props.setScript(i)
+                                                    //         if (props.setTrigger) props.setTrigger()
+                                                    //         // update()
+                                                    //     }}
+                                                    //     onCreated={() => {
+                                                    //         m.destroy()
+                                                    //     }}
+                                                    // />
+                                                    //         </>
+                                                    //     ),
+                                                    //     keyboard: false
+                                                    // })
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    </Space>
+                                )
+                            }
                             script={script}
-                            groups={groups}
-                            update={() => {
-                                setTimeout(() => props.setTrigger!(), 300)
-                            }}
-                            updateGroups={updateGroups}
-                            setScript={props.setScript}
-                            deletePluginLocal={(value) => {
-                                if (props.deletePluginLocal) props.deletePluginLocal(value)
-                            }}
+                            size={props.size}
+                            extraYakExecutorParams={extraParams}
+                            settingShow={settingShow}
+                            settingNode={
+                                <PluginManagement
+                                    style={{marginBottom: 10}}
+                                    script={script}
+                                    groups={groups}
+                                    update={() => {
+                                        setTimeout(() => props.setTrigger!(), 300)
+                                    }}
+                                    updateGroups={updateGroups}
+                                    setScript={props.setScript}
+                                    deletePluginLocal={(value) => {
+                                        if (props.deletePluginLocal) props.deletePluginLocal(value)
+                                    }}
+                                />
+                            }
                         />
-                    }
-                />
+                    )}
+                </>
             )
         )
     })
@@ -231,7 +252,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             secondNode={executor()}
                         ></ResizeBox>
                     )}
-                    {script && (
+                    {/* {script && (
                         <PluginExecutor
                             subTitle={
                                 <Space>
@@ -245,9 +266,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                         </Tooltip>
                                     )}
                                     <Space size={8}>
-                                        {/*{script?.ScriptName && (*/}
-                                        {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
-                                        {/*)}*/}
                                         <p style={{color: "#999999", marginBottom: 0}}>作者:{script?.Author}</p>
                                         {script?.Tags
                                             ? (script?.Tags || "")
@@ -322,7 +340,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                 />
                             }
                         />
-                    )}
+                    )} */}
                     {enablePluginSelector && (
                         <ResizeBox
                             firstNode={
@@ -410,7 +428,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 return defaultContent()
         }
     }
-
     return (
         <div
             style={{
