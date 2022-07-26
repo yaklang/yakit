@@ -240,8 +240,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 if (!newSrcipt) return
                 ipcRenderer
                     .invoke("delete-yak-script", newSrcipt.Id)
-                    .then(() => {
-                    })
+                    .then(() => {})
                     .catch((err) => {
                         failed("删除本地失败:" + err)
                     })

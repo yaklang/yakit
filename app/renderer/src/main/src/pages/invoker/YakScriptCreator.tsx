@@ -22,9 +22,9 @@ import {YakExecutorParam} from "./YakExecutorParams"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
-import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
 import Login from "../Login"
 import {GetYakScriptByOnlineIDRequest} from "../yakitStore/YakitStorePage"
+import { DownloadOnlinePluginProps } from "../yakitStore/YakitPluginInfoOnline"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 

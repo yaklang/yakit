@@ -53,7 +53,7 @@ import {
 } from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {DownloadOnlinePluginProps} from "../yakitStoreOnline/YakitStoreOnline"
+import { DownloadOnlinePluginProps } from "../yakitStore/YakitPluginInfoOnline"
 import {randomString} from "@/utils/randomUtil"
 import {OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon} from "../../assets/icons"
 import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/index"
