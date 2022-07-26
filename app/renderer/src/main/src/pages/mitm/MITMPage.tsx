@@ -444,6 +444,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const stop = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer.invoke("mitm-stop-call").then(() => {
+            handleAutoForward("log");
             setStatus("idle")
         }).catch((e: any) => {
             notification["error"]({message: `停止中间人劫持失败：${e}`})
@@ -545,12 +546,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
 
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
-        if (!isManual) {
-            setHijackAllResponse(false)
-        }
-        setAutoForward(e)
-        if (currentPacket && currentPacketId) {
-            forward()
+        try {
+            if (!isManual) {
+                setHijackAllResponse(false)
+            }
+            setAutoForward(e)
+            if (currentPacket && currentPacketId) {
+                forward()
+            }
+        } catch (e) {
+            console.info(e)
         }
     })
 
@@ -586,6 +591,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                             onSubmitCapture={e => {
                                 e.preventDefault()
                                 start()
+                                handleAutoForward("log");
 
                                 if (enableInitialPlugin) {
                                     enableMITMPluginMode(defaultPlugins).then(() => {
