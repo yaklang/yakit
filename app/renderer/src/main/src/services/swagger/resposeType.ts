@@ -83,6 +83,9 @@
     appid: string;
     head_img: string;
   }
+  export interface UserInfoByToken {
+    token: string;
+  }
   export interface UserData {
     from_platform: string;
     email: string;

@@ -1,3 +1,5 @@
+import {UserInfoProps, useStore} from "@/store"
+import {loginOut, loginOutLocal} from "@/utils/login"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
 
@@ -6,6 +8,7 @@ const {ipcRenderer} = window.require("electron")
 interface AxiosResponseInfoProps {
     message?: string
     reason?: string
+    userInfo?: UserInfoProps
 }
 
 // 批量覆盖
@@ -40,11 +43,11 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
 
 export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, resolve, reject) => {
     const {code, message, data} = res
+    // console.log("返回", res)
     if (!code) {
         failed("请求超时，请重试")
         return
     }
-    // console.log("返回", res)
     switch (code) {
         case 200:
             resolve(data)
@@ -52,8 +55,17 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
         case 209:
             reject(data.reason)
             break
+        case 401:
+            tokenOverdue(res)
+            break
         default:
             reject(message)
             break
     }
+}
+
+// token过期，退出
+const tokenOverdue = (res) => {
+    if (res.userInfo) loginOutLocal(res.userInfo)
+    failed("登录过期，请重新登录")
 }

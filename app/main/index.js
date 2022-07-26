@@ -83,7 +83,12 @@ const createWindow = () => {
             app.exit()
         }
     })
-
+    win.on("minimize", (e) => {
+        win.webContents.send("refresh-token")
+    })
+    win.on("maximize", (e) => {
+        win.webContents.send("refresh-token")
+    })
     // 阻止内部react页面的链接点击跳转
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
@@ -174,7 +179,8 @@ ipcMain.on("user-sign-in", (event, arg) => {
                     qqName: info.from_platform === "qq" ? info.name : null,
                     qqHeadImg: info.from_platform === "qq" ? info.head_img : null,
                     role: info.role,
-                    user_id: info.user_id
+                    user_id: info.user_id,
+                    token: info.token
                 }
 
                 USER_INFO.isLogin = user.isLogin
@@ -219,4 +225,19 @@ ipcMain.on("user-sign-out", (event) => {
     USER_INFO.token = null
     USER_INFO.user_id = ""
     win.webContents.send("login-out")
+})
+
+ipcMain.on("sync-update-user", (event, user) => {
+    USER_INFO.isLogin = user.isLogin
+    USER_INFO.platform = user.platform
+    USER_INFO.githubName = user.githubName
+    USER_INFO.githubHeadImg = user.githubHeadImg
+    USER_INFO.wechatName = user.wechatName
+    USER_INFO.wechatHeadImg = user.wechatHeadImg
+    USER_INFO.qqName = user.qqName
+    USER_INFO.qqHeadImg = user.qqHeadImg
+    USER_INFO.role = user.role
+    USER_INFO.token = user.token
+    USER_INFO.user_id = user.user_id
+    event.returnValue = user
 })

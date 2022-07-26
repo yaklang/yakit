@@ -10,6 +10,11 @@ import {getCompletions} from "./utils/monacoSpec/yakCompletionSchema"
 import {showModal} from "./utils/showModal"
 import {YakCodeEditor} from "./utils/editors"
 import {getRemoteValue, setRemoteValue} from "./utils/kv"
+import {useMemoizedFn} from "ahooks"
+import {NetWorkApi} from "./services/fetch"
+import {API} from "./services/swagger/resposeType"
+import {useStore} from "./store"
+import {refreshToken} from "./utils/login"
 
 const InterceptKeyword = [
     // "KeyA",
@@ -157,6 +162,9 @@ function App() {
         }, 1000)
     }, [])
 
+    // 全局监听登录状态
+    const {userInfo, setStoreUserInfo} = useStore()
+
     const testYak = () => {
         if (loading) {
             return
@@ -166,8 +174,9 @@ function App() {
                 ipcRenderer
                     .invoke("GetOnlineProfile", {})
                     .then((data: OnlineProfileProps) => {
-                        ipcRenderer.send("edit-baseUrl", {baseUrl: data.BaseUrl})
+                        ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: data.BaseUrl}) // 同步
                         setRemoteValue("httpSetting", JSON.stringify({BaseUrl: data.BaseUrl}))
+                        refreshLogin()
                     })
                     .catch((e) => {
                         failed(`获取失败:${e}`)
@@ -179,16 +188,61 @@ function App() {
                         ...values
                     } as OnlineProfileProps)
                     .then((data) => {
-                        ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
+                        ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步
                         setRemoteValue("httpSetting", JSON.stringify(values))
+                        refreshLogin()
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
                     .finally(() => setTimeout(() => setLoading(false), 300))
             }
         })
+
         setLoading(true)
         yakEcho()
     }
+
+    const refreshLogin = useMemoizedFn(() => {
+        // 获取引擎中的token
+        getRemoteValue("token-online")
+            .then((resToken) => {
+                if (!resToken) {
+                    return
+                }
+                // 通过token获取用户信息
+                NetWorkApi<API.UserInfoByToken, API.UserData>({
+                    method: "post",
+                    url: "auth/user",
+                    data: {
+                        token: resToken
+                    }
+                })
+                    .then((res) => {
+                        setRemoteValue("token-online", resToken)
+                        const user = {
+                            isLogin: true,
+                            platform: res.from_platform,
+                            githubName: res.from_platform === "github" ? res.name : null,
+                            githubHeadImg: res.from_platform === "github" ? res.head_img : null,
+                            wechatName: res.from_platform === "wechat" ? res.name : null,
+                            wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
+                            qqName: res.from_platform === "qq" ? res.name : null,
+                            qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
+                            role: res.role,
+                            user_id: res.user_id,
+                            token: resToken
+                        }
+                        ipcRenderer.sendSync("sync-update-user", user)
+                        setStoreUserInfo(user)
+                        refreshToken(user)
+                    })
+                    .catch((e) => {
+                        setRemoteValue("token-online", "")
+                    })
+            })
+            .catch((e) => {
+                setRemoteValue("token-online", "")
+            })
+    })
 
     useEffect(() => {
         if (mode !== "local") {

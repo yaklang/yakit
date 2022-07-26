@@ -12,6 +12,7 @@ export interface UserInfoProps {
     qqHeadImg: string | null
     role: string | null
     user_id: number | null
+    token: string
 }
 interface StoreProps {
     /**@name 登录用户信息 */
@@ -30,7 +31,8 @@ export const useStore = create<StoreProps>((set, get) => ({
         qqName: null,
         qqHeadImg: null,
         role: null,
-        user_id: null
+        user_id: null,
+        token: ""
     },
     setStoreUserInfo: (info) => set({userInfo: info})
 }))
