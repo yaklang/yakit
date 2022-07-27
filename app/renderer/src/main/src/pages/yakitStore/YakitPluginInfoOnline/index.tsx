@@ -44,7 +44,6 @@ import {CollapseParagraph} from "./CollapseParagraph"
 import {OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon} from "@/assets/icons"
 import {SecondConfirm} from "@/components/functionTemplate/SecondConfirm"
 import {YakEditor} from "@/utils/editors"
-import {usePluginStore} from "@/store/plugin"
 import {YakScript} from "@/pages/invoker/schema"
 import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
 import Login from "@/pages/Login"
@@ -57,6 +56,7 @@ interface YakitPluginInfoOnlineProps {
     info: API.YakitPluginDetail
     user?: boolean
     deletePlugin: (i: API.YakitPluginDetail) => void
+    updatePlugin: (i: API.YakitPluginDetail) => void
 }
 
 interface SearchPluginDetailRequest {
@@ -85,7 +85,7 @@ export const TagColor: {[key: string]: string} = {
 }
 
 export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (props) => {
-    const {info, user, deletePlugin} = props
+    const {info, user, deletePlugin, updatePlugin} = props
     // 全局登录状态
     const {userInfo} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
@@ -177,7 +177,6 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 setTimeout(() => setAddLoading(false), 200)
             })
     })
-    const {setCurrentPlugin} = usePluginStore()
     const pluginExamine = useMemoizedFn((status: number) => {
         const auditParams: AuditParameters = {
             id: plugin?.id || 0,
@@ -194,7 +193,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 if (plugin) {
                     const newPlugin = {...plugin, status}
                     setPlugin(newPlugin)
-                    setCurrentPlugin({currentPlugin: newPlugin})
+                    updatePlugin(newPlugin)
                 }
                 success(`插件审核${status === 1 ? "通过" : "不通过"}`)
             })
@@ -270,18 +269,17 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                     style={{marginBottom: 0, paddingBottom: 0}}
                     subTitle={
                         <Space>
-                            {(isAdmin && !user) ||
-                                (user && !info.is_private && (
-                                    <div className='plugin-status vertical-center'>
-                                        <div
-                                            className={`${
-                                                TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
-                                            } title-body-admin-tag`}
-                                        >
-                                            {TagColor[["not", "success", "failed"][plugin.status]].split("|")[1]}
-                                        </div>
+                            {((isAdmin && !user) || (user && !info.is_private)) && (
+                                <div className='plugin-status vertical-center'>
+                                    <div
+                                        className={`${
+                                            TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
+                                        } title-body-admin-tag`}
+                                    >
+                                        {TagColor[["not", "success", "failed"][plugin.status]].split("|")[1]}
                                     </div>
-                                ))}
+                                </div>
+                            )}
                             {plugin?.help && (
                                 <Tooltip title={plugin.help}>
                                     <Button type={"link"} icon={<QuestionOutlined />} />

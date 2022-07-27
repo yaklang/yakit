@@ -59,7 +59,6 @@ import {OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon} from "../../assets/i
 import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/index"
 import moment from "moment"
 import {findDOMNode} from "react-dom"
-import {usePluginStore} from "@/store/plugin"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {RollingLoadList} from "@/components/RollingLoadList"
 import {setTimeout} from "timers"
@@ -154,6 +153,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             setPlugSource(value)
             onResetQuery()
             onResetPluginDetails()
+            onResetPluginDelecteAndUpdate()
         },
         {wait: 200}
     ).run
@@ -167,10 +167,22 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setUserPlugin(undefined)
         setPlugin(undefined)
     })
+    const onResetPluginDelecteAndUpdate = useMemoizedFn(() => {
+        // 重置删除
+        setDeletePluginRecordUser(undefined)
+        setDeletePluginRecordOnline(undefined)
+        setDeletePluginRecordLocal(undefined)
+        // 重置更新
+        setUpdatePluginRecordUser(undefined)
+        setUpdatePluginRecordOnline(undefined)
+    })
+    // 删除
     const [deletePluginRecordUser, setDeletePluginRecordUser] = useState<API.YakitPluginDetail>()
     const [deletePluginRecordOnline, setDeletePluginRecordOnline] = useState<API.YakitPluginDetail>()
     const [deletePluginRecordLocal, setDeletePluginRecordLocal] = useState<YakScript>()
-
+    // 修改
+    const [updatePluginRecordUser, setUpdatePluginRecordUser] = useState<API.YakitPluginDetail>()
+    const [updatePluginRecordOnline, setUpdatePluginRecordOnline] = useState<API.YakitPluginDetail>()
     return (
         <div style={{height: "100%", display: "flex", flexDirection: "row"}}>
             <Card
@@ -232,6 +244,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             isRefList={isRefList}
                             deletePluginRecordUser={deletePluginRecordUser}
                             setListLoading={setListLoading}
+                            updatePluginRecordUser={updatePluginRecordUser}
                         />
                     )}
                     {plugSource === "online" && (
@@ -241,8 +254,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             userInfo={userInfo}
                             publicKeyword={publicKeyword}
                             isRefList={isRefList}
-                            deletePluginRecordUser={deletePluginRecordOnline}
+                            deletePluginRecordOnline={deletePluginRecordOnline}
                             setListLoading={setListLoading}
+                            updatePluginRecordOnline={updatePluginRecordOnline}
                         />
                     )}
                 </Spin>
@@ -283,13 +297,18 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             />
                         )}
                         {plugSource === "online" && plugin && (
-                            <YakitPluginInfoOnline info={plugin} deletePlugin={setDeletePluginRecordOnline} />
+                            <YakitPluginInfoOnline
+                                info={plugin}
+                                deletePlugin={setDeletePluginRecordOnline}
+                                updatePlugin={setUpdatePluginRecordOnline}
+                            />
                         )}
                         {plugSource === "user" && userPlugin && (
                             <YakitPluginInfoOnline
                                 info={userPlugin}
                                 user={true}
                                 deletePlugin={setDeletePluginRecordUser}
+                                updatePlugin={setUpdatePluginRecordUser}
                             />
                         )}
                     </AutoCard>
@@ -310,7 +329,7 @@ interface YakModuleProp {
     deletePluginRecordLocal?: YakScript
 }
 const YakModule: React.FC<YakModuleProp> = (props) => {
-    const {script, setScript, publicKeyword, isRefList, deletePluginRecordLocal, } = props
+    const {script, setScript, publicKeyword, isRefList, deletePluginRecordLocal} = props
     const [isUpdateItem, setIsUpdateItem] = useState(false)
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -1364,11 +1383,20 @@ interface YakModuleUserProps {
     isRefList: boolean
     publicKeyword: string
     deletePluginRecordUser?: API.YakitPluginDetail
+    updatePluginRecordUser?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
 }
 const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
-    const {userPlugin, setUserPlugin, userInfo, publicKeyword, isRefList, deletePluginRecordUser, setListLoading} =
-        props
+    const {
+        userPlugin,
+        setUserPlugin,
+        userInfo,
+        publicKeyword,
+        isRefList,
+        deletePluginRecordUser,
+        setListLoading,
+        updatePluginRecordUser
+    } = props
     const [queryUser, setQueryUser] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
     })
@@ -1479,6 +1507,7 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     user={true}
                     refresh={refresh}
                     deletePluginRecord={deletePluginRecordUser}
+                    updatePluginRecord={updatePluginRecordUser}
                 />
             </div>
         </div>
@@ -1491,11 +1520,21 @@ interface YakModuleOnlineProps {
     userInfo: UserInfoProps
     isRefList: boolean
     publicKeyword: string
-    deletePluginRecordUser?: API.YakitPluginDetail
+    deletePluginRecordOnline?: API.YakitPluginDetail
+    updatePluginRecordOnline?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
 }
 const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
-    const {plugin, setPlugin, userInfo, publicKeyword, isRefList, deletePluginRecordUser, setListLoading} = props
+    const {
+        plugin,
+        setPlugin,
+        userInfo,
+        publicKeyword,
+        isRefList,
+        deletePluginRecordOnline,
+        setListLoading,
+        updatePluginRecordOnline
+    } = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
     })
@@ -1605,7 +1644,8 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     userInfo={userInfo}
                     user={false}
                     refresh={refresh}
-                    deletePluginRecord={deletePluginRecordUser}
+                    deletePluginRecord={deletePluginRecordOnline}
+                    updatePluginRecord={updatePluginRecordOnline}
                 />
             </div>
         </div>
@@ -1624,6 +1664,7 @@ interface YakModuleOnlineListProps {
     user: boolean
     refresh: boolean
     deletePluginRecord?: API.YakitPluginDetail
+    updatePluginRecord?: API.YakitPluginDetail
 }
 
 const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
@@ -1638,6 +1679,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         userInfo,
         user,
         deletePluginRecord,
+        updatePluginRecord,
         refresh
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
@@ -1656,6 +1698,16 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const numberOnlineUser = useRef(0) // 我的插件 选择的插件index
     const numberOnline = useRef(0) // 插件商店 选择的插件index
+    useEffect(() => {
+        if (!updatePluginRecord) return
+        const index = response.data.findIndex((ele) => ele.id === updatePluginRecord.id)
+        if (index === -1) return
+        response.data[index] = {...updatePluginRecord}
+        setResponse({
+            ...response,
+            data: [...response.data]
+        })
+    }, [updatePluginRecord])
     useEffect(() => {
         if (!deletePluginRecord) return
         if (user) {
@@ -1894,22 +1946,9 @@ const PluginItemOnline = (props: PluginListOptProps) => {
     const {isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, user} = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const [status, setStatus] = useState<number>(info.status)
-    const {
-        pluginData: {currentPlugin},
-        setCurrentPlugin
-    } = usePluginStore()
     useEffect(() => {
         setStatus(info.status)
     }, [info.status, info.id])
-    useEffect(() => {
-        if (!currentPlugin) return
-        if (info.id === currentPlugin.id) {
-            setStatus(currentPlugin.status)
-            setTimeout(() => {
-                setCurrentPlugin({currentPlugin: null})
-            }, 100)
-        }
-    }, [currentPlugin && currentPlugin.id])
     const add = useMemoizedFn(async () => {
         setLoading(true)
         onDownload(info, () => {
