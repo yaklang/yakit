@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron");
+const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
     // asyncQueryYakScript wrapper
@@ -39,24 +39,24 @@ module.exports = (win, getClient) => {
                 console.info(`update nuclei template failed: ${err}`)
             }
         })
-    });
+    })
     ipcMain.handle("auto-update-yak-module", (e) => {
-        let stream = getClient().AutoUpdateYakModule({});
-        stream.on("data", data => {
+        let stream = getClient().AutoUpdateYakModule({})
+        stream.on("data", (data) => {
             if (!win) {
                 return
             }
 
             win.webContents.send("client-auto-update-yak-module-data", data)
         })
-        stream.on("end", data => {
+        stream.on("end", (data) => {
             if (!win) {
                 return
             }
 
             win.webContents.send("client-auto-update-yak-module-end")
         })
-        stream.on("error", error => {
+        stream.on("error", (error) => {
             if (!win) {
                 return
             }
@@ -87,23 +87,39 @@ module.exports = (win, getClient) => {
         })
     })
 
-    const streamMap = new Map();
+    const asyncDeleteYakScript = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteYakScript(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    ipcMain.handle("DeleteYakScript", async (e, params) => {
+        return await asyncDeleteYakScript(params)
+    })
+
+    const streamMap = new Map()
     ipcMain.handle("cancel-exec-yak-script", async (e, token) => {
-        const stream = streamMap.get(token);
+        const stream = streamMap.get(token)
         console.info(`cancel exec yak script by token: ${token}`)
         stream && stream.cancel()
         streamMap.delete(token)
     })
     ipcMain.handle("exec-yak-script", (e, params, token) => {
-        let stream = getClient().ExecYakScript(params);
+        let stream = getClient().ExecYakScript(params)
         streamMap.set(token, stream)
-        stream.on("data", data => {
+        stream.on("data", (data) => {
             if (!win) {
                 return
             }
             win.webContents.send(`${token}-data`, data)
         })
-        stream.on("error", error => {
+        stream.on("error", (error) => {
             if (!win) {
                 return
             }
@@ -119,21 +135,21 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("cancel-exec-batch-yak-script", async (e, token) => {
-        const stream = streamMap.get(token);
+        const stream = streamMap.get(token)
         console.info(`cancel exec batch yak script by token: ${token}`)
         stream && stream.cancel()
         streamMap.delete(token)
     })
     ipcMain.handle("exec-batch-yak-script", async (e, params, token) => {
-        let stream = getClient().ExecBatchYakScript(params);
-        streamMap.set(token, stream);
-        stream.on("data", data => {
+        let stream = getClient().ExecBatchYakScript(params)
+        streamMap.set(token, stream)
+        stream.on("data", (data) => {
             if (!win) {
                 return
             }
             win.webContents.send(`${token}-exec-batch-yak-script-data`, data)
         })
-        stream.on("error", error => {
+        stream.on("error", (error) => {
             if (!win) {
                 return
             }
@@ -148,16 +164,15 @@ module.exports = (win, getClient) => {
         })
     })
 
-
     /*
-    * 这个接口用于控制批量执行 Yak 模块
-    *    不仅可用在批量执行 nuclei 脚本，也可以用于批量执行 yak 脚本
-    * */
-    const handlerHelper = require("./handleStreamWithContext");
-    const streamExecBatchYakScriptMap = new Map();
-    ipcMain.handle("cancel-ExecBatchYakScript", handlerHelper.cancelHandler(streamExecBatchYakScriptMap));
+     * 这个接口用于控制批量执行 Yak 模块
+     *    不仅可用在批量执行 nuclei 脚本，也可以用于批量执行 yak 脚本
+     * */
+    const handlerHelper = require("./handleStreamWithContext")
+    const streamExecBatchYakScriptMap = new Map()
+    ipcMain.handle("cancel-ExecBatchYakScript", handlerHelper.cancelHandler(streamExecBatchYakScriptMap))
     ipcMain.handle("ExecBatchYakScript", (e, params, token) => {
-        let stream = getClient().ExecBatchYakScript(params);
+        let stream = getClient().ExecBatchYakScript(params)
         handlerHelper.registerHandler(win, stream, streamExecBatchYakScriptMap, token)
     })
 
@@ -177,10 +192,13 @@ module.exports = (win, getClient) => {
         return await asyncGetYakScriptById(params)
     })
 
-    const streamRecoverExecBatchYakScriptUnfinishedTaskMap = new Map();
-    ipcMain.handle("cancel-RecoverExecBatchYakScriptUnfinishedTask", handlerHelper.cancelHandler(streamRecoverExecBatchYakScriptUnfinishedTaskMap));
+    const streamRecoverExecBatchYakScriptUnfinishedTaskMap = new Map()
+    ipcMain.handle(
+        "cancel-RecoverExecBatchYakScriptUnfinishedTask",
+        handlerHelper.cancelHandler(streamRecoverExecBatchYakScriptUnfinishedTaskMap)
+    )
     ipcMain.handle("RecoverExecBatchYakScriptUnfinishedTask", (e, params, token) => {
-        let stream = getClient().RecoverExecBatchYakScriptUnfinishedTask(params);
+        let stream = getClient().RecoverExecBatchYakScriptUnfinishedTask(params)
         handlerHelper.registerHandler(win, stream, streamRecoverExecBatchYakScriptUnfinishedTaskMap, token)
     })
 
@@ -375,4 +393,4 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteYakScriptExecResult", async (e, params) => {
         return await asyncDeleteYakScriptExecResult(params)
     })
-};
+}
