@@ -23,7 +23,7 @@ service.interceptors.request.use(
     (config) => {
         config.baseURL = `${HttpSetting.httpBaseURL}/api/`
         if (USER_INFO.isLogin && USER_INFO.token) config.headers["Authorization"] = USER_INFO.token
-        // console.log('request-config',config);
+        console.log('request-config',config);
         return config
     },
     (error) => {
@@ -41,7 +41,7 @@ service.interceptors.response.use(
         return res
     },
     (error) => {
-        // console.log("error_1", error)
+        console.log("error_1", error)
         if (error.response && error.response.data && error.response.data.message === "token过期") {
             const res = {
                 code: 401,

@@ -221,6 +221,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             isRefList={isRefList}
                             isUpdateItem={isUpdateItem}
                             deletePluginRecordLocal={deletePluginRecordLocal}
+                            plugSource={plugSource}
                         />
                     </div>
                     <div style={{display: plugSource === "user" ? "" : "none", height: "100%"}}>
@@ -232,23 +233,10 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             isRefList={isRefList}
                             deletePluginRecordUser={deletePluginRecordUser}
                             setListLoading={setListLoading}
+                            plugSource={plugSource}
                         />
                     </div>
                     <div style={{display: plugSource === "online" ? "" : "none", height: "100%"}}>
-                        {/* <YakModuleOnlineList
-                            currentId={plugin?.id || 0}
-                            queryOnline={queryOnline}
-                            selectedRowKeysRecord={selectedRowKeysRecord}
-                            onSelectItem={onSelectItem} //选择一个
-                            isSelectAll={isSelectAll}
-                            onSelectAll={setSelectedRowKeysRecord}
-                            setTotal={setTotalOnline}
-                            onClicked={onSetPlugin}
-                            userInfo={userInfo}
-                            user={false}
-                            refresh={refresh}
-                            deletePluginRecord={deletePluginRecord}
-                        /> */}
                         <YakModuleOnline
                             plugin={plugin}
                             setPlugin={setPlugin}
@@ -257,6 +245,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             isRefList={isRefList}
                             deletePluginRecordUser={deletePluginRecordOnline}
                             setListLoading={setListLoading}
+                            plugSource={plugSource}
                         />
                     </div>
                 </Spin>
@@ -322,9 +311,10 @@ interface YakModuleProp {
     isRefList: boolean
     isUpdateItem: boolean
     deletePluginRecordLocal?: YakScript
+    plugSource: string
 }
 const YakModule: React.FC<YakModuleProp> = (props) => {
-    const {script, setScript, publicKeyword, isRefList, deletePluginRecordLocal} = props
+    const {script, setScript, publicKeyword, isRefList, deletePluginRecordLocal, plugSource} = props
     const [isUpdateItem, setIsUpdateItem] = useState(false)
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -335,6 +325,12 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState(false)
+    useEffect(() => {
+        if (plugSource === "local") {
+            setQueryLocal({...defQueryLocal})
+            onSelectAllLocal(false)
+        }
+    }, [plugSource])
     useEffect(() => {
         setIsUpdateItem(props.isUpdateItem)
     }, [props.isUpdateItem])
@@ -392,9 +388,9 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                 })
         }
     })
-    const onSelectAllLocal = useMemoizedFn((e) => {
-        setIsSelectAllLocal(e.target.checked)
-        if (!e.target.checked) {
+    const onSelectAllLocal = useMemoizedFn((checked) => {
+        setIsSelectAllLocal(checked)
+        if (!checked) {
             setSelectedRowKeysRecordLocal([]) // 清除本地
         }
     })
@@ -402,7 +398,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
                 <Col span={12} className='col'>
-                    <Checkbox checked={isSelectAllLocal} onChange={onSelectAllLocal}>
+                    <Checkbox checked={isSelectAllLocal} onChange={(e) => onSelectAllLocal(e.target.checked)}>
                         全选&emsp;
                         {selectedRowKeysRecordLocal.length > 0 && (
                             <Tag color='blue'>已选{selectedRowKeysRecordLocal.length}条</Tag>
@@ -495,22 +491,25 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                     </Button>
                 </Col>
             </Row>
-            <YakModuleList
-                currentScript={script}
-                currentId={script?.Id}
-                onClicked={(info, index) => {
-                    if (info?.Id === script?.Id) return
-                    setScript(info)
-                }}
-                setTotal={setTotalLocal}
-                queryLocal={queryLocal}
-                refresh={refresh}
-                deletePluginRecordLocal={deletePluginRecordLocal}
-                isUpdateItem={isUpdateItem}
-                isSelectAll={isSelectAllLocal}
-                selectedRowKeysRecord={selectedRowKeysRecordLocal}
-                onSelectList={setSelectedRowKeysRecordLocal}
-            />
+            <div style={{height: "calc(100% - 32px)"}}>
+                <YakModuleList
+                    itemHeight={128}
+                    currentScript={script}
+                    currentId={script?.Id}
+                    onClicked={(info, index) => {
+                        if (info?.Id === script?.Id) return
+                        setScript(info)
+                    }}
+                    setTotal={setTotalLocal}
+                    queryLocal={queryLocal}
+                    refresh={refresh}
+                    deletePluginRecordLocal={deletePluginRecordLocal}
+                    isUpdateItem={isUpdateItem}
+                    isSelectAll={isSelectAllLocal}
+                    selectedRowKeysRecord={selectedRowKeysRecordLocal}
+                    onSelectList={setSelectedRowKeysRecordLocal}
+                />
+            </div>
         </div>
     )
 }
@@ -1377,11 +1376,20 @@ interface YakModuleUserProps {
     publicKeyword: string
     deletePluginRecordUser?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
+    plugSource: string
 }
 const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
-    const {userPlugin, setUserPlugin, userInfo, publicKeyword, isRefList, deletePluginRecordUser, setListLoading} =
-        props
-    const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
+    const {
+        userPlugin,
+        setUserPlugin,
+        userInfo,
+        publicKeyword,
+        isRefList,
+        deletePluginRecordUser,
+        setListLoading,
+        plugSource
+    } = props
+    const [queryUser, setQueryUser] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
     })
     const [isFilter, setIsFilter] = useState(false)
@@ -1391,27 +1399,33 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllUser, setIsSelectAllUser] = useState<boolean>(false)
     useEffect(() => {
+        if (plugSource === "user") {
+            setQueryUser({...queryUser})
+            onSelectAllUser(false)
+        }
+    }, [plugSource])
+    useEffect(() => {
         if (!userInfo.isLogin) onSelectAllUser(false)
     }, [userInfo])
     useEffect(() => {
         if (
-            !queryOnline.is_private &&
-            queryOnline.order_by === "stars" &&
-            queryOnline.order === "desc" &&
-            queryOnline.type === typeOnline &&
-            !queryOnline.status &&
-            queryOnline.user === false
+            !queryUser.is_private &&
+            queryUser.order_by === "stars" &&
+            queryUser.order === "desc" &&
+            queryUser.type === typeOnline &&
+            !queryUser.status &&
+            queryUser.user === false
         ) {
             setIsFilter(false)
         } else {
             setIsFilter(true)
         }
-    }, [queryOnline])
+    }, [queryUser])
     useDebounceEffect(
         () => {
-            if (publicKeyword !== queryOnline.keywords) {
-                setQueryOnline({
-                    ...queryOnline,
+            if (publicKeyword !== queryUser.keywords) {
+                setQueryUser({
+                    ...queryUser,
                     keywords: publicKeyword
                 })
             }
@@ -1448,9 +1462,9 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                                 <QueryComponentOnline
                                     onClose={() => setVisibleQuery(false)}
                                     userInfo={userInfo}
-                                    queryOnline={queryOnline}
+                                    queryOnline={queryUser}
                                     setQueryOnline={(e) => {
-                                        setQueryOnline(e)
+                                        setQueryUser(e)
                                         setRefresh(!refresh)
                                     }}
                                     user={true}
@@ -1478,19 +1492,21 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     />
                 </Col>
             </Row>
-            <YakModuleOnlineList
-                currentId={userPlugin?.id || 0}
-                queryOnline={queryOnline}
-                selectedRowKeysRecord={selectedRowKeysRecordUser}
-                onSelectList={setSelectedRowKeysRecordUser} //选择一个
-                isSelectAll={isSelectAllUser}
-                setTotal={setTotalUser}
-                onClicked={setUserPlugin}
-                userInfo={userInfo}
-                user={true}
-                refresh={refresh}
-                deletePluginRecord={deletePluginRecordUser}
-            />
+            <div style={{height: "calc(100% - 32px)"}}>
+                <YakModuleOnlineList
+                    currentId={userPlugin?.id || 0}
+                    queryOnline={queryUser}
+                    selectedRowKeysRecord={selectedRowKeysRecordUser}
+                    onSelectList={setSelectedRowKeysRecordUser} //选择一个
+                    isSelectAll={isSelectAllUser}
+                    setTotal={setTotalUser}
+                    onClicked={setUserPlugin}
+                    userInfo={userInfo}
+                    user={true}
+                    refresh={refresh}
+                    deletePluginRecord={deletePluginRecordUser}
+                />
+            </div>
         </div>
     )
 }
@@ -1503,9 +1519,11 @@ interface YakModuleOnlineProps {
     publicKeyword: string
     deletePluginRecordUser?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
+    plugSource: string
 }
 const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
-    const {plugin, setPlugin, userInfo, publicKeyword, isRefList, deletePluginRecordUser, setListLoading} = props
+    const {plugin, setPlugin, userInfo, publicKeyword, isRefList, deletePluginRecordUser, setListLoading, plugSource} =
+        props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
     })
@@ -1516,7 +1534,13 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllUser, setIsSelectAllUser] = useState<boolean>(false)
     useEffect(() => {
-        if (!userInfo.isLogin) onSelectAllUser(false)
+        if (plugSource === "online") {
+            setQueryOnline({...defQueryOnline})
+            onSelectAllOnline(false)
+        }
+    }, [plugSource])
+    useEffect(() => {
+        if (!userInfo.isLogin) onSelectAllOnline(false)
     }, [userInfo])
     useEffect(() => {
         if (
@@ -1547,7 +1571,7 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     useEffect(() => {
         setRefresh(!refresh)
     }, [isRefList])
-    const onSelectAllUser = useMemoizedFn((checked) => {
+    const onSelectAllOnline = useMemoizedFn((checked) => {
         setIsSelectAllUser(checked)
         if (!checked) {
             setSelectedRowKeysRecordOnline([]) // 清除本地
@@ -1557,7 +1581,7 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
                 <Col span={12} className='col'>
-                    <Checkbox checked={isSelectAllUser} onChange={(e) => onSelectAllUser(e.target.checked)}>
+                    <Checkbox checked={isSelectAllUser} onChange={(e) => onSelectAllOnline(e.target.checked)}>
                         全选&emsp;
                         {selectedRowKeysRecordOnline.length > 0 && (
                             <Tag color='blue'>已选{selectedRowKeysRecordOnline.length}条</Tag>
@@ -1598,24 +1622,26 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                         user={false}
                         userInfo={userInfo}
                         onFinish={() => {
-                            onSelectAllUser(false)
+                            onSelectAllOnline(false)
                         }}
                     />
                 </Col>
             </Row>
-            <YakModuleOnlineList
-                currentId={plugin?.id || 0}
-                queryOnline={queryOnline}
-                selectedRowKeysRecord={selectedRowKeysRecordOnline}
-                onSelectList={setSelectedRowKeysRecordOnline} //选择一个
-                isSelectAll={isSelectAllUser}
-                setTotal={setTotalOnline}
-                onClicked={setPlugin}
-                userInfo={userInfo}
-                user={false}
-                refresh={refresh}
-                deletePluginRecord={deletePluginRecordUser}
-            />
+            <div style={{height: "calc(100% - 32px)"}}>
+                <YakModuleOnlineList
+                    currentId={plugin?.id || 0}
+                    queryOnline={queryOnline}
+                    selectedRowKeysRecord={selectedRowKeysRecordOnline}
+                    onSelectList={setSelectedRowKeysRecordOnline} //选择一个
+                    isSelectAll={isSelectAllUser}
+                    setTotal={setTotalOnline}
+                    onClicked={setPlugin}
+                    userInfo={userInfo}
+                    user={false}
+                    refresh={refresh}
+                    deletePluginRecord={deletePluginRecordUser}
+                />
+            </div>
         </div>
     )
 }
@@ -1679,8 +1705,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     }, [deletePluginRecord?.id])
     useEffect(() => {
         if (isSelectAll) {
-            const data = response.data.filter((ele) => ele.status === 1)
-            onSelectList([...data])
+            // const data = response.data.filter((ele) => ele.status === 1)
+            onSelectList([...response.data])
         }
     }, [isSelectAll])
     useEffect(() => {
@@ -1732,6 +1758,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             data: payload
         })
             .then((res) => {
+                console.log("res", res.data)
+
                 if (!res.data) {
                     res.data = []
                 }
