@@ -213,7 +213,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 className='left-list'
             >
                 <Spin spinning={listLoading}>
-                    <div style={{display: plugSource === "local" ? "" : "none", height: "100%"}}>
+                    {plugSource === "local" && (
                         <YakModule
                             script={script}
                             setScript={setScript}
@@ -221,10 +221,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             isRefList={isRefList}
                             isUpdateItem={isUpdateItem}
                             deletePluginRecordLocal={deletePluginRecordLocal}
-                            plugSource={plugSource}
                         />
-                    </div>
-                    <div style={{display: plugSource === "user" ? "" : "none", height: "100%"}}>
+                    )}
+                    {plugSource === "user" && (
                         <YakModuleUser
                             userPlugin={userPlugin}
                             setUserPlugin={setUserPlugin}
@@ -233,10 +232,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             isRefList={isRefList}
                             deletePluginRecordUser={deletePluginRecordUser}
                             setListLoading={setListLoading}
-                            plugSource={plugSource}
                         />
-                    </div>
-                    <div style={{display: plugSource === "online" ? "" : "none", height: "100%"}}>
+                    )}
+                    {plugSource === "online" && (
                         <YakModuleOnline
                             plugin={plugin}
                             setPlugin={setPlugin}
@@ -245,9 +243,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             isRefList={isRefList}
                             deletePluginRecordUser={deletePluginRecordOnline}
                             setListLoading={setListLoading}
-                            plugSource={plugSource}
                         />
-                    </div>
+                    )}
                 </Spin>
             </Card>
 
@@ -311,10 +308,9 @@ interface YakModuleProp {
     isRefList: boolean
     isUpdateItem: boolean
     deletePluginRecordLocal?: YakScript
-    plugSource: string
 }
 const YakModule: React.FC<YakModuleProp> = (props) => {
-    const {script, setScript, publicKeyword, isRefList, deletePluginRecordLocal, plugSource} = props
+    const {script, setScript, publicKeyword, isRefList, deletePluginRecordLocal, } = props
     const [isUpdateItem, setIsUpdateItem] = useState(false)
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -325,12 +321,6 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState(false)
-    useEffect(() => {
-        if (plugSource === "local") {
-            setQueryLocal({...defQueryLocal})
-            onSelectAllLocal(false)
-        }
-    }, [plugSource])
     useEffect(() => {
         setIsUpdateItem(props.isUpdateItem)
     }, [props.isUpdateItem])
@@ -701,7 +691,6 @@ interface PluginListLocalProps {
 export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
     const {plugin, selectedRowKeysRecord, onSelect} = props
     const {userInfo, maxWidth, onClicked} = props
-    // const [plugin, setPlugin] = useState(props.plugin)
     const [uploadLoading, setUploadLoading] = useState(false)
     const uploadOnline = (oldItem: YakScript) => {
         if (!userInfo.isLogin) {
@@ -1376,19 +1365,10 @@ interface YakModuleUserProps {
     publicKeyword: string
     deletePluginRecordUser?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
-    plugSource: string
 }
 const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
-    const {
-        userPlugin,
-        setUserPlugin,
-        userInfo,
-        publicKeyword,
-        isRefList,
-        deletePluginRecordUser,
-        setListLoading,
-        plugSource
-    } = props
+    const {userPlugin, setUserPlugin, userInfo, publicKeyword, isRefList, deletePluginRecordUser, setListLoading} =
+        props
     const [queryUser, setQueryUser] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
     })
@@ -1398,12 +1378,6 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllUser, setIsSelectAllUser] = useState<boolean>(false)
-    useEffect(() => {
-        if (plugSource === "user") {
-            setQueryUser({...queryUser})
-            onSelectAllUser(false)
-        }
-    }, [plugSource])
     useEffect(() => {
         if (!userInfo.isLogin) onSelectAllUser(false)
     }, [userInfo])
@@ -1519,11 +1493,9 @@ interface YakModuleOnlineProps {
     publicKeyword: string
     deletePluginRecordUser?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
-    plugSource: string
 }
 const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
-    const {plugin, setPlugin, userInfo, publicKeyword, isRefList, deletePluginRecordUser, setListLoading, plugSource} =
-        props
+    const {plugin, setPlugin, userInfo, publicKeyword, isRefList, deletePluginRecordUser, setListLoading} = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
     })
@@ -1533,12 +1505,6 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllUser, setIsSelectAllUser] = useState<boolean>(false)
-    useEffect(() => {
-        if (plugSource === "online") {
-            setQueryOnline({...defQueryOnline})
-            onSelectAllOnline(false)
-        }
-    }, [plugSource])
     useEffect(() => {
         if (!userInfo.isLogin) onSelectAllOnline(false)
     }, [userInfo])

@@ -24,7 +24,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
 import Login from "../Login"
 import {GetYakScriptByOnlineIDRequest} from "../yakitStore/YakitStorePage"
-import { DownloadOnlinePluginProps } from "../yakitStore/YakitPluginInfoOnline"
+import {DownloadOnlinePluginProps} from "../yakitStore/YakitPluginInfoOnline"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -33,6 +33,8 @@ export interface YakScriptCreatorFormProp {
     modified?: YakScript
     onChanged?: (i: YakScript) => any
     fromLayout?: FromLayoutProps
+    noClose?: boolean
+    setScript?: (i: YakScript) => any
 }
 
 /*
@@ -352,11 +354,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             warn("未登录，请先登录!")
             return
         }
-        if (!item.UserId && item.UserId > 0 && userInfo.user_id !== item.UserId) {
+        if (!(userInfo.user_id == item.UserId || item.UserId == 0)) {
             warn("只能上传本人创建的插件!")
             return
         }
-
         const params: API.NewYakitPlugin = {
             type: item.Type,
             script_name: item.ScriptName,
@@ -737,7 +738,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                         info("调试前保存插件成功")
                                         setModified(data)
                                         setParams(data)
-                                        props.onChanged && props.onChanged(data)
+                                        if (props.noClose) {
+                                            // 不关闭修改这个模块，返回最新数据
+                                            props.setScript && props.setScript(data)
+                                        } else {
+                                            props.onChanged && props.onChanged(data)
+                                        }
+
                                         executeYakScriptByParams(data, true)
                                     })
                                     .catch((e: any) => {

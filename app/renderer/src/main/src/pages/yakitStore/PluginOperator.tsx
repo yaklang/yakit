@@ -107,10 +107,19 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 <>
                     {(isEdit && (
                         <div className='edit-plugin-body'>
-                            <CloseOutlined className='close-icon' onClick={() => setIsEdit(false)} />
+                            <CloseOutlined
+                                className='close-icon'
+                                onClick={() => {
+                                    setIsEdit(false)
+                                    if (props.setScript) props.setScript(script)
+                                    if (props.setTrigger) props.setTrigger()
+                                }}
+                            />
                             <YakScriptCreatorForm
                                 modified={script}
-                                onChanged={(i) => {
+                                noClose={true}
+                                setScript={setScript}
+                                onCreated={(i) => {
                                     if (props.setScript) props.setScript(i)
                                     if (props.setTrigger) props.setTrigger()
                                 }}
@@ -172,26 +181,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                                 style={{color: "#a7a7a7"}}
                                                 onClick={(e) => {
                                                     setIsEdit(true)
-                                                    // let m = showDrawer({
-                                                    //     title: `修改插件: ${script?.ScriptName}`,
-                                                    //     width: "100%",
-                                                    //     content: (
-                                                    //         <>
-                                                    // <YakScriptCreatorForm
-                                                    //     modified={script}
-                                                    //     onChanged={(i) => {
-                                                    //         if (props.setScript) props.setScript(i)
-                                                    //         if (props.setTrigger) props.setTrigger()
-                                                    //         // update()
-                                                    //     }}
-                                                    //     onCreated={() => {
-                                                    //         m.destroy()
-                                                    //     }}
-                                                    // />
-                                                    //         </>
-                                                    //     ),
-                                                    //     keyboard: false
-                                                    // })
                                                 }}
                                             />
                                         </Tooltip>

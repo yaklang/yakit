@@ -33,6 +33,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const [loading, setLoading] = useState<boolean>(false)
     // 全局监听登录状态
     const {userInfo} = useStore()
+    const syncLoginOut = async () => {
+        await loginOut(userInfo)
+    }
     const onFinish = useMemoizedFn((values: OnlineProfileProps) => {
         setLoading(true)
         ipcRenderer
@@ -40,9 +43,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 ...values
             } as OnlineProfileProps)
             .then((data) => {
+                syncLoginOut()
                 ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
                 setRemoteValue("httpSetting", JSON.stringify(values))
-                loginOut(userInfo)
                 success("设置成功")
                 onClose()
             })
