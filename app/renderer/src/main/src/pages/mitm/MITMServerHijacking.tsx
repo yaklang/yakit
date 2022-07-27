@@ -46,6 +46,8 @@ export interface MITMServerHijackingProp {
     host: string
     port: number
     status: MITMStatus
+    enableInitialMITMPlugin?: boolean
+    defaultPlugins?: string[]
     setStatus: (status: MITMStatus) => any
     onLoading?: (loading: boolean) => any
 }
@@ -86,7 +88,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const [allowHijackCurrentResponse, setAllowHijackCurrentResponse] = useState(false); // 仅劫持一个请求
     const [initialed, setInitialed] = useState(false);
     const [forResponse, setForResponse] = useState(false);
-    const [haveSideCar, setHaveSideCar] = useState(true);
 
     const [urlInfo, setUrlInfo] = useState("监听中...")
     const [ipInfo, setIpInfo] = useState("")
@@ -232,11 +233,18 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             ipcRenderer.removeAllListeners("client-mitm-error")
             ipcRenderer.removeAllListeners("client-mitm-filter")
             ipcRenderer.removeAllListeners("client-mitm-history-update")
-            ipcRenderer.removeAllListeners("mitm-have-current-stream")
             ipcRenderer.removeAllListeners("client-mitm-message")
             // ipcRenderer.invoke("mitm-close-stream")
         }
     }, [])
+
+    useEffect(() => {
+        if (!!props.enableInitialMITMPlugin && (props?.defaultPlugins || []).length > 0) {
+            enableMITMPluginMode(props.defaultPlugins).then(() => {
+                info("启动初始 MITM 插件成功")
+            })
+        }
+    }, [props.enableInitialMITMPlugin, props.defaultPlugins])
 
     useEffect(() => {
         if (hijackAllResponse && currentPacketId > 0) {
@@ -359,12 +367,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         }
     })
 
-    const recover = useMemoizedFn(() => {
-        ipcRenderer.invoke("mitm-recover").then(() => {
-            // success("恢复 MITM 会话成功")
-        })
-    })
-
     const stop = useMemoizedFn(() => {
         // setLoading(true)
         ipcRenderer.invoke("mitm-stop-call").then(() => {
@@ -383,6 +385,10 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         // setLoading(true);
         setStatus("hijacking");
     })
+
+
+    useEffect(() => {
+    }, [props])
 
     function getCurrentId() {
         return currentPacketId
@@ -883,4 +889,14 @@ const forwardResponse = (id: number) => {
 
 const allowHijackedResponseByRequest = (id: number) => {
     return ipcRenderer.invoke("mitm-hijacked-current-response", id)
+}
+
+const enableMITMPluginMode = (initPluginNames?: string[]) => {
+    return ipcRenderer.invoke("mitm-enable-plugin-mode", initPluginNames)
+}
+
+const recover = () => {
+    ipcRenderer.invoke("mitm-recover").then(() => {
+        // success("恢复 MITM 会话成功")
+    })
 }
