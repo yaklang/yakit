@@ -8,7 +8,7 @@ import {BaseTable, features, useTablePipeline} from "../alibaba/ali-react-table-
 import {CopyableField} from "../utils/inputUtil";
 import {showDrawer} from "../utils/showModal";
 import ReactResizeDetector from "react-resize-detector";
-import {useInViewport, useThrottleFn} from "ahooks";
+import {useDebounceFn, useInViewport, useThrottleFn} from "ahooks";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -21,7 +21,7 @@ export interface HTTPFlowMiniTableProp {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
 }
 
-export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
+export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((props) => {
     const [tableHeight, setTableHeight] = useState(400);
     const [response, setResponse] = useState<QueryGeneralResponse<HTTPFlow>>({
         Data: [],
@@ -208,8 +208,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
             props.onTotal(data.Total)
         })
     }
-    const updateThrottle = useThrottleFn(update, {wait: 1000})
-
+    const updateThrottle = useDebounceFn(update, {leading: true, wait: 200})
 
     useEffect(() => {
         updateThrottle.run()
@@ -217,10 +216,10 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
 
     useEffect(() => {
         if (props.simple) {
-
             if (!props.autoUpdate) {
                 return
             }
+            updateThrottle.run()
             const id = setInterval(() => {
                 updateThrottle.run()
             }, 1000)
@@ -244,4 +243,4 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = (props) => {
             {...pipeline.getProps()} style={{width: "100%", height: tableHeight, overflow: "auto"}}
         />
     </div>
-};
+});

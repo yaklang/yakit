@@ -1,9 +1,13 @@
 .mitm-http-list {
     height: 100%;
 
+    .ant-spin-nested-loading {
+        height: 100%;
+    }
+
     .plugin-list {
         padding: 0px !important;
-
+        margin-bottom: 0px;
         .ant-list-item {
             padding: 0px;
         }

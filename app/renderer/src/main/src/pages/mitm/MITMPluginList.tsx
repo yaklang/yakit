@@ -3,7 +3,7 @@ import {AutoCard} from "../../components/AutoCard"
 import {Button, Empty, Form, List, Popconfirm, Space} from "antd"
 import {SelectOne} from "../../utils/inputUtil"
 import {PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
-import {getValue, saveValue} from "../../utils/kv"
+import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
 import {EditorProps, YakCodeEditor} from "../../utils/editors"
 import {YakModuleList} from "../yakitStore/YakitStorePage"
 import {YakScript, YakScriptHooks} from "../invoker/schema"
@@ -47,8 +47,9 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         setRefreshTrigger(!refreshTrigger)
     })
 
+    // 热加载模块持久化
     useEffect(() => {
-        getValue(MITM_HOTPATCH_CODE).then((e) => {
+        getRemoteValue(MITM_HOTPATCH_CODE).then((e) => {
             if (!e) {
                 return
             }
@@ -58,13 +59,24 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
 
     // 设置用户模式
     const userDefined = mode === "hot-patch"
-    let hooksItem: {name: string}[] = []
+    let hooksItem: { name: string }[] = []
     hooks.forEach((value, key) => {
         if (value) {
             hooksItem.push({name: key})
         }
     })
     hooksItem = hooksItem.sort((a, b) => a.name.localeCompare(b.name))
+
+    // 初始化加载 hooks，设置定时更新 hooks 状态
+    useEffect(() => {
+        updateHooks()
+        const id = setInterval(() => {
+            updateHooks()
+        }, 1000)
+        return () => {
+            clearInterval(id)
+        }
+    }, [])
 
     useEffect(() => {
         // 用于 MITM 的 查看当前 Hooks
@@ -80,7 +92,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         updateHooks()
         setTimeout(() => {
             setInitialed(true)
-        }, 300)
+        }, 500)
         return () => {
             ipcRenderer.removeAllListeners("client-mitm-hooks")
         }
@@ -112,7 +124,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 refresh()
                             }}
                         >
-                            <Button type={"link"} icon={<ReloadOutlined />} size={"small"} />
+                            <Button type={"link"} icon={<ReloadOutlined/>} size={"small"}/>
                         </Popconfirm>
                     )}
                 </Space>
@@ -127,7 +139,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 type={"primary"}
                                 onClick={() => {
                                     if (!!script) {
-                                        saveValue(MITM_HOTPATCH_CODE, script)
+                                        setRemoteValue(MITM_HOTPATCH_CODE, script)
                                     }
                                     props.onSubmitScriptContent && props.onSubmitScriptContent(script)
                                 }}
@@ -148,7 +160,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                             onClick={() => {
                                 props.onExit && props.onExit()
                             }}
-                            icon={<PoweroffOutlined />}
+                            icon={<PoweroffOutlined/>}
                         >
                             停止
                         </Button>
@@ -179,7 +191,8 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                 <div className='mitm-http-list'>
                     <YakModuleList
                         itemHeight={43}
-                        onClicked={(script) => {}}
+                        onClicked={(script) => {
+                        }}
                         onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                             return (
                                 <MITMYakScriptLoader
@@ -222,7 +235,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                         </>
                     ) : (
                         <>
-                            <Empty description={"未启用 MITM 插件"} />
+                            <Empty description={"未启用 MITM 插件"}/>
                         </>
                     )}
                 </>
