@@ -1,4 +1,5 @@
 import {UserInfoProps, useStore} from "@/store"
+import {setRemoteValue} from "@/utils/kv"
 import {loginOut, loginOutLocal} from "@/utils/login"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
@@ -67,5 +68,6 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
 // token过期，退出
 const tokenOverdue = (res) => {
     if (res.userInfo) loginOutLocal(res.userInfo)
+    setRemoteValue("token-online", "")
     failed("登录过期，请重新登录")
 }

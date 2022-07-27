@@ -16,9 +16,11 @@ export const loginOut = (userInfo: UserInfoProps) => {
             ipcRenderer.invoke("DeletePluginByUserID", {
                 UserID: userInfo.user_id
             })
-            setRemoteValue("token-online", "")
         })
         .catch((e) => {})
+        .finally(() => {
+            setRemoteValue("token-online", "")
+        })
 }
 
 export const loginOutLocal = (userInfo: UserInfoProps) => {
@@ -27,7 +29,6 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
     ipcRenderer.invoke("DeletePluginByUserID", {
         UserID: userInfo.user_id
     })
-    setRemoteValue("token-online", "")
 }
 
 export const refreshToken = (userInfo: UserInfoProps) => {
