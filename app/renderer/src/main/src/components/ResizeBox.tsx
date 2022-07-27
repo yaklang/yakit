@@ -1,6 +1,6 @@
-import React, {useEffect, useRef} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {ResizeLine} from "./ResizeLine"
-import {useMemoizedFn} from "ahooks"
+import {useDebounce, useDebounceFn, useMemoizedFn, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 
 import "./ResizeBox.css"

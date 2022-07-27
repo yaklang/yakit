@@ -507,7 +507,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
              style={{marginLeft: 12, marginRight: 12, height: "100%"}}>
             <Row gutter={14} style={{height: "100%"}}>
                 <Col
-                    style={{display: "flex", flexDirection: "column", height: "100%"}}
+                    style={{display: "flex", flexDirection: "column", height: "100%", width: "100%"}}
                 >
                     <PageHeader
                         className="mitm-header-title"
