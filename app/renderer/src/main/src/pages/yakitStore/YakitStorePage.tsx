@@ -363,7 +363,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
         {wait: 200}
     )
     useEffect(() => {
-        setRefresh(!refresh)
+        onResetList()
     }, [isRefList])
     const onRemoveLocalPlugin = useMemoizedFn(() => {
         const length = selectedRowKeysRecordLocal.length
@@ -403,6 +403,10 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
             setSelectedRowKeysRecordLocal([]) // 清除本地
         }
     })
+    const onResetList = useMemoizedFn(() => {
+        setRefresh(!refresh)
+        onSelectAllLocal(false)
+    })
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
@@ -425,7 +429,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                                     queryLocal={queryLocal}
                                     setQueryLocal={(e) => {
                                         setQueryLocal(e)
-                                        setRefresh(!refresh)
+                                        onResetList()
                                     }}
                                 />
                             )
@@ -1436,13 +1440,17 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
         {wait: 200}
     )
     useEffect(() => {
-        setRefresh(!refresh)
+        onResetList()
     }, [isRefList])
     const onSelectAllUser = useMemoizedFn((checked) => {
         setIsSelectAllUser(checked)
         if (!checked) {
             setSelectedRowKeysRecordUser([]) // 清除本地
         }
+    })
+    const onResetList = useMemoizedFn(() => {
+        setRefresh(!refresh)
+        onSelectAllUser(false)
     })
     return (
         <div className='height-100'>
@@ -1467,7 +1475,7 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                                     queryOnline={queryUser}
                                     setQueryOnline={(e) => {
                                         setQueryUser(e)
-                                        setRefresh(!refresh)
+                                        onResetList()
                                     }}
                                     user={true}
                                 />
@@ -1574,13 +1582,17 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         {wait: 200}
     )
     useEffect(() => {
-        setRefresh(!refresh)
+        onResetList()
     }, [isRefList])
     const onSelectAllOnline = useMemoizedFn((checked) => {
         setIsSelectAllUser(checked)
         if (!checked) {
             setSelectedRowKeysRecordOnline([]) // 清除本地
         }
+    })
+    const onResetList = useMemoizedFn(() => {
+        setRefresh(!refresh)
+        onSelectAllOnline(false)
     })
     return (
         <div className='height-100'>
@@ -1605,7 +1617,7 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                                     queryOnline={queryOnline}
                                     setQueryOnline={(e) => {
                                         setQueryOnline(e)
-                                        setRefresh(!refresh)
+                                        onResetList()
                                     }}
                                     user={false}
                                 />
