@@ -5,7 +5,7 @@ import {LoadingOutlined} from "@ant-design/icons"
 import "./index.scss"
 
 interface RollingLoadListProps<T> {
-    key?: string
+    rowKey?: string
     data: T[]
     loadMoreData: () => void
     renderRow: (r: T, i: number) => ReactNode
@@ -29,7 +29,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         renderRow,
         page,
         hasMore,
-        key = "Id",
+        rowKey,
         loading,
         isRef,
         classNameRow,
@@ -85,7 +85,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             <div className={classNameList} style={{height: vlistHeigth}} ref={containerRef} onScroll={onScrollCapture}>
                 <div ref={wrapperRef}>
                     {list.map((i) => (
-                        <div key={i.data[key]} className={classNameRow}>
+                        <div key={i.data[rowKey || "Id"]} className={classNameRow}>
                             {renderRow(i.data, i.index)}
                         </div>
                     ))}

@@ -364,6 +364,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
     )
     useEffect(() => {
         onResetList()
+        setScript()
     }, [isRefList])
     const onRemoveLocalPlugin = useMemoizedFn(() => {
         const length = selectedRowKeysRecordLocal.length
@@ -1441,6 +1442,7 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     )
     useEffect(() => {
         onResetList()
+        setUserPlugin()
     }, [isRefList])
     const onSelectAllUser = useMemoizedFn((checked) => {
         setIsSelectAllUser(checked)
@@ -1583,6 +1585,7 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     )
     useEffect(() => {
         onResetList()
+        setPlugin()
     }, [isRefList])
     const onSelectAllOnline = useMemoizedFn((checked) => {
         setIsSelectAllUser(checked)
@@ -1788,8 +1791,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             data: payload
         })
             .then((res) => {
-                console.log("res", res.data)
-
                 if (!res.data) {
                     res.data = []
                 }
@@ -1898,7 +1899,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 hasMore={hasMore}
                 loading={loading}
                 loadMoreData={() => loadMoreData()}
-                key='id'
+                rowKey='id'
                 itemHeight={135}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'

@@ -1,14 +1,16 @@
-import React, {useEffect, useState} from "react"
-import {Button, Form, Input, Row} from "antd"
+import React, {useEffect, useState, useRef} from "react"
+import {Button, Form, Input, Select} from "antd"
 import "./index.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success} from "@/utils/notification"
 import {loginOut} from "@/utils/login"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useStore} from "@/store"
 
 const {ipcRenderer} = window.require("electron")
+
+const {Option} = Select
 
 interface OnlineProfileProps {
     BaseUrl: string
@@ -31,6 +33,12 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const {onClose} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
+    const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
+    const defaultHttpUrl = useRef<string>("")
+    const selectText = useRef<string>("")
+    useEffect(() => {
+        getHttpSetting()
+    }, [])
     // 全局监听登录状态
     const {userInfo} = useStore()
     const syncLoginOut = async () => {
@@ -46,24 +54,74 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 syncLoginOut()
                 ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
                 setRemoteValue("httpSetting", JSON.stringify(values))
+                addHttpHistoryList(values.BaseUrl)
                 success("设置成功")
                 onClose()
             })
             .catch((e: any) => failed("设置私有域失败:" + e))
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
-    useEffect(() => {
+    const addHttpHistoryList = useMemoizedFn((url) => {
+        const index = httpHistoryList.findIndex((u) => u === url)
+        if (index !== -1) return
+        httpHistoryList.push(url)
+        setRemoteValue("httpHistoryList", JSON.stringify(httpHistoryList))
+    })
+    const getHttpSetting = useMemoizedFn(() => {
         getRemoteValue("httpSetting").then((setting) => {
+            if (!setting) return
             const value = JSON.parse(setting)
+            defaultHttpUrl.current = value.BaseUrl
+            getHistoryList()
             form.setFieldsValue({
                 ...value
             })
         })
-    }, [])
+    })
+    const getHistoryList = useMemoizedFn(() => {
+        getRemoteValue("httpHistoryList").then((listString) => {
+            if (listString) {
+                const list: string[] = JSON.parse(listString)
+                setHttpHistoryList(list)
+            } else {
+                const defList: string[] = [defaultHttpUrl.current]
+                setHttpHistoryList(defList)
+                addHttpHistoryList(defaultHttpUrl.current)
+            }
+        })
+    })
+    const onSetUrl = useMemoizedFn(() => {
+        if (selectText.current) {
+            form.setFieldsValue({
+                BaseUrl: selectText.current
+            })
+            // setHttpHistoryList([...httpHistoryList, selectText.current])
+            selectText.current = ""
+        }
+    })
+    const onSearch = useDebounceFn(
+        useMemoizedFn((value) => {
+            selectText.current = value
+        }),
+        {wait: 200}
+    ).run
     return (
         <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
             <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"}]}>
-                <Input placeholder='请输入你的私有域地址' allowClear />
+                <Select
+                    placeholder='请输入你的私有域地址'
+                    showArrow={false}
+                    showSearch
+                    filterOption={false}
+                    onSelect={onSetUrl}
+                    onSearch={onSearch}
+                    onBlur={onSetUrl}
+                    onFocus={onSetUrl}
+                >
+                    {httpHistoryList.map((item) => (
+                        <Option value={item}>{item}</Option>
+                    ))}
+                </Select>
             </Form.Item>
             {/* rules={[{required: true, message: "该项为必填"}]} */}
             {/* <Form.Item name='Password' label='密码'>
