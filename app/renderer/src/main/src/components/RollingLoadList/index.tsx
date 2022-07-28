@@ -82,7 +82,12 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <div className={classNameList} style={{height: vlistHeigth}} ref={containerRef} onScroll={onScrollCapture}>
+            <div
+                className={classNameList}
+                style={{height: vlistHeigth}}
+                ref={containerRef}
+                onScroll={(e) => onScrollCapture(e)}
+            >
                 <div ref={wrapperRef}>
                     {list.map((i) => (
                         <div key={i.data[rowKey || "Id"]} className={classNameRow}>

@@ -262,7 +262,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 </Spin>
             </Card>
 
-            <div style={{flex: 1, overflowY: "auto"}} id="plugin-info-scroll">
+            <div style={{flex: 1, overflowY: "auto"}} id='plugin-info-scroll'>
                 {plugin || script || userPlugin ? (
                     <AutoCard
                         loading={loading}
@@ -642,7 +642,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             ...queryLocal
         })
         setIsRef(!isRef)
-        setHasMore(true)
         setListBodyLoading(true)
         update(1, undefined, queryLocal)
         if (onSelectList) onSelectList([])
@@ -656,7 +655,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         })
         props.onClicked()
     }, [deletePluginRecordLocal?.Id])
-    const [hasMore, setHasMore] = useState<boolean>(true)
+    const [hasMore, setHasMore] = useState<boolean>(false)
     const loadMoreData = useMemoizedFn(() => {
         update(parseInt(`${response.Pagination.Page}`) + 1, undefined)
     })
@@ -1708,7 +1707,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     })
     const [loading, setLoading] = useState(false)
     const [isAdmin, setIsAdmin] = useState<boolean>(true)
-    const [hasMore, setHasMore] = useState(true)
+    const [hasMore, setHasMore] = useState(false)
     const [isRef, setIsRef] = useState(false)
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const numberOnlineUser = useRef(0) // 我的插件 选择的插件index
@@ -1746,7 +1745,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
     useEffect(() => {
-        setHasMore(true)
         setIsRef(!isRef)
         setListBodyLoading(true)
         if (!userInfo.isLogin && user) {
@@ -1777,6 +1775,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         if (!user) {
             delete payload.is_private
         }
+        console.log("payload", payload)
+
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -1791,6 +1791,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             data: payload
         })
             .then((res) => {
+                console.log("res.data", res.data)
                 if (!res.data) {
                     res.data = []
                 }
@@ -1900,7 +1901,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 loading={loading}
                 loadMoreData={() => loadMoreData()}
                 rowKey='id'
-                itemHeight={135}
+                itemHeight={151}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (
