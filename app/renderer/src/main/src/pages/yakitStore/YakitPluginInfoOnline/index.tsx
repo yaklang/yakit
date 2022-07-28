@@ -47,6 +47,7 @@ import {YakEditor} from "@/utils/editors"
 import {YakScript} from "@/pages/invoker/schema"
 import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
 import Login from "@/pages/Login"
+import {fail} from "assert"
 
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
@@ -815,6 +816,9 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
             .invoke("upload-img", {path: file.path, type: file.type})
             .then((res) => {
                 setFiles(files.concat(res.data))
+            })
+            .catch((err) => {
+                fail("图片上传失败")
             })
             .finally(() => {
                 setTimeout(() => setFilesLoading(false), 1)

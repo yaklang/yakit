@@ -262,7 +262,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 </Spin>
             </Card>
 
-            <div style={{flex: 1, overflowY: "auto"}}>
+            <div style={{flex: 1, overflowY: "auto"}} id="plugin-info-scroll">
                 {plugin || script || userPlugin ? (
                     <AutoCard
                         loading={loading}
