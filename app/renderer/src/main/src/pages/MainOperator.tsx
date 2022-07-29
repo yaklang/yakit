@@ -512,7 +512,6 @@ const Main: React.FC<MainProp> = (props) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
-
             setRemoteValue("token-online", res.token)
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
@@ -521,6 +520,7 @@ const Main: React.FC<MainProp> = (props) => {
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
+            setRemoteValue("token-online", "")
         })
         return () => ipcRenderer.removeAllListeners("login-out")
     }, [])

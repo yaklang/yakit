@@ -179,3 +179,21 @@ const OnlineCloud = () => (
 export const OnlineCloudIcon: React.FC = (props: any) => {
     return <Icon component={OnlineCloud} {...props} />
 }
+
+const Import = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='1em' height='1em' viewBox='0 0 24 24'>
+        <g stroke='none' strokeWidth='1' fill='none' fillRule='evenodd'>
+            <path
+                d='M8 7H5C3.89543 7 3 7.89543 3 9V18C3 19.1046 3.89543 20 5 20H19C20.1046 20 21 19.1046 21 18V9C21 7.89543 20.1046 7 19 7H16M15 11L12 14M12 14L9 11M12 14L12 4'
+                stroke='currentColor'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+    </svg>
+)
+
+export const ImportIcon: React.FC = (props: any) => {
+    return <Icon component={Import} {...props} />
+}

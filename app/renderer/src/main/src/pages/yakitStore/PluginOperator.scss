@@ -1,0 +1,25 @@
+.plugin-store-info .ant-tabs-content {
+    height: 100%;
+}
+
+.script-author {
+    cursor: pointer;
+    color: #999999;
+    margin-bottom: 0
+}
+
+.edit-plugin-title {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0 12px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 12px;
+
+    .title {
+        margin: 0;
+        color: rgba(0, 0, 0, 0.85);
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 22px;
+    }
+}
