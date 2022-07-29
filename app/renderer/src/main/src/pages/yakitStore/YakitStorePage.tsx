@@ -480,10 +480,12 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                         overlayClassName='pop-confirm'
                         visible={visibleQuery}
                     >
-                        <FilterOutlined
-                            className={`operation-icon ${isFilter && "operation-icon-active"}`}
-                            onClick={() => setVisibleQuery(true)}
-                        />
+                        <Tooltip title='查询'>
+                            <FilterOutlined
+                                className={`operation-icon ${isFilter && "operation-icon-active"}`}
+                                onClick={() => setVisibleQuery(true)}
+                            />
+                        </Tooltip>
                     </Popconfirm>
                     <Popconfirm
                         title={selectedRowKeysRecordLocal.length === 0 ? "是否删除本地所有插件?" : "是否删除所选插件?"}
@@ -1460,10 +1462,12 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         overlayClassName='pop-confirm'
                         visible={visibleQuery}
                     >
-                        <FilterOutlined
-                            className={`operation-icon ${isFilter && "operation-icon-active"}`}
-                            onClick={() => setVisibleQuery(true)}
-                        />
+                        <Tooltip title='查询'>
+                            <FilterOutlined
+                                className={`operation-icon ${isFilter && "operation-icon-active"}`}
+                                onClick={() => setVisibleQuery(true)}
+                            />
+                        </Tooltip>
                     </Popconfirm>
                     <AddAllPlugin
                         selectedRowKeysRecord={selectedRowKeysRecordUser}
@@ -1609,10 +1613,12 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                         overlayClassName='pop-confirm'
                         visible={visibleQuery}
                     >
-                        <FilterOutlined
-                            className={`operation-icon ${isFilter && "operation-icon-active"}`}
-                            onClick={() => setVisibleQuery(true)}
-                        />
+                        <Tooltip title='查询'>
+                            <FilterOutlined
+                                className={`operation-icon ${isFilter && "operation-icon-active"}`}
+                                onClick={() => setVisibleQuery(true)}
+                            />
+                        </Tooltip>
                     </Popconfirm>
                     <AddAllPlugin
                         selectedRowKeysRecord={selectedRowKeysRecordOnline}
