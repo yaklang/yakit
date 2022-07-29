@@ -146,6 +146,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         if (!userInfo.isLogin) onResetPluginDetails()
     }, [userInfo.isLogin])
     const onRefList = useMemoizedFn(() => {
+        setPublicKeyword("")
         setIsRefList(!isRefList)
     })
     const [publicKeyword, setPublicKeyword] = useState<string>("")
@@ -220,6 +221,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     value={publicKeyword}
                                     onChange={(e) => {
                                         setPublicKeyword(e.target.value)
+                                        // setIsRefList(!isRefList)
                                     }}
                                 />
                             </Col>
@@ -372,7 +374,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                     ...queryLocal,
                     Keyword: publicKeyword
                 })
-                setRefresh(!refresh)
+                onResetList()
             }
         },
         [publicKeyword],
@@ -444,6 +446,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
         }
         setRefresh(!refresh)
         setIsShowYAMLPOC(checked)
+        onSelectAllLocal(false)
     })
     return (
         <div className='height-100'>
@@ -1402,7 +1405,7 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     ...queryUser,
                     keywords: publicKeyword
                 })
-                setRefresh(!refresh)
+                onResetList()
             }
         },
         [publicKeyword],
@@ -1554,7 +1557,7 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     ...queryOnline,
                     keywords: publicKeyword
                 })
-                setRefresh(!refresh)
+                onResetList()
             }
         },
         [publicKeyword],
