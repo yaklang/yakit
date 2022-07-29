@@ -26,22 +26,13 @@
 
     .col {
         display: flex;
+        align-items: center;
     }
 
     .col-flex-end {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-
-        .col-icon {
-            color: rgba(0, 0, 0, 0.45);
-            cursor: pointer;
-        }
-
-        .col-icon-active {
-            color: #1890ff;
-            cursor: pointer;
-        }
 
         button {
             margin-left: 12px;
@@ -204,7 +195,7 @@
 }
 
 .upload-outline {
-    margin-left: 6px;
+    margin: 0 12px;
     font-size: 16px;
     cursor: pointer;
 
@@ -231,4 +222,31 @@
 
 .icon-select-active {
     color: #1890ff;
+}
+
+.operation-icon {
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.45);
+    margin-left: 12px;
+    cursor: pointer;
+
+    &:hover {
+        color: #1890ff;
+    }
+}
+
+.operation-icon-active {
+    color: #1890ff;
+    cursor: pointer;
+}
+
+.delete-icon {
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.45);
+    margin-left: 12px;
+    cursor: pointer;
+
+    &:hover {
+        color: #ff4d4f;
+    }
 }

@@ -106,15 +106,19 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             script && (
                 <>
                     {(isEdit && (
-                        <div className='edit-plugin-body'>
-                            <CloseOutlined
-                                className='close-icon'
-                                onClick={() => {
-                                    setIsEdit(false)
-                                    if (props.setScript) props.setScript(script)
-                                    if (props.setTrigger) props.setTrigger()
-                                }}
-                            />
+                        <>
+                            <div className='edit-plugin-title'>
+                                <div className='title content-ellipsis'>修改插件:{script.ScriptName}</div>
+                                <div>
+                                    <CloseOutlined
+                                        onClick={() => {
+                                            setIsEdit(false)
+                                            if (props.setScript) props.setScript(script)
+                                            if (props.setTrigger) props.setTrigger()
+                                        }}
+                                    />
+                                </div>
+                            </div>
                             <YakScriptCreatorForm
                                 modified={script}
                                 noClose={true}
@@ -128,7 +132,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     wrapperCol: {span: 18}
                                 }}
                             />
-                        </div>
+                        </>
                     )) || (
                         <PluginExecutor
                             subTitle={
