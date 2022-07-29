@@ -1740,16 +1740,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         } else {
             search(1)
         }
-    }, [
-        user,
-        refresh,
-        userInfo.isLogin
-        // queryOnline.is_private,
-        // queryOnline.keywords,
-        // queryOnline.status,
-        // queryOnline.type,
-        // queryOnline.order_by
-    ])
+    }, [user, refresh, userInfo.isLogin])
     const search = useMemoizedFn((page: number) => {
         let url = "yakit/plugin/unlogged"
         if (userInfo.isLogin) {
