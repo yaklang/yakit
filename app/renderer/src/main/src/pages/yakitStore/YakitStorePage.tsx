@@ -372,14 +372,21 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                     ...queryLocal,
                     Keyword: publicKeyword
                 })
+                setRefresh(!refresh)
             }
         },
         [publicKeyword],
         {wait: 200}
     )
+    const isRefListRef = useRef(true)
     useEffect(() => {
-        onResetList()
-        setScript()
+        if (isRefListRef.current) {
+            isRefListRef.current = false
+        } else {
+            // 初次不执行
+            onResetList()
+            setScript()
+        }
     }, [isRefList])
     const onRemoveLocalPlugin = useMemoizedFn(() => {
         const length = selectedRowKeysRecordLocal.length
@@ -435,6 +442,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                 Type: "yak,mitm,codec,packet-hack,port-scan"
             })
         }
+        setRefresh(!refresh)
         setIsShowYAMLPOC(checked)
     })
     return (
@@ -675,7 +683,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         setListBodyLoading(true)
         update(1, undefined, queryLocal)
         if (onSelectList) onSelectList([])
-    }, [userInfo.isLogin, props.refresh, queryLocal.Type, queryLocal.Keyword, queryLocal.Pagination])
+    }, [userInfo.isLogin, props.refresh])
     useEffect(() => {
         if (!deletePluginRecordLocal) return
         response.Data.splice(numberLocal.current, 1)
@@ -1392,14 +1400,21 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     ...queryUser,
                     keywords: publicKeyword
                 })
+                setRefresh(!refresh)
             }
         },
         [publicKeyword],
         {wait: 200}
     )
+    const isRefListRef = useRef(true)
     useEffect(() => {
-        onResetList()
-        setUserPlugin()
+        if (isRefListRef.current) {
+            isRefListRef.current = false
+        } else {
+            // 初次不执行
+            onResetList()
+            setUserPlugin()
+        }
     }, [isRefList])
     const onSelectAllUser = useMemoizedFn((checked) => {
         setIsSelectAllUser(checked)
@@ -1535,14 +1550,21 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     ...queryOnline,
                     keywords: publicKeyword
                 })
+                setRefresh(!refresh)
             }
         },
         [publicKeyword],
         {wait: 200}
     )
+    const isRefListRef = useRef(true)
     useEffect(() => {
-        onResetList()
-        setPlugin()
+        if (isRefListRef.current) {
+            isRefListRef.current = false
+        } else {
+            // 初次不执行
+            onResetList()
+            setPlugin()
+        }
     }, [isRefList])
     const onSelectAllOnline = useMemoizedFn((checked) => {
         setIsSelectAllUser(checked)
@@ -1564,7 +1586,6 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                             <Tag color='blue'>已选{selectedRowKeysRecordOnline.length}条</Tag>
                         )}
                     </Checkbox>
-
                     <Tag>Total:{totalUserOnline}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
@@ -1713,12 +1734,12 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     }, [
         user,
         refresh,
-        userInfo.isLogin,
-        queryOnline.is_private,
-        queryOnline.keywords,
-        queryOnline.status,
-        queryOnline.type,
-        queryOnline.order_by
+        userInfo.isLogin
+        // queryOnline.is_private,
+        // queryOnline.keywords,
+        // queryOnline.status,
+        // queryOnline.type,
+        // queryOnline.order_by
     ])
     const search = useMemoizedFn((page: number) => {
         let url = "yakit/plugin/unlogged"
@@ -1733,8 +1754,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         if (!user) {
             delete payload.is_private
         }
-        console.log("payload", payload)
-
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -1749,7 +1768,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             data: payload
         })
             .then((res) => {
-                console.log("res.data", res.data)
                 if (!res.data) {
                     res.data = []
                 }
