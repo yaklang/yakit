@@ -21,7 +21,7 @@ import {ContentUploadInput} from "../../components/functionTemplate/ContentUploa
 import {ReloadOutlined} from "@ant-design/icons"
 
 import "./PortScanPage.css"
-import {SimplePluginList} from "../../components/SimplePluginList";
+import {SimplePluginList} from "../../components/SimplePluginList"
 
 const {ipcRenderer} = window.require("electron")
 const ScanPortTemplate = "scan-port-template"
@@ -57,14 +57,15 @@ export interface PortScanParams {
     BasicCrawlerRequestMax?: number
 }
 
-const ScanKind: { [key: string]: string } = {
+const ScanKind: {[key: string]: string} = {
     syn: "SYN",
     fingerprint: "指纹",
     all: "SYN+指纹"
 }
 const ScanKindKeys: string[] = Object.keys(ScanKind)
 
-const defaultPorts = "21,22,443,445,80,8000-8004,3306,3389,5432,6379,8080-8084,7000-7005,9000-9002,8443,7443,9443,7080,8070"
+const defaultPorts =
+    "21,22,443,445,80,8000-8004,3306,3389,5432,6379,8080-8084,7000-7005,9000-9002,8443,7443,9443,7080,8070"
 
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [loading, setLoading] = useState(false)
@@ -86,7 +87,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         HostAlivePorts: "22,80,443",
         EnableBasicCrawler: true,
         BasicCrawlerRequestMax: 5,
-        SynConcurrent: 1000,
+        SynConcurrent: 1000
     })
     const [token, setToken] = useState(randomString(40))
     const xtermRef = useRef(null)
@@ -103,10 +104,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         "scan-port",
         "PortScan",
         token,
-        () => {
-        },
-        () => {
-        },
+        () => {},
+        () => {},
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
@@ -122,8 +121,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                     // }, 300)
                 }
             })
-            .catch(() => {
-            })
+            .catch(() => {})
             .finally(() => {
                 setTimeout(() => setLoading(false), 100)
             })
@@ -185,7 +183,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                             <SimplePluginList
                                 pluginTypes={"port-scan,mitm"}
                                 initialSelected={params.ScriptNames}
-                                onSelected={l => {
+                                onSelected={(l) => {
                                     setParams({...params, ScriptNames: [...l]})
                                 }}
                             />
@@ -218,7 +216,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                 >
                                     <Spin spinning={uploadLoading}>
                                         <ContentUploadInput
-                                            type="textarea"
+                                            type='textarea'
                                             beforeUpload={(f) => {
                                                 if (f.type !== "text/plain") {
                                                     failed(`${f.name}非txt文件，请上传txt格式文件！`)
@@ -226,15 +224,17 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 }
 
                                                 setUploadLoading(true)
-                                                ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
-                                                    setParams({...params, Targets: res})
-                                                    setTimeout(() => setUploadLoading(false), 100)
-                                                })
+                                                ipcRenderer
+                                                    .invoke("fetch-file-content", (f as any).path)
+                                                    .then((res) => {
+                                                        setParams({...params, Targets: res})
+                                                        setTimeout(() => setUploadLoading(false), 100)
+                                                    })
                                                 return false
                                             }}
                                             item={{
                                                 style: {textAlign: "left"},
-                                                label: "扫描目标",
+                                                label: "扫描目标"
                                             }}
                                             textarea={{
                                                 isBubbing: true,
@@ -246,7 +246,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                             suffixNode={
                                                 loading ? (
                                                     <Button
-                                                        className="form-submit-style"
+                                                        className='form-submit-style'
                                                         type='primary'
                                                         danger
                                                         onClick={(e) => ipcRenderer.invoke("cancel-PortScan", token)}
@@ -255,7 +255,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                     </Button>
                                                 ) : (
                                                     <Button
-                                                        className="form-submit-style"
+                                                        className='form-submit-style'
                                                         type='primary'
                                                         htmlType='submit'
                                                     >
@@ -299,22 +299,33 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         />
                                         <Space size={"small"} style={{marginBottom: 4}}>
                                             <Tooltip title={"保存为模版"}>
-                                                <a className="link-button-bfc"
-                                                   onClick={() => {
-                                                       if (!params.Ports) {
-                                                           failed("请输入端口后再保存")
-                                                           return
-                                                       }
-                                                       ipcRenderer.invoke("set-value", ScanPortTemplate, params.Ports).then(() => {
-                                                           setTemplatePort(params.Ports)
-                                                           success("保存成功")
-                                                       })
-                                                   }}>保存</a>
+                                                <a
+                                                    className='link-button-bfc'
+                                                    onClick={() => {
+                                                        if (!params.Ports) {
+                                                            failed("请输入端口后再保存")
+                                                            return
+                                                        }
+                                                        ipcRenderer
+                                                            .invoke("set-value", ScanPortTemplate, params.Ports)
+                                                            .then(() => {
+                                                                setTemplatePort(params.Ports)
+                                                                success("保存成功")
+                                                            })
+                                                    }}
+                                                >
+                                                    保存
+                                                </a>
                                             </Tooltip>
                                             <Tooltip title={"重置为默认扫描端口"}>
-                                                <a href={"#"} onClick={() => {
-                                                    setParams({...params, Ports: defaultPorts})
-                                                }}><ReloadOutlined/></a>
+                                                <a
+                                                    href={"#"}
+                                                    onClick={() => {
+                                                        setParams({...params, Ports: defaultPorts})
+                                                    }}
+                                                >
+                                                    <ReloadOutlined />
+                                                </a>
                                             </Tooltip>
                                         </Space>
                                     </Form.Item>
@@ -323,12 +334,15 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         <Space>
                                             <Tag>扫描模式:{ScanKind[params.Mode]}</Tag>
                                             <Tag>指纹并发:{params.Concurrent}</Tag>
-                                            <Checkbox onClick={e => {
-                                                setParams({
-                                                    ...params,
-                                                    SkippedHostAliveScan: !params.SkippedHostAliveScan
-                                                })
-                                            }} checked={params.SkippedHostAliveScan}>
+                                            <Checkbox
+                                                onClick={(e) => {
+                                                    setParams({
+                                                        ...params,
+                                                        SkippedHostAliveScan: !params.SkippedHostAliveScan
+                                                    })
+                                                }}
+                                                checked={params.SkippedHostAliveScan}
+                                            >
                                                 跳过主机存活检测
                                             </Checkbox>
                                             <Button
@@ -355,7 +369,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     </Form.Item>
                                 </Form>
                             </div>
-                            <Divider style={{margin: "5px 0"}}/>
+                            <Divider style={{margin: "5px 0"}} />
                             <div style={{flex: 1, overflow: "hidden"}}>
                                 <Tabs className='scan-port-tabs' tabBarStyle={{marginBottom: 5}}>
                                     <Tabs.TabPane tab={"扫描端口列表"} key={"scanPort"} forceRender>
@@ -380,7 +394,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 
                                             <Row style={{marginTop: 6}} gutter={6}>
                                                 <Col span={24}>
-                                                    <OpenPortTableViewer data={openPorts}/>
+                                                    <OpenPortTableViewer data={openPorts} />
                                                 </Col>
                                                 {/*<Col span={8}>*/}
                                                 {/*    <ClosedPortTableViewer data={closedPorts}/>*/}
@@ -453,93 +467,104 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 label={"扫描协议"}
                 data={[
                     {text: "TCP", value: "tcp"},
-                    {text: "UDP", value: "udp", disabled: params.Mode === "syn" || params.Mode === "all"},
+                    {text: "UDP", value: "udp", disabled: params.Mode === "syn" || params.Mode === "all"}
                 ]}
-                setValue={i => setParams({...params, Proto: [i]})}
+                setValue={(i) => setParams({...params, Proto: [i]})}
                 value={(params.Proto || []).length > 0 ? params.Proto[0] : "tcp"}
-            >
-
-            </SelectOne>
-            {(params.Mode === "all" || params.Mode === "syn") && <>
-                <Divider orientation={"left"}>SYN 配置</Divider>
-                <InputInteger
-                    label={"SYN 并发"}
-                    help={"每秒发送 SYN 数据包数量，可视为 SYN 并发量"}
-                    value={params.SynConcurrent}
-                    min={10}
-                    setValue={(e) => setParams({...params, SynConcurrent: e})}
-                />
-            </>}
-            {(params.Mode === "all" || params.Mode === "fingerprint") &&
-            <>
-                <Divider orientation={"left"}>指纹扫描配置</Divider>
-                <InputInteger
-                    label={"指纹扫描并发"}
-                    help={"推荐最多同时扫描200个端口"}
-                    value={params.Concurrent}
-                    min={1}
-                    max={200}
-                    setValue={(e) => setParams({...params, Concurrent: e})}
-                />
-                <SwitchItem
-                    label={"主动模式"}
-                    help={"允许指纹探测主动发包"}
-                    setValue={(Active) => setParams({...params, Active})}
-                    value={params.Active}
-                />
-                <SelectOne
-                    label={"服务指纹级别"}
-                    help={"级别越高探测的详细程度越多，主动发包越多，时间越长"}
-                    data={[
-                        {value: 1, text: "基础"},
-                        {value: 3, text: "适中"},
-                        {value: 7, text: "详细"},
-                        {value: 100, text: "全部"},
-                    ]}
-                    value={params.ProbeMax} setValue={ProbeMax => setParams({...params, ProbeMax})}
-                />
-                <InputInteger
-                    label={"主动发包超时时间"}
-                    help={"某些指纹的检测需要检查目标针对某一个探针请求的响应，需要主动发包"}
-                    value={params.ProbeTimeout} setValue={ProbeTimeout => setParams({...params, ProbeTimeout})}
-                />
-                <ManyMultiSelectForString
-                    label={"TCP 代理"}
-                    help={"支持 HTTP/Sock4/Sock4a/Socks5 协议，例如 http://127.0.0.1:7890  socks5://127.0.0.1:7890"}
-                    data={[
-                        "http://127.0.0.1:7890", "http://127.0.0.1:8082",
-                        "socks5://127.0.0.1:8082", "http://127.0.0.1:8083",
-                    ].map(i => {
-                        return {value: i, label: i}
-                    })}
-                    value={(params.Proxy || []).join(",")}
-                    mode={"tags"}
-                    setValue={e => setParams({...params, Proxy: (e || "").split(",").filter(i => !!i)})}
-                />
-                <SelectOne
-                    label={"高级指纹选项"}
-                    data={[
-                        {value: "web", text: "仅web指纹"},
-                        {value: "service", text: "服务指纹"},
-                        {value: "all", text: "全部指纹"}
-                    ]}
-                    setValue={(FingerprintMode) => setParams({...params, FingerprintMode})}
-                    value={params.FingerprintMode}
-                />
-                <Divider orientation={"left"}>基础爬虫配置</Divider>
-                <Form.Item label={"爬虫设置"} help={"在发现网站内容是一个 HTTP(s) 服务后，进行最基础的爬虫以发现更多数据"}>
-                    <Space>
-                        <Checkbox onChange={e => setParams({...params, EnableBasicCrawler: e.target.value})}
-                                  checked={params.EnableBasicCrawler}>启用爬虫</Checkbox>
-                        <InputNumber
-                            addonBefore={"爬虫请求数"}
-                            value={params.BasicCrawlerRequestMax}
-                            onChange={e => setParams({...params, BasicCrawlerRequestMax: e})}
-                        />
-                    </Space>
-                </Form.Item>
-            </>
-            }
+            ></SelectOne>
+            {(params.Mode === "all" || params.Mode === "syn") && (
+                <>
+                    <Divider orientation={"left"}>SYN 配置</Divider>
+                    <InputInteger
+                        label={"SYN 并发"}
+                        help={"每秒发送 SYN 数据包数量，可视为 SYN 并发量"}
+                        value={params.SynConcurrent}
+                        min={10}
+                        setValue={(e) => setParams({...params, SynConcurrent: e})}
+                    />
+                </>
+            )}
+            {(params.Mode === "all" || params.Mode === "fingerprint") && (
+                <>
+                    <Divider orientation={"left"}>指纹扫描配置</Divider>
+                    <InputInteger
+                        label={"指纹扫描并发"}
+                        // help={"推荐最多同时扫描200个端口"}
+                        value={params.Concurrent}
+                        min={1}
+                        // max={200}
+                        setValue={(e) => setParams({...params, Concurrent: e})}
+                    />
+                    <SwitchItem
+                        label={"主动模式"}
+                        help={"允许指纹探测主动发包"}
+                        setValue={(Active) => setParams({...params, Active})}
+                        value={params.Active}
+                    />
+                    <SelectOne
+                        label={"服务指纹级别"}
+                        help={"级别越高探测的详细程度越多，主动发包越多，时间越长"}
+                        data={[
+                            {value: 1, text: "基础"},
+                            {value: 3, text: "适中"},
+                            {value: 7, text: "详细"},
+                            {value: 100, text: "全部"}
+                        ]}
+                        value={params.ProbeMax}
+                        setValue={(ProbeMax) => setParams({...params, ProbeMax})}
+                    />
+                    <InputInteger
+                        label={"主动发包超时时间"}
+                        help={"某些指纹的检测需要检查目标针对某一个探针请求的响应，需要主动发包"}
+                        value={params.ProbeTimeout}
+                        setValue={(ProbeTimeout) => setParams({...params, ProbeTimeout})}
+                    />
+                    <ManyMultiSelectForString
+                        label={"TCP 代理"}
+                        help={"支持 HTTP/Sock4/Sock4a/Socks5 协议，例如 http://127.0.0.1:7890  socks5://127.0.0.1:7890"}
+                        data={[
+                            "http://127.0.0.1:7890",
+                            "http://127.0.0.1:8082",
+                            "socks5://127.0.0.1:8082",
+                            "http://127.0.0.1:8083"
+                        ].map((i) => {
+                            return {value: i, label: i}
+                        })}
+                        value={(params.Proxy || []).join(",")}
+                        mode={"tags"}
+                        setValue={(e) => setParams({...params, Proxy: (e || "").split(",").filter((i) => !!i)})}
+                    />
+                    <SelectOne
+                        label={"高级指纹选项"}
+                        data={[
+                            {value: "web", text: "仅web指纹"},
+                            {value: "service", text: "服务指纹"},
+                            {value: "all", text: "全部指纹"}
+                        ]}
+                        setValue={(FingerprintMode) => setParams({...params, FingerprintMode})}
+                        value={params.FingerprintMode}
+                    />
+                    <Divider orientation={"left"}>基础爬虫配置</Divider>
+                    <Form.Item
+                        label={"爬虫设置"}
+                        help={"在发现网站内容是一个 HTTP(s) 服务后，进行最基础的爬虫以发现更多数据"}
+                    >
+                        <Space>
+                            <Checkbox
+                                onChange={(e) => setParams({...params, EnableBasicCrawler: e.target.value})}
+                                checked={params.EnableBasicCrawler}
+                            >
+                                启用爬虫
+                            </Checkbox>
+                            <InputNumber
+                                addonBefore={"爬虫请求数"}
+                                value={params.BasicCrawlerRequestMax}
+                                onChange={(e) => setParams({...params, BasicCrawlerRequestMax: e})}
+                            />
+                        </Space>
+                    </Form.Item>
+                </>
+            )}
 
             <Divider orientation={"left"}>其他配置</Divider>
             <SwitchItem
@@ -556,39 +581,50 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                     value={params.SaveClosedPorts}
                 />
             )}
-            <SwitchItem label={"自动扫相关C段"} help={"可以把域名 /IP 转化为 C 段目标，直接进行扫描"}
-                        value={params.EnableCClassScan}
-                        setValue={EnableCClassScan => setParams({...params, EnableCClassScan})}
+            <SwitchItem
+                label={"自动扫相关C段"}
+                help={"可以把域名 /IP 转化为 C 段目标，直接进行扫描"}
+                value={params.EnableCClassScan}
+                setValue={(EnableCClassScan) => setParams({...params, EnableCClassScan})}
             />
-            <SwitchItem label={"跳过主机存活检测"} help={"主机存活检测，根据当前用户权限使用 ICMP/TCP Ping 探测主机是否存活"}
-                        value={params.SkippedHostAliveScan}
-                        setValue={SkippedHostAliveScan => setParams({...params, SkippedHostAliveScan})}
+            <SwitchItem
+                label={"跳过主机存活检测"}
+                help={"主机存活检测，根据当前用户权限使用 ICMP/TCP Ping 探测主机是否存活"}
+                value={params.SkippedHostAliveScan}
+                setValue={(SkippedHostAliveScan) => setParams({...params, SkippedHostAliveScan})}
             />
             {!params.SkippedHostAliveScan && (
                 <>
                     <InputItem
-                        label={"TCP Ping 端口"} help={"配置 TCP Ping 端口：以这些端口是否开放作为 TCP Ping 依据"}
+                        label={"TCP Ping 端口"}
+                        help={"配置 TCP Ping 端口：以这些端口是否开放作为 TCP Ping 依据"}
                         value={params.HostAlivePorts}
-                        setValue={HostAlivePorts => setParams({...params, HostAlivePorts})}
+                        setValue={(HostAlivePorts) => setParams({...params, HostAlivePorts})}
                     />
                 </>
             )}
             <InputItem
-                label={"排除主机"} setValue={ExcludeHosts => setParams({...params, ExcludeHosts})}
+                label={"排除主机"}
+                setValue={(ExcludeHosts) => setParams({...params, ExcludeHosts})}
                 value={params.ExcludeHosts}
             />
             <InputItem
-                label={"排除端口"} setValue={ExcludePorts => setParams({...params, ExcludePorts})}
+                label={"排除端口"}
+                setValue={(ExcludePorts) => setParams({...params, ExcludePorts})}
                 value={params.ExcludePorts}
             />
             <Form.Item label={"爬虫设置"}>
                 <Space>
-                    <Checkbox onChange={e => setParams({...params, EnableBasicCrawler: e.target.value})}
-                              checked={params.EnableBasicCrawler}>启用爬虫</Checkbox>
+                    <Checkbox
+                        onChange={(e) => setParams({...params, EnableBasicCrawler: e.target.value})}
+                        checked={params.EnableBasicCrawler}
+                    >
+                        启用爬虫
+                    </Checkbox>
                     <InputNumber
                         addonBefore={"爬虫请求数"}
                         value={params.BasicCrawlerRequestMax}
-                        onChange={e => setParams({...params, BasicCrawlerRequestMax: e})}
+                        onChange={(e) => setParams({...params, BasicCrawlerRequestMax: e})}
                     />
                 </Space>
             </Form.Item>
@@ -609,20 +645,23 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             <InputInteger
                 label={"主动发包超时时间"}
                 help={"某些指纹的检测需要检查目标针对某一个探针请求的响应，需要主动发包"}
-                value={params.ProbeTimeout} setValue={ProbeTimeout => setParams({...params, ProbeTimeout})}
+                value={params.ProbeTimeout}
+                setValue={(ProbeTimeout) => setParams({...params, ProbeTimeout})}
             />
             <ManyMultiSelectForString
                 label={"TCP 代理"}
                 help={"支持 HTTP/Sock4/Sock4a/Socks5 协议，例如 http://127.0.0.1:7890  socks5://127.0.0.1:7890"}
                 data={[
-                    "http://127.0.0.1:7890", "http://127.0.0.1:8082",
-                    "socks5://127.0.0.1:8082", "http://127.0.0.1:8083",
-                ].map(i => {
+                    "http://127.0.0.1:7890",
+                    "http://127.0.0.1:8082",
+                    "socks5://127.0.0.1:8082",
+                    "http://127.0.0.1:8083"
+                ].map((i) => {
                     return {value: i, label: i}
                 })}
                 value={(params.Proxy || []).join(",")}
                 mode={"tags"}
-                setValue={e => setParams({...params, Proxy: (e || "").split(",").filter(i => !!i)})}
+                setValue={(e) => setParams({...params, Proxy: (e || "").split(",").filter((i) => !!i)})}
             />
             <SwitchItem
                 label={"扫描结果入库"}

@@ -94,10 +94,16 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                     })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
+                        setTimeout(() => {
+                            if (uploadLoading) uploadLoading(false)
+                        }, 200)
                     })
             })
             .catch((err) => {
                 failed("插件上传失败:" + err)
+                setTimeout(() => {
+                    if (uploadLoading) uploadLoading(false)
+                }, 200)
             })
     })
     // 上传
@@ -172,11 +178,17 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                     })
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
+                        setTimeout(() => {
+                            if (uploadLoading) uploadLoading(false)
+                        }, 200)
                     })
                 success("插件上传成功")
             })
             .catch((err) => {
                 failed("插件上传失败:" + err)
+                setTimeout(() => {
+                    if (uploadLoading) uploadLoading(false)
+                }, 200)
             })
     }
     const onSyncCloud = useMemoizedFn(() => {
