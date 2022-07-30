@@ -1767,8 +1767,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             data: payload
         })
             .then((res) => {
-                console.log('res', res.pagemeta)
-                console.log('res-data', res.data.map(ele => ele.id))
                 if (!res.data) {
                     res.data = []
                 }
