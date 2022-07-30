@@ -1383,6 +1383,8 @@ message StringFuzzerRequest {
   string Template = 1;
   string HotPatchCode = 2;
   string HotPatchCodeWithParamGetter = 3;
+  int64 Limit = 4;
+  int64 TimeoutSeconds = 5;
 }
 
 

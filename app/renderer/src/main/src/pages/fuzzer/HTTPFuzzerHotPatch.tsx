@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from "react";
-import {Button, Checkbox, Form, Space, Tag, Tooltip} from "antd";
+import {Button, Checkbox, Form, Popconfirm, Space, Tag, Tooltip} from "antd";
 import {YakEditor} from "../../utils/editors";
 import {callCopyToClipboard} from "../../utils/basic";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {AutoCard} from "../../components/AutoCard";
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
+import {useGetState} from "ahooks";
 
 export interface HTTPFuzzerHotPatchProp {
     onInsert?: (s: string) => any
@@ -42,19 +43,19 @@ const {ipcRenderer} = window.require("electron");
 
 
 const HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG = "HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG"
+const HTTPFuzzerHotPatch_TEMPLATE_DEMO = "HTTPFuzzerHotPatch_TEMPLATE_DEMO"
 
 export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
-    const [params, setParams] = useState({
+    const [params, setParams, getParams] = useGetState({
         Template: `{{yak(handle|{{params(test)}})}}`,
         HotPatchCode: !!props.initialHotPatchCode ? props.initialHotPatchCode : HotPatchDefaultContent,
         HotPatchCodeWithParamGetter: !!props.initialHotPatchCodeWithParamGetter ? props.initialHotPatchCodeWithParamGetter : HotPatchParamsGetterDefault,
+        TimeoutSeconds: 20,
+        Limit: 300,
     });
-    const [dynamicParam, setDynamicParam] = useState(false);
+    const [dynamicParam, setDynamicParam, getDynamicParam] = useGetState(false);
+    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        setRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG, dynamicParam ? "1" : "0").then(() => {
-        })
-    }, [dynamicParam])
     useEffect(() => {
         getRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG).then(e => {
             if (e === "1") {
@@ -63,6 +64,18 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 setDynamicParam(false)
             }
         })
+
+        getRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO).then(e => {
+            if (!!e) {
+                setParams({...params, Template: e})
+            }
+        })
+        return () => {
+            setRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {
+            })
+            setRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG, getDynamicParam() ? "1" : "0").then(() => {
+            })
+        }
     }, [])
 
     return <Form
@@ -72,7 +85,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             if (props.onSaveCode) props.onSaveCode(params.HotPatchCode);
             if (props.onSaveHotPatchCodeWithParamGetterCode) props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter);
 
-            console.info(params)
+            setLoading(true)
             ipcRenderer.invoke("StringFuzzer", {...params}).then((response: { Results: Uint8Array[] }) => {
                 const data: string[] = (response.Results || []).map(buf => new Buffer(buf).toString("utf8"))
                 showDrawer({
@@ -93,7 +106,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         </AutoCard>
                     )
                 })
-            })
+            }).finally(() => setTimeout(() => setLoading(false), 300))
         }}
         layout={"vertical"}
         // labelCol={{span: 5}} wrapperCol={{span: 14}}
@@ -124,7 +137,12 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                            setValue={Template => setParams({...params, Template})}/>
             </div>
         </Form.Item>
-        {dynamicParam && <Form.Item label={"预加载参数生成器"}>
+        {dynamicParam && <Form.Item label={<Space>
+            <div>{"预加载参数生成器"}</div>
+            {props.onSaveHotPatchCodeWithParamGetterCode && <Button type={"primary"} size={"small"} onClick={() => {
+                if (props.onSaveHotPatchCodeWithParamGetterCode) props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter);
+            }}>保存</Button>}
+        </Space>}>
             <div style={{height: 250}}>
                 <YakEditor
                     type={"yak"} value={params.HotPatchCodeWithParamGetter}
@@ -136,7 +154,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             热加载代码
             {props.onSaveCode && <Button type={"primary"} size={"small"} onClick={() => {
                 if (props.onSaveCode) props.onSaveCode(params.HotPatchCode);
-            }}>保存到本地</Button>}
+            }}>保存</Button>}
         </Space>}>
             <div style={{height: 250}}>
                 <YakEditor
@@ -145,9 +163,11 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 />
             </div>
         </Form.Item>
-        <Form.Item>
+        <Form.Item help={"调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 1000 条"}>
             <Button
-                type="primary" htmlType="submit"> 执行 </Button>
+                loading={loading}
+                type="primary" htmlType="submit"
+            > 调试执行 </Button>
         </Form.Item>
     </Form>
 };
