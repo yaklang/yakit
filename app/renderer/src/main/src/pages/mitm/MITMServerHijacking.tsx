@@ -3,7 +3,7 @@ import {
     Alert,
     Button,
     Checkbox,
-    Col,
+    Col, Dropdown, Menu,
     Modal,
     notification,
     PageHeader,
@@ -37,6 +37,7 @@ import {ExtractExecResultMessage} from "@/components/yakitLogSchema";
 import {showDrawer, showModal} from "@/utils/showModal";
 import {saveABSFileToOpen} from "@/utils/openWebsite";
 import {MITMResponse} from "@/pages/mitm/MITMPage";
+import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy";
 
 type MITMStatus = "hijacking" | "hijacked" | "idle";
 const {Text} = Typography;
@@ -450,7 +451,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 })
             }}
         >
-            匹配/标记/替换
+            标记 / 替换流量规则
         </Button>
     })
 
@@ -472,7 +473,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                </>
                            });
                        }}
-        >过滤器</Button>
+        >过滤劫持流量</Button>
     })
 
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
@@ -521,9 +522,16 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         style={{marginRight: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 8}}
                         extra={
                             <Space>
+                                <Button onClick={() => {
+                                    showConfigSystemProxyForm(`${host === "0.0.0.0" ? "127.0.0.1" : host}:${port}`)
+                                }}>系统代理</Button>
                                 <ChromeLauncherButton host={host} port={port}/>
-                                {contentReplacer()}
-                                {setFilter()}
+                                <Dropdown overlay={<Space direction={"vertical"}>
+                                    {contentReplacer()}
+                                    {setFilter()}
+                                </Space>}>
+                                    <Button type={"link"}>过滤 / 替换流量</Button>
+                                </Dropdown>
                                 {downloadCert()}
                                 <Button danger={true} type={"link"}
                                         onClick={() => {

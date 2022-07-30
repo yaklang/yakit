@@ -605,3 +605,7 @@ const StartToExecYakScriptViewer = React.memo((props: {
         />
     )
 })
+
+export const IsWindows = () => {
+    return ipcRenderer.invoke("is-windows")
+}

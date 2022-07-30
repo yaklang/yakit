@@ -374,10 +374,12 @@ message GetKeyResult {
 
 message SetSystemProxyRequest {
   string HttpProxy = 1;
+  bool Enable = 2;
 }
 
 message GetSystemProxyResult {
   string CurrentProxy = 1;
+  bool Enable = 2;
 }
 
 message GetExecBatchYakScriptUnfinishedTaskByUidRequest {
