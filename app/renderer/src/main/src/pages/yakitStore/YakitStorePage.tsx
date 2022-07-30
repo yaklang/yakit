@@ -1436,12 +1436,11 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
             <Row className='row-body' gutter={12}>
                 <Col span={12} className='col'>
                     <Checkbox checked={isSelectAllUser} onChange={(e) => onSelectAllUser(e.target.checked)}>
-                        全选&emsp;
-                        {selectedRowKeysRecordUser.length > 0 && (
-                            <Tag color='blue'>已选{selectedRowKeysRecordUser.length}条</Tag>
-                        )}
+                        全选
                     </Checkbox>
-
+                    {selectedRowKeysRecordUser.length > 0 && (
+                        <Tag color='blue'>已选{selectedRowKeysRecordUser.length}条</Tag>
+                    )}
                     <Tag>Total:{totalUser}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
@@ -1588,11 +1587,11 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
             <Row className='row-body' gutter={12}>
                 <Col span={12} className='col'>
                     <Checkbox checked={isSelectAllUser} onChange={(e) => onSelectAllOnline(e.target.checked)}>
-                        全选&emsp;
-                        {selectedRowKeysRecordOnline.length > 0 && (
-                            <Tag color='blue'>已选{selectedRowKeysRecordOnline.length}条</Tag>
-                        )}
+                        全选
                     </Checkbox>
+                    {selectedRowKeysRecordOnline.length > 0 && (
+                        <Tag color='blue'>已选{selectedRowKeysRecordOnline.length}条</Tag>
+                    )}
                     <Tag>Total:{totalUserOnline}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
