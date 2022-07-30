@@ -66,6 +66,7 @@ import "./GlobalClass.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
 import {setRemoteValue} from "@/utils/kv"
+import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy";
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -176,7 +177,7 @@ export interface MenuItemType {
 
 const Main: React.FC<MainProp> = (props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
-    const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
+    const [status, setStatus] = useState<{ addr: string; isTLS: boolean }>()
     const [collapsed, setCollapsed] = useState(false)
     const [hideMenu, setHideMenu] = useState(false)
 
@@ -230,7 +231,7 @@ const Main: React.FC<MainProp> = (props) => {
         // Fetch User Defined Plugins
         ipcRenderer
             .invoke("GetAllMenuItem", {})
-            .then((data: {Groups: MenuItemGroup[]}) => {
+            .then((data: { Groups: MenuItemGroup[] }) => {
                 setMenuItems(data.Groups)
             })
             .catch((e: any) => failed("Update Menu Item Failed"))
@@ -249,7 +250,7 @@ const Main: React.FC<MainProp> = (props) => {
                         if (item.key === Route.GeneralModule) {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
-                                    icon: <EllipsisOutlined />,
+                                    icon: <EllipsisOutlined/>,
                                     key: `plugin:${i.Id}`,
                                     label: i.ScriptName
                                 } as unknown as MenuDataProps
@@ -632,7 +633,7 @@ const Main: React.FC<MainProp> = (props) => {
 
     // 加载补全
     useEffect(() => {
-        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
+        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
             const completionJson = Buffer.from(data.RawJson).toString("utf8")
             setCompletions(JSON.parse(completionJson) as CompletionTotal)
             // success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
@@ -657,7 +658,8 @@ const Main: React.FC<MainProp> = (props) => {
                 .catch((e: any) => {
                     setEngineStatus("error")
                 })
-                .finally(() => {})
+                .finally(() => {
+                })
         }
         let id = setInterval(updateEngineStatus, 3000)
         return () => {
@@ -667,7 +669,8 @@ const Main: React.FC<MainProp> = (props) => {
         }
     }, [])
 
-    useHotkeys("Ctrl+Alt+T", () => {})
+    useHotkeys("Ctrl+Alt+T", () => {
+    })
 
     useEffect(() => {
         ipcRenderer.invoke("query-latest-notification").then((e: string) => {
@@ -685,7 +688,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         title: "Notification",
                                         content: (
                                             <>
-                                                <MDEditor.Markdown source={e} />
+                                                <MDEditor.Markdown source={e}/>
                                             </>
                                         )
                                     })
@@ -765,7 +768,8 @@ const Main: React.FC<MainProp> = (props) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {})
+                .catch(() => {
+                })
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === Route.PoC)
@@ -893,11 +897,11 @@ const Main: React.FC<MainProp> = (props) => {
                         <Col span={8}>
                             <Space>
                                 <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} />
+                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}}/>
                                 </div>
-                                <Divider type={"vertical"} />
-                                <YakVersion />
-                                <YakitVersion />
+                                <Divider type={"vertical"}/>
+                                <YakVersion/>
+                                <YakitVersion/>
                                 {!hideMenu && (
                                     <Button
                                         style={{marginLeft: 4, color: "#207ee8"}}
@@ -906,7 +910,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         onClick={(e) => {
                                             setCollapsed(!collapsed)
                                         }}
-                                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                                        icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
                                     />
                                 )}
                                 <Button
@@ -916,18 +920,18 @@ const Main: React.FC<MainProp> = (props) => {
                                     onClick={(e) => {
                                         updateMenuItems()
                                     }}
-                                    icon={<ReloadOutlined />}
+                                    icon={<ReloadOutlined/>}
                                 />
                             </Space>
                         </Col>
                         <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                            <PerformanceDisplay />
-                            <RiskStatsTag professionalMode={true} />
+                            <PerformanceDisplay/>
+                            <RiskStatsTag professionalMode={true}/>
                             <Space>
                                 {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                                <ReversePlatformStatus />
+                                <ReversePlatformStatus/>
                                 <Dropdown
                                     forceRender={true}
                                     overlay={
@@ -960,7 +964,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                         width: 800,
                                                         content: (
                                                             <div style={{width: 800}}>
-                                                                <ConfigGlobalReverse />
+                                                                <ConfigGlobalReverse/>
                                                             </div>
                                                         )
                                                     })
@@ -969,11 +973,11 @@ const Main: React.FC<MainProp> = (props) => {
                                                 <Button type={"link"}>配置全局反连</Button>
                                                 {/*<ConfigGlobalReverseButton/>*/}
                                             </Menu.Item>
-                                            {/*<Menu.Item key={"config-system-proxy"} onClick={() => {*/}
-                                            {/*    showConfigSystemProxyForm()*/}
-                                            {/*}}>*/}
-                                            {/*    <Button type={"link"}>配置系统代理</Button>*/}
-                                            {/*</Menu.Item>*/}
+                                            <Menu.Item key={"config-system-proxy"} onClick={() => {
+                                                showConfigSystemProxyForm()
+                                            }}>
+                                                <Button type={"link"}>配置系统代理</Button>
+                                            </Menu.Item>
                                             <Menu.Item key={"config-menu"} onClick={() => showConfigMenuItems()}>
                                                 <Button type={"link"}>配置菜单栏</Button>
                                             </Menu.Item>
@@ -982,18 +986,18 @@ const Main: React.FC<MainProp> = (props) => {
                                                 onClick={() => {
                                                     const m = showModal({
                                                         title: "配置私有域",
-                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()} />
+                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()}/>
                                                     })
                                                     return m
                                                 }}
                                             >
-                                                <Button type={"link"}>配置私有域</Button>   
+                                                <Button type={"link"}>配置私有域</Button>
                                             </Menu.Item>
                                         </Menu>
                                     }
                                     trigger={["click"]}
                                 >
-                                    <Button icon={<SettingOutlined />}>配置</Button>
+                                    <Button icon={<SettingOutlined/>}>配置</Button>
                                 </Dropdown>
                                 {userInfo.isLogin ? (
                                     <div>
@@ -1030,7 +1034,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 <Button
                                     type={"link"}
                                     danger={true}
-                                    icon={<PoweroffOutlined />}
+                                    icon={<PoweroffOutlined/>}
                                     onClick={() => {
                                         if (winCloseFlag) {
                                             setWinCloseShow(true)
@@ -1083,7 +1087,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                                 return (
                                                     <Menu.SubMenu
-                                                        icon={<EllipsisOutlined />}
+                                                        icon={<EllipsisOutlined/>}
                                                         key={i.Group}
                                                         title={i.Group}
                                                     >
@@ -1091,7 +1095,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             if (item.YakScriptId > 0) {
                                                                 return (
                                                                     <MenuItem
-                                                                        icon={<EllipsisOutlined />}
+                                                                        icon={<EllipsisOutlined/>}
                                                                         key={`plugin:${item.Group}:${item.YakScriptId}`}
                                                                     >
                                                                         <Text ellipsis={{tooltip: true}}>
@@ -1102,7 +1106,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             }
                                                             return (
                                                                 <MenuItem
-                                                                    icon={<EllipsisOutlined />}
+                                                                    icon={<EllipsisOutlined/>}
                                                                     key={`batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`}
                                                                 >
                                                                     <Text ellipsis={{tooltip: true}}>
@@ -1219,7 +1223,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                     </>
                                                                 }
                                                             >
-                                                                <EditOutlined className='main-container-cion' />
+                                                                <EditOutlined className='main-container-cion'/>
                                                             </Popover>
                                                             <CloseOutlined
                                                                 className='main-container-cion'
@@ -1293,7 +1297,7 @@ const Main: React.FC<MainProp> = (props) => {
                 ]}
             >
                 <div style={{height: 40}}>
-                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
+                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
                     <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
                 </div>
                 <p style={{fontSize: 15, marginLeft: 37}}>
@@ -1346,12 +1350,12 @@ const Main: React.FC<MainProp> = (props) => {
                             setBugTestValue(
                                 value
                                     ? [
-                                          {
-                                              filter: option?.filter,
-                                              key: option?.key,
-                                              title: option?.title
-                                          }
-                                      ]
+                                        {
+                                            filter: option?.filter,
+                                            key: option?.key,
+                                            title: option?.title
+                                        }
+                                    ]
                                     : []
                             )
                     }}
