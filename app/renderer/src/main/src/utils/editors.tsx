@@ -22,15 +22,17 @@ import {HTTPPacketFuzzable} from "../components/HTTPHistory";
 import ReactResizeDetector from "react-resize-detector";
 
 import './editors.css'
-import {useMemoizedFn} from "ahooks";
+import {useDebounceFn, useMemoizedFn} from "ahooks";
 import {Buffer} from "buffer";
 import {failed, info} from "./notification";
 import {StringToUint8Array, Uint8ArrayToString} from "./str";
 import {newWebFuzzerTab} from "../pages/fuzzer/HTTPFuzzerPage";
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
-import {IPosition, IRange} from "monaco-editor";
+import {editor, IPosition, IRange, MarkerSeverity} from "monaco-editor";
 import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode";
 import {callCopyToClipboard} from "@/utils/basic";
+import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers";
+import ITextModel = editor.ITextModel;
 
 const {ipcRenderer} = window.require("electron")
 
@@ -179,8 +181,28 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                 host.shadowRoot.prepend(style);
             }
         })
+    });
 
-    })
+    const yakSyntaxChecking = useDebounceFn(useMemoizedFn((editor: IMonacoEditor, model: ITextModel) => {
+        const allContent = model.getValue()
+        ipcRenderer.invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)}).then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
+            if (e && e.Result.length > 0) {
+                const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker);
+                // console.info(markers)
+                // markers.push({
+                //     endColumn: 14,
+                //     endLineNumber: 4,
+                //     message: "test",
+                //     severity: MarkerSeverity.Error,
+                //     startColumn: 12,
+                //     startLineNumber: 5,
+                // })
+                monaco.editor.setModelMarkers(model, "owner", markers)
+            } else {
+                monaco.editor.setModelMarkers(model, "owner", [])
+            }
+        })
+    }), {wait: 300})
 
     return <>
         {!reload && <div style={{height: "100%", width: "100%", overflow: "hidden"}} ref={outterContainer}>
@@ -212,6 +234,16 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                         editorDidMount={(editor: IMonacoEditor, monaco: any) => {
                             setEditor(editor)
                             editor.setSelection({startColumn: 0, startLineNumber: 0, endColumn: 0, endLineNumber: 0})
+
+                            if (editor && props.type === "yak") {
+                                const model = editor.getModel();
+                                if (model) {
+                                    yakSyntaxChecking.run(editor, model)
+                                    model.onDidChangeContent(() => {
+                                        yakSyntaxChecking.run(editor, model)
+                                    })
+                                }
+                            }
 
                             fixContextMenu(editor)
                             if (props.full) {

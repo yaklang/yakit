@@ -193,6 +193,7 @@ service Yak {
 
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
+  rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
@@ -314,6 +315,24 @@ service Yak {
   rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
   rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
   rpc DeleteAllLocalPlugins(Empty) returns (Empty);
+}
+
+message StaticAnalyzeErrorRequest {
+  bytes Code = 1;
+}
+
+message StaticAnalyzeErrorResult {
+  bytes Message = 1;
+  int64 StartLineNumber = 2;
+  int64 EndLineNumber = 3;
+  int64 StartColumn = 4;
+  int64 EndColumn = 5;
+  bytes RawMessage = 6;
+  string Severity = 7;
+}
+
+message StaticAnalyzeErrorResponse {
+  repeated StaticAnalyzeErrorResult Result = 1;
 }
 
 message SavePayloadProgress {
