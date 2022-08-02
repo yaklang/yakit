@@ -138,6 +138,7 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
+                if (params.OnlineID) win.webContents.send('ref-plugin-operator', { pluginOnlineId: params.OnlineID })
                 resolve(data)
             })
         })
@@ -145,7 +146,6 @@ module.exports = (win, getClient) => {
     // 下载插件
     ipcMain.handle("DownloadOnlinePluginById", async (e, params) => {
         params.Token = USER_INFO.token
-        if (params.OnlineID) win.webContents.send('ref-plugin-operator', { pluginOnlineId: params.OnlineID })
         return await asyncDownloadOnlinePluginById(params)
     })
     const asyncDownloadOnlinePluginByIds = (params) => {

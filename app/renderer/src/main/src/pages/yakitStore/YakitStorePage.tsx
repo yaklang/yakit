@@ -149,7 +149,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setPublicKeyword("")
         onResetPluginDetails()
         setIsRefList(!isRefList)
-        setScriptIdOnlineId(0)
+        setScriptIdOnlineId(undefined)
     })
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const onFullScreen = useMemoizedFn(() => {
@@ -192,7 +192,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [updatePluginRecordOnline, setUpdatePluginRecordOnline] = useState<API.YakitPluginDetail>()
     const [updatePluginRecordLocal, setUpdatePluginRecordLocal] = useState<YakScript>()
     // 线上插件id
-    const [scriptIdOnlineId, setScriptIdOnlineId] = useState<number>(0)
+    const [scriptIdOnlineId, setScriptIdOnlineId] = useState<number>()
     const onSetPluginAndGetLocal = useMemoizedFn((p?: API.YakitPluginDetail) => {
         if (!p) {
             setScript(undefined)
@@ -210,7 +210,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             } as GetYakScriptByOnlineIDRequest)
             .then((localSrcipt: YakScript) => {
                 setScript(localSrcipt)
-                setScriptIdOnlineId(0)
+                setScriptIdOnlineId(undefined)
             })
             .catch((e) => {
                 // 本地未查询到相关数据
@@ -237,7 +237,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             } as GetYakScriptByOnlineIDRequest)
             .then((localSrcipt: YakScript) => {
                 setScript(localSrcipt)
-                setScriptIdOnlineId(0)
+                setScriptIdOnlineId(undefined)
             })
             .catch((e) => {
                 // 本地未查询到相关数据
@@ -870,7 +870,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             title={
                 <div className='flex-align-center'>
                     <Tooltip title={plugin.ScriptName}>
-                        <span className='content-ellipsis'>{plugin.ScriptName}</span>
+                        <span className='text-style content-ellipsis'>{plugin.ScriptName}</span>
                     </Tooltip>
 
                     <div className='text-icon-local'>
@@ -1838,8 +1838,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             delete payload.is_private
         }
         setLoading(true)
-        console.log('payload', payload);
-
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
             url,
@@ -1853,8 +1851,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             data: payload
         })
             .then((res) => {
-                console.log('res', res);
-
                 if (!res.data) {
                     res.data = []
                 }

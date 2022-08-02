@@ -213,7 +213,10 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                         script={script}
                                         groups={groups}
                                         update={() => {
-                                            setTimeout(() => props.setTrigger!(), 300)
+                                            setScript(undefined)
+                                            setTimeout(() => {
+                                                props.setTrigger!()
+                                            }, 300)
                                         }}
                                         updateGroups={updateGroups}
                                         setScript={props.setScript}
@@ -228,21 +231,27 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             )
         )
     })
-    // console.log('script', script);
     const [isDisabledLocal, setIsDisabledLocal] = useState<boolean>(false)
     const [isDisabledOnline, setIsDisabledOnline] = useState<boolean>(false)
     const [activeKey, setActiveKey] = useState<string>('runner')
     const [pluginIdOnlineId, setPluginIdOnlineId] = useState<number>()
     const refTabsAndOnlinePlugin = useMemoizedFn(() => {
-        if (!!(props.yakScriptIdOnlineId && props.yakScriptIdOnlineId > 0)) {
+        const isOnline: boolean = props.yakScriptIdOnlineId !== undefined
+        if (!script && isOnline) {
             setIsDisabledLocal(true)
             setActiveKey('online')
         }
-        if (!script?.OnlineId && props.yakScriptIdOnlineId && props.yakScriptIdOnlineId > 0) setIsDisabledOnline(true)
-        if (script?.OnlineId) {
+        else {
+            setIsDisabledLocal(false)
+            setActiveKey('runner')
+        }
+        if (script?.OnlineId == 0 && !isOnline) {
+            setIsDisabledOnline(true)
+        }
+        if (script?.OnlineId as number > 0) {
             // 有本地走本地
             setPluginIdOnlineId(script?.OnlineId)
-        } else if (props.yakScriptIdOnlineId && props.yakScriptIdOnlineId > 0) {
+        } else if (script?.OnlineId == 0 && isOnline) {
             // 没本地走线上
             setPluginIdOnlineId(props.yakScriptIdOnlineId)
         }
@@ -273,10 +282,10 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     }, [script?.OnlineId, props.yakScriptIdOnlineId])
 
     useEffect(() => {
+        // 下载插件后，刷新
         ipcRenderer.on('ref-plugin-operator', async (e: any, data: any) => {
-            debugger
             const { pluginOnlineId } = data;
-            if (script?.OnlineId === pluginOnlineId || props.yakScriptIdOnlineId === pluginOnlineId) {
+            if (script?.OnlineId == pluginOnlineId || props.yakScriptIdOnlineId === pluginOnlineId) {
                 getYakScriptLocal(pluginOnlineId)
             }
         })
@@ -291,7 +300,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 className='plugin-store-info'
                 style={{ height: "100%" }}
                 type={"card"}
-                // defaultValue={isDisabledLocal ? "online" : 'runner'}
                 tabPosition={"right"}
                 activeKey={activeKey}
                 onTabClick={setActiveKey}
@@ -484,6 +492,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             pluginId={pluginIdOnlineId}
                             deletePlugin={(p) => { if (props.deletePluginOnline) props.deletePluginOnline(p) }}
                             updatePlugin={(p) => { if (props.updatePluginOnline) props.updatePluginOnline(p) }}
+                            deletePluginLocal={(s) => { if (props.deletePluginLocal) props.deletePluginLocal(s) }}
                         />
                     }
                 </Tabs.TabPane>
@@ -722,8 +731,8 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                         ipcRenderer.invoke("change-main-menu")
                         if (props.deletePluginLocal) props.deletePluginLocal(script)
                         if (props.setScript) props.setScript(undefined)
+                        update()
                     })
-                    update()
                 }}
             >
                 <Button size={"small"} danger={true}>
