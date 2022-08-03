@@ -1,6 +1,6 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
 const OS = require("os")
-const {USER_INFO} = require("../state")
+const { USER_INFO } = require("../state")
 const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
@@ -28,7 +28,7 @@ module.exports = (win, getClient) => {
         }
 
         //Return the average Idle and Tick times
-        return {idle: totalIdle / cpus.length, total: totalTick / cpus.length}
+        return { idle: totalIdle / cpus.length, total: totalTick / cpus.length }
     }
 
     // function to calculate average of array
@@ -138,6 +138,7 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
+                if (params.OnlineID) win.webContents.send('ref-plugin-operator', { pluginOnlineId: params.OnlineID })
                 resolve(data)
             })
         })

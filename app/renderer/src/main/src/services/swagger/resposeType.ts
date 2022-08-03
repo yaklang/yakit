@@ -82,6 +82,7 @@
     email?: string;
     appid: string;
     head_img: string;
+    role: string;
   }
   export interface UserInfoByToken {
     token: string;
@@ -99,6 +100,11 @@
   export interface UpdateUserRole {
     appid: string;
     operation: string;
+    role: string;
+  }
+  export interface UpdatePluginUser {
+    uuid: string;
+    user_id: number;
   }
   export interface SaveYakitPlugin {
     id?: number;

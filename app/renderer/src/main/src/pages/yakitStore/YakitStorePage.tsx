@@ -147,7 +147,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     }, [userInfo.isLogin])
     const onRefList = useMemoizedFn(() => {
         setPublicKeyword("")
+        onResetPluginDetails()
         setIsRefList(!isRefList)
+        setScriptIdOnlineId(undefined)
     })
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const onFullScreen = useMemoizedFn(() => {
@@ -189,6 +191,54 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [updatePluginRecordUser, setUpdatePluginRecordUser] = useState<API.YakitPluginDetail>()
     const [updatePluginRecordOnline, setUpdatePluginRecordOnline] = useState<API.YakitPluginDetail>()
     const [updatePluginRecordLocal, setUpdatePluginRecordLocal] = useState<YakScript>()
+    // 线上插件id
+    const [scriptIdOnlineId, setScriptIdOnlineId] = useState<number>()
+    const onSetPluginAndGetLocal = useMemoizedFn((p?: API.YakitPluginDetail) => {
+        if (!p) {
+            setScript(undefined)
+            setPlugin(undefined)
+            return
+        }
+        ipcRenderer
+            .invoke("GetYakScriptByOnlineID", {
+                OnlineID: p.id,
+                UUID: p.uuid
+            } as GetYakScriptByOnlineIDRequest)
+            .then((localSrcipt: YakScript) => {
+                setScript(localSrcipt)
+            })
+            .catch((e) => {
+                // 本地未查询到相关数据
+                setScript(undefined)
+            })
+            .finally(() => {
+                setPlugin(p)
+                setScriptIdOnlineId(p.id)
+            })
+    })
+    const onSetUserPluginAndGetLocal = useMemoizedFn((p?: API.YakitPluginDetail) => {
+        if (!p) {
+            setScript(undefined)
+            setUserPlugin(undefined)
+            return
+        }
+        ipcRenderer
+            .invoke("GetYakScriptByOnlineID", {
+                OnlineID: p.id,
+                UUID: p.uuid
+            } as GetYakScriptByOnlineIDRequest)
+            .then((localSrcipt: YakScript) => {
+                setScript(localSrcipt)
+            })
+            .catch((e) => {
+                // 本地未查询到相关数据
+                setScript(undefined)
+            })
+            .finally(() => {
+                setUserPlugin(p)
+                setScriptIdOnlineId(p.id)
+            })
+    })
     return (
         <div style={{height: "100%", display: "flex", flexDirection: "row"}}>
             <Card
@@ -246,7 +296,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     {plugSource === "user" && (
                         <YakModuleUser
                             userPlugin={userPlugin}
-                            setUserPlugin={setUserPlugin}
+                            setUserPlugin={onSetUserPluginAndGetLocal}
                             userInfo={userInfo}
                             publicKeyword={publicKeyword}
                             isRefList={isRefList}
@@ -258,7 +308,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     {plugSource === "online" && (
                         <YakModuleOnline
                             plugin={plugin}
-                            setPlugin={setPlugin}
+                            setPlugin={onSetPluginAndGetLocal}
                             userInfo={userInfo}
                             publicKeyword={publicKeyword}
                             isRefList={isRefList}
@@ -296,10 +346,37 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             />
                         }
                     >
-                        {plugSource === "local" && script && (
+                        <PluginOperator
+                            yakScriptId={(script && script.Id) || 0}
+                            yakScriptIdOnlineId={scriptIdOnlineId}
+                            setTrigger={() => {}}
+                            setScript={(s) => {
+                                setScript(s)
+                                setUpdatePluginRecordLocal(s)
+                            }}
+                            deletePluginLocal={setDeletePluginRecordLocal}
+                            deletePluginOnline={(p: API.YakitPluginDetail) => {
+                                if (plugSource === "online" && plugin) {
+                                    setDeletePluginRecordOnline(p)
+                                }
+                                if (plugSource === "user" && userPlugin) {
+                                    setDeletePluginRecordUser(p)
+                                }
+                            }}
+                            updatePluginOnline={(p: API.YakitPluginDetail) => {
+                                if (plugSource === "online" && plugin) {
+                                    setUpdatePluginRecordOnline(p)
+                                }
+                                if (plugSource === "user" && userPlugin) {
+                                    setUpdatePluginRecordUser(p)
+                                }
+                            }}
+                        />
+
+                        {/* {plugSource === "local" && script && (
                             <PluginOperator
                                 yakScriptId={script.Id}
-                                setTrigger={() => {}}
+                                setTrigger={() => { }}
                                 setScript={(s) => {
                                     setScript(s)
                                     setUpdatePluginRecordLocal(s)
@@ -309,19 +386,19 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                         {plugSource === "online" && plugin && (
                             <YakitPluginInfoOnline
-                                info={plugin}
+                                pluginId={plugin.id}
                                 deletePlugin={setDeletePluginRecordOnline}
                                 updatePlugin={setUpdatePluginRecordOnline}
                             />
                         )}
                         {plugSource === "user" && userPlugin && (
                             <YakitPluginInfoOnline
-                                info={userPlugin}
+                                pluginId={userPlugin.id}
                                 user={true}
                                 deletePlugin={setDeletePluginRecordUser}
                                 updatePlugin={setUpdatePluginRecordUser}
                             />
-                        )}
+                        )} */}
                     </AutoCard>
                 ) : (
                     <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
@@ -785,7 +862,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             title={
                 <div className='flex-align-center'>
                     <Tooltip title={plugin.ScriptName}>
-                        <span className='content-ellipsis'>{plugin.ScriptName}</span>
+                        <span className='text-style content-ellipsis'>{plugin.ScriptName}</span>
                     </Tooltip>
 
                     <div className='text-icon-local'>
@@ -2031,6 +2108,7 @@ const PluginItemOnline = (props: PluginListOptProps) => {
                     onSelect(info)
                 }}
             />
+
             <Row>
                 <Col span={24}>
                     <CopyableField

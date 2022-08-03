@@ -119,6 +119,12 @@
         padding: 0 6px;
     }
 
+    .text-style {
+        font-size: 16px;
+        font-weight: 600;
+        color: #595b64;
+    }
+
     .plugin-list-opt {
 
         .info-title {
@@ -130,12 +136,6 @@
                 width: 80%;
                 height: 22px;
                 display: flex;
-
-                .text-style {
-                    font-size: 16px;
-                    font-weight: 600;
-                    color: #595b64;
-                }
 
                 .text-icon {
                     margin-left: 4px;

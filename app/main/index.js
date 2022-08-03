@@ -159,7 +159,6 @@ ipcMain.on("user-sign-in", (event, arg) => {
         const params = geturlparam(url)
         httpApi("get", typeApi[type], {code: params.get("code")})
             .then((res) => {
-                // console.log("loginres", res)
                 if (!authWindow) return
                 if (res.code !== 200) {
                     authWindow.webContents.session.clearStorageData()
