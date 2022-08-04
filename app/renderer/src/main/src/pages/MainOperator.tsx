@@ -536,7 +536,7 @@ const Main: React.FC<MainProp> = (props) => {
             setUserMenu([
                 {key: "sign-out", title: "退出登录"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "trust-list", title: "信任用户管理"}
+                {key: "trust-list", title: "用户管理"}
             ])
         } else {
             setUserMenu([
