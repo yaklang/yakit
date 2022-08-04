@@ -38,6 +38,7 @@ service.interceptors.response.use(
             code: response.status,
             data: response.data
         }
+        // console.log("response__1", response)
         return res
     },
     (error) => {

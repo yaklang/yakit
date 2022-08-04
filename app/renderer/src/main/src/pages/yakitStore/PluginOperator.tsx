@@ -15,27 +15,33 @@ import {BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, YakScriptCreatorForm} from "../in
 import {EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined, CloseOutlined} from "@ant-design/icons"
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
 import {getValue} from "../../utils/kv"
-import {useGetState, useMemoizedFn} from "ahooks"
-
+import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
+import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/index"
 import "./PluginOperator.scss"
 import {ResizeBox} from "../../components/ResizeBox"
 import {SimplePluginList} from "../../components/SimplePluginList"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
+import {API} from "@/services/swagger/resposeType"
+import {GetYakScriptByOnlineIDRequest} from "./YakitStorePage"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
+    yakScriptIdOnlineId?: number
     size?: "big" | "small"
     fromMenu?: boolean
 
     setTrigger?: () => void
-    setScript?: (item: any) => any
+    setScript?: (item?: any) => any
     deletePluginLocal?: (i: YakScript) => void
+
+    deletePluginOnline?: (p: API.YakitPluginDetail) => void
+    updatePluginOnline?: (p: API.YakitPluginDetail) => void
 }
 
 const {ipcRenderer} = window.require("electron")
 
 export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
-    const [script, setScript] = useState<YakScript>()
+    const [script, setScript, getScript] = useGetState<YakScript>()
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const [groups, setGroups] = useState<string[]>([])
@@ -63,26 +69,17 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         if (props.yakScriptId <= 0) {
             return
         }
+        getYakScriptById(props.yakScriptId)
+    }
+
+    const getYakScriptById = useMemoizedFn((yakScriptId: number) => {
         updateGroups()
 
         setLoading(true)
         ipcRenderer
-            .invoke("GetYakScriptById", {Id: props.yakScriptId})
+            .invoke("GetYakScriptById", {Id: yakScriptId})
             .then((e: YakScript) => {
-                setScript(e)
-                // setDetails(!e.IsGeneralModule)
-
-                ipcRenderer
-                    .invoke("GetMarkdownDocument", {
-                        YakScriptId: e?.Id,
-                        YakScriptName: e?.ScriptName
-                    })
-                    .then((data: {Markdown: string}) => {
-                        setMarkdown(data.Markdown)
-                    })
-                    .catch((e: any) => {
-                        setMarkdown("")
-                    })
+                getLocalScriptAfter(e)
             })
             .catch((e: any) => {
                 failed("Query YakScript By ID failed")
@@ -93,7 +90,22 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     setLoading(false)
                 }, 300)
             )
-    }
+    })
+
+    const getLocalScriptAfter = useMemoizedFn((e: YakScript) => {
+        setScript(e)
+        ipcRenderer
+            .invoke("GetMarkdownDocument", {
+                YakScriptId: e?.Id,
+                YakScriptName: e?.ScriptName
+            })
+            .then((data: {Markdown: string}) => {
+                setMarkdown(data.Markdown)
+            })
+            .catch((e: any) => {
+                setMarkdown("")
+            })
+    })
 
     useEffect(() => {
         update()
@@ -201,7 +213,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     script={script}
                                     groups={groups}
                                     update={() => {
-                                        setTimeout(() => props.setTrigger!(), 300)
+                                        if (props.setScript) props.setScript(undefined)
                                     }}
                                     updateGroups={updateGroups}
                                     setScript={props.setScript}
@@ -216,17 +228,83 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             )
         )
     })
+    const [isDisabledLocal, setIsDisabledLocal] = useState<boolean>(false)
+    const [isDisabledOnline, setIsDisabledOnline] = useState<boolean>(false)
+    const [activeKey, setActiveKey] = useState<string>("runner")
+    const [pluginIdOnlineId, setPluginIdOnlineId, getPluginIdOnlineId] = useGetState<number>()
+    const refTabsAndOnlinePlugin = useMemoizedFn(() => {
+        if (script) {
+            setIsDisabledLocal(false)
+            setActiveKey("runner")
+        } else {
+            setIsDisabledLocal(true)
+            setActiveKey("online")
+        }
+        if (script && script.OnlineId == 0) {
+            setIsDisabledOnline(true)
+        } else {
+            setIsDisabledOnline(false)
+        }
+        if (script && script.OnlineId > 0) {
+            // 有本地走本地
+            setPluginIdOnlineId(script?.OnlineId)
+        } else {
+            // 没本地走线上
+            setPluginIdOnlineId(props.yakScriptIdOnlineId)
+        }
+    })
+    const getYakScriptLocal = useMemoizedFn((id) => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("GetYakScriptByOnlineID", {
+                OnlineID: id
+            } as GetYakScriptByOnlineIDRequest)
+            .then((newSrcipt: YakScript) => {
+                setIsDisabledLocal(false)
+                setActiveKey("runner")
+                setPluginIdOnlineId(0)
+                if (props.setScript) props.setScript(newSrcipt)
+                getLocalScriptAfter(newSrcipt)
+            })
+            .catch((e) => {})
+            .finally(() => {
+                setTimeout(() => {
+                    setTrigger(!trigger)
+                    setLoading(false)
+                }, 300)
+            })
+    })
+    useDebounceEffect(
+        () => {
+            refTabsAndOnlinePlugin()
+        },
+        [script?.OnlineId, props.yakScriptIdOnlineId],
+        {wait: 200}
+    )
 
+    useEffect(() => {
+        // 下载插件后，刷新
+        ipcRenderer.on("ref-plugin-operator", async (e: any, data: any) => {
+            const {pluginOnlineId} = data
+            if (getScript()?.OnlineId == pluginOnlineId || getPluginIdOnlineId() === pluginOnlineId) {
+                getYakScriptLocal(pluginOnlineId)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("ref-plugin-operator")
+        }
+    }, [])
     const defaultContent = () => {
         return (
             <Tabs
                 className='plugin-store-info'
                 style={{height: "100%"}}
                 type={"card"}
-                defaultValue={"runner"}
                 tabPosition={"right"}
+                activeKey={activeKey}
+                onTabClick={setActiveKey}
             >
-                <Tabs.TabPane tab={"执行"} key={"runner"}>
+                <Tabs.TabPane tab={"执行"} key={"runner"} disabled={isDisabledLocal}>
                     {!enablePluginSelector && executor()}
                     {enablePluginSelector && (
                         <ResizeBox
@@ -352,7 +430,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         ></ResizeBox>
                     )}
                 </Tabs.TabPane>
-                <Tabs.TabPane tab={"文档"} key={"docs"}>
+                <Tabs.TabPane tab={"文档"} key={"docs"} disabled={isDisabledLocal}>
                     {script && (
                         <div style={{textAlign: "right", marginBottom: 10}}>
                             <Button
@@ -391,7 +469,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         <Empty style={{marginTop: 80}} description={"插件作者未添加文档"} />
                     )}
                 </Tabs.TabPane>
-                <Tabs.TabPane tab={"源码"} key={"code"}>
+                <Tabs.TabPane tab={"源码"} key={"code"} disabled={isDisabledLocal}>
                     <div style={{height: "100%"}}>
                         <YakEditor
                             type={script?.Type === "nuclei" ? "yaml" : "yak"}
@@ -400,12 +478,28 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         />
                     </div>
                 </Tabs.TabPane>
-                <Tabs.TabPane tab={"历史"} key={"history"}>
+                <Tabs.TabPane tab={"历史"} key={"history"} disabled={isDisabledLocal}>
                     {script && <PluginHistoryTable script={script} trigger={trigger} />}
                     {/*<ExecHistoryTable mini={false} trigger={null as any}/>*/}
                 </Tabs.TabPane>
-                <Tabs.TabPane tab={"结果"} key={"results"}>
+                <Tabs.TabPane tab={"结果"} key={"results"} disabled={isDisabledLocal}>
                     {script && <YakScriptExecResultTable YakScriptName={script.ScriptName} trigger={trigger} />}
+                </Tabs.TabPane>
+                <Tabs.TabPane tab={"线上"} key={"online"} disabled={isDisabledOnline}>
+                    {pluginIdOnlineId && pluginIdOnlineId > 0 && (
+                        <YakitPluginInfoOnline
+                            pluginId={pluginIdOnlineId}
+                            deletePlugin={(p) => {
+                                if (props.deletePluginOnline) props.deletePluginOnline(p)
+                            }}
+                            updatePlugin={(p) => {
+                                if (props.updatePluginOnline) props.updatePluginOnline(p)
+                            }}
+                            deletePluginLocal={(s) => {
+                                if (props.deletePluginLocal) props.deletePluginLocal(s)
+                            }}
+                        />
+                    )}
                 </Tabs.TabPane>
             </Tabs>
         )
@@ -642,8 +736,8 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                         ipcRenderer.invoke("change-main-menu")
                         if (props.deletePluginLocal) props.deletePluginLocal(script)
                         if (props.setScript) props.setScript(undefined)
+                        update()
                     })
-                    update()
                 }}
             >
                 <Button size={"small"} danger={true}>

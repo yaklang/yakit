@@ -1,6 +1,6 @@
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn} from "ahooks"
-import React, {useState, useEffect, memo} from "react"
+import React, {useState, useEffect, memo, Suspense} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "../../../utils/notification"
@@ -49,15 +49,20 @@ import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
 import Login from "@/pages/Login"
 import {fail} from "assert"
 
+const EditOnlinePluginDetails = React.lazy(() => import("./EditOnlinePluginDetails"))
+
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
 const limit = 5
 
 interface YakitPluginInfoOnlineProps {
-    info: API.YakitPluginDetail
+    // info: API.YakitPluginDetail
+    pluginId: number
     user?: boolean
     deletePlugin: (i: API.YakitPluginDetail) => void
     updatePlugin: (i: API.YakitPluginDetail) => void
+
+    deletePluginLocal?: (s: YakScript) => void
 }
 
 interface SearchPluginDetailRequest {
@@ -86,19 +91,24 @@ export const TagColor: {[key: string]: string} = {
 }
 
 export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (props) => {
-    const {info, user, deletePlugin, updatePlugin} = props
+    const {pluginId, user, deletePlugin, updatePlugin, deletePluginLocal} = props
     // 全局登录状态
     const {userInfo} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
     const [addLoading, setAddLoading] = useState<boolean>(false)
     const [isAdmin, setIsAdmin] = useState<boolean>(userInfo.role === "admin")
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
+    const [isEdit, setIsEdit] = useState<boolean>(false)
     useEffect(() => {
-        getPluginDetail()
-    }, [info.id])
+        if (pluginId >= 0) getPluginDetail()
+    }, [pluginId])
     useEffect(() => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
+    useEffect(() => {
+        if (!plugin) return
+        updatePlugin(plugin)
+    }, [plugin?.authors])
     const getPluginDetail = useMemoizedFn(() => {
         let url = "yakit/plugin/detail-unlogged"
         if (userInfo.isLogin) {
@@ -109,7 +119,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             method: "get",
             url,
             params: {
-                id: info.id
+                id: pluginId
             }
         })
             .then((res) => {
@@ -240,7 +250,9 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 if (!newSrcipt) return
                 ipcRenderer
                     .invoke("delete-yak-script", newSrcipt.Id)
-                    .then(() => {})
+                    .then(() => {
+                        if (deletePluginLocal) deletePluginLocal(newSrcipt)
+                    })
                     .catch((err) => {
                         failed("删除本地失败:" + err)
                     })
@@ -254,9 +266,11 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     })
     if (!plugin) {
         return (
-            <div className='yakit-plugin-info-container'>
-                <Empty description='无插件信息' />
-            </div>
+            <Spin spinning={loading} style={{height: "100%"}}>
+                <div className='yakit-plugin-info-container'>
+                    <Empty description='无插件信息' />
+                </div>
+            </Spin>
         )
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
@@ -270,7 +284,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                     style={{marginBottom: 0, paddingBottom: 0}}
                     subTitle={
                         <Space>
-                            {((isAdmin && !user) || (user && !info.is_private)) && (
+                            {((isAdmin && !user) || (user && !plugin.is_private)) && (
                                 <div className='plugin-status vertical-center'>
                                     <div
                                         className={`${
@@ -336,7 +350,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             <div className='preface-time'>
                                 <span className='time-title'>最新更新时间</span>
                                 <span className='time-style'>
-                                    {plugin?.updated_at && moment.unix(info.updated_at).format("YYYY年MM月DD日")}
+                                    {plugin?.updated_at && moment.unix(plugin.updated_at).format("YYYY年MM月DD日")}
                                 </span>
                             </div>
                         </div>
@@ -354,11 +368,24 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                     <Button type='primary' onClick={() => pluginExamine(1)}>
                                         通过
                                     </Button>
+                                    <Button type='primary' onClick={() => setIsEdit(true)}>
+                                        修改作者
+                                    </Button>
                                 </>
                             )}
                         </div>
                     </div>
-
+                    <Suspense fallback={<Spin />}>
+                        <EditOnlinePluginDetails
+                            pulgin={plugin}
+                            visible={isEdit}
+                            handleOk={() => {
+                                setIsEdit(false)
+                                getPluginDetail()
+                            }}
+                            handleCancel={() => setIsEdit(false)}
+                        />
+                    </Suspense>
                     <Tabs defaultActiveKey='1'>
                         <TabPane tab='源码' key='1'>
                             <YakEditor type={"yak"} value={plugin.content} readOnly={true} />
