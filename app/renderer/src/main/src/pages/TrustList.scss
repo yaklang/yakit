@@ -72,31 +72,3 @@
     }
 }
 
-.select-opt {
-    display: flex;
-    height: 40px;
-    line-height: 40px;
-
-    .opt-img {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-    }
-
-    .opt-author {
-        flex: 1;
-        overflow: hidden;
-        margin-left: 8px;
-
-        .author-name {
-            height: 20px;
-            line-height: 20px;
-            width: 100%;
-        }
-
-        .author-platform {
-            height: 16px;
-            line-height: 16px;
-        }
-    }
-}

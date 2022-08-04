@@ -1,6 +1,6 @@
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn} from "ahooks"
-import React, {useState, useEffect, memo} from "react"
+import React, {useState, useEffect, memo, Suspense} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "../../../utils/notification"
@@ -49,6 +49,8 @@ import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
 import Login from "@/pages/Login"
 import {fail} from "assert"
 
+const EditOnlinePluginDetails = React.lazy(() => import("./EditOnlinePluginDetails"))
+
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
 const limit = 5
@@ -96,12 +98,17 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const [addLoading, setAddLoading] = useState<boolean>(false)
     const [isAdmin, setIsAdmin] = useState<boolean>(userInfo.role === "admin")
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
+    const [isEdit, setIsEdit] = useState<boolean>(false)
     useEffect(() => {
         if (pluginId >= 0) getPluginDetail()
     }, [pluginId])
     useEffect(() => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
+    useEffect(() => {
+        if (!plugin) return
+        updatePlugin(plugin)
+    }, [plugin?.authors])
     const getPluginDetail = useMemoizedFn(() => {
         let url = "yakit/plugin/detail-unlogged"
         if (userInfo.isLogin) {
@@ -361,11 +368,24 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                     <Button type='primary' onClick={() => pluginExamine(1)}>
                                         通过
                                     </Button>
+                                    <Button type='primary' onClick={() => setIsEdit(true)}>
+                                        修改作者
+                                    </Button>
                                 </>
                             )}
                         </div>
                     </div>
-
+                    <Suspense fallback={<Spin />}>
+                        <EditOnlinePluginDetails
+                            pulgin={plugin}
+                            visible={isEdit}
+                            handleOk={() => {
+                                setIsEdit(false)
+                                getPluginDetail()
+                            }}
+                            handleCancel={() => setIsEdit(false)}
+                        />
+                    </Suspense>
                     <Tabs defaultActiveKey='1'>
                         <TabPane tab='源码' key='1'>
                             <YakEditor type={"yak"} value={plugin.content} readOnly={true} />

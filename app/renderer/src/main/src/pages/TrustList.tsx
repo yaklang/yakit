@@ -9,11 +9,12 @@ import {failed, info} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {OnlineUserItem} from "@/components/OnlineUserItem"
 
 const {Search} = Input
 const {ipcRenderer, contextBridge} = window.require("electron")
 
-const PlatformIcon: {[key: string]: ReactNode} = {
+export const PlatformIcon: {[key: string]: ReactNode} = {
     github: <GithubOutlined />,
     wechat: <WechatOutlined />,
     qq: <QqOutlined />
@@ -44,8 +45,9 @@ interface UserListQuery extends API.PageMeta {
     keywords: string
 }
 
-interface UserQuery {
+export interface UserQuery {
     keywords: string
+    role?: string
 }
 
 interface AddOrRemoveUserProps {
@@ -200,15 +202,7 @@ export const TrustList: React.FC = memo(() => {
                         onSelect: (_, option: any) => onSelectUser(option),
                         onSearch: getUserList,
                         renderOpt: (info: API.UserList) => {
-                            return (
-                                <div className='select-opt'>
-                                    <img src={info.head_img} className='opt-img' />
-                                    <div className='opt-author'>
-                                        <div className='author-name content-ellipsis'>{info.name}</div>
-                                        <div className='author-platform'>{PlatformIcon[info.from_platform]}</div>
-                                    </div>
-                                </div>
-                            )
+                            return <OnlineUserItem info={info} />
                         }
                     }}
                 ></ItemSelects>
