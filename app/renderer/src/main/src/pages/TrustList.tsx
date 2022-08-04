@@ -76,6 +76,7 @@ export const TrustList: React.FC = memo(() => {
     const [loading, setLoading] = useState(false)
     const [removeLoading, setRemoveLoading] = useState(false)
     const [appid, setAppid] = useState<string>("")
+    const [role, setRole] = useState<string>("trusted")
     const onClear = useMemoizedFn(() => {
         setUserList({
             data: []
@@ -141,6 +142,10 @@ export const TrustList: React.FC = memo(() => {
         setCurrentUser(option.value)
     })
 
+    const onSelectRole = useMemoizedFn((role) => {
+        setRole(role.value)
+    })
+
     const onAddOrRemove = useMemoizedFn((appid: string, operation: string, isSetLoading: boolean) => {
         if (!appid) {
             info("请先选择用户")
@@ -148,7 +153,8 @@ export const TrustList: React.FC = memo(() => {
         }
         const param = {
             appid,
-            operation
+            operation,
+            role
         }
         if (isSetLoading) setLoading(true)
         NetWorkApi<AddOrRemoveUserProps, API.ActionSucceeded>({
@@ -158,6 +164,7 @@ export const TrustList: React.FC = memo(() => {
         })
             .then((res) => {
                 setAppid("")
+                setRole("trusted")
                 setCurrentUser("")
                 getTrustUserList()
                 setUserList({
@@ -215,10 +222,40 @@ export const TrustList: React.FC = memo(() => {
                     添加
                 </Button>
             </div>
+            <div>
+                <span>选择角色：</span>
+                <ItemSelects
+                    isItem={false}
+                    select={{
+                        showSearch: true,
+                        style: {width: 360},
+                        className: "add-select",
+                        allowClear: true,
+                        onClear: onClear,
+                        data: [
+                            {
+                                value: "trusted",
+                                label: "信任用户"
+                            },
+                            {
+                                value: "admin",
+                                label: "管理员"
+                            }
+                        ],
+                        optValue: "value",
+                        optText: "label",
+                        placeholder: "请选择角色",
+                        optionLabelProp: "title",
+                        value: role,
+                        onSelect: (_, option: any) => onSelectRole(option),
+                        renderOpt: (info) => info.label
+                    }}
+                ></ItemSelects>
+            </div>
 
             <div className='added-account-body'>
                 <div className='added-header'>
-                    <span className='header-title'>信任用户列表</span>
+                    <span className='header-title'>信任用户/管理员列表</span>
                 </div>
                 <Search
                     placeholder='请输入用户名进行搜索'
@@ -255,7 +292,13 @@ export const TrustList: React.FC = memo(() => {
                                             <div className='author-name content-ellipsis' title={item.name}>
                                                 {item.name}
                                             </div>
-                                            <div className='author-icon'>{PlatformIcon[item.from_platform]}</div>
+                                            <div className="author-info">
+                                                <div className='author-icon'>{PlatformIcon[item.from_platform]}</div>
+                                                <div className="author-role">
+                                                    {item.role === "trusted" && "信任用户"}
+                                                    {item.role === "admin" && "管理员"}
+                                                </div>
+                                            </div>
                                         </div>
                                         <div>
                                             <Button

@@ -76,6 +76,10 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
     })
     const getUserList = useDebounceFn(
         useMemoizedFn((str: string) => {
+            if(!str){
+                onReset()
+                return
+            }
             NetWorkApi<UserQuery, API.UserOrdinaryResponse>({
                 method: "get",
                 url: "user/ordinary",

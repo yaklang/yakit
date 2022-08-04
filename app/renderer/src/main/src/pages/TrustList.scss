@@ -58,9 +58,19 @@
                         max-width: 70px;
                     }
 
-                    .author-icon {
-                        height: 16px;
-                        line-height: 16px;
+                    .author-info {
+                        display: flex;
+                        align-items: center;
+
+                        .author-icon {
+                            height: 16px;
+                            line-height: 16px;
+                            margin-right: 6px;
+                        }
+
+                        .author-role {
+                            font-size: 12px;
+                        }
                     }
                 }
 
@@ -71,4 +81,3 @@
         }
     }
 }
-

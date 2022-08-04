@@ -1364,7 +1364,7 @@ const Main: React.FC<MainProp> = (props) => {
             {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
             <Modal
                 visible={trustShow}
-                title={"信任用户管理"}
+                title={"用户管理"}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{padding: "10px 24px 24px 24px"}}
