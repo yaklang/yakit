@@ -35,7 +35,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
     const defaultHttpUrl = useRef<string>("")
-    const selectText = useRef<string>("")
+    const [searchValue, setSearchValue] = useState("")
     useEffect(() => {
         getHttpSetting()
     }, [])
@@ -72,6 +72,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             if (!setting) return
             const value = JSON.parse(setting)
             defaultHttpUrl.current = value.BaseUrl
+            setSearchValue(value.BaseUrl)
             getHistoryList()
             form.setFieldsValue({
                 ...value
@@ -90,38 +91,50 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             }
         })
     })
-    const onSetUrl = useMemoizedFn(() => {
-        if (selectText.current) {
+    const onSearch = useMemoizedFn((value) => {
+        if (value) {
+            setSearchValue(value)
             form.setFieldsValue({
-                BaseUrl: selectText.current
+                BaseUrl: value
             })
-            selectText.current = ""
         }
     })
-    const onSearch = useDebounceFn(
-        useMemoizedFn((value) => {
-            selectText.current = value
-        }),
-        {wait: 200}
-    ).run
+    const onSelect = useMemoizedFn((value) => {
+        setSearchValue(value)
+        form.setFieldsValue({
+            BaseUrl: value
+        })
+    })
+    const onInputKeyDown = useMemoizedFn((e) => {
+        if(e.key==="Backspace"&&searchValue.length===1){
+            setSearchValue('')
+            form.setFieldsValue({
+                BaseUrl: ''
+            })
+        }
+    })
     return (
         <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
             <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"}]}>
                 <Select
+                    onInputKeyDown={onInputKeyDown}
                     placeholder='请输入你的私有域地址'
                     showArrow={false}
+                    autoClearSearchValue={false}
                     showSearch
                     filterOption={false}
-                    onSelect={onSetUrl}
+                    onSelect={onSelect}
                     onSearch={onSearch}
-                    onBlur={onSetUrl}
-                    onFocus={onSetUrl}
+                    searchValue={searchValue}
                 >
                     {httpHistoryList.map((item) => (
-                        <Option value={item}>{item}</Option>
+                        <Option value={item} key={item}>
+                            {item}
+                        </Option>
                     ))}
                 </Select>
             </Form.Item>
+
             {/* rules={[{required: true, message: "该项为必填"}]} */}
             {/* <Form.Item name='Password' label='密码'>
                 <Input placeholder='请输入你的密码' allowClear />
@@ -134,3 +147,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         </Form>
     )
 })
+
+
+
+
+
+
