@@ -90,8 +90,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             >
                 <div ref={wrapperRef}>
                     {list.map((i) => (
-                        //  key={i.data[rowKey || "Id"]}
-                        <div className={classNameRow}>
+                        <div key={i.data[rowKey || "Id"]} className={classNameRow}>
                             {renderRow(i.data, i.index)}
                         </div>
                     ))}

@@ -95,7 +95,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             form.setFieldsValue({
                 BaseUrl: selectText.current
             })
-            // setHttpHistoryList([...httpHistoryList, selectText.current])
             selectText.current = ""
         }
     })
