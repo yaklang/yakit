@@ -19,6 +19,10 @@
 .flex-align-center {
     display: flex;
     align-items: center;
+
+    .ant-input-search>.ant-input-group>.ant-input-group-addon:last-child {
+        top: -0.5px;
+    }
 }
 
 .row-body {
@@ -222,6 +226,23 @@
 
 .icon-select-active {
     color: #1890ff;
+}
+
+.full-filter {
+    display: flex;
+    align-items: center;
+    color: #000000d9;
+    cursor: pointer;
+
+    .filter-icon {
+        font-size: 16px;
+        cursor: pointer;
+        margin-right: 3px;
+    }
+
+    &:hover {
+        color: #1890ff;
+    }
 }
 
 .operation-icon {

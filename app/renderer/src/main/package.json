@@ -44,6 +44,7 @@
     "react-hex-editor": "^0.3.0",
     "react-highlight-words": "^0.17.0",
     "react-hotkeys-hook": "^3.4.4",
+    "react-infinite-scroll-component": "^6.1.0",
     "react-json-view": "^1.21.3",
     "react-markdown": "^7.0.1",
     "react-monaco-editor": "^0.44.0",
