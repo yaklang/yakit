@@ -2,6 +2,8 @@
     margin-right: 12px;
 }
 
-.ant-select-single .ant-select-selector .ant-select-selection-item {
-    visibility: hidden;
+.private-domain {
+    .ant-select-single .ant-select-selector .ant-select-selection-item {
+        visibility: hidden;
+    }
 }
