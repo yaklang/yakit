@@ -194,6 +194,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [updatePluginRecordLocal, setUpdatePluginRecordLocal] = useState<YakScript>()
     // 线上插件id
     const [scriptIdOnlineId, setScriptIdOnlineId] = useState<number>()
+
+    //滚动
+    const [numberLocal, setNumberLocal] = useState<number>()
     const onSetPluginAndGetLocal = useMemoizedFn((p?: API.YakitPluginDetail) => {
         if (!p) {
             setScript(undefined)
@@ -293,6 +296,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     <Spin spinning={listLoading}>
                         {plugSource === "local" && (
                             <YakModule
+                                numberLocal={numberLocal}
+                                setNumberLocal={setNumberLocal}
                                 size={isFull ? "middle" : "small"}
                                 script={script}
                                 setScript={setScript}
@@ -403,6 +408,8 @@ interface YakModuleProp {
     updatePluginRecordLocal?: YakScript
     setUpdatePluginRecordLocal: (s?: YakScript) => void
     size: "middle" | "small"
+    numberLocal?: number
+    setNumberLocal: (n: number) => void
 }
 export const YakModule: React.FC<YakModuleProp> = (props) => {
     const {
@@ -413,7 +420,9 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         deletePluginRecordLocal,
         updatePluginRecordLocal,
         setUpdatePluginRecordLocal,
-        size
+        size,
+        setNumberLocal,
+        numberLocal
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -629,11 +638,15 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             </Row>
             <div style={{height: "calc(100% - 32px)"}}>
                 <YakModuleList
+                    numberLocalRoll={numberLocal}
                     size={size}
-                    itemHeight={128}
+                    itemHeight={150}
                     currentScript={script}
                     onClicked={(info, index) => {
                         if (info?.Id === script?.Id) return
+                        if (size === "middle") {
+                            setNumberLocal(index || 0)
+                        }
                         setScript(info)
                     }}
                     setTotal={setTotalLocal}
@@ -668,6 +681,7 @@ export interface YakModuleListProp {
     onSelectList?: (m: YakScript[]) => void
     setUpdatePluginRecordLocal?: (y: YakScript) => any
     size?: "middle" | "small"
+    numberLocalRoll?: number
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -693,8 +707,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         selectedRowKeysRecord,
         onSelectList,
         setUpdatePluginRecordLocal,
-        size = defSize
+        size = defSize,
+        numberLocalRoll
     } = props
+
     // 全局登录状态
     const {userInfo} = useStore()
     const [params, setParams] = useState<QueryYakScriptRequest>({
@@ -799,6 +815,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     return (
         <Spin spinning={listBodyLoading}>
             <RollingLoadList<YakScript>
+                numberRoll={numberLocalRoll}
                 isRef={isRef}
                 data={response.Data}
                 page={response.Pagination.Page}

@@ -19,6 +19,7 @@ interface RollingLoadListProps<T> {
     classNameWrapper?: string
     itemHeight?: number
     overscan?: number
+    numberRoll?: number
 }
 
 // declare function List<T>({...rest}: RollingLoadListProps<T>)
@@ -37,21 +38,33 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         classNameList,
         classNameWrapper,
         itemHeight,
-        overscan
+        overscan,
+        numberRoll
     } = props
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
     const [list, scrollTo] = useVirtualList(data || [], {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight:150,
-        overscan:100,
-        // itemHeight: itemHeight || 113,
+        overscan: 100,
+        itemHeight: itemHeight || 113,
         // overscan: overscan || 10
     })
     useEffect(() => {
         scrollTo(0)
     }, [isRef])
+    const isFirstImplement = useRef(true) // 初次不执行
+    useEffect(() => {
+        if (!numberRoll) return
+        if (isFirstImplement.current) {
+            isFirstImplement.current = false
+        } else {
+            console.log('numberRoll',numberRoll);
+            
+            // 初次不执行
+            scrollTo(numberRoll)
+        }
+    }, [numberRoll])
     const [vlistHeigth, setVListHeight] = useState(600)
     const onScrollCapture = useThrottleFn(
         () => {
