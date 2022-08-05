@@ -68,6 +68,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {RollingLoadList} from "@/components/RollingLoadList"
 import {setTimeout} from "timers"
 import {SyncCloudButton} from "@/components/SyncCloudButton/index"
+import YakitStorePageWhole from "./YakitStorePageWhole"
 
 const {Search} = Input
 const {Option} = Select
@@ -2263,7 +2264,11 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
         setQueryOnline({...query})
     })
     const onSelect = useMemoizedFn((key) => {
+        console.log('key',key);
+        
         setIsShowStatus(key === "false")
+        console.log(form.getFieldsValue());
+        
     })
     return (
         <div ref={refTest} className='query-form-body'>
