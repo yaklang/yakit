@@ -106,50 +106,46 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         })
     })
     const onInputKeyDown = useMemoizedFn((e) => {
-        if(e.key==="Backspace"&&searchValue.length===1){
-            setSearchValue('')
+        if (e.key === "Backspace" && searchValue.length === 1) {
+            setSearchValue("")
             form.setFieldsValue({
-                BaseUrl: ''
+                BaseUrl: ""
             })
         }
     })
     return (
-        <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
-            <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"}]}>
-                <Select
-                    onInputKeyDown={onInputKeyDown}
-                    placeholder='请输入你的私有域地址'
-                    showArrow={false}
-                    autoClearSearchValue={false}
-                    showSearch
-                    filterOption={false}
-                    onSelect={onSelect}
-                    onSearch={onSearch}
-                    searchValue={searchValue}
-                >
-                    {httpHistoryList.map((item) => (
-                        <Option value={item} key={item}>
-                            {item}
-                        </Option>
-                    ))}
-                </Select>
-            </Form.Item>
+        <div className='private-domain'>
+            <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
+                <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"}]}>
+                    <Select
+                        onInputKeyDown={onInputKeyDown}
+                        placeholder='请输入你的私有域地址'
+                        showArrow={false}
+                        autoClearSearchValue={false}
+                        showSearch
+                        filterOption={false}
+                        onSelect={onSelect}
+                        onSearch={onSearch}
+                        searchValue={searchValue}
+                    >
+                        {httpHistoryList.map((item) => (
+                            <Option value={item} key={item}>
+                                {item}
+                            </Option>
+                        ))}
+                    </Select>
+                </Form.Item>
 
-            {/* rules={[{required: true, message: "该项为必填"}]} */}
-            {/* <Form.Item name='Password' label='密码'>
+                {/* rules={[{required: true, message: "该项为必填"}]} */}
+                {/* <Form.Item name='Password' label='密码'>
                 <Input placeholder='请输入你的密码' allowClear />
             </Form.Item> */}
-            <Form.Item {...tailLayout}>
-                <Button type='primary' htmlType='submit' className='btn-sure' loading={loading}>
-                    确定
-                </Button>
-            </Form.Item>
-        </Form>
+                <Form.Item {...tailLayout}>
+                    <Button type='primary' htmlType='submit' className='btn-sure' loading={loading}>
+                        确定
+                    </Button>
+                </Form.Item>
+            </Form>
+        </div>
     )
 })
-
-
-
-
-
-
