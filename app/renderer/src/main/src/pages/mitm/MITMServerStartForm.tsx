@@ -6,6 +6,7 @@ import {MITMContentReplacerViewer} from "@/pages/mitm/MITMContentReplacerViewer"
 import {MITMContentReplacerExport, MITMContentReplacerImport} from "@/pages/mitm/MITMContentReplacerImport";
 import {getRemoteValue, getValue, setRemoteValue} from "@/utils/kv";
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "@/pages/mitm/MITMPage";
+import {MITMConsts} from "@/pages/mitm/MITMConsts";
 
 export interface MITMServerStartFormProp {
     onStartMITMServer: (host: string, port: number, downstreamProxy: string, enableInitialPlugin: boolean, defaultPlugins: string[]) => any
@@ -25,6 +26,24 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then(a => {
             setEnableInitialPlugin(!!a)
         })
+
+        getRemoteValue(MITMConsts.MITMDefaultServer).then(e => {
+            if (!!e) {
+                setHost(`${e}`)
+            }
+        })
+
+        getRemoteValue(MITMConsts.MITMDefaultPort).then(e => {
+            if (!!e) {
+                setPort(parseInt(`${e}`))
+            }
+        })
+
+        getRemoteValue(MITMConsts.MITMDefaultDownstreamProxy).then(e => {
+            if (!!e) {
+                setDownstreamProxy(`${e}`)
+            }
+        })
     }, [])
 
     return <div style={{height: "100%", width: "100%"}}>
@@ -33,11 +52,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             onSubmitCapture={e => {
                 e.preventDefault()
                 props.onStartMITMServer(host, port, downstreamProxy, enableInitialPlugin, defaultPlugins)
+
+                setRemoteValue(MITMConsts.MITMDefaultServer, host);
+                setRemoteValue(MITMConsts.MITMDefaultPort, `${port}`);
+                setRemoteValue(MITMConsts.MITMDefaultDownstreamProxy, downstreamProxy)
             }}
             layout={"horizontal"} labelCol={{span: 7}}
             wrapperCol={{span: 13}}
         >
-            <Item label={"劫持代理监听主机"}>
+            <Item label={"劫持代理监听主机"} help={"远程模式可以修改为 0.0.0.0 以监听主机所有网卡"}>
                 <Input value={host} onChange={e => setHost(e.target.value)}/>
             </Item>
             <Item label={"劫持代理监听端口"}>
