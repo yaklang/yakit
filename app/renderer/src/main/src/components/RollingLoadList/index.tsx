@@ -16,6 +16,7 @@ interface RollingLoadListProps<T> {
     isRef?: boolean
     classNameRow?: string
     classNameList?: string
+    classNameWrapper?: string
     itemHeight?: number
     overscan?: number
 }
@@ -34,6 +35,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         isRef,
         classNameRow,
         classNameList,
+        classNameWrapper,
         itemHeight,
         overscan
     } = props
@@ -42,8 +44,10 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const [list, scrollTo] = useVirtualList(data || [], {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight: itemHeight || 113,
-        overscan: overscan || 10
+        itemHeight:150,
+        overscan:100,
+        // itemHeight: itemHeight || 113,
+        // overscan: overscan || 10
     })
     useEffect(() => {
         scrollTo(0)
@@ -88,7 +92,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 ref={containerRef}
                 onScroll={(e) => onScrollCapture(e)}
             >
-                <div ref={wrapperRef}>
+                <div ref={wrapperRef} className={classNameWrapper}>
                     {list.map((i) => (
                         <div key={i.data[rowKey || "Id"]} className={classNameRow}>
                             {renderRow(i.data, i.index)}

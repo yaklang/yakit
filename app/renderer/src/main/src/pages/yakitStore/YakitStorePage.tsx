@@ -252,42 +252,40 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 }}
             >
                 <Card
-                    bodyStyle={{padding: 0, height: isFull ? "calc(100% - 50px)" : "calc(100% - 42px)"}}
+                    bodyStyle={{padding: 0, height: isFull ? "calc(100% - 62px)" : "calc(100% - 42px)"}}
                     bordered={false}
                     style={{height: "100%", width: isFull ? "100%" : 470, display: fullScreen ? "none" : ""}}
                     title={
-                        <div className='list-card-title'>
-                            <Row gutter={12}>
-                                <Col span={12} className='flex-align-center'>
-                                    <Radio.Group
-                                        value={plugSource}
-                                        size={isFull ? "middle" : "small"}
-                                        onChange={(e) => onSetPluginSource(e.target.value)}
-                                    >
-                                        <Radio.Button value='online'>插件商店</Radio.Button>
-                                        <Radio.Button value='user'>我的插件</Radio.Button>
-                                        <Radio.Button value='local'>本地</Radio.Button>
-                                    </Radio.Group>
-                                    <Button size={isFull ? "middle" : "small"} type={"link"} onClick={onRefList}>
-                                        <ReloadOutlined style={{fontSize: isFull ? 16 : 14}} />
-                                    </Button>
-                                </Col>
-                                <Col span={12} className='flex-align-center'>
-                                    {/* 搜索： */}
-                                    <Search
-                                        placeholder='输入关键字搜索'
-                                        size={isFull ? "middle" : "small"}
-                                        enterButton={isFull ? "搜索" : undefined}
-                                        onSearch={() => setIsRefList(!isRefList)}
-                                        value={publicKeyword}
-                                        onChange={(e) => {
-                                            setPublicKeyword(e.target.value)
-                                            // setIsRefList(!isRefList)
-                                        }}
-                                    />
-                                </Col>
-                            </Row>
-                        </div>
+                        <Row gutter={12} className='plugin-title'>
+                            <Col span={12} className='flex-align-center'>
+                                <Radio.Group
+                                    value={plugSource}
+                                    size={isFull ? "middle" : "small"}
+                                    onChange={(e) => onSetPluginSource(e.target.value)}
+                                >
+                                    <Radio.Button value='online'>插件商店</Radio.Button>
+                                    <Radio.Button value='user'>我的插件</Radio.Button>
+                                    <Radio.Button value='local'>本地</Radio.Button>
+                                </Radio.Group>
+                                <Button size={isFull ? "middle" : "small"} type={"link"} onClick={onRefList}>
+                                    <ReloadOutlined style={{fontSize: isFull ? 16 : 14}} />
+                                </Button>
+                            </Col>
+                            <Col span={12} className='search-input-body'>
+                                {/* 搜索： */}
+                                <Search
+                                    placeholder='输入关键字搜索'
+                                    size={isFull ? "middle" : "small"}
+                                    enterButton={isFull ? "搜索" : undefined}
+                                    onSearch={() => setIsRefList(!isRefList)}
+                                    value={publicKeyword}
+                                    onChange={(e) => {
+                                        setPublicKeyword(e.target.value)
+                                        // setIsRefList(!isRefList)
+                                    }}
+                                />
+                            </Col>
+                        </Row>
                     }
                     size={"small"}
                     className='left-list'
@@ -556,7 +554,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
-                <Col span={size === "small" ? 20 : 16} className='col'>
+                <Col span={size === "small" ? 20 : 12} className='col'>
                     <Checkbox checked={isSelectAllLocal} onChange={(e) => onSelectAllLocal(e.target.checked)}>
                         全选
                     </Checkbox>
@@ -573,7 +571,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                         <span>&nbsp;&nbsp;展示YAML POC</span>
                     </div>
                 </Col>
-                <Col span={size === "small" ? 4 : 8} className='col-flex-end'>
+                <Col span={size === "small" ? 4 : 12} className='col-flex-end'>
                     <PluginFilter
                         visibleQuery={visibleQuery}
                         setVisibleQuery={setVisibleQuery}
@@ -631,6 +629,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             </Row>
             <div style={{height: "calc(100% - 32px)"}}>
                 <YakModuleList
+                    size={size}
                     itemHeight={128}
                     currentScript={script}
                     onClicked={(info, index) => {
@@ -668,6 +667,7 @@ export interface YakModuleListProp {
     selectedRowKeysRecord?: YakScript[]
     onSelectList?: (m: YakScript[]) => void
     setUpdatePluginRecordLocal?: (y: YakScript) => any
+    size?: "middle" | "small"
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -681,6 +681,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const defItemHeight = useCreation(() => {
         return 143
     }, [])
+    const defSize = useCreation(() => {
+        return "small"
+    }, [])
     const {
         deletePluginRecordLocal,
         itemHeight = defItemHeight,
@@ -689,7 +692,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         isSelectAll,
         selectedRowKeysRecord,
         onSelectList,
-        setUpdatePluginRecordLocal
+        setUpdatePluginRecordLocal,
+        size = defSize
     } = props
     // 全局登录状态
     const {userInfo} = useStore()
@@ -803,6 +807,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 loadMoreData={loadMoreData}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
+                classNameWrapper={size === "small" ? "" : "plugin-list-grid"}
                 itemHeight={itemHeight}
                 renderRow={(data: YakScript, index) => (
                     <PluginListLocalItem
@@ -900,6 +905,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             }
             style={{
                 width: "100%",
+                height: "100%",
                 marginBottom: 12,
                 backgroundColor: currentScript?.Id === plugin.Id ? "rgba(79,188,255,0.26)" : "#fff"
             }}
@@ -918,7 +924,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             <Row>
                 <Col span={24}>
                     <CopyableField
-                        style={{width: 430, color: "#5f5f5f", marginBottom: 5}}
+                        style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
                         text={plugin.Help || "No Description about it."}
                         noCopy={true}
                     />
