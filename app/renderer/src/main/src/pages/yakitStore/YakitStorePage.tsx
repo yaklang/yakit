@@ -320,6 +320,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                         {plugSource === "online" && (
                             <YakModuleOnline
+                                size={isFull ? "middle" : "small"}
                                 plugin={plugin}
                                 setPlugin={onSetPluginAndGetLocal}
                                 userInfo={userInfo}
@@ -1606,6 +1607,7 @@ interface YakModuleOnlineProps {
     deletePluginRecordOnline?: API.YakitPluginDetail
     updatePluginRecordOnline?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
+    size: "middle" | "small"
 }
 export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const {
@@ -1616,7 +1618,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         isRefList,
         deletePluginRecordOnline,
         setListLoading,
-        updatePluginRecordOnline
+        updatePluginRecordOnline,
+        size
     } = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
@@ -1690,33 +1693,24 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     <Tag>Total:{totalUserOnline}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
-                    <Popconfirm
-                        title={
-                            visibleQuery && (
-                                <QueryComponentOnline
-                                    onClose={() => setVisibleQuery(false)}
-                                    userInfo={userInfo}
-                                    queryOnline={queryOnline}
-                                    setQueryOnline={(e) => {
-                                        setQueryOnline(e)
-                                        onResetList()
-                                    }}
-                                    user={false}
-                                />
-                            )
-                        }
-                        placement='bottomLeft'
-                        icon={null}
-                        overlayClassName='pop-confirm'
-                        visible={visibleQuery}
-                    >
-                        <Tooltip title='查询'>
-                            <FilterOutlined
-                                className={`operation-icon ${isFilter && "operation-icon-active"}`}
-                                onClick={() => setVisibleQuery(true)}
+                    <PluginFilter
+                        visibleQuery={visibleQuery}
+                        setVisibleQuery={setVisibleQuery}
+                        queryChildren={
+                            <QueryComponentOnline
+                                onClose={() => setVisibleQuery(false)}
+                                userInfo={userInfo}
+                                queryOnline={queryOnline}
+                                setQueryOnline={(e) => {
+                                    setQueryOnline(e)
+                                    onResetList()
+                                }}
+                                user={false}
                             />
-                        </Tooltip>
-                    </Popconfirm>
+                        }
+                        size={size}
+                        isFilter={isFilter}
+                    />
                     <AddAllPlugin
                         selectedRowKeysRecord={selectedRowKeysRecordOnline}
                         setListLoading={setListLoading}
@@ -1725,7 +1719,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                         onFinish={() => {
                             onSelectAllOnline(false)
                         }}
-                        size='small'
+                        size={size}
                     />
                     <AddAllPlugin
                         isAddAll={true}
