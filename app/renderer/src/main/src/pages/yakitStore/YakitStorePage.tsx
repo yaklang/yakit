@@ -2264,10 +2264,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
         setQueryOnline({...query})
     })
     const onSelect = useMemoizedFn((key) => {
-        console.log("key", key)
-
         setIsShowStatus(key === "false")
-        console.log(form.getFieldsValue())
     })
     return (
         <div ref={refTest} className='query-form-body'>
