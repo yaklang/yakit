@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef, ReactNode} from "react"
 import ReactResizeDetector from "react-resize-detector"
-import {useThrottleFn, useVirtualList} from "ahooks"
+import {useCreation, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
 import {LoadingOutlined} from "@ant-design/icons"
 import "./index.scss"
 
@@ -17,12 +17,11 @@ interface RollingLoadListProps<T> {
     classNameRow?: string
     classNameList?: string
     classNameWrapper?: string
-    itemHeight?: number
+    defItemHeight?: number
     overscan?: number
     numberRoll?: number
+    isGridLayout?: boolean
 }
-
-// declare function List<T>({...rest}: RollingLoadListProps<T>)
 
 export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) => {
     const {
@@ -36,38 +35,67 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         isRef,
         classNameRow,
         classNameList,
-        classNameWrapper,
-        itemHeight,
+        defItemHeight,
         overscan,
-        numberRoll
+        numberRoll,
+        isGridLayout
     } = props
+    const [vlistHeigth, setVListHeight] = useState(600)
+    const [itemHeight, setItemHeight] = useState<number>(defItemHeight || 113)
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
     const [list, scrollTo] = useVirtualList(data || [], {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        overscan: 100,
-        itemHeight: itemHeight || 113,
-        // overscan: overscan || 10
+        itemHeight: itemHeight,
+        overscan: overscan || 10
     })
     useEffect(() => {
+        console.log("scrollTo")
         scrollTo(0)
     }, [isRef])
     const isFirstImplement = useRef(true) // 初次不执行
     useEffect(() => {
-        if (!numberRoll) return
+        console.log("numberRoll")
+
         if (isFirstImplement.current) {
             isFirstImplement.current = false
         } else {
-            console.log('numberRoll',numberRoll);
-            
+            if (!numberRoll) return
             // 初次不执行
             scrollTo(numberRoll)
         }
     }, [numberRoll])
-    const [vlistHeigth, setVListHeight] = useState(600)
+    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
+    useEffect(() => {
+        console.log("isGridLayout", width)
+        if (isGridLayout) {
+            onComputeItemHeight()
+        } else {
+            setItemHeight(itemHeight)
+        }
+    }, [isGridLayout, width])
+
+    const onComputeItemHeight = useMemoizedFn(() => {
+        if (!width) return
+        console.log("width", width)
+        const height = defItemHeight || 113
+        if (width <= 800) {
+            setItemHeight(height)
+        } else if (width > 800 && width < 1024) {
+            setItemHeight(height / 2)
+        } else if (width >= 1024 && width < 1440) {
+            setItemHeight(height / 3)
+        } else if (width >= 1440 && width < 1920) {
+            setItemHeight(height / 4)
+        } else if (width >= 1920) {
+            setItemHeight(height / 5)
+        }
+    })
+
     const onScrollCapture = useThrottleFn(
         () => {
+            console.log(111)
             if (wrapperRef && containerRef && !loading && hasMore) {
                 const dom = containerRef.current || {
                     scrollTop: 0,
@@ -100,23 +128,27 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshRate={50}
             />
             <div
-                className={classNameList}
+                className={`container ${classNameList}`}
                 style={{height: vlistHeigth}}
                 ref={containerRef}
                 onScroll={(e) => onScrollCapture(e)}
             >
-                <div ref={wrapperRef} className={classNameWrapper}>
+                <div ref={wrapperRef} className={`${isGridLayout ? "list-grid" : ""} `}>
                     {list.map((i) => (
                         <div key={i.data[rowKey || "Id"]} className={classNameRow}>
                             {renderRow(i.data, i.index)}
                         </div>
                     ))}
-                    {loading && hasMore && (
-                        <div className='loading-center'>
-                            <LoadingOutlined />
-                        </div>
-                    )}
-                    {!loading && !hasMore && (page || 0) > 0 && <div className='no-more-text'>暂无更多数据</div>}
+                    <>
+                        {loading && hasMore && (
+                            <div className='grid-block text-center'>
+                                <LoadingOutlined />
+                            </div>
+                        )}
+                        {!loading && !hasMore && (page || 0) > 0 && (
+                            <div className='grid-block text-center'>暂无更多数据</div>
+                        )}
+                    </>
                 </div>
             </div>
         </>

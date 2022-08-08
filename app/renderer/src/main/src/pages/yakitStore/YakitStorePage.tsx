@@ -259,7 +259,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     bordered={false}
                     style={{height: "100%", width: isFull ? "100%" : 470, display: fullScreen ? "none" : ""}}
                     title={
-                        <Row gutter={12} className='plugin-title'>
+                        <Row gutter={12} className={isFull ? "plugin-title" : ""}>
                             <Col span={12} className='flex-align-center'>
                                 <Radio.Group
                                     value={plugSource}
@@ -638,9 +638,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             </Row>
             <div style={{height: "calc(100% - 32px)"}}>
                 <YakModuleList
+                    isGridLayout={true}
                     numberLocalRoll={numberLocal}
                     size={size}
-                    itemHeight={150}
+                    itemHeight={162} //150+12
                     currentScript={script}
                     onClicked={(info, index) => {
                         if (info?.Id === script?.Id) return
@@ -667,7 +668,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
 export interface YakModuleListProp {
     onClicked: (y?: YakScript, i?: number) => any
     currentScript?: YakScript
-    itemHeight?: number
+    itemHeight: number
     isRef?: boolean
     onYakScriptRender?: (i: YakScript, maxWidth?: number) => any
     setTotal?: (n: number) => void
@@ -682,6 +683,7 @@ export interface YakModuleListProp {
     setUpdatePluginRecordLocal?: (y: YakScript) => any
     size?: "middle" | "small"
     numberLocalRoll?: number
+    isGridLayout?: boolean
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -692,15 +694,12 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
         }
     }, [])
-    const defItemHeight = useCreation(() => {
-        return 143
-    }, [])
     const defSize = useCreation(() => {
         return "small"
     }, [])
     const {
         deletePluginRecordLocal,
-        itemHeight = defItemHeight,
+        itemHeight,
         queryLocal = defaultQuery,
         updatePluginRecordLocal,
         isSelectAll,
@@ -708,7 +707,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         onSelectList,
         setUpdatePluginRecordLocal,
         size = defSize,
-        numberLocalRoll
+        numberLocalRoll,
+        isGridLayout
     } = props
 
     // 全局登录状态
@@ -815,6 +815,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     return (
         <Spin spinning={listBodyLoading}>
             <RollingLoadList<YakScript>
+                isGridLayout={size !== "small"}
                 numberRoll={numberLocalRoll}
                 isRef={isRef}
                 data={response.Data}
@@ -824,8 +825,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 loadMoreData={loadMoreData}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
-                classNameWrapper={size === "small" ? "" : "plugin-list-grid"}
-                itemHeight={itemHeight}
+                // classNameWrapper={size === "small" ? "" : "plugin-list-grid"}
+                defItemHeight={itemHeight}
                 renderRow={(data: YakScript, index) => (
                     <PluginListLocalItem
                         plugin={data}
@@ -923,7 +924,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             style={{
                 width: "100%",
                 height: "100%",
-                marginBottom: 12,
                 backgroundColor: currentScript?.Id === plugin.Id ? "rgba(79,188,255,0.26)" : "#fff"
             }}
             onClick={() => props.onClicked(plugin)}
@@ -1997,7 +1997,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 loading={loading}
                 loadMoreData={() => loadMoreData()}
                 rowKey='id'
-                itemHeight={151}
+                defItemHeight={151}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (

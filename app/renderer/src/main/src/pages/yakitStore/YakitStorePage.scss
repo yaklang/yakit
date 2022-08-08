@@ -12,10 +12,6 @@
     padding: 0 10px;
 }
 
-.no-more-text {
-    text-align: center;
-}
-
 .plugin-title {
     padding-bottom: 12px;
 
@@ -67,11 +63,6 @@
     min-width: 100px;
     max-width: 300px;
     margin-left: 6px;
-}
-
-.loading-center {
-    display: flex;
-    justify-content: center;
 }
 
 .left-list {
@@ -132,11 +123,10 @@
 
     .plugin-list {
         width: 100%;
-        margin-bottom: 12px;
-        padding: 0 6px;
         height: 100%;
         max-height: 150px;
-        // height: 150px;
+        padding: 0 6px;
+        margin-bottom: 12px;
     }
 
     .text-style {
@@ -231,8 +221,8 @@
 .icon-select {
     color: #bfbfbf;
     position: absolute;
-    right: 0;
-    top: 0;
+    right: -1px;
+    top: -1px;
 
     svg {
         width: 1.5em;
