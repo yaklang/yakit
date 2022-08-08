@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef, ReactNode} from "react"
 import ReactResizeDetector from "react-resize-detector"
-import {useCreation, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
 import {LoadingOutlined} from "@ant-design/icons"
 import "./index.scss"
 
@@ -41,21 +41,36 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     } = props
     const [vlistHeigth, setVListHeight] = useState(600)
     const [itemHeight, setItemHeight] = useState<number>(defItemHeight || 113)
-    const containerRef = useRef(null)
-    const wrapperRef = useRef(null)
+    const containerRef = useRef<any>(null)
+    const wrapperRef = useRef<any>(null)
     const [list, scrollTo] = useVirtualList(data || [], {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: itemHeight,
         overscan: overscan || 10
     })
+    useDebounceEffect(
+        () => {
+            if (!containerRef || !wrapperRef) return
+            // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
+            const containerHeight = containerRef.current?.clientHeight
+            const wrapperHeight = wrapperRef.current?.clientHeight
+            if (wrapperHeight <= containerHeight) {
+                loadMoreData()
+            }
+        },
+        [wrapperRef.current?.clientHeight],
+        {wait: 200}
+    )
     useEffect(() => {
+        // console.log("isRef", isRef)
         scrollTo(0)
     }, [isRef])
-    const isFirstImplement = useRef(true) // 初次不执行
+    const isFirstNumberRoll = useRef(true) // 初次不执行
     useEffect(() => {
-        if (isFirstImplement.current) {
-            isFirstImplement.current = false
+        // console.log("numberRoll", numberRoll)
+        if (isFirstNumberRoll.current) {
+            isFirstNumberRoll.current = false
         } else {
             if (!numberRoll) return
             // 初次不执行
@@ -64,6 +79,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     }, [numberRoll])
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     useEffect(() => {
+        // console.log("isGridLayout", isGridLayout, width)
         if (isGridLayout) {
             onComputeItemHeight()
         } else {
@@ -132,16 +148,14 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                             {renderRow(i.data, i.index)}
                         </div>
                     ))}
-                    <>
-                        {loading && hasMore && (
-                            <div className='grid-block text-center'>
-                                <LoadingOutlined />
-                            </div>
-                        )}
-                        {!loading && !hasMore && (page || 0) > 0 && (
-                            <div className='grid-block text-center'>暂无更多数据</div>
-                        )}
-                    </>
+                    {loading && hasMore && (
+                        <div className='grid-block text-center'>
+                            <LoadingOutlined />
+                        </div>
+                    )}
+                    {!loading && !hasMore && (page || 0) > 0 && (
+                        <div className='grid-block text-center'>暂无更多数据</div>
+                    )}
                 </div>
             </div>
         </>

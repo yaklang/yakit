@@ -8,7 +8,7 @@
         display: grid;
         width: 100%;
         // grid-row-gap: 12px;
-        // grid-template-rows: max-content
+        grid-template-rows: max-content
     }
 
     @media screen and (min-width:400px) {
