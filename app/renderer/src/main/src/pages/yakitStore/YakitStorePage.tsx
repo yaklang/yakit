@@ -197,6 +197,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
 
     //滚动
     const [numberLocal, setNumberLocal] = useState<number>()
+    const [numberOnline, setNumberOnline] = useState<number>()
+    const [numberUser, setNumberUser] = useState<number>()
     const onSetPluginAndGetLocal = useMemoizedFn((p?: API.YakitPluginDetail) => {
         if (!p) {
             setScript(undefined)
@@ -310,6 +312,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                         {plugSource === "user" && (
                             <YakModuleUser
+                                numberUser={numberUser}
+                                setNumberUser={setNumberUser}
                                 size={isFull ? "middle" : "small"}
                                 userPlugin={userPlugin}
                                 setUserPlugin={onSetUserPluginAndGetLocal}
@@ -323,6 +327,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                         {plugSource === "online" && (
                             <YakModuleOnline
+                                numberOnline={numberOnline}
+                                setNumberOnline={setNumberOnline}
                                 size={isFull ? "middle" : "small"}
                                 plugin={plugin}
                                 setPlugin={onSetPluginAndGetLocal}
@@ -1468,6 +1474,8 @@ interface YakModuleUserProps {
     updatePluginRecordUser?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
     size: "middle" | "small"
+    numberUser?: number
+    setNumberUser: (n: number) => void
 }
 export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     const {
@@ -1479,7 +1487,9 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
         deletePluginRecordUser,
         setListLoading,
         updatePluginRecordUser,
-        size
+        size,
+        numberUser,
+        setNumberUser
     } = props
     const [queryUser, setQueryUser] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
@@ -1593,6 +1603,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
             </Row>
             <div style={{height: "calc(100% - 32px)"}}>
                 <YakModuleOnlineList
+                    number={numberUser}
                     size={size}
                     currentId={userPlugin?.id || 0}
                     queryOnline={queryUser}
@@ -1600,7 +1611,12 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     onSelectList={setSelectedRowKeysRecordUser} //选择一个
                     isSelectAll={isSelectAllUser}
                     setTotal={setTotalUser}
-                    onClicked={setUserPlugin}
+                    onClicked={(info, index) => {
+                        if (size === "middle") {
+                            setNumberUser(index || 0)
+                        }
+                        setUserPlugin(info)
+                    }}
                     userInfo={userInfo}
                     user={true}
                     refresh={refresh}
@@ -1622,6 +1638,8 @@ interface YakModuleOnlineProps {
     updatePluginRecordOnline?: API.YakitPluginDetail
     setListLoading: (l: boolean) => void
     size: "middle" | "small"
+    numberOnline?: number
+    setNumberOnline: (n: number) => void
 }
 export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const {
@@ -1633,7 +1651,9 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         deletePluginRecordOnline,
         setListLoading,
         updatePluginRecordOnline,
-        size
+        size,
+        numberOnline,
+        setNumberOnline
     } = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...defQueryOnline
@@ -1747,6 +1767,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
             </Row>
             <div style={{height: "calc(100% - 32px)"}}>
                 <YakModuleOnlineList
+                    number={numberOnline}
                     size={size}
                     currentId={plugin?.id || 0}
                     queryOnline={queryOnline}
@@ -1754,7 +1775,12 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     onSelectList={setSelectedRowKeysRecordOnline} //选择一个
                     isSelectAll={isSelectAllUser}
                     setTotal={setTotalOnline}
-                    onClicked={setPlugin}
+                    onClicked={(info, index) => {
+                        if (size === "middle") {
+                            setNumberOnline(index || 0)
+                        }
+                        setPlugin(info)
+                    }}
                     userInfo={userInfo}
                     user={false}
                     refresh={refresh}
@@ -1772,7 +1798,7 @@ interface YakModuleOnlineListProps {
     setTotal: (m: number) => void
     selectedRowKeysRecord: API.YakitPluginDetail[]
     onSelectList: (m: API.YakitPluginDetail[]) => void
-    onClicked: (m?: API.YakitPluginDetail) => void
+    onClicked: (m?: API.YakitPluginDetail, i?: number) => void
     userInfo: UserInfoProps
     isSelectAll: boolean
     user: boolean
@@ -1780,6 +1806,7 @@ interface YakModuleOnlineListProps {
     deletePluginRecord?: API.YakitPluginDetail
     updatePluginRecord?: API.YakitPluginDetail
     size: "middle" | "small"
+    number?: number
 }
 
 const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
@@ -1796,7 +1823,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         deletePluginRecord,
         updatePluginRecord,
         refresh,
-        size
+        size,
+        number
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
@@ -1984,6 +2012,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     return (
         <Spin spinning={listBodyLoading}>
             <RollingLoadList<API.YakitPluginDetail>
+                numberRoll={number}
                 isRef={isRef}
                 data={response.data}
                 page={response.pagemeta.page}
@@ -2008,7 +2037,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                             } else {
                                 numberOnline.current = index
                             }
-                            onClicked(info)
+                            onClicked(info, index)
                         }}
                         onDownload={addLocalLab}
                         onStarred={starredPlugin}
@@ -2253,10 +2282,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
         setQueryOnline({...query})
     })
     const onSelect = useMemoizedFn((key) => {
-        console.log("key", key)
-
         setIsShowStatus(key === "false")
-        console.log(form.getFieldsValue())
     })
     return (
         <div ref={refTest} className='query-form-body'>

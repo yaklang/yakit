@@ -1,6 +1,14 @@
 import React, {useEffect, useState, useRef, ReactNode} from "react"
 import ReactResizeDetector from "react-resize-detector"
-import {useCreation, useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
+import {
+    useCreation,
+    useDebounceEffect,
+    useGetState,
+    useMemoizedFn,
+    useSize,
+    useThrottleFn,
+    useVirtualList
+} from "ahooks"
 import {LoadingOutlined} from "@ant-design/icons"
 import "./index.scss"
 
@@ -47,7 +55,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: itemHeight,
-        overscan: overscan || 10
+        overscan: overscan || 20
     })
     useDebounceEffect(
         () => {
@@ -63,12 +71,14 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         {wait: 200}
     )
     useEffect(() => {
-        // console.log("isRef", isRef)
         scrollTo(0)
     }, [isRef])
     const isFirstNumberRoll = useRef(true) // 初次不执行
     useEffect(() => {
-        // console.log("numberRoll", numberRoll)
+        onRollNumber()
+    }, [numberRoll, itemHeight])
+    const onRollNumber = useMemoizedFn(() => {
+        // console.log("numberRoll", numberRoll, itemHeight)
         if (isFirstNumberRoll.current) {
             isFirstNumberRoll.current = false
         } else {
@@ -76,14 +86,14 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             // 初次不执行
             scrollTo(numberRoll)
         }
-    }, [numberRoll])
+    })
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     useEffect(() => {
         // console.log("isGridLayout", isGridLayout, width)
         if (isGridLayout) {
             onComputeItemHeight()
         } else {
-            setItemHeight(itemHeight)
+            setItemHeight(defItemHeight || 113)
         }
     }, [isGridLayout, width])
 
