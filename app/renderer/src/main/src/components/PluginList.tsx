@@ -1,10 +1,10 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Checkbox, Form, Popover, Space, Tooltip, Typography} from "antd"
-import {QuestionCircleOutlined, UserOutlined, SettingOutlined, SearchOutlined, CodeOutlined} from "@ant-design/icons"
+import {Button, Checkbox, Form, Popover, Space, Tooltip, Typography, Input} from "antd"
+import {CodeOutlined, QuestionCircleOutlined, SearchOutlined, SettingOutlined, UserOutlined} from "@ant-design/icons"
 import {YakScript} from "../pages/invoker/schema"
 import {AutoCard, AutoCardProps} from "./AutoCard"
 import ReactResizeDetector from "react-resize-detector"
-import {useMemoizedFn, useVirtualList} from "ahooks"
+import {useVirtualList} from "ahooks"
 import {showModal} from "../utils/showModal"
 import {InputInteger, InputItem, OneLine} from "../utils/inputUtil"
 
@@ -22,7 +22,7 @@ export interface PluginListProp extends AutoCardProps {
     allSelectScript: (flag: boolean) => any
     selectScript: (info: YakScript) => any
     unSelectScript: (info: YakScript) => any
-    search: (params: {limit: number; keyword: string}) => any
+    search: (params: { limit: number; keyword: string }) => any
     extra?: React.ReactNode
     disabled?: boolean
     readOnly?: boolean
@@ -74,13 +74,13 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
                         href={"#"}
                         style={{marginLeft: 2, marginRight: 2}}
                     >
-                        <QuestionCircleOutlined />
+                        <QuestionCircleOutlined/>
                     </a>
                 )}
                 {info.Author && (
                     <Tooltip title={info.Author}>
                         <a href={"#"} style={{marginRight: 2, marginLeft: 2}}>
-                            <UserOutlined />
+                            <UserOutlined/>
                         </a>
                     </Tooltip>
                 )}
@@ -104,7 +104,7 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
                             })
                         }}
                     >
-                        <CodeOutlined />
+                        <CodeOutlined/>
                     </a>
                 )}
             </div>
@@ -166,6 +166,9 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                 extra={
                     !props.readOnly && (
                         <Space>
+                            <Input.Search onSearch={value => {
+                                search({limit: limit, keyword: value.trim()})
+                            }} size={"small"} style={{width: 140}}/>
                             <Popover
                                 title={"额外设置"}
                                 trigger={["click"]}
@@ -193,44 +196,44 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                                     </div>
                                 }
                             >
-                                <Button size={"small"} icon={<SettingOutlined />} type={"link"} />
+                                <Button size={"small"} icon={<SettingOutlined/>} type={"link"}/>
                             </Popover>
-                            <Popover
-                                title={"搜索插件关键字"}
-                                trigger={["click"]}
-                                content={
-                                    <div>
-                                        <Form
-                                            size={"small"}
-                                            onSubmitCapture={(e) => {
-                                                e.preventDefault()
-                                                search({limit: limit, keyword: keyword})
-                                            }}
-                                        >
-                                            <InputItem
-                                                label={""}
-                                                extraFormItemProps={{
-                                                    style: {marginBottom: 4},
-                                                    colon: false
-                                                }}
-                                                value={keyword}
-                                                setValue={setKeyword}
-                                            />
-                                            <Form.Item colon={false} label={""} style={{marginBottom: 10}}>
-                                                <Button type='primary' htmlType='submit'>
-                                                    搜索
-                                                </Button>
-                                            </Form.Item>
-                                        </Form>
-                                    </div>
-                                }
-                            >
-                                <Button
-                                    size={"small"}
-                                    type={!!keyword ? "primary" : "link"}
-                                    icon={<SearchOutlined />}
-                                />
-                            </Popover>
+                            {/*<Popover*/}
+                            {/*    title={"搜索插件关键字"}*/}
+                            {/*    trigger={["click"]}*/}
+                            {/*    content={*/}
+                            {/*        <div>*/}
+                            {/*            <Form*/}
+                            {/*                size={"small"}*/}
+                            {/*                onSubmitCapture={(e) => {*/}
+                            {/*                    e.preventDefault()*/}
+                            {/*                    search({limit: limit, keyword: keyword})*/}
+                            {/*                }}*/}
+                            {/*            >*/}
+                            {/*                <InputItem*/}
+                            {/*                    label={""}*/}
+                            {/*                    extraFormItemProps={{*/}
+                            {/*                        style: {marginBottom: 4},*/}
+                            {/*                        colon: false*/}
+                            {/*                    }}*/}
+                            {/*                    value={keyword}*/}
+                            {/*                    setValue={setKeyword}*/}
+                            {/*                />*/}
+                            {/*                <Form.Item colon={false} label={""} style={{marginBottom: 10}}>*/}
+                            {/*                    <Button type='primary' htmlType='submit'>*/}
+                            {/*                        搜索*/}
+                            {/*                    </Button>*/}
+                            {/*                </Form.Item>*/}
+                            {/*            </Form>*/}
+                            {/*        </div>*/}
+                            {/*    }*/}
+                            {/*>*/}
+                            {/*    <Button*/}
+                            {/*        size={"small"}*/}
+                            {/*        type={!!keyword ? "primary" : "link"}*/}
+                            {/*        icon={<SearchOutlined />}*/}
+                            {/*    />*/}
+                            {/*</Popover>*/}
                             <Checkbox
                                 disabled={props.disabled}
                                 indeterminate={indeterminate}

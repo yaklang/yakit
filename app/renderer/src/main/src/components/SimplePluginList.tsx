@@ -93,7 +93,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
         selectScript={selectYakScript}
         unSelectScript={unselectYakScript}
         search={search}
-        title={props?.verbose || "选择插件"}
+        title={props?.verbose || "插件"}
         bodyStyle={{
             padding: "0 4px",
             overflow: "hidden"
