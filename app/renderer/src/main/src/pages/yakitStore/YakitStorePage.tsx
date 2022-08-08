@@ -640,8 +640,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 <YakModuleList
                     isGridLayout={true}
                     numberLocalRoll={numberLocal}
-                    size={size}
-                    itemHeight={162} //150+12
+                    itemHeight={150} //137+12
                     currentScript={script}
                     onClicked={(info, index) => {
                         if (info?.Id === script?.Id) return
@@ -681,7 +680,6 @@ export interface YakModuleListProp {
     selectedRowKeysRecord?: YakScript[]
     onSelectList?: (m: YakScript[]) => void
     setUpdatePluginRecordLocal?: (y: YakScript) => any
-    size?: "middle" | "small"
     numberLocalRoll?: number
     isGridLayout?: boolean
 }
@@ -694,9 +692,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
         }
     }, [])
-    const defSize = useCreation(() => {
-        return "small"
-    }, [])
     const {
         deletePluginRecordLocal,
         itemHeight,
@@ -706,7 +701,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         selectedRowKeysRecord,
         onSelectList,
         setUpdatePluginRecordLocal,
-        size = defSize,
         numberLocalRoll,
         isGridLayout
     } = props
@@ -815,7 +809,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     return (
         <Spin spinning={listBodyLoading}>
             <RollingLoadList<YakScript>
-                isGridLayout={size !== "small"}
+                isGridLayout={isGridLayout}
                 numberRoll={numberLocalRoll}
                 isRef={isRef}
                 data={response.Data}
@@ -825,7 +819,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 loadMoreData={loadMoreData}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
-                // classNameWrapper={size === "small" ? "" : "plugin-list-grid"}
                 defItemHeight={itemHeight}
                 renderRow={(data: YakScript, index) => (
                     <PluginListLocalItem
@@ -923,7 +916,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             }
             style={{
                 width: "100%",
-                height: "100%",
                 backgroundColor: currentScript?.Id === plugin.Id ? "rgba(79,188,255,0.26)" : "#fff"
             }}
             onClick={() => props.onClicked(plugin)}
@@ -948,11 +940,11 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                 </Col>
             </Row>
             <Row style={{marginBottom: 4}}>
-                {plugin.Tags && plugin.Tags !== "null" && (
+                {(plugin.Tags && plugin.Tags !== "null" && (
                     <Col span={24}>
                         <div className='plugin-tag'>TAG:{plugin.Tags}</div>
                     </Col>
-                )}
+                )) || <div className='plugin-tag'>&nbsp;</div>}
             </Row>
             <Row>
                 <Col span={12}>
@@ -1997,7 +1989,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 loading={loading}
                 loadMoreData={() => loadMoreData()}
                 rowKey='id'
-                defItemHeight={151}
+                isGridLayout={true}
+                defItemHeight={151}// 139+12
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (
@@ -2051,7 +2044,7 @@ export const RandomTagColor: string[] = [
     "color-bgColor-red"
 ]
 
-const PluginItemOnline = (props: PluginListOptProps) => {
+const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const {isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, user} = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
@@ -2138,7 +2131,6 @@ const PluginItemOnline = (props: PluginListOptProps) => {
             }
             style={{
                 width: "100%",
-                marginBottom: 12,
                 backgroundColor: currentId === info.id ? "rgba(79,188,255,0.26)" : "#fff"
             }}
         >
@@ -2156,18 +2148,18 @@ const PluginItemOnline = (props: PluginListOptProps) => {
             <Row>
                 <Col span={24}>
                     <CopyableField
-                        style={{width: 430, color: "#5f5f5f", marginBottom: 5}}
+                        style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
                         text={info.help || "No Description about it."}
                         noCopy={true}
                     />
                 </Col>
             </Row>
             <Row style={{marginBottom: 4}}>
-                {tags && tags.length > 0 && (
+                {(tags && tags.length > 0 && (
                     <Col span={24}>
                         <div className='plugin-tag'>TAG:{tags.join(",")}</div>
                     </Col>
-                )}
+                )) || <div className='plugin-tag'>&nbsp;</div>}
             </Row>
             <Row>
                 <Col span={12}>

@@ -16,7 +16,6 @@ interface RollingLoadListProps<T> {
     isRef?: boolean
     classNameRow?: string
     classNameList?: string
-    classNameWrapper?: string
     defItemHeight?: number
     overscan?: number
     numberRoll?: number
@@ -51,13 +50,10 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         overscan: overscan || 10
     })
     useEffect(() => {
-        console.log("scrollTo")
         scrollTo(0)
     }, [isRef])
     const isFirstImplement = useRef(true) // 初次不执行
     useEffect(() => {
-        console.log("numberRoll")
-
         if (isFirstImplement.current) {
             isFirstImplement.current = false
         } else {
@@ -68,7 +64,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     }, [numberRoll])
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     useEffect(() => {
-        console.log("isGridLayout", width)
         if (isGridLayout) {
             onComputeItemHeight()
         } else {
@@ -78,7 +73,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
 
     const onComputeItemHeight = useMemoizedFn(() => {
         if (!width) return
-        console.log("width", width)
         const height = defItemHeight || 113
         if (width <= 800) {
             setItemHeight(height)
@@ -95,7 +89,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
 
     const onScrollCapture = useThrottleFn(
         () => {
-            console.log(111)
             if (wrapperRef && containerRef && !loading && hasMore) {
                 const dom = containerRef.current || {
                     scrollTop: 0,
