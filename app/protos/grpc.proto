@@ -315,6 +315,34 @@ service Yak {
   rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
   rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
   rpc DeleteAllLocalPlugins(Empty) returns (Empty);
+
+  // 新的扫描模式
+  rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
+}
+
+message ExecPacketScanRequest {
+  // 选择 HTTPFlow 进行扫描
+  repeated int64 HTTPFlow = 1;
+  bytes HTTPRequest = 2;
+  bool HTTPS = 3;
+
+  // 允许数据包的 Fuzz 打开
+  bool AllowFuzzTag = 5;
+
+  // 扫描进程总超时
+  int64 TotalTimeoutSeconds = 6;
+  // 默认发包的 Timeout
+  int64 Timeout = 7;
+
+  // 并发
+  int64 PluginConcurrent = 8;
+  int64 PacketConcurrent = 9;
+
+  // 插件列表
+  repeated string PluginList = 10;
+
+  // 设置代理
+  string Proxy = 11;
 }
 
 message StaticAnalyzeErrorRequest {

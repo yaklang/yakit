@@ -1,4 +1,5 @@
 const axios = require("axios")
+const https = require('https');
 const {ipcMain, webContents} = require("electron")
 const {USER_INFO, HttpSetting} = require("./state")
 
@@ -15,7 +16,8 @@ const service = axios.create({
     // baseURL: "http://onlinecs.vaiwan.cn/api/",
     baseURL: `${HttpSetting.httpBaseURL}/api/`,
     timeout: 30 * 1000, // 请求超时时间
-    maxBodyLength: Infinity //设置适当的大小
+    maxBodyLength: Infinity, //设置适当的大小
+    httpsAgent: new https.Agent({rejectUnauthorized: false}), // 忽略 HTTPS 错误
 })
 
 // request拦截器,拦截每一个请求加上请求头
