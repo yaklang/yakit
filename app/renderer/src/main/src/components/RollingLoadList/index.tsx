@@ -156,6 +156,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
 
     const onScrollCapture = useThrottleFn(
         () => {
+            console.log(111)
             if (wrapperRef && containerRef && !loading && hasMore) {
                 const dom = containerRef.current || {
                     scrollTop: 0,
