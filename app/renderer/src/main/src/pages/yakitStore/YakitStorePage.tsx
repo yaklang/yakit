@@ -638,7 +638,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             </Row>
             <div style={{height: "calc(100% - 32px)"}}>
                 <YakModuleList
-                    isGridLayout={true}
+                    isGridLayout={size === "middle"}
                     numberLocalRoll={numberLocal}
                     itemHeight={150} //137+12
                     currentScript={script}
@@ -939,13 +939,11 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     />
                 </Col>
             </Row>
-            <Row style={{marginBottom: 4}}>
-                {(plugin.Tags && plugin.Tags !== "null" && (
-                    <Col span={24}>
-                        <div className='plugin-tag'>TAG:{plugin.Tags}</div>
-                    </Col>
-                )) || <div className='plugin-tag'>&nbsp;</div>}
-            </Row>
+            <div style={{marginBottom: 4}}>
+                {(plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>) || (
+                    <div className='plugin-tag'>&nbsp;</div>
+                )}
+            </div>
             <Row>
                 <Col span={12}>
                     <Space style={{width: "100%"}}>
@@ -1595,6 +1593,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
             </Row>
             <div style={{height: "calc(100% - 32px)"}}>
                 <YakModuleOnlineList
+                    size={size}
                     currentId={userPlugin?.id || 0}
                     queryOnline={queryUser}
                     selectedRowKeysRecord={selectedRowKeysRecordUser}
@@ -1748,6 +1747,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
             </Row>
             <div style={{height: "calc(100% - 32px)"}}>
                 <YakModuleOnlineList
+                    size={size}
                     currentId={plugin?.id || 0}
                     queryOnline={queryOnline}
                     selectedRowKeysRecord={selectedRowKeysRecordOnline}
@@ -1779,6 +1779,7 @@ interface YakModuleOnlineListProps {
     refresh: boolean
     deletePluginRecord?: API.YakitPluginDetail
     updatePluginRecord?: API.YakitPluginDetail
+    size: "middle" | "small"
 }
 
 const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
@@ -1794,7 +1795,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         user,
         deletePluginRecord,
         updatePluginRecord,
-        refresh
+        refresh,
+        size
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
@@ -1989,8 +1991,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 loading={loading}
                 loadMoreData={() => loadMoreData()}
                 rowKey='id'
-                isGridLayout={true}
-                defItemHeight={151}// 139+12
+                isGridLayout={size === "middle"}
+                defItemHeight={151} // 139+12
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (
@@ -2154,13 +2156,11 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                     />
                 </Col>
             </Row>
-            <Row style={{marginBottom: 4}}>
-                {(tags && tags.length > 0 && (
-                    <Col span={24}>
-                        <div className='plugin-tag'>TAG:{tags.join(",")}</div>
-                    </Col>
-                )) || <div className='plugin-tag'>&nbsp;</div>}
-            </Row>
+            <div style={{marginBottom: 4}}>
+                {(tags && tags.length > 0 && <div className='plugin-tag'>TAG:{tags.join(",")}</div>) || (
+                    <div className='plugin-tag'>&nbsp;</div>
+                )}
+            </div>
             <Row>
                 <Col span={12}>
                     <Space style={{width: "100%"}}>
