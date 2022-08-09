@@ -755,6 +755,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
+        // newParams.Pagination.Limit = 120
+        // console.log('newParams',newParams);
+
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
@@ -827,22 +830,25 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 classNameList='plugin-list-body'
                 defItemHeight={itemHeight}
                 renderRow={(data: YakScript, index) => (
-                    <PluginListLocalItem
-                        plugin={data}
-                        userInfo={userInfo}
-                        onClicked={(info) => {
-                            numberLocal.current = index
-                            props.onClicked(info, index)
-                        }}
-                        currentScript={props.currentScript}
-                        onYakScriptRender={props.onYakScriptRender}
-                        maxWidth={maxWidth}
-                        selectedRowKeysRecord={selectedRowKeysRecord || []}
-                        onSelect={onSelect}
-                        setUpdatePluginRecordLocal={(s) => {
-                            if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
-                        }}
-                    />
+                    <div style={{position: "relative"}}>
+                        <div style={{position: "absolute",zIndex:9}}>{index}</div>
+                        <PluginListLocalItem
+                            plugin={data}
+                            userInfo={userInfo}
+                            onClicked={(info) => {
+                                numberLocal.current = index
+                                props.onClicked(info, index)
+                            }}
+                            currentScript={props.currentScript}
+                            onYakScriptRender={props.onYakScriptRender}
+                            maxWidth={maxWidth}
+                            selectedRowKeysRecord={selectedRowKeysRecord || []}
+                            onSelect={onSelect}
+                            setUpdatePluginRecordLocal={(s) => {
+                                if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
+                            }}
+                        />
+                    </div>
                 )}
             />
         </Spin>

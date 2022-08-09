@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef, ReactNode} from "react"
+import React, {useEffect, useState, useRef, ReactNode, useMemo} from "react"
 import ReactResizeDetector from "react-resize-detector"
 import {
     useCreation,
@@ -24,8 +24,7 @@ interface RollingLoadListProps<T> {
     isRef?: boolean
     classNameRow?: string
     classNameList?: string
-    defItemHeight?: number
-    overscan?: number
+    defItemHeight: number
     numberRoll?: number
     isGridLayout?: boolean
 }
@@ -43,19 +42,28 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         classNameRow,
         classNameList,
         defItemHeight,
-        overscan,
         numberRoll,
         isGridLayout
     } = props
     const [vlistHeigth, setVListHeight] = useState(600)
-    const [itemHeight, setItemHeight] = useState<number>(defItemHeight || 113)
+    // const [itemHeight, setItemHeight] = useState<number>(defItemHeight)
+    // const itemHeightRef = useRef<number>(defItemHeight)
+    // const overScanRef = useRef<number>(10)
+    const colRef = useRef<number>(1)
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
+    // const originalList = useCreation(() => Array.from(Array(data.length/colRef.current).keys()), [data.length]);
+    // useEffect(() => {
+    //     console.log('data',data);
+
+    //    console.log('originalList',originalList);
+    // }, [originalList.length])
     const [list, scrollTo] = useVirtualList(data || [], {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight: itemHeight,
-        overscan: overscan || 20
+        // itemHeight: itemHeightRef.current,
+        overscan: 1 * colRef.current,
+        itemHeight: defItemHeight / colRef.current
     })
     useDebounceEffect(
         () => {
@@ -76,9 +84,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const isFirstNumberRoll = useRef(true) // 初次不执行
     useEffect(() => {
         onRollNumber()
-    }, [numberRoll, itemHeight])
+    }, [numberRoll, colRef.current])
     const onRollNumber = useMemoizedFn(() => {
-        // console.log("numberRoll", numberRoll, itemHeight)
         if (isFirstNumberRoll.current) {
             isFirstNumberRoll.current = false
         } else {
@@ -89,27 +96,25 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     })
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     useEffect(() => {
-        // console.log("isGridLayout", isGridLayout, width)
         if (isGridLayout) {
             onComputeItemHeight()
         } else {
-            setItemHeight(defItemHeight || 113)
+            colRef.current = 1
         }
     }, [isGridLayout, width])
-
     const onComputeItemHeight = useMemoizedFn(() => {
         if (!width) return
-        const height = defItemHeight || 113
+        const col = 1
         if (width <= 800) {
-            setItemHeight(height)
+            colRef.current = col
         } else if (width > 800 && width < 1024) {
-            setItemHeight(height / 2)
+            colRef.current = col * 2
         } else if (width >= 1024 && width < 1440) {
-            setItemHeight(height / 3)
+            colRef.current = col * 3
         } else if (width >= 1440 && width < 1920) {
-            setItemHeight(height / 4)
+            colRef.current = col * 4
         } else if (width >= 1920) {
-            setItemHeight(height / 5)
+            colRef.current = col * 5
         }
     })
 
@@ -125,13 +130,19 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 const clientHeight = dom.clientHeight //可视区域
                 const scrollHeight = dom.scrollHeight //滚动条内容的总高度
                 const scrollBottom = scrollHeight - contentScrollTop - clientHeight
+                // console.log(
+                //     "contentScrollTop",
+                //     // defItemHeight / colRef.current,
+                //     Math.floor(contentScrollTop / defItemHeight) + 1
+                // )
                 if (scrollBottom <= 500) {
                     loadMoreData() // 获取数据的方法
                 }
             }
         },
         {wait: 200, leading: false}
-    ).run
+    )
+
     return (
         <>
             <ReactResizeDetector
@@ -150,14 +161,75 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 className={`container ${classNameList}`}
                 style={{height: vlistHeigth}}
                 ref={containerRef}
-                onScroll={(e) => onScrollCapture(e)}
+                onScroll={() => onScrollCapture.run()}
             >
                 <div ref={wrapperRef} className={`${isGridLayout ? "list-grid" : ""} `}>
-                    {list.map((i) => (
-                        <div key={i.data[rowKey || "Id"]} className={classNameRow}>
-                            {renderRow(i.data, i.index)}
-                        </div>
-                    ))}
+                    {list.map((i) => {
+                        return (
+                            <div key={i.data[rowKey || "Id"]} className={classNameRow}>
+                                {renderRow(i.data, i.index)}
+                            </div>
+                        )
+
+                        // if (!isGridLayout || colRef.current === 1) {
+                        //     return (
+                        //         <div key={i.data[rowKey || "Id"]} className={classNameRow}>
+                        //             {renderRow(i.data, i.index)}
+                        //         </div>
+                        //     )
+                        // }
+
+                        // if (colRef.current === 2) {
+                        //     return (
+                        //         i.index / 2 === 0 && (
+                        //             <div style={{display: "flex"}}>
+                        //                 <div
+                        //                     key={i.data[rowKey || "Id"]}
+                        //                     className={classNameRow}
+                        //                 >
+                        //                     {renderRow(data[i.index], i.index)}
+                        //                 </div>
+                        //                 <div
+                        //                     key={i.data[rowKey || "Id"]}
+                        //                     className={classNameRow}
+                        //                 >
+                        //                     {renderRow(data[i.index + 1], i.index + 1)}
+                        //                 </div>
+                        //             </div>
+                        //         )
+                        //     )
+                        // }
+                        // if (colRef.current === 3) {
+                        //     return (
+                        //         i.index / 3 === 0 && (
+                        //             <div style={{display: "flex"}}>
+                        //                 <div
+                        //                     key={i.data[rowKey || "Id"]}
+                        //                     className={classNameRow}
+                        //                 >
+                        //                     {renderRow(data[i.index], i.index)}
+                        //                 </div>
+                        //                 {data[i.index + 1] && (
+                        //                     <div
+                        //                         key={i.data[rowKey || "Id"]}
+                        //                         className={classNameRow}
+                        //                     >
+                        //                         {renderRow(data[i.index + 1], i.index + 1)}
+                        //                     </div>
+                        //                 )}
+                        //                 {data[i.index + 2] && (
+                        //                     <div
+                        //                         key={i.data[rowKey || "Id"]}
+                        //                         className={classNameRow}
+                        //                     >
+                        //                         {renderRow(data[i.index + 2], i.index + 2)}
+                        //                     </div>
+                        //                 )}
+                        //             </div>
+                        //         )
+                        //     )
+                        // }
+                    })}
                     {loading && hasMore && (
                         <div className='grid-block text-center'>
                             <LoadingOutlined />
