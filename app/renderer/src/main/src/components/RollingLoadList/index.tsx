@@ -166,11 +166,9 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 const clientHeight = dom.clientHeight //可视区域
                 const scrollHeight = dom.scrollHeight //滚动条内容的总高度
                 const scrollBottom = scrollHeight - contentScrollTop - clientHeight
-                // console.log(
-                //     "contentScrollTop",
-                //     // defItemHeight / colRef.current,
-                //     Math.floor(contentScrollTop / defItemHeight) + 1
-                // )
+                console.log(Math.floor(contentScrollTop / defItemHeight) + 1)
+                console.log("clientHeight", wrapperRef.current.clientHeight)
+
                 if (scrollBottom <= 500) {
                     loadMoreData() // 获取数据的方法
                 }
@@ -194,8 +192,9 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
+            {/* container */}
             <div
-                className={`container ${classNameList}`}
+                className={` ${classNameList}`}
                 style={{height: vlistHeigth}}
                 ref={containerRef}
                 onScroll={() => onScrollCapture.run()}
