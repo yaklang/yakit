@@ -30,6 +30,7 @@ import {AutoSpin} from "./AutoSpin";
 import {ResizeBox} from "./ResizeBox";
 import ReactResizeDetector from "react-resize-detector";
 import {Buffer} from "buffer";
+import {Uint8ArrayToString} from "@/utils/str";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -123,23 +124,22 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     type: "fuzzer",
                     data: {
                         isHttps: flow?.IsHTTPS,
-                        request: Buffer.from(flow?.Request || []).toString("utf8")
+                        request: Uint8ArrayToString(flow?.Request || new Uint8Array, "utf8")
                     }
                 })
                 if (props.onClose) props.onClose()
             }
         },
-        {
-            id: 'send-to-plugin',
-            label: '发送到数据包扫描',
-            contextMenuGroupId: 'send-fuzzer-info',
-            run: () => ipcRenderer.invoke("send-to-packet-hack", {
-                request: flow?.Request,
-                ishttps: flow?.IsHTTPS,
-                response: flow?.Response
-            })
-
-        }
+        // {
+        //     id: 'send-to-plugin',
+        //     label: '发送到数据包扫描',
+        //     contextMenuGroupId: 'send-fuzzer-info',
+        //     run: () => ipcRenderer.invoke("send-to-packet-hack", {
+        //         request: flow?.Request,
+        //         ishttps: flow?.IsHTTPS,
+        //         response: flow?.Response
+        //     })
+        // }
     ]
 
     useEffect(() => {

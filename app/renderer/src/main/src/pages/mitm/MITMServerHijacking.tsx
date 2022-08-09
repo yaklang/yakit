@@ -798,20 +798,20 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                                                 },
                                                                 contextMenuGroupId: "Actions"
                                                             },
-                                                            {
-                                                                id: "send-to-plugin",
-                                                                label: "发送到 数据包扫描",
-                                                                keybindings: [
-                                                                    monaco.KeyMod.Shift |
-                                                                    (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                                                    monaco.KeyCode.KEY_E
-                                                                ],
-                                                                run: function (StandaloneEditor: any) {
-                                                                    if (!StandaloneEditor.getModel().getValue()) return
-                                                                    execPlugin(StandaloneEditor.getModel().getValue())
-                                                                },
-                                                                contextMenuGroupId: "Actions"
-                                                            },
+                                                            // {
+                                                            //     id: "send-to-plugin",
+                                                            //     label: "发送到 数据包扫描",
+                                                            //     keybindings: [
+                                                            //         monaco.KeyMod.Shift |
+                                                            //         (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
+                                                            //         monaco.KeyCode.KEY_E
+                                                            //     ],
+                                                            //     run: function (StandaloneEditor: any) {
+                                                            //         if (!StandaloneEditor.getModel().getValue()) return
+                                                            //         execPlugin(StandaloneEditor.getModel().getValue())
+                                                            //     },
+                                                            //     contextMenuGroupId: "Actions"
+                                                            // },
                                                             {
                                                                 id: "forward-response",
                                                                 label: "放行该 HTTP Request",

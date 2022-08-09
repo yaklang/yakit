@@ -85,11 +85,13 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
 
     const moveStart = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "block"
+            ;
+        (maskRef.current as unknown as HTMLDivElement).style.display = "block"
     })
     const moveEnd = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "none"
+            ;
+        (maskRef.current as unknown as HTMLDivElement).style.display = "none"
     })
 
     useEffect(() => {
@@ -117,7 +119,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                     overflow: "hidden"
                 }}
             >
-                {firstNode}
+                {typeof firstNode === "function" ? firstNode() : firstNode}
             </div>
             <div
                 ref={lineRef}
@@ -138,7 +140,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                     overflow: "hidden"
                 }}
             >
-                {secondNode}
+                {typeof secondNode === "function" ? secondNode() : secondNode}
             </div>
             <ResizeLine
                 isVer={isVer}
@@ -150,7 +152,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                 onEnd={moveEnd}
                 onChangeSize={moveSize}
             />
-            <div ref={maskRef} className='mask-body' />
+            <div ref={maskRef} className='mask-body'/>
         </div>
     )
 })

@@ -20,6 +20,7 @@ import {
     generateYakCodeByRequest,
     RequestToYakCodeTemplate
 } from "../pages/invoker/fromPacketToYakCode"
+import {execPacketScan} from "@/pages/packetScanner/PacketScanner";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1521,10 +1522,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                                ? TableRowColor(
-                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                                )
-                                                : "#ffffff"
+                                            ? TableRowColor(
+                                                rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                            )
+                                            : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
@@ -1557,22 +1558,31 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     }
                                 },
                                 {
-                                    title: "发送到 数据包扫描",
+                                    title: "执行插件",
                                     onClick: () => {
-                                        ipcRenderer
-                                            .invoke("GetHTTPFlowById", {Id: rowData.Id})
-                                            .then((i: HTTPFlow) => {
-                                                ipcRenderer.invoke("send-to-packet-hack", {
-                                                    request: i.Request,
-                                                    ishttps: i.IsHTTPS,
-                                                    response: i.Response
-                                                })
-                                            })
-                                            .catch((e: any) => {
-                                                failed(`Query Response failed: ${e}`)
-                                            })
+                                        if (!rowData) {
+                                            return
+                                        }
+                                        execPacketScan([rowData.Id])
                                     }
                                 },
+                                // {
+                                //     title: "发送到 数据包扫描",
+                                //     onClick: () => {
+                                //         ipcRenderer
+                                //             .invoke("GetHTTPFlowById", {Id: rowData.Id})
+                                //             .then((i: HTTPFlow) => {
+                                //                 ipcRenderer.invoke("send-to-packet-hack", {
+                                //                     request: i.Request,
+                                //                     ishttps: i.IsHTTPS,
+                                //                     response: i.Response
+                                //                 })
+                                //             })
+                                //             .catch((e: any) => {
+                                //                 failed(`Query Response failed: ${e}`)
+                                //             })
+                                //     }
+                                // },
                                 {
                                     title: "复制 URL",
                                     onClick: () => {

@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Checkbox, Form, Popover, Space, Tooltip, Typography, Input} from "antd"
+import {Button, Checkbox, Form, Popover, Space, Tooltip, Typography, Input, Tag} from "antd"
 import {CodeOutlined, QuestionCircleOutlined, SearchOutlined, SettingOutlined, UserOutlined} from "@ant-design/icons"
 import {YakScript} from "../pages/invoker/schema"
 import {AutoCard, AutoCardProps} from "./AutoCard"
@@ -166,6 +166,8 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                 extra={
                     !props.readOnly && (
                         <Space>
+                            {(selected || []).length > 0 ?
+                                <Tag color={"green"}>已选{selected?.length}</Tag> : undefined}
                             <Input.Search onSearch={value => {
                                 search({limit: limit, keyword: value.trim()})
                             }} size={"small"} style={{width: 140}}/>
