@@ -166,6 +166,11 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 const clientHeight = dom.clientHeight //可视区域
                 const scrollHeight = dom.scrollHeight //滚动条内容的总高度
                 const scrollBottom = scrollHeight - contentScrollTop - clientHeight
+                // console.log(
+                //     "contentScrollTop",
+                //     // defItemHeight / colRef.current,
+                //     Math.floor(contentScrollTop / defItemHeight) + 1
+                // )
                 if (scrollBottom <= 500) {
                     loadMoreData() // 获取数据的方法
                 }
