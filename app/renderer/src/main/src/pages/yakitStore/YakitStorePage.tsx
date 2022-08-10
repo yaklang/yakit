@@ -151,6 +151,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         onResetPluginDetails()
         setIsRefList(!isRefList)
         setScriptIdOnlineId(undefined)
+        onResetNumber()
     })
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const onFullScreen = useMemoizedFn(() => {
@@ -162,9 +163,15 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             onResetQuery()
             onResetPluginDetails()
             onResetPluginDelecteAndUpdate()
+            onResetNumber()
         },
         {wait: 200}
     ).run
+    const onResetNumber = useMemoizedFn(() => {
+        setNumberLocal(0)
+        setNumberOnline(0)
+        setNumberUser(0)
+    })
     const onResetQuery = useMemoizedFn(() => {
         // 重置查询条件
         setPublicKeyword("")
@@ -245,7 +252,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 setScriptIdOnlineId(p.id)
             })
     })
-    const isFull = !(script || userPlugin || plugin) //是否全屏card展示
+    const [isFull, setIsFull] = useState(true) //是否全屏card展示
+    useEffect(() => {
+        setIsFull(!(script || userPlugin || plugin))
+    }, [script, userPlugin, plugin])
+    // const isFull = !(script || userPlugin || plugin)
     return (
         <>
             {/* <YakitStorePageWhole /> */}
@@ -755,9 +766,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
-        // newParams.Pagination.Limit = 120
-        // console.log('newParams',newParams);
-
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
@@ -830,25 +838,22 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 classNameList='plugin-list-body'
                 defItemHeight={itemHeight}
                 renderRow={(data: YakScript, index) => (
-                    <div style={{position: "relative"}}>
-                        <div style={{position: "absolute",zIndex:9}}>{index}</div>
-                        <PluginListLocalItem
-                            plugin={data}
-                            userInfo={userInfo}
-                            onClicked={(info) => {
-                                numberLocal.current = index
-                                props.onClicked(info, index)
-                            }}
-                            currentScript={props.currentScript}
-                            onYakScriptRender={props.onYakScriptRender}
-                            maxWidth={maxWidth}
-                            selectedRowKeysRecord={selectedRowKeysRecord || []}
-                            onSelect={onSelect}
-                            setUpdatePluginRecordLocal={(s) => {
-                                if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
-                            }}
-                        />
-                    </div>
+                    <PluginListLocalItem
+                        plugin={data}
+                        userInfo={userInfo}
+                        onClicked={(info) => {
+                            numberLocal.current = index
+                            props.onClicked(info, index)
+                        }}
+                        currentScript={props.currentScript}
+                        onYakScriptRender={props.onYakScriptRender}
+                        maxWidth={maxWidth}
+                        selectedRowKeysRecord={selectedRowKeysRecord || []}
+                        onSelect={onSelect}
+                        setUpdatePluginRecordLocal={(s) => {
+                            if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
+                        }}
+                    />
                 )}
             />
         </Spin>

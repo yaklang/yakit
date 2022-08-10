@@ -1,14 +1,6 @@
 import React, {useEffect, useState, useRef, ReactNode, useMemo} from "react"
 import ReactResizeDetector from "react-resize-detector"
-import {
-    useCreation,
-    useDebounceEffect,
-    useGetState,
-    useMemoizedFn,
-    useSize,
-    useThrottleFn,
-    useVirtualList
-} from "ahooks"
+import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
 import {LoadingOutlined} from "@ant-design/icons"
 import "./index.scss"
 
@@ -30,6 +22,13 @@ interface RollingLoadListProps<T> {
     defCol?: number
 }
 
+const classNameWidth = {
+    2: "width-50",
+    3: "width-33",
+    4: "width-25",
+    5: "width-20"
+}
+
 export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) => {
     const {
         data,
@@ -45,29 +44,40 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         defItemHeight,
         numberRoll,
         isGridLayout,
-        defCol = 1
+        defCol
     } = props
     const [vlistHeigth, setVListHeight] = useState(600)
-    const [col, setCol] = useState<number>(defCol)
+    const [col, setCol] = useState<number>()
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
-    const originalList = useCreation(() => {
-        const listByLength: number[] = []
-        data.forEach((ele, index) => {
+    let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
+    let preDataLength = useRef<number>(0)
+    let originalList = useMemo(() => {
+        if (!col) return []
+        const listByLength: any[] = []
+        const length = data.length
+        for (let index = 0; index < length; index += col) {
             if (index % col === 0) {
-                listByLength.push(index)
+                const arr: any = []
+                for (let j = 0; j < col; j++) {
+                    if (data[index + j]) {
+                        const item = data[index + j]
+                        indexMapRef.current?.set(`${item[rowKey || "Id"]}`, index + j)
+                        arr.push(item)
+                    }
+                }
+                listByLength.push(arr)
             }
-        })
+        }
+        preDataLength.current = length
         return listByLength
     }, [data.length, col])
-    useEffect(() => {
-        console.log("defItemHeight", defItemHeight)
-    }, [originalList.length])
+
     const [list, scrollTo] = useVirtualList(originalList, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight: defItemHeight
-        // overscan: 1 * col
+        itemHeight: defItemHeight,
+        overscan: 2
     })
     useDebounceEffect(
         () => {
@@ -104,7 +114,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             if (isGridLayout) {
                 onComputeItemHeight()
             } else {
-                setCol(defCol)
+                setCol(defCol || 1)
             }
         },
         [isGridLayout, width],
@@ -112,16 +122,17 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     )
     const onComputeItemHeight = useMemoizedFn(() => {
         if (!width) return
+        const computeCol = defCol || 1
         if (width <= 800) {
-            setCol(defCol)
+            setCol(computeCol)
         } else if (width > 800 && width < 1024) {
-            setCol(defCol * 2)
+            setCol(computeCol * 2)
         } else if (width >= 1024 && width < 1440) {
-            setCol(defCol * 3)
+            setCol(computeCol * 3)
         } else if (width >= 1440 && width < 1920) {
-            setCol(defCol * 4)
+            setCol(computeCol * 4)
         } else if (width >= 1920) {
-            setCol(defCol * 5)
+            setCol(computeCol * 5)
         }
     })
 
@@ -137,9 +148,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 const clientHeight = dom.clientHeight //可视区域
                 const scrollHeight = dom.scrollHeight //滚动条内容的总高度
                 const scrollBottom = scrollHeight - contentScrollTop - clientHeight
-                console.log(Math.floor(contentScrollTop / defItemHeight) + 1)
-                console.log("clientHeight", wrapperRef.current.clientHeight)
-
                 if (scrollBottom <= 500) {
                     loadMoreData() // 获取数据的方法
                 }
@@ -147,81 +155,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         },
         {wait: 200, leading: false}
     )
-    const renderContent = useMemoizedFn((i) => {
-        switch (col) {
-            case 2:
-                return renderItem2(i)
-            case 3:
-                return renderItem3(i)
-            case 4:
-                return renderItem4(i)
-            case 5:
-                return renderItem5(i)
-            default:
-                return renderDef(i)
-        }
-    })
-    const renderItem2 = (i) =>
-        data[i.data] && (
-            <div className='display-flex' key={data[i.data][rowKey || "Id"]}>
-                <div className={`width-50 ${classNameRow}`}>{renderRow(data[i.data], i.data)}</div>
-                {data[i.data + 1] && (
-                    <div className={`width-50 ${classNameRow}`}>{renderRow(data[i.data + 1], i.data + 1)}</div>
-                )}
-            </div>
-        )
-    const renderItem3 = (i) =>
-        data[i.data] && (
-            <div className='display-flex' style={{position: "relative"}} key={data[i.data][rowKey || "Id"]}>
-                <div style={{position: "absolute", zIndex: 9, color: "red"}}>{i.index}</div>
-                <div className={`width-33 ${classNameRow}`}>{renderRow(data[i.data], i.data)}</div>
-                {data[i.data + 1] && (
-                    <div className={`width-33 ${classNameRow}`}>{renderRow(data[i.data + 1], i.data + 1)}</div>
-                )}
-                {data[i.data + 2] && (
-                    <div className={`width-33 ${classNameRow}`}>{renderRow(data[i.data + 2], i.data + 2)}</div>
-                )}
-            </div>
-        )
-    const renderItem4 = (i) =>
-        data[i.data] && (
-            <div className='display-flex' key={data[i.data][rowKey || "Id"]}>
-                <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data], i.data)}</div>
-                {data[i.data + 1] && (
-                    <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data + 1], i.data + 1)}</div>
-                )}
-                {data[i.data + 2] && (
-                    <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data + 2], i.data + 2)}</div>
-                )}
-                {data[i.data + 3] && (
-                    <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data + 3], i.data + 3)}</div>
-                )}
-            </div>
-        )
-    const renderItem5 = (i) =>
-        data[i.data] && (
-            <div className='display-flex' key={data[i.data][rowKey || "Id"]}>
-                <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data], i.data)}</div>
-                {data[i.data + 1] && (
-                    <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data + 1], i.data + 1)}</div>
-                )}
-                {data[i.data + 2] && (
-                    <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data + 2], i.data + 2)}</div>
-                )}
-                {data[i.data + 3] && (
-                    <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data + 3], i.data + 3)}</div>
-                )}
-                {data[i.data + 4] && (
-                    <div className={`width-25 ${classNameRow}`}>{renderRow(data[i.data + 4], i.data + 4)}</div>
-                )}
-            </div>
-        )
-    const renderDef = (i) =>
-        data[i.data] && (
-            <div key={data[i.data][rowKey || "Id"]} className={classNameRow}>
-                {renderRow(data[i.data], i.data)}
-            </div>
-        )
+    console.log("col", col)
+
     return (
         <>
             <ReactResizeDetector
@@ -236,17 +171,34 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            {/* container */}
             <div
-                className={` ${classNameList}`}
+                className={`container ${classNameList}`}
                 style={{height: vlistHeigth}}
                 ref={containerRef}
                 onScroll={() => onScrollCapture.run()}
             >
                 <div ref={wrapperRef}>
-                    {list.map((i) => {
-                        return renderContent(i)
-                    })}
+                    {
+                        // ((col && col > 1) || !isGridLayout&&col===1) &&
+                        list.map((i, index) => {
+                            const itemArr = i.data as any
+                            return (
+                                <div
+                                    className={`display-flex `}
+                                    key={itemArr.map((ele) => ele[rowKey || "Id"]).join("-")}
+                                >
+                                    {itemArr.map((ele, number) => (
+                                        <div
+                                            className={`${col && classNameWidth[col]} ${classNameRow}`}
+                                            key={ele[rowKey || "Id"]}
+                                        >
+                                            {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0)}
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        })
+                    }
                     {loading && hasMore && (
                         <div className='grid-block text-center'>
                             <LoadingOutlined />
