@@ -5,6 +5,9 @@ import {ResizeBox} from "@/components/ResizeBox";
 import {getRemoteValue} from "@/utils/kv";
 import {Form, Space} from "antd";
 import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
+import {PacketScanForm} from "@/pages/packetScanner/PacketScanForm";
+import {randomString} from "@/utils/randomUtil";
+import {useCreation} from "ahooks";
 
 export interface PacketScannerProp {
     HttpFlowIds: number[]
@@ -43,7 +46,7 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
             </>}
             firstRatio={"400px"}
             firstMinSize={400}
-            secondNode={<>
+            secondNode={() => <>
                 <PacketScannerViewer plugins={[]} flowIds={props.HttpFlowIds}/>
             </>}
         >
@@ -60,16 +63,17 @@ interface PacketScannerFormProp {
 }
 
 const PacketScannerViewer: React.FC<PacketScannerFormProp> = (props) => {
+    const token = useCreation(() => randomString(20), [])
 
     return <div style={{width: "100%", height: "100%"}}>
         <ResizeBox
             isVer={true}
             firstNode={() => {
-                return <div>HHHH CALLBACK</div>
+                return <PacketScanForm token={token}/>
             }}
             firstRatio={"200px"}
             firstMinSize={200}
-            secondNode={()=>{
+            secondNode={() => {
                 return
             }}
         >
