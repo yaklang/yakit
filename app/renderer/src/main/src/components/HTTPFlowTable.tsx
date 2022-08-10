@@ -1522,10 +1522,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                            ? TableRowColor(
-                                                rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                            )
-                                            : "#ffffff"
+                                                ? TableRowColor(
+                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                                )
+                                                : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
@@ -1558,7 +1558,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     }
                                 },
                                 {
-                                    title: "执行插件",
+                                    title: "数据包扫描",
                                     onClick: () => {
                                         if (!rowData) {
                                             return

@@ -75,7 +75,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         onSelected={(list: string[]) => {
                             setDefaultPlugins(list)
                         }} pluginTypes={"mitm,port-scan"}
-                        verbose={<div>MITM 与 端口扫描插件</div>}/>
+                        verbose={"插件"}/>
                 </div>
             </Item>
             <Item label={"下游代理"} help={"为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描"}>

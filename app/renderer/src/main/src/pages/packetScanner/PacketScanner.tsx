@@ -8,6 +8,7 @@ import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
 import {PacketScanForm} from "@/pages/packetScanner/PacketScanForm";
 import {randomString} from "@/utils/randomUtil";
 import {useCreation} from "ahooks";
+import {PacketScanResult} from "@/pages/packetScanner/PacketScanResult";
 
 export interface PacketScannerProp {
     HttpFlowIds: number[]
@@ -47,7 +48,7 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
             firstRatio={"400px"}
             firstMinSize={400}
             secondNode={() => <>
-                <PacketScannerViewer plugins={[]} flowIds={props.HttpFlowIds}/>
+                <PacketScannerViewer plugins={presetPacketScanPlugin} flowIds={props.HttpFlowIds}/>
             </>}
         >
 
@@ -65,16 +66,20 @@ interface PacketScannerFormProp {
 const PacketScannerViewer: React.FC<PacketScannerFormProp> = (props) => {
     const token = useCreation(() => randomString(20), [])
 
+    useEffect(() => {
+        console.info(props.plugins)
+    }, [props])
+
     return <div style={{width: "100%", height: "100%"}}>
         <ResizeBox
             isVer={true}
             firstNode={() => {
-                return <PacketScanForm token={token}/>
+                return <PacketScanForm httpFlowIds={props.flowIds} token={token} plugins={props.plugins}/>
             }}
-            firstRatio={"200px"}
-            firstMinSize={200}
+            firstRatio={"100"}
+            firstMinSize={100}
             secondNode={() => {
-                return
+                return <PacketScanResult token={token}/>
             }}
         >
 

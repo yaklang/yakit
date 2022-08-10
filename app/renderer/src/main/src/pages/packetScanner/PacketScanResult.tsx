@@ -2,11 +2,11 @@ import React from "react";
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream";
 import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
 
-export interface packetScanResultProp {
+export interface PacketScanResultProp {
     token: string
 }
 
-export const packetScanResult: React.FC<packetScanResultProp> = (props) => {
+export const PacketScanResult: React.FC<PacketScanResultProp> = (props) => {
     const {token} = props;
 
     const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream("start-packet", "ExecPacketScan", token);
