@@ -155,8 +155,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         },
         {wait: 200, leading: false}
     )
-    console.log("col", col)
-
     return (
         <>
             <ReactResizeDetector
@@ -178,8 +176,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 onScroll={() => onScrollCapture.run()}
             >
                 <div ref={wrapperRef}>
-                    {
-                        // ((col && col > 1) || !isGridLayout&&col===1) &&
+                    {((isGridLayout && col && col > 1) || (!isGridLayout && col === 1)) &&
                         list.map((i, index) => {
                             const itemArr = i.data as any
                             return (
@@ -197,8 +194,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                                     ))}
                                 </div>
                             )
-                        })
-                    }
+                        })}
                     {loading && hasMore && (
                         <div className='grid-block text-center'>
                             <LoadingOutlined />
