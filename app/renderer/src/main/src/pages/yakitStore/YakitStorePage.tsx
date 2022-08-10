@@ -68,7 +68,6 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {RollingLoadList} from "@/components/RollingLoadList"
 import {setTimeout} from "timers"
 import {SyncCloudButton} from "@/components/SyncCloudButton/index"
-import YakitStorePageWhole from "./YakitStorePageWhole"
 
 const {Search} = Input
 const {Option} = Select
