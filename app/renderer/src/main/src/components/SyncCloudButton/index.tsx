@@ -108,10 +108,10 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
     })
     // 上传
     const uploadOnline = (item: YakScript) => {
-        if (!(userInfo.user_id == item.UserId || item.UserId == 0)) {
-            warn("只能上传本人创建的插件!")
-            return
-        }
+        // if (!(userInfo.user_id == item.UserId || item.UserId == 0)) {
+        //     warn("只能上传本人创建的插件!")
+        //     return
+        // }
         const params: API.NewYakitPlugin = {
             type: item.Type,
             script_name: item.ScriptName,
