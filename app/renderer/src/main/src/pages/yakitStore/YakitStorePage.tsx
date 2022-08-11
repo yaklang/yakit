@@ -883,10 +883,10 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             onClicked(updatePlugin)
         }
     })
-    let isAnonymous = false
-    if (plugin.Author === "" || plugin.Author === "anonymous") {
-        isAnonymous = true
-    }
+    // let isAnonymous = false
+    // if (plugin.Author === "" || plugin.Author === "anonymous") {
+    //     isAnonymous = true
+    // }
     if (props.onYakScriptRender) {
         return props.onYakScriptRender(plugin, maxWidth)
     }
@@ -964,7 +964,8 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             <Row>
                 <Col span={12}>
                     <Space style={{width: "100%"}}>
-                        <Tag color={isAnonymous ? "gray" : "geekblue"}>{plugin.Author || "anonymous"}</Tag>
+                        {plugin.Author || "anonymous"}
+                        {/* <Tag color={isAnonymous ? "gray" : "geekblue"}>{plugin.Author || "anonymous"}</Tag> */}
                     </Space>
                 </Col>
                 <Col span={12} style={{textAlign: "right"}}>

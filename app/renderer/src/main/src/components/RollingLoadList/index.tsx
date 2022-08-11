@@ -51,12 +51,13 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
     let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
-    let preDataLength = useRef<number>(0)
+    let preLength = useRef<number>(0)
+    let preData = useRef<any>([])
     let originalList = useMemo(() => {
         if (!col) return []
         const listByLength: any[] = []
         const length = data.length
-        for (let index = 0; index < length; index += col) {
+        for (let index = preLength.current; index < length; index += col) {
             if (index % col === 0) {
                 const arr: any = []
                 for (let j = 0; j < col; j++) {
@@ -69,8 +70,11 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 listByLength.push(arr)
             }
         }
-        preDataLength.current = length
-        return listByLength
+        preLength.current = length
+        preData.current = preData.current.concat(listByLength)
+        // console.log("preData.current", preData.current)
+        // console.log("listByLength", listByLength)
+        return preData.current
     }, [data.length, col])
 
     const [list, scrollTo] = useVirtualList(originalList, {
