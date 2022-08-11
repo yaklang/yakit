@@ -963,7 +963,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                 key={"reverse-global"}
                                                 onClick={() => {
                                                     showModal({
-                                                        title: "更新插件源",
+                                                        title: "配置全局反连",
                                                         width: 800,
                                                         content: (
                                                             <div style={{width: 800}}>
