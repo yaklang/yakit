@@ -1,10 +1,11 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {Tabs} from "antd"
+import {Input, Popover, Space, Tabs} from "antd"
 import {multipleNodeInfo} from "./MainOperator"
 import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 
 import "./MainTabs.css"
+import {CloseOutlined, EditOutlined} from "@ant-design/icons"
 
 const {TabPane} = Tabs
 
@@ -18,14 +19,24 @@ export interface MainTabsProp {
     removePage: (key: string, type: string) => void
     removeOtherPage: (key: string, type: string) => void
     onAddTab?: () => any
+    updateCacheVerbose: (key: string, tabType: string, value: string) => void
 }
 
 export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
-    const {currentTabKey, tabType, pages, currentKey, isShowAdd = false, setCurrentKey, removePage, removeOtherPage, onAddTab = () => {}} = props
-
+    const {
+        currentTabKey,
+        tabType,
+        pages,
+        currentKey,
+        isShowAdd = false,
+        setCurrentKey,
+        removePage,
+        removeOtherPage,
+        onAddTab = () => {},
+        updateCacheVerbose
+    } = props
     const [loading, setLoading] = useState<boolean>(false)
     const tabsRef = useRef(null)
-
     useEffect(() => {
         setTimeout(() => {
             if (!tabsRef || !tabsRef.current) return
@@ -73,7 +84,6 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
             />
         )
     }
-
     return (
         <AutoSpin spinning={loading}>
             <div
@@ -96,7 +106,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                     if (e.code === "KeyT" && (e.ctrlKey || e.metaKey)) {
                         e.preventDefault()
                         e.stopPropagation()
-                        if(!isShowAdd) return
+                        if (!isShowAdd) return
                         onAddTab()
                         return
                     }
@@ -110,8 +120,8 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                     activeKey={currentKey}
                     onChange={(key) => setCurrentKey(key, tabType)}
                     onEdit={(targetKey, action) => {
-                        if (action === "remove") removePage(targetKey as unknown as string, tabType)
-                        if(action === "add") onAddTab()
+                        // if (action === "remove") removePage(targetKey as unknown as string, tabType)
+                        if (action === "add") onAddTab()
                     }}
                     renderTabBar={(props, TabBarDefault) => {
                         return bars(props, TabBarDefault)
@@ -119,7 +129,36 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                 >
                     {pages.map((item, index) => {
                         return (
-                            <TabPane forceRender={true} key={item.id} tab={item.verbose}>
+                            <TabPane
+                                forceRender={true}
+                                key={item.id}
+                                tab={item.verbose}
+                                closeIcon={
+                                    <Space>
+                                        <Popover
+                                            trigger={"click"}
+                                            title={"修改名称"}
+                                            content={
+                                                <>
+                                                    <Input
+                                                        size={"small"}
+                                                        defaultValue={item.verbose}
+                                                        onBlur={(e) =>
+                                                            updateCacheVerbose(`${item.id}`, tabType, e.target.value)
+                                                        }
+                                                    />
+                                                </>
+                                            }
+                                        >
+                                            <EditOutlined className='main-container-cion' />
+                                        </Popover>
+                                        <CloseOutlined
+                                            className='main-container-cion'
+                                            onClick={() => removePage(`${item.id}`, tabType)}
+                                        />
+                                    </Space>
+                                }
+                            >
                                 <div
                                     style={{
                                         overflow: "hidden",
