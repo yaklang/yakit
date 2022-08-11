@@ -205,15 +205,7 @@
 
 }
 
-.upload-outline {
-    margin: 0 12px;
-    font-size: 16px;
-    cursor: pointer;
 
-    &:hover {
-        color: #1890ff;
-    }
-}
 
 .text-icon-local {
     margin-left: 4px;
@@ -289,4 +281,29 @@
 .filter-opt-btn {
     color: #ff4d4f;
     margin-top: 4px;
+}
+
+.plugin-item {
+    .plugin-item-heard {
+        display: flex;
+        justify-content: space-between;
+
+        .plugin-item-left {
+            display: flex;
+        }
+
+        .plugin-item-right {
+
+
+            .upload-outline {
+                margin: 0 12px;
+                font-size: 16px;
+                cursor: pointer;
+
+                &:hover {
+                    color: #1890ff;
+                }
+            }
+        }
+    }
 }

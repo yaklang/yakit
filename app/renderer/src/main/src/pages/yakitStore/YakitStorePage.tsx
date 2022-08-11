@@ -766,6 +766,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
+        newParams.Pagination.Limit = 20
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
@@ -891,91 +892,118 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         return props.onYakScriptRender(plugin, maxWidth)
     }
     return (
-        <Card
-            size={"small"}
-            bordered={true}
-            hoverable={true}
-            title={
-                <div className='flex-align-center'>
-                    <Tooltip title={plugin.ScriptName}>
-                        <span className='text-style content-ellipsis'>{plugin.ScriptName}</span>
-                    </Tooltip>
-
+        <div className='plugin-item'>
+            <div className='plugin-item-heard'>
+                <div className='plugin-item-left'>
+                    <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
                     <div className='text-icon-local'>
-                        {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && (
-                            <Tooltip title='线上的公开插件'>
-                                <OnlineCloudIcon />
-                            </Tooltip>
-                        )}
-                        {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && (
-                            <Tooltip title='线上的私密插件'>
-                                <LockOutlined />
-                            </Tooltip>
-                        )}
+                        {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && <OnlineCloudIcon />}
+                        {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
                         {gitUrlIcon(plugin.FromGit)}
                     </div>
                 </div>
-            }
-            extra={
-                (uploadLoading && <LoadingOutlined className='upload-outline' />) || (
-                    <>
-                        {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
-                            <SyncCloudButton
-                                params={plugin}
-                                setParams={updateListItem}
-                                uploadLoading={setUploadLoading}
-                            >
-                                <UploadOutlined className='upload-outline' />
-                            </SyncCloudButton>
-                        )}
-                    </>
-                )
-            }
-            style={{
-                width: "100%",
-                backgroundColor: currentScript?.Id === plugin.Id ? "rgba(79,188,255,0.26)" : "#fff"
-            }}
-            onClick={() => props.onClicked(plugin)}
-        >
-            <SelectIcon
-                //  @ts-ignore
-                className={`icon-select  ${
-                    selectedRowKeysRecord.findIndex((ele) => ele.Id === plugin.Id) !== -1 && "icon-select-active"
-                }`}
-                onClick={(e) => {
-                    e.stopPropagation()
-                    onSelect(plugin)
-                }}
-            />
-            <Row>
-                <Col span={24}>
-                    <CopyableField
-                        style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
-                        text={plugin.Help || "No Description about it."}
-                        noCopy={true}
-                    />
-                </Col>
-            </Row>
-            <div style={{marginBottom: 4}}>
-                {(plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>) || (
-                    <div className='plugin-tag'>&nbsp;</div>
-                )}
+                <div className="plugin-item-right">
+                    {(uploadLoading && <LoadingOutlined className='upload-outline' />) || (
+                        <>
+                            {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
+                                <SyncCloudButton
+                                    params={plugin}
+                                    setParams={updateListItem}
+                                    uploadLoading={setUploadLoading}
+                                >
+                                    <UploadOutlined className='upload-outline' />
+                                </SyncCloudButton>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
-            <Row>
-                <Col span={12}>
-                    <Space style={{width: "100%"}}>
-                        {plugin.Author || "anonymous"}
-                        {/* <Tag color={isAnonymous ? "gray" : "geekblue"}>{plugin.Author || "anonymous"}</Tag> */}
-                    </Space>
-                </Col>
-                <Col span={12} style={{textAlign: "right"}}>
-                    <Space size={2}>
-                        <CopyableField noCopy={true} text={formatDate(plugin.CreatedAt)} />
-                        {gitUrlIcon(plugin.FromGit, true)}
-                    </Space>
-                </Col>
-            </Row>
-        </Card>
+        </div>
+        // <Card
+        //     size={"small"}
+        //     bordered={true}
+        //     hoverable={true}
+        //     title={
+        //         <div className='flex-align-center'>
+        //             <Tooltip title={plugin.ScriptName}>
+        //                 <span className='text-style content-ellipsis'>{plugin.ScriptName}</span>
+        //             </Tooltip>
+
+        //             <div className='text-icon-local'>
+        //                 {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && (
+        //                     <Tooltip title='线上的公开插件'>
+        //                         <OnlineCloudIcon />
+        //                     </Tooltip>
+        //                 )}
+        //                 {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && (
+        //                     <Tooltip title='线上的私密插件'>
+        //                         <LockOutlined />
+        //                     </Tooltip>
+        //                 )}
+        //                 {gitUrlIcon(plugin.FromGit)}
+        //             </div>
+        //         </div>
+        //     }
+        //     extra={
+        //         (uploadLoading && <LoadingOutlined className='upload-outline' />) || (
+        //             <>
+        //                 {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
+        //                     <SyncCloudButton
+        //                         params={plugin}
+        //                         setParams={updateListItem}
+        //                         uploadLoading={setUploadLoading}
+        //                     >
+        //                         <UploadOutlined className='upload-outline' />
+        //                     </SyncCloudButton>
+        //                 )}
+        //             </>
+        //         )
+        //     }
+        //     style={{
+        //         width: "100%",
+        //         backgroundColor: currentScript?.Id === plugin.Id ? "rgba(79,188,255,0.26)" : "#fff"
+        //     }}
+        //     onClick={() => props.onClicked(plugin)}
+        // >
+        //     <SelectIcon
+        //         //  @ts-ignore
+        //         className={`icon-select  ${
+        //             selectedRowKeysRecord.findIndex((ele) => ele.Id === plugin.Id) !== -1 && "icon-select-active"
+        //         }`}
+        //         onClick={(e) => {
+        //             e.stopPropagation()
+        //             onSelect(plugin)
+        //         }}
+        //     />
+        //     <Row>
+        //         <Col span={24}>
+        //             <CopyableField
+        //                 style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
+        //                 text={plugin.Help || "No Description about it."}
+        //                 noCopy={true}
+        //             />
+        //         </Col>
+        //     </Row>
+        //     <div style={{marginBottom: 4}}>
+        //         {(plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>) || (
+        //             <div className='plugin-tag'>&nbsp;</div>
+        //         )}
+        //     </div>
+        //     <Row>
+        //         <Col span={12}>
+        //             <Space style={{width: "100%"}}>
+        //                 {plugin.Author || "anonymous"}
+        //                 {/* <Tag color={isAnonymous ? "gray" : "geekblue"}>{plugin.Author || "anonymous"}</Tag> */}
+        //             </Space>
+        //         </Col>
+        //         <Col span={12} style={{textAlign: "right"}}>
+        //             <Space size={2}>
+        //                 <CopyableField noCopy={true} text={formatDate(plugin.CreatedAt)} />
+        //                 {gitUrlIcon(plugin.FromGit, true)}
+        //             </Space>
+        //         </Col>
+        //     </Row>
+        // </Card>
     )
 }
 
