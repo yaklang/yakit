@@ -32,7 +32,8 @@ import {
     PlusOutlined,
     DeleteOutlined,
     CloudDownloadOutlined,
-    DownloadOutlined
+    DownloadOutlined,
+    PoweroffOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
@@ -1397,9 +1398,10 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 </div>
             )}
             {addLoading ? (
-                <Button className='filter-opt-btn' size='small' type='primary' danger onClick={StopAllPlugin}>
-                    停止
-                </Button>
+                // <Button className='filter-opt-btn' size='small' type='primary' danger onClick={StopAllPlugin}>
+                //     停止
+                // </Button>
+                <PoweroffOutlined className='filter-opt-btn' onClick={StopAllPlugin} />
             ) : (
                 <>
                     {(isAddAll && (
@@ -1539,14 +1541,6 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     <Tag>Total:{totalUser}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
-                    <AddAllPlugin
-                        isAddAll={true}
-                        selectedRowKeysRecord={[]}
-                        setListLoading={setListLoading}
-                        user={true}
-                        userInfo={userInfo}
-                        onFinish={() => {}}
-                    />
                     <Popconfirm
                         title={
                             visibleQuery && (
@@ -1582,6 +1576,14 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         onFinish={() => {
                             onSelectAllUser(false)
                         }}
+                    />
+                    <AddAllPlugin
+                        isAddAll={true}
+                        selectedRowKeysRecord={[]}
+                        setListLoading={setListLoading}
+                        user={true}
+                        userInfo={userInfo}
+                        onFinish={() => {}}
                     />
                 </Col>
             </Row>
@@ -1698,14 +1700,6 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     <Tag>Total:{totalUserOnline}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
-                    <AddAllPlugin
-                        isAddAll={true}
-                        selectedRowKeysRecord={[]}
-                        setListLoading={setListLoading}
-                        user={false}
-                        userInfo={userInfo}
-                        onFinish={() => {}}
-                    />
                     <Popconfirm
                         title={
                             visibleQuery && (
@@ -1741,6 +1735,14 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                         onFinish={() => {
                             onSelectAllOnline(false)
                         }}
+                    />
+                    <AddAllPlugin
+                        isAddAll={true}
+                        selectedRowKeysRecord={[]}
+                        setListLoading={setListLoading}
+                        user={false}
+                        userInfo={userInfo}
+                        onFinish={() => {}}
                     />
                 </Col>
             </Row>
