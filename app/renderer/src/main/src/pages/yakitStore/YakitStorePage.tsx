@@ -1300,6 +1300,7 @@ interface AddAllPluginProps {
     user: boolean
     userInfo: UserInfoProps
     onFinish: () => void
+    isAddAll?: boolean
 }
 
 interface DownloadOnlinePluginByIdsRequest {
@@ -1308,7 +1309,7 @@ interface DownloadOnlinePluginByIdsRequest {
 }
 
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
-    const {selectedRowKeysRecord, setListLoading, user, userInfo, onFinish} = props
+    const {selectedRowKeysRecord, setListLoading, user, userInfo, onFinish, isAddAll} = props
     const [taskToken, setTaskToken] = useState(randomString(40))
     // 全部添加进度条
     const [addLoading, setAddLoading] = useState<boolean>(false)
@@ -1401,22 +1402,39 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 </Button>
             ) : (
                 <>
-                    {/* 未选择数据 并且 我的插件未登录的情况下 */}
-                    {(selectedRowKeysRecord.length === 0 && !(user && !userInfo.isLogin) && (
+                    {(isAddAll && (
                         <Popconfirm
                             title={user ? "确定将我的插件所有数据导入到本地吗" : "确定将插件商店所有数据导入到本地吗?"}
                             onConfirm={AddAllPlugin}
                             okText='Yes'
                             cancelText='No'
                         >
-                            <Tooltip title='下载'>
-                                <DownloadOutlined className='operation-icon ' />
-                            </Tooltip>
+                            <div className='operation-text'>一键导入</div>
                         </Popconfirm>
                     )) || (
-                        <Tooltip title='下载'>
-                            <DownloadOutlined className='operation-icon ' onClick={AddAllPlugin} />
-                        </Tooltip>
+                        <>
+                            {/* 未选择数据 并且 我的插件未登录的情况下 */}
+                            {(selectedRowKeysRecord.length === 0 && !(user && !userInfo.isLogin) && (
+                                <Popconfirm
+                                    title={
+                                        user
+                                            ? "确定将我的插件所有数据导入到本地吗"
+                                            : "确定将插件商店所有数据导入到本地吗?"
+                                    }
+                                    onConfirm={AddAllPlugin}
+                                    okText='Yes'
+                                    cancelText='No'
+                                >
+                                    <Tooltip title='下载'>
+                                        <DownloadOutlined className='operation-icon ' />
+                                    </Tooltip>
+                                </Popconfirm>
+                            )) || (
+                                <Tooltip title='下载'>
+                                    <DownloadOutlined className='operation-icon ' onClick={AddAllPlugin} />
+                                </Tooltip>
+                            )}
+                        </>
                     )}
                 </>
             )}
@@ -1521,6 +1539,14 @@ const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     <Tag>Total:{totalUser}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
+                    <AddAllPlugin
+                        isAddAll={true}
+                        selectedRowKeysRecord={[]}
+                        setListLoading={setListLoading}
+                        user={true}
+                        userInfo={userInfo}
+                        onFinish={() => {}}
+                    />
                     <Popconfirm
                         title={
                             visibleQuery && (
@@ -1672,6 +1698,14 @@ const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     <Tag>Total:{totalUserOnline}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
+                    <AddAllPlugin
+                        isAddAll={true}
+                        selectedRowKeysRecord={[]}
+                        setListLoading={setListLoading}
+                        user={false}
+                        userInfo={userInfo}
+                        onFinish={() => {}}
+                    />
                     <Popconfirm
                         title={
                             visibleQuery && (
