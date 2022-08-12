@@ -8,6 +8,8 @@ export interface PacketScanFormProp {
     token: string
     httpFlowIds: number[]
     plugins: string[]
+    https?: boolean
+    httpRequest?: Uint8Array
 }
 
 export interface ExecPacketScanRequest {
@@ -44,7 +46,7 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
     const [params, setParams] = useState(defaultPacketScanRequestParams());
     const [loading, setLoading] = useState(false);
 
-    const {token, httpFlowIds, plugins} = props;
+    const {token, httpFlowIds, plugins, https, httpRequest} = props;
 
     useEffect(() => {
         if (!token) {
@@ -72,6 +74,8 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
         ipcRenderer.invoke("ExecPacketScan", {
             ...params,
             HTTPFlow: httpFlowIds,
+            HTTPS: https,
+            HTTPRequest: httpRequest,
             PluginList: plugins
         } as ExecPacketScanRequest, token).then(() => {
             info("开始扫描数据包")

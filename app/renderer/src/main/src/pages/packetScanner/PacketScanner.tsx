@@ -12,12 +12,15 @@ import {PacketScanResult} from "@/pages/packetScanner/PacketScanResult";
 
 export interface PacketScannerProp {
     HttpFlowIds: number[]
+    Https?: boolean
+    HttpRequest?: Uint8Array
 }
 
 const PACKET_SCANNER_PRESET_PLUGIN_LIST = "PACKET_SCANNER_PRESET_PLUGIN_LISTNAMES"
 
 export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
     const [presetPacketScanPlugin, setPresetPacketScanPlugin] = useState<string[]>([]);
+    const {Https, HttpRequest} = props;
 
     useEffect(() => {
         getRemoteValue(PACKET_SCANNER_PRESET_PLUGIN_LIST).then((e: string) => {
@@ -48,7 +51,10 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
             firstRatio={"400px"}
             firstMinSize={400}
             secondNode={() => <>
-                <PacketScannerViewer plugins={presetPacketScanPlugin} flowIds={props.HttpFlowIds}/>
+                <PacketScannerViewer
+                    plugins={presetPacketScanPlugin} flowIds={props.HttpFlowIds}
+                    https={Https} httpRequest={HttpRequest}
+                />
             </>}
         >
 
@@ -60,7 +66,8 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
 interface PacketScannerFormProp {
     flowIds: number[]
     plugins: string[]
-
+    https?: boolean
+    httpRequest?: Uint8Array
 }
 
 const PacketScannerViewer: React.FC<PacketScannerFormProp> = (props) => {
@@ -74,7 +81,10 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = (props) => {
         <ResizeBox
             isVer={true}
             firstNode={() => {
-                return <PacketScanForm httpFlowIds={props.flowIds} token={token} plugins={props.plugins}/>
+                return <PacketScanForm
+                    httpFlowIds={props.flowIds} token={token} plugins={props.plugins}
+                    https={props.https} httpRequest={props.httpRequest}
+                />
             }}
             firstRatio={"100"}
             firstMinSize={100}
@@ -94,6 +104,18 @@ export const execPacketScan = (ids: number[]) => {
         content: (
             <>
                 <PacketScanner HttpFlowIds={ids}/>
+            </>
+        )
+    })
+};
+
+export const execPacketScanFromRaw = (https: boolean, request: Uint8Array) => {
+    showDrawer({
+        title: "Web Fuzzer 数据包扫描", maskClosable: false,
+        width: "95%",
+        content: (
+            <>
+                <PacketScanner Https={https} HttpRequest={request} HttpFlowIds={[]}/>
             </>
         )
     })
