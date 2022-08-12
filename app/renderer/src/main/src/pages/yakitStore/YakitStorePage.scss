@@ -348,6 +348,30 @@
             align-items: center;
             width: 80px;
         }
+
+        .icon-select {
+            color: #bfbfbf;
+            position: absolute;
+            right: -1px;
+            top: -1px;
+
+            svg {
+                width: 1.5em;
+                height: 1.5em;
+            }
+        }
+
+    }
+
+    .plugin-item-content {
+        display: flex;
+        flex-direction: column;
+
+        .plugin-help {
+            width: "100%";
+            color: #5f5f5f;
+            margin-bottom: 5px;
+        }
     }
 }
 
