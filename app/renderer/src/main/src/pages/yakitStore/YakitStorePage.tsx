@@ -835,7 +835,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 hasMore={hasMore}
                 loading={loading}
                 loadMoreData={loadMoreData}
-                classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 defItemHeight={itemHeight}
                 renderRow={(data: YakScript, index) => (
@@ -892,7 +891,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         return props.onYakScriptRender(plugin, maxWidth)
     }
     return (
-        <div className='plugin-item'>
+        <div className={`plugin-item`}>
             <div className='plugin-item-heard'>
                 <div className='plugin-item-left'>
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
