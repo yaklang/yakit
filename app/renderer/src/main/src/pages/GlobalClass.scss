@@ -5,3 +5,8 @@
     overflow: hidden;
     word-break: break-all;
 }
+
+.justify-space-between{
+    display: flex;
+    justify-content: space-between;
+}

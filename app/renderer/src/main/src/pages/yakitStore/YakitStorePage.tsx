@@ -895,9 +895,11 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             <div className='plugin-item-heard'>
                 <div className='plugin-item-left'>
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
-                    <div className='text-icon-local'>
-                        {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && <OnlineCloudIcon />}
-                        {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
+                    <div className='icon-body'>
+                        <div className='text-icon-local'>
+                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && <OnlineCloudIcon />}
+                            {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
+                        </div>
                         {gitUrlIcon(plugin.FromGit)}
                     </div>
                 </div>
@@ -929,93 +931,19 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             </div>
             <div className='plugin-item-content'>
                 <div className='plugin-help content-ellipsis'>{plugin.Help || "No Description about it."}</div>
+                {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
+                <div className='plugin-item-footer'>
+                    <div className='plugin-item-footer-left'>
+                        <img
+                            alt=''
+                            src='https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'
+                        />
+                        <div className='plugin-item-author content-ellipsis'>{plugin.Author || "anonymous"}</div>
+                    </div>
+                    <div className='plugin-item-time'>{formatDate(plugin.CreatedAt)}</div>
+                </div>
             </div>
         </div>
-        // <Card
-        //     size={"small"}
-        //     bordered={true}
-        //     hoverable={true}
-        //     title={
-        //         <div className='flex-align-center'>
-        //             <Tooltip title={plugin.ScriptName}>
-        //                 <span className='text-style content-ellipsis'>{plugin.ScriptName}</span>
-        //             </Tooltip>
-
-        //             <div className='text-icon-local'>
-        //                 {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && (
-        //                     <Tooltip title='线上的公开插件'>
-        //                         <OnlineCloudIcon />
-        //                     </Tooltip>
-        //                 )}
-        //                 {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && (
-        //                     <Tooltip title='线上的私密插件'>
-        //                         <LockOutlined />
-        //                     </Tooltip>
-        //                 )}
-        //                 {gitUrlIcon(plugin.FromGit)}
-        //             </div>
-        //         </div>
-        //     }
-        //     extra={
-        //         (uploadLoading && <LoadingOutlined className='upload-outline' />) || (
-        //             <>
-        //                 {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
-        //                     <SyncCloudButton
-        //                         params={plugin}
-        //                         setParams={updateListItem}
-        //                         uploadLoading={setUploadLoading}
-        //                     >
-        //                         <UploadOutlined className='upload-outline' />
-        //                     </SyncCloudButton>
-        //                 )}
-        //             </>
-        //         )
-        //     }
-        //     style={{
-        //         width: "100%",
-        //         backgroundColor: currentScript?.Id === plugin.Id ? "rgba(79,188,255,0.26)" : "#fff"
-        //     }}
-        //     onClick={() => props.onClicked(plugin)}
-        // >
-        //     <SelectIcon
-        //         //  @ts-ignore
-        //         className={`icon-select  ${
-        //             selectedRowKeysRecord.findIndex((ele) => ele.Id === plugin.Id) !== -1 && "icon-select-active"
-        //         }`}
-        //         onClick={(e) => {
-        //             e.stopPropagation()
-        //             onSelect(plugin)
-        //         }}
-        //     />
-        //     <Row>
-        //         <Col span={24}>
-        //             <CopyableField
-        //                 style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
-        //                 text={plugin.Help || "No Description about it."}
-        //                 noCopy={true}
-        //             />
-        //         </Col>
-        //     </Row>
-        //     <div style={{marginBottom: 4}}>
-        //         {(plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>) || (
-        //             <div className='plugin-tag'>&nbsp;</div>
-        //         )}
-        //     </div>
-        //     <Row>
-        //         <Col span={12}>
-        //             <Space style={{width: "100%"}}>
-        //                 {plugin.Author || "anonymous"}
-        //                 {/* <Tag color={isAnonymous ? "gray" : "geekblue"}>{plugin.Author || "anonymous"}</Tag> */}
-        //             </Space>
-        //         </Col>
-        //         <Col span={12} style={{textAlign: "right"}}>
-        //             <Space size={2}>
-        //                 <CopyableField noCopy={true} text={formatDate(plugin.CreatedAt)} />
-        //                 {gitUrlIcon(plugin.FromGit, true)}
-        //             </Space>
-        //         </Col>
-        //     </Row>
-        // </Card>
     )
 }
 
@@ -1348,23 +1276,9 @@ export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
     if (!url) {
         return <></>
     }
-
-    if (url.startsWith("https://github.com/yaklang/yakit-store") && !noTag) {
-        return <Tag color={"green"}>yaklang.io</Tag>
-    }
-
     return (
         <Tooltip title={url}>
-            <Button
-                type={"link"}
-                style={{
-                    paddingLeft: 0,
-                    paddingRight: 0,
-                    marginLeft: 0,
-                    marginRight: 0
-                }}
-                icon={<GithubOutlined />}
-            />
+            <GithubOutlined className='github-icon' />
         </Tooltip>
     )
 }
