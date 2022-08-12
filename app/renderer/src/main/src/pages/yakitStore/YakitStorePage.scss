@@ -251,13 +251,9 @@
     }
 }
 
-.operation-text{
-    font-size: 12px;
-    color: rgba(0, 0, 0, 0.45);
+.operation-text {
+    font-size: 14px;
+    color: #1890ff;
     margin-left: 12px;
     cursor: pointer;
-
-    &:hover {
-        color: #1890ff;
-    }
 }
