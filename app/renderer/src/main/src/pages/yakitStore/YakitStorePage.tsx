@@ -901,7 +901,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                         {gitUrlIcon(plugin.FromGit)}
                     </div>
                 </div>
-                <div className="plugin-item-right">
+                <div className='plugin-item-right'>
                     {(uploadLoading && <LoadingOutlined className='upload-outline' />) || (
                         <>
                             {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
@@ -916,6 +916,19 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                         </>
                     )}
                 </div>
+                <SelectIcon
+                    //  @ts-ignore
+                    className={`icon-select  ${
+                        selectedRowKeysRecord.findIndex((ele) => ele.Id === plugin.Id) !== -1 && "icon-select-active"
+                    }`}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onSelect(plugin)
+                    }}
+                />
+            </div>
+            <div className='plugin-item-content'>
+                <div className='plugin-help content-ellipsis'>{plugin.Help || "No Description about it."}</div>
             </div>
         </div>
         // <Card
