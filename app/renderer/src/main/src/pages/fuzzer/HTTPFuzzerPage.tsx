@@ -61,6 +61,7 @@ import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageE
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str";
 import {insertFileFuzzTag} from "./InsertFileFuzzTag";
 import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner";
+import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1140,9 +1141,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                     extra={
                         <Space size={2}>
-                            <Button size={"small"} onClick={() => {
-                                execPacketScanFromRaw(isHttps, StringToUint8Array(request, "utf8"))
-                            }}>{"插件扫描"}</Button>
+                            <PacketScanButton packetGetter={() => {
+                                return {httpRequest: StringToUint8Array(request), https: isHttps}
+                            }}/>
                             <Button
                                 style={{marginRight: 1}}
                                 size={"small"} type={"primary"}

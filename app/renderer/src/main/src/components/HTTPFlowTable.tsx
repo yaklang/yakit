@@ -21,6 +21,7 @@ import {
     RequestToYakCodeTemplate
 } from "../pages/invoker/fromPacketToYakCode"
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner";
+import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1557,15 +1558,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         })
                                     }
                                 },
-                                {
-                                    title: "数据包扫描",
-                                    onClick: () => {
-                                        if (!rowData) {
-                                            return
-                                        }
-                                        execPacketScan([rowData.Id])
-                                    }
-                                },
+                                GetPacketScanByCursorMenuItem(rowData.Id),
                                 // {
                                 //     title: "发送到 数据包扫描",
                                 //     onClick: () => {

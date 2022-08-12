@@ -6,7 +6,7 @@ import {ExecResult} from "@/pages/invoker/schema";
 
 export interface PacketScanFormProp {
     token: string
-    httpFlowIds: number[]
+    httpFlowIds?: number[]
     plugins: string[]
     https?: boolean
     httpRequest?: Uint8Array
@@ -80,7 +80,14 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
         } as ExecPacketScanRequest, token).then(() => {
             info("开始扫描数据包")
         })
-    }} layout={"inline"}>
+    }} layout={"horizontal"}>
+        <Form.Item style={{marginBottom: 4}}>
+            {loading && <Button type={"primary"} danger={true} onClick={() => {
+                ipcRenderer.invoke("cancel-ExecPacketScan", token)
+            }}>停止任务</Button>}
+            {!loading && <Button type="primary" htmlType="submit"> 提交数据包扫描任务 </Button>}
+        </Form.Item>
+
         <InputInteger
             label={"设置请求超时时间"}
             setValue={Timeout => setParams({...params, Timeout})} value={params.Timeout}
@@ -90,11 +97,6 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
             setValue={TotalTimeoutSeconds => setParams({...params, TotalTimeoutSeconds})}
             value={params.TotalTimeoutSeconds}
         />
-        <Form.Item colon={false} label={" "}>
-            {loading && <Button type={"primary"} danger={true} onClick={() => {
-                ipcRenderer.invoke("cancel-ExecPacketScan", token)
-            }}>停止任务</Button>}
-            {!loading && <Button type="primary" htmlType="submit"> 提交数据包扫描任务 </Button>}
-        </Form.Item>
+
     </Form>
 };

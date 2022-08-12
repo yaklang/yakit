@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {QueryYakScriptRequest, YakScript} from "../pages/invoker/schema";
 import {PluginList} from "./PluginList";
 import "./PluginList.css";
-import {useDebounce, useGetState, useMemoizedFn, useVirtualList} from "ahooks";
+import {useDebounce, useDebounceEffect, useGetState, useMemoizedFn, useVirtualList} from "ahooks";
 import {queryYakScriptList} from "../pages/yakitStore/network";
 import {AutoCard} from "./AutoCard";
 import {Space, Tag, Tooltip} from "antd";
@@ -15,6 +15,7 @@ import {YakEditor} from "../utils/editors";
 export interface SimplePluginListProp {
     readOnly?: boolean
     initialQuery?: QueryYakScriptRequest
+    autoSelectAll?: boolean
     pluginTypes?: string
     initialSelected?: string[]
     onSelected?: (names: string[]) => any
@@ -64,7 +65,11 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
             (data, total) => {
                 setTotal(total || 0)
                 setScripts(data)
-                setListNames([...(data || []).filter(i => i.IsGeneralModule).map(i => i.ScriptName)])
+                if (props.autoSelectAll) {
+                    setListNames(data.map(i => i.ScriptName))
+                } else {
+                    setListNames([...(data || []).filter(i => i.IsGeneralModule).map(i => i.ScriptName)])
+                }
             },
             () => setTimeout(() => setPluginLoading(false), 300),
             limit || 200,
@@ -74,9 +79,9 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
         )
     })
 
-    useEffect(() => {
+    useDebounceEffect(() => {
         search()
-    }, [useDebounce(props.initialQuery, {wait: 500})])
+    }, [props.initialQuery], {wait: 500})
 
     return <PluginList
         readOnly={props.readOnly}

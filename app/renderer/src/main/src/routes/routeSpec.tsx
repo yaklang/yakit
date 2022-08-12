@@ -222,6 +222,7 @@ interface ComponentParams {
     packetScan_FlowIds?: number[]
     packetScan_Https?: boolean
     packetScan_HttpRequest?: Uint8Array
+    packetScan_Keyword?: string
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -321,9 +322,10 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.PacketScanPage:
             return (
                 <PacketScanner
-                    HttpFlowIds={(params?.packetScan_FlowIds)||[]}
+                    HttpFlowIds={params?.packetScan_FlowIds}
                     Https={params?.packetScan_Https}
                     HttpRequest={params?.packetScan_HttpRequest}
+                    Keyword={params?.packetScan_Keyword}
                 />
             )
         default:
