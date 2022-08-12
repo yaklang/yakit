@@ -818,6 +818,16 @@ const Main: React.FC<MainProp> = (props) => {
         })
     })
 
+    const addPacketScan = useMemoizedFn((httpFlows: number[], https: boolean, request?: Uint8Array) => {
+        addTabPage(Route.PacketScanPage, {
+            hideAdd: false,
+            node: ContentByRoute(Route.PacketScanPage, undefined, {
+                packetScan_FlowIds: httpFlows, packetScan_Https: https,
+                packetScan_HttpRequest: request,
+            })
+        })
+    })
+
     useEffect(() => {
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
             const {type, data = {}} = res
@@ -827,6 +837,7 @@ const Main: React.FC<MainProp> = (props) => {
             if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
+            if (type === "exec-packet-scan") addPacketScan(data["httpFlows"], data["https"], data["httpRequest"])
             console.info("send to tab: ", type)
         })
 

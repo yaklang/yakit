@@ -98,25 +98,22 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = (props) => {
 };
 
 export const execPacketScan = (ids: number[]) => {
-    showDrawer({
-        title: "数据包扫描", maskClosable: false,
-        width: "95%",
-        content: (
-            <>
-                <PacketScanner HttpFlowIds={ids}/>
-            </>
-        )
-    })
+    execPacketScanWithNewTab(ids, false, new Uint8Array)
 };
 
 export const execPacketScanFromRaw = (https: boolean, request: Uint8Array) => {
-    showDrawer({
-        title: "Web Fuzzer 数据包扫描", maskClosable: false,
-        width: "95%",
-        content: (
-            <>
-                <PacketScanner Https={https} HttpRequest={request} HttpFlowIds={[]}/>
-            </>
-        )
+    execPacketScanWithNewTab([], https, request)
+}
+
+const {ipcRenderer} = window.require("electron");
+
+export const execPacketScanWithNewTab = (httpFlowIds: number[], https: boolean, request: Uint8Array) => {
+    ipcRenderer.invoke("send-to-tab", {
+        type: "exec-packet-scan",
+        data: {
+            httpRequest: request,
+            https: https,
+            httpFlows: httpFlowIds,
+        }
     })
 }
