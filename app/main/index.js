@@ -131,7 +131,6 @@ ipcMain.on("user-sign-in", (event, arg) => {
     }
 
     const {url = "", type} = arg
-
     const geturlparam = (url) => {
         let p = url.split("?")[1]
         return new URLSearchParams(p)
@@ -148,7 +147,6 @@ ipcMain.on("user-sign-in", (event, arg) => {
             nodeIntegration: true
         }
     })
-
     authWindow.show()
     authWindow.loadURL(url)
     authWindow.webContents.on("will-navigate", (event, url) => {
@@ -157,12 +155,22 @@ ipcMain.on("user-sign-in", (event, arg) => {
         if (excludeUrl.filter((item) => url.indexOf(item) > -1).length > 0) return
 
         const params = geturlparam(url)
-        httpApi("get", typeApi[type], {code: params.get("code")})
+        const wxCode = params.get("code")
+        if (!wxCode) {
+            authWindow.webContents.session.clearStorageData()
+            win.webContents.send("fetch-signin-data", {ok: false, info: "code获取失败,请重新登录！"})
+            authWindow.close()
+            return
+        }
+        httpApi("get", typeApi[type], {code: wxCode})
             .then((res) => {
                 if (!authWindow) return
                 if (res.code !== 200) {
                     authWindow.webContents.session.clearStorageData()
-                    win.webContents.send("fetch-signin-data", {ok: false, info: res.reason || "请求异常，请重新登录！"})
+                    win.webContents.send("fetch-signin-data", {
+                        ok: false,
+                        info: res.data.reason || "请求异常，请重新登录！"
+                    })
                     authWindow.close()
                     return
                 }
@@ -201,7 +209,7 @@ ipcMain.on("user-sign-in", (event, arg) => {
             })
             .catch((err) => {
                 authWindow.webContents.session.clearStorageData()
-                win.webContents.send("fetch-signin-data", {ok: false, info: "请求异常，请重新登录！"})
+                win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:"+err})
                 authWindow.close()
             })
     })
