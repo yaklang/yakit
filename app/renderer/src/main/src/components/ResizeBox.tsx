@@ -7,12 +7,12 @@ import "./ResizeBox.css"
 
 export interface ResizeBoxProps {
     isVer?: boolean
-
-    firstRatio?: string
+    freeze?: boolean
+    firstRatio?: string | any
     firstMinSize?: string | number
     firstNode: any
 
-    secondRatio?: string
+    secondRatio?: string | any
     secondMinSize?: string | number
     secondNode: any
 
@@ -124,12 +124,12 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
             <div
                 ref={lineRef}
                 style={{
-                    ...lineStyle,
+                    ...props.freeze ? undefined : lineStyle,
                     width: `${isVer ? "100%" : "6px"}`,
                     height: `${isVer ? "6px" : "100%"}`,
                     cursor: `${isVer ? "row-resize" : "col-resize"}`
                 }}
-                className='resize-split-line'
+                className={props.freeze ? undefined : 'resize-split-line'}
             />
             <div
                 ref={secondRef}
@@ -142,7 +142,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
             >
                 {typeof secondNode === "function" ? secondNode() : secondNode}
             </div>
-            <ResizeLine
+            {!props.freeze && <ResizeLine
                 isVer={isVer}
                 bodyRef={bodyRef}
                 resizeRef={lineRef}
@@ -151,7 +151,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                 onStart={moveStart}
                 onEnd={moveEnd}
                 onChangeSize={moveSize}
-            />
+            />}
             <div ref={maskRef} className='mask-body'/>
         </div>
     )

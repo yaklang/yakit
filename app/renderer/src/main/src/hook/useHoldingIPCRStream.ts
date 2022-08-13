@@ -1,21 +1,23 @@
-import { useState, useCallback, useRef, useEffect } from "react"
+import {useState, useCallback, useRef, useEffect} from "react"
 import {
     ExecResultLog,
     ExecResultMessage,
     ExecResultProgress
 } from "../pages/invoker/batch/ExecMessageViewer"
-import { ExecResult } from "../pages/invoker/schema"
-import { StatusCardInfoProps, StatusCardProps } from "../pages/yakitStore/viewers/base"
-import { writeExecResultXTerm } from "../utils/xtermUtils"
-import { failed, info } from "../utils/notification"
-import { useGetState } from "ahooks"
+import {ExecResult} from "../pages/invoker/schema"
+import {StatusCardInfoProps, StatusCardProps} from "../pages/yakitStore/viewers/base"
+import {writeExecResultXTerm} from "../utils/xtermUtils"
+import {failed, info} from "../utils/notification"
+import {useGetState} from "ahooks"
+import {Risk} from "@/pages/risks/schema";
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 interface InfoState {
     messageState: ExecResultLog[]
     processState: ExecResultProgress[]
     statusState: StatusCardInfoProps[]
+    riskState: Risk[]
     featureMessageState: ExecResultLog[]
     featureTypeState: ExecResultLog[]
 }
@@ -39,6 +41,7 @@ export default function useHoldingIPCRStream(
         messageState: [],
         processState: [],
         statusState: [],
+        riskState: [],
         featureMessageState: [],
         featureTypeState: []
     })
@@ -47,6 +50,7 @@ export default function useHoldingIPCRStream(
     let messages = useRef<ExecResultMessage[]>([])
     let featureMessages = useRef<ExecResultMessage[]>([])
     let featureTypes = useRef<ExecResultMessage[]>([])
+    let riskMessages = useRef<Risk[]>([])
     let processKVPair = useRef<Map<string, number>>(new Map<string, number>())
     let statusKVPair = useRef<Map<string, CacheStatusCardProps>>(
         new Map<string, CacheStatusCardProps>()
@@ -66,12 +70,15 @@ export default function useHoldingIPCRStream(
                 .filter((i) => i.type === "log")
                 .map((i) => i.content as ExecResultLog)
                 .filter((i) => i.data !== 'null')
+
+            let riskResults = riskMessages.current.filter(i => !!i);
+
             const featureTypeFilter = featureTypeResults.map(item => item.data)
             featureTypeResults = featureTypeResults.filter((item, index) => featureTypeFilter.indexOf(item.data) === index)
 
             const processes: ExecResultProgress[] = []
             processKVPair.current.forEach((value, id) => {
-                processes.push({ id: id, progress: value })
+                processes.push({id: id, progress: value})
             })
 
             const cacheStatusKVPair: { [x: string]: StatusCardInfoProps } = {}
@@ -88,10 +95,10 @@ export default function useHoldingIPCRStream(
                     if (cacheStatusKVPair[item.Tag]) {
                         cacheStatusKVPair[item.Tag].info.push(item)
                     } else {
-                        cacheStatusKVPair[item.Tag] = { tag: item.Tag, info: [item] }
+                        cacheStatusKVPair[item.Tag] = {tag: item.Tag, info: [item]}
                     }
                 } else {
-                    cacheStatusKVPair[item.Id] = { tag: item.Id, info: [item] }
+                    cacheStatusKVPair[item.Id] = {tag: item.Id, info: [item]}
                 }
             }
 
@@ -100,6 +107,7 @@ export default function useHoldingIPCRStream(
                 JSON.stringify({
                     messageState: results,
                     featureMessageState: featureResults,
+                    riskState: riskResults,
                     processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
                     statusState: Object.values(cacheStatusKVPair),
                     featureTypeState: featureTypeResults
@@ -108,6 +116,7 @@ export default function useHoldingIPCRStream(
                 setInfoState({
                     messageState: results,
                     featureMessageState: featureResults,
+                    riskState: riskResults,
                     processState: processes.sort((a, b) => a.id.localeCompare(b.id)),
                     statusState: Object.values(cacheStatusKVPair),
                     featureTypeState: featureTypeResults
@@ -143,8 +152,8 @@ export default function useHoldingIPCRStream(
                     if (obj.type === "log" && logData.level === "feature-status-card-data") {
                         try {
                             const obj = JSON.parse(logData.data)
-                            const { id, data, tags } = obj
-                            const { timestamp } = logData
+                            const {id, data, tags} = obj
+                            const {timestamp} = logData
                             const originData = statusKVPair.current.get(id)
                             if (originData && originData.Timestamp > timestamp) {
                                 return
@@ -155,26 +164,37 @@ export default function useHoldingIPCRStream(
                                 Timestamp: timestamp,
                                 Tags: Array.isArray(tags) ? tags : []
                             })
-                        } catch (e) {}
+                        } catch (e) {
+                        }
                         return
                     }
 
                     if (obj.type === "log" && logData.level === "json-feature") {
                         try {
                             featureTypes.current.unshift(obj)
-                        } catch (e) {}
+                        } catch (e) {
+                        }
                         return
                     }
 
                     if (obj.type === "log" && logData.level === "feature-table-data") {
                         try {
                             featureMessages.current.unshift(obj)
-                        } catch (e) {}
+                        } catch (e) {
+                        }
                         return
                     }
 
+                    if (obj.type === "log" && logData.level === "json-risk") {
+                        try {
+                            const risk = JSON.parse(logData.data) as Risk
+                            riskMessages.current.unshift(risk)
+                        } catch (e) {
+                        }
+                    }
+
                     // 第三方数据过滤方法
-                    if(dataFilter) if(dataFilter(obj, logData)) return
+                    if (dataFilter) if (dataFilter(obj, logData)) return
 
                     messages.current.unshift(obj)
 
@@ -182,7 +202,8 @@ export default function useHoldingIPCRStream(
                     if (messages.current.length > 100) {
                         messages.current.pop()
                     }
-                } catch (e) {}
+                } catch (e) {
+                }
             }
             writeExecResultXTerm(getXtermRef(), data)
         })
@@ -217,8 +238,15 @@ export default function useHoldingIPCRStream(
         featureTypes.current = []
         processKVPair.current = new Map<string, number>()
         statusKVPair.current = new Map<string, CacheStatusCardProps>()
-        setInfoState({ messageState: [], processState: [], statusState: [], featureMessageState: [], featureTypeState: [] })
+        setInfoState({
+            messageState: [],
+            processState: [],
+            statusState: [],
+            riskState: [],
+            featureMessageState: [],
+            featureTypeState: []
+        })
     }
 
-    return [infoState, { reset, setXtermRef }, xtermRef] as const
+    return [infoState, {reset, setXtermRef}, xtermRef] as const
 }

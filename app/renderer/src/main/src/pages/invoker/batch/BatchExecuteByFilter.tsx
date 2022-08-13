@@ -23,6 +23,7 @@ import {YakitLogFormatter} from "../YakitLogFormatter";
 
 import "./BatchExecuteByFilter.css"
 import {Risk} from "../../risks/schema";
+import {RisksViewer} from "@/pages/risks/RisksViewer";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -374,99 +375,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                                 setTableContentHeight(height - 4)
                             }}
                             handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}/>
-                        <TableResizableColumn
-                            virtualized={true}
-                            sortFilter={() => {
-                            }}
-                            autoHeight={tableContentHeight <= 0}
-                            height={tableContentHeight}
-                            data={jsonRisks}
-                            wordWrap={true}
-                            renderEmpty={() => {
-                                return <Empty className="table-empty" description="数据加载中"/>
-                            }}
-                            columns={[
-                                {
-                                    dataKey: "TitleVerbose",
-                                    width: 400,
-                                    resizable: true,
-                                    headRender: () => "标题",
-                                    cellRender: ({rowData, dataKey, ...props}: any) => {
-                                        return (
-                                            <div
-                                                className="div-font-ellipsis"
-                                                style={{width: "100%"}}
-                                                title={rowData?.TitleVerbose || rowData.Title}
-                                            >
-                                                {rowData?.TitleVerbose || rowData.Title}
-                                            </div>
-                                        )
-                                    }
-                                },
-                                {
-                                    dataKey: "RiskTypeVerbose",
-                                    width: 130,
-                                    headRender: () => "类型",
-                                    cellRender: ({rowData, dataKey, ...props}: any) => {
-                                        return rowData?.RiskTypeVerbose || rowData.RiskType
-                                    }
-                                },
-                                {
-                                    dataKey: "Severity",
-                                    width: 90,
-                                    headRender: () => "等级",
-                                    cellRender: ({rowData, dataKey, ...props}: any) => {
-                                        const title = TitleColor.filter((item) => item.key.includes(rowData.Severity || ""))[0]
-                                        return (
-                                            <span className={title?.value || "title-default"}>
-                                                {title ? title.name : rowData.Severity || "-"}
-                                            </span>
-                                        )
-                                    }
-                                },
-                                {
-                                    dataKey: "IP",
-                                    width: 140,
-                                    headRender: () => "IP",
-                                    cellRender: ({rowData, dataKey, ...props}: any) => {
-                                        return rowData?.IP || "-"
-                                    }
-                                },
-                                {
-                                    dataKey: "ReverseToken",
-                                    headRender: () => "Token",
-                                    cellRender: ({rowData, dataKey, ...props}: any) => {
-                                        return rowData?.ReverseToken || "-"
-                                    }
-                                },
-                                {
-                                    dataKey: "operate",
-                                    width: 90,
-                                    fixed: "right",
-                                    headRender: () => "操作",
-                                    cellRender: ({rowData}: any) => {
-                                        return (
-                                            <a
-                                                onClick={(e) => {
-                                                    showModal({
-                                                        width: "80%",
-                                                        title: "详情",
-                                                        content: (
-                                                            <div style={{overflow: "auto"}}>
-                                                                <RiskDetails info={rowData} isShowTime={false}/>
-                                                            </div>
-                                                        )
-                                                    })
-                                                }}
-                                            >详情</a>
-                                        )
-                                    }
-                                }
-                            ].map(item => {
-                                item["verticalAlign"] = "middle"
-                                return item
-                            })}
-                        />
+                        <RisksViewer risks={jsonRisks} tableContentHeight={tableContentHeight}/>
                     </div>
                 </Tabs.TabPane>
             </Tabs>

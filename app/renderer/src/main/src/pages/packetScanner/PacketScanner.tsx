@@ -3,7 +3,7 @@ import {SimplePluginList} from "@/components/SimplePluginList";
 import {showDrawer, showModal} from "@/utils/showModal";
 import {ResizeBox} from "@/components/ResizeBox";
 import {getRemoteValue} from "@/utils/kv";
-import {Card, Col, Form, Row, Space} from "antd";
+import {Card, Col, Form, Layout, Row, Space} from "antd";
 import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
 import {PacketScanForm} from "@/pages/packetScanner/PacketScanForm";
 import {randomString} from "@/utils/randomUtil";
@@ -12,6 +12,9 @@ import {PacketScanResult} from "@/pages/packetScanner/PacketScanResult";
 import {HTTPPacketEditor} from "@/utils/editors";
 import {HttpFlowViewer} from "@/pages/packetScanner/HttpFlowViewer";
 import {genDefaultPagination, QueryYakScriptRequest} from "@/pages/invoker/schema";
+import {AutoCard} from "@/components/AutoCard";
+import ReactResizeDetector from "react-resize-detector";
+import {xtermFit} from "@/utils/xtermUtils";
 
 export interface PacketScannerProp {
     HttpFlowIds?: number[]
@@ -45,7 +48,7 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
     return <div style={{height: "100%", width: "100%"}}>
         <ResizeBox
             isVer={false}
-            firstNode={<>
+            firstNode={() => <>
                 <SimplePluginList
                     initialQuery={initQuery}
                     autoSelectAll={!!Keyword}
@@ -60,13 +63,11 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
             </>}
             firstRatio={"300px"}
             firstMinSize={"300px"}
-            secondNode={() => <>
-                <PacketScannerViewer
-                    plugins={presetPacketScanPlugin}
-                    flowIds={props.HttpFlowIds}
-                    https={Https} httpRequest={HttpRequest}
-                />
-            </>}
+            secondNode={() => <PacketScannerViewer
+                plugins={presetPacketScanPlugin}
+                flowIds={props.HttpFlowIds}
+                https={Https} httpRequest={HttpRequest}
+            />}
         >
 
         </ResizeBox>
@@ -83,14 +84,19 @@ interface PacketScannerFormProp {
 
 const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) => {
     const token = useCreation(() => randomString(20), [])
+    const [viewerHeight, setViewerHeight] = useState(200);
 
     useEffect(() => {
         console.info("数据包扫描右控制台", props.plugins)
     }, [props])
 
-    return <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column"}}>
-        <div style={{height: 200, marginBottom: 8, marginTop: 8}}>
-            <Row gutter={8} style={{height: "100%"}}>
+    return <ResizeBox
+        isVer={true}
+        firstRatio={200}
+        firstMinSize={200}
+        freeze={true}
+        firstNode={() => {
+            return <Row gutter={8} style={{height: "200px"}}>
                 <Col span={16}>
                     {(props?.flowIds || []).length <= 0 ? <div style={{height: "100%"}}>
                         <HTTPPacketEditor noTitle={true} noHeader={true} readOnly={true}
@@ -106,11 +112,13 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) 
                     />
                 </Col>
             </Row>
-        </div>
-        <div style={{flex: 1}}>
-            <PacketScanResult token={token}/>
-        </div>
-    </div>
+        }}
+        secondNode={() => {
+            return <PacketScanResult token={token}/>
+        }}
+    >
+
+    </ResizeBox>
 });
 
 export const execPacketScan = (ids: number[], keyword?: string) => {

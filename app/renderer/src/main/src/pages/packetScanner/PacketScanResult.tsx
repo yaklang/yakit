@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream";
 import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
 
@@ -15,6 +15,7 @@ export const PacketScanResult: React.FC<PacketScanResultProp> = (props) => {
         loading={false}
         progress={infoState.processState}
         results={infoState.messageState}
+        risks={infoState.riskState}
         featureType={infoState.featureTypeState}
         feature={infoState.featureMessageState}
         statusCards={infoState.statusState}
@@ -22,4 +23,5 @@ export const PacketScanResult: React.FC<PacketScanResultProp> = (props) => {
     >
 
     </PluginResultUI>
+
 };

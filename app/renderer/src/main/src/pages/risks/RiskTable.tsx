@@ -346,7 +346,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             width: 400,
             filteredValue: (getParams()["Search"] && ["TitleVerbose"]) || null,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -372,7 +372,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             filteredValue: (getParams()["RiskType"] && ["RiskTypeVerbose"]) || null,
             render: (_, i: Risk) => i?.RiskTypeVerbose || i.RiskType,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -406,7 +406,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             render: (_, i: Risk) => i?.IP || "-",
             filteredValue: (getParams()["Network"] && ["IP"]) || null,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -446,7 +446,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     title: "详情",
                                     content: (
                                         <div style={{overflow: "auto"}}>
-                                            <RiskDetails info={i} />
+                                            <RiskDetails info={i}/>
                                         </div>
                                     )
                                 })
@@ -541,7 +541,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                                 onClick={() => {
                                                     refList()
                                                 }}
-                                                icon={<ReloadOutlined />}
+                                                icon={<ReloadOutlined/>}
                                             />
                                         </Tooltip>
                                     </Space>
@@ -771,6 +771,7 @@ export interface DeleteRiskFormProp {
     types?: FieldNameSelectItem[]
     severities?: FieldNameSelectItem[]
 }
+
 interface RiskDetailsProp {
     info: Risk
     isShowTime?: boolean
@@ -780,18 +781,27 @@ interface RiskDetailsProp {
 export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDetailsProp) => {
     const {info, isShowTime = true} = props
     const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
+    const [shrink, setShrink] = useState(!!props.shrink);
 
     return (
         <Descriptions
             title={
                 <div className='container-title-body'>
                     <div className='title-icon'>
-                        <img src={title?.img || infoImg} className='icon-img' />
+                        <img src={title?.img || infoImg} className='icon-img'/>
                     </div>
 
                     <div className='title-header'>
                         <div className='header-name text-ellipsis' title={info?.TitleVerbose || info.Title}>
-                            {info?.TitleVerbose || info.Title}
+                            <Space>
+                                {info?.TitleVerbose || info.Title}
+                                <Button
+                                    type={"link"} size={"small"}
+                                    onClick={()=>{
+                                        setShrink(!shrink)
+                                    }}
+                                >{shrink ? `展开详情` : `折叠详情`}</Button>
+                            </Space>
                         </div>
 
                         <div className='header-subtitle'>
@@ -859,7 +869,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                 </div>
             </Descriptions.Item>
 
-            {!props.shrink && (
+            {!shrink && (
                 <>
                     <Descriptions.Item label='Parameter' span={3}>
                         <div>{info.Parameter || "-"}</div>
