@@ -10,3 +10,9 @@ export function StringToUint8Array(str: string, encoding?: "latin1" | "ascii" | 
     }
     return Buffer.from(str, encoding)
 }
+
+export function removeRepeatedElement<T = string>(arr: T[]) {
+    return arr.filter((element, index) => {
+        return arr.indexOf(element) === index
+    })
+}

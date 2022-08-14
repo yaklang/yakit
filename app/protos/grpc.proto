@@ -319,6 +319,13 @@ service Yak {
 
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
+
+  rpc GetEngineDefaultProxy(Empty) returns (DefaultProxyResult);
+  rpc SetEngineDefaultProxy(DefaultProxyResult) returns (Empty);
+}
+
+message DefaultProxyResult {
+  string Proxy = 1;
 }
 
 message ExecPacketScanRequest {

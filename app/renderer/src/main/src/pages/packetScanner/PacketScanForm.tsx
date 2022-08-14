@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Button, Form} from "antd";
-import {InputInteger} from "@/utils/inputUtil";
+import {InputInteger, InputItem} from "@/utils/inputUtil";
 import {failed, info} from "@/utils/notification";
 import {ExecResult} from "@/pages/invoker/schema";
 
@@ -85,18 +85,17 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
             {loading && <Button type={"primary"} danger={true} onClick={() => {
                 ipcRenderer.invoke("cancel-ExecPacketScan", token)
             }}>停止任务</Button>}
-            {!loading && <Button type="primary" htmlType="submit"> 提交数据包扫描任务 </Button>}
+            {!loading && <Button type="primary" htmlType="submit"> 开始扫描 </Button>}
         </Form.Item>
-
+        {/*<InputInteger*/}
+        {/*    label={"设置请求超时时间"}*/}
+        {/*    setValue={Timeout => setParams({...params, Timeout})} value={params.Timeout}*/}
+        {/*/>*/}
         <InputInteger
-            label={"设置请求超时时间"}
-            setValue={Timeout => setParams({...params, Timeout})} value={params.Timeout}
-        />
-        <InputInteger
-            label={"设置请求超时时间"}
+            size={"small"}
+            label={"总超时时间"}
             setValue={TotalTimeoutSeconds => setParams({...params, TotalTimeoutSeconds})}
             value={params.TotalTimeoutSeconds}
         />
-
     </Form>
 };

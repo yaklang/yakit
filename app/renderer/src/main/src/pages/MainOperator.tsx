@@ -67,6 +67,7 @@ import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
 import {setRemoteValue} from "@/utils/kv"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
+import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy";
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -997,6 +998,14 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }}
                                             >
                                                 <Button type={"link"}>配置系统代理</Button>
+                                            </Menu.Item>
+                                            <Menu.Item
+                                                key={"config-engine-proxy"}
+                                                onClick={() => {
+                                                    showConfigEngineProxyForm()
+                                                }}
+                                            >
+                                                <Button type={"link"}>配置引擎代理</Button>
                                             </Menu.Item>
                                             <Menu.Item key={"config-menu"} onClick={() => showConfigMenuItems()}>
                                                 <Button type={"link"}>配置菜单栏</Button>
