@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Card, Space} from "antd";
+import {Card, Radio, Space} from "antd";
 import {FuzzerResponse} from "./HTTPFuzzerPage";
 import {SelectOne} from "../../utils/inputUtil";
 import {FuzzerResponseTableEx} from "./FuzzerResponseTable";
@@ -28,12 +28,23 @@ export const HTTPFuzzerResultsCard: React.FC<HTTPFuzzerResultsCardProp> = (props
         className={"flex-card"}
         title={<Space>
             Responses
-            <SelectOne size={"small"} label={" "} colon={false} data={[
-                {value: true, text: `成功[${(props.successResponses || []).length}]`},
-                {value: false, text: `失败[${(props.failedResponses || []).length}]`},
-            ]} value={showSuccess} setValue={setShowSuccess}
-                       formItemStyle={{marginBottom: 0}}
-            />
+            <Radio.Group onChange={e => {
+                setShowSuccess(!!e.target.value)
+            }} value={showSuccess} buttonStyle="solid" size={"small"}>
+                {[
+                    {value: true, text: `成功[${(props.successResponses || []).length}]`},
+                    {value: false, text: `失败[${(props.failedResponses || []).length}]`},
+                ].map(e => <Radio.Button
+                    key={`${e.value}`}
+                    value={e.value}
+                >{e.text}</Radio.Button>)}
+            </Radio.Group>
+            {/*<SelectOne size={"small"} label={" "} colon={false} data={[*/}
+            {/*    {value: true, text: `成功[${(props.successResponses || []).length}]`},*/}
+            {/*    {value: false, text: `失败[${(props.failedResponses || []).length}]`},*/}
+            {/*]} value={showSuccess} setValue={setShowSuccess}*/}
+            {/*           formItemStyle={{marginBottom: 0}}*/}
+            {/*/>*/}
         </Space>}
         extra={props.extra}
         bodyStyle={{padding: 0, width: "100%", overflow: "hidden"}}

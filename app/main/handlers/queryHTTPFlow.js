@@ -2,8 +2,8 @@ const {ipcMain} = require("electron");
 
 
 module.exports = (win, getClient) => {
-    ipcMain.handle("delete-http-flows-all", async (e,params) => {
-        getClient().DeleteHTTPFlows({DeleteAll: true,...params}, (err, data) => {
+    ipcMain.handle("delete-http-flows-all", async (e, params) => {
+        getClient().DeleteHTTPFlows({DeleteAll: true, ...params}, (err, data) => {
         })
     })
 
@@ -50,6 +50,22 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("QueryHTTPFlows", async (e, params) => {
         return await asyncQueryHTTPFlows(params)
+    })
+
+    // asyncQueryHTTPFlowByIds wrapper
+    const asyncQueryHTTPFlowByIds = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHTTPFlowByIds(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHTTPFlowByIds", async (e, params) => {
+        return await asyncQueryHTTPFlowByIds(params)
     })
 
     // asyncSetTagForHTTPFlow wrapper

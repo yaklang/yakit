@@ -20,6 +20,8 @@ import {
     generateYakCodeByRequest,
     RequestToYakCodeTemplate
 } from "../pages/invoker/fromPacketToYakCode"
+import {execPacketScan} from "@/pages/packetScanner/PacketScanner";
+import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1556,23 +1558,24 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         })
                                     }
                                 },
-                                {
-                                    title: "发送到 数据包扫描",
-                                    onClick: () => {
-                                        ipcRenderer
-                                            .invoke("GetHTTPFlowById", {Id: rowData.Id})
-                                            .then((i: HTTPFlow) => {
-                                                ipcRenderer.invoke("send-to-packet-hack", {
-                                                    request: i.Request,
-                                                    ishttps: i.IsHTTPS,
-                                                    response: i.Response
-                                                })
-                                            })
-                                            .catch((e: any) => {
-                                                failed(`Query Response failed: ${e}`)
-                                            })
-                                    }
-                                },
+                                GetPacketScanByCursorMenuItem(rowData.Id),
+                                // {
+                                //     title: "发送到 数据包扫描",
+                                //     onClick: () => {
+                                //         ipcRenderer
+                                //             .invoke("GetHTTPFlowById", {Id: rowData.Id})
+                                //             .then((i: HTTPFlow) => {
+                                //                 ipcRenderer.invoke("send-to-packet-hack", {
+                                //                     request: i.Request,
+                                //                     ishttps: i.IsHTTPS,
+                                //                     response: i.Response
+                                //                 })
+                                //             })
+                                //             .catch((e: any) => {
+                                //                 failed(`Query Response failed: ${e}`)
+                                //             })
+                                //     }
+                                // },
                                 {
                                     title: "复制 URL",
                                     onClick: () => {

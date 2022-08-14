@@ -20,6 +20,10 @@ import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport"
 import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useThrottle} from "ahooks"
 import "./base.scss"
+import {Risk} from "@/pages/risks/schema";
+import {RisksViewer} from "@/pages/risks/RisksViewer";
+import {RiskDetails} from "@/pages/risks/RiskTable";
+import {RiskStatsTag} from "@/utils/RiskStatsTag";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -44,6 +48,7 @@ export interface PluginResultUIProp {
     feature?: ExecResultLog[]
     progress: ExecResultProgress[]
     statusCards: StatusCardInfoProps[]
+    risks?: Risk[]
     script?: YakScript
     defaultConsole?: boolean
 
@@ -60,6 +65,7 @@ export interface TooltipTitleProps {
 export interface TooltipTitleProps {
     list: StatusCardProps[]
 }
+
 const idToColor = (id: string) => {
     switch (true) {
         case id.includes("success"):
@@ -113,26 +119,26 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         if (props.onXtermRef) props.onXtermRef(xtermRef)
     }, [xtermRef])
 
-    let progressBars: {id: string; node: React.ReactNode}[] = []
+    let progressBars: { id: string; node: React.ReactNode }[] = []
     progress.forEach((v) => {
         progressBars.push({
             id: v.id,
             node: (
                 <Card size={"small"} hoverable={false} bordered={true} title={`任务进度ID：${v.id}`}>
-                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active' />
+                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active'/>
                 </Card>
             )
         })
     })
     // progressBars = progressBars.sort((a, b) => a.id.localeCompare(b.id));
 
-    const features: {feature: string; params: any; key: string}[] = featureType
+    const features: { feature: string; params: any; key: string }[] = featureType
         .filter((i) => {
             return i.level === "json-feature"
         })
         .map((i) => {
             try {
-                let res = JSON.parse(i.data) as {feature: string; params: any; key: string}
+                let res = JSON.parse(i.data) as { feature: string; params: any; key: string }
                 if (!res.key) {
                     res.key = randomString(50)
                 }
@@ -158,7 +164,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         {infoList.length > 0 && (
                             <Tooltip
                                 color='#fff'
-                                title={<TooltipTitle list={infoList} />}
+                                title={<TooltipTitle list={infoList}/>}
                                 overlayClassName='status-cards-info'
                                 placement='topLeft'
                             >
@@ -194,7 +200,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
     }
 
     return (
-        <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
+        <div style={{width: "100%", height: "100%", overflow: "hidden auto", display: "flex", flexDirection: "column"}}>
             {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
             {props.debugMode && props.onXtermRef && (
                 <>
@@ -236,8 +242,11 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                     <Card
                                         hoverable={true}
                                         bodyStyle={{
-                                            padding: 12,
-                                            height: 130,
+                                            paddingTop: 8,
+                                            paddingBottom: 4,
+                                            paddingLeft: 12,
+                                            paddingRight: 12,
+                                            height: 80,
                                             display: "flex",
                                             flexDirection: "column",
                                             justifyContent: "space-between"
@@ -248,7 +257,8 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                             title={<span className='font-color-000'>{card.tag}</span>}
                                             placement='topLeft'
                                         >
-                                            <h2 className='status-cards-tag'>{card.tag}</h2>
+                                            <h2 className='status-cards-tag'
+                                                style={{marginBottom: 0, fontSize: 16}}>{card.tag}</h2>
                                         </Tooltip>
                                         {renderCard(card.info, cardStyleType)}
                                     </Card>
@@ -276,7 +286,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 {(finalFeatures || []).map((i, index) => {
                     return (
                         <Tabs.TabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
-                            <YakitFeatureRender params={i.params} feature={i.feature} execResultsLog={feature || []} />
+                            <YakitFeatureRender params={i.params} feature={i.feature} execResultsLog={feature || []}/>
                         </Tabs.TabPane>
                     )
                 })}
@@ -317,10 +327,20 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         </>
                     }
                 </Tabs.TabPane>
+                {!!props?.risks && props.risks.length > 0 &&
+                <Tabs.TabPane tab={`漏洞与风险[${props.risks.length}]`} key={"risk"}>
+                    <AutoCard bodyStyle={{overflowY: "auto"}}>
+                        <Space direction={"vertical"} style={{width: "100%"}} size={12}>
+                            {props.risks.map(i => {
+                                return <RiskDetails info={i} shrink={true}/>
+                            })}
+                        </Space>
+                    </AutoCard>
+                </Tabs.TabPane>}
                 {!props.debugMode && props.onXtermRef && (
                     <Tabs.TabPane tab={"Console"} key={"console"}>
                         <div style={{width: "100%", height: "100%"}}>
-                            <CVXterm ref={xtermRef} options={{convertEol: true}} />
+                            <CVXterm ref={xtermRef} options={{convertEol: true}}/>
                             {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
                         onResize={(r) => {
                             xtermFit(xtermRef, 50, 18)
@@ -550,7 +570,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
                         }
                         trigger={["click"]}
                     >
-                        <SearchOutlined style={{color: query[i] ? "#1890ff" : undefined, marginRight: 6}} />
+                        <SearchOutlined style={{color: query[i] ? "#1890ff" : undefined, marginRight: 6}}/>
                     </Popover>
                     {params[i]?.isFilter && (
                         <Tooltip title={<span>{params[i]?.sort === "up" ? "点击降序" : "点击升序"}</span>}>
@@ -579,9 +599,9 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
             return (
                 <div style={{height: "100%", display: "flex", flexFlow: "column", overflowY: "auto"}}>
                     <div className='btn-body'>
-                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='爆破结果' />
+                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='爆破结果'/>
                     </div>
-                    <BasicTable columns={columns} data={tableData.current} loading={loading} />
+                    <BasicTable columns={columns} data={tableData.current} loading={loading}/>
                 </div>
             )
     }

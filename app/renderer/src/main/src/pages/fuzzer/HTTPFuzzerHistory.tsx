@@ -60,21 +60,34 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
         <List<HTTPFuzzerTask>
             loading={loading}
             dataSource={tasks} pagination={{total: tasks.length, size: "small", pageSize: 10}}
-            renderItem={(i: HTTPFuzzerTask) => {
-                return <Card size={"small"} style={{marginBottom: 8}} hoverable={true} onClick={e => {
-                    e.preventDefault()
 
-                    props.onSelect(i.Id)
-                }}>
-                    <Space size={4}>
-                        <div>
-                            {`ID:${i.Id}`}
-                        </div>
-                        <Tag color={"geekblue"}>{!!i.Host ? i.Host : formatTimestamp(i.CreatedAt)}</Tag>
-                        <Tag>共{i.HTTPFlowTotal}个</Tag>
-                        {i.HTTPFlowSuccessCount != i.HTTPFlowTotal && <Tag>成功:{i.HTTPFlowSuccessCount}个</Tag>}
-                    </Space>
-                </Card>
+            renderItem={(i: HTTPFuzzerTask) => {
+                return <List.Item key={i.Id} style={{padding: 2}}>
+                    <Card
+                        size={"small"}
+                        style={{marginBottom: 4, width: "100%"}}
+                        bodyStyle={{paddingTop: 4, paddingBottom: 4}}
+                        hoverable={true}
+                        onClick={e => {
+                            e.preventDefault()
+
+                            props.onSelect(i.Id)
+                        }}
+                        bordered={false}
+                    >
+                        <Space size={4} style={{display: "flex", flexDirection: "row"}}>
+                            <div>
+                                {`ID:${i.Id}`}
+                            </div>
+                            <Tag color={"geekblue"}>{!!i.Host ? i.Host : formatTimestamp(i.CreatedAt)}</Tag>
+                            <Tag>共{i.HTTPFlowTotal}个</Tag>
+                            {i.HTTPFlowSuccessCount != i.HTTPFlowTotal &&
+                            <div style={{flex: 1, alignItems: "right", textAlign: "right"}}>
+                                <Tag>成功:{i.HTTPFlowSuccessCount}个</Tag>
+                            </div>}
+                        </Space>
+                    </Card>
+                </List.Item>
             }}
         />
     </Card>

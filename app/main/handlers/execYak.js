@@ -162,4 +162,11 @@ module.exports = (win, getClient) => {
         let stream = getClient().ExecYakitPluginsByYakScriptFilter(params);
         handlerHelper.registerHandler(win, stream, streamExecYakitPluginsByYakScriptFilterMap, token)
     })
+
+    const streamExecPacketScanMap = new Map();
+    ipcMain.handle("cancel-ExecPacketScan", handlerHelper.cancelHandler(streamExecPacketScanMap));
+    ipcMain.handle("ExecPacketScan", (e, params, token) => {
+        let stream = getClient().ExecPacketScan(params);
+        handlerHelper.registerHandler(win, stream, streamExecPacketScanMap, token)
+    })
 };

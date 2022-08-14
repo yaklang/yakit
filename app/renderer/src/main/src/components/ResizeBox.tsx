@@ -7,12 +7,12 @@ import "./ResizeBox.css"
 
 export interface ResizeBoxProps {
     isVer?: boolean
-
-    firstRatio?: string
+    freeze?: boolean
+    firstRatio?: string | any
     firstMinSize?: string | number
     firstNode: any
 
-    secondRatio?: string
+    secondRatio?: string | any
     secondMinSize?: string | number
     secondNode: any
 
@@ -85,11 +85,13 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
 
     const moveStart = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "block"
+            ;
+        (maskRef.current as unknown as HTMLDivElement).style.display = "block"
     })
     const moveEnd = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "none"
+            ;
+        (maskRef.current as unknown as HTMLDivElement).style.display = "none"
     })
 
     useEffect(() => {
@@ -117,17 +119,17 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                     overflow: "hidden"
                 }}
             >
-                {firstNode}
+                {typeof firstNode === "function" ? firstNode() : firstNode}
             </div>
             <div
                 ref={lineRef}
                 style={{
-                    ...lineStyle,
+                    ...props.freeze ? undefined : lineStyle,
                     width: `${isVer ? "100%" : "6px"}`,
                     height: `${isVer ? "6px" : "100%"}`,
                     cursor: `${isVer ? "row-resize" : "col-resize"}`
                 }}
-                className='resize-split-line'
+                className={props.freeze ? undefined : 'resize-split-line'}
             />
             <div
                 ref={secondRef}
@@ -138,9 +140,9 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                     overflow: "hidden"
                 }}
             >
-                {secondNode}
+                {typeof secondNode === "function" ? secondNode() : secondNode}
             </div>
-            <ResizeLine
+            {!props.freeze && <ResizeLine
                 isVer={isVer}
                 bodyRef={bodyRef}
                 resizeRef={lineRef}
@@ -149,8 +151,8 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                 onStart={moveStart}
                 onEnd={moveEnd}
                 onChangeSize={moveSize}
-            />
-            <div ref={maskRef} className='mask-body' />
+            />}
+            <div ref={maskRef} className='mask-body'/>
         </div>
     )
 })

@@ -60,6 +60,8 @@ import {callCopyToClipboard} from "../../utils/basic";
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport";
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str";
 import {insertFileFuzzTag} from "./InsertFileFuzzTag";
+import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner";
+import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -231,11 +233,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const refreshRequest = () => {
         setRefreshTrigger(!refreshTrigger)
     }
-
-    // history
-    const [history, setHistory] = useState<string[]>([])
-    const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number>()
-
     const [urlPacketShow, setUrlPacketShow] = useState<boolean>(false)
 
     // filter
@@ -266,21 +263,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 定时器
     const sendTimer = useRef<any>(null)
-
-    const withdrawRequest = useMemoizedFn(() => {
-        const targetIndex = history.indexOf(request) - 1
-        if (targetIndex >= 0) {
-            setRequest(history[targetIndex])
-            setCurrentHistoryIndex(targetIndex)
-        }
-    })
-    const forwardRequest = useMemoizedFn(() => {
-        const targetIndex = history.indexOf(request) + 1
-        if (targetIndex < history.length) {
-            setCurrentHistoryIndex(targetIndex)
-            setRequest(history[targetIndex])
-        }
-    })
 
     const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
         ipcRenderer.invoke("send-to-tab", {
@@ -323,13 +305,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
 
     useEffect(() => {
-        if (currentHistoryIndex === undefined) {
-            return
-        }
-        refreshRequest()
-    }, [currentHistoryIndex])
-
-    useEffect(() => {
         setIsHttps(!!props.isHttps)
         if (props.request) {
             setRequest(props.request)
@@ -339,13 +314,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const loadHistory = useMemoizedFn((id: number) => {
         setLoading(true)
-        setHistory([])
         ipcRenderer.invoke(
             "HTTPFuzzer",
             {HistoryWebFuzzerId: id}, fuzzToken
         ).then(() => {
             ipcRenderer.invoke("GetHistoryHTTPFuzzerTask", {Id: id}).then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
-                console.info(data.OriginRequest)
                 setHistoryTask(data.OriginRequest)
             })
         })
@@ -357,12 +330,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         saveValue(WEB_FUZZ_PROXY, proxy)
         setLoading(true)
-        if (history.includes(request)) {
-            history.splice(history.indexOf(request), 1)
-        }
-        history.push(request)
-        setHistory([...history])
-
         setDroppedCount(0)
         ipcRenderer.invoke(
             "HTTPFuzzer",
@@ -555,6 +522,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 bordered={true}
                 hideSearch={true}
                 isResponse={true}
+                noHex={true}
                 emptyOr={
                     !rsp?.Ok && (
                         <Result
@@ -585,6 +553,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <Space>
                                     {content[0].IsHTTPS && <Tag>{content[0].IsHTTPS ? "https" : ""}</Tag>}
                                     <Tag>{content[0].DurationMs}ms</Tag>
+                                    <Tag>{content[0].BodyLength}字节</Tag>
                                     <Space key='single'>
                                         <Button
                                             size={"small"}
@@ -746,7 +715,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8} style={{marginBottom: 8}}>
                 <Col span={24} style={{textAlign: "left", marginTop: 4}}>
-                    <Space>
+                    <Space style={{width: "100%", display: "flex", flexDirection: "row"}}>
                         {loading ? (
                             <Button
                                 style={{width: 150}}
@@ -774,48 +743,22 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 发送数据包
                             </Button>
                         )}
-                        <Space>
-                            <Button
-                                onClick={() => {
-                                    withdrawRequest()
-                                }}
-                                type={"link"}
-                                icon={<LeftOutlined/>}
-                            />
-                            <Button
-                                onClick={() => {
-                                    forwardRequest()
-                                }}
-                                type={"link"}
-                                icon={<RightOutlined/>}
-                            />
-                            {history.length > 1 && (
-                                <Dropdown
-                                    trigger={["click"]}
-                                    overlay={() => {
-                                        return (
-                                            <Menu>
-                                                {history.map((i, index) => {
-                                                    return (
-                                                        <Menu.Item
-                                                            style={{width: 120}}
-                                                            onClick={() => {
-                                                                setRequest(i)
-                                                                setCurrentHistoryIndex(index)
-                                                            }}
-                                                        >{`${index}`}</Menu.Item>
-                                                    )
-                                                })}
-                                            </Menu>
-                                        )
-                                    }}
-                                >
-                                    <Button size={"small"} type={"link"} onClick={(e) => e.preventDefault()}>
-                                        History <DownOutlined/>
-                                    </Button>
-                                </Dropdown>
-                            )}
-                        </Space>
+                        <Popover
+                            trigger={"click"}
+                            placement={"bottom"}
+                            destroyTooltipOnHide={true}
+                            content={
+                                <div style={{width: 400}}>
+                                    <HTTPFuzzerHistorySelector onSelect={e => {
+                                        loadHistory(e)
+                                    }}/>
+                                </div>
+                            }
+                        >
+                            <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}>
+                                历史
+                            </Button>
+                        </Popover>
                         <Checkbox defaultChecked={isHttps} value={isHttps} onChange={() => setIsHttps(!isHttps)}>强制
                             HTTPS</Checkbox>
                         <SwitchItem
@@ -1144,6 +1087,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 style={{overflow: "hidden"}}
                 firstNode={<HTTPPacketEditor
                     system={props.system}
+                    noHex={true}
                     refreshTrigger={refreshTrigger}
                     hideSearch={true}
                     bordered={true}
@@ -1197,13 +1141,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                     extra={
                         <Space size={2}>
+                            <PacketScanButton packetGetter={() => {
+                                return {httpRequest: StringToUint8Array(request), https: isHttps}
+                            }}/>
                             <Button
                                 style={{marginRight: 1}}
                                 size={"small"} type={"primary"}
                                 onClick={() => {
                                     hotPatchTrigger()
                                 }}
-                            >热加载标签</Button>
+                            >热加载</Button>
                             <Popover
                                 trigger={"click"}
                                 title={"从 URL 加载数据包"}
@@ -1262,82 +1209,81 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     </div>
                                 }
                             >
-                                <Button size={"small"} type={"primary"} icon={<HistoryOutlined/>}>
-                                    历史
-                                </Button>
+                                <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}/>
                             </Popover>
                         </Space>
                     }
                 />}
-                secondNode={<AutoSpin spinning={false}>
-                    {onlyOneResponse ? (
-                        <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
-                    ) : (
-                        <>
-                            {(content || []).length > 0 ? (
-                                <HTTPFuzzerResultsCard
-                                    onSendToWebFuzzer={sendToFuzzer}
-                                    sendToPlugin={sendToPlugin}
-                                    setRequest={(r) => {
-                                        setRequest(r)
-                                        refreshRequest()
-                                    }}
-                                    extra={
-                                        <div>
-                                            <Popover
-                                                title={"导出数据"}
-                                                trigger={["click"]}
-                                                content={<>
-                                                    <Space>
-                                                        <Button
-                                                            size={"small"}
-                                                            type={"primary"}
-                                                            onClick={() => {
-                                                                exportHTTPFuzzerResponse(successResults)
-                                                            }}
-                                                        >
-                                                            导出所有请求
-                                                        </Button>
-                                                        <Button
-                                                            size={"small"}
-                                                            type={"primary"}
-                                                            onClick={() => {
-                                                                exportPayloadResponse(successResults)
-                                                            }}
-                                                        >
-                                                            仅导出 Payload
-                                                        </Button>
-                                                    </Space>
-                                                </>}>
-                                                <Button>导出数据</Button>
-                                            </Popover>
-                                            {/*<Input*/}
-                                            {/*    value={keyword}*/}
-                                            {/*    style={{maxWidth: 200}}*/}
-                                            {/*    allowClear*/}
-                                            {/*    placeholder="输入字符串或正则表达式"*/}
-                                            {/*    onChange={e => setKeyword(e.target.value)}*/}
-                                            {/*    addonAfter={*/}
-                                            {/*        <DownloadOutlined style={{cursor: "pointer"}}*/}
-                                            {/*                          onClick={downloadContent}/>*/}
-                                            {/*    }></Input>*/}
-                                        </div>
-                                    }
-                                    failedResponses={failedResults}
-                                    successResponses={filterContent.length !== 0 ? filterContent : keyword ? [] : successResults}
-                                />
-                            ) : (
-                                <Result
-                                    status={"info"}
-                                    title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                    subTitle={
-                                        "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
-                                    }
-                                />
-                            )}
-                        </>
-                    )}
-                </AutoSpin>}/>
+                secondNode={() =>
+                    <AutoSpin spinning={false}>
+                        {onlyOneResponse ? (
+                            <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
+                        ) : (
+                            <>
+                                {(content || []).length > 0 ? (
+                                    <HTTPFuzzerResultsCard
+                                        onSendToWebFuzzer={sendToFuzzer}
+                                        sendToPlugin={sendToPlugin}
+                                        setRequest={(r) => {
+                                            setRequest(r)
+                                            refreshRequest()
+                                        }}
+                                        extra={
+                                            <div>
+                                                <Popover
+                                                    title={"导出数据"}
+                                                    trigger={["click"]}
+                                                    content={<>
+                                                        <Space>
+                                                            <Button
+                                                                size={"small"}
+                                                                type={"primary"}
+                                                                onClick={() => {
+                                                                    exportHTTPFuzzerResponse(successResults)
+                                                                }}
+                                                            >
+                                                                导出所有请求
+                                                            </Button>
+                                                            <Button
+                                                                size={"small"}
+                                                                type={"primary"}
+                                                                onClick={() => {
+                                                                    exportPayloadResponse(successResults)
+                                                                }}
+                                                            >
+                                                                仅导出 Payload
+                                                            </Button>
+                                                        </Space>
+                                                    </>}>
+                                                    <Button size={"small"} type={"link"}>导出数据</Button>
+                                                </Popover>
+                                                {/*<Input*/}
+                                                {/*    value={keyword}*/}
+                                                {/*    style={{maxWidth: 200}}*/}
+                                                {/*    allowClear*/}
+                                                {/*    placeholder="输入字符串或正则表达式"*/}
+                                                {/*    onChange={e => setKeyword(e.target.value)}*/}
+                                                {/*    addonAfter={*/}
+                                                {/*        <DownloadOutlined style={{cursor: "pointer"}}*/}
+                                                {/*                          onClick={downloadContent}/>*/}
+                                                {/*    }></Input>*/}
+                                            </div>
+                                        }
+                                        failedResponses={failedResults}
+                                        successResponses={filterContent.length !== 0 ? filterContent : keyword ? [] : successResults}
+                                    />
+                                ) : (
+                                    <Result
+                                        status={"info"}
+                                        title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                        subTitle={
+                                            "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                        }
+                                    />
+                                )}
+                            </>
+                        )}
+                    </AutoSpin>}/>
             <Modal
                 visible={urlPacketShow}
                 title='从 URL 加载数据包'

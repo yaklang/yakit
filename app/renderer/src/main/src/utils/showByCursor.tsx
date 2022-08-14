@@ -44,17 +44,17 @@ export const showByCursorContainer = (props: ByCursorContainerProp, x: number, y
     return {destroy: destory}
 }
 
-interface MenuItemProps {
+export interface ByCursorMenuItemProps {
     id?: string
     title: string
     render?: React.ReactNode
     onClick: () => void
     disabled?: boolean
     danger?: boolean
-    subMenuItems?: MenuItemProps[]
+    subMenuItems?: ByCursorMenuItemProps[]
 }
 
-function menuItemWalker(list: MenuItemProps[], handler: (item: MenuItemProps) => any) {
+function menuItemWalker(list: ByCursorMenuItemProps[], handler: (item: ByCursorMenuItemProps) => any) {
     list.forEach(i => {
         handler(i)
         if (i?.subMenuItems && i.subMenuItems.length > 0) {
@@ -64,7 +64,7 @@ function menuItemWalker(list: MenuItemProps[], handler: (item: MenuItemProps) =>
 }
 
 export interface ByCursorMenuProp {
-    content: MenuItemProps[]
+    content: ByCursorMenuItemProps[]
 }
 
 const cursorMenuId = "yakit-cursor-menu"
@@ -114,7 +114,8 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
                         {props.content.map((item, index) => {
                             const {title, disabled, id} = item;
                             if (item?.subMenuItems && item.subMenuItems.length > 0) {
-                                return <Menu.SubMenu popupClassName="right-cursor-submenu" key={`${title}-${index}`} title={title} disabled={!!disabled}>
+                                return <Menu.SubMenu popupClassName="right-cursor-submenu" key={`${title}-${index}`}
+                                                     title={title} disabled={!!disabled}>
                                     {(item.subMenuItems || []).map((subItem, index) => {
                                         const {title, render, disabled} = subItem;
                                         const subId = subItem?.id;

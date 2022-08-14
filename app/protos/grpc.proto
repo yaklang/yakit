@@ -153,6 +153,7 @@ service Yak {
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
   rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
+  rpc GetHTTPFlowByIds(GetHTTPFlowByIdsRequest) returns (HTTPFlows);
   rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
@@ -318,6 +319,13 @@ service Yak {
 
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
+
+  rpc GetEngineDefaultProxy(Empty) returns (DefaultProxyResult);
+  rpc SetEngineDefaultProxy(DefaultProxyResult) returns (Empty);
+}
+
+message DefaultProxyResult {
+  string Proxy = 1;
 }
 
 message ExecPacketScanRequest {
@@ -1583,6 +1591,10 @@ message GetHTTPFlowByIdRequest {
   int64 Id = 1;
 }
 
+message GetHTTPFlowByIdsRequest {
+  repeated int64 Ids = 2;
+}
+
 message QueryHTTPFlowRequest {
   Paging Pagination = 1;
   string SourceType = 2;
@@ -1614,6 +1626,10 @@ message DeleteHTTPFlowRequest {
 message HTTPHeader {
   string Header = 1;
   string Value = 2;
+}
+
+message HTTPFlows {
+  repeated HTTPFlow Data = 1;
 }
 
 message HTTPFlow {

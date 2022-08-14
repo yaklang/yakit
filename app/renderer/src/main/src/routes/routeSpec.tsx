@@ -41,6 +41,7 @@ import {
     ReadOnlyBatchExecutorByMenuItem,
     ReadOnlyBatchExecutorByRecoverUid
 } from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
+import {PacketScanner} from "@/pages/packetScanner/PacketScanner";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -98,7 +99,10 @@ export enum Route {
 
     // 测试
     BatchExecutorPage = "batch-executor-page-ex",
-    BatchExecutorRecover = "batch-executor-recover"
+    BatchExecutorRecover = "batch-executor-recover",
+
+    // 数据包扫描
+    PacketScanPage = "packet-scan-page",
 }
 
 export interface MenuDataProps {
@@ -116,19 +120,19 @@ export const RouteMenuData: MenuDataProps[] = [
     {
         key: Route.PenTest,
         label: "手工渗透测试",
-        icon: <AimOutlined />,
+        icon: <AimOutlined/>,
         subMenuData: [
-            {key: Route.HTTPHacker, label: "MITM", icon: <FireOutlined />},
-            {key: Route.HTTPFuzzer, label: "Web Fuzzer", icon: <AimOutlined />}
+            {key: Route.HTTPHacker, label: "MITM", icon: <FireOutlined/>},
+            {key: Route.HTTPFuzzer, label: "Web Fuzzer", icon: <AimOutlined/>}
         ]
     },
     {
         key: Route.GeneralModule,
         label: "基础安全工具",
-        icon: <RocketOutlined />,
+        icon: <RocketOutlined/>,
         subMenuData: [
-            {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined />},
-            {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined />, disabled: false}
+            {key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined/>},
+            {key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined/>, disabled: false}
             // {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
             // {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
             // {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
@@ -137,54 +141,54 @@ export const RouteMenuData: MenuDataProps[] = [
     {
         key: Route.PoC,
         label: "专项漏洞检测",
-        icon: <FunctionOutlined />
+        icon: <FunctionOutlined/>
     },
 
     {
         key: Route.ModManagerDetail,
         label: "插件管理",
-        icon: <AppstoreOutlined />,
+        icon: <AppstoreOutlined/>,
         subMenuData: [
-            {key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined />},
-            {key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined />}
+            {key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined/>},
+            {key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined/>}
         ]
     },
 
-    {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined />},
-    {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined />},
+    {key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined/>},
+    {key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined/>},
     {
         key: Route.ReverseManager,
         label: "反连管理",
-        icon: <AppstoreOutlined />,
+        icon: <AppstoreOutlined/>,
         subMenuData: [
-            {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined />},
-            {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined />},
-            {key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined />},
-            {key: Route.ICMPSizeLog, label: "ICMP-SizeLog", icon: <OneToOneOutlined />},
-            {key: Route.TCPPortLog, label: "TCP-PortLog", icon: <OneToOneOutlined />}
+            {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined/>},
+            {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined/>},
+            {key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined/>},
+            {key: Route.ICMPSizeLog, label: "ICMP-SizeLog", icon: <OneToOneOutlined/>},
+            {key: Route.TCPPortLog, label: "TCP-PortLog", icon: <OneToOneOutlined/>}
         ]
     },
     {
         key: Route.DataHandler,
         label: "数据处理",
-        icon: <FunctionOutlined />,
+        icon: <FunctionOutlined/>,
         subMenuData: [
-            {key: Route.Codec, label: "Codec", icon: <FireOutlined />},
-            {key: Route.DataCompare, label: "数据对比", icon: <OneToOneOutlined />}
+            {key: Route.Codec, label: "Codec", icon: <FireOutlined/>},
+            {key: Route.DataCompare, label: "数据对比", icon: <OneToOneOutlined/>}
         ]
     },
 
     {
         key: Route.Database,
         label: "数据库",
-        icon: <FunctionOutlined />,
+        icon: <FunctionOutlined/>,
         subMenuData: [
-            {key: Route.DB_HTTPHistory, label: "HTTP History", icon: <OneToOneOutlined />},
-            {key: Route.DB_Ports, label: "端口资产", icon: <OneToOneOutlined />},
-            {key: Route.DB_Domain, label: "域名资产", icon: <FireOutlined />},
-            {key: Route.DB_ExecResults, label: "插件执行结果", icon: <FireOutlined />},
-            {key: Route.DB_Risk, label: "漏洞与风险", icon: <BugOutlined />},
-            {key: Route.DB_Report, label: "报告(Beta*)", icon: <FireOutlined />}
+            {key: Route.DB_HTTPHistory, label: "HTTP History", icon: <OneToOneOutlined/>},
+            {key: Route.DB_Ports, label: "端口资产", icon: <OneToOneOutlined/>},
+            {key: Route.DB_Domain, label: "域名资产", icon: <FireOutlined/>},
+            {key: Route.DB_ExecResults, label: "插件执行结果", icon: <FireOutlined/>},
+            {key: Route.DB_Risk, label: "漏洞与风险", icon: <BugOutlined/>},
+            {key: Route.DB_Report, label: "报告(Beta*)", icon: <FireOutlined/>}
         ]
     },
 
@@ -192,7 +196,7 @@ export const RouteMenuData: MenuDataProps[] = [
     {
         key: Route.BatchExecutorRecover,
         label: "继续任务：批量执行插件",
-        icon: <FireOutlined />,
+        icon: <FireOutlined/>,
         disabled: true,
         hidden: true
     }
@@ -205,12 +209,20 @@ interface ComponentParams {
     system?: string
     order?: string
     fuzzerParams?: fuzzerInfoProp
+
     // Route.Mod_ScanPort 参数
     scanportParams?: string
+
     // Route.Mod_Brute 参数
     bruteParams?: string
     recoverUid?: string
     recoverBaseProgress?: number
+
+    // Route.PacketScanPage 参数
+    packetScan_FlowIds?: number[]
+    packetScan_Https?: boolean
+    packetScan_HttpRequest?: Uint8Array
+    packetScan_Keyword?: string
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -225,7 +237,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         } catch (e) {
             failed(`Loading PluginKey: ${r} failed`)
         }
-        return <PluginOperator yakScriptId={yakScriptId || id} size={"big"} fromMenu={true} />
+        return <PluginOperator yakScriptId={yakScriptId || id} size={"big"} fromMenu={true}/>
     }
 
     if (routeStr.startsWith("batch:")) {
@@ -237,22 +249,22 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         } catch (e) {
             failed(`Loading PluginKey: ${r} failed`)
         }
-        return <ReadOnlyBatchExecutorByMenuItem MenuItemId={batchMenuItemId} />
+        return <ReadOnlyBatchExecutorByMenuItem MenuItemId={batchMenuItemId}/>
     }
 
     switch (r) {
         case Route.ShellReceiver:
-            return <ShellReceiverPage />
+            return <ShellReceiverPage/>
         case Route.WebShellManager:
             return <div>待开发</div>
         case Route.PoC:
-            return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
+            return <YakBatchExecutors keyword={"poc"} verbose={"Poc"}/>
         case Route.YakScript:
-            return <YakExecutor />
+            return <YakExecutor/>
         case Route.HTTPHacker:
             return (
                 <Suspense fallback={<div>loading</div>}>
-                    <HTTPHacker />
+                    <HTTPHacker/>
                 </Suspense>
             )
         case Route.HTTPFuzzer:
@@ -266,40 +278,40 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                 />
             )
         case Route.Codec:
-            return <CodecPage />
+            return <CodecPage/>
         case Route.ModManager:
-            return <YakitStorePage />
+            return <YakitStorePage/>
         case Route.PayloadManager:
-            return <PayloadManagerPage />
+            return <PayloadManagerPage/>
         case Route.Mod_ScanPort:
-            return <PortScanPage sendTarget={params?.scanportParams} />
+            return <PortScanPage sendTarget={params?.scanportParams}/>
         case Route.Mod_Brute:
-            return <BrutePage sendTarget={params?.bruteParams} />
+            return <BrutePage sendTarget={params?.bruteParams}/>
         case Route.DataCompare:
-            return <DataCompare />
+            return <DataCompare/>
         case Route.DB_HTTPHistory:
-            return <HTTPHistory />
+            return <HTTPHistory/>
         case Route.DB_Ports:
-            return <PortAssetTable />
+            return <PortAssetTable/>
         case Route.DB_Domain:
-            return <DomainAssetPage />
+            return <DomainAssetPage/>
         case Route.DB_ExecResults:
-            return <YakScriptExecResultTable />
+            return <YakScriptExecResultTable/>
         case Route.ReverseServer:
-            return <ReverseServerPage />
+            return <ReverseServerPage/>
         case Route.DB_Risk:
-            return <RiskPage />
+            return <RiskPage/>
         case Route.DNSLog:
-            return <DNSLogPage />
+            return <DNSLogPage/>
         case Route.ICMPSizeLog:
-            return <ICMPSizeLoggerPage />
+            return <ICMPSizeLoggerPage/>
         case Route.TCPPortLog:
-            return <RandomPortLogPage />
+            return <RandomPortLogPage/>
         case Route.BatchExecutorPage:
             // return <BatchExecutorPage/>
-            return <BatchExecutorPageEx />
+            return <BatchExecutorPageEx/>
         case Route.DB_Report:
-            return <ReportViewerPage />
+            return <ReportViewerPage/>
         case Route.BatchExecutorRecover:
             return (
                 <ReadOnlyBatchExecutorByRecoverUid
@@ -307,7 +319,16 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                     BaseProgress={params?.recoverBaseProgress}
                 />
             )
+        case Route.PacketScanPage:
+            return (
+                <PacketScanner
+                    HttpFlowIds={params?.packetScan_FlowIds}
+                    Https={params?.packetScan_Https}
+                    HttpRequest={params?.packetScan_HttpRequest}
+                    Keyword={params?.packetScan_Keyword}
+                />
+            )
         default:
-            return <div />
+            return <div/>
     }
 }
