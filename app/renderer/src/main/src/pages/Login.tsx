@@ -8,7 +8,6 @@ import "./Login.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {randomString} from "@/utils/randomUtil"
-import { fail } from "assert"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -40,7 +39,7 @@ const Login: React.FC<LoginProp> = (props) => {
                 if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
             })
             .catch((err) => {
-                fail('登录错误:'+err)
+                failed('登录错误:'+err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
