@@ -124,7 +124,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     useDebounceEffect(
         () => {
-            console.log("width", width)
             resetPre()
             if (isGridLayout) {
                 onComputeItemHeight()
@@ -194,7 +193,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                             const itemArr = i.data as any
                             return (
                                 <div
-                                    className={`display-flex `}
+                                    className={`${isGridLayout && col && col > 1 && "display-flex"}`}
                                     key={itemArr.map((ele) => ele[rowKey || "Id"]).join("-")}
                                 >
                                     {itemArr.map((ele, number) => (

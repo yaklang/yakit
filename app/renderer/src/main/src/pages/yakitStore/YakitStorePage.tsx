@@ -651,7 +651,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     )}
                 </Col>
             </Row>
-            <div style={{height: "calc(100% - 32px)"}}>
+            <div className='list-height'>
                 <YakModuleList
                     isGridLayout={size === "middle"}
                     numberLocalRoll={numberLocal}
@@ -889,8 +889,11 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         return props.onYakScriptRender(plugin, maxWidth)
     }
     return (
-        <div className={`plugin-item`}>
-            <div className='plugin-item-heard'>
+        <div
+            className={`plugin-item ${currentScript?.Id === plugin.Id && "plugin-item-active"}`}
+            onClick={() => props.onClicked(plugin)}
+        >
+            <div className={`plugin-item-heard ${currentScript?.Id === plugin.Id && "plugin-item-heard-active"}`}>
                 <div className='plugin-item-left'>
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
                     <div className='icon-body'>
@@ -1393,6 +1396,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                             onConfirm={AddAllPlugin}
                             okText='Yes'
                             cancelText='No'
+                            placement={size === "small" ? "top" : "topRight"}
                         >
                             {size === "small" ? (
                                 <div className='operation-text'>一键导入</div>
@@ -1588,7 +1592,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     />
                 </Col>
             </Row>
-            <div style={{height: "calc(100% - 32px)"}}>
+            <div className='list-height'>
                 <YakModuleOnlineList
                     number={numberUser}
                     size={size}
@@ -1752,7 +1756,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     />
                 </Col>
             </Row>
-            <div style={{height: "calc(100% - 32px)"}}>
+            <div className='list-height'>
                 <YakModuleOnlineList
                     number={numberOnline}
                     size={size}
@@ -2077,119 +2081,120 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
         })
     })
     return (
-        <Card
-            size={"small"}
-            className='plugin-list-opt'
-            onClick={() => onClick(info)}
-            bordered={true}
-            hoverable={true}
-            title={
-                <div className='info-title'>
-                    <div className='title-text'>
-                        <Tooltip title={info.script_name}>
-                            <span
-                                style={{maxWidth: isAdmin || bind_me ? "60%" : "80%"}}
-                                className='text-style content-ellipsis'
-                            >
-                                {info.script_name}
-                            </span>
-                        </Tooltip>
+        <div></div>
+        // <Card
+        //     size={"small"}
+        //     className='plugin-list-opt'
+        //     onClick={() => onClick(info)}
+        //     bordered={true}
+        //     hoverable={true}
+        //     title={
+        //         <div className='info-title'>
+        //             <div className='title-text'>
+        //                 <Tooltip title={info.script_name}>
+        //                     <span
+        //                         style={{maxWidth: isAdmin || bind_me ? "60%" : "80%"}}
+        //                         className='text-style content-ellipsis'
+        //                     >
+        //                         {info.script_name}
+        //                     </span>
+        //                 </Tooltip>
 
-                        <div className='text-icon'>
-                            {(isAdmin && !bind_me) || (bind_me && !info.is_private) ? (
-                                <div
-                                    className={`text-icon-admin ${
-                                        TagColor[["not", "success", "failed"][status]].split("|")[0]
-                                    } vertical-center`}
-                                >
-                                    {TagColor[["not", "success", "failed"][status]].split("|")[1]}
-                                </div>
-                            ) : (
-                                !bind_me &&
-                                info.official && (
-                                    <Tooltip title='官方插件'>
-                                        {/* @ts-ignore */}
-                                        <OfficialYakitLogoIcon className='text-icon-style' />
-                                    </Tooltip>
-                                )
-                            )}
-                            {bind_me && (
-                                <>
-                                    {(info.is_private === true && (
-                                        <Tooltip title='私密插件'>
-                                            <LockOutlined />
-                                        </Tooltip>
-                                    )) || (
-                                        <Tooltip title='公开插件'>
-                                            <OnlineCloudIcon />
-                                        </Tooltip>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </div>
+        //                 <div className='text-icon'>
+        //                     {(isAdmin && !bind_me) || (bind_me && !info.is_private) ? (
+        //                         <div
+        //                             className={`text-icon-admin ${
+        //                                 TagColor[["not", "success", "failed"][status]].split("|")[0]
+        //                             } vertical-center`}
+        //                         >
+        //                             {TagColor[["not", "success", "failed"][status]].split("|")[1]}
+        //                         </div>
+        //                     ) : (
+        //                         !bind_me &&
+        //                         info.official && (
+        //                             <Tooltip title='官方插件'>
+        //                                 {/* @ts-ignore */}
+        //                                 <OfficialYakitLogoIcon className='text-icon-style' />
+        //                             </Tooltip>
+        //                         )
+        //                     )}
+        //                     {bind_me && (
+        //                         <>
+        //                             {(info.is_private === true && (
+        //                                 <Tooltip title='私密插件'>
+        //                                     <LockOutlined />
+        //                                 </Tooltip>
+        //                             )) || (
+        //                                 <Tooltip title='公开插件'>
+        //                                     <OnlineCloudIcon />
+        //                                 </Tooltip>
+        //                             )}
+        //                         </>
+        //                     )}
+        //                 </div>
+        //             </div>
 
-                    <div className='vertical-center'>
-                        {(loading && <LoadingOutlined />) || (
-                            <Tooltip title={"添加到插件仓库"}>
-                                <Button
-                                    className='title-add'
-                                    type='link'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        add()
-                                    }}
-                                >
-                                    下载
-                                </Button>
-                            </Tooltip>
-                        )}
-                    </div>
-                </div>
-            }
-            style={{
-                width: "100%",
-                backgroundColor: currentId === info.id ? "rgba(79,188,255,0.26)" : "#fff"
-            }}
-        >
-            <SelectIcon
-                //  @ts-ignore
-                className={`icon-select  ${
-                    selectedRowKeysRecord.findIndex((ele) => ele.id === info.id) !== -1 && "icon-select-active"
-                }`}
-                onClick={(e) => {
-                    e.stopPropagation()
-                    onSelect(info)
-                }}
-            />
+        //             <div className='vertical-center'>
+        //                 {(loading && <LoadingOutlined />) || (
+        //                     <Tooltip title={"添加到插件仓库"}>
+        //                         <Button
+        //                             className='title-add'
+        //                             type='link'
+        //                             onClick={(e) => {
+        //                                 e.stopPropagation()
+        //                                 add()
+        //                             }}
+        //                         >
+        //                             下载
+        //                         </Button>
+        //                     </Tooltip>
+        //                 )}
+        //             </div>
+        //         </div>
+        //     }
+        //     style={{
+        //         width: "100%",
+        //         backgroundColor: currentId === info.id ? "rgba(79,188,255,0.26)" : "#fff"
+        //     }}
+        // >
+        //     <SelectIcon
+        //         //  @ts-ignore
+        //         className={`icon-select  ${
+        //             selectedRowKeysRecord.findIndex((ele) => ele.id === info.id) !== -1 && "icon-select-active"
+        //         }`}
+        //         onClick={(e) => {
+        //             e.stopPropagation()
+        //             onSelect(info)
+        //         }}
+        //     />
 
-            <Row>
-                <Col span={24}>
-                    <CopyableField
-                        style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
-                        text={info.help || "No Description about it."}
-                        noCopy={true}
-                    />
-                </Col>
-            </Row>
-            <div style={{marginBottom: 4}}>
-                {(tags && tags.length > 0 && <div className='plugin-tag'>TAG:{tags.join(",")}</div>) || (
-                    <div className='plugin-tag'>&nbsp;</div>
-                )}
-            </div>
-            <Row>
-                <Col span={12}>
-                    <Space style={{width: "100%"}}>
-                        <Tag color={!info.authors || info.authors === "anonymous" ? "gray" : "geekblue"}>
-                            {info.authors || "anonymous"}
-                        </Tag>
-                    </Space>
-                </Col>
-                <Col span={12} style={{textAlign: "right"}}>
-                    {moment.unix(info.created_at).format("YYYY-MM-DD")}
-                </Col>
-            </Row>
-        </Card>
+        //     <Row>
+        //         <Col span={24}>
+        //             <CopyableField
+        //                 style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
+        //                 text={info.help || "No Description about it."}
+        //                 noCopy={true}
+        //             />
+        //         </Col>
+        //     </Row>
+        //     <div style={{marginBottom: 4}}>
+        //         {(tags && tags.length > 0 && <div className='plugin-tag'>TAG:{tags.join(",")}</div>) || (
+        //             <div className='plugin-tag'>&nbsp;</div>
+        //         )}
+        //     </div>
+        //     <Row>
+        //         <Col span={12}>
+        //             <Space style={{width: "100%"}}>
+        //                 <Tag color={!info.authors || info.authors === "anonymous" ? "gray" : "geekblue"}>
+        //                     {info.authors || "anonymous"}
+        //                 </Tag>
+        //             </Space>
+        //         </Col>
+        //         <Col span={12} style={{textAlign: "right"}}>
+        //             {moment.unix(info.created_at).format("YYYY-MM-DD")}
+        //         </Col>
+        //     </Row>
+        // </Card>
     )
 }
 

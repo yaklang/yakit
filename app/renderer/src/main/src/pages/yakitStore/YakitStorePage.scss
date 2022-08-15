@@ -110,6 +110,9 @@
     height: 100%;
 }
 
+.list-height {
+    height: calc(100% - 32px);
+}
 
 .icon-select-active {
     color: #1890ff;
@@ -176,12 +179,22 @@
     overflow-x: hidden;
 }
 
+.plugin-item-active {
+    background-color: rgba(79, 188, 255, 0.26);
+}
+
+
 .plugin-item {
     height: 138px;
+    // width: 100%;
     margin: 0 6px 12px;
     border: 1px solid #0000000f;
     border-radius: 2px;
     color: #000000d9;
+
+    .plugin-item-heard-active {
+        background-color: initial !important;
+    }
 
     .plugin-item-heard {
         position: relative;
