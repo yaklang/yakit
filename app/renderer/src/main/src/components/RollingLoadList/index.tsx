@@ -57,6 +57,11 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         if (!col) return []
         const listByLength: any[] = []
         const length = data.length
+        const remainder = preLength.current % col
+        if (remainder !== 0) {
+            preLength.current = preLength.current - remainder
+            preData.current.pop()
+        }
         for (let index = preLength.current; index < length; index += col) {
             if (index % col === 0) {
                 const arr: any = []
@@ -72,8 +77,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         }
         preLength.current = length
         preData.current = preData.current.concat(listByLength)
-        // console.log("preData.current", preData.current)
-        // console.log("listByLength", listByLength)
+        // console.log('preData.current',preData.current);
         return preData.current
     }, [data.length, col])
 
@@ -97,6 +101,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         {wait: 200}
     )
     useEffect(() => {
+        resetPre()
         scrollTo(0)
     }, [isRef])
     const isFirstNumberRoll = useRef(true) // 初次不执行
@@ -112,9 +117,15 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             scrollTo(numberRoll)
         }
     })
+    const resetPre = useMemoizedFn(() => {
+        preLength.current = 0
+        preData.current = []
+    })
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     useDebounceEffect(
         () => {
+            console.log("width", width)
+            resetPre()
             if (isGridLayout) {
                 onComputeItemHeight()
             } else {
@@ -127,9 +138,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const onComputeItemHeight = useMemoizedFn(() => {
         if (!width) return
         const computeCol = defCol || 1
-        if (width <= 800) {
-            setCol(computeCol)
-        } else if (width > 800 && width < 1024) {
+        if (width <= 1024) {
             setCol(computeCol * 2)
         } else if (width >= 1024 && width < 1440) {
             setCol(computeCol * 3)
