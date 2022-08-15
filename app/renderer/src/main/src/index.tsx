@@ -3,10 +3,12 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import {YakitEntry} from "@/entry/YakitEntry";
 
 ReactDOM.render(
     // <React.StrictMode>
-    <App/>,
+    // <App/>,
+    <YakitEntry/>,
 // </React.StrictMode>,
     document.getElementById('root')
 )

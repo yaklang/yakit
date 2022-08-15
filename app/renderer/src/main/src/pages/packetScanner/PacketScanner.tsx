@@ -92,9 +92,9 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) 
 
     return <ResizeBox
         isVer={true}
-        firstRatio={200}
-        firstMinSize={200}
-        freeze={true}
+        firstRatio={"200px"}
+        firstMinSize={"200px"}
+        freeze={false}
         firstNode={() => {
             return <Row gutter={8} style={{height: "200px"}}>
                 <Col span={16}>
