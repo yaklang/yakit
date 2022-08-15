@@ -19,7 +19,8 @@ export const queryYakScriptList = (
     }
     ipcRenderer.invoke("QueryYakScript", {
         Type: pluginType,
-        Keyword: keyword, ...(extraParam || {}),
+        ...(extraParam || {}),
+        Keyword: keyword,
         Pagination: genDefaultPagination(limit, page),
     } as QueryYakScriptRequest).then((rsp: QueryYakScriptsResponse) => {
         onResult(rsp.Data, rsp.Total)

@@ -56,9 +56,9 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
     }, [listNames])
 
 
-    const search = useMemoizedFn((searchParams?: { limit: number; keyword: string }) => {
+    const search = useMemoizedFn((searchParams?: { limit?: number; keyword?: string }, initial?: boolean) => {
         const {limit, keyword} = searchParams || {}
-
+        console.info("搜索", keyword, limit)
         setPluginLoading(true)
         queryYakScriptList(
             props.pluginTypes ? props.pluginTypes : "",
@@ -74,7 +74,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
             () => setTimeout(() => setPluginLoading(false), 300),
             limit || 200,
             undefined,
-            keyword || "",
+            keyword,
             props.initialQuery,
         )
     })
