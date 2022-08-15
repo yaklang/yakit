@@ -53,7 +53,7 @@ export const SelectIcon: React.FC = (props: any) => {
 }
 const OfficialYakitLogo = () => (
     <svg width='1em' height='1em' viewBox='0 0 20 20' version='1.1' xmlns='http://www.w3.org/2000/svg'>
-        <title>切片</title>
+        <title>官方插件</title>
         <g id='页面-1' stroke='none' strokeWidth='1' fill='none' fillRule='evenodd'>
             <g id='官网首页设计备份-4' transform='translate(-484.000000, -766.000000)' fill='#EF5B26'>
                 <g id='组件/卡片/插件样式01' transform='translate(384.000000, 748.000000)'>

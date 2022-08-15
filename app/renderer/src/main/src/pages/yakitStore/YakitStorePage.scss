@@ -114,6 +114,10 @@
     height: calc(100% - 32px);
 }
 
+.max-width-70 {
+    max-width: 70%;
+}
+
 .icon-select-active {
     color: #1890ff;
 }
@@ -210,6 +214,7 @@
 
         .plugin-item-left {
             display: flex;
+            align-items: center;
             width: 90%;
 
             .text-style {
@@ -222,8 +227,22 @@
                 display: flex;
                 align-items: center;
 
-                .text-icon-local {
+                .text-icon-admin {
+                    height: 20px;
+                    line-height: 20px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    padding: 1px 5px;
+                }
+
+                .text-icon {
                     margin: 0 4px;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .text-icon-style {
+                    font-size: 20px;
                 }
             }
         }
@@ -240,6 +259,12 @@
                 &:hover {
                     color: #1890ff;
                 }
+            }
+
+            .plugin-down {
+                cursor: pointer;
+                color: #1890ff;
+                width: 35px;
             }
         }
 
@@ -265,7 +290,7 @@
         height: 100px;
 
         .plugin-help {
-            width: "100%";
+            width: 100%;
             color: #5f5f5f;
             margin-bottom: 5px;
         }
@@ -289,7 +314,7 @@
             .plugin-item-footer-left {
                 display: flex;
                 align-items: center;
-                width: 70%;
+                width: calc(100% - 90px);
 
                 img {
                     height: 24px;
@@ -307,6 +332,7 @@
         .plugin-item-time {
             display: flex;
             align-items: center;
+            width: 80px;
         }
     }
 }
@@ -314,4 +340,19 @@
 .github-icon {
     color: #1890ff;
     margin: 0 4px;
+}
+
+.color-bgColor-blue {
+    background-color: rgba(82, 166, 250, 0.08);
+    color: rgba(82, 166, 250, 1);
+}
+
+.color-bgColor-green {
+    background-color: rgba(113, 204, 178, 0.08);
+    color: rgba(113, 204, 178, 1);
+}
+
+.color-bgColor-red {
+    background-color: rgba(255, 135, 135, 0.08);
+    color: rgba(255, 135, 135, 1);
 }

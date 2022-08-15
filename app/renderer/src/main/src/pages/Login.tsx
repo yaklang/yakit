@@ -3,7 +3,6 @@ import {Modal} from "antd"
 import {ExclamationCircleOutlined, GithubOutlined, QqOutlined, RightOutlined, WechatOutlined} from "@ant-design/icons"
 import {AutoSpin} from "@/components/AutoSpin"
 import {failed, warn} from "@/utils/notification"
-
 import "./Login.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -39,7 +38,7 @@ const Login: React.FC<LoginProp> = (props) => {
                 if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
             })
             .catch((err) => {
-                failed('登录错误:'+err)
+                failed("登录错误:" + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)

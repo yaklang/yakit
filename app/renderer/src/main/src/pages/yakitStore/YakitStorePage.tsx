@@ -364,18 +364,28 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             bordered={false}
                             size={"small"}
                             extra={
-                                <Button
-                                    icon={
-                                        fullScreen ? (
-                                            <FullscreenExitOutlined style={{fontSize: 15}} />
-                                        ) : (
-                                            <FullscreenOutlined style={{fontSize: 15}} />
-                                        )
-                                    }
-                                    type={"link"}
-                                    size={"small"}
-                                    onClick={() => onFullScreen()}
-                                />
+                                <>
+                                    <Button
+                                        type='link'
+                                        onClick={() => {
+                                            onRefList()
+                                        }}
+                                    >
+                                        返回
+                                    </Button>
+                                    <Button
+                                        icon={
+                                            fullScreen ? (
+                                                <FullscreenExitOutlined style={{fontSize: 15}} />
+                                            ) : (
+                                                <FullscreenOutlined style={{fontSize: 15}} />
+                                            )
+                                        }
+                                        type={"link"}
+                                        size={"small"}
+                                        onClick={() => onFullScreen()}
+                                    />
+                                </>
                             }
                         >
                             <PluginOperator
@@ -897,7 +907,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                 <div className='plugin-item-left'>
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
                     <div className='icon-body'>
-                        <div className='text-icon-local'>
+                        <div className='text-icon'>
                             {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && <OnlineCloudIcon />}
                             {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
                         </div>
@@ -935,10 +945,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                 {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
-                        <img
-                            alt=''
-                            src='https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'
-                        />
                         <div className='plugin-item-author content-ellipsis'>{plugin.Author || "anonymous"}</div>
                     </div>
                     <div className='plugin-item-time'>{formatDate(plugin.CreatedAt)}</div>
@@ -1387,7 +1393,13 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 </div>
             )}
             {addLoading ? (
-                <PoweroffOutlined className='filter-opt-btn' onClick={StopAllPlugin} />
+                <>
+                    {(size === "small" && <PoweroffOutlined className='filter-opt-btn' onClick={StopAllPlugin} />) || (
+                        <Button size='small' type='primary' danger onClick={StopAllPlugin}>
+                            停止
+                        </Button>
+                    )}
+                </>
             ) : (
                 <>
                     {(isAddAll && (
@@ -2080,121 +2092,84 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
             setLoading(false)
         })
     })
+    const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private)
+    const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
     return (
-        <div></div>
-        // <Card
-        //     size={"small"}
-        //     className='plugin-list-opt'
-        //     onClick={() => onClick(info)}
-        //     bordered={true}
-        //     hoverable={true}
-        //     title={
-        //         <div className='info-title'>
-        //             <div className='title-text'>
-        //                 <Tooltip title={info.script_name}>
-        //                     <span
-        //                         style={{maxWidth: isAdmin || bind_me ? "60%" : "80%"}}
-        //                         className='text-style content-ellipsis'
-        //                     >
-        //                         {info.script_name}
-        //                     </span>
-        //                 </Tooltip>
-
-        //                 <div className='text-icon'>
-        //                     {(isAdmin && !bind_me) || (bind_me && !info.is_private) ? (
-        //                         <div
-        //                             className={`text-icon-admin ${
-        //                                 TagColor[["not", "success", "failed"][status]].split("|")[0]
-        //                             } vertical-center`}
-        //                         >
-        //                             {TagColor[["not", "success", "failed"][status]].split("|")[1]}
-        //                         </div>
-        //                     ) : (
-        //                         !bind_me &&
-        //                         info.official && (
-        //                             <Tooltip title='官方插件'>
-        //                                 {/* @ts-ignore */}
-        //                                 <OfficialYakitLogoIcon className='text-icon-style' />
-        //                             </Tooltip>
-        //                         )
-        //                     )}
-        //                     {bind_me && (
-        //                         <>
-        //                             {(info.is_private === true && (
-        //                                 <Tooltip title='私密插件'>
-        //                                     <LockOutlined />
-        //                                 </Tooltip>
-        //                             )) || (
-        //                                 <Tooltip title='公开插件'>
-        //                                     <OnlineCloudIcon />
-        //                                 </Tooltip>
-        //                             )}
-        //                         </>
-        //                     )}
-        //                 </div>
-        //             </div>
-
-        //             <div className='vertical-center'>
-        //                 {(loading && <LoadingOutlined />) || (
-        //                     <Tooltip title={"添加到插件仓库"}>
-        //                         <Button
-        //                             className='title-add'
-        //                             type='link'
-        //                             onClick={(e) => {
-        //                                 e.stopPropagation()
-        //                                 add()
-        //                             }}
-        //                         >
-        //                             下载
-        //                         </Button>
-        //                     </Tooltip>
-        //                 )}
-        //             </div>
-        //         </div>
-        //     }
-        //     style={{
-        //         width: "100%",
-        //         backgroundColor: currentId === info.id ? "rgba(79,188,255,0.26)" : "#fff"
-        //     }}
-        // >
-        //     <SelectIcon
-        //         //  @ts-ignore
-        //         className={`icon-select  ${
-        //             selectedRowKeysRecord.findIndex((ele) => ele.id === info.id) !== -1 && "icon-select-active"
-        //         }`}
-        //         onClick={(e) => {
-        //             e.stopPropagation()
-        //             onSelect(info)
-        //         }}
-        //     />
-
-        //     <Row>
-        //         <Col span={24}>
-        //             <CopyableField
-        //                 style={{width: "100%", color: "#5f5f5f", marginBottom: 5}}
-        //                 text={info.help || "No Description about it."}
-        //                 noCopy={true}
-        //             />
-        //         </Col>
-        //     </Row>
-        //     <div style={{marginBottom: 4}}>
-        //         {(tags && tags.length > 0 && <div className='plugin-tag'>TAG:{tags.join(",")}</div>) || (
-        //             <div className='plugin-tag'>&nbsp;</div>
-        //         )}
-        //     </div>
-        //     <Row>
-        //         <Col span={12}>
-        //             <Space style={{width: "100%"}}>
-        //                 <Tag color={!info.authors || info.authors === "anonymous" ? "gray" : "geekblue"}>
-        //                     {info.authors || "anonymous"}
-        //                 </Tag>
-        //             </Space>
-        //         </Col>
-        //         <Col span={12} style={{textAlign: "right"}}>
-        //             {moment.unix(info.created_at).format("YYYY-MM-DD")}
-        //         </Col>
-        //     </Row>
-        // </Card>
+        <div className={`plugin-item ${currentId === info.id && "plugin-item-active"}`} onClick={() => onClick(info)}>
+            <div className={`plugin-item-heard ${currentId === info.id && "plugin-item-heard-active"}`}>
+                <div className='plugin-item-left'>
+                    <div
+                        title={info.script_name}
+                        className={`text-style content-ellipsis ${isShowAdmin && "max-width-70"}`}
+                    >
+                        {info.script_name}
+                    </div>
+                    <div className='icon-body'>
+                        <div className='text-icon'>
+                            {isShowAdmin ? (
+                                <div
+                                    className={`text-icon-admin ${
+                                        TagColor[["not", "success", "failed"][status]].split("|")[0]
+                                    } vertical-center`}
+                                >
+                                    {TagColor[["not", "success", "failed"][status]].split("|")[1]}
+                                </div>
+                            ) : (
+                                !bind_me &&
+                                info.official && (
+                                    // <Tooltip title='官方插件'>
+                                    // @ts-ignore
+                                    <OfficialYakitLogoIcon className='text-icon-style' />
+                                    //    </Tooltip>
+                                )
+                            )}
+                            {bind_me && <>{(info.is_private === true && <LockOutlined />) || <OnlineCloudIcon />}</>}
+                        </div>
+                    </div>
+                </div>
+                <div className='plugin-item-right'>
+                    {(loading && <LoadingOutlined />) || (
+                        <div
+                            className='plugin-down'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                add()
+                            }}
+                            title='添加到插件仓库'
+                        >
+                            下载
+                        </div>
+                    )}
+                </div>
+                <SelectIcon
+                    //  @ts-ignore
+                    className={`icon-select  ${
+                        selectedRowKeysRecord.findIndex((ele) => ele.id === info.id) !== -1 && "icon-select-active"
+                    }`}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onSelect(info)
+                    }}
+                />
+            </div>
+            <div className='plugin-item-content'>
+                <div className='plugin-help content-ellipsis' title={info.help}>
+                    {info.help || "No Description about it."}
+                </div>
+                {(tags && tags.length > 0 && (
+                    <div className='plugin-tag' title={tagsString}>
+                        TAG:{tagsString}
+                    </div>
+                )) || <div className='plugin-tag'>&nbsp;</div>}
+                <div className='plugin-item-footer'>
+                    <div className='plugin-item-footer-left'>
+                        {!bind_me && info.head_img && <img alt='' src={info.head_img} />}
+                        <div className='plugin-item-author content-ellipsis'>{info.authors || "anonymous"}</div>
+                    </div>
+                    <div className='plugin-item-time'>{formatDate(info.created_at)}</div>
+                </div>
+            </div>
+        </div>
     )
 }
 
