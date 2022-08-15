@@ -94,11 +94,11 @@ const defQueryOnline: SearchPluginOnlineRequest = {
     keywords: "",
     order_by: "stars",
     order: "desc",
-    type: typeOnline,
+    plugin_type: typeOnline,
     page: 1,
     limit: 12,
     status: "",
-    user: false,
+    bind_me: false,
     is_private: ""
 }
 
@@ -288,7 +288,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 </Button>
                             </Col>
                             <Col span={12} className='search-input-body'>
-                                {/* 搜索： */}
                                 <Search
                                     placeholder='输入关键字搜索'
                                     size={isFull ? "middle" : "small"}
@@ -297,7 +296,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     value={publicKeyword}
                                     onChange={(e) => {
                                         setPublicKeyword(e.target.value)
-                                        // setIsRefList(!isRefList)
                                     }}
                                 />
                             </Col>
@@ -1474,9 +1472,9 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
             !queryUser.is_private &&
             queryUser.order_by === "stars" &&
             queryUser.order === "desc" &&
-            queryUser.type === typeOnline &&
+            queryUser.plugin_type === typeOnline &&
             !queryUser.status &&
-            queryUser.user === false
+            queryUser.bind_me === false
         ) {
             setIsFilter(false)
         } else {
@@ -1584,7 +1582,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         setUserPlugin(info)
                     }}
                     userInfo={userInfo}
-                    user={true}
+                    bind_me={true}
                     refresh={refresh}
                     deletePluginRecord={deletePluginRecordUser}
                     updatePluginRecord={updatePluginRecordUser}
@@ -1638,9 +1636,9 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
             !queryOnline.is_private &&
             queryOnline.order_by === "stars" &&
             queryOnline.order === "desc" &&
-            queryOnline.type === typeOnline &&
+            queryOnline.plugin_type === typeOnline &&
             !queryOnline.status &&
-            queryOnline.user === false
+            queryOnline.bind_me === false
         ) {
             setIsFilter(false)
         } else {
@@ -1748,7 +1746,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                         setPlugin(info)
                     }}
                     userInfo={userInfo}
-                    user={false}
+                    bind_me={false}
                     refresh={refresh}
                     deletePluginRecord={deletePluginRecordOnline}
                     updatePluginRecord={updatePluginRecordOnline}
@@ -1767,7 +1765,7 @@ interface YakModuleOnlineListProps {
     onClicked: (m?: API.YakitPluginDetail, i?: number) => void
     userInfo: UserInfoProps
     isSelectAll: boolean
-    user: boolean
+    bind_me: boolean
     refresh: boolean
     deletePluginRecord?: API.YakitPluginDetail
     updatePluginRecord?: API.YakitPluginDetail
@@ -1785,7 +1783,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         onClicked,
         currentId,
         userInfo,
-        user,
+        bind_me,
         deletePluginRecord,
         updatePluginRecord,
         refresh,
@@ -1820,7 +1818,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     }, [updatePluginRecord])
     useEffect(() => {
         if (!deletePluginRecord) return
-        if (user) {
+        if (bind_me) {
             response.data.splice(numberOnlineUser.current, 1)
         } else {
             response.data.splice(numberOnline.current, 1)
@@ -1843,12 +1841,12 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     useEffect(() => {
         setIsRef(!isRef)
         setListBodyLoading(true)
-        if (!userInfo.isLogin && user) {
+        if (!userInfo.isLogin && bind_me) {
             setTotal(0)
         } else {
             search(1)
         }
-    }, [user, refresh, userInfo.isLogin])
+    }, [bind_me, refresh, userInfo.isLogin])
     const search = useMemoizedFn((page: number) => {
         let url = "yakit/plugin/unlogged"
         if (userInfo.isLogin) {
@@ -1857,9 +1855,9 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         const payload = {
             ...queryOnline,
             page,
-            user
+            bind_me
         }
-        if (!user) {
+        if (!bind_me) {
             delete payload.is_private
         }
         setLoading(true)
@@ -1871,7 +1869,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 order_by: payload.order_by,
                 limit: payload.limit,
                 order: payload.order,
-                user: payload.user
+                bind_me: payload.bind_me
             },
             data: payload
         })
@@ -1966,7 +1964,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 setTimeout(() => setLoading(false), 200)
             })
     })
-    if (!userInfo.isLogin && user) {
+    if (!userInfo.isLogin && bind_me) {
         return (
             <List
                 dataSource={[]}
@@ -1998,7 +1996,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                         selectedRowKeysRecord={selectedRowKeysRecord}
                         onSelect={onSelect}
                         onClick={(info) => {
-                            if (user) {
+                            if (bind_me) {
                                 numberOnlineUser.current = index
                             } else {
                                 numberOnline.current = index
@@ -2007,7 +2005,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                         }}
                         onDownload={addLocalLab}
                         onStarred={starredPlugin}
-                        user={user}
+                        bind_me={bind_me}
                     />
                 )}
             />
@@ -2030,7 +2028,7 @@ interface PluginListOptProps {
     onStarred: (info: API.YakitPluginDetail) => any
     onSelect: (info: API.YakitPluginDetail) => any
     selectedRowKeysRecord: API.YakitPluginDetail[]
-    user: boolean
+    bind_me: boolean
 }
 
 export const RandomTagColor: string[] = [
@@ -2043,7 +2041,7 @@ export const RandomTagColor: string[] = [
 
 const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
-    const {isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, user} = props
+    const {isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, bind_me} = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const [status, setStatus] = useState<number>(info.status)
     useEffect(() => {
@@ -2067,7 +2065,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                     <div className='title-text'>
                         <Tooltip title={info.script_name}>
                             <span
-                                style={{maxWidth: isAdmin || user ? "60%" : "80%"}}
+                                style={{maxWidth: isAdmin || bind_me ? "60%" : "80%"}}
                                 className='text-style content-ellipsis'
                             >
                                 {info.script_name}
@@ -2075,7 +2073,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                         </Tooltip>
 
                         <div className='text-icon'>
-                            {(isAdmin && !user) || (user && !info.is_private) ? (
+                            {(isAdmin && !bind_me) || (bind_me && !info.is_private) ? (
                                 <div
                                     className={`text-icon-admin ${
                                         TagColor[["not", "success", "failed"][status]].split("|")[0]
@@ -2084,7 +2082,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                     {TagColor[["not", "success", "failed"][status]].split("|")[1]}
                                 </div>
                             ) : (
-                                !user &&
+                                !bind_me &&
                                 info.official && (
                                     <Tooltip title='官方插件'>
                                         {/* @ts-ignore */}
@@ -2092,7 +2090,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                     </Tooltip>
                                 )
                             )}
-                            {user && (
+                            {bind_me && (
                                 <>
                                     {(info.is_private === true && (
                                         <Tooltip title='私密插件'>
@@ -2212,7 +2210,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
     useEffect(() => {
         form.setFieldsValue({
             order_by: queryOnline.order_by,
-            type: queryOnline.type ? queryOnline.type.split(",") : [],
+            plugin_type: queryOnline.plugin_type ? queryOnline.plugin_type.split(",") : [],
             status: !queryOnline.status ? "all" : queryOnline.status,
             is_private: queryOnline.is_private === "" ? "" : `${queryOnline.is_private === "true"}`
         })
@@ -2230,10 +2228,16 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
         }
     }
     const onReset = () => {
-        setQueryOnline({...queryOnline, order_by: "stars", type: defQueryOnline.type, status: "", is_private: ""})
+        setQueryOnline({
+            ...queryOnline,
+            order_by: "stars",
+            plugin_type: defQueryOnline.plugin_type,
+            status: "",
+            is_private: ""
+        })
         form.setFieldsValue({
             order_by: "stars",
-            type: defQueryOnline.type,
+            plugin_type: defQueryOnline.plugin_type,
             status: "all",
             is_private: ""
         })
@@ -2243,7 +2247,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
             ...queryOnline,
             ...value,
             status: value.status === "all" ? "" : value.status,
-            type: value.type.join(",")
+            plugin_type: value.plugin_type.join(",")
         }
         setQueryOnline({...query})
     })
@@ -2261,7 +2265,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                         </Select>
                     </Form.Item>
                 )}
-                <Form.Item name='type' label='插件类型'>
+                <Form.Item name='plugin_type' label='插件类型'>
                     <Select size='small' getPopupContainer={() => refTest.current} mode='multiple'>
                         {PluginType.map((item) => (
                             <Option value={item.value} key={item.value}>

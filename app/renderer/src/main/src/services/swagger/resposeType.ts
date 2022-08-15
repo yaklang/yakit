@@ -35,7 +35,7 @@
     params?: YakitPluginParam[];
     authors: string;
     user_id?: number;
-    head_img?: string;
+    head_img: string;
     /**
      * 插件发布的时间
      */
@@ -181,9 +181,16 @@
      */
     uuid?: string[];
     token?: string;
+    /**
+     * 下载个人所有/插件商店
+     */
     bind_me?: boolean;
     page?: number;
     limit?: number;
+    keywords?: string;
+    plugin_type?: string;
+    status?: string;
+    is_private?: string;
   }
   export interface Paging {
     pagemeta: PageMeta;
@@ -251,13 +258,13 @@
      * 审核状态,0待审核，1通过审核，2审核不通过
      */
     status?: string;
-    type?: string;
-    user: boolean;
+    plugin_type?: string;
+    bind_me: boolean;
     is_private?: string;
   }
   export interface GetPluginUnloggedWhere {
     keywords?: string;
-    type?: string;
+    plugin_type?: string;
   }
   export interface DeletePluginUuid {
     uuid: string;
