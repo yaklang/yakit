@@ -394,6 +394,10 @@ message DownloadOnlinePluginProgress {
 message DownloadOnlinePluginByTokenRequest {
   string Token = 1;
   bool BindMe = 2;
+  string Keywords = 3;
+  string PluginType = 4;
+  string Status = 5;
+  string IsPrivate = 6;
 }
 
 message DownloadOnlinePluginByIdRequest {
