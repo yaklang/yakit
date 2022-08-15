@@ -1101,10 +1101,25 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 }}
                             >
                                 <Button danger={true} size={"small"}>
-                                    删除历史记录
+                                    删除当前筛选
                                 </Button>
                             </Popconfirm>
                         )}
+                        {props.noHeader && <Popconfirm
+                            title={"删除全部数据并重置索引？"}
+                            onConfirm={() => {
+                                ipcRenderer
+                                    .invoke("DeleteHTTPFlows", {DeleteAll: true})
+                                    .then(() => {
+
+                                    })
+                                    .catch((e: any) => {
+                                        failed(`历史记录删除失败: ${e}`)
+                                    })
+                            }}
+                        >
+                            <Button type={"link"} danger={true}>重置数据库</Button>
+                        </Popconfirm>}
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                 </Col>
