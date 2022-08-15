@@ -20,6 +20,7 @@ interface RollingLoadListProps<T> {
     numberRoll?: number
     isGridLayout?: boolean
     defCol?: number
+    defOverscan?: number
 }
 
 const classNameWidth = {
@@ -42,6 +43,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         classNameRow,
         classNameList,
         defItemHeight,
+        defOverscan,
         numberRoll,
         isGridLayout,
         defCol
@@ -60,7 +62,10 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         const remainder = preLength.current % col
         if (remainder !== 0) {
             preLength.current = preLength.current - remainder
-            preData.current.pop()
+            const removeList = preData.current.pop()
+            removeList.forEach((element) => {
+                indexMapRef.current?.delete(`${element[rowKey || "Id"]}`)
+            })
         }
         for (let index = preLength.current; index < length; index += col) {
             if (index % col === 0) {
@@ -77,7 +82,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         }
         preLength.current = length
         preData.current = preData.current.concat(listByLength)
-        // console.log('preData.current',preData.current);
         return preData.current
     }, [data.length, col])
 
@@ -85,7 +89,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: defItemHeight,
-        overscan: 2
+        overscan: defOverscan || 5
     })
     useDebounceEffect(
         () => {
@@ -113,6 +117,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             isFirstNumberRoll.current = false
         } else {
             if (!numberRoll) return
+            console.log('numberRoll',numberRoll);
+            
             // 初次不执行
             scrollTo(numberRoll)
         }
@@ -167,6 +173,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         },
         {wait: 200, leading: false}
     )
+    // console.log('indexMapRef.current',indexMapRef.current);
+    
     return (
         <>
             <ReactResizeDetector

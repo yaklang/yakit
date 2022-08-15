@@ -1780,6 +1780,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     setTotal={setTotalOnline}
                     onClicked={(info, index) => {
                         if (size === "middle") {
+                            console.log("index", index)
+
                             setNumberOnline(index || 0)
                         }
                         setPlugin(info)
@@ -2028,24 +2030,29 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (
-                    <PluginItemOnline
-                        currentId={currentId}
-                        isAdmin={isAdmin}
-                        info={data}
-                        selectedRowKeysRecord={selectedRowKeysRecord}
-                        onSelect={onSelect}
-                        onClick={(info) => {
-                            if (bind_me) {
-                                numberOnlineUser.current = index
-                            } else {
-                                numberOnline.current = index
-                            }
-                            onClicked(info, index)
-                        }}
-                        onDownload={addLocalLab}
-                        onStarred={starredPlugin}
-                        bind_me={bind_me}
-                    />
+                    <div style={{position: "relative"}}>
+                        <div style={{position: "absolute", zIndex: 99}}>
+                            {index}----{data.id}
+                        </div>
+                        <PluginItemOnline
+                            currentId={currentId}
+                            isAdmin={isAdmin}
+                            info={data}
+                            selectedRowKeysRecord={selectedRowKeysRecord}
+                            onSelect={onSelect}
+                            onClick={(info) => {
+                                if (bind_me) {
+                                    numberOnlineUser.current = index
+                                } else {
+                                    numberOnline.current = index
+                                }
+                                onClicked(info, index)
+                            }}
+                            onDownload={addLocalLab}
+                            onStarred={starredPlugin}
+                            bind_me={bind_me}
+                        />
+                    </div>
                 )}
             />
         </Spin>
