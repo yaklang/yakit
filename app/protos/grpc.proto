@@ -1375,6 +1375,7 @@ message YakScript {
   string OnlineContributors = 22;
   string UUID = 23;
   bool OnlineIsPrivate = 24;
+  string HeadImg = 25;
 }
 
 message CodecRequest {
