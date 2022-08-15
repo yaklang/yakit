@@ -764,7 +764,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
-        newParams.Pagination.Limit = 20
+        newParams.Pagination.Limit = 23
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
@@ -1393,28 +1393,51 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                             onConfirm={AddAllPlugin}
                             okText='Yes'
                             cancelText='No'
-                            placement={size === "small" ? "top" : "topRight"}
                         >
-                            {(size === "small" && (
-                                <Tooltip title='下载'>
-                                    <DownloadOutlined className='operation-icon ' />
-                                </Tooltip>
-                            )) || (
+                            {size === "small" ? (
+                                <div className='operation-text'>一键导入</div>
+                            ) : (
                                 <Button type='primary' size='small'>
-                                    下载
+                                    一键导入
                                 </Button>
                             )}
                         </Popconfirm>
                     )) || (
                         <>
-                            {(size === "small" && (
-                                <Tooltip title='下载'>
-                                    <DownloadOutlined className='operation-icon ' onClick={AddAllPlugin} />
-                                </Tooltip>
+                            {(selectedRowKeysRecord.length === 0 && !(user && !userInfo.isLogin) && (
+                                <Popconfirm
+                                    title={
+                                        user
+                                            ? "确定将我的插件所有数据导入到本地吗"
+                                            : "确定将插件商店所有数据导入到本地吗?"
+                                    }
+                                    onConfirm={AddAllPlugin}
+                                    okText='Yes'
+                                    cancelText='No'
+                                    placement={size === "small" ? "top" : "topRight"}
+                                >
+                                    {(size === "small" && (
+                                        <Tooltip title='下载'>
+                                            <DownloadOutlined className='operation-icon ' />
+                                        </Tooltip>
+                                    )) || (
+                                        <Button type='primary' size='small'>
+                                            下载
+                                        </Button>
+                                    )}
+                                </Popconfirm>
                             )) || (
-                                <Button type='primary' size='small' onClick={AddAllPlugin}>
-                                    下载
-                                </Button>
+                                <>
+                                    {(size === "small" && (
+                                        <Tooltip title='下载'>
+                                            <DownloadOutlined className='operation-icon ' onClick={AddAllPlugin} />
+                                        </Tooltip>
+                                    )) || (
+                                        <Button type='primary' size='small' onClick={AddAllPlugin}>
+                                            下载
+                                        </Button>
+                                    )}
+                                </>
                             )}
                         </>
                     )}
