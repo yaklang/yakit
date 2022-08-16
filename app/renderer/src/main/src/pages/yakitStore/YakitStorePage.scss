@@ -259,13 +259,16 @@
         }
 
         .plugin-item-right {
+            display: flex;
+            align-items: center;
             flex: 1;
             line-height: initial;
 
             .upload-outline {
-                margin: 0 12px;
+                margin: 0 6px;
                 font-size: 16px;
                 cursor: pointer;
+                color: rgba(0, 0, 0, 0.45);
 
                 &:hover {
                     color: #1890ff;
@@ -274,7 +277,6 @@
 
             .plugin-down {
                 cursor: pointer;
-                color: #1890ff;
                 width: 35px;
             }
         }

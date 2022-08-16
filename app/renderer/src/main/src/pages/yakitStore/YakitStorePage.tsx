@@ -18,7 +18,9 @@ import {
     Select,
     Checkbox,
     Switch,
-    Radio
+    Radio,
+    Modal,
+    Typography
 } from "antd"
 import {
     ReloadOutlined,
@@ -33,7 +35,8 @@ import {
     DeleteOutlined,
     CloudDownloadOutlined,
     DownloadOutlined,
-    PoweroffOutlined
+    PoweroffOutlined,
+    InfoCircleOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
@@ -60,7 +63,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {DownloadOnlinePluginProps} from "../yakitStore/YakitPluginInfoOnline"
 import {randomString} from "@/utils/randomUtil"
-import {OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon} from "../../assets/icons"
+import {OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon, ShareIcon} from "../../assets/icons"
 import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/index"
 import moment from "moment"
 import {findDOMNode} from "react-dom"
@@ -71,6 +74,7 @@ import {SyncCloudButton} from "@/components/SyncCloudButton/index"
 
 const {Search} = Input
 const {Option} = Select
+const {Paragraph} = Typography
 const {ipcRenderer} = window.require("electron")
 
 const userInitUse = "user-init-use"
@@ -832,6 +836,13 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (onSelectList) onSelectList([...selectedRowKeysRecord])
     })
+    const onShare = useMemoizedFn((item: YakScript) => {
+        Modal.info({
+            title: "请将插件id复制以后分享给朋友，导入后即可使用。",
+            icon: <InfoCircleOutlined />,
+            content: <CopyableField text={item.UUID} />
+        })
+    })
     return (
         <Spin spinning={listBodyLoading}>
             <RollingLoadList<YakScript>
@@ -861,6 +872,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                         setUpdatePluginRecordLocal={(s) => {
                             if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
                         }}
+                        onShare={onShare}
                     />
                 )}
             />
@@ -876,11 +888,12 @@ interface PluginListLocalProps {
     onYakScriptRender?: (i: YakScript, maxWidth?: number) => any
     maxWidth: number
     onSelect: (info: YakScript) => any
+    onShare: (info: YakScript) => any
     selectedRowKeysRecord: YakScript[]
     setUpdatePluginRecordLocal: (y: YakScript) => any
 }
 export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
-    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript} = props
+    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare} = props
     const {userInfo, maxWidth, onClicked} = props
     const [uploadLoading, setUploadLoading] = useState(false)
     const updateListItem = useMemoizedFn((updatePlugin: YakScript) => {
@@ -911,6 +924,16 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     </div>
                 </div>
                 <div className='plugin-item-right'>
+                    {plugin.UUID && (
+                        <ShareIcon
+                            // @ts-ignore
+                            className='operation-icon'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onShare(plugin)
+                            }}
+                        />
+                    )}
                     {(uploadLoading && <LoadingOutlined className='upload-outline' />) || (
                         <>
                             {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
@@ -1615,6 +1638,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     />
                     <AddAllPlugin
                         oneImport={true}
+                        size={size}
                         selectedRowKeysRecord={[]}
                         setListLoading={setListLoading}
                         user={true}
@@ -1784,6 +1808,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     />
                     <AddAllPlugin
                         oneImport={true}
+                        size={size}
                         selectedRowKeysRecord={[]}
                         setListLoading={setListLoading}
                         user={false}
@@ -2146,10 +2171,8 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                             ) : (
                                 !bind_me &&
                                 info.official && (
-                                    // <Tooltip title='官方插件'>
                                     // @ts-ignore
                                     <OfficialYakitLogoIcon className='text-icon-style' />
-                                    //    </Tooltip>
                                 )
                             )}
                             {bind_me && <>{(info.is_private === true && <LockOutlined />) || <OnlineCloudIcon />}</>}
@@ -2157,7 +2180,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                     </div>
                 </div>
                 <div className='plugin-item-right'>
-                    {(loading && <LoadingOutlined />) || (
+                    {(loading && <LoadingOutlined className='plugin-down' />) || (
                         <div
                             className='plugin-down'
                             onClick={(e) => {
@@ -2166,7 +2189,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                             }}
                             title='添加到插件仓库'
                         >
-                            下载
+                            <DownloadOutlined className='operation-icon ' />
                         </div>
                     )}
                 </div>
