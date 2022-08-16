@@ -117,8 +117,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             isFirstNumberRoll.current = false
         } else {
             if (!numberRoll) return
-            console.log('numberRoll',numberRoll);
-            
+            console.log("numberRoll", numberRoll)
+
             // 初次不执行
             scrollTo(numberRoll)
         }
@@ -174,7 +174,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         {wait: 200, leading: false}
     )
     // console.log('indexMapRef.current',indexMapRef.current);
-    
+
     return (
         <>
             <ReactResizeDetector
