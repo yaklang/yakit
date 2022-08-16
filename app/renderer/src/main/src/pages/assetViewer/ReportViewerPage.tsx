@@ -15,7 +15,8 @@ import {onRemoveToolFC} from "../../utils/deleteTool"
 
 import "./ReportViewerPage.scss"
 
-export interface ReportViewerPageProp {}
+export interface ReportViewerPageProp {
+}
 
 export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
     const [_, setReport, getReport] = useGetState<Report>()
@@ -24,11 +25,11 @@ export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
         <>
             <ResizeBox
                 isVer={false}
-                firstNode={<ReportList onClick={setReport} selectedId={getReport()?.Id} />}
+                firstNode={<ReportList onClick={setReport} selectedId={getReport()?.Id}/>}
                 firstMinSize={"320px"}
                 firstRatio={"320px"}
                 secondNode={(() => {
-                    return <ReportViewer id={getReport()?.Id || 0} />
+                    return <ReportViewer id={getReport()?.Id || 0}/>
                 })()}
             />
         </>
@@ -129,11 +130,12 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
             size={"small"}
             loading={loading}
             bordered={false}
+            bodyStyle={{overflowY: "auto"}}
             extra={
                 <Space>
                     <Tooltip title={<>{`点击列表中的报告检查内容`}</>}>
                         <a href='#'>
-                            <QuestionOutlined />
+                            <QuestionOutlined/>
                         </a>
                     </Tooltip>
                     <a
@@ -142,7 +144,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                             update(1)
                         }}
                     >
-                        <ReloadOutlined />
+                        <ReloadOutlined/>
                     </a>
                     <Popconfirm
                         title={
@@ -153,7 +155,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                         onConfirm={onRemove}
                     >
                         {/* @ts-ignore */}
-                        <DeleteOutlined className='icon-color' />
+                        <DeleteOutlined className='icon-color'/>
                     </Popconfirm>
                 </Space>
             }
