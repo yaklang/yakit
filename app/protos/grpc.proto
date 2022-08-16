@@ -1897,4 +1897,6 @@ message ExecResult {
 
   // 如果是一个保存过的 ExecResult 他应该有数据库记录 ID
   int64 Id = 6;
+
+  string RuntimeID = 7;
 }

@@ -1115,7 +1115,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     })
                                     .catch((e: any) => {
                                         failed(`历史记录删除失败: ${e}`)
-                                    })
+                                    }).finally(() => update(1))
                             }}
                         >
                             <Button type={"link"} danger={true}>重置数据库</Button>
@@ -1538,10 +1538,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                                ? TableRowColor(
-                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                                )
-                                                : "#ffffff"
+                                            ? TableRowColor(
+                                                rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                            )
+                                            : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
