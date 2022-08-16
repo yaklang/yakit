@@ -96,7 +96,7 @@ const defQueryOnline: SearchPluginOnlineRequest = {
     order: "desc",
     plugin_type: typeOnline,
     page: 1,
-    limit: 12,
+    limit: 20,
     status: "",
     bind_me: false,
     is_private: ""
@@ -845,27 +845,22 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 classNameList='plugin-list-body'
                 defItemHeight={itemHeight}
                 renderRow={(data: YakScript, index) => (
-                    <div style={{position: "relative"}}>
-                        <div style={{position: "absolute", zIndex: 99}}>
-                            {index}----{data.Id}
-                        </div>
-                        <PluginListLocalItem
-                            plugin={data}
-                            userInfo={userInfo}
-                            onClicked={(info) => {
-                                numberLocal.current = index
-                                props.onClicked(info, index)
-                            }}
-                            currentScript={props.currentScript}
-                            onYakScriptRender={props.onYakScriptRender}
-                            maxWidth={maxWidth}
-                            selectedRowKeysRecord={selectedRowKeysRecord || []}
-                            onSelect={onSelect}
-                            setUpdatePluginRecordLocal={(s) => {
-                                if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
-                            }}
-                        />
-                    </div>
+                    <PluginListLocalItem
+                        plugin={data}
+                        userInfo={userInfo}
+                        onClicked={(info) => {
+                            numberLocal.current = index
+                            props.onClicked(info, index)
+                        }}
+                        currentScript={props.currentScript}
+                        onYakScriptRender={props.onYakScriptRender}
+                        maxWidth={maxWidth}
+                        selectedRowKeysRecord={selectedRowKeysRecord || []}
+                        onSelect={onSelect}
+                        setUpdatePluginRecordLocal={(s) => {
+                            if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
+                        }}
+                    />
                 )}
             />
         </Spin>
@@ -2028,29 +2023,24 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (
-                    <div style={{position: "relative"}}>
-                        <div style={{position: "absolute", zIndex: 99}}>
-                            {index}----{data.id}
-                        </div>
-                        <PluginItemOnline
-                            currentId={currentId}
-                            isAdmin={isAdmin}
-                            info={data}
-                            selectedRowKeysRecord={selectedRowKeysRecord}
-                            onSelect={onSelect}
-                            onClick={(info) => {
-                                if (bind_me) {
-                                    numberOnlineUser.current = index
-                                } else {
-                                    numberOnline.current = index
-                                }
-                                onClicked(info, index)
-                            }}
-                            onDownload={addLocalLab}
-                            onStarred={starredPlugin}
-                            bind_me={bind_me}
-                        />
-                    </div>
+                    <PluginItemOnline
+                        currentId={currentId}
+                        isAdmin={isAdmin}
+                        info={data}
+                        selectedRowKeysRecord={selectedRowKeysRecord}
+                        onSelect={onSelect}
+                        onClick={(info) => {
+                            if (bind_me) {
+                                numberOnlineUser.current = index
+                            } else {
+                                numberOnline.current = index
+                            }
+                            onClicked(info, index)
+                        }}
+                        onDownload={addLocalLab}
+                        onStarred={starredPlugin}
+                        bind_me={bind_me}
+                    />
                 )}
             />
         </Spin>
