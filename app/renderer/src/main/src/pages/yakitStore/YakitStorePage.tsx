@@ -491,6 +491,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     }, [isRefList])
     const onRemoveLocalPlugin = useMemoizedFn(() => {
         const length = selectedRowKeysRecordLocal.length
+        // isSelectAllLocal
         if (length === 0) {
             // 全部删除
             ipcRenderer
@@ -1291,8 +1292,10 @@ interface AddAllPluginProps {
     user: boolean
     userInfo: UserInfoProps
     onFinish: () => void
-    isAddAll?: boolean
+    oneImport?: boolean
     size?: "middle" | "small"
+    query?: SearchPluginOnlineRequest
+    isSelectAll?: boolean
 }
 
 interface DownloadOnlinePluginByIdsRequest {
@@ -1300,8 +1303,17 @@ interface DownloadOnlinePluginByIdsRequest {
     UUID: string[]
 }
 
+interface DownloadOnlinePluginByTokenRequest {
+    isAddToken: boolean
+    BindMe: boolean
+    Keywords?: string
+    PluginType?: string
+    Status?: string
+    IsPrivate?: string
+}
+
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
-    const {selectedRowKeysRecord, setListLoading, user, userInfo, onFinish, isAddAll, size} = props
+    const {selectedRowKeysRecord, setListLoading, user, userInfo, onFinish, oneImport, size, query, isSelectAll} = props
     const [taskToken, setTaskToken] = useState(randomString(40))
     // 全部添加进度条
     const [addLoading, setAddLoading] = useState<boolean>(false)
@@ -1318,6 +1330,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
             setTimeout(() => {
                 setAddLoading(false)
                 setPercent(0)
+                onFinish()
                 ipcRenderer.invoke("change-main-menu")
             }, 500)
         })
@@ -1333,7 +1346,27 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
             warn("我的插件需要先登录才能下载，请先登录")
             return
         }
-        if (selectedRowKeysRecord.length > 0) {
+        if (isSelectAll) {
+            // 全部添加
+            setAddLoading(true)
+            let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: user}
+            // 一键导入不加条件，其他要加
+            if (!oneImport) {
+                addParams = {
+                    ...addParams,
+                    Keywords: query?.keywords,
+                    PluginType: query?.plugin_type,
+                    Status: query?.status,
+                    IsPrivate: query?.is_private
+                }
+            }
+            ipcRenderer
+                .invoke("DownloadOnlinePluginAll", addParams, taskToken)
+                .then(() => {})
+                .catch((e) => {
+                    failed(`添加失败:${e}`)
+                })
+        } else {
             // 批量添加
             const uuIds: string[] = []
             const onlineIDs: number[] = []
@@ -1358,16 +1391,6 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     setTimeout(() => {
                         setListLoading(false)
                     }, 200)
-                })
-        } else {
-            // 全部添加
-            setAddLoading(true)
-            const addParams = {isAddToken: true, BindMe: user}
-            ipcRenderer
-                .invoke("DownloadOnlinePluginAll", addParams, taskToken)
-                .then(() => {})
-                .catch((e) => {
-                    failed(`添加失败:${e}`)
                 })
         }
     })
@@ -1398,17 +1421,15 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 </>
             ) : (
                 <>
-                    {(isAddAll && (
+                    {(oneImport && (
                         <Popconfirm
-                            title={user ? "确定将我的插件所有数据导入到本地吗" : "确定将插件商店所有数据导入到本地吗?"}
+                            title={user ? "确定将我的插件所有数据导入到本地吗?" : "确定将插件商店所有数据导入到本地吗?"}
                             onConfirm={AddAllPlugin}
                             okText='Yes'
                             cancelText='No'
                             placement={size === "small" ? "top" : "topRight"}
                         >
-                            {size === "small" ? (
-                                <div className='operation-text'>一键导入</div>
-                            ) : (
+                            {(size === "small" && <div className='operation-text'>一键导入</div>) || (
                                 <Button type='primary' size='small'>
                                     一键导入
                                 </Button>
@@ -1589,9 +1610,11 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                             onSelectAllUser(false)
                         }}
                         size={size}
+                        isSelectAll={isSelectAllUser}
+                        query={queryUser}
                     />
                     <AddAllPlugin
-                        isAddAll={true}
+                        oneImport={true}
                         selectedRowKeysRecord={[]}
                         setListLoading={setListLoading}
                         user={true}
@@ -1609,6 +1632,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     selectedRowKeysRecord={selectedRowKeysRecordUser}
                     onSelectList={setSelectedRowKeysRecordUser} //选择一个
                     isSelectAll={isSelectAllUser}
+                    setIsSelectAll={setIsSelectAllUser}
                     setTotal={setTotalUser}
                     onClicked={(info, index) => {
                         if (size === "middle") {
@@ -1662,7 +1686,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const [totalUserOnline, setTotalOnline] = useState<number>(0)
     const [refresh, setRefresh] = useState(false)
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
-    const [isSelectAllUser, setIsSelectAllUser] = useState<boolean>(false)
+    const [isSelectAllOnline, setIsSelectAllOnline] = useState<boolean>(false)
     useEffect(() => {
         if (!userInfo.isLogin) onSelectAllOnline(false)
     }, [userInfo])
@@ -1704,7 +1728,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         }
     }, [isRefList])
     const onSelectAllOnline = useMemoizedFn((checked) => {
-        setIsSelectAllUser(checked)
+        setIsSelectAllOnline(checked)
         if (!checked) {
             setSelectedRowKeysRecordOnline([]) // 清除本地
         }
@@ -1717,11 +1741,13 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
                 <Col span={12} className='col'>
-                    <Checkbox checked={isSelectAllUser} onChange={(e) => onSelectAllOnline(e.target.checked)}>
+                    <Checkbox checked={isSelectAllOnline} onChange={(e) => onSelectAllOnline(e.target.checked)}>
                         全选
                     </Checkbox>
                     {selectedRowKeysRecordOnline.length > 0 && (
-                        <Tag color='blue'>已选{selectedRowKeysRecordOnline.length}条</Tag>
+                        <Tag color='blue'>
+                            已选{isSelectAllOnline ? totalUserOnline : selectedRowKeysRecordOnline.length}条
+                        </Tag>
                     )}
                     <Tag>Total:{totalUserOnline}</Tag>
                 </Col>
@@ -1753,9 +1779,11 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                             onSelectAllOnline(false)
                         }}
                         size={size}
+                        isSelectAll={isSelectAllOnline}
+                        query={queryOnline}
                     />
                     <AddAllPlugin
-                        isAddAll={true}
+                        oneImport={true}
                         selectedRowKeysRecord={[]}
                         setListLoading={setListLoading}
                         user={false}
@@ -1771,8 +1799,9 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     currentId={plugin?.id || 0}
                     queryOnline={queryOnline}
                     selectedRowKeysRecord={selectedRowKeysRecordOnline}
-                    onSelectList={setSelectedRowKeysRecordOnline} //选择一个
-                    isSelectAll={isSelectAllUser}
+                    onSelectList={setSelectedRowKeysRecordOnline}
+                    isSelectAll={isSelectAllOnline}
+                    setIsSelectAll={setIsSelectAllOnline}
                     setTotal={setTotalOnline}
                     onClicked={(info, index) => {
                         if (size === "middle") {
@@ -1800,6 +1829,7 @@ interface YakModuleOnlineListProps {
     onClicked: (m?: API.YakitPluginDetail, i?: number) => void
     userInfo: UserInfoProps
     isSelectAll: boolean
+    setIsSelectAll: (b: boolean) => void
     bind_me: boolean
     refresh: boolean
     deletePluginRecord?: API.YakitPluginDetail
@@ -1823,7 +1853,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         updatePluginRecord,
         refresh,
         size,
-        number
+        number,
+        setIsSelectAll
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
@@ -1866,7 +1897,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     }, [deletePluginRecord?.id])
     useEffect(() => {
         if (isSelectAll) {
-            // const data = response.data.filter((ele) => ele.status === 1)
             onSelectList([...response.data])
         }
     }, [isSelectAll])
@@ -1915,6 +1945,9 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 const data = page === 1 ? res.data : response.data.concat(res.data)
                 const isMore = res.data.length < res.pagemeta.limit
                 setHasMore(!isMore)
+                if (payload.page > 1 && isSelectAll) {
+                    onSelectList(data)
+                }
                 setResponse({
                     ...res,
                     data: [...data]
@@ -1941,6 +1974,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         } else {
             selectedRowKeysRecord.splice(index, 1)
         }
+        setIsSelectAll(false)
         onSelectList([...selectedRowKeysRecord])
     })
     const addLocalLab = useMemoizedFn((info: API.YakitPluginDetail, callback) => {

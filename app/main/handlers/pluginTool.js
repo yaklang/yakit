@@ -1,6 +1,6 @@
-const { ipcMain } = require("electron")
+const {ipcMain} = require("electron")
 const OS = require("os")
-const { USER_INFO } = require("../state")
+const {USER_INFO} = require("../state")
 const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
@@ -28,7 +28,7 @@ module.exports = (win, getClient) => {
         }
 
         //Return the average Idle and Tick times
-        return { idle: totalIdle / cpus.length, total: totalTick / cpus.length }
+        return {idle: totalIdle / cpus.length, total: totalTick / cpus.length}
     }
 
     // function to calculate average of array
@@ -138,7 +138,7 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
-                if (params.OnlineID) win.webContents.send('ref-plugin-operator', { pluginOnlineId: params.OnlineID })
+                if (params.OnlineID) win.webContents.send("ref-plugin-operator", {pluginOnlineId: params.OnlineID})
                 resolve(data)
             })
         })
@@ -170,11 +170,12 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DownloadOnlinePluginAll", (e, params, token) => {
         // params传Token，登录时调用：添加该用户名下的所有插件；不传Token：添加所有的
         const newParams = {
-            BindMe: params.BindMe
+            ...params
         }
         if (params.isAddToken) {
             newParams.Token = USER_INFO.token
         }
+        delete newParams.isAddToken
         let stream = getClient().DownloadOnlinePluginAll(newParams)
         handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
     })

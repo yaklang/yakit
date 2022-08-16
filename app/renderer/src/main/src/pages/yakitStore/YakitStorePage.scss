@@ -131,10 +131,6 @@
     max-width: 70%;
 }
 
-.icon-select-active {
-    color: #1890ff;
-}
-
 .full-filter {
     display: flex;
     align-items: center;
@@ -247,6 +243,7 @@
                     border-radius: 4px;
                     font-size: 12px;
                     padding: 1px 5px;
+                    width: max-content;
                 }
 
                 .text-icon {
@@ -292,6 +289,10 @@
                 width: 1.5em;
                 height: 1.5em;
             }
+        }
+
+        .icon-select-active {
+            color: #1890ff;
         }
 
     }
