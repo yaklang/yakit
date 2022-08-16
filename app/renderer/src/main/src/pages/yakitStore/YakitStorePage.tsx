@@ -1346,7 +1346,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
             warn("我的插件需要先登录才能下载，请先登录")
             return
         }
-        if (isSelectAll) {
+        if (selectedRowKeysRecord.length === 0 || isSelectAll) {
             // 全部添加
             setAddLoading(true)
             let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: user}
