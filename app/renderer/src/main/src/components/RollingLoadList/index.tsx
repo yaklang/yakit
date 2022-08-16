@@ -62,8 +62,15 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
     let preLength = useRef<number>(0)
     let preData = useRef<any>([])
+    const resetPre = useMemoizedFn(() => {
+        preLength.current = 0
+        preData.current = []
+    })
     let originalList = useMemo(() => {
         if (!col) return []
+        if (data.length < preLength.current) {
+            resetPre()
+        }
         const listByLength: any[] = []
         const length = data.length
         const remainder = preLength.current % col
@@ -124,16 +131,11 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             isFirstNumberRoll.current = false
         } else {
             if (!numberRoll) return
-            console.log("numberRoll", numberRoll)
-
             // 初次不执行
             scrollTo(numberRoll)
         }
     })
-    const resetPre = useMemoizedFn(() => {
-        preLength.current = 0
-        preData.current = []
-    })
+
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     useDebounceEffect(
         () => {
@@ -180,8 +182,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         },
         {wait: 200, leading: false}
     )
-    // console.log('indexMapRef.current',indexMapRef.current);
-
     return (
         <>
             <ReactResizeDetector
@@ -210,11 +210,13 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                                 <div
                                     className={`${isGridLayout && col && col > 1 && "display-flex"}`}
                                     key={itemArr.map((ele) => ele[rowKey || "Id"]).join("-")}
+                                    id={itemArr.map((ele) => ele[rowKey || "Id"]).join("-")}
                                 >
                                     {itemArr.map((ele, number) => (
                                         <div
                                             className={`${col && classNameWidth[col]} ${classNameRow}`}
                                             key={ele[rowKey || "Id"]}
+                                            id={ele[rowKey || "Id"]}
                                         >
                                             {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0)}
                                         </div>

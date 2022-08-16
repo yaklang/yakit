@@ -774,7 +774,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
-        newParams.Pagination.Limit = 23
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
@@ -846,7 +845,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 classNameList='plugin-list-body'
                 defItemHeight={itemHeight}
                 renderRow={(data: YakScript, index) => (
-                    <div>
+                    <div style={{position: "relative"}}>
                         <div style={{position: "absolute", zIndex: 99}}>
                             {index}----{data.Id}
                         </div>
@@ -896,10 +895,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             onClicked(updatePlugin)
         }
     })
-    // let isAnonymous = false
-    // if (plugin.Author === "" || plugin.Author === "anonymous") {
-    //     isAnonymous = true
-    // }
     if (props.onYakScriptRender) {
         return props.onYakScriptRender(plugin, maxWidth)
     }
@@ -950,7 +945,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                 {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
-                        {/* { plugin && <img alt='' src={plugin.head_img} />} */}
+                        {plugin.HeadImg && <img alt='' src={plugin.HeadImg} />}
                         <div className='plugin-item-author content-ellipsis'>{plugin.Author || "anonymous"}</div>
                     </div>
                     <div className='plugin-item-time'>{formatDate(plugin.CreatedAt)}</div>
@@ -1786,8 +1781,6 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     setTotal={setTotalOnline}
                     onClicked={(info, index) => {
                         if (size === "middle") {
-                            console.log("index", index)
-
                             setNumberOnline(index || 0)
                         }
                         setPlugin(info)
@@ -2019,7 +2012,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             />
         )
     }
-
     return (
         <Spin spinning={listBodyLoading}>
             <RollingLoadList<API.YakitPluginDetail>
@@ -2036,24 +2028,29 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (
-                    <PluginItemOnline
-                        currentId={currentId}
-                        isAdmin={isAdmin}
-                        info={data}
-                        selectedRowKeysRecord={selectedRowKeysRecord}
-                        onSelect={onSelect}
-                        onClick={(info) => {
-                            if (bind_me) {
-                                numberOnlineUser.current = index
-                            } else {
-                                numberOnline.current = index
-                            }
-                            onClicked(info, index)
-                        }}
-                        onDownload={addLocalLab}
-                        onStarred={starredPlugin}
-                        bind_me={bind_me}
-                    />
+                    <div style={{position: "relative"}}>
+                        <div style={{position: "absolute", zIndex: 99}}>
+                            {index}----{data.id}
+                        </div>
+                        <PluginItemOnline
+                            currentId={currentId}
+                            isAdmin={isAdmin}
+                            info={data}
+                            selectedRowKeysRecord={selectedRowKeysRecord}
+                            onSelect={onSelect}
+                            onClick={(info) => {
+                                if (bind_me) {
+                                    numberOnlineUser.current = index
+                                } else {
+                                    numberOnline.current = index
+                                }
+                                onClicked(info, index)
+                            }}
+                            onDownload={addLocalLab}
+                            onStarred={starredPlugin}
+                            bind_me={bind_me}
+                        />
+                    </div>
                 )}
             />
         </Spin>
