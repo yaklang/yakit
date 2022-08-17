@@ -92,6 +92,16 @@ interface SearchPluginOnlineRequest extends API.GetPluginWhere {
     limit?: number
 }
 
+interface TagsAndType {
+    Name: string
+    Title: string
+    Total: string
+}
+interface GetYakScriptTagsAndTypeResponse {
+    OnlinePluginType: TagsAndType[]
+    OnlineTags: TagsAndType[]
+}
+
 const typeOnline = "yak,mitm,packet-hack,port-scan,codec,nuclei"
 const defQueryOnline: SearchPluginOnlineRequest = {
     keywords: "",
@@ -206,6 +216,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setIsRefList(!isRefList)
         setScriptIdOnlineId(undefined)
         onResetNumber()
+        getStatistics(width)
+        onResetQuery()
     })
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const onFullScreen = useMemoizedFn(() => {
@@ -312,17 +324,36 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setIsFull(!(script || userPlugin || plugin))
     }, [script, userPlugin, plugin])
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
-    const [statisticsLoading, setStatisticsLoading] = useState<boolean>(true)
+    const [statisticsLoading, setStatisticsLoading] = useState<boolean>()
     const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
     const [statisticsQueryOnline, setStatisticsQueryOnline] = useState<SearchPluginOnlineRequest>(defQueryOnline)
     const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
+    const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
     useEffect(() => {
-        if (width > 1940) {
-            setTimeout(() => {
-                setStatisticsLoading(false)
-            }, 2000)
+        getStatistics(width)
+    }, [width, plugSource])
+    const getStatistics = useMemoizedFn((width:number) => {
+        if (width < 1940) return
+        if (plugSource === "local" && !yakScriptTagsAndType) {
+            getYakScriptTagsAndType()
         }
-    }, [width])
+    })
+    const getYakScriptTagsAndType = useMemoizedFn(() => {
+        setStatisticsLoading(true)
+        ipcRenderer
+            .invoke("GetYakScriptTagsAndType", {})
+            .then((res: GetYakScriptTagsAndTypeResponse) => {
+                setYakScriptTagsAndType(res)
+            })
+            .catch((e) => {
+                failed(`获取本地插件统计数据展示错误:${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setStatisticsLoading(false)
+                }, 200)
+            })
+    })
     const onResetStatisticsQuery = useMemoizedFn(() => {
         setStatisticsQueryLocal(defQueryLocal)
         setStatisticsQueryOnline(defQueryOnline)
@@ -586,11 +617,14 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 {isFull && width > 1940 && (
                     <div className='plugin-statistics'>
                         <Spin spinning={statisticsLoading}>
-                            {Object.entries(plugSource === "local" ? {} : statisticsDataOnlineOrUser).map((item) => {
+                            {Object.entries(
+                                plugSource === "local" ? yakScriptTagsAndType || {} : statisticsDataOnlineOrUser || {}
+                            ).map((item) => {
                                 const queryName = item[0]
                                 const statisticsList = item[1]
-                                const title = statisticsList.length > 0 ? statisticsList[0].title : "-"
-                                let current = ""
+                                const title =
+                                    statisticsList.length > 0 ? statisticsList[0].title || statisticsList[0].Title : "-"
+                                let current: string = ""
                                 if (plugSource === "local") {
                                     current = statisticsQueryLocal[queryName]
                                 }
@@ -605,16 +639,16 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         <div className='opt-header'>{title}</div>
                                         {statisticsList.map((ele) => (
                                             <div
-                                                key={ele.name}
+                                                key={ele.name || ele.Name}
                                                 className={`opt-list-item ${
-                                                    current.includes(ele.name) && "opt-list-item-selected"
+                                                    current?.includes(ele.Name) && "opt-list-item-selected"
                                                 }`}
-                                                onClick={() => onSearch(queryName, ele.name)}
+                                                onClick={() => onSearch(queryName, ele.Name)}
                                             >
                                                 <span className='item-name content-ellipsis'>
-                                                    {showName(queryName, ele.name)}
+                                                    {showName(queryName, ele.Name)}
                                                 </span>
-                                                <span>{ele.count}</span>
+                                                <span>{ele.count || ele.Total}</span>
                                             </div>
                                         ))}
                                     </>
@@ -641,6 +675,11 @@ interface YakModuleProp {
     setNumberLocal: (n: number) => void
     setStatisticsQueryLocal: (l: QueryYakScriptRequest) => void
     statisticsQueryLocal: QueryYakScriptRequest
+}
+
+interface DeleteAllLocalPluginsRequest {
+    Keywords?: string
+    Type?: string
 }
 export const YakModule: React.FC<YakModuleProp> = (props) => {
     const {
@@ -706,14 +745,19 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     }, [isRefList])
     const onRemoveLocalPlugin = useMemoizedFn(() => {
         const length = selectedRowKeysRecordLocal.length
-        // isSelectAllLocal
-        if (length === 0) {
+        if (length === 0 || isSelectAllLocal) {
+            const paramsRemove: DeleteAllLocalPluginsRequest = {
+                Keywords: queryLocal.Keyword,
+                Type: queryLocal.Type
+            }
+            console.log("paramsRemove", paramsRemove)
             // 全部删除
             ipcRenderer
-                .invoke("DeleteAllLocalPlugins", {})
+                .invoke("DeleteAllLocalPlugins", paramsRemove)
                 .then(() => {
                     setRefresh(!refresh)
                     setScript(undefined)
+                    onSelectAllLocal(false)
                     ipcRenderer.invoke("change-main-menu")
                     success("全部删除成功")
                 })
@@ -729,6 +773,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 .then(() => {
                     setRefresh(!refresh)
                     setScript(undefined)
+                    onSelectAllLocal(false)
                     ipcRenderer.invoke("change-main-menu")
                     success(`成功删除${length}条数据`)
                 })
@@ -809,7 +854,9 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                         全选
                     </Checkbox>
                     {selectedRowKeysRecordLocal.length > 0 && (
-                        <Tag color='blue'>已选{selectedRowKeysRecordLocal.length}条</Tag>
+                        <Tag color='blue'>
+                            已选{isSelectAllLocal ? totalLocal : selectedRowKeysRecordLocal.length}条
+                        </Tag>
                     )}
                     <Tag>Total:{totalLocal}</Tag>
                     <div className='flex-align-center'>
@@ -881,7 +928,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 <YakModuleList
                     isGridLayout={size === "middle"}
                     numberLocalRoll={numberLocal}
-                    itemHeight={150} //137+12
+                    itemHeight={150}
                     currentScript={script}
                     onClicked={(info, index) => {
                         if (info?.Id === script?.Id) return
@@ -895,6 +942,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     refresh={refresh}
                     deletePluginRecordLocal={deletePluginRecordLocal}
                     isSelectAll={isSelectAllLocal}
+                    setIsSelectAll={setIsSelectAllLocal}
                     selectedRowKeysRecord={selectedRowKeysRecordLocal}
                     onSelectList={setSelectedRowKeysRecordLocal}
                     updatePluginRecordLocal={updatePluginRecordLocal}
@@ -918,6 +966,7 @@ export interface YakModuleListProp {
     updatePluginRecordLocal?: YakScript
     trigger?: boolean
     isSelectAll?: boolean
+    setIsSelectAll?: (s: boolean) => void
     selectedRowKeysRecord?: YakScript[]
     onSelectList?: (m: YakScript[]) => void
     setUpdatePluginRecordLocal?: (y: YakScript) => any
@@ -943,7 +992,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         onSelectList,
         setUpdatePluginRecordLocal,
         numberLocalRoll,
-        isGridLayout
+        isGridLayout,
+        setIsSelectAll
     } = props
 
     // 全局登录状态
@@ -997,6 +1047,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit
                 setHasMore(!isMore)
+                if (newParams.Pagination.Page > 1 && isSelectAll) {
+                    if (onSelectList) onSelectList(data)
+                }
                 setResponse({
                     ...item,
                     Data: [...data]
@@ -1045,6 +1098,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         } else {
             selectedRowKeysRecord.splice(index, 1)
         }
+        if (setIsSelectAll) setIsSelectAll(false)
         if (onSelectList) onSelectList([...selectedRowKeysRecord])
     })
     const onShare = useMemoizedFn((item: YakScript) => {
@@ -1823,7 +1877,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         全选
                     </Checkbox>
                     {selectedRowKeysRecordUser.length > 0 && (
-                        <Tag color='blue'>已选{selectedRowKeysRecordUser.length}条</Tag>
+                        <Tag color='blue'>已选{isSelectAllUser ? totalUser : selectedRowKeysRecordUser.length}条</Tag>
                     )}
                     <Tag>Total:{totalUser}</Tag>
                 </Col>

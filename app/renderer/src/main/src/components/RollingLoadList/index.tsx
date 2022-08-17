@@ -183,6 +183,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         },
         {wait: 200, leading: false}
     )
+
     return (
         <>
             <ReactResizeDetector

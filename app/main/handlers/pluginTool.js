@@ -225,4 +225,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetYakScriptByOnlineID", async (e, params) => {
         return await asyncGetYakScriptByOnlineID(params)
     })
+
+    const asyncGetYakScriptTagsAndType = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetYakScriptTagsAndType(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 统计
+    ipcMain.handle("GetYakScriptTagsAndType", async (e, params) => {
+        return await asyncGetYakScriptTagsAndType(params)
+    })
 }
