@@ -315,7 +315,8 @@ service Yak {
   rpc DownloadOnlinePluginByIds(DownloadOnlinePluginByIdsRequest) returns (Empty);
   rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
   rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
-  rpc DeleteAllLocalPlugins(Empty) returns (Empty);
+  rpc DeleteAllLocalPlugins(DeleteAllLocalPluginsRequest) returns (Empty);
+  rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
 
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
@@ -383,6 +384,11 @@ message SavePayloadProgress {
 
 message DeletePluginByUserIDRequest {
   int64 UserID = 1;
+}
+
+message DeleteAllLocalPluginsRequest {
+  string Keywords = 1;
+  string Type = 2;
 }
 
 message DownloadOnlinePluginProgress {
@@ -1376,6 +1382,17 @@ message YakScript {
   string UUID = 23;
   bool OnlineIsPrivate = 24;
   string HeadImg = 25;
+}
+
+message GetYakScriptTagsAndTypeResponse {
+  repeated TagsAndType OnlinePluginType = 1;
+  repeated TagsAndType OnlineTags = 2;
+}
+
+message TagsAndType {
+  string Name = 1;
+  string Title = 2;
+  int32 Total = 3;
 }
 
 message CodecRequest {
