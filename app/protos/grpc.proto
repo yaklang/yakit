@@ -1391,9 +1391,8 @@ message GetYakScriptTagsAndTypeResponse {
 }
 
 message TagsAndType {
-  string Name = 1;
-  string Title = 2;
-  int32 Total = 3;
+  string Value = 1;
+  int32 Total = 2;
 }
 
 message CodecRequest {
