@@ -57,15 +57,14 @@ import {
     useMemoizedFn,
     useThrottleFn,
     useVirtualList,
-    useDebounceEffect
+    useDebounceEffect,
+    useSize
 } from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {DownloadOnlinePluginProps} from "../yakitStore/YakitPluginInfoOnline"
 import {randomString} from "@/utils/randomUtil"
 import {OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon, ShareIcon} from "../../assets/icons"
-import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/index"
-import moment from "moment"
 import {findDOMNode} from "react-dom"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {RollingLoadList} from "@/components/RollingLoadList"
@@ -103,13 +102,64 @@ const defQueryOnline: SearchPluginOnlineRequest = {
     limit: 20,
     status: "",
     bind_me: false,
-    is_private: ""
+    is_private: "",
+    online_tags: ""
 }
 
 const defQueryLocal: QueryYakScriptRequest = {
     Type: "yak,mitm,codec,packet-hack,port-scan",
     Keyword: "",
     Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+}
+
+const statusType = {
+    "0": "待审核",
+    "1": "审核通过",
+    "2": "审核不通过"
+}
+
+const statisticsDataOnlineOrUser: API.YakitSearch = {
+    plugin_type: [
+        {
+            title: "类型",
+            name: "yak",
+            count: 1
+        },
+        {
+            title: "类型",
+            name: "mitm",
+            count: 2
+        }
+    ],
+    status: [
+        {
+            title: "状态",
+            name: "0",
+            count: 1
+        },
+        {
+            title: "状态",
+            name: "1",
+            count: 1
+        },
+        {
+            title: "状态",
+            name: "2",
+            count: 1
+        }
+    ],
+    online_tags: [
+        {
+            title: "TAG",
+            name: "redis",
+            count: 1
+        },
+        {
+            title: "TAG",
+            name: "crawler",
+            count: 1
+        }
+    ]
 }
 
 export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
@@ -179,6 +229,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const onResetQuery = useMemoizedFn(() => {
         // 重置查询条件
         setPublicKeyword("")
+        onResetStatisticsQuery()
     })
     const onResetPluginDetails = useMemoizedFn(() => {
         // 重置详情
@@ -260,21 +311,123 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     useEffect(() => {
         setIsFull(!(script || userPlugin || plugin))
     }, [script, userPlugin, plugin])
-    // const isFull = !(script || userPlugin || plugin)
+    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
+    const [statisticsLoading, setStatisticsLoading] = useState<boolean>(true)
+    const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
+    const [statisticsQueryOnline, setStatisticsQueryOnline] = useState<SearchPluginOnlineRequest>(defQueryOnline)
+    const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
+    useEffect(() => {
+        if (width > 1940) {
+            setTimeout(() => {
+                setStatisticsLoading(false)
+            }, 2000)
+        }
+    }, [width])
+    const onResetStatisticsQuery = useMemoizedFn(() => {
+        setStatisticsQueryLocal(defQueryLocal)
+        setStatisticsQueryOnline(defQueryOnline)
+        setStatisticsQueryUser(defQueryOnline)
+    })
+    const onSearch = useMemoizedFn((queryName: string, value: string) => {
+        if (plugSource === "local") {
+            onSearchLocal(queryName, value)
+        }
+        if (plugSource === "user") {
+            onSearchUser(queryName, value)
+        }
+        if (plugSource === "online") {
+            onSearchOnline(queryName, value)
+        }
+    })
+    const onSearchLocal = useMemoizedFn((queryName: string, value: string) => {
+        const currentQuery: string = statisticsQueryLocal[queryName]
+        const queryArr: string[] = currentQuery.split(",")
+        const index: number = queryArr.findIndex((ele) => ele === value)
+        if (index === -1) {
+            queryArr.push(value)
+            setStatisticsQueryLocal({
+                ...statisticsQueryLocal,
+                [queryName]: queryArr.join(",")
+            })
+        } else {
+            queryArr.splice(index, 1)
+            setStatisticsQueryLocal({
+                ...statisticsQueryLocal,
+                [queryName]: queryArr.join(",")
+            })
+        }
+    })
+    const onSearchUser = useMemoizedFn((queryName: string, value: string) => {
+        if (queryName === "status") {
+            setStatisticsQueryUser({
+                ...statisticsQueryUser,
+                [queryName]: statisticsQueryUser[queryName] === value ? "" : value
+            })
+        } else {
+            const currentQuery: string = statisticsQueryUser[queryName]
+            const queryArr: string[] = currentQuery.split(",")
+            const index: number = queryArr.findIndex((ele) => ele === value)
+            if (index === -1) {
+                queryArr.push(value)
+                setStatisticsQueryUser({
+                    ...statisticsQueryUser,
+                    [queryName]: queryArr.join(",")
+                })
+            } else {
+                queryArr.splice(index, 1)
+                setStatisticsQueryUser({
+                    ...statisticsQueryUser,
+                    [queryName]: queryArr.join(",")
+                })
+            }
+        }
+    })
+    const onSearchOnline = useMemoizedFn((queryName: string, value: string) => {
+        if (queryName === "status") {
+            setStatisticsQueryOnline({
+                ...statisticsQueryOnline,
+                [queryName]: statisticsQueryOnline[queryName] === value ? "" : value
+            })
+        } else {
+            const currentQuery: string = statisticsQueryOnline[queryName]
+            const queryArr: string[] = currentQuery.split(",")
+            const index: number = queryArr.findIndex((ele) => ele === value)
+            if (index === -1) {
+                queryArr.push(value)
+                setStatisticsQueryOnline({
+                    ...statisticsQueryOnline,
+                    [queryName]: queryArr.join(",")
+                })
+            } else {
+                queryArr.splice(index, 1)
+                setStatisticsQueryOnline({
+                    ...statisticsQueryOnline,
+                    [queryName]: queryArr.join(",")
+                })
+            }
+        }
+    })
+    const showName = useMemoizedFn((queryName: string, name: string) => {
+        switch (queryName) {
+            case "plugin_type":
+                return PluginType[name]
+            case "status":
+                return statusType[name]
+            default:
+                return name
+        }
+    })
     return (
         <>
-            {/* <YakitStorePageWhole /> */}
-            <div
-                style={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "row"
-                }}
-            >
+            <div className='plugin-store'>
                 <Card
                     bodyStyle={{padding: 0, height: isFull ? "calc(100% - 62px)" : "calc(100% - 42px)"}}
                     bordered={false}
-                    style={{height: "100%", width: isFull ? "100%" : 470, display: fullScreen ? "none" : ""}}
+                    style={{
+                        height: "100%",
+                        width: isFull ? (width > 1940 && "calc(100% - 500px)") || "100%" : 470,
+                        display: fullScreen ? "none" : ""
+                    }}
                     title={
                         <Row gutter={12} className={isFull ? "plugin-title" : ""}>
                             <Col span={12} className='flex-align-center'>
@@ -311,6 +464,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     <Spin spinning={listLoading}>
                         {plugSource === "local" && (
                             <YakModule
+                                setStatisticsQueryLocal={setStatisticsQueryLocal}
+                                statisticsQueryLocal={statisticsQueryLocal}
                                 numberLocal={numberLocal}
                                 setNumberLocal={setNumberLocal}
                                 size={isFull ? "middle" : "small"}
@@ -325,6 +480,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                         {plugSource === "user" && (
                             <YakModuleUser
+                                setStatisticsQueryUser={setStatisticsQueryUser}
+                                statisticsQueryUser={statisticsQueryUser}
                                 numberUser={numberUser}
                                 setNumberUser={setNumberUser}
                                 size={isFull ? "middle" : "small"}
@@ -340,6 +497,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                         {plugSource === "online" && (
                             <YakModuleOnline
+                                setStatisticsQueryOnline={setStatisticsQueryOnline}
+                                statisticsQueryOnline={statisticsQueryOnline}
                                 numberOnline={numberOnline}
                                 setNumberOnline={setNumberOnline}
                                 size={isFull ? "middle" : "small"}
@@ -355,74 +514,115 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                     </Spin>
                 </Card>
-
-                <div style={{flex: 1, overflowY: "auto"}} id='plugin-info-scroll'>
-                    {plugin || script || userPlugin ? (
-                        <AutoCard
-                            loading={loading}
-                            title={
-                                <Space>
-                                    <div>Yak[{script?.Type}] 模块详情</div>
-                                </Space>
-                            }
-                            bordered={false}
-                            size={"small"}
-                            extra={
-                                <>
-                                    <Button
-                                        type='link'
-                                        onClick={() => {
-                                            onRefList()
-                                        }}
-                                    >
-                                        返回
-                                    </Button>
-                                    <Button
-                                        icon={
-                                            fullScreen ? (
-                                                <FullscreenExitOutlined style={{fontSize: 15}} />
-                                            ) : (
-                                                <FullscreenOutlined style={{fontSize: 15}} />
-                                            )
+                {!isFull && (
+                    <div className='plugin-store-operator'>
+                        {plugin || script || userPlugin ? (
+                            <AutoCard
+                                loading={loading}
+                                title={
+                                    <Space>
+                                        <div>Yak[{script?.Type}] 模块详情</div>
+                                    </Space>
+                                }
+                                bordered={false}
+                                size={"small"}
+                                extra={
+                                    <>
+                                        <Button
+                                            type='link'
+                                            onClick={() => {
+                                                onRefList()
+                                            }}
+                                        >
+                                            返回
+                                        </Button>
+                                        <Button
+                                            icon={
+                                                fullScreen ? (
+                                                    <FullscreenExitOutlined style={{fontSize: 15}} />
+                                                ) : (
+                                                    <FullscreenOutlined style={{fontSize: 15}} />
+                                                )
+                                            }
+                                            type={"link"}
+                                            size={"small"}
+                                            onClick={() => onFullScreen()}
+                                        />
+                                    </>
+                                }
+                            >
+                                <PluginOperator
+                                    yakScriptId={(script && script.Id) || 0}
+                                    yakScriptIdOnlineId={scriptIdOnlineId}
+                                    setTrigger={() => {}}
+                                    setScript={(s) => {
+                                        setScript(s)
+                                        setUpdatePluginRecordLocal(s)
+                                    }}
+                                    deletePluginLocal={setDeletePluginRecordLocal}
+                                    deletePluginOnline={(p: API.YakitPluginDetail) => {
+                                        if (plugSource === "online" && plugin) {
+                                            setDeletePluginRecordOnline(p)
                                         }
-                                        type={"link"}
-                                        size={"small"}
-                                        onClick={() => onFullScreen()}
-                                    />
-                                </>
-                            }
-                        >
-                            <PluginOperator
-                                yakScriptId={(script && script.Id) || 0}
-                                yakScriptIdOnlineId={scriptIdOnlineId}
-                                setTrigger={() => {}}
-                                setScript={(s) => {
-                                    setScript(s)
-                                    setUpdatePluginRecordLocal(s)
-                                }}
-                                deletePluginLocal={setDeletePluginRecordLocal}
-                                deletePluginOnline={(p: API.YakitPluginDetail) => {
-                                    if (plugSource === "online" && plugin) {
-                                        setDeletePluginRecordOnline(p)
-                                    }
-                                    if (plugSource === "user" && userPlugin) {
-                                        setDeletePluginRecordUser(p)
-                                    }
-                                }}
-                                updatePluginOnline={(p: API.YakitPluginDetail) => {
-                                    if (plugSource === "online" && plugin) {
-                                        setUpdatePluginRecordOnline(p)
-                                    }
-                                    if (plugSource === "user" && userPlugin) {
-                                        setUpdatePluginRecordUser(p)
-                                    }
-                                }}
-                            />
-                        </AutoCard>
-                    ) : (
-                        <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
-                    )}
-                </div>
+                                        if (plugSource === "user" && userPlugin) {
+                                            setDeletePluginRecordUser(p)
+                                        }
+                                    }}
+                                    updatePluginOnline={(p: API.YakitPluginDetail) => {
+                                        if (plugSource === "online" && plugin) {
+                                            setUpdatePluginRecordOnline(p)
+                                        }
+                                        if (plugSource === "user" && userPlugin) {
+                                            setUpdatePluginRecordUser(p)
+                                        }
+                                    }}
+                                />
+                            </AutoCard>
+                        ) : (
+                            <Empty style={{marginTop: 100}}>在左侧所选模块查看详情</Empty>
+                        )}
+                    </div>
+                )}
+                {isFull && width > 1940 && (
+                    <div className='plugin-statistics'>
+                        <Spin spinning={statisticsLoading}>
+                            {Object.entries(plugSource === "local" ? {} : statisticsDataOnlineOrUser).map((item) => {
+                                const queryName = item[0]
+                                const statisticsList = item[1]
+                                const title = statisticsList.length > 0 ? statisticsList[0].title : "-"
+                                let current = ""
+                                if (plugSource === "local") {
+                                    current = statisticsQueryLocal[queryName]
+                                }
+                                if (plugSource === "user") {
+                                    current = statisticsQueryUser[queryName]
+                                }
+                                if (plugSource === "online") {
+                                    current = statisticsQueryOnline[queryName]
+                                }
+                                return (
+                                    <>
+                                        <div className='opt-header'>{title}</div>
+                                        {statisticsList.map((ele) => (
+                                            <div
+                                                key={ele.name}
+                                                className={`opt-list-item ${
+                                                    current.includes(ele.name) && "opt-list-item-selected"
+                                                }`}
+                                                onClick={() => onSearch(queryName, ele.name)}
+                                            >
+                                                <span className='item-name content-ellipsis'>
+                                                    {showName(queryName, ele.name)}
+                                                </span>
+                                                <span>{ele.count}</span>
+                                            </div>
+                                        ))}
+                                    </>
+                                )
+                            })}
+                        </Spin>
+                    </div>
+                )}
             </div>
         </>
     )
@@ -439,6 +639,8 @@ interface YakModuleProp {
     size: "middle" | "small"
     numberLocal?: number
     setNumberLocal: (n: number) => void
+    setStatisticsQueryLocal: (l: QueryYakScriptRequest) => void
+    statisticsQueryLocal: QueryYakScriptRequest
 }
 export const YakModule: React.FC<YakModuleProp> = (props) => {
     const {
@@ -451,11 +653,13 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         setUpdatePluginRecordLocal,
         size,
         setNumberLocal,
-        numberLocal
+        numberLocal,
+        setStatisticsQueryLocal,
+        statisticsQueryLocal
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
-        ...defQueryLocal
+        ...statisticsQueryLocal
     })
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
@@ -463,6 +667,13 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState(false)
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState(false)
+    useEffect(() => {
+        setQueryLocal({
+            ...queryLocal,
+            ...statisticsQueryLocal
+        })
+        onResetList()
+    }, [statisticsQueryLocal])
     useEffect(() => {
         if (queryLocal.Type === defQueryLocal.Type) {
             setIsFilter(false)
@@ -1519,6 +1730,8 @@ interface YakModuleUserProps {
     size: "middle" | "small"
     numberUser?: number
     setNumberUser: (n: number) => void
+    setStatisticsQueryUser: (u: SearchPluginOnlineRequest) => void
+    statisticsQueryUser: SearchPluginOnlineRequest
 }
 export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     const {
@@ -1532,10 +1745,12 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
         updatePluginRecordUser,
         size,
         numberUser,
-        setNumberUser
+        setNumberUser,
+        statisticsQueryUser,
+        setStatisticsQueryUser
     } = props
     const [queryUser, setQueryUser] = useState<SearchPluginOnlineRequest>({
-        ...defQueryOnline
+        ...statisticsQueryUser
     })
     const [isFilter, setIsFilter] = useState(false)
     const [selectedRowKeysRecordUser, setSelectedRowKeysRecordUser] = useState<API.YakitPluginDetail[]>([])
@@ -1543,6 +1758,13 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllUser, setIsSelectAllUser] = useState<boolean>(false)
+    useEffect(() => {
+        setQueryUser({
+            ...queryUser,
+            ...statisticsQueryUser
+        })
+        onResetList()
+    }, [statisticsQueryUser])
     useEffect(() => {
         if (!userInfo.isLogin) onSelectAllUser(false)
     }, [userInfo])
@@ -1687,6 +1909,8 @@ interface YakModuleOnlineProps {
     size: "middle" | "small"
     numberOnline?: number
     setNumberOnline: (n: number) => void
+    setStatisticsQueryOnline: (q: SearchPluginOnlineRequest) => void
+    statisticsQueryOnline: SearchPluginOnlineRequest
 }
 export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const {
@@ -1700,10 +1924,12 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         updatePluginRecordOnline,
         size,
         numberOnline,
-        setNumberOnline
+        setNumberOnline,
+        statisticsQueryOnline,
+        setStatisticsQueryOnline
     } = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
-        ...defQueryOnline
+        ...statisticsQueryOnline
     })
     const [isFilter, setIsFilter] = useState(false)
     const [selectedRowKeysRecordOnline, setSelectedRowKeysRecordOnline] = useState<API.YakitPluginDetail[]>([])
@@ -1711,6 +1937,13 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllOnline, setIsSelectAllOnline] = useState<boolean>(false)
+    useEffect(() => {
+        setQueryOnline({
+            ...queryOnline,
+            ...statisticsQueryOnline
+        })
+        onResetList()
+    }, [statisticsQueryOnline])
     useEffect(() => {
         if (!userInfo.isLogin) onSelectAllOnline(false)
     }, [userInfo])
@@ -2233,19 +2466,14 @@ interface QueryComponentOnlineProps {
     user: boolean
 }
 
-const layout = {
-    labelCol: {span: 8},
-    wrapperCol: {span: 16}
+const PluginType = {
+    yak: "YAK 插件",
+    mitm: "MITM 插件",
+    "packet-hack": "数据包扫描",
+    "port-scan": "端口扫描插件",
+    codec: "CODEC插件",
+    nuclei: "YAML POC"
 }
-
-const PluginType: {text: string; value: string}[] = [
-    {text: "YAK 插件", value: "yak"},
-    {text: "MITM 插件", value: "mitm"},
-    {text: "数据包扫描", value: "packet-hack"},
-    {text: "端口扫描插件", value: "port-scan"},
-    {text: "CODEC插件", value: "codec"},
-    {text: "YAML POC", value: "nuclei"}
-]
 
 const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
     const {onClose, userInfo, queryOnline, setQueryOnline, user} = props
@@ -2322,9 +2550,9 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                 )}
                 <Form.Item name='plugin_type' label='插件类型'>
                     <Select size='small' getPopupContainer={() => refTest.current} mode='multiple'>
-                        {PluginType.map((item) => (
-                            <Option value={item.value} key={item.value}>
-                                {item.text}
+                        {Object.keys(PluginType).map((key) => (
+                            <Option value={key} key={key}>
+                                {PluginType[key]}
                             </Option>
                         ))}
                     </Select>
@@ -2341,9 +2569,9 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                     <Form.Item name='status' label='审核状态'>
                         <Select size='small' getPopupContainer={() => refTest.current}>
                             <Option value='all'>全部</Option>
-                            <Option value='0'>待审核</Option>
-                            <Option value='1'>审核通过</Option>
-                            <Option value='2'>审核不通过</Option>
+                            {Object.keys(statusType).map((key) => (
+                                <Option value={key}>{statusType[key]}</Option>
+                            ))}
                         </Select>
                     </Form.Item>
                 )}
@@ -2409,9 +2637,9 @@ const QueryComponentLocal: React.FC<QueryComponentLocalProps> = (props) => {
             <Form layout='vertical' form={form} name='control-hooks' onFinish={onFinish}>
                 <Form.Item name='Type' label='插件类型'>
                     <Select size='small' getPopupContainer={() => refTest.current} mode='multiple'>
-                        {PluginType.map((item) => (
-                            <Option value={item.value} key={item.value}>
-                                {item.text}
+                        {Object.keys(PluginType).map((key) => (
+                            <Option value={key} key={key}>
+                                {PluginType[key]}
                             </Option>
                         ))}
                     </Select>

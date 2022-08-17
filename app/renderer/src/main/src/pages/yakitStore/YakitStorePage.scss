@@ -1,15 +1,45 @@
-.yak-store-list {
-    width: 100%;
+.plugin-store {
+    display: flex;
     height: 100%;
-    overflow: hidden;
 }
 
-.yak-store-list.ant-tabs .ant-tabs-content-holder {
-    overflow: auto;
+.plugin-store-operator {
+    flex: 1;
+    overflow-y: auto;
 }
 
-.yak-store-list.ant-tabs .ant-tabs-content-holder .ant-tabs-tabpane {
-    padding: 0 10px;
+.plugin-statistics {
+    width: 100%;
+    min-width: 200px;
+    padding: 24px 24px 12px;
+    max-width: 500px;
+    min-height: 200px;
+
+    .opt-header {
+        height: 30px;
+        line-height: 30px;
+        font-weight: 600;
+    }
+
+    .opt-list-item {
+        cursor: pointer;
+        height: 24px;
+        line-height: 24px;
+        display: flex;
+        justify-content: space-between;
+
+        &:hover {
+            color: #1890ff;
+        }
+
+        .item-name {
+            margin-right: 12px;
+        }
+    }
+
+    .opt-list-item-selected {
+        color: #1890ff;
+    }
 }
 
 .plugin-title {
@@ -81,6 +111,7 @@
 .left-list {
     .ant-spin-nested-loading {
         height: 100%;
+        width: 100%;
     }
 
     .ant-card-head {

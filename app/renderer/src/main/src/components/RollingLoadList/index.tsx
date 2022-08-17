@@ -156,11 +156,12 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             setCol(computeCol * 2)
         } else if (width >= 1024 && width < 1440) {
             setCol(computeCol * 3)
-        } else if (width >= 1440 && width < 1920) {
+        } else if (width >= 1440) {
             setCol(computeCol * 4)
-        } else if (width >= 1920) {
-            setCol(computeCol * 5)
         }
+        // else if (width >= 1920) {
+        //     setCol(computeCol * 5)
+        // }
     })
 
     const onScrollCapture = useThrottleFn(
