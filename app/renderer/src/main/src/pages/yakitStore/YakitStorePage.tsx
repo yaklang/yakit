@@ -98,8 +98,12 @@ interface TagsAndType {
     Total: string
 }
 interface GetYakScriptTagsAndTypeResponse {
-    OnlinePluginType: TagsAndType[]
-    OnlineTags: TagsAndType[]
+    Type: TagsAndType[]
+    Tag: TagsAndType[]
+}
+
+interface PluginSearchStatisticsRequest {
+    bind_me: boolean
 }
 
 const typeOnline = "yak,mitm,packet-hack,port-scan,codec,nuclei"
@@ -113,7 +117,7 @@ const defQueryOnline: SearchPluginOnlineRequest = {
     status: "",
     bind_me: false,
     is_private: "",
-    online_tags: ""
+    tags: ""
 }
 
 const defQueryLocal: QueryYakScriptRequest = {
@@ -128,48 +132,12 @@ const statusType = {
     "2": "审核不通过"
 }
 
-const statisticsDataOnlineOrUser: API.YakitSearch = {
-    plugin_type: [
-        {
-            title: "类型",
-            name: "yak",
-            count: 1
-        },
-        {
-            title: "类型",
-            name: "mitm",
-            count: 2
-        }
-    ],
-    status: [
-        {
-            title: "状态",
-            name: "0",
-            count: 1
-        },
-        {
-            title: "状态",
-            name: "1",
-            count: 1
-        },
-        {
-            title: "状态",
-            name: "2",
-            count: 1
-        }
-    ],
-    online_tags: [
-        {
-            title: "TAG",
-            name: "redis",
-            count: 1
-        },
-        {
-            title: "TAG",
-            name: "crawler",
-            count: 1
-        }
-    ]
+const queryTitle = {
+    Type: "插件类型",
+    Tag: "TAG",
+    tags: "TAG",
+    plugin_type: "插件类型",
+    status: "审核状态"
 }
 
 export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
@@ -324,19 +292,62 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setIsFull(!(script || userPlugin || plugin))
     }, [script, userPlugin, plugin])
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
-    const [statisticsLoading, setStatisticsLoading] = useState<boolean>()
+    const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
+    // 统计查询
     const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
     const [statisticsQueryOnline, setStatisticsQueryOnline] = useState<SearchPluginOnlineRequest>(defQueryOnline)
     const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
+    // 统计数据
     const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
+    const [statisticsDataOnlineOrUser, setStatisticsDataOnlineOrUser] = useState<API.YakitSearch>()
+    const [isShowFilter, setIsShowFilter] = useState<boolean>(true)
     useEffect(() => {
-        getStatistics(width)
-    }, [width, plugSource])
-    const getStatistics = useMemoizedFn((width:number) => {
-        if (width < 1940) return
+        console.log("width", width)
+        if (plugSource === "user" && !userInfo.isLogin) {
+            setIsShowFilter(true)
+        } else {
+            getStatistics(width)
+        }
+    }, [width, plugSource, userInfo.isLogin])
+    const getStatistics = useMemoizedFn((width: number) => {
+        // debugger
+        if (width < 1940) {
+            setIsShowFilter(true)
+            return
+        }
+        setIsShowFilter(false)
         if (plugSource === "local" && !yakScriptTagsAndType) {
             getYakScriptTagsAndType()
+        } else {
+            getPluginSearch()
         }
+    })
+    const getPluginSearch = useMemoizedFn(() => {
+        let url = "plugin/search/unlogged"
+        if (userInfo.isLogin) {
+            url = "plugin/search"
+        }
+        console.log("url", url)
+
+        setStatisticsLoading(true)
+        NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
+            method: "get",
+            url,
+            params: {
+                bind_me: userInfo.isLogin
+            }
+        })
+            .then((res) => {
+                setStatisticsDataOnlineOrUser(res)
+            })
+            .catch((err) => {
+                failed("线上统计数据获取失败:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setStatisticsLoading(false)
+                }, 200)
+            })
     })
     const getYakScriptTagsAndType = useMemoizedFn(() => {
         setStatisticsLoading(true)
@@ -389,7 +400,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         }
     })
     const onSearchUser = useMemoizedFn((queryName: string, value: string) => {
-        if (queryName === "status") {
+        if (queryName === "status" || queryName === "is_private") {
             setStatisticsQueryUser({
                 ...statisticsQueryUser,
                 [queryName]: statisticsQueryUser[queryName] === value ? "" : value
@@ -456,7 +467,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     bordered={false}
                     style={{
                         height: "100%",
-                        width: isFull ? (width > 1940 && "calc(100% - 500px)") || "100%" : 470,
+                        width: isFull ? (!isShowFilter && "calc(100% - 500px)") || "100%" : 470,
                         display: fullScreen ? "none" : ""
                     }}
                     title={
@@ -495,6 +506,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     <Spin spinning={listLoading}>
                         {plugSource === "local" && (
                             <YakModule
+                                isShowFilter={isShowFilter}
                                 setStatisticsQueryLocal={setStatisticsQueryLocal}
                                 statisticsQueryLocal={statisticsQueryLocal}
                                 numberLocal={numberLocal}
@@ -511,6 +523,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                         {plugSource === "user" && (
                             <YakModuleUser
+                                isShowFilter={isShowFilter}
                                 setStatisticsQueryUser={setStatisticsQueryUser}
                                 statisticsQueryUser={statisticsQueryUser}
                                 numberUser={numberUser}
@@ -528,6 +541,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                         {plugSource === "online" && (
                             <YakModuleOnline
+                                isShowFilter={isShowFilter}
                                 setStatisticsQueryOnline={setStatisticsQueryOnline}
                                 statisticsQueryOnline={statisticsQueryOnline}
                                 numberOnline={numberOnline}
@@ -614,16 +628,36 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                         )}
                     </div>
                 )}
-                {isFull && width > 1940 && (
+                {isFull && !isShowFilter && (
                     <div className='plugin-statistics'>
                         <Spin spinning={statisticsLoading}>
+                            {plugSource === "user" && (
+                                <>
+                                    <div className='opt-header'>私密/公开</div>
+                                    <div
+                                        className={`opt-list-item ${
+                                            statisticsQueryUser.is_private === "true" && "opt-list-item-selected"
+                                        }`}
+                                        onClick={() => onSearch("is_private", "true")}
+                                    >
+                                        <span className='item-name content-ellipsis'>私密</span>
+                                    </div>
+                                    <div
+                                        className={`opt-list-item ${
+                                            statisticsQueryUser.is_private === "false" && "opt-list-item-selected"
+                                        }`}
+                                        onClick={() => onSearch("is_private", "false")}
+                                    >
+                                        <span className='item-name content-ellipsis'>公开</span>
+                                    </div>
+                                </>
+                            )}
                             {Object.entries(
                                 plugSource === "local" ? yakScriptTagsAndType || {} : statisticsDataOnlineOrUser || {}
                             ).map((item) => {
                                 const queryName = item[0]
                                 const statisticsList = item[1]
-                                const title =
-                                    statisticsList.length > 0 ? statisticsList[0].title || statisticsList[0].Title : "-"
+                                const title = queryTitle[queryName]
                                 let current: string = ""
                                 if (plugSource === "local") {
                                     current = statisticsQueryLocal[queryName]
@@ -634,23 +668,34 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 if (plugSource === "online") {
                                     current = statisticsQueryOnline[queryName]
                                 }
+                                if (
+                                    (queryName === "status" &&
+                                        plugSource === "user" &&
+                                        statisticsQueryUser.is_private !== "false") ||
+                                    (queryName === "status" && plugSource === "online" && !userInfo.isLogin)
+                                ) {
+                                    return <></>
+                                }
                                 return (
                                     <>
                                         <div className='opt-header'>{title}</div>
-                                        {statisticsList.map((ele) => (
-                                            <div
-                                                key={ele.name || ele.Name}
-                                                className={`opt-list-item ${
-                                                    current?.includes(ele.Name) && "opt-list-item-selected"
-                                                }`}
-                                                onClick={() => onSearch(queryName, ele.Name)}
-                                            >
-                                                <span className='item-name content-ellipsis'>
-                                                    {showName(queryName, ele.Name)}
-                                                </span>
-                                                <span>{ele.count || ele.Total}</span>
-                                            </div>
-                                        ))}
+                                        {(statisticsList &&
+                                            statisticsList.length > 0 &&
+                                            statisticsList.map((ele) => (
+                                                <div
+                                                    key={ele.value || ele.Name}
+                                                    className={`opt-list-item ${
+                                                        current?.includes(ele.value || ele.Name) &&
+                                                        "opt-list-item-selected"
+                                                    }`}
+                                                    onClick={() => onSearch(queryName, ele.value || ele.Name)}
+                                                >
+                                                    <span className='item-name content-ellipsis'>
+                                                        {showName(queryName, ele.value || ele.Name)}
+                                                    </span>
+                                                    <span>{ele.count || ele.Total}</span>
+                                                </div>
+                                            ))) || <Empty description='' />}
                                     </>
                                 )
                             })}
@@ -675,6 +720,7 @@ interface YakModuleProp {
     setNumberLocal: (n: number) => void
     setStatisticsQueryLocal: (l: QueryYakScriptRequest) => void
     statisticsQueryLocal: QueryYakScriptRequest
+    isShowFilter: boolean
 }
 
 interface DeleteAllLocalPluginsRequest {
@@ -694,7 +740,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         setNumberLocal,
         numberLocal,
         setStatisticsQueryLocal,
-        statisticsQueryLocal
+        statisticsQueryLocal,
+        isShowFilter
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -750,7 +797,6 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 Keywords: queryLocal.Keyword,
                 Type: queryLocal.Type
             }
-            console.log("paramsRemove", paramsRemove)
             // 全部删除
             ipcRenderer
                 .invoke("DeleteAllLocalPlugins", paramsRemove)
@@ -869,22 +915,24 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     </div>
                 </Col>
                 <Col span={size === "small" ? 4 : 12} className='col-flex-end'>
-                    <PluginFilter
-                        visibleQuery={visibleQuery}
-                        setVisibleQuery={setVisibleQuery}
-                        queryChildren={
-                            <QueryComponentLocal
-                                onClose={() => setVisibleQuery(false)}
-                                queryLocal={queryLocal}
-                                setQueryLocal={(e) => {
-                                    setQueryLocal(e)
-                                    onResetList()
-                                }}
-                            />
-                        }
-                        size={size}
-                        isFilter={isFilter}
-                    />
+                    {isShowFilter && (
+                        <PluginFilter
+                            visibleQuery={visibleQuery}
+                            setVisibleQuery={setVisibleQuery}
+                            queryChildren={
+                                <QueryComponentLocal
+                                    onClose={() => setVisibleQuery(false)}
+                                    queryLocal={queryLocal}
+                                    setQueryLocal={(e) => {
+                                        setQueryLocal(e)
+                                        onResetList()
+                                    }}
+                                />
+                            }
+                            size={size}
+                            isFilter={isFilter}
+                        />
+                    )}
                     <Popconfirm
                         title={selectedRowKeysRecordLocal.length === 0 ? "是否删除本地所有插件?" : "是否删除所选插件?"}
                         onConfirm={() => onRemoveLocalPlugin()}
@@ -1786,6 +1834,7 @@ interface YakModuleUserProps {
     setNumberUser: (n: number) => void
     setStatisticsQueryUser: (u: SearchPluginOnlineRequest) => void
     statisticsQueryUser: SearchPluginOnlineRequest
+    isShowFilter: boolean
 }
 export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     const {
@@ -1801,7 +1850,8 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
         numberUser,
         setNumberUser,
         statisticsQueryUser,
-        setStatisticsQueryUser
+        setStatisticsQueryUser,
+        isShowFilter
     } = props
     const [queryUser, setQueryUser] = useState<SearchPluginOnlineRequest>({
         ...statisticsQueryUser
@@ -1882,24 +1932,26 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     <Tag>Total:{totalUser}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
-                    <PluginFilter
-                        visibleQuery={visibleQuery}
-                        setVisibleQuery={setVisibleQuery}
-                        queryChildren={
-                            <QueryComponentOnline
-                                onClose={() => setVisibleQuery(false)}
-                                userInfo={userInfo}
-                                queryOnline={queryUser}
-                                setQueryOnline={(e) => {
-                                    setQueryUser(e)
-                                    onResetList()
-                                }}
-                                user={true}
-                            />
-                        }
-                        size={size}
-                        isFilter={isFilter}
-                    />
+                    {isShowFilter && (
+                        <PluginFilter
+                            visibleQuery={visibleQuery}
+                            setVisibleQuery={setVisibleQuery}
+                            queryChildren={
+                                <QueryComponentOnline
+                                    onClose={() => setVisibleQuery(false)}
+                                    userInfo={userInfo}
+                                    queryOnline={queryUser}
+                                    setQueryOnline={(e) => {
+                                        setQueryUser(e)
+                                        onResetList()
+                                    }}
+                                    user={true}
+                                />
+                            }
+                            size={size}
+                            isFilter={isFilter}
+                        />
+                    )}
                     <AddAllPlugin
                         selectedRowKeysRecord={selectedRowKeysRecordUser}
                         setListLoading={setListLoading}
@@ -1965,6 +2017,7 @@ interface YakModuleOnlineProps {
     setNumberOnline: (n: number) => void
     setStatisticsQueryOnline: (q: SearchPluginOnlineRequest) => void
     statisticsQueryOnline: SearchPluginOnlineRequest
+    isShowFilter: boolean
 }
 export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const {
@@ -1980,7 +2033,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         numberOnline,
         setNumberOnline,
         statisticsQueryOnline,
-        setStatisticsQueryOnline
+        setStatisticsQueryOnline,
+        isShowFilter
     } = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...statisticsQueryOnline
@@ -2063,24 +2117,26 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     <Tag>Total:{totalUserOnline}</Tag>
                 </Col>
                 <Col span={12} className='col-flex-end'>
-                    <PluginFilter
-                        visibleQuery={visibleQuery}
-                        setVisibleQuery={setVisibleQuery}
-                        queryChildren={
-                            <QueryComponentOnline
-                                onClose={() => setVisibleQuery(false)}
-                                userInfo={userInfo}
-                                queryOnline={queryOnline}
-                                setQueryOnline={(e) => {
-                                    setQueryOnline(e)
-                                    onResetList()
-                                }}
-                                user={false}
-                            />
-                        }
-                        size={size}
-                        isFilter={isFilter}
-                    />
+                    {isShowFilter && (
+                        <PluginFilter
+                            visibleQuery={visibleQuery}
+                            setVisibleQuery={setVisibleQuery}
+                            queryChildren={
+                                <QueryComponentOnline
+                                    onClose={() => setVisibleQuery(false)}
+                                    userInfo={userInfo}
+                                    queryOnline={queryOnline}
+                                    setQueryOnline={(e) => {
+                                        setQueryOnline(e)
+                                        onResetList()
+                                    }}
+                                    user={false}
+                                />
+                            }
+                            size={size}
+                            isFilter={isFilter}
+                        />
+                    )}
                     <AddAllPlugin
                         selectedRowKeysRecord={selectedRowKeysRecordOnline}
                         setListLoading={setListLoading}
