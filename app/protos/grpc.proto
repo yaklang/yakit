@@ -404,6 +404,7 @@ message DownloadOnlinePluginByTokenRequest {
   string PluginType = 4;
   string Status = 5;
   string IsPrivate = 6;
+  string Tags = 7;
 }
 
 message DownloadOnlinePluginByIdRequest {
@@ -1385,8 +1386,8 @@ message YakScript {
 }
 
 message GetYakScriptTagsAndTypeResponse {
-  repeated TagsAndType OnlinePluginType = 1;
-  repeated TagsAndType OnlineTags = 2;
+  repeated TagsAndType Type = 1;
+  repeated TagsAndType Tag = 2;
 }
 
 message TagsAndType {
