@@ -309,7 +309,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     }, [width, plugSource, userInfo.isLogin])
     const getStatistics = useMemoizedFn((width: number) => {
         if (width < 1940) {
-            // onResetStatisticsQuery()
             setIsShowFilter(true)
             return
         }
@@ -429,7 +428,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         }
     })
     const onSearchOnline = useMemoizedFn((queryName: string, value: string) => {
-        if (queryName === "status") {
+        if (queryName === "status" || queryName === "order_by") {
             setStatisticsQueryOnline({
                 ...statisticsQueryOnline,
                 [queryName]: statisticsQueryOnline[queryName] === value ? "" : value
@@ -638,6 +637,27 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 {isFull && !isShowFilter && (
                     <div className='plugin-statistics'>
                         <Spin spinning={statisticsLoading}>
+                            {plugSource === "online" && (
+                                <>
+                                    <div className='opt-header'>排序顺序</div>
+                                    <div
+                                        className={`opt-list-item ${
+                                            statisticsQueryOnline.order_by === "stars" && "opt-list-item-selected"
+                                        }`}
+                                        onClick={() => onSearch("order_by", "stars")}
+                                    >
+                                        <span className='item-name content-ellipsis'>按热度</span>
+                                    </div>
+                                    <div
+                                        className={`opt-list-item ${
+                                            statisticsQueryOnline.order_by === "created_at" && "opt-list-item-selected"
+                                        }`}
+                                        onClick={() => onSearch("order_by", "created_at")}
+                                    >
+                                        <span className='item-name content-ellipsis'>按时间</span>
+                                    </div>
+                                </>
+                            )}
                             {plugSource === "user" && userInfo.isLogin && (
                                 <>
                                     <div className='opt-header'>私密/公开</div>
@@ -690,7 +710,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             statisticsList.length > 0 &&
                                             statisticsList.map((ele) => (
                                                 <div
-                                                    key={ele.value || ele.Value}
+                                                    key={`${ele.value || ele.Value}-${plugSource}`}
                                                     className={`opt-list-item ${
                                                         current?.includes(ele.value || ele.Value) &&
                                                         "opt-list-item-selected"
