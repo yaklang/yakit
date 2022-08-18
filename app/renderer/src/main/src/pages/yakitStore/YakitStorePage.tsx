@@ -512,6 +512,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     <Spin spinning={listLoading}>
                         {plugSource === "local" && (
                             <YakModule
+                                getYakScriptTagsAndType={getYakScriptTagsAndType}
                                 isShowFilter={isShowFilter}
                                 setStatisticsQueryLocal={setStatisticsQueryLocal}
                                 statisticsQueryLocal={statisticsQueryLocal}
@@ -727,6 +728,7 @@ interface YakModuleProp {
     setStatisticsQueryLocal: (l: QueryYakScriptRequest) => void
     statisticsQueryLocal: QueryYakScriptRequest
     isShowFilter: boolean
+    getYakScriptTagsAndType: () => void
 }
 
 interface DeleteAllLocalPluginsRequest {
@@ -747,7 +749,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         numberLocal,
         setStatisticsQueryLocal,
         statisticsQueryLocal,
-        isShowFilter
+        isShowFilter,
+        getYakScriptTagsAndType
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -819,6 +822,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     setRefresh(!refresh)
                     setScript(undefined)
                     onSelectAllLocal(false)
+                    getYakScriptTagsAndType()
                     ipcRenderer.invoke("change-main-menu")
                     success("全部删除成功")
                 })
@@ -835,6 +839,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     setRefresh(!refresh)
                     setScript(undefined)
                     onSelectAllLocal(false)
+                    getYakScriptTagsAndType()
                     ipcRenderer.invoke("change-main-menu")
                     success(`成功删除${length}条数据`)
                 })
