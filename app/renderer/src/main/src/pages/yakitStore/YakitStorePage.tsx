@@ -302,7 +302,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [statisticsDataOnlineOrUser, setStatisticsDataOnlineOrUser] = useState<API.YakitSearch>()
     const [isShowFilter, setIsShowFilter] = useState<boolean>(true)
     useEffect(() => {
-        console.log("width", width)
         if (plugSource === "user" && !userInfo.isLogin) {
             setIsShowFilter(true)
         } else {
@@ -327,8 +326,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         if (userInfo.isLogin) {
             url = "plugin/search"
         }
-        console.log("url", url)
-
         setStatisticsLoading(true)
         NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
             method: "get",
@@ -354,6 +351,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptTagsAndType", {})
             .then((res: GetYakScriptTagsAndTypeResponse) => {
+                console.log('本地',res);
+                
                 setYakScriptTagsAndType(res)
             })
             .catch((e) => {
@@ -383,7 +382,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     })
     const onSearchLocal = useMemoizedFn((queryName: string, value: string) => {
         const currentQuery: string = statisticsQueryLocal[queryName]
-        const queryArr: string[] = currentQuery.split(",")
+        const queryArr: string[] = currentQuery ? currentQuery.split(",") : []
         const index: number = queryArr.findIndex((ele) => ele === value)
         if (index === -1) {
             queryArr.push(value)
@@ -407,7 +406,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             })
         } else {
             const currentQuery: string = statisticsQueryUser[queryName]
-            const queryArr: string[] = currentQuery.split(",")
+            const queryArr: string[] = currentQuery ? currentQuery.split(",") : []
             const index: number = queryArr.findIndex((ele) => ele === value)
             if (index === -1) {
                 queryArr.push(value)
@@ -432,7 +431,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             })
         } else {
             const currentQuery: string = statisticsQueryOnline[queryName]
-            const queryArr: string[] = currentQuery.split(",")
+            const queryArr: string[] = currentQuery ? currentQuery.split(",") : []
             const index: number = queryArr.findIndex((ele) => ele === value)
             if (index === -1) {
                 queryArr.push(value)
