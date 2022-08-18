@@ -330,7 +330,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             method: "get",
             url,
             params: {
-                bind_me: userInfo.isLogin
+                bind_me: plugSource==='user'
             }
         })
             .then((res) => {
