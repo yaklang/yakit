@@ -93,9 +93,8 @@ interface SearchPluginOnlineRequest extends API.GetPluginWhere {
 }
 
 interface TagsAndType {
-    Name: string
-    Title: string
-    Total: string
+    Value: string
+    Total: number
 }
 interface GetYakScriptTagsAndTypeResponse {
     Type: TagsAndType[]
@@ -309,8 +308,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         }
     }, [width, plugSource, userInfo.isLogin])
     const getStatistics = useMemoizedFn((width: number) => {
-        // debugger
         if (width < 1940) {
+            // onResetStatisticsQuery()s
             setIsShowFilter(true)
             return
         }
@@ -335,6 +334,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             }
         })
             .then((res) => {
+                console.log("res", res)
                 setStatisticsDataOnlineOrUser(res)
             })
             .catch((err) => {
@@ -351,8 +351,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptTagsAndType", {})
             .then((res: GetYakScriptTagsAndTypeResponse) => {
-                console.log('本地',res);
-                
                 setYakScriptTagsAndType(res)
             })
             .catch((e) => {
@@ -382,19 +380,27 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     })
     const onSearchLocal = useMemoizedFn((queryName: string, value: string) => {
         const currentQuery: string = statisticsQueryLocal[queryName]
-        const queryArr: string[] = currentQuery ? currentQuery.split(",") : []
+        let queryArr: string[] = []
+        if (Array.isArray(currentQuery)) {
+            queryArr = currentQuery || []
+        } else {
+            queryArr = currentQuery ? currentQuery.split(",") : []
+        }
+
         const index: number = queryArr.findIndex((ele) => ele === value)
         if (index === -1) {
             queryArr.push(value)
+            const newValue = queryName === "Tag" ? queryArr : queryArr.join(",")
             setStatisticsQueryLocal({
                 ...statisticsQueryLocal,
-                [queryName]: queryArr.join(",")
+                [queryName]: newValue
             })
         } else {
             queryArr.splice(index, 1)
+            const newValue = queryName === "Tag" ? queryArr : queryArr.join(",")
             setStatisticsQueryLocal({
                 ...statisticsQueryLocal,
-                [queryName]: queryArr.join(",")
+                [queryName]: newValue
             })
         }
     })
@@ -451,6 +457,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const showName = useMemoizedFn((queryName: string, name: string) => {
         switch (queryName) {
             case "plugin_type":
+                return PluginType[name]
+            case "Type":
                 return PluginType[name]
             case "status":
                 return statusType[name]
@@ -682,15 +690,15 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             statisticsList.length > 0 &&
                                             statisticsList.map((ele) => (
                                                 <div
-                                                    key={ele.value || ele.Name}
+                                                    key={ele.value || ele.Value}
                                                     className={`opt-list-item ${
-                                                        current?.includes(ele.value || ele.Name) &&
+                                                        current?.includes(ele.value || ele.Value) &&
                                                         "opt-list-item-selected"
                                                     }`}
-                                                    onClick={() => onSearch(queryName, ele.value || ele.Name)}
+                                                    onClick={() => onSearch(queryName, ele.value || ele.Value)}
                                                 >
                                                     <span className='item-name content-ellipsis'>
-                                                        {showName(queryName, ele.value || ele.Name)}
+                                                        {showName(queryName, ele.value || ele.Value)}
                                                     </span>
                                                     <span>{ele.count || ele.Total}</span>
                                                 </div>
@@ -753,10 +761,19 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [isFilter, setIsFilter] = useState(false)
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState(false)
     useEffect(() => {
-        setQueryLocal({
+        const newQuery = {
             ...queryLocal,
             ...statisticsQueryLocal
-        })
+        }
+        if (!statisticsQueryLocal.Tag) {
+            delete newQuery.Tag
+        }
+        if (newQuery.Type?.includes("nuclei")) {
+            setIsShowYAMLPOC(true)
+        } else {
+            setIsShowYAMLPOC(false)
+        }
+        setQueryLocal(newQuery)
         onResetList()
     }, [statisticsQueryLocal])
     useEffect(() => {
@@ -839,12 +856,12 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     })
     const onChangeSwitch = useMemoizedFn((checked) => {
         if (checked) {
-            setQueryLocal({
+            setStatisticsQueryLocal({
                 ...queryLocal,
                 Type: "yak,mitm,codec,packet-hack,port-scan,nuclei"
             })
         } else {
-            setQueryLocal({
+            setStatisticsQueryLocal({
                 ...queryLocal,
                 Type: "yak,mitm,codec,packet-hack,port-scan"
             })
@@ -923,7 +940,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                                     onClose={() => setVisibleQuery(false)}
                                     queryLocal={queryLocal}
                                     setQueryLocal={(e) => {
-                                        setQueryLocal(e)
+                                        setStatisticsQueryLocal(e)
                                         onResetList()
                                     }}
                                 />
@@ -1024,6 +1041,7 @@ export interface YakModuleListProp {
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const defaultQuery = useCreation(() => {
         return {
+            Tag: [],
             Type: "mitm,port-scan",
             Keyword: "",
             Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
@@ -1115,10 +1133,14 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     }
     const [isRef, setIsRef] = useState(false)
     useEffect(() => {
-        setParams({
+        const newParams = {
             ...params,
             ...queryLocal
-        })
+        }
+        if (!queryLocal.Tag) {
+            delete newParams.Tag
+        }
+        setParams(newParams)
         setIsRef(!isRef)
         setListBodyLoading(true)
         update(1, undefined, queryLocal)
@@ -1862,10 +1884,14 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllUser, setIsSelectAllUser] = useState<boolean>(false)
     useEffect(() => {
-        setQueryUser({
+        const newQuery = {
             ...queryUser,
             ...statisticsQueryUser
-        })
+        }
+        if (!statisticsQueryUser.tags) {
+            delete newQuery.tags
+        }
+        setQueryUser(newQuery)
         onResetList()
     }, [statisticsQueryUser])
     useEffect(() => {
@@ -1941,7 +1967,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                                     userInfo={userInfo}
                                     queryOnline={queryUser}
                                     setQueryOnline={(e) => {
-                                        setQueryUser(e)
+                                        setStatisticsQueryUser(e)
                                         onResetList()
                                     }}
                                     user={true}
@@ -2045,10 +2071,14 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllOnline, setIsSelectAllOnline] = useState<boolean>(false)
     useEffect(() => {
-        setQueryOnline({
+        const newQuery = {
             ...queryOnline,
             ...statisticsQueryOnline
-        })
+        }
+        if (!statisticsQueryOnline.tags) {
+            delete newQuery.tags
+        }
+        setQueryOnline(newQuery)
         onResetList()
     }, [statisticsQueryOnline])
     useEffect(() => {
@@ -2126,7 +2156,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                                     userInfo={userInfo}
                                     queryOnline={queryOnline}
                                     setQueryOnline={(e) => {
-                                        setQueryOnline(e)
+                                        setStatisticsQueryOnline(e)
                                         onResetList()
                                     }}
                                     user={false}
@@ -2292,6 +2322,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         if (!bind_me) {
             delete payload.is_private
         }
+        console.log('payload',payload);
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",

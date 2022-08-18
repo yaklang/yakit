@@ -115,7 +115,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 loadMoreData()
             }
         },
-        [wrapperRef.current?.clientHeight],
+        [wrapperRef.current?.clientHeight, isRef],
         {wait: 200}
     )
     useEffect(() => {
@@ -159,9 +159,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         } else if (width >= 1440) {
             setCol(computeCol * 4)
         }
-        // else if (width >= 1920) {
-        //     setCol(computeCol * 5)
-        // }
     })
 
     const onScrollCapture = useThrottleFn(
