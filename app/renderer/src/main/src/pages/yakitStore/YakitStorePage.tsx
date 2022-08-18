@@ -330,7 +330,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             method: "get",
             url,
             params: {
-                bind_me: plugSource==='user'
+                bind_me: plugSource === "user"
             }
         })
             .then((res) => {
@@ -639,7 +639,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 {isFull && !isShowFilter && (
                     <div className='plugin-statistics'>
                         <Spin spinning={statisticsLoading}>
-                            {plugSource === "user" && (
+                            {plugSource === "user" && userInfo.isLogin && (
                                 <>
                                     <div className='opt-header'>私密/公开</div>
                                     <div

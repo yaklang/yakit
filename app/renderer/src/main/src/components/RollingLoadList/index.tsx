@@ -30,13 +30,6 @@ const classNameWidth = {
     5: "width-20"
 }
 
-const classNameWidth = {
-    2: "width-50",
-    3: "width-33",
-    4: "width-25",
-    5: "width-20"
-}
-
 export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) => {
     const {
         data,
