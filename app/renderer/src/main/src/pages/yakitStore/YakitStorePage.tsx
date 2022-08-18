@@ -704,7 +704,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     return <></>
                                 }
                                 return (
-                                    <>
+                                    <div key={title}>
                                         <div className='opt-header'>{title}</div>
                                         {(statisticsList &&
                                             statisticsList.length > 0 &&
@@ -723,7 +723,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                                     <span>{ele.count || ele.Total}</span>
                                                 </div>
                                             ))) || <Empty description='' />}
-                                    </>
+                                    </div>
                                 )
                             })}
                         </Spin>
@@ -2733,7 +2733,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                         <Select size='small' getPopupContainer={() => refTest.current}>
                             <Option value='all'>全部</Option>
                             {Object.keys(statusType).map((key) => (
-                                <Option value={key}>{statusType[key]}</Option>
+                                <Option value={key} key={key}>{statusType[key]}</Option>
                             ))}
                         </Select>
                     </Form.Item>
