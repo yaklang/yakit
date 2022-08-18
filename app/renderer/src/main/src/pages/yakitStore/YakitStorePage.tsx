@@ -350,7 +350,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptTagsAndType", {})
             .then((res: GetYakScriptTagsAndTypeResponse) => {
-                console.log("本地统计", res)
                 setYakScriptTagsAndType(res)
             })
             .catch((e) => {
