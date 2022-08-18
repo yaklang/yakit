@@ -334,7 +334,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("res", res)
                 setStatisticsDataOnlineOrUser(res)
             })
             .catch((err) => {
@@ -2322,7 +2321,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         if (!bind_me) {
             delete payload.is_private
         }
-        console.log('payload',payload);
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
