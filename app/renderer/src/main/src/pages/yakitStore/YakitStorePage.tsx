@@ -309,12 +309,12 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     }, [width, plugSource, userInfo.isLogin])
     const getStatistics = useMemoizedFn((width: number) => {
         if (width < 1940) {
-            // onResetStatisticsQuery()s
+            // onResetStatisticsQuery()
             setIsShowFilter(true)
             return
         }
         setIsShowFilter(false)
-        if (plugSource === "local" && !yakScriptTagsAndType) {
+        if (plugSource === "local") {
             getYakScriptTagsAndType()
         } else {
             getPluginSearch()
@@ -350,6 +350,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptTagsAndType", {})
             .then((res: GetYakScriptTagsAndTypeResponse) => {
+                console.log("本地统计", res)
                 setYakScriptTagsAndType(res)
             })
             .catch((e) => {
