@@ -474,7 +474,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     bordered={false}
                     style={{
                         height: "100%",
-                        width: isFull ? (!isShowFilter && "calc(100% - 500px)") || "100%" : 470,
+                        width: isFull ? (!isShowFilter && "calc(100% - 360px)") || "100%" : 470,
                         display: fullScreen ? "none" : ""
                     }}
                     title={

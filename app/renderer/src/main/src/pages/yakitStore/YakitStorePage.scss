@@ -9,10 +9,10 @@
 }
 
 .plugin-statistics {
-    width: 100%;
-    min-width: 200px;
-    padding: 24px 24px 12px;
-    max-width: 500px;
+    width: 360px;
+    // min-width: 200px;
+    padding: 12px 24px 12px;
+    // max-width: 500px;
     min-height: 200px;
     height: 100%;
     overflow: hidden auto;
@@ -21,6 +21,11 @@
         height: 30px;
         line-height: 30px;
         font-weight: 600;
+        margin-top: 12px;
+
+        &:first-child {
+            margin-top: 0;
+        }
     }
 
     .opt-list-item {
@@ -235,7 +240,7 @@
 .plugin-item {
     height: 138px;
     // width: 100%;
-    margin: 0 6px 12px;
+    margin: 0 8px 16px;
     border: 1px solid #0000000f;
     border-radius: 2px;
     color: #000000d9;
