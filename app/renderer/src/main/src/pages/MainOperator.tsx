@@ -850,6 +850,7 @@ const Main: React.FC<MainProp> = (props) => {
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
             if (type === "exec-packet-scan") addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
             console.info("send to tab: ", type)
+            console.info("MainOperator SendtoTab", data);
         })
 
         return () => {

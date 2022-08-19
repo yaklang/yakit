@@ -24,7 +24,7 @@ export interface SimplePluginListProp {
     disabled?: boolean
 }
 
-export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((props) => {
+export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((props: SimplePluginListProp) => {
     const [scripts, setScripts, getScripts] = useGetState<YakScript[]>([])
     const [total, setTotal] = useState(0)
     const [listNames, setListNames] = useState<string[]>([...(props.initialSelected || [])]);
@@ -58,7 +58,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
 
     const search = useMemoizedFn((searchParams?: { limit?: number; keyword?: string }, initial?: boolean) => {
         const {limit, keyword} = searchParams || {}
-        console.info("搜索", keyword, limit)
+        console.info("插件菜单栏搜索", keyword, limit)
         setPluginLoading(true)
         queryYakScriptList(
             props.pluginTypes ? props.pluginTypes : "",
@@ -80,7 +80,10 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
     })
 
     useDebounceEffect(() => {
-        search()
+        search({
+            limit: props.initialQuery?.Pagination ? props.initialQuery.Pagination.Limit : 300,
+            keyword: props.initialQuery?.Keyword,
+        }, true)
     }, [props.initialQuery], {wait: 500})
 
     return <PluginList

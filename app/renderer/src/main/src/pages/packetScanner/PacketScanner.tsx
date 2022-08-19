@@ -86,10 +86,6 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) 
     const token = useCreation(() => randomString(20), [])
     const [viewerHeight, setViewerHeight] = useState(200);
 
-    useEffect(() => {
-        console.info("数据包扫描右控制台", props.plugins)
-    }, [props])
-
     return <ResizeBox
         isVer={true}
         firstRatio={200}
