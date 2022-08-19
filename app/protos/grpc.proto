@@ -315,9 +315,9 @@ service Yak {
   rpc DownloadOnlinePluginByIds(DownloadOnlinePluginByIdsRequest) returns (Empty);
   rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
   rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
-  rpc DeleteAllLocalPlugins(DeleteAllLocalPluginsRequest) returns (Empty);
+  rpc DeleteAllLocalPlugins(Empty) returns (Empty);
   rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
-
+  rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
 
@@ -386,7 +386,7 @@ message DeletePluginByUserIDRequest {
   int64 UserID = 1;
 }
 
-message DeleteAllLocalPluginsRequest {
+message DeleteLocalPluginsByWhereRequest {
   string Keywords = 1;
   string Type = 2;
 }
@@ -1919,6 +1919,4 @@ message ExecResult {
 
   // 如果是一个保存过的 ExecResult 他应该有数据库记录 ID
   int64 Id = 6;
-
-  string RuntimeID = 7;
 }
