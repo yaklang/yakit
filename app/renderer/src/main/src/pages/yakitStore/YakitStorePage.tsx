@@ -300,6 +300,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
     const [statisticsDataOnlineOrUser, setStatisticsDataOnlineOrUser] = useState<API.YakitSearch>()
     const [isShowFilter, setIsShowFilter] = useState<boolean>(true)
+    const [typeStatistics, setTypeStatistics] = useState<string[]>([])
     useEffect(() => {
         if (plugSource === "user" && !userInfo.isLogin) {
             setIsShowFilter(true)
@@ -333,6 +334,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             }
         })
             .then((res) => {
+                if (res.plugin_type) {
+                    setTypeStatistics(res.plugin_type.map((ele) => ele.value))
+                }
                 setStatisticsDataOnlineOrUser(res)
             })
             .catch((err) => {
@@ -349,6 +353,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptTagsAndType", {})
             .then((res: GetYakScriptTagsAndTypeResponse) => {
+                if (res.Type) {
+                    setTypeStatistics(res.Type.map((ele) => ele.Value))
+                }
                 setYakScriptTagsAndType(res)
             })
             .catch((e) => {
@@ -395,7 +402,13 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             })
         } else {
             queryArr.splice(index, 1)
-            const newValue = queryName === "Tag" ? queryArr : queryArr.join(",")
+            let newValue = queryName === "Tag" ? queryArr : queryArr.join(",")
+            if (queryName === "Type") {
+                const length = typeStatistics.map((ele) => queryArr.some((l) => l === ele)).filter((l) => l).length
+                if (length === 0) {
+                    newValue = ""
+                }
+            }
             setStatisticsQueryLocal({
                 ...statisticsQueryLocal,
                 [queryName]: newValue
@@ -414,15 +427,23 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             const index: number = queryArr.findIndex((ele) => ele === value)
             if (index === -1) {
                 queryArr.push(value)
+                const newValue = queryArr.join(",")
                 setStatisticsQueryUser({
                     ...statisticsQueryUser,
-                    [queryName]: queryArr.join(",")
+                    [queryName]: newValue
                 })
             } else {
                 queryArr.splice(index, 1)
+                let newValue = queryArr.join(",")
+                if (queryName === "plugin_type") {
+                    const length = typeStatistics.map((ele) => queryArr.some((l) => l === ele)).filter((l) => l).length
+                    if (length === 0) {
+                        newValue = ""
+                    }
+                }
                 setStatisticsQueryUser({
                     ...statisticsQueryUser,
-                    [queryName]: queryArr.join(",")
+                    [queryName]: newValue
                 })
             }
         }
@@ -439,15 +460,23 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             const index: number = queryArr.findIndex((ele) => ele === value)
             if (index === -1) {
                 queryArr.push(value)
+                const newValue = queryArr.join(",")
                 setStatisticsQueryOnline({
                     ...statisticsQueryOnline,
-                    [queryName]: queryArr.join(",")
+                    [queryName]: newValue
                 })
             } else {
                 queryArr.splice(index, 1)
+                let newValue = queryArr.join(",")
+                if (queryName === "plugin_type") {
+                    const length = typeStatistics.map((ele) => queryArr.some((l) => l === ele)).filter((l) => l).length
+                    if (length === 0) {
+                        newValue = ""
+                    }
+                }
                 setStatisticsQueryOnline({
                     ...statisticsQueryOnline,
-                    [queryName]: queryArr.join(",")
+                    [queryName]: newValue
                 })
             }
         }
@@ -699,7 +728,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     (queryName === "status" &&
                                         plugSource === "user" &&
                                         statisticsQueryUser.is_private !== "false") ||
-                                    (queryName === "status" && plugSource === "online" && !userInfo.isLogin)
+                                    (queryName === "status" && plugSource === "online" && userInfo.role !== "admin")
                                 ) {
                                     return <></>
                                 }
@@ -2733,7 +2762,9 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                         <Select size='small' getPopupContainer={() => refTest.current}>
                             <Option value='all'>全部</Option>
                             {Object.keys(statusType).map((key) => (
-                                <Option value={key} key={key}>{statusType[key]}</Option>
+                                <Option value={key} key={key}>
+                                    {statusType[key]}
+                                </Option>
                             ))}
                         </Select>
                     </Form.Item>
