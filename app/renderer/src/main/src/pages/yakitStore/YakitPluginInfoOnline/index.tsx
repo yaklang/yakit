@@ -364,10 +364,14 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             )}
                             {isAdmin && !user && (
                                 <>
-                                    <Button onClick={() => pluginExamine(2)}>不通过</Button>
-                                    <Button type='primary' onClick={() => pluginExamine(1)}>
-                                        通过
-                                    </Button>
+                                    {plugin.status === 0 && (
+                                        <>
+                                            <Button onClick={() => pluginExamine(2)}>不通过</Button>
+                                            <Button type='primary' onClick={() => pluginExamine(1)}>
+                                                通过
+                                            </Button>
+                                        </>
+                                    )}
                                     <Button type='primary' onClick={() => setIsEdit(true)}>
                                         修改作者
                                     </Button>

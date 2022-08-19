@@ -39,7 +39,6 @@
     "google-protobuf": "^3.17.3",
     "numeral": "^2.0.6",
     "process": "^0.11.10",
-    "react-infinite-scroll-component": "^6.1.0",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",
     "sudo-prompt": "^9.2.1",

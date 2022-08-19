@@ -13,7 +13,7 @@ const USER_INFO = {
     user_id: 0
 }
 const HttpSetting = {
-    httpBaseURL: "http://www.yaklang.com"
+    httpBaseURL: "https://www.yaklang.com"
 }
 
 module.exports = {

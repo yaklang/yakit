@@ -316,7 +316,8 @@ service Yak {
   rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
   rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
   rpc DeleteAllLocalPlugins(Empty) returns (Empty);
-
+  rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
+  rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
 
@@ -385,6 +386,11 @@ message DeletePluginByUserIDRequest {
   int64 UserID = 1;
 }
 
+message DeleteLocalPluginsByWhereRequest {
+  string Keywords = 1;
+  string Type = 2;
+}
+
 message DownloadOnlinePluginProgress {
   // 进度
   double Progress = 1;
@@ -394,6 +400,11 @@ message DownloadOnlinePluginProgress {
 message DownloadOnlinePluginByTokenRequest {
   string Token = 1;
   bool BindMe = 2;
+  string Keywords = 3;
+  string PluginType = 4;
+  string Status = 5;
+  string IsPrivate = 6;
+  string Tags = 7;
 }
 
 message DownloadOnlinePluginByIdRequest {
@@ -1371,6 +1382,17 @@ message YakScript {
   string OnlineContributors = 22;
   string UUID = 23;
   bool OnlineIsPrivate = 24;
+  string HeadImg = 25;
+}
+
+message GetYakScriptTagsAndTypeResponse {
+  repeated TagsAndType Type = 1;
+  repeated TagsAndType Tag = 2;
+}
+
+message TagsAndType {
+  string Value = 1;
+  int32 Total = 2;
 }
 
 message CodecRequest {
@@ -1897,6 +1919,4 @@ message ExecResult {
 
   // 如果是一个保存过的 ExecResult 他应该有数据库记录 ID
   int64 Id = 6;
-
-  string RuntimeID = 7;
 }

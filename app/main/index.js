@@ -25,6 +25,8 @@ const createWindow = () => {
     win = new BrowserWindow({
         width: 1600,
         height: 1000,
+        minWidth: 900,
+        minHeight: 500,
         autoHideMenuBar: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
@@ -209,7 +211,7 @@ ipcMain.on("user-sign-in", (event, arg) => {
             })
             .catch((err) => {
                 authWindow.webContents.session.clearStorageData()
-                win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:"+err})
+                win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
                 authWindow.close()
             })
     })

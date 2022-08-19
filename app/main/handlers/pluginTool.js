@@ -1,6 +1,6 @@
-const { ipcMain } = require("electron")
+const {ipcMain} = require("electron")
 const OS = require("os")
-const { USER_INFO } = require("../state")
+const {USER_INFO} = require("../state")
 const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
@@ -28,7 +28,7 @@ module.exports = (win, getClient) => {
         }
 
         //Return the average Idle and Tick times
-        return { idle: totalIdle / cpus.length, total: totalTick / cpus.length }
+        return {idle: totalIdle / cpus.length, total: totalTick / cpus.length}
     }
 
     // function to calculate average of array
@@ -138,7 +138,7 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
-                if (params.OnlineID) win.webContents.send('ref-plugin-operator', { pluginOnlineId: params.OnlineID })
+                if (params.OnlineID) win.webContents.send("ref-plugin-operator", {pluginOnlineId: params.OnlineID})
                 resolve(data)
             })
         })
@@ -170,11 +170,12 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DownloadOnlinePluginAll", (e, params, token) => {
         // params传Token，登录时调用：添加该用户名下的所有插件；不传Token：添加所有的
         const newParams = {
-            BindMe: params.BindMe
+            ...params
         }
         if (params.isAddToken) {
             newParams.Token = USER_INFO.token
         }
+        delete newParams.isAddToken
         let stream = getClient().DownloadOnlinePluginAll(newParams)
         handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
     })
@@ -205,7 +206,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    // 删除本地插件
+    // 删除本地插件 暂时废弃
     ipcMain.handle("DeleteAllLocalPlugins", async (e, params) => {
         return await asyncDeleteAllLocalPlugins(params)
     })
@@ -223,5 +224,38 @@ module.exports = (win, getClient) => {
     //通过OnlineID 查询本地插件数据
     ipcMain.handle("GetYakScriptByOnlineID", async (e, params) => {
         return await asyncGetYakScriptByOnlineID(params)
+    })
+
+    const asyncGetYakScriptTagsAndType = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetYakScriptTagsAndType(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        }) 
+    }
+    // 统计
+    ipcMain.handle("GetYakScriptTagsAndType", async (e, params) => {
+        return await asyncGetYakScriptTagsAndType(params)
+    })
+
+
+    const asyncDeleteLocalPluginsByWhere = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteLocalPluginsByWhere(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除本地插件,带条件
+    ipcMain.handle("DeleteLocalPluginsByWhere", async (e, params) => {
+        return await asyncDeleteLocalPluginsByWhere(params)
     })
 }
