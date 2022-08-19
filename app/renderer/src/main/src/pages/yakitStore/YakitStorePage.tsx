@@ -888,7 +888,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             }
             // 全部删除
             ipcRenderer
-                .invoke("DeleteAllLocalPlugins", paramsRemove)
+                .invoke("DeleteLocalPluginsByWhere", paramsRemove)
                 .then(() => {
                     setRefresh(!refresh)
                     setScript(undefined)

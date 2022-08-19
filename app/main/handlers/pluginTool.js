@@ -206,7 +206,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    // 删除本地插件
+    // 删除本地插件 暂时废弃
     ipcMain.handle("DeleteAllLocalPlugins", async (e, params) => {
         return await asyncDeleteAllLocalPlugins(params)
     })
@@ -235,10 +235,27 @@ module.exports = (win, getClient) => {
                 }
                 resolve(data)
             })
-        })
+        }) 
     }
     // 统计
     ipcMain.handle("GetYakScriptTagsAndType", async (e, params) => {
         return await asyncGetYakScriptTagsAndType(params)
+    })
+
+
+    const asyncDeleteLocalPluginsByWhere = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteLocalPluginsByWhere(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除本地插件,带条件
+    ipcMain.handle("DeleteLocalPluginsByWhere", async (e, params) => {
+        return await asyncDeleteLocalPluginsByWhere(params)
     })
 }
