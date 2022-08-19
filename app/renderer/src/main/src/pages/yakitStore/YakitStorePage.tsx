@@ -300,6 +300,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
     const [statisticsDataOnlineOrUser, setStatisticsDataOnlineOrUser] = useState<API.YakitSearch>()
     const [isShowFilter, setIsShowFilter] = useState<boolean>(true)
+    const [statisticsIsNull, setStatisticsIsNull] = useState<boolean>(false)
     const [typeStatistics, setTypeStatistics] = useState<string[]>([])
     useEffect(() => {
         if (plugSource === "user" && !userInfo.isLogin) {
@@ -337,6 +338,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 if (res.plugin_type) {
                     setTypeStatistics(res.plugin_type.map((ele) => ele.value))
                 }
+                if (res.tags.length === 0 && res.plugin_type.length === 0 && res.status?.length === 0) {
+                    setStatisticsIsNull(true)
+                } else {
+                    setStatisticsIsNull(false)
+                }
                 setStatisticsDataOnlineOrUser(res)
             })
             .catch((err) => {
@@ -355,6 +361,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .then((res: GetYakScriptTagsAndTypeResponse) => {
                 if (res.Type) {
                     setTypeStatistics(res.Type.map((ele) => ele.Value))
+                }
+                if (res.Tag.length === 0 && res.Type.length === 0) {
+                    setStatisticsIsNull(true)
+                } else {
+                    setStatisticsIsNull(false)
                 }
                 setYakScriptTagsAndType(res)
             })
@@ -667,7 +678,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     <div className='plugin-statistics'>
                         <Spin spinning={statisticsLoading}>
                             {plugSource === "online" && (
-                                <>
+                                <div className='opt-list'>
                                     <div className='opt-header'>排序顺序</div>
                                     <div
                                         className={`opt-list-item ${
@@ -685,10 +696,10 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     >
                                         <span className='item-name content-ellipsis'>按时间</span>
                                     </div>
-                                </>
+                                </div>
                             )}
                             {plugSource === "user" && userInfo.isLogin && (
-                                <>
+                                <div className='opt-list'>
                                     <div className='opt-header'>私密/公开</div>
                                     <div
                                         className={`opt-list-item ${
@@ -706,55 +717,66 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     >
                                         <span className='item-name content-ellipsis'>公开</span>
                                     </div>
+                                </div>
+                            )}
+                            {(statisticsIsNull && <Empty description='暂无统计数据' />) || (
+                                <>
+                                    {Object.entries(
+                                        plugSource === "local"
+                                            ? yakScriptTagsAndType || {}
+                                            : statisticsDataOnlineOrUser || {}
+                                    ).map((item) => {
+                                        const queryName = item[0]
+                                        const statisticsList = item[1]
+                                        const title = queryTitle[queryName]
+                                        let current: string = ""
+                                        if (plugSource === "local") {
+                                            current = statisticsQueryLocal[queryName]
+                                        }
+                                        if (plugSource === "user") {
+                                            current = statisticsQueryUser[queryName]
+                                        }
+                                        if (plugSource === "online") {
+                                            current = statisticsQueryOnline[queryName]
+                                        }
+                                        // if(y)
+                                        if (
+                                            (queryName === "status" &&
+                                                plugSource === "user" &&
+                                                statisticsQueryUser.is_private !== "false") ||
+                                            (queryName === "status" &&
+                                                plugSource === "online" &&
+                                                userInfo.role !== "admin")
+                                        ) {
+                                            return <></>
+                                        }
+
+                                        return (
+                                            statisticsList &&
+                                            statisticsList.length > 0 && (
+                                                <div key={title} className='opt-list'>
+                                                    <div className='opt-header'>{title}</div>
+                                                    {statisticsList.map((ele) => (
+                                                        <div
+                                                            key={`${ele.value || ele.Value}-${plugSource}`}
+                                                            className={`opt-list-item ${
+                                                                current?.includes(ele.value || ele.Value) &&
+                                                                "opt-list-item-selected"
+                                                            }`}
+                                                            onClick={() => onSearch(queryName, ele.value || ele.Value)}
+                                                        >
+                                                            <span className='item-name content-ellipsis'>
+                                                                {showName(queryName, ele.value || ele.Value)}
+                                                            </span>
+                                                            <span>{ele.count || ele.Total}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )
+                                        )
+                                    })}
                                 </>
                             )}
-                            {Object.entries(
-                                plugSource === "local" ? yakScriptTagsAndType || {} : statisticsDataOnlineOrUser || {}
-                            ).map((item) => {
-                                const queryName = item[0]
-                                const statisticsList = item[1]
-                                const title = queryTitle[queryName]
-                                let current: string = ""
-                                if (plugSource === "local") {
-                                    current = statisticsQueryLocal[queryName]
-                                }
-                                if (plugSource === "user") {
-                                    current = statisticsQueryUser[queryName]
-                                }
-                                if (plugSource === "online") {
-                                    current = statisticsQueryOnline[queryName]
-                                }
-                                if (
-                                    (queryName === "status" &&
-                                        plugSource === "user" &&
-                                        statisticsQueryUser.is_private !== "false") ||
-                                    (queryName === "status" && plugSource === "online" && userInfo.role !== "admin")
-                                ) {
-                                    return <></>
-                                }
-                                return (
-                                    <div key={title}>
-                                        <div className='opt-header'>{title}</div>
-                                        {(statisticsList &&
-                                            statisticsList.length > 0 &&
-                                            statisticsList.map((ele) => (
-                                                <div
-                                                    key={`${ele.value || ele.Value}-${plugSource}`}
-                                                    className={`opt-list-item ${
-                                                        current?.includes(ele.value || ele.Value) &&
-                                                        "opt-list-item-selected"
-                                                    }`}
-                                                    onClick={() => onSearch(queryName, ele.value || ele.Value)}
-                                                >
-                                                    <span className='item-name content-ellipsis'>
-                                                        {showName(queryName, ele.value || ele.Value)}
-                                                    </span>
-                                                    <span>{ele.count || ele.Total}</span>
-                                                </div>
-                                            ))) || <Empty description='' />}
-                                    </div>
-                                )
-                            })}
                         </Spin>
                     </div>
                 )}
@@ -2640,7 +2662,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                 )) || <div className='plugin-tag'>&nbsp;</div>}
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
-                        {!bind_me && info.head_img && <img alt='' src={info.head_img} />}
+                        {info.head_img && <img alt='' src={info.head_img} />}
                         <div className='plugin-item-author content-ellipsis'>{info.authors || "anonymous"}</div>
                     </div>
                     <div className='plugin-item-time'>{formatDate(info.created_at)}</div>

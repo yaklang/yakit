@@ -11,7 +11,7 @@ export declare namespace API {
     export interface YakitSearch {
         plugin_type: YakitSearchData[]
         tags: YakitSearchData[]
-        status?: YakitSearchData[]
+        status: YakitSearchData[]
     }
     export interface YakitPluginResponse {
         id: number

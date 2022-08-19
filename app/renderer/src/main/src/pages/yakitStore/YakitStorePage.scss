@@ -17,15 +17,24 @@
     height: 100%;
     overflow: hidden auto;
 
+    .opt-list {
+        border-radius: 1px;
+        padding: 20px 0;
+        border-bottom: 1px solid #e6eaef;
+
+        &:first-child {
+            padding-top: 0;
+        }
+
+        &:last-child {
+            border-bottom: 0;
+        }
+    }
+
     .opt-header {
         height: 30px;
         line-height: 30px;
         font-weight: 600;
-        margin-top: 12px;
-
-        &:first-child {
-            margin-top: 0;
-        }
     }
 
     .opt-list-item {
