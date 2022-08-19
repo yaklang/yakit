@@ -14,6 +14,7 @@ export interface CompletionSchema {
 export interface FieldsCompletion {
     isMethod: boolean
     fieldName: string
+    libName?: string
     structName: string
     structNameShort: string
     methodsCompletion: string
