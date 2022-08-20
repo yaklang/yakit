@@ -89,15 +89,18 @@ export interface MonacoEditorActions extends IMonacoActionDescriptor {
 }
 
 export const MonacoEditorCodecActions: MonacoEditorActions[] = [
-    // {id: "md5", label: "MD5"},
-    // {id: "sha1", label: "SHA1"},
+    {id: "urlencode", label: "URL 编码"},
+    {id: "urlescape", label: "URL 编码(只编码特殊字符)"},
     {id: "base64", label: "Base64 编码"},
     {id: "base64-decode", label: "Base64 解码"},
     {id: "htmlencode", label: "HTML 编码"},
     {id: "htmldecode", label: "HTML 解码"},
-    {id: "urlencode", label: "URL 编码"},
     {id: "urlunescape", label: "URL 解码"},
     {id: "double-urlencode", label: "双重 URL 编码"},
+    {id: "unicode-decode", label: "Unicode 解码（\\uXXXX 解码）"},
+    {id: "unicode-encode", label: "Unicode 解码（\\uXXXX 编码）"},
+    {id: "base64-url-encode", label: "Base64->URL 编码"},
+    {id: "url-base64-decode", label: "URL->Base64 解码"},
 ].map(i => {
     return {id: i.id, label: i.label, contextMenuGroupId: "codec", run: editorCodecHandlerFactory(i.id as CodecType)}
 });
