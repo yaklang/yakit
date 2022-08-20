@@ -98,9 +98,9 @@ export const MonacoEditorCodecActions: MonacoEditorActions[] = [
     {id: "urlunescape", label: "URL 解码"},
     {id: "double-urlencode", label: "双重 URL 编码"},
     {id: "unicode-decode", label: "Unicode 解码（\\uXXXX 解码）"},
-    {id: "unicode-encode", label: "Unicode 解码（\\uXXXX 编码）"},
-    {id: "base64-url-encode", label: "Base64->URL 编码"},
-    {id: "url-base64-decode", label: "URL->Base64 解码"},
+    {id: "unicode-encode", label: "Unicode 编码（\\uXXXX 编码）"},
+    {id: "base64-url-encode", label: "先 Base64 后 URL 编码"},
+    {id: "url-base64-decode", label: "先 URL 后 Base64 解码"},
 ].map(i => {
     return {id: i.id, label: i.label, contextMenuGroupId: "codec", run: editorCodecHandlerFactory(i.id as CodecType)}
 });
