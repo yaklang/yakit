@@ -1,12 +1,12 @@
-import React, {memo, useEffect, useState} from "react"
+import React, {memo, useEffect, useRef, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
-import {Button, Empty, Form, List, Popconfirm, Space} from "antd"
+import {Button, Empty, Form, Input, List, Popconfirm, Space} from "antd"
 import {SelectOne} from "../../utils/inputUtil"
 import {PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
 import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
 import {EditorProps, YakCodeEditor} from "../../utils/editors"
 import {YakModuleList} from "../yakitStore/YakitStorePage"
-import {YakScript, YakScriptHooks} from "../invoker/schema"
+import {genDefaultPagination, YakScript, YakScriptHooks} from "../invoker/schema"
 import {useMap, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
@@ -43,10 +43,10 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>())
     const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
     const [refreshTrigger, setRefreshTrigger] = useState(false)
+    const [searchKeyword, setSearchKeyword] = useState("");
     const refresh = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
     })
-
     // 热加载模块持久化
     useEffect(() => {
         getRemoteValue(MITM_HOTPATCH_CODE).then((e) => {
@@ -97,6 +97,8 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             ipcRenderer.removeAllListeners("client-mitm-hooks")
         }
     }, [])
+
+
     return (
         <AutoCard
             bordered={false}
@@ -104,7 +106,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             loading={!initialed}
             title={
                 <Space>
-                    <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()}>
+                    <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()} layout={"inline"}>
                         <SelectOne
                             data={[
                                 {text: "热加载", value: "hot-patch"},
@@ -112,9 +114,16 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 {text: "全部", value: "all"}
                             ]}
                             value={mode}
-                            formItemStyle={{marginBottom: 0}}
+                            formItemStyle={{marginBottom: 2}}
                             setValue={setMode}
                         />
+                        {mode === "all" && <Form.Item style={{marginBottom: 0}}>
+                            <Input.Search onSearch={value => {
+                                setSearchKeyword(value)
+                            }}>
+
+                            </Input.Search>
+                        </Form.Item>}
                     </Form>
                     {mode === "hot-patch" && (
                         <Popconfirm
@@ -193,6 +202,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                         itemHeight={43}
                         onClicked={(script) => {
                         }}
+                        searchKeyword={searchKeyword}
                         onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                             return (
                                 <MITMYakScriptLoader

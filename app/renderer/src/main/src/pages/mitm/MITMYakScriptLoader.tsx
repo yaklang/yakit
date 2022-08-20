@@ -1,5 +1,5 @@
-import React from "react";
-import {Button, Card, Checkbox, Col, Popconfirm, Row, Statistic, Tooltip} from "antd";
+import React, {useState} from "react";
+import {Button, Card, Checkbox, Col, Descriptions, Popconfirm, Row, Space, Statistic, Tooltip} from "antd";
 import {showModal} from "../../utils/showModal";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import {YakExecutorParam} from "../invoker/YakExecutorParams";
@@ -8,12 +8,49 @@ import {StatusCardProps} from "../yakitStore/viewers/base";
 import {YakScript} from "../invoker/schema";
 import {failed, warn} from "../../utils/notification";
 import {OneLine} from "../../utils/inputUtil";
+import {useMemoizedFn, useThrottle} from "ahooks";
+import ReactResizeDetector from "react-resize-detector";
 
 const {ipcRenderer} = window.require("electron");
 
 export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     const {hooks, script, onSubmitYakScriptId} = p;
     const i = script;
+    const onCheckboxClicked = useMemoizedFn(() => {
+        const checked = !!hooks.get(i.ScriptName);
+
+        if (checked) {
+            ipcRenderer.invoke("mitm-remove-hook", {
+                HookName: [],
+                RemoveHookID: [i.ScriptName],
+            } as any)
+            return
+        }
+
+        if (!p.onSubmitYakScriptId) {
+            return
+        }
+
+        if ((script.Params || []).length > 0 && script.Type !== "port-scan") {
+            let m2 = showModal({
+                title: `设置 [${script.ScriptName}] 的参数`,
+                content: <>
+                    <YakScriptParamsSetter
+                        {...script}
+                        onParamsConfirm={(p: YakExecutorParam[]) => {
+                            clearMITMPluginCache()
+                            onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
+                            m2.destroy()
+                        }}
+                        submitVerbose={"设置 MITM 参数"}
+                    />
+                </>, width: "50%",
+            })
+        } else {
+            clearMITMPluginCache()
+            p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
+        }
+    })
 
     return <Card
         size={"small"}
@@ -21,65 +58,52 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         style={{
             width: "100%", marginBottom: 4,
             // backgroundColor: hooks.get(i.ScriptName) ? "#d6e4ff" : undefined
-        }} hoverable={true}
+        }}
     >
-        <div style={{display: "flex", flexDirection: "row", width: "100%"}}>
-            <Checkbox
-                style={{marginRight: 6}}
-                checked={!!hooks.get(i.ScriptName)}
-                onClick={() => {
-                    const checked = !!hooks.get(i.ScriptName);
-
-                    if (checked) {
-                        ipcRenderer.invoke("mitm-remove-hook", {
-                            HookName: [],
-                            RemoveHookID: [i.ScriptName],
-                        } as any)
-                        return
-                    }
-
-                    if (!p.onSubmitYakScriptId) {
-                        return
-                    }
-
-                    if ((script.Params || []).length > 0 && script.Type !== "port-scan") {
-                        let m2 = showModal({
-                            title: `设置 [${script.ScriptName}] 的参数`,
-                            content: <>
-                                <YakScriptParamsSetter
-                                    {...script}
-                                    onParamsConfirm={(p: YakExecutorParam[]) => {
-                                        clearMITMPluginCache()
-                                        onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
-                                        m2.destroy()
-                                    }}
-                                    submitVerbose={"设置 MITM 参数"}
-                                />
-                            </>, width: "50%",
-                        })
-                    } else {
-                        clearMITMPluginCache()
-                        p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
-                    }
+        <div style={{
+            display: "flex", flexDirection: "row", width: "100%",
+            justifyContent: "flex-end",
+        }}>
+            <div
+                style={{
+                    flex: 1, display: "flex", flexDirection: "row",
+                    overflow: "hidden",
                 }}
+                onClick={onCheckboxClicked}
             >
-                <OneLine overflow={"hidden"} maxWidth={200}>
+                <Checkbox
+                    style={{marginRight: 6}}
+                    checked={!!hooks.get(i.ScriptName)}
+                >
+                </Checkbox>
+                <div style={{
+                    // width: cardWidth - 50 - 24,
+                    flex: `1 1 auto`,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis", whiteSpace: "nowrap"
+                }}>
                     {!!i.ScriptName ? i.ScriptName : `{hot-patched}`}
-                </OneLine>
-                {/*<div style={{marginRight: 6, maxWidth: p.maxWidth || 260, overflowX: "hidden", textOverflow: "ellipsis"}}>*/}
-                {/*</div>*/}
-            </Checkbox>
-            {script.Help && <Tooltip title={script.Help}>
-                <a href={"#"}><QuestionCircleOutlined/></a>
-            </Tooltip>}
+                </div>
+            </div>
 
-            <div style={{flex: 1, textAlign: "right"}}>
+
+            <div style={{width: '50px', textAlign: "right"}}>
                 <OneLine>
-                    {script.Author && <Tooltip title={script.Author}>
-                        <a href={"#"}>
-                            <UserOutlined/>
-                        </a>
-                    </Tooltip>}
+                    <a href={"#"} onClick={() => {
+                        showModal({
+                            title: "详情",
+                            width: "50%",
+                            content: (<Descriptions size={"small"} column={2}>
+                                <Descriptions.Item label={"作者"} span={2}>{i.Author}</Descriptions.Item>
+                                <Descriptions.Item label={"帮助"} span={2}>{i.Help}</Descriptions.Item>
+                            </Descriptions>)
+                        })
+                    }}><QuestionCircleOutlined/></a>
+                    {/*{script.Author && <div title={script.Author}>*/}
+                    {/*    <a href={"#"}>*/}
+                    {/*        <UserOutlined/>*/}
+                    {/*    </a>*/}
+                    {/*</div>}*/}
                     <Popconfirm
                         disabled={!p.onSendToPatch}
                         title={"发送到【热加载】中调试代码？"}
