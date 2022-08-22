@@ -2060,7 +2060,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                                     queryOnline={queryUser}
                                     setQueryOnline={(e) => {
                                         setStatisticsQueryUser(e)
-                                        onResetList()
+                                        // onResetList()
                                     }}
                                     user={true}
                                 />
@@ -2250,7 +2250,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                                     queryOnline={queryOnline}
                                     setQueryOnline={(e) => {
                                         setStatisticsQueryOnline(e)
-                                        onResetList()
+                                        // onResetList()
                                     }}
                                     user={false}
                                 />
