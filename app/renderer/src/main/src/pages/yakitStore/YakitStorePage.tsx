@@ -78,8 +78,7 @@ const {ipcRenderer} = window.require("electron")
 
 const userInitUse = "user-init-use"
 
-export interface YakitStorePageProp {
-}
+export interface YakitStorePageProp {}
 
 export interface GetYakScriptByOnlineIDRequest {
     OnlineID?: number
@@ -173,10 +172,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                     ipcRenderer.invoke("set-value", userInitUse, true)
                 }
             })
-            .catch(() => {
-            })
-            .finally(() => {
-            })
+            .catch(() => {})
+            .finally(() => {})
     }, [])
     useEffect(() => {
         if (!userInfo.isLogin) onResetPluginDetails()
@@ -532,7 +529,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     <Radio.Button value='local'>本地</Radio.Button>
                                 </Radio.Group>
                                 <Button size={isFull ? "middle" : "small"} type={"link"} onClick={onRefList}>
-                                    <ReloadOutlined style={{fontSize: isFull ? 16 : 14}}/>
+                                    <ReloadOutlined style={{fontSize: isFull ? 16 : 14}} />
                                 </Button>
                             </Col>
                             <Col span={12} className='search-input-body'>
@@ -634,9 +631,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         <Button
                                             icon={
                                                 fullScreen ? (
-                                                    <FullscreenExitOutlined style={{fontSize: 15}}/>
+                                                    <FullscreenExitOutlined style={{fontSize: 15}} />
                                                 ) : (
-                                                    <FullscreenOutlined style={{fontSize: 15}}/>
+                                                    <FullscreenOutlined style={{fontSize: 15}} />
                                                 )
                                             }
                                             type={"link"}
@@ -649,8 +646,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 <PluginOperator
                                     yakScriptId={(script && script.Id) || 0}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
-                                    setTrigger={() => {
-                                    }}
+                                    setTrigger={() => {}}
                                     setScript={(s) => {
                                         setScript(s)
                                         setUpdatePluginRecordLocal(s)
@@ -724,7 +720,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     </div>
                                 </div>
                             )}
-                            {(statisticsIsNull && <Empty description='暂无统计数据'/>) || (
+                            {(statisticsIsNull && <Empty description='暂无统计数据' />) || (
                                 <>
                                     {Object.entries(
                                         plugSource === "local"
@@ -947,7 +943,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 Type: "yak,mitm,codec,packet-hack,port-scan"
             })
         }
-        setRefresh(!refresh)
+        // setRefresh(!refresh)
         setIsShowYAMLPOC(checked)
         onSelectAllLocal(false)
     })
@@ -1022,7 +1018,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                                     queryLocal={queryLocal}
                                     setQueryLocal={(e) => {
                                         setStatisticsQueryLocal(e)
-                                        onResetList()
+                                        // onResetList()
                                     }}
                                 />
                             }
@@ -1036,7 +1032,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     >
                         {(size === "small" && (
                             <Tooltip title='删除'>
-                                <DeleteOutlined className='delete-icon'/>
+                                <DeleteOutlined className='delete-icon' />
                             </Tooltip>
                         )) || (
                             <Button size='small' type='primary' danger ghost>
@@ -1047,7 +1043,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     {(size === "small" && (
                         <>
                             <Tooltip title='新建'>
-                                <PlusOutlined className='operation-icon' onClick={onAdd}/>
+                                <PlusOutlined className='operation-icon' onClick={onAdd} />
                             </Tooltip>
                             <Tooltip title='导入'>
                                 <CloudDownloadOutlined
@@ -1225,6 +1221,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         setParams(newParams)
         setIsRef(!isRef)
         setListBodyLoading(true)
+        
         update(1, undefined, queryLocal)
         if (onSelectList) onSelectList([])
     }, [userInfo.isLogin, props.refresh])
@@ -1264,8 +1261,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const onShare = useMemoizedFn((item: YakScript) => {
         Modal.info({
             title: "请将插件id复制以后分享给朋友，导入后即可使用。",
-            icon: <InfoCircleOutlined/>,
-            content: <CopyableField text={item.UUID}/>
+            icon: <InfoCircleOutlined />,
+            content: <CopyableField text={item.UUID} />
         })
     })
     return (
@@ -1343,8 +1340,8 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
                     <div className='icon-body'>
                         <div className='text-icon'>
-                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && <OnlineCloudIcon/>}
-                            {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined/>}
+                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && <OnlineCloudIcon />}
+                            {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
                         </div>
                         {gitUrlIcon(plugin.FromGit)}
                     </div>
@@ -1360,7 +1357,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                             }}
                         />
                     )}
-                    {(uploadLoading && <LoadingOutlined className='upload-outline'/>) || (
+                    {(uploadLoading && <LoadingOutlined className='upload-outline' />) || (
                         <>
                             {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
                                 <SyncCloudButton
@@ -1368,7 +1365,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                                     setParams={updateListItem}
                                     uploadLoading={setUploadLoading}
                                 >
-                                    <UploadOutlined className='upload-outline'/>
+                                    <UploadOutlined className='upload-outline' />
                                 </SyncCloudButton>
                             )}
                         </>
@@ -1390,7 +1387,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                 {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
-                        {plugin.HeadImg && <img alt='' src={plugin.HeadImg}/>}
+                        {plugin.HeadImg && <img alt='' src={plugin.HeadImg} />}
                         <div className='plugin-item-author content-ellipsis'>{plugin.Author || "anonymous"}</div>
                     </div>
                     <div className='plugin-item-time'>{formatDate(plugin.CreatedAt)}</div>
@@ -1525,7 +1522,7 @@ const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY"
 const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH"
 const YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH"
 
-export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => {
+export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
     const [gitUrl, setGitUrl] = useState("https://github.com/yaklang/yakit-store")
     const [nucleiGitUrl, setNucleiGitUrl] = useState("https://github.com/projectdiscovery/nuclei-templates")
     const [proxy, setProxy] = useState("")
@@ -1697,17 +1694,17 @@ export const LoadYakitPluginForm = React.memo((p: { onFinished: () => any }) => 
             )}
             {loadMode === "local" && (
                 <>
-                    <InputItem label={"本地仓库地址"} value={localPath} setValue={setLocalPath}/>
+                    <InputItem label={"本地仓库地址"} value={localPath} setValue={setLocalPath} />
                 </>
             )}
             {loadMode === "local-nuclei" && (
                 <>
-                    <InputItem label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath}/>
+                    <InputItem label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath} />
                 </>
             )}
             {loadMode === "uploadId" && (
                 <>
-                    <InputItem label={"插件ID"} value={localId} setValue={setLocalId}/>
+                    <InputItem label={"插件ID"} value={localId} setValue={setLocalId} />
                 </>
             )}
             <Form.Item colon={false} label={" "}>
@@ -1731,7 +1728,7 @@ export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
     }
     return (
         <Tooltip title={url}>
-            <GithubOutlined className='github-icon'/>
+            <GithubOutlined className='github-icon' />
         </Tooltip>
     )
 }
@@ -1784,8 +1781,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 ipcRenderer.invoke("change-main-menu")
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -1813,8 +1809,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
             }
             ipcRenderer
                 .invoke("DownloadOnlinePluginAll", addParams, taskToken)
-                .then(() => {
-                })
+                .then(() => {})
                 .catch((e) => {
                     failed(`添加失败:${e}`)
                 })
@@ -1865,7 +1860,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
             )}
             {addLoading ? (
                 <>
-                    {(size === "small" && <PoweroffOutlined className='filter-opt-btn' onClick={StopAllPlugin}/>) || (
+                    {(size === "small" && <PoweroffOutlined className='filter-opt-btn' onClick={StopAllPlugin} />) || (
                         <Button size='small' type='primary' danger onClick={StopAllPlugin}>
                             停止
                         </Button>
@@ -1903,7 +1898,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                                 >
                                     {(size === "small" && (
                                         <Tooltip title='下载'>
-                                            <DownloadOutlined className='operation-icon '/>
+                                            <DownloadOutlined className='operation-icon ' />
                                         </Tooltip>
                                     )) || (
                                         <Button type='primary' size='small'>
@@ -1915,7 +1910,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                                 <>
                                     {(size === "small" && (
                                         <Tooltip title='下载'>
-                                            <DownloadOutlined className='operation-icon ' onClick={AddAllPlugin}/>
+                                            <DownloadOutlined className='operation-icon ' onClick={AddAllPlugin} />
                                         </Tooltip>
                                     )) || (
                                         <Button type='primary' size='small' onClick={AddAllPlugin}>
@@ -2093,8 +2088,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         setListLoading={setListLoading}
                         user={true}
                         userInfo={userInfo}
-                        onFinish={() => {
-                        }}
+                        onFinish={() => {}}
                     />
                 </Col>
             </Row>
@@ -2284,8 +2278,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                         setListLoading={setListLoading}
                         user={false}
                         userInfo={userInfo}
-                        onFinish={() => {
-                        }}
+                        onFinish={() => {}}
                     />
                 </Col>
             </Row>
@@ -2534,7 +2527,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         return (
             <List
                 dataSource={[]}
-                locale={{emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='未登录,请先登录'/>}}
+                locale={{emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='未登录,请先登录' />}}
             />
         )
     }
@@ -2578,7 +2571,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     )
 }
 
-export const TagColor: { [key: string]: string } = {
+export const TagColor: {[key: string]: string} = {
     failed: "color-bgColor-red|审核不通过",
     success: "color-bgColor-green|审核通过",
     not: "color-bgColor-blue|待审核"
@@ -2644,15 +2637,15 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                 !bind_me &&
                                 info.official && (
                                     // @ts-ignore
-                                    <OfficialYakitLogoIcon className='text-icon-style'/>
+                                    <OfficialYakitLogoIcon className='text-icon-style' />
                                 )
                             )}
-                            {bind_me && <>{(info.is_private === true && <LockOutlined/>) || <OnlineCloudIcon/>}</>}
+                            {bind_me && <>{(info.is_private === true && <LockOutlined />) || <OnlineCloudIcon />}</>}
                         </div>
                     </div>
                 </div>
                 <div className='plugin-item-right'>
-                    {(loading && <LoadingOutlined className='plugin-down'/>) || (
+                    {(loading && <LoadingOutlined className='plugin-down' />) || (
                         <div
                             className='plugin-down'
                             onClick={(e) => {
@@ -2661,7 +2654,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                             }}
                             title='添加到插件仓库'
                         >
-                            <DownloadOutlined className='operation-icon '/>
+                            <DownloadOutlined className='operation-icon ' />
                         </div>
                     )}
                 </div>
@@ -2687,7 +2680,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                 )) || <div className='plugin-tag'>&nbsp;</div>}
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
-                        {info.head_img && <img alt='' src={info.head_img}/>}
+                        {info.head_img && <img alt='' src={info.head_img} />}
                         <div className='plugin-item-author content-ellipsis'>{info.authors || "anonymous"}</div>
                     </div>
                     <div className='plugin-item-time'>{formatDate(info.created_at)}</div>
@@ -2929,7 +2922,7 @@ const PluginFilter: React.FC<PluginFilterProps> = (props) => {
                     className={`full-filter  ${isFilter && "operation-icon-active"}`}
                     onClick={() => setVisibleQuery(true)}
                 >
-                    <FilterOutlined className='filter-icon'/>
+                    <FilterOutlined className='filter-icon' />
                     筛选
                 </div>
             )}
