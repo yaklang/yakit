@@ -278,6 +278,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                     system={params?.system}
                     order={params?.order}
                     fuzzerParams={params?.fuzzerParams}
+                    shareContent={params?.shareContent}
                 />
             )
         case Route.Codec:

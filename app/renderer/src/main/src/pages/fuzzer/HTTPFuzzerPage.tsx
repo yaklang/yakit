@@ -795,7 +795,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         callback(params)
     })
     const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
-        // console.log("shareContent", shareContent)
         setIsHttps(shareContent.isHttps)
         setAdvancedConfig(shareContent.advancedConfig)
         setRequest(shareContent.request || defaultPostTemplate)
@@ -922,7 +921,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     </Space>
                 </Col>
                 <Col span={4} className='share-right'>
-                    <ShareData<ShareValueProps> module='HTTPFuzzer' getShareContent={getShareContent} />
+                    <ShareData module='HTTPFuzzer' getShareContent={getShareContent} />
                 </Col>
             </Row>
 

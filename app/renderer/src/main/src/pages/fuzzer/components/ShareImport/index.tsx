@@ -24,7 +24,6 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
     const {onClose} = props
     const [loading, setLoading] = useState<boolean>(false)
     const onFinish = useMemoizedFn((value: ShareDataResProps) => {
-        console.log("value", value)
         const shareContent = {
             advancedConfig: true,
             advancedConfiguration: {
