@@ -77,7 +77,7 @@ interface ShareValueProps {
     isHttps: boolean
     advancedConfig: boolean
     advancedConfiguration?: AdvancedConfigurationProps
-    requestCode: any
+    request: any
 }
 
 interface AdvancedConfigurationProps {
@@ -123,6 +123,7 @@ export interface HTTPFuzzerPageProp {
     system?: string
     order?: string
     fuzzerParams?: fuzzerInfoProp
+    shareContent?: string
 }
 
 const Text = Typography.Text
@@ -287,6 +288,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [keyword, setKeyword] = useState<string>("")
     const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
     const [timer, setTimer] = useState<any>()
+
+    useEffect(() => {
+        if (props.shareContent) {
+            setUpShareContent(JSON.parse(props.shareContent))
+        }
+    }, [props.shareContent])
 
     useEffect(() => {
         getValue(WEB_FUZZ_HOTPATCH_CODE).then((data: any) => {
@@ -770,7 +777,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const params: ShareValueProps = {
             isHttps,
             advancedConfig: advancedConfig,
-            requestCode: getRequest(),
+            request: getRequest(),
             advancedConfiguration: {
                 forceFuzz,
                 concurrent,
@@ -786,6 +793,24 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
         }
         callback(params)
+    })
+    const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
+        // console.log("shareContent", shareContent)
+        setIsHttps(shareContent.isHttps)
+        setAdvancedConfig(shareContent.advancedConfig)
+        setRequest(shareContent.request || defaultPostTemplate)
+        if (shareContent.advancedConfiguration) {
+            setForceFuzz(shareContent.advancedConfiguration?.forceFuzz)
+            setConcurrent(shareContent.advancedConfiguration.concurrent || 20)
+            setNoFixContentLength(shareContent.advancedConfiguration.noFixContentLength)
+            setProxy(shareContent.advancedConfiguration.proxy)
+            setActualHost(shareContent.advancedConfiguration.actualHost)
+            setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
+            setMinDelaySeconds(shareContent.advancedConfiguration.minDelaySeconds)
+            setMaxDelaySeconds(shareContent.advancedConfiguration.maxDelaySeconds)
+            setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
+            setFilter(shareContent.advancedConfiguration.getFilter)
+        }
     })
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
@@ -837,7 +862,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 历史
                             </Button>
                         </Popover>
-                        <Checkbox defaultChecked={isHttps} value={isHttps} onChange={() => setIsHttps(!isHttps)}>
+                        <Checkbox checked={isHttps} onChange={() => setIsHttps(!isHttps)}>
                             强制 HTTPS
                         </Checkbox>
                         <SwitchItem
@@ -897,7 +922,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     </Space>
                 </Col>
                 <Col span={4} className='share-right'>
-                    <ShareData module="HTTPFuzzer" getShareContent={getShareContent} />
+                    <ShareData<ShareValueProps> module='HTTPFuzzer' getShareContent={getShareContent} />
                 </Col>
             </Row>
 
