@@ -929,7 +929,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 <Row style={{marginBottom: 8}} gutter={8}>
                     <Col span={16}>
                         {/*高级配置*/}
-                        <Card bordered={true} size={"small"} bodyStyle={{height: 106}}>
+                        <Card bordered={true} size={"small"}>
                             <Spin style={{width: "100%"}} spinning={!reqEditor}>
                                 <Form
                                     onSubmitCapture={(e) => e.preventDefault()}
