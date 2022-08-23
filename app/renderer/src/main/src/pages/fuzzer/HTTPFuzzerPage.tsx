@@ -921,7 +921,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     </Space>
                 </Col>
                 <Col span={4} className='share-right'>
-                    <ShareData module='HTTPFuzzer' getShareContent={getShareContent} />
+                    <ShareData module='fuzzer' getShareContent={getShareContent} />
                 </Col>
             </Row>
 

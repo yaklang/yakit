@@ -3,59 +3,76 @@ import {Button, Modal, Radio} from "antd"
 import {ShareIcon} from "@/assets/icons"
 import {useMemoizedFn, useHover} from "ahooks"
 import {useStore} from "@/store"
-import {warn, success} from "@/utils/notification"
+import {warn, success, failed} from "@/utils/notification"
 import CopyToClipboard from "react-copy-to-clipboard"
 import "./index.scss"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
 
 interface ShareDataProps {
-    module: string //路由的key值
+    module: string // 新建tab类型
     getShareContent: (callback: any) => void
-}
-
-export interface ShareDataResProps {
-    share_id: string
-    extract_code: string
 }
 
 export const ShareData: React.FC<ShareDataProps> = (props) => {
     const {getShareContent, module} = props
-    const [shareContent, setShareContent] = useState<string>()
+    const [shareContent, setShareContent] = useState<string>("")
     const [expiredTime, setExpiredTime] = useState<number>(3)
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false)
     const [shareLoading, setShareLoading] = useState<boolean>(false)
-    const [shareResData, setShareResData] = useState<ShareDataResProps>()
+    const [shareResData, setShareResData] = useState<API.ShareResponse>({
+        share_id: 0,
+        extract_code: ""
+    })
 
     // 全局监听登录状态
     const {userInfo} = useStore()
     const getValue = useMemoizedFn(() => {
-        // if (!userInfo.isLogin) {
-        //     warn("请先登录")
-        //     return
-        // }
+        if (!userInfo.isLogin) {
+            warn("请先登录")
+            return
+        }
+        setShareLoading(false)
         getShareContent((content) => {
             setShareContent(JSON.stringify(content))
             setIsModalVisible(true)
         })
     })
     const handleCancel = () => {
-        setShareResData(undefined)
+        setShareResData({
+            share_id: 0,
+            extract_code: ""
+        })
         setIsModalVisible(false)
+        setExpiredTime(3)
     }
     const onShare = useMemoizedFn(() => {
-        const params = {
+        const params: API.ShareRequest = {
             expired_time: expiredTime,
             share_content: shareContent,
             module
         }
-        // console.log("params", params)
+        console.log("params", params)
         setShareLoading(true)
-        setTimeout(() => {
-            setShareResData({
-                share_id: "5550",
-                extract_code: "888"
+        NetWorkApi<API.ShareRequest, API.ShareResponse>({
+            url: "module/share",
+            method: "post",
+            data: params
+        })
+            .then((res) => {
+                console.log("res", res)
+                setShareResData({
+                    ...res
+                })
             })
-            setShareLoading(false)
-        }, 2000)
+            .catch((err) => {
+                failed("分享失败：" + err)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setShareLoading(false)
+                }, 200)
+            })
     })
     return (
         <>
@@ -71,7 +88,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                         <Radio.Button value={7}>7天</Radio.Button>
                     </Radio.Group>
                 </div>
-                {shareResData && (
+                {shareResData.share_id > 0 && (
                     <>
                         <div className='content-value'>
                             <span className='label-text'>分享id：</span>
@@ -87,7 +104,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                     <Button type='primary' onClick={onShare} loading={shareLoading}>
                         生成分享密令
                     </Button>
-                    {shareResData && (
+                    {shareResData.share_id > 0 && (
                         <CopyToClipboard
                             text={`分享id：${shareResData.share_id}\r\n密码：${shareResData.extract_code}`}
                             onCopy={(text, ok) => {
