@@ -116,7 +116,7 @@
       user_id: number;
     }
     export interface ShareResponse {
-      share_id: number;
+      share_id: string;
       extract_code: string;
     }
     export interface ShareRequest {

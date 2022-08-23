@@ -24,11 +24,6 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
     const {onClose} = props
     const [loading, setLoading] = useState<boolean>(false)
     const onFinish = useMemoizedFn((value) => {
-        if (isNaN(parseInt(value.share_id))) {
-            failed("请输入整数")
-            return
-        }
-        value.share_id = parseInt(value.share_id)
         console.log("value", value)
         setLoading(true)
         NetWorkApi<API.ShareResponse, string>({

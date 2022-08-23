@@ -21,7 +21,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false)
     const [shareLoading, setShareLoading] = useState<boolean>(false)
     const [shareResData, setShareResData] = useState<API.ShareResponse>({
-        share_id: 0,
+        share_id: "",
         extract_code: ""
     })
 
@@ -40,7 +40,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
     })
     const handleCancel = () => {
         setShareResData({
-            share_id: 0,
+            share_id: "",
             extract_code: ""
         })
         setIsModalVisible(false)
@@ -88,7 +88,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                         <Radio.Button value={7}>7天</Radio.Button>
                     </Radio.Group>
                 </div>
-                {shareResData.share_id > 0 && (
+                {shareResData.share_id && (
                     <>
                         <div className='content-value'>
                             <span className='label-text'>分享id：</span>
@@ -104,7 +104,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                     <Button type='primary' onClick={onShare} loading={shareLoading}>
                         生成分享密令
                     </Button>
-                    {shareResData.share_id > 0 && (
+                    {shareResData.share_id && (
                         <CopyToClipboard
                             text={`分享id：${shareResData.share_id}\r\n密码：${shareResData.extract_code}`}
                             onCopy={(text, ok) => {
