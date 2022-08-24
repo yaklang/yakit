@@ -10,6 +10,7 @@ import {failed, warn} from "../../utils/notification";
 import {OneLine} from "../../utils/inputUtil";
 import {useMemoizedFn, useThrottle} from "ahooks";
 import ReactResizeDetector from "react-resize-detector";
+import {AutoSpin} from "@/components/AutoSpin";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -31,25 +32,26 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
             return
         }
 
-        if ((script.Params || []).length > 0 && script.Type !== "port-scan") {
-            let m2 = showModal({
-                title: `设置 [${script.ScriptName}] 的参数`,
-                content: <>
-                    <YakScriptParamsSetter
-                        {...script}
-                        onParamsConfirm={(p: YakExecutorParam[]) => {
-                            clearMITMPluginCache()
-                            onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
-                            m2.destroy()
-                        }}
-                        submitVerbose={"设置 MITM 参数"}
-                    />
-                </>, width: "50%",
-            })
-        } else {
-            clearMITMPluginCache()
-            p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
-        }
+        clearMITMPluginCache()
+        p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
+        // if ((script.Params || []).length > 0 && script.Type !== "port-scan") {
+        //     let m2 = showModal({
+        //         title: `设置 [${script.ScriptName}] 的参数`,
+        //         content: <>
+        //             <YakScriptParamsSetter
+        //                 {...script}
+        //                 onParamsConfirm={(p: YakExecutorParam[]) => {
+        //                     clearMITMPluginCache()
+        //                     onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
+        //                     m2.destroy()
+        //                 }}
+        //                 submitVerbose={"设置 MITM 参数"}
+        //             />
+        //         </>, width: "50%",
+        //     })
+        // } else {
+        //
+        // }
     })
 
     return <Card
@@ -60,10 +62,12 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
             // backgroundColor: hooks.get(i.ScriptName) ? "#d6e4ff" : undefined
         }}
     >
-        <div style={{
-            display: "flex", flexDirection: "row", width: "100%",
-            justifyContent: "flex-end",
-        }}>
+        <div
+            style={{
+                display: "flex", flexDirection: "row", width: "100%",
+                justifyContent: "flex-end",
+            }}
+        >
             <div
                 style={{
                     flex: 1, display: "flex", flexDirection: "row",

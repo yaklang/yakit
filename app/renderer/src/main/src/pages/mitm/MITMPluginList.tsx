@@ -47,6 +47,8 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     const refresh = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
     })
+    const [loading, setLoading] = useState(false);
+
     // 热加载模块持久化
     useEffect(() => {
         getRemoteValue(MITM_HOTPATCH_CODE).then((e) => {
@@ -79,6 +81,11 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     }, [])
 
     useEffect(() => {
+        // 加载状态(从服务端加载)
+        ipcRenderer.on("client-mitm-loading", (_, flag: boolean) => {
+            setLoading(flag)
+        })
+
         // 用于 MITM 的 查看当前 Hooks
         ipcRenderer.on("client-mitm-hooks", (e, data: YakScriptHooks[]) => {
             const tmp = new Map<string, boolean>()
@@ -103,7 +110,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         <AutoCard
             bordered={false}
             bodyStyle={{padding: 0, overflowY: "auto"}}
-            loading={!initialed}
+            loading={!initialed || loading}
             title={
                 <Space>
                     <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()} layout={"inline"}>

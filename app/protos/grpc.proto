@@ -1852,6 +1852,11 @@ message MITMResponse {
   repeated YakScriptHooks hooks = 31;
 
   string RemoteAddr = 32;
+
+  bool haveNotification = 34;
+  bytes notificationContent = 33;
+  bool haveLoadingSetter = 35;
+  bool loadingFlag = 36;
 }
 
 message YakScriptHooks {

@@ -214,6 +214,16 @@ module.exports = (win, getClient) => {
                 win.webContents.send("client-mitm-start-success")
             }
 
+            // mitm 服务端控制客户端加载状态
+            if (win && data["haveLoadingSetter"]) {
+                win.webContents.send("client-mitm-loading", !!(data["loadingFlag"]))
+            }
+
+            // mitm 服务端给客户端发送提示信息
+            if (win && data["haveNotification"]) {
+                win.webContents.send("client-mitm-notification", data["notificationContent"])
+            }
+
             // 检查替代规则的问题，如果返回了有内容，说明没 BUG
             if (win && (data?.replacers || []).length > 0) {
                 win.webContents.send("client-mitm-content-replacer-update", data)

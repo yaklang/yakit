@@ -41,6 +41,7 @@ import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplace
 import {ChromeLauncherButton} from "./MITMChromeLauncher";
 import {MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm";
 import {MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking";
+import {Uint8ArrayToString} from "@/utils/str";
 
 const {Text} = Typography;
 const {Item} = Form;
@@ -87,10 +88,28 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 setLoading(false)
             }, 300)
         })
+
+        // 加载状态(从服务端加载)
+        ipcRenderer.on("client-mitm-loading", (_, flag: boolean) => {
+            setLoading(flag)
+        })
+
+        ipcRenderer.on("client-mitm-notification", (_, i: Uint8Array) => {
+            try {
+                info(Uint8ArrayToString(i))
+            } catch (e) {
+
+            }
+
+        })
+
         return () => {
             ipcRenderer.removeAllListeners("client-mitm-start-success")
+            ipcRenderer.removeAllListeners("client-mitm-loading")
+            ipcRenderer.removeAllListeners("client-mitm-notification")
         }
     }, [])
+
 
     // 通过 gRPC 调用，启动 MITM 劫持
     const startMITMServer = useMemoizedFn((targetHost, targetPort, downstreamProxy) => {
