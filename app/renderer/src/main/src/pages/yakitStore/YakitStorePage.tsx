@@ -865,7 +865,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     ...queryLocal,
                     Keyword: publicKeyword
                 })
-                onResetList()
+                // onResetList()
             }
         },
         [publicKeyword],
@@ -1221,7 +1221,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         setParams(newParams)
         setIsRef(!isRef)
         setListBodyLoading(true)
-        
+
         update(1, undefined, queryLocal)
         if (onSelectList) onSelectList([])
     }, [userInfo.isLogin, props.refresh])
@@ -2010,7 +2010,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     ...queryUser,
                     keywords: publicKeyword
                 })
-                onResetList()
+                // onResetList()
             }
         },
         [publicKeyword],
@@ -2198,7 +2198,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     ...queryOnline,
                     keywords: publicKeyword
                 })
-                onResetList()
+                // onResetList()
             }
         },
         [publicKeyword],
