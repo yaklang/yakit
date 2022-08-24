@@ -1026,10 +1026,12 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             }
         }
         if (errList.length > 0) {
-            const errString = errList.map((e) => {
-                return `插件名：【${e.script_name}】，失败原因：${e.err}`
-            })
-            failed("有插件上传失败，详情：“" + errString.join(";") + "”")
+            const errString = errList
+                .filter((_, index) => index < 10)
+                .map((e) => {
+                    return `插件名：【${e.script_name}】，失败原因：${e.err}`
+                })
+            failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
         } else {
             success("批量上传成功")
         }
@@ -1150,7 +1152,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     <Popconfirm title='上传不支持全选且只能上传未上传至云端的插件' onConfirm={() => onBatchUpload()}>
                         {(size === "small" && (
                             <Tooltip title='上传'>
-                                <CloudUploadOutlined className='operation-icon' />
+                                <UploadOutlined className='operation-icon' />
                             </Tooltip>
                         )) || (
                             <Button size='small' type='primary'>
