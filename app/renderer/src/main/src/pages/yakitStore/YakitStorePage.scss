@@ -269,7 +269,7 @@
         .plugin-item-left {
             display: flex;
             align-items: center;
-            width: 90%;
+            width: 80%;
 
             .text-style {
                 font-size: 16px;
@@ -307,6 +307,7 @@
             align-items: center;
             flex: 1;
             line-height: initial;
+            justify-content: flex-end;
 
             .upload-outline {
                 margin: 0 6px;

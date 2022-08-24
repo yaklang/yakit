@@ -24,22 +24,21 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
     const {onClose} = props
     const [loading, setLoading] = useState<boolean>(false)
     const onFinish = useMemoizedFn((value) => {
-        console.log("value", value)
         setLoading(true)
-        NetWorkApi<API.ShareResponse, string>({
+        NetWorkApi<API.ShareResponse, API.ExtractResponse>({
             url: "module/extract",
             method: "post",
             data: value
         })
             .then((res) => {
-                const shareContent = JSON.parse(res)
+                const shareContent = JSON.parse(res.extract_content)
                 ipcRenderer
                     .invoke("send-to-tab", {
-                        type: "fuzzer",
+                        type: res.module,
                         data: {
                             isHttps: shareContent.isHttps,
                             request: shareContent.request,
-                            shareContent: res
+                            shareContent: res.extract_content
                         }
                     })
                     .then(() => {

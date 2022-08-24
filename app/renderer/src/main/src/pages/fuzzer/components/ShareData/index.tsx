@@ -52,7 +52,6 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             share_content: shareContent,
             module
         }
-        console.log("params", params)
         setShareLoading(true)
         NetWorkApi<API.ShareRequest, API.ShareResponse>({
             url: "module/share",
@@ -60,7 +59,6 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             data: params
         })
             .then((res) => {
-                console.log("res", res)
                 setShareResData({
                     ...res
                 })
