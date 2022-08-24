@@ -30,7 +30,7 @@ import {
     ReloadOutlined,
     SettingOutlined
 } from "@ant-design/icons"
-import {failed, info, success} from "../utils/notification"
+import {failed, info, success, warn} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {YakLogoBanner} from "../utils/logo"
 import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
@@ -744,7 +744,7 @@ const Main: React.FC<MainProp> = (props) => {
                     request: request || "",
                     system: system,
                     order: time,
-                    shareContent:res.shareContent
+                    shareContent: res.shareContent
                 })
             })
             addFuzzerList(time, request || "", isHttps || false)
@@ -1037,10 +1037,14 @@ const Main: React.FC<MainProp> = (props) => {
                                             <Menu.Item
                                                 key={"share-menu"}
                                                 onClick={() => {
-                                                    const m = showModal({
-                                                        title: "使用分享数据",
-                                                        content: <ShareImport onClose={() => m.destroy()}/>
-                                                    })
+                                                    if (userInfo.isLogin) {
+                                                        const m = showModal({
+                                                            title: "使用分享数据",
+                                                            content: <ShareImport onClose={() => m.destroy()} />
+                                                        })
+                                                    } else {
+                                                        warn("请先登录")
+                                                    }
                                                 }}
                                             >
                                                 <Button type={"link"}>使用分享数据</Button>
