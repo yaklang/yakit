@@ -86,6 +86,7 @@ const singletonRoute: Route[] = [
     Route.ModManager,
     Route.ModManagerLegacy,
     Route.YakScript,
+    Route.AddYakitScript,
 
     // database
     Route.DB_Ports,
@@ -189,7 +190,7 @@ const Main: React.FC<MainProp> = (props) => {
 
     const [notification, setNotification] = useState("")
 
-    const [pageCache, setPageCache] = useState<PageCache[]>([
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>([
         {
             verbose: "MITM",
             route: Route.HTTPHacker,
@@ -298,8 +299,8 @@ const Main: React.FC<MainProp> = (props) => {
 
     // Tabs Bar Operation Function
     const getCacheIndex = (route: string) => {
-        const targets = pageCache.filter((i) => i.route === route)
-        return targets.length > 0 ? pageCache.indexOf(targets[0]) : -1
+        const targets = getPageCache().filter((i) => i.route === route)
+        return targets.length > 0 ? getPageCache().indexOf(targets[0]) : -1
     }
     const addTabPage = useMemoizedFn(
         (
@@ -394,20 +395,23 @@ const Main: React.FC<MainProp> = (props) => {
             })
         } else addTabPage(route as Route)
     })
-    const removePage = (route: string) => {
+    const removePage = (route: string, isClose: boolean = true) => {
         const targetIndex = getCacheIndex(route)
-
-        if (targetIndex > 0 && pageCache[targetIndex - 1]) {
-            const targetCache = pageCache[targetIndex - 1]
+        if (route === Route.AddYakitScript && isClose) {
+            ipcRenderer.invoke("tab-isClose")
+            return
+        }
+        if (targetIndex > 0 && getPageCache()[targetIndex - 1]) {
+            const targetCache = getPageCache()[targetIndex - 1]
             setCurrentTabKey(targetCache.route)
         }
-        if (targetIndex === 0 && pageCache[targetIndex + 1]) {
-            const targetCache = pageCache[targetIndex + 1]
+        if (targetIndex === 0 && getPageCache()[targetIndex + 1]) {
+            const targetCache = getPageCache()[targetIndex + 1]
             setCurrentTabKey(targetCache.route)
         }
-        if (targetIndex === 0 && pageCache.length === 1) setCurrentTabKey("" as any)
+        if (targetIndex === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
 
-        setPageCache(pageCache.filter((i) => i.route !== route))
+        setPageCache(getPageCache().filter((i) => i.route !== route))
 
         if (route === Route.HTTPFuzzer) delFuzzerList(1)
     }
@@ -750,6 +754,13 @@ const Main: React.FC<MainProp> = (props) => {
             addFuzzerList(time, request || "", isHttps || false)
         }
     })
+    const addYakScript = useMemoizedFn((res: any) => {
+        const time = new Date().getTime().toString()
+        addTabPage(Route.AddYakitScript, {
+            time: time,
+            node: ContentByRoute(Route.AddYakitScript, undefined)
+        })
+    })
     const addScanPort = useMemoizedFn((res: any) => {
         const {URL = ""} = res || {}
         if (URL) {
@@ -853,12 +864,22 @@ const Main: React.FC<MainProp> = (props) => {
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
             if (type === "exec-packet-scan")
                 addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
-            console.info("send to tab: ", type)
-            console.info("MainOperator SendtoTab", data)
+            if (type === "add-yakit-script") addYakScript(data)
         })
 
         return () => {
             ipcRenderer.removeAllListeners("fetch-send-to-tab")
+        }
+    }, [])
+    useEffect(() => {
+        ipcRenderer.on("fetch-close-tab", (e, res: any) => {
+            const {router, singleNode} = res
+            if (singleNode) {
+                removePage(router, false)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-close-tab")
         }
     }, [])
 

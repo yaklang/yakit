@@ -42,6 +42,7 @@ import {
     ReadOnlyBatchExecutorByRecoverUid
 } from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
 import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
+import {AddYakitScript} from "@/pages/yakitStore/AddYakitScript"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -49,6 +50,7 @@ const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
 export enum Route {
     MITM = "mitm",
     YakScript = "yakScript",
+    AddYakitScript = "新建插件",
     Codec = "codec",
     WebShellManager = "webShellManager",
     HistoryRequests = "historyRequests",
@@ -332,6 +334,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                     Keyword={params?.packetScan_Keyword}
                 />
             )
+        case Route.AddYakitScript:
+            return <AddYakitScript />
+
         default:
             return <div />
     }

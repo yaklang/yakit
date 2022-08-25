@@ -951,22 +951,9 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         onSelectAllLocal(false)
     })
     const onAdd = useMemoizedFn(() => {
-        let m = showDrawer({
-            title: "创建新插件",
-            width: "100%",
-            content: (
-                <>
-                    <YakScriptCreatorForm
-                        onChanged={(e) => {
-                            setRefresh(!refresh)
-                        }}
-                        onCreated={() => {
-                            m.destroy()
-                        }}
-                    />
-                </>
-            ),
-            keyboard: false
+        ipcRenderer.invoke("send-to-tab", {
+            type: "add-yakit-script",
+            data: {}
         })
     })
     const onImport = useMemoizedFn(() => {
@@ -1037,7 +1024,9 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         }
         setUpLoading(false)
         setVisibleSyncSelect(false)
-        onResetList()
+        setTimeout(() => {
+            onResetList()
+        }, 200);
     })
 
     const upOnline = useMemoizedFn(async (params: YakScript, url: string) => {

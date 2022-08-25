@@ -28,6 +28,16 @@ module.exports = (win, getClient) => {
   });
 
 
+  // tab是否可以关闭
+  ipcMain.handle("tab-isClose", async (e, params) => {
+    win.webContents.send("fetch-tab-isClose", params);
+  });
+
+  // 关闭tab
+  ipcMain.handle("send-close-tab", async (e, params) => {
+    win.webContents.send("fetch-close-tab", params);
+  });
+
   // 本地环境(打包/开发)
   ipcMain.handle("is-dev", () => {return isDev});
 };
