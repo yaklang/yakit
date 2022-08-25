@@ -411,6 +411,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 loading={loading}
                                                 progress={infoState.processState}
                                                 results={infoState.messageState}
+                                                risks={infoState.riskState}
                                                 featureType={infoState.featureTypeState}
                                                 feature={infoState.featureMessageState}
                                                 statusCards={infoState.statusState}

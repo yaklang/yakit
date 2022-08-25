@@ -322,6 +322,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                     <PluginResultUI
                         results={infoState.messageState}
                         progress={infoState.processState}
+                        risks={infoState.riskState}
                         featureType={infoState.featureTypeState}
                         feature={infoState.featureMessageState}
                         statusCards={infoState.statusState}

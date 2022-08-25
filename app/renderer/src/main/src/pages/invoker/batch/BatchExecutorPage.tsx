@@ -1039,7 +1039,7 @@ const BatchTaskViewer: React.FC<BatchTaskViewerProp> = React.memo((props) => {
                 feature={featureResults}
                 statusCards={Object.values(cacheStatusKVPair)}
                 onXtermRef={setXtermRef}
-            ></PluginResultUI>
+            />
         )
     }
 

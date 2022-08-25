@@ -51,6 +51,7 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
                 debugMode={props.debugMode}
                 results={infoState.messageState}
                 statusCards={infoState.statusState}
+                risks={infoState.riskState}
                 featureType={infoState.featureTypeState}
                 progress={infoState.processState}
                 feature={infoState.featureMessageState}

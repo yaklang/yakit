@@ -83,6 +83,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
                 loading={loading}
                 progress={infoState.processState}
                 results={infoState.messageState}
+                risks={infoState.riskState}
                 featureType={infoState.featureTypeState}
                 feature={infoState.featureMessageState}
                 statusCards={infoState.statusState}

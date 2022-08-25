@@ -38,6 +38,7 @@ export const ExecutePacketYakScript: React.FC<ExecutePacketYakScriptProp> = (pro
             <PluginResultUI
                 results={infoState.messageState}
                 progress={infoState.processState}
+                risks={infoState.riskState}
                 featureType={infoState.featureTypeState}
                 feature={infoState.featureMessageState}
                 statusCards={infoState.statusState}

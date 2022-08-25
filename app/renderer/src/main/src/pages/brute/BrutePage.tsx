@@ -321,6 +321,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                             <PluginResultUI
                                 // script={script}
                                 loading={loading}
+                                risks={infoState.riskState}
                                 progress={infoState.processState}
                                 results={infoState.messageState}
                                 featureType={infoState.featureTypeState}
