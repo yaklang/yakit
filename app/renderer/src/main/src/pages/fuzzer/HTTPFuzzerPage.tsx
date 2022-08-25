@@ -192,6 +192,8 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
     })
 }
 
+const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
+
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
     const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(props.fuzzerParams?.isHttps || props.isHttps || false)
@@ -515,6 +517,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [isHttps, forceFuzz, concurrent, proxy, actualHost, timeout, request])
 
     const responseViewer = useMemoizedFn((rsp: FuzzerResponse) => {
+        let reason = "未知原因"
+        try {
+            reason = content[0]!.Reason
+        } catch (e) {
+
+        }
         return (
             <HTTPPacketEditor
                 system={props.system}
@@ -526,16 +534,29 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 emptyOr={
                     !rsp?.Ok && (
                         <Result
-                            status={"error"}
-                            title={"请求失败"}
+                            status={
+                                (
+                                    reason.includes("tcp: i/o timeout") ||
+                                    reason.includes("empty response") ||
+                                    reason.includes("no such host") ||
+                                    reason.includes("cannot create proxy")
+                                ) ? "warning" : "error"
+                            }
+                            title={"请求失败或服务端（代理）异常"}
                             // no such host
                             subTitle={(() => {
                                 const reason = content[0]!.Reason
                                 if (reason.includes("tcp: i/o timeout")) {
-                                    return "网络超时"
+                                    return `网络超时（请检查目标主机是否在线？）`
                                 }
                                 if (reason.includes("no such host")) {
-                                    return "DNS 错误或主机错误"
+                                    return `DNS 错误或主机错误 (请检查域名是否可以被正常解析？)`
+                                }
+                                if (reason.includes("cannot create proxy")) {
+                                    return `无法设置代理（请检查代理是否可用）`
+                                }
+                                if (reason.includes("empty response")) {
+                                    return `服务端没有任何返回数据`
                                 }
                                 return undefined
                             })()}
@@ -657,58 +678,68 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             return
         }
 
-        setLoading(true)
-        ipcRenderer.invoke("IsMultipartFormDataRequest", {
-            Request: StringToUint8Array(props.request || "", "utf8")
-        }).then((e: { IsMultipartFormData: boolean }) => {
-            if (e.IsMultipartFormData) {
-                showModal({
-                    title: "潜在的数据包编码问题提示",
-                    content: (
-                        <Space direction={"vertical"}>
-                            <Space>
-                                <Typography>
-                                    <Text>当前数据包包含一个</Text>
-                                    <Text mark={true}>
-                                        原始文件内容 mutlipart/form-data
-                                    </Text>
-                                    <Text>
-                                        文件中的不可见字符进入编辑器将会被编码导致丢失信息。
-                                    </Text>
-                                </Typography>
-                            </Space>
-                            <Space>
-                                <Typography>
-                                    <Button type={"link"} size={"small"} onClick={() => {
-                                        ipcRenderer.invoke(
-                                            "FixUploadPacket", {Request: StringToUint8Array(props.request || "", "utf8")},
-                                        ).then((fixed: { Request: Uint8Array }) => {
-                                            setRequest(Uint8ArrayToString(fixed.Request, "utf8"))
-                                            refreshRequest()
-                                        })
-                                    }}>
-                                        点击替换
-                                    </Button>
-                                    <Text>
-                                        后，会替换掉原始文件内容
-                                    </Text>
-                                </Typography>
-                            </Space>
-                            <br/>
-                            <Space>
-                                <Typography>
-                                    <Text>如需要插入具体文件内容，可右键</Text>
-                                    <Text mark={true}>
-                                        插入文件
-                                    </Text>
-                                </Typography>
-                            </Space>
-                        </Space>
-                    ),
-                    width: "40%",
-                })
+        getRemoteValue(ALLOW_MULTIPART_DATA_ALERT).then(e => {
+            if (e !== "1") {
+                setLoading(true)
+                ipcRenderer.invoke("IsMultipartFormDataRequest", {
+                    Request: StringToUint8Array(props.request || "", "utf8")
+                }).then((e: { IsMultipartFormData: boolean }) => {
+                    if (e.IsMultipartFormData) {
+                        showModal({
+                            title: "潜在的数据包编码问题提示",
+                            content: (
+                                <Space direction={"vertical"}>
+                                    <Space>
+                                        <Typography>
+                                            <Text>当前数据包包含一个</Text>
+                                            <Text mark={true}>
+                                                原始文件内容 mutlipart/form-data
+                                            </Text>
+                                            <Text>
+                                                文件中的不可见字符进入编辑器将会被编码导致丢失信息。
+                                            </Text>
+                                        </Typography>
+                                    </Space>
+                                    <Space>
+                                        <Typography>
+                                            <Button type={"link"} size={"small"} onClick={() => {
+                                                ipcRenderer.invoke(
+                                                    "FixUploadPacket", {Request: StringToUint8Array(props.request || "", "utf8")},
+                                                ).then((fixed: { Request: Uint8Array }) => {
+                                                    setRequest(Uint8ArrayToString(fixed.Request, "utf8"))
+                                                    refreshRequest()
+                                                })
+                                            }}>
+                                                点击替换
+                                            </Button>
+                                            <Text>
+                                                后，会替换掉原始文件内容
+                                            </Text>
+                                        </Typography>
+                                    </Space>
+                                    <br/>
+                                    <Space>
+                                        <Typography>
+                                            <Text>如需要插入具体文件内容，可右键</Text>
+                                            <Text mark={true}>
+                                                插入文件
+                                            </Text>
+                                        </Typography>
+                                    </Space>
+                                    <Checkbox
+                                        defaultChecked={false}
+                                        onChange={e => {
+                                            setRemoteValue(ALLOW_MULTIPART_DATA_ALERT, "1")
+                                        }}
+                                    >不再提示</Checkbox>
+                                </Space>
+                            ),
+                            width: "40%",
+                        })
+                    }
+                }).finally(() => setLoading(false))
             }
-        }).finally(() => setLoading(false))
+        })
     }, [props.request])
 
     return (
