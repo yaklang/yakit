@@ -126,6 +126,12 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                     renderTabBar={(props, TabBarDefault) => {
                         return bars(props, TabBarDefault)
                     }}
+                    addIcon={
+                        <div>
+                            <div>+</div>
+                            {/* <ShareData /> */}
+                        </div>
+                    }
                 >
                     {pages.map((item, index) => {
                         return (

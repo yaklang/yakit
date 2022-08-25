@@ -74,7 +74,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
     })
     return (
         <>
-            <Button type='primary' size='small' icon={<ShareIcon />} onClick={getValue}>
+            <Button type='primary' icon={<ShareIcon />} onClick={getValue}>
                 分享
             </Button>
             <Modal title='分享' visible={isModalVisible} onCancel={handleCancel} footer={null}>

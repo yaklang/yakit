@@ -69,6 +69,7 @@ import {setRemoteValue} from "@/utils/kv"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {ShareImport} from "./fuzzer/components/ShareImport"
+import {ShareImportIcon} from "@/assets/icons"
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -905,6 +906,17 @@ const Main: React.FC<MainProp> = (props) => {
             }
         })
     })
+
+    const onShare = useMemoizedFn(() => {
+        if (userInfo.isLogin) {
+            const m = showModal({
+                title: "使用分享数据",
+                content: <ShareImport onClose={() => m.destroy()} />
+            })
+        } else {
+            warn("请先登录")
+        }
+    })
     const bars = (props: any, TabBarDefault: any) => {
         return (
             <TabBarDefault
@@ -1055,20 +1067,8 @@ const Main: React.FC<MainProp> = (props) => {
                                             >
                                                 <Button type={"link"}>配置私有域</Button>
                                             </Menu.Item>
-                                            <Menu.Item
-                                                key={"share-menu"}
-                                                onClick={() => {
-                                                    if (userInfo.isLogin) {
-                                                        const m = showModal({
-                                                            title: "使用分享数据",
-                                                            content: <ShareImport onClose={() => m.destroy()} />
-                                                        })
-                                                    } else {
-                                                        warn("请先登录")
-                                                    }
-                                                }}
-                                            >
-                                                <Button type={"link"}>使用分享数据</Button>
+                                            <Menu.Item key={"share-menu"} onClick={() => onShare()}>
+                                                <Button type={"link"}>导入协作资源</Button>
                                             </Menu.Item>
                                         </Menu>
                                     }
@@ -1253,7 +1253,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 {pageCache.length > 0 ? (
                                     <Tabs
                                         style={{display: "flex", flex: "1"}}
-                                        tabBarStyle={{marginBottom: 8}}
+                                        // tabBarStyle={{marginBottom: 8}}
                                         className='main-content-tabs yakit-layout-tabs'
                                         activeKey={currentTabKey}
                                         onChange={setCurrentTabKey}
@@ -1262,7 +1262,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         renderTabBar={(props, TabBarDefault) => {
                                             return bars(props, TabBarDefault)
                                         }}
-                                        hideAdd={true}
+                                        // hideAdd={true}
                                         onTabClick={(key, e) => {
                                             const divExisted = document.getElementById("yakit-cursor-menu")
                                             if (divExisted) {
@@ -1273,6 +1273,13 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                             }
                                         }}
+                                        addIcon={
+                                            <ShareImportIcon
+                                                // @ts-ignore
+                                                className='share-import-icon'
+                                                onClick={() => onShare()}
+                                            />
+                                        }
                                     >
                                         {pageCache.map((i) => {
                                             return (

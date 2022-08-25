@@ -567,9 +567,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let reason = "未知原因"
         try {
             reason = content[0]!.Reason
-        } catch (e) {
-
-        }
+        } catch (e) {}
         return (
             <HTTPPacketEditor
                 system={props.system}
@@ -582,12 +580,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     !rsp?.Ok && (
                         <Result
                             status={
-                                (
-                                    reason.includes("tcp: i/o timeout") ||
-                                    reason.includes("empty response") ||
-                                    reason.includes("no such host") ||
-                                    reason.includes("cannot create proxy")
-                                ) ? "warning" : "error"
+                                reason.includes("tcp: i/o timeout") ||
+                                reason.includes("empty response") ||
+                                reason.includes("no such host") ||
+                                reason.includes("cannot create proxy")
+                                    ? "warning"
+                                    : "error"
                             }
                             title={"请求失败或服务端（代理）异常"}
                             // no such host
@@ -814,7 +812,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8} style={{marginBottom: 8}}>
-                <Col span={20} style={{textAlign: "left", marginTop: 4}}>
+                <Col span={24} style={{textAlign: "left", marginTop: 4}}>
                     <Space style={{width: "100%", display: "flex", flexDirection: "row"}}>
                         {loading ? (
                             <Button
@@ -843,6 +841,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 发送数据包
                             </Button>
                         )}
+                        <ShareData module='fuzzer' getShareContent={getShareContent} />
                         <Popover
                             trigger={"click"}
                             placement={"bottom"}
@@ -920,9 +919,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {actualHost !== "" && <Tag color={"red"}>请求 Host:{actualHost}</Tag>}
                     </Space>
                 </Col>
-                <Col span={4} className='share-right'>
-                    <ShareData module='fuzzer' getShareContent={getShareContent} />
-                </Col>
+                {/* <Col span={4} className='share-right'>
+                <ShareData module='fuzzer' getShareContent={getShareContent} />
+                </Col> */}
             </Row>
 
             {advancedConfig && (
