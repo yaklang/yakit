@@ -884,6 +884,14 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             setScript()
         }
     }, [isRefList])
+    useEffect(() => {
+        ipcRenderer.on("ref-local-script-list", (e, res: any) => {
+            onResetList()
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("ref-local-script-list")
+        }
+    }, [])
     const onRemoveLocalPlugin = useMemoizedFn(() => {
         const length = selectedRowKeysRecordLocal.length
         if (length === 0 || isSelectAllLocal) {
@@ -1026,7 +1034,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         setVisibleSyncSelect(false)
         setTimeout(() => {
             onResetList()
-        }, 200);
+        }, 200)
     })
 
     const upOnline = useMemoizedFn(async (params: YakScript, url: string) => {

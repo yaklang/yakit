@@ -15,7 +15,7 @@ import {CodecPluginTemplate} from "./data/CodecPluginTemplate"
 import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate"
 import {useCreation, useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import "./YakScriptCreator.css"
+import "./YakScriptCreator.scss"
 import {queryYakScriptList} from "../yakitStore/network"
 import {YakExecutorParam} from "./YakExecutorParams"
 import {SyncCloudButton} from "@/components/SyncCloudButton/index"
@@ -166,7 +166,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const [modified, setModified] = useState<YakScript | undefined>(props.modified)
     const [fullscreen, setFullscreen] = useState(false)
     const [loading, setLoading] = useState(false)
-
+    const [visible, setVisible] = useState<boolean>(false)
     const isNucleiPoC = params.Type === "nuclei"
 
     const debugButton = (primary?: boolean) => {
@@ -181,14 +181,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 onCloseTab()
                 return
             }
-            Modal.confirm({
-                title: "请先保存数据，关闭tab后，数据不会保存",
-                okText: "关闭",
-                cancelText: "取消",
-                onOk: () => {
-                    onCloseTab()
-                }
-            })
+            setVisible(true)
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-tab-isClose")
@@ -265,10 +258,14 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             })
     }, [props.modified])
     const onCloseTab = useMemoizedFn(() => {
-        ipcRenderer.invoke("send-close-tab", {
-            router: Route.AddYakitScript,
-            singleNode: true
-        })
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.AddYakitScript,
+                singleNode: true
+            })
+            .then(() => {
+                setVisible(false)
+            })
     })
     // 仅保存本地
     const onSaveLocal = useMemoizedFn(() => {
@@ -281,6 +278,12 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             .then((data) => {
                 info("创建 / 保存 Yak 脚本成功")
                 setParams(data)
+                if (visible) {
+                    // model提示保存后的处理
+                    onCloseTab()
+                    setVisible(false)
+                    ipcRenderer.invoke("send-local-script-list")
+                }
                 props.onCreated && props.onCreated(data)
                 props.onChanged && props.onChanged(data)
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
@@ -289,6 +292,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 failed(`保存 Yak 模块失败: ${e}`)
             })
     })
+
     return (
         <div>
             <Form {...fromLayout}>
@@ -605,6 +609,33 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     </Space>
                 </Form.Item>
             </Form>
+
+            <Modal
+                visible={visible}
+                onCancel={() => setVisible(false)}
+                footer={[
+                    <Button key='link' onClick={() => setVisible(false)}>
+                        取消
+                    </Button>,
+                    <Button
+                        key='submit'
+                        onClick={() => {
+                            onCloseTab()
+                        }}
+                    >
+                        不保存
+                    </Button>,
+                    <Button key='back' type='primary' onClick={() => onSaveLocal()}>
+                        保存
+                    </Button>
+                ]}
+            >
+                <div className='save-script'>
+                    <ExclamationCircleOutlined className='exclamation-icon' />
+                    <span className='title'>插件未保存</span>
+                    <div className='tip'>是否要保存该插件</div>
+                </div>
+            </Modal>
         </div>
     )
 }
