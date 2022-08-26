@@ -117,12 +117,13 @@
   }
   export interface ShareResponse {
     share_id: string;
-    extract_code: string;
+    extract_code?: string;
   }
   export interface ShareRequest {
     expired_time: number;
     module: string;
     share_content: string;
+    pwd: boolean;
   }
   export interface SaveYakitPlugin {
     id?: number;

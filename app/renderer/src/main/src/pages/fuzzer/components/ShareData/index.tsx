@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Modal, Radio} from "antd"
+import {Button, Modal, Radio, Switch} from "antd"
 import {ShareIcon} from "@/assets/icons"
 import {useMemoizedFn, useHover} from "ahooks"
 import {useStore} from "@/store"
@@ -17,9 +17,10 @@ interface ShareDataProps {
 export const ShareData: React.FC<ShareDataProps> = (props) => {
     const {getShareContent, module} = props
     const [shareContent, setShareContent] = useState<string>("")
-    const [expiredTime, setExpiredTime] = useState<number>(3)
+    const [expiredTime, setExpiredTime] = useState<number>(15)
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false)
     const [shareLoading, setShareLoading] = useState<boolean>(false)
+    const [pwd, setPwd] = useState<boolean>(false)
     const [shareResData, setShareResData] = useState<API.ShareResponse>({
         share_id: "",
         extract_code: ""
@@ -50,7 +51,8 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
         const params: API.ShareRequest = {
             expired_time: expiredTime,
             share_content: shareContent,
-            module
+            module,
+            pwd
         }
         setShareLoading(true)
         NetWorkApi<API.ShareRequest, API.ShareResponse>({
@@ -81,22 +83,27 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                 <div className='content-value'>
                     <span className='label-text'>设置有效期：</span>
                     <Radio.Group value={expiredTime} onChange={(e) => setExpiredTime(e.target.value)}>
-                        <Radio.Button value={3}>3天</Radio.Button>
-                        <Radio.Button value={5}>5天</Radio.Button>
-                        <Radio.Button value={7}>7天</Radio.Button>
+                        <Radio.Button value={5}>5分钟</Radio.Button>
+                        <Radio.Button value={15}>15分钟</Radio.Button>
+                        <Radio.Button value={60}>1小时</Radio.Button>
+                        <Radio.Button value={1440}>1天</Radio.Button>
                     </Radio.Group>
                 </div>
+                <div className='content-value'>
+                    <span className='label-text'>随机码：</span>
+                    <Switch checked={pwd} onChange={(checked) => setPwd(checked)} />
+                </div>
                 {shareResData.share_id && (
-                    <>
-                        <div className='content-value'>
-                            <span className='label-text'>分享id：</span>
-                            <span>{shareResData.share_id}</span>
-                        </div>
-                        <div className='content-value'>
-                            <span className='label-text'>密码：</span>
-                            <span>{shareResData.extract_code}</span>
-                        </div>
-                    </>
+                    <div className='content-value'>
+                        <span className='label-text'>分享id：</span>
+                        <span>{shareResData.share_id}</span>
+                    </div>
+                )}
+                {shareResData.extract_code && (
+                    <div className='content-value'>
+                        <span className='label-text'>密码：</span>
+                        <span>{shareResData.extract_code}</span>
+                    </div>
                 )}
                 <div className='btn-footer'>
                     <Button type='primary' onClick={onShare} loading={shareLoading}>
@@ -104,7 +111,11 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                     </Button>
                     {shareResData.share_id && (
                         <CopyToClipboard
-                            text={`分享id：${shareResData.share_id}\r\n密码：${shareResData.extract_code}`}
+                            text={
+                                shareResData.extract_code
+                                    ? `分享id：${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
+                                    : `分享id：${shareResData.share_id}`
+                            }
                             onCopy={(text, ok) => {
                                 if (ok) success("已复制到粘贴板")
                             }}

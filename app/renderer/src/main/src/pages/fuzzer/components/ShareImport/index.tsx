@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Form, Input, InputNumber} from "antd"
 import {useMemoizedFn} from "ahooks"
-import {failed} from "@/utils/notification"
+import {failed, warn} from "@/utils/notification"
 import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
@@ -20,10 +20,50 @@ interface ShareImportProps {
     onClose: () => void
 }
 
+interface pwdRequestProps {
+    share_id: string
+}
+
 export const ShareImport: React.FC<ShareImportProps> = (props) => {
     const {onClose} = props
     const [loading, setLoading] = useState<boolean>(false)
+    const [isShowPassword, setIsShowPassword] = useState<boolean>(false)
     const onFinish = useMemoizedFn((value) => {
+        if (value.extract_code) {
+            onShareExtract(value)
+        } else {
+            onExtractPwd(value)
+        }
+    })
+
+    const onExtractPwd = useMemoizedFn((value) => {
+        setLoading(true)
+        NetWorkApi<pwdRequestProps, boolean>({
+            url: "module/extract/pwd",
+            method: "get",
+            params: {
+                share_id: value.share_id
+            }
+        })
+            .then((pwd) => {
+                if (pwd) {
+                    setIsShowPassword(true)
+                    warn("该分享需要输入密码!")
+                } else {
+                    onShareExtract(value)
+                }
+            })
+            .catch((err) => {
+                failed(err)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
+    })
+
+    const onShareExtract = useMemoizedFn((value) => {
         setLoading(true)
         NetWorkApi<API.ShareResponse, API.ExtractResponse>({
             url: "module/extract",
@@ -63,9 +103,11 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 <Form.Item name='share_id' label='分享id' rules={[{required: true, message: "该项为必填"}]}>
                     <Input placeholder='请输入分享id' />
                 </Form.Item>
-                <Form.Item name='extract_code' label='密码' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入密码' allowClear />
-                </Form.Item>
+                {isShowPassword && (
+                    <Form.Item name='extract_code' label='密码' rules={[{required: true, message: "该项为必填"}]}>
+                        <Input placeholder='请输入密码' allowClear />
+                    </Form.Item>
+                )}
                 <Form.Item {...tailLayout}>
                     <Button type='primary' htmlType='submit' className='btn-sure' loading={loading}>
                         确定

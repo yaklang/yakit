@@ -909,7 +909,7 @@ const Main: React.FC<MainProp> = (props) => {
     const onShare = useMemoizedFn(() => {
         if (userInfo.isLogin) {
             const m = showModal({
-                title: "使用分享数据",
+                title: "导入协作资源",
                 content: <ShareImport onClose={() => m.destroy()} />
             })
         } else {
