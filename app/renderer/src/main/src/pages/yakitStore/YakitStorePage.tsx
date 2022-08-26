@@ -567,6 +567,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 deletePluginRecordLocal={deletePluginRecordLocal}
                                 updatePluginRecordLocal={updatePluginRecordLocal}
                                 setUpdatePluginRecordLocal={setUpdatePluginRecordLocal}
+                                userInfo={userInfo}
                             />
                         )}
                         {plugSource === "user" && (
@@ -802,6 +803,7 @@ interface YakModuleProp {
     statisticsQueryLocal: QueryYakScriptRequest
     isShowFilter: boolean
     getYakScriptTagsAndType: () => void
+    userInfo: UserInfoProps
 }
 
 interface DeleteAllLocalPluginsRequest {
@@ -824,7 +826,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         setStatisticsQueryLocal,
         statisticsQueryLocal,
         isShowFilter,
-        getYakScriptTagsAndType
+        getYakScriptTagsAndType,
+        userInfo
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -984,6 +987,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         })
     })
     const onBatchUpload = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            warn("请先登录")
+            return
+        }
         if (isSelectAllLocal) {
             warn("上传不支持全选")
             return
