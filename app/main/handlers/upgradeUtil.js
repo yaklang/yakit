@@ -415,19 +415,22 @@ module.exports = {
 
         const installYakEngine = (version) => {
             return new Promise((resolve, reject) => {
-                const origin = path.join(yakEngineDir, `yak-${version}`);
+                let origin = path.join(yakEngineDir, `yak-${version}`);
+                origin = origin.replaceAll(`"`, `\"`);
 
-                const dest = getLatestYakLocalEngine(); //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+                let dest = getLatestYakLocalEngine(); //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+                dest = dest.replaceAll(`"`, `\"`)
 
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
                 }
 
+
                 childProcess.exec(
                     isWindows ?
-                        `copy ${origin} ${dest}`
-                        : `cp ${origin} ${dest} && chmod +x ${dest}`,
+                        `copy "${origin}" "${dest}"`
+                        : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
                     err => {
                         if (err) {
                             reject(err)
