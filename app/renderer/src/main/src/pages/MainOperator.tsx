@@ -16,6 +16,7 @@ import {
     Spin,
     Tabs,
     Tag,
+    Tooltip,
     Typography
 } from "antd"
 import {ContentByRoute, MenuDataProps, NoScrollRoutes, Route, RouteMenuData} from "../routes/routeSpec"
@@ -994,7 +995,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
                                 <ReversePlatformStatus />
                                 <Dropdown
-                                overlayClassName="setting-menu"
+                                    overlayClassName='setting-menu'
                                     forceRender={true}
                                     overlay={
                                         <Menu>
@@ -1273,11 +1274,13 @@ const Main: React.FC<MainProp> = (props) => {
                                             }
                                         }}
                                         addIcon={
-                                            <ShareImportIcon
-                                                // @ts-ignore
-                                                className='share-import-icon'
-                                                onClick={() => onShare()}
-                                            />
+                                            <Tooltip title="导入协作资源">
+                                                <ShareImportIcon
+                                                    // @ts-ignore
+                                                    className='share-import-icon'
+                                                    onClick={() => onShare()}
+                                                />
+                                            </Tooltip>
                                         }
                                     >
                                         {pageCache.map((i) => {

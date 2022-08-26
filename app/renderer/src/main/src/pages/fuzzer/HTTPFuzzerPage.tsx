@@ -76,7 +76,7 @@ const {ipcRenderer} = window.require("electron")
 interface ShareValueProps {
     isHttps: boolean
     advancedConfig: boolean
-    advancedConfiguration?: AdvancedConfigurationProps
+    advancedConfiguration: AdvancedConfigurationProps
     request: any
 }
 
@@ -796,18 +796,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setIsHttps(shareContent.isHttps)
         setAdvancedConfig(shareContent.advancedConfig)
         setRequest(shareContent.request || defaultPostTemplate)
-        if (shareContent.advancedConfiguration) {
-            setForceFuzz(shareContent.advancedConfiguration?.forceFuzz)
-            setConcurrent(shareContent.advancedConfiguration.concurrent || 20)
-            setNoFixContentLength(shareContent.advancedConfiguration.noFixContentLength)
-            setProxy(shareContent.advancedConfiguration.proxy)
-            setActualHost(shareContent.advancedConfiguration.actualHost)
-            setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
-            setMinDelaySeconds(shareContent.advancedConfiguration.minDelaySeconds)
-            setMaxDelaySeconds(shareContent.advancedConfiguration.maxDelaySeconds)
-            setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
-            setFilter(shareContent.advancedConfiguration.getFilter)
-        }
+        setForceFuzz(shareContent.advancedConfiguration.forceFuzz)
+        setConcurrent(shareContent.advancedConfiguration.concurrent || 20)
+        setNoFixContentLength(shareContent.advancedConfiguration.noFixContentLength)
+        setProxy(shareContent.advancedConfiguration.proxy)
+        setActualHost(shareContent.advancedConfiguration.actualHost)
+        setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
+        setMinDelaySeconds(shareContent.advancedConfiguration.minDelaySeconds)
+        setMaxDelaySeconds(shareContent.advancedConfiguration.maxDelaySeconds)
+        setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
+        setFilter(shareContent.advancedConfiguration.getFilter)
     })
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
@@ -919,9 +917,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {actualHost !== "" && <Tag color={"red"}>请求 Host:{actualHost}</Tag>}
                     </Space>
                 </Col>
-                {/* <Col span={4} className='share-right'>
-                <ShareData module='fuzzer' getShareContent={getShareContent} />
-                </Col> */}
             </Row>
 
             {advancedConfig && (
