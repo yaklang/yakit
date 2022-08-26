@@ -1201,7 +1201,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 <YakModuleList
                     isGridLayout={size === "middle"}
                     numberLocalRoll={numberLocal}
-                    itemHeight={150}
+                    itemHeight={170}
                     currentScript={script}
                     onClicked={(info, index) => {
                         if (info?.Id === script?.Id) return
@@ -1518,7 +1518,10 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             </div>
             <div className='plugin-item-content'>
                 <div className='plugin-help content-ellipsis'>{plugin.Help || "No Description about it."}</div>
-                {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
+                <div className='plugin-type-body'>
+                    {PluginTypeText(plugin.Type)}
+                    {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
+                </div>
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
                         {plugin.HeadImg && <img alt='' src={plugin.HeadImg} />}
@@ -1529,6 +1532,32 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             </div>
         </div>
     )
+}
+const PluginType = {
+    yak: "YAK 插件",
+    mitm: "MITM 插件",
+    "packet-hack": "数据包扫描",
+    "port-scan": "端口扫描插件",
+    codec: "CODEC插件",
+    nuclei: "YAML POC"
+}
+const PluginTypeText = (type) => {
+    switch (type) {
+        case "yak":
+            return <div className='plugin-type plugin-yak'>{PluginType[type]}</div>
+        case "mitm":
+            return <div className='plugin-type plugin-mitm'>{PluginType[type]}</div>
+        case "packet-hack":
+            return <div className='plugin-type plugin-packet-hack'>{PluginType[type]}</div>
+        case "port-scan":
+            return <div className='plugin-type plugin-port-scan'>{PluginType[type]}</div>
+        case "codec":
+            return <div className='plugin-type plugin-codec'>{PluginType[type]}</div>
+        case "nuclei":
+            return <div className='plugin-type plugin-nuclei'>{PluginType[type]}</div>
+        default:
+            break
+    }
 }
 
 const loadLocalYakitPluginCode = `yakit.AutoInitYakit()
@@ -2677,7 +2706,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 loadMoreData={() => loadMoreData()}
                 rowKey='id'
                 isGridLayout={size === "middle"}
-                defItemHeight={151} // 139+12
+                defItemHeight={170}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (
@@ -2807,11 +2836,15 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                 <div className='plugin-help content-ellipsis' title={info.help}>
                     {info.help || "No Description about it."}
                 </div>
-                {(tags && tags.length > 0 && (
-                    <div className='plugin-tag' title={tagsString}>
-                        TAG:{tagsString}
-                    </div>
-                )) || <div className='plugin-tag'>&nbsp;</div>}
+                <div className='plugin-type-body'>
+                    {PluginTypeText(info.type)}
+                    {tags && tags.length > 0 && (
+                        <div className='plugin-tag' title={tagsString}>
+                            TAG:{tagsString}
+                        </div>
+                    )}
+                </div>
+
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
                         {info.head_img && <img alt='' src={info.head_img} />}
@@ -2830,15 +2863,6 @@ interface QueryComponentOnlineProps {
     setQueryOnline: (q: SearchPluginOnlineRequest) => void
     queryOnline: SearchPluginOnlineRequest
     user: boolean
-}
-
-const PluginType = {
-    yak: "YAK 插件",
-    mitm: "MITM 插件",
-    "packet-hack": "数据包扫描",
-    "port-scan": "端口扫描插件",
-    codec: "CODEC插件",
-    nuclei: "YAML POC"
 }
 
 const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {

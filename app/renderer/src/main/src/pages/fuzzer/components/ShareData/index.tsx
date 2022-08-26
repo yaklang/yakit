@@ -25,14 +25,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
         share_id: "",
         extract_code: ""
     })
-
-    // 全局监听登录状态
-    const {userInfo} = useStore()
     const getValue = useMemoizedFn(() => {
-        if (!userInfo.isLogin) {
-            warn("请先登录")
-            return
-        }
         setShareLoading(false)
         getShareContent((content) => {
             setShareContent(JSON.stringify(content))
@@ -45,7 +38,8 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             extract_code: ""
         })
         setIsModalVisible(false)
-        setExpiredTime(3)
+        setExpiredTime(15)
+        setPwd(false)
     }
     const onShare = useMemoizedFn(() => {
         const params: API.ShareRequest = {
@@ -53,6 +47,9 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             share_content: shareContent,
             module,
             pwd
+        }
+        if (shareResData.share_id) {
+            params.share_id = shareResData.share_id
         }
         setShareLoading(true)
         NetWorkApi<API.ShareRequest, API.ShareResponse>({
@@ -90,7 +87,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                     </Radio.Group>
                 </div>
                 <div className='content-value'>
-                    <span className='label-text'>随机码：</span>
+                    <span className='label-text'>密码：</span>
                     <Switch checked={pwd} onChange={(checked) => setPwd(checked)} />
                 </div>
                 {shareResData.share_id && (

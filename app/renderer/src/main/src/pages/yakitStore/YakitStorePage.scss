@@ -243,7 +243,7 @@
 
 
 .plugin-item {
-    height: 138px;
+    height: 154px;
     // width: 100%;
     margin: 0 8px 16px;
     border: 1px solid #0000000f;
@@ -349,27 +349,29 @@
         flex-direction: column;
         justify-content: space-between;
         padding: 12px;
-        height: 100px;
+        height: 116px;
 
         .plugin-help {
             width: 100%;
             color: #5f5f5f;
-            margin-bottom: 5px;
             height: 21px;
             line-height: 21px;
         }
 
-        .plugin-tag {
-            width: 100%;
-            margin-bottom: 4px;
-            text-align: right;
-            color: rgb(136, 136, 136);
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            word-break: break-all;
+        .plugin-type-body {
             height: 21px;
-            line-height: 21px;
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+
+            .plugin-tag {
+                width: 100%;
+                color: rgb(136, 136, 136);
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
+            }
         }
 
         .plugin-item-footer {
@@ -434,4 +436,45 @@
 .color-bgColor-red {
     background-color: rgba(255, 135, 135, 0.08);
     color: rgba(255, 135, 135, 1);
+}
+
+.plugin-type {
+    height: 20px;
+    line-height: 20px;
+    margin-right: 6px;
+    padding: 0 7px;
+    font-size: 12px;
+    border-radius: 2px;
+    width: max-content;
+    white-space: nowrap;
+}
+
+.plugin-yak {
+    background-color: rgba(116, 129, 255, 0.08);
+    color: #7481FF;
+}
+
+.plugin-mitm {
+    background-color: rgba(112, 161, 255, 0.08);
+    color: #70A1FF;
+}
+
+.plugin-packet-hack {
+    background-color: rgba(250, 175, 43, 0.08);
+    color: #FAAF2B;
+}
+
+.plugin-port-scan {
+    background-color: rgba(66, 215, 173, 0.08);
+    color: #42D7AD;
+}
+
+.plugin-codec {
+    background-color: rgba(154, 107, 255, 0.08);
+    color: #9A6BFF;
+}
+
+.plugin-nuclei {
+    background-color: rgba(255, 135, 135, 0.08);
+    color: #FF8787;
 }

@@ -907,14 +907,10 @@ const Main: React.FC<MainProp> = (props) => {
     })
 
     const onShare = useMemoizedFn(() => {
-        if (userInfo.isLogin) {
-            const m = showModal({
-                title: "导入协作资源",
-                content: <ShareImport onClose={() => m.destroy()} />
-            })
-        } else {
-            warn("请先登录")
-        }
+        const m = showModal({
+            title: "导入协作资源",
+            content: <ShareImport onClose={() => m.destroy()} />
+        })
     })
     const bars = (props: any, TabBarDefault: any) => {
         return (

@@ -5,6 +5,7 @@ import {failed, warn} from "@/utils/notification"
 import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
+import {useStore} from "@/store"
 
 const layout = {
     labelCol: {span: 5},
@@ -28,6 +29,8 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
     const {onClose} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false)
+    // 全局监听登录状态
+    const {userInfo} = useStore()
     const onFinish = useMemoizedFn((value) => {
         if (value.extract_code) {
             onShareExtract(value)
@@ -64,6 +67,9 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
     })
 
     const onShareExtract = useMemoizedFn((value) => {
+        if (userInfo.isLogin) {
+            value.token = userInfo.token
+        }
         setLoading(true)
         NetWorkApi<API.ShareResponse, API.ExtractResponse>({
             url: "module/extract",
