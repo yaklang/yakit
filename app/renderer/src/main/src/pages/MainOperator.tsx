@@ -56,13 +56,11 @@ import {TrustList} from "./TrustList"
 import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
-import "./main.css"
 import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
 import {showConfigMenuItems} from "../utils/ConfigMenuItems"
 import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain"
-import "./main.css"
-import "./GlobalClass.scss"
+import "./main.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
 import {setRemoteValue} from "@/utils/kv"
@@ -996,6 +994,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
                                 <ReversePlatformStatus />
                                 <Dropdown
+                                overlayClassName="setting-menu"
                                     forceRender={true}
                                     overlay={
                                         <Menu>

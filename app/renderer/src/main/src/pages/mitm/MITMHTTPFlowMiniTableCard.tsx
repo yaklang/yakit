@@ -11,7 +11,7 @@ import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
 import ReactJson from "react-json-view";
 import {SelectOne} from "../../utils/inputUtil";
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
-import "../main.css";
+import "../main.scss";
 import {MITMPluginOperatorProps} from "./MITMPluginOperator";
 import {MITMPluginListProp} from "./MITMPluginList";
 
