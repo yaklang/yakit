@@ -1,0 +1,20 @@
+.btn-footer {
+    margin-top: 24px;
+
+    button {
+        margin-right: 12px;
+    }
+
+}
+
+.content-value {
+    display: flex;
+    align-items: center;
+    margin-top: 12px;
+
+    .label-text {
+        margin-right: 6px;
+        width: 85px;
+        text-align: right;
+    }
+}

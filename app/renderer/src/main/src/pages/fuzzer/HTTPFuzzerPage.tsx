@@ -16,7 +16,10 @@ import {
     Typography,
     Dropdown,
     Menu,
-    Popover, Checkbox, Tooltip, InputNumber
+    Popover,
+    Checkbox,
+    Tooltip,
+    InputNumber
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -28,7 +31,8 @@ import {
     InputInteger,
     InputItem,
     ManyMultiSelectForString,
-    OneLine, SelectOne,
+    OneLine,
+    SelectOne,
     SwitchItem
 } from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
@@ -41,53 +45,77 @@ import {
     RightOutlined,
     DownOutlined,
     HistoryOutlined,
-    DownloadOutlined, QuestionCircleOutlined
+    DownloadOutlined,
+    QuestionCircleOutlined
 } from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed, info, success} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
-import {useGetState, useMemoizedFn} from "ahooks";
-import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv";
-import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory";
-import {PayloadManagerPage} from "../payloadManager/PayloadManager";
+import {useGetState, useMemoizedFn} from "ahooks"
+import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
+import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory"
+import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
 import {fuzzerInfoProp} from "../MainOperator"
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
-import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch";
-import {AutoCard} from "../../components/AutoCard";
-import {callCopyToClipboard} from "../../utils/basic";
-import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport";
-import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str";
-import {insertFileFuzzTag} from "./InsertFileFuzzTag";
-import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner";
-import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup";
+import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
+import {AutoCard} from "../../components/AutoCard"
+import {callCopyToClipboard} from "../../utils/basic"
+import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
+import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
+import {insertFileFuzzTag} from "./InsertFileFuzzTag"
+import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner"
+import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
+import "./HTTPFuzzerPage.scss"
+import {ShareIcon} from "@/assets/icons"
+import {ShareData} from "./components/ShareData"
 
 const {ipcRenderer} = window.require("electron")
 
-export const analyzeFuzzerResponse =
-    (
-        i: FuzzerResponse,
-        setRequest: (isHttps: boolean, request: string) => any,
-        index?: number,
-        data?: FuzzerResponse[]
-    ) => {
-        let m = showDrawer({
-            width: "90%",
-            content: (
-                <>
-                    <FuzzerResponseToHTTPFlowDetail
-                        response={i}
-                        onClosed={() => {
-                            m.destroy()
-                        }}
-                        index={index}
-                        data={data}
-                    />
-                </>
-            )
-        })
-    }
+interface ShareValueProps {
+    isHttps: boolean
+    advancedConfig: boolean
+    advancedConfiguration: AdvancedConfigurationProps
+    request: any
+}
+
+interface AdvancedConfigurationProps {
+    forceFuzz: boolean
+    concurrent: number
+    isHttps: boolean
+    noFixContentLength: boolean
+    proxy: string
+    actualHost: string
+    timeout: number
+    minDelaySeconds: number
+    maxDelaySeconds: number
+    _filterMode: "drop" | "match"
+    getFilter: FuzzResponseFilter
+}
+
+export const analyzeFuzzerResponse = (
+    i: FuzzerResponse,
+    setRequest: (isHttps: boolean, request: string) => any,
+    index?: number,
+    data?: FuzzerResponse[]
+) => {
+    let m = showDrawer({
+        width: "90%",
+        content: (
+            <>
+                <FuzzerResponseToHTTPFlowDetail
+                    response={i}
+                    onClosed={() => {
+                        m.destroy()
+                    }}
+                    index={index}
+                    data={data}
+                />
+            </>
+        )
+    })
+}
 
 export interface HTTPFuzzerPageProp {
     isHttps?: boolean
@@ -95,16 +123,17 @@ export interface HTTPFuzzerPageProp {
     system?: string
     order?: string
     fuzzerParams?: fuzzerInfoProp
+    shareContent?: string
 }
 
-const Text = Typography.Text;
+const Text = Typography.Text
 
 export interface FuzzerResponse {
     Method: string
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: { Header: string; Value: string }[]
+    Headers: {Header: string; Value: string}[]
     ResponseRaw: Uint8Array
     RequestRaw: Uint8Array
     BodyLength: number
@@ -145,12 +174,17 @@ export const showDictsAndSelect = (res: (i: string) => any) => {
     const m = showModal({
         title: "选择想要插入的字典",
         width: 1200,
-        content: <div style={{width: 1100, height: 500, overflow: "hidden"}}>
-            <PayloadManagerPage readOnly={true} selectorHandle={e => {
-                res(e)
-                m.destroy()
-            }}/>
-        </div>
+        content: (
+            <div style={{width: 1100, height: 500, overflow: "hidden"}}>
+                <PayloadManagerPage
+                    readOnly={true}
+                    selectorHandle={(e) => {
+                        res(e)
+                        m.destroy()
+                    }}
+                />
+            </div>
+        )
     })
 }
 
@@ -163,54 +197,67 @@ interface FuzzResponseFilter {
 }
 
 function removeEmptyFiledFromFuzzResponseFilter(i: FuzzResponseFilter): FuzzResponseFilter {
-    i.Keywords = (i.Keywords || []).filter(i => !!i)
-    i.StatusCode = (i.StatusCode || []).filter(i => !!i)
-    i.Regexps = (i.Regexps || []).filter(i => !!i)
+    i.Keywords = (i.Keywords || []).filter((i) => !!i)
+    i.StatusCode = (i.StatusCode || []).filter((i) => !!i)
+    i.Regexps = (i.Regexps || []).filter((i) => !!i)
     return {...i}
 }
 
 function filterIsEmpty(f: FuzzResponseFilter): boolean {
-    return f.MinBodySize === 0 && f.MaxBodySize === 0 &&
-        f.Regexps.length === 0 && f.Keywords.length === 0 &&
+    return (
+        f.MinBodySize === 0 &&
+        f.MaxBodySize === 0 &&
+        f.Regexps.length === 0 &&
+        f.Keywords.length === 0 &&
         f.StatusCode.length === 0
+    )
 }
 
-function copyAsUrl(f: { Request: string, IsHTTPS: boolean }) {
-    ipcRenderer.invoke("ExtractUrl", f).then((data: { Url: string }) => {
-        callCopyToClipboard(data.Url)
-    }).catch(e => {
-        failed("复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
-    })
+function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
+    ipcRenderer
+        .invoke("ExtractUrl", f)
+        .then((data: {Url: string}) => {
+            callCopyToClipboard(data.Url)
+        })
+        .catch((e) => {
+            failed("复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
+        })
 }
 
 export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
-    return ipcRenderer.invoke("send-to-tab", {
-        type: "fuzzer",
-        data: {isHttps: isHttps, request: request}
-    }).then(() => {
-        info("新开 WebFuzzer Tab")
-    })
+    return ipcRenderer
+        .invoke("send-to-tab", {
+            type: "fuzzer",
+            data: {isHttps: isHttps, request: request}
+        })
+        .then(() => {
+            info("新开 WebFuzzer Tab")
+        })
 }
 
 const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
 
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
-    const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(props.fuzzerParams?.isHttps || props.isHttps || false)
+    const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(
+        props.fuzzerParams?.isHttps || props.isHttps || false
+    )
     const [noFixContentLength, setNoFixContentLength] = useState(false)
-    const [request, setRequest, getRequest] = useGetState(props.fuzzerParams?.request || props.request || defaultPostTemplate)
+    const [request, setRequest, getRequest] = useGetState(
+        props.fuzzerParams?.request || props.request || defaultPostTemplate
+    )
     const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
     const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
     const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
-    const [minDelaySeconds, setMinDelaySeconds] = useState(0);
-    const [maxDelaySeconds, setMaxDelaySeconds] = useState(0);
+    const [minDelaySeconds, setMinDelaySeconds] = useState(0)
+    const [maxDelaySeconds, setMaxDelaySeconds] = useState(0)
     const [proxy, setProxy] = useState(props.fuzzerParams?.proxy || "")
     const [actualHost, setActualHost] = useState(props.fuzzerParams?.actualHost || "")
     const [advancedConfig, setAdvancedConfig] = useState(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
-    const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>();
-    const [hotPatchCode, setHotPatchCode] = useState<string>("");
-    const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("");
+    const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
+    const [hotPatchCode, setHotPatchCode] = useState<string>("")
+    const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
 
     // filter
     const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
@@ -219,9 +266,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         MinBodySize: 0,
         Regexps: [],
         StatusCode: []
-    });
-    const [_filterMode, setFilterMode, getFilterMode] = useGetState<"drop" | "match">("drop");
-    const [droppedCount, setDroppedCount] = useState(0);
+    })
+    const [_filterMode, setFilterMode, getFilterMode] = useGetState<"drop" | "match">("drop")
+    const [droppedCount, setDroppedCount] = useState(0)
 
     // state
     const [loading, setLoading] = useState(false)
@@ -243,9 +290,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [timer, setTimer] = useState<any>()
 
     useEffect(() => {
+        if (props.shareContent) {
+            setUpShareContent(JSON.parse(props.shareContent))
+        }
+    }, [props.shareContent])
+
+    useEffect(() => {
         getValue(WEB_FUZZ_HOTPATCH_CODE).then((data: any) => {
             if (!data) {
-                getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then(remoteData => {
+                getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
                     if (!remoteData) {
                         return
                     }
@@ -256,7 +309,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setHotPatchCode(`${data}`)
         })
 
-        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then(remoteData => {
+        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
             if (!!remoteData) {
                 setHotPatchCodeWithParamGetter(`${remoteData}`)
             }
@@ -297,13 +350,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     useEffect(() => {
         // 缓存全局参数
-        getValue(WEB_FUZZ_PROXY).then(e => {
+        getValue(WEB_FUZZ_PROXY).then((e) => {
             if (!e) {
                 return
             }
             setProxy(`${e}`)
         })
-
     }, [])
 
     useEffect(() => {
@@ -316,19 +368,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const loadHistory = useMemoizedFn((id: number) => {
         setLoading(true)
-        ipcRenderer.invoke(
-            "HTTPFuzzer",
-            {HistoryWebFuzzerId: id}, fuzzToken
-        ).then(() => {
-            ipcRenderer.invoke("GetHistoryHTTPFuzzerTask", {Id: id}).then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
-                setHistoryTask(data.OriginRequest)
-            })
+        ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
+            ipcRenderer
+                .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
+                .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
+                    setHistoryTask(data.OriginRequest)
+                })
         })
     })
 
     const submitToHTTPFuzzer = useMemoizedFn(() => {
         // 清楚历史任务的标记
-        setHistoryTask(undefined);
+        setHistoryTask(undefined)
 
         saveValue(WEB_FUZZ_PROXY, proxy)
         setLoading(true)
@@ -349,7 +400,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
                 Filter: getFilter(),
                 DelayMinSeconds: minDelaySeconds,
-                DelayMaxSeconds: maxDelaySeconds,
+                DelayMaxSeconds: maxDelaySeconds
             },
             fuzzToken
         )
@@ -374,7 +425,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
         })
         let buffer: FuzzerResponse[] = []
-        let droppedCount = 0;
+        let droppedCount = 0
         let count: number = 0
         const updateData = () => {
             if (buffer.length <= 0) {
@@ -386,14 +437,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             if (!filterIsEmpty(getFilter())) {
                 // 设置了 Filter
-                const hit = data["MatchedByFilter"] === true;
+                const hit = data["MatchedByFilter"] === true
                 // 丢包的条件：
                 //   1. 命中过滤器，同时过滤模式设置为丢弃
                 //   2. 未命中过滤器，过滤模式设置为保留
-                if (
-                    (hit && getFilterMode() === "drop") ||
-                    (!hit && getFilterMode() === "match")
-                ) {
+                if ((hit && getFilterMode() === "drop") || (!hit && getFilterMode() === "match")) {
                     // 丢弃不匹配的内容
                     droppedCount++
                     setDroppedCount(droppedCount)
@@ -420,7 +468,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 IsHTTPS: data.IsHTTPS,
                 Count: count,
                 BodySimilarity: data.BodySimilarity,
-                HeaderSimilarity: data.HeaderSimilarity,
+                HeaderSimilarity: data.HeaderSimilarity
             } as FuzzerResponse)
             count++
             // setContent([...buffer])
@@ -459,8 +507,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
-                } catch (error) {
-                }
+                } catch (error) {}
             }, 500)
         )
     }
@@ -475,8 +522,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     useEffect(() => {
         if (keyword && content.length !== 0) {
-            const filters = content.filter(item => {
-                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, 'g'))
+            const filters = content.filter((item) => {
+                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
             })
             setFilterContent(filters)
         }
@@ -488,8 +535,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         search === ""
             ? content || []
             : (content || []).filter((i) => {
-                return Buffer.from(i.ResponseRaw).toString().includes(search)
-            })
+                  return Buffer.from(i.ResponseRaw).toString().includes(search)
+              })
     const successResults = filtredResponses.filter((i) => i.Ok)
     const failedResults = filtredResponses.filter((i) => !i.Ok)
 
@@ -509,8 +556,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             sendTimer.current = null
         }
         sendTimer.current = setTimeout(() => {
-            ipcRenderer.invoke('send-fuzzer-setting-data', {key: props.order || "", param: JSON.stringify(info)})
-        }, 1000);
+            ipcRenderer.invoke("send-fuzzer-setting-data", {key: props.order || "", param: JSON.stringify(info)})
+        }, 1000)
     })
     useEffect(() => {
         sendFuzzerSettingInfo()
@@ -520,9 +567,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let reason = "未知原因"
         try {
             reason = content[0]!.Reason
-        } catch (e) {
-
-        }
+        } catch (e) {}
         return (
             <HTTPPacketEditor
                 system={props.system}
@@ -535,12 +580,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     !rsp?.Ok && (
                         <Result
                             status={
-                                (
-                                    reason.includes("tcp: i/o timeout") ||
-                                    reason.includes("empty response") ||
-                                    reason.includes("no such host") ||
-                                    reason.includes("cannot create proxy")
-                                ) ? "warning" : "error"
+                                reason.includes("tcp: i/o timeout") ||
+                                reason.includes("empty response") ||
+                                reason.includes("no such host") ||
+                                reason.includes("cannot create proxy")
+                                    ? "warning"
+                                    : "error"
                             }
                             title={"请求失败或服务端（代理）异常"}
                             // no such host
@@ -567,66 +612,60 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
                 readOnly={true}
                 extra={
-                    (
-                        <Space>
-                            {loading && <Spin size={"small"} spinning={loading}/>}
-                            {onlyOneResponse ? (
-                                <Space>
-                                    {content[0].IsHTTPS && <Tag>{content[0].IsHTTPS ? "https" : ""}</Tag>}
-                                    <Tag>{content[0].DurationMs}ms</Tag>
-                                    <Tag>{content[0].BodyLength}字节</Tag>
-                                    <Space key='single'>
-                                        <Button
-                                            size={"small"}
-                                            onClick={() => {
-                                                analyzeFuzzerResponse(
-                                                    rsp,
-                                                    (bool, r) => {
-                                                        // setRequest(r)
-                                                        // refreshRequest()
-                                                    }
-                                                )
-                                            }}
-                                            type={"primary"}
-                                            icon={<ProfileOutlined/>}
-                                        >
-                                            详情
-                                        </Button>
-                                        <Button
-                                            type={"primary"}
-                                            size={"small"}
-                                            onClick={() => {
-                                                setContent([])
-                                            }}
-                                            danger={true}
-                                            icon={<DeleteOutlined/>}
-                                        />
-                                    </Space>
-                                </Space>
-                            ) : (
-                                <Space key='list'>
-                                    <Tag color={"green"}>成功:{successResults.length}</Tag>
-                                    <Input
-                                        size={"small"}
-                                        value={search}
-                                        onChange={(e) => {
-                                            setSearch(e.target.value)
-                                        }}
-                                    />
-                                    {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
+                    <Space>
+                        {loading && <Spin size={"small"} spinning={loading} />}
+                        {onlyOneResponse ? (
+                            <Space>
+                                {content[0].IsHTTPS && <Tag>{content[0].IsHTTPS ? "https" : ""}</Tag>}
+                                <Tag>{content[0].DurationMs}ms</Tag>
+                                <Tag>{content[0].BodyLength}字节</Tag>
+                                <Space key='single'>
                                     <Button
+                                        size={"small"}
+                                        onClick={() => {
+                                            analyzeFuzzerResponse(rsp, (bool, r) => {
+                                                // setRequest(r)
+                                                // refreshRequest()
+                                            })
+                                        }}
+                                        type={"primary"}
+                                        icon={<ProfileOutlined />}
+                                    >
+                                        详情
+                                    </Button>
+                                    <Button
+                                        type={"primary"}
                                         size={"small"}
                                         onClick={() => {
                                             setContent([])
                                         }}
-                                    >
-                                        清除数据
-                                    </Button>
+                                        danger={true}
+                                        icon={<DeleteOutlined />}
+                                    />
                                 </Space>
-                            )}
-
-                        </Space>
-                    )
+                            </Space>
+                        ) : (
+                            <Space key='list'>
+                                <Tag color={"green"}>成功:{successResults.length}</Tag>
+                                <Input
+                                    size={"small"}
+                                    value={search}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value)
+                                    }}
+                                />
+                                {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
+                                <Button
+                                    size={"small"}
+                                    onClick={() => {
+                                        setContent([])
+                                    }}
+                                >
+                                    清除数据
+                                </Button>
+                            </Space>
+                        )}
+                    </Space>
                 }
             />
         )
@@ -654,16 +693,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <HTTPFuzzerHotPatch
                         initialHotPatchCode={hotPatchCode}
                         initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
-                        onInsert={tag => {
-                            if (reqEditor) monacoEditorWrite(reqEditor, tag);
+                        onInsert={(tag) => {
+                            if (reqEditor) monacoEditorWrite(reqEditor, tag)
                             m.destroy()
                         }}
-                        onSaveCode={code => {
+                        onSaveCode={(code) => {
                             setHotPatchCode(code)
                             saveValue(WEB_FUZZ_HOTPATCH_CODE, code)
                             setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                         }}
-                        onSaveHotPatchCodeWithParamGetterCode={code => {
+                        onSaveHotPatchCodeWithParamGetterCode={(code) => {
                             setHotPatchCodeWithParamGetter(code)
                             setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}
@@ -678,70 +717,96 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             return
         }
 
-        getRemoteValue(ALLOW_MULTIPART_DATA_ALERT).then(e => {
-            if (e !== "1") {
-                setLoading(true)
-                ipcRenderer.invoke("IsMultipartFormDataRequest", {
-                    Request: StringToUint8Array(props.request || "", "utf8")
-                }).then((e: { IsMultipartFormData: boolean }) => {
-                    if (e.IsMultipartFormData) {
-                        showModal({
-                            title: "潜在的数据包编码问题提示",
-                            content: (
-                                <Space direction={"vertical"}>
-                                    <Space>
-                                        <Typography>
-                                            <Text>当前数据包包含一个</Text>
-                                            <Text mark={true}>
-                                                原始文件内容 mutlipart/form-data
-                                            </Text>
-                                            <Text>
-                                                文件中的不可见字符进入编辑器将会被编码导致丢失信息。
-                                            </Text>
-                                        </Typography>
-                                    </Space>
-                                    <Space>
-                                        <Typography>
-                                            <Button type={"link"} size={"small"} onClick={() => {
-                                                ipcRenderer.invoke(
-                                                    "FixUploadPacket", {Request: StringToUint8Array(props.request || "", "utf8")},
-                                                ).then((fixed: { Request: Uint8Array }) => {
-                                                    setRequest(Uint8ArrayToString(fixed.Request, "utf8"))
-                                                    refreshRequest()
-                                                })
-                                            }}>
-                                                点击替换
-                                            </Button>
-                                            <Text>
-                                                后，会替换掉原始文件内容
-                                            </Text>
-                                        </Typography>
-                                    </Space>
-                                    <br/>
-                                    <Space>
-                                        <Typography>
-                                            <Text>如需要插入具体文件内容，可右键</Text>
-                                            <Text mark={true}>
-                                                插入文件
-                                            </Text>
-                                        </Typography>
-                                    </Space>
-                                    <Checkbox
-                                        defaultChecked={false}
-                                        onChange={e => {
-                                            setRemoteValue(ALLOW_MULTIPART_DATA_ALERT, "1")
-                                        }}
-                                    >不再提示</Checkbox>
+        setLoading(true)
+        ipcRenderer
+            .invoke("IsMultipartFormDataRequest", {
+                Request: StringToUint8Array(props.request || "", "utf8")
+            })
+            .then((e: {IsMultipartFormData: boolean}) => {
+                if (e.IsMultipartFormData) {
+                    showModal({
+                        title: "潜在的数据包编码问题提示",
+                        content: (
+                            <Space direction={"vertical"}>
+                                <Space>
+                                    <Typography>
+                                        <Text>当前数据包包含一个</Text>
+                                        <Text mark={true}>原始文件内容 mutlipart/form-data</Text>
+                                        <Text>文件中的不可见字符进入编辑器将会被编码导致丢失信息。</Text>
+                                    </Typography>
                                 </Space>
-                            ),
-                            width: "40%",
-                        })
-                    }
-                }).finally(() => setLoading(false))
-            }
-        })
+                                <Space>
+                                    <Typography>
+                                        <Button
+                                            type={"link"}
+                                            size={"small"}
+                                            onClick={() => {
+                                                ipcRenderer
+                                                    .invoke("FixUploadPacket", {
+                                                        Request: StringToUint8Array(props.request || "", "utf8")
+                                                    })
+                                                    .then((fixed: {Request: Uint8Array}) => {
+                                                        setRequest(Uint8ArrayToString(fixed.Request, "utf8"))
+                                                        refreshRequest()
+                                                    })
+                                            }}
+                                        >
+                                            点击替换
+                                        </Button>
+                                        <Text>后，会替换掉原始文件内容</Text>
+                                    </Typography>
+                                </Space>
+                                <br />
+                                <Space>
+                                    <Typography>
+                                        <Text>如需要插入具体文件内容，可右键</Text>
+                                        <Text mark={true}>插入文件</Text>
+                                    </Typography>
+                                </Space>
+                            </Space>
+                        ),
+                        width: "40%"
+                    })
+                }
+            })
+            .finally(() => setLoading(false))
     }, [props.request])
-
+    const getShareContent = useMemoizedFn((callback) => {
+        const params: ShareValueProps = {
+            isHttps,
+            advancedConfig: advancedConfig,
+            request: getRequest(),
+            advancedConfiguration: {
+                forceFuzz,
+                concurrent,
+                isHttps,
+                noFixContentLength,
+                proxy,
+                actualHost,
+                timeout,
+                minDelaySeconds,
+                maxDelaySeconds,
+                _filterMode: getFilterMode(),
+                getFilter: getFilter()
+            }
+        }
+        callback(params)
+    })
+    const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
+        setIsHttps(shareContent.isHttps)
+        setAdvancedConfig(shareContent.advancedConfig)
+        setRequest(shareContent.request || defaultPostTemplate)
+        setForceFuzz(shareContent.advancedConfiguration.forceFuzz)
+        setConcurrent(shareContent.advancedConfiguration.concurrent || 20)
+        setNoFixContentLength(shareContent.advancedConfiguration.noFixContentLength)
+        setProxy(shareContent.advancedConfiguration.proxy)
+        setActualHost(shareContent.advancedConfiguration.actualHost)
+        setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
+        setMinDelaySeconds(shareContent.advancedConfiguration.minDelaySeconds)
+        setMaxDelaySeconds(shareContent.advancedConfiguration.maxDelaySeconds)
+        setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
+        setFilter(shareContent.advancedConfiguration.getFilter)
+    })
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8} style={{marginBottom: 8}}>
@@ -774,24 +839,28 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 发送数据包
                             </Button>
                         )}
+                        <ShareData module='fuzzer' getShareContent={getShareContent} />
                         <Popover
                             trigger={"click"}
                             placement={"bottom"}
                             destroyTooltipOnHide={true}
                             content={
                                 <div style={{width: 400}}>
-                                    <HTTPFuzzerHistorySelector onSelect={e => {
-                                        loadHistory(e)
-                                    }}/>
+                                    <HTTPFuzzerHistorySelector
+                                        onSelect={(e) => {
+                                            loadHistory(e)
+                                        }}
+                                    />
                                 </div>
                             }
                         >
-                            <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}>
+                            <Button size={"small"} type={"link"} icon={<HistoryOutlined />}>
                                 历史
                             </Button>
                         </Popover>
-                        <Checkbox defaultChecked={isHttps} value={isHttps} onChange={() => setIsHttps(!isHttps)}>强制
-                            HTTPS</Checkbox>
+                        <Checkbox checked={isHttps} onChange={() => setIsHttps(!isHttps)}>
+                            强制 HTTPS
+                        </Checkbox>
                         <SwitchItem
                             label={"高级配置"}
                             formItemStyle={{marginBottom: 0}}
@@ -831,7 +900,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )}
                         {loading && (
                             <Space>
-                                <Spin size={"small"}/>
+                                <Spin size={"small"} />
                                 <div style={{color: "#3a8be3"}}>sending packets</div>
                             </Space>
                         )}
@@ -848,15 +917,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {actualHost !== "" && <Tag color={"red"}>请求 Host:{actualHost}</Tag>}
                     </Space>
                 </Col>
-                {/*<Col span={12} style={{textAlign: "left"}}>*/}
-                {/*</Col>*/}
             </Row>
 
             {advancedConfig && (
                 <Row style={{marginBottom: 8}} gutter={8}>
                     <Col span={16}>
                         {/*高级配置*/}
-                        <Card bordered={true} size={"small"} bodyStyle={{height: 106}}>
+                        <Card bordered={true} size={"small"}>
                             <Spin style={{width: "100%"}} spinning={!reqEditor}>
                                 <Form
                                     onSubmitCapture={(e) => e.preventDefault()}
@@ -960,11 +1027,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         </Col>
                                         <Col span={12} xl={8}>
                                             <SwitchItem
-                                                label={<OneLine width={70}>
-                                                    <Tooltip title={"不修复 Content-Length: 常用发送多个数据包"}>
-                                                        不修复长度
-                                                    </Tooltip>
-                                                </OneLine>}
+                                                label={
+                                                    <OneLine width={70}>
+                                                        <Tooltip title={"不修复 Content-Length: 常用发送多个数据包"}>
+                                                            不修复长度
+                                                        </Tooltip>
+                                                    </OneLine>
+                                                }
                                                 setValue={(e) => {
                                                     setNoFixContentLength(e)
                                                 }}
@@ -977,7 +1046,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             <ItemSelects
                                                 item={{
                                                     style: {marginBottom: 4},
-                                                    label: <OneLine width={68}>设置代理</OneLine>,
+                                                    label: <OneLine width={68}>设置代理</OneLine>
                                                 }}
                                                 select={{
                                                     style: {width: "100%"},
@@ -992,7 +1061,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     ],
                                                     value: proxy ? proxy.split(",") : [],
                                                     setValue: (value) => setProxy(value.join(",")),
-                                                    maxTagCount: "responsive",
+                                                    maxTagCount: "responsive"
                                                 }}
                                             />
                                         </Col>
@@ -1025,22 +1094,25 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         style={{width: 95}}
                                                         precision={1}
                                                         value={minDelaySeconds}
-                                                        onChange={e => {
+                                                        onChange={(e) => {
                                                             setMinDelaySeconds(e)
                                                         }}
-                                                        min={0} step={0.5}
-                                                        formatter={e => {
+                                                        min={0}
+                                                        step={0.5}
+                                                        formatter={(e) => {
                                                             return `min: ${e} s`
                                                         }}
                                                     />
                                                     <InputNumber
                                                         style={{width: 96}}
-                                                        precision={1} min={0} step={0.5}
+                                                        precision={1}
+                                                        min={0}
+                                                        step={0.5}
                                                         value={maxDelaySeconds}
-                                                        onChange={e => {
+                                                        onChange={(e) => {
                                                             setMaxDelaySeconds(e)
                                                         }}
-                                                        formatter={e => {
+                                                        formatter={(e) => {
                                                             return `max: ${e} s`
                                                         }}
                                                     />
@@ -1053,55 +1125,67 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </Card>
                     </Col>
                     <Col span={8}>
-                        <AutoCard title={(
-                            <Space>
-                                <Tooltip title={"通过过滤匹配，丢弃无用数据包，保证界面性能！"}>
-                                    过滤器模式：
-                                </Tooltip>
-                                <Form onSubmitCapture={e => e.preventDefault()}>
-                                    <SelectOne
-                                        formItemStyle={{marginBottom: 0}}
-                                        label={""} colon={false} size={"small"}
-                                        data={[{value: "drop", text: "丢弃"}, {value: "match", text: "保留"},]}
-                                        value={getFilterMode()} setValue={e => setFilterMode(e)}
-                                    />
-                                </Form>
-                            </Space>
-                        )}
-                                  bordered={false} size={"small"} bodyStyle={{paddingTop: 4}}
-                                  style={{marginTop: 0, paddingTop: 0}}
+                        <AutoCard
+                            title={
+                                <Space>
+                                    <Tooltip title={"通过过滤匹配，丢弃无用数据包，保证界面性能！"}>
+                                        过滤器模式：
+                                    </Tooltip>
+                                    <Form onSubmitCapture={(e) => e.preventDefault()}>
+                                        <SelectOne
+                                            formItemStyle={{marginBottom: 0}}
+                                            label={""}
+                                            colon={false}
+                                            size={"small"}
+                                            data={[
+                                                {value: "drop", text: "丢弃"},
+                                                {value: "match", text: "保留"}
+                                            ]}
+                                            value={getFilterMode()}
+                                            setValue={(e) => setFilterMode(e)}
+                                        />
+                                    </Form>
+                                </Space>
+                            }
+                            bordered={false}
+                            size={"small"}
+                            bodyStyle={{paddingTop: 4}}
+                            style={{marginTop: 0, paddingTop: 0}}
                         >
-                            <Form size={"small"} onSubmitCapture={e => e.preventDefault()}>
+                            <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()}>
                                 <Row gutter={20}>
                                     <Col span={12}>
                                         <InputItem
-                                            label={"状态码"} placeholder={"200,300-399"}
+                                            label={"状态码"}
+                                            placeholder={"200,300-399"}
                                             disable={loading}
                                             value={getFilter().StatusCode.join(",")}
-                                            setValue={e => {
-                                                setFilter({...getFilter(), StatusCode: e.split(",").filter(i => !!i)})
+                                            setValue={(e) => {
+                                                setFilter({...getFilter(), StatusCode: e.split(",").filter((i) => !!i)})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0}}}
                                         />
                                     </Col>
                                     <Col span={12}>
                                         <InputItem
-                                            label={"关键字"} placeholder={"Login,登录成功"}
+                                            label={"关键字"}
+                                            placeholder={"Login,登录成功"}
                                             value={getFilter().Keywords.join(",")}
                                             disable={loading}
-                                            setValue={e => {
-                                                setFilter({...getFilter(), Keywords: e.split(",").filter(i => !!i)})
+                                            setValue={(e) => {
+                                                setFilter({...getFilter(), Keywords: e.split(",").filter((i) => !!i)})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0}}}
                                         />
                                     </Col>
                                     <Col span={12}>
                                         <InputItem
-                                            label={"正则"} placeholder={`Welcome\\s+\\w+!`}
+                                            label={"正则"}
+                                            placeholder={`Welcome\\s+\\w+!`}
                                             value={getFilter().Regexps.join(",")}
                                             disable={loading}
-                                            setValue={e => {
-                                                setFilter({...getFilter(), Regexps: e.split(",").filter(i => !!i)})
+                                            setValue={(e) => {
+                                                setFilter({...getFilter(), Regexps: e.split(",").filter((i) => !!i)})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0, marginTop: 2}}}
                                         />
@@ -1114,138 +1198,146 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             )}
             {/*<Divider style={{marginTop: 6, marginBottom: 8, paddingTop: 0}}/>*/}
             <ResizeBox
-                firstMinSize={350} secondMinSize={360}
+                firstMinSize={350}
+                secondMinSize={360}
                 style={{overflow: "hidden"}}
-                firstNode={<HTTPPacketEditor
-                    system={props.system}
-                    noHex={true}
-                    refreshTrigger={refreshTrigger}
-                    hideSearch={true}
-                    bordered={true}
-                    utf8={true}
-                    originValue={StringToUint8Array(request)}
-                    actions={[
-                        {
-                            id: "packet-from-url",
-                            label: "URL转数据包",
-                            contextMenuGroupId: "1_urlPacket",
-                            run: () => {
-                                setUrlPacketShow(true)
-                            }
-                        },
-                        {
-                            id: "copy-as-url",
-                            label: "复制为 URL",
-                            contextMenuGroupId: "1_urlPacket",
-                            run: () => {
-                                copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
-                            }
-                        },
-                        {
-                            id: "insert-intruder-tag",
-                            label: "插入模糊测试字典标签",
-                            contextMenuGroupId: "1_urlPacket",
-                            run: (editor) => {
-                                showDictsAndSelect(i => {
-                                    monacoEditorWrite(editor, i, editor.getSelection())
-                                })
-                            }
-                        },
-                        {
-                            id: "insert-hotpatch-tag",
-                            label: "插入热加载标签",
-                            contextMenuGroupId: "1_urlPacket",
-                            run: (editor) => {
-                                hotPatchTrigger()
-                            }
-                        },
-                        {
-                            id: "insert-fuzzfile-tag",
-                            label: "插入文件标签",
-                            contextMenuGroupId: "1_urlPacket",
-                            run: (editor) => {
-                                insertFileFuzzTag(i => monacoEditorWrite(editor, i))
-                            }
-                        },
-                    ]}
-                    onEditor={setReqEditor}
-                    onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
-                    extra={
-                        <Space size={2}>
-                            <PacketScanButton packetGetter={() => {
-                                return {httpRequest: StringToUint8Array(request), https: isHttps}
-                            }}/>
-                            <Button
-                                style={{marginRight: 1}}
-                                size={"small"} type={"primary"}
-                                onClick={() => {
+                firstNode={
+                    <HTTPPacketEditor
+                        system={props.system}
+                        noHex={true}
+                        refreshTrigger={refreshTrigger}
+                        hideSearch={true}
+                        bordered={true}
+                        utf8={true}
+                        originValue={StringToUint8Array(request)}
+                        actions={[
+                            {
+                                id: "packet-from-url",
+                                label: "URL转数据包",
+                                contextMenuGroupId: "1_urlPacket",
+                                run: () => {
+                                    setUrlPacketShow(true)
+                                }
+                            },
+                            {
+                                id: "copy-as-url",
+                                label: "复制为 URL",
+                                contextMenuGroupId: "1_urlPacket",
+                                run: () => {
+                                    copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
+                                }
+                            },
+                            {
+                                id: "insert-intruder-tag",
+                                label: "插入模糊测试字典标签",
+                                contextMenuGroupId: "1_urlPacket",
+                                run: (editor) => {
+                                    showDictsAndSelect((i) => {
+                                        monacoEditorWrite(editor, i, editor.getSelection())
+                                    })
+                                }
+                            },
+                            {
+                                id: "insert-hotpatch-tag",
+                                label: "插入热加载标签",
+                                contextMenuGroupId: "1_urlPacket",
+                                run: (editor) => {
                                     hotPatchTrigger()
-                                }}
-                            >热加载</Button>
-                            <Popover
-                                trigger={"click"}
-                                title={"从 URL 加载数据包"}
-                                content={
-                                    <div style={{width: 400}}>
-                                        <Form
-                                            layout={"vertical"}
-                                            onSubmitCapture={(e) => {
-                                                e.preventDefault()
-
-                                                ipcRenderer
-                                                    .invoke("Codec", {
-                                                        Type: "packet-from-url",
-                                                        Text: targetUrl
-                                                    })
-                                                    .then((e) => {
-                                                        if (e?.Result) {
-                                                            setRequest(e.Result)
-                                                            refreshRequest()
-                                                        }
-                                                    })
-                                                    .finally(() => {
-                                                    })
-                                            }}
-                                            size={"small"}
-                                        >
-                                            <InputItem
-                                                label={"从 URL 构造请求"}
-                                                value={targetUrl}
-                                                setValue={setTargetUrl}
-                                                extraFormItemProps={{style: {marginBottom: 8}}}
-                                            ></InputItem>
-                                            <Form.Item style={{marginBottom: 8}}>
-                                                <Button type={"primary"} htmlType={"submit"}>
-                                                    构造请求
-                                                </Button>
-                                            </Form.Item>
-
-                                        </Form>
-                                    </div>
                                 }
-                            >
-                                <Button size={"small"} type={"primary"}>
-                                    URL
+                            },
+                            {
+                                id: "insert-fuzzfile-tag",
+                                label: "插入文件标签",
+                                contextMenuGroupId: "1_urlPacket",
+                                run: (editor) => {
+                                    insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
+                                }
+                            }
+                        ]}
+                        onEditor={setReqEditor}
+                        onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
+                        extra={
+                            <Space size={2}>
+                                <PacketScanButton
+                                    packetGetter={() => {
+                                        return {httpRequest: StringToUint8Array(request), https: isHttps}
+                                    }}
+                                />
+                                <Button
+                                    style={{marginRight: 1}}
+                                    size={"small"}
+                                    type={"primary"}
+                                    onClick={() => {
+                                        hotPatchTrigger()
+                                    }}
+                                >
+                                    热加载
                                 </Button>
-                            </Popover>
-                            <Popover
-                                trigger={"click"}
-                                placement={"bottom"}
-                                destroyTooltipOnHide={true}
-                                content={
-                                    <div style={{width: 400}}>
-                                        <HTTPFuzzerHistorySelector onSelect={e => {
-                                            loadHistory(e)
-                                        }}/>
-                                    </div>
-                                }
-                            >
-                                <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}/>
-                            </Popover>
-                        </Space>
-                    }
-                />}
-                secondNode={() =>
+                                <Popover
+                                    trigger={"click"}
+                                    title={"从 URL 加载数据包"}
+                                    content={
+                                        <div style={{width: 400}}>
+                                            <Form
+                                                layout={"vertical"}
+                                                onSubmitCapture={(e) => {
+                                                    e.preventDefault()
+
+                                                    ipcRenderer
+                                                        .invoke("Codec", {
+                                                            Type: "packet-from-url",
+                                                            Text: targetUrl
+                                                        })
+                                                        .then((e) => {
+                                                            if (e?.Result) {
+                                                                setRequest(e.Result)
+                                                                refreshRequest()
+                                                            }
+                                                        })
+                                                        .finally(() => {})
+                                                }}
+                                                size={"small"}
+                                            >
+                                                <InputItem
+                                                    label={"从 URL 构造请求"}
+                                                    value={targetUrl}
+                                                    setValue={setTargetUrl}
+                                                    extraFormItemProps={{style: {marginBottom: 8}}}
+                                                ></InputItem>
+                                                <Form.Item style={{marginBottom: 8}}>
+                                                    <Button type={"primary"} htmlType={"submit"}>
+                                                        构造请求
+                                                    </Button>
+                                                </Form.Item>
+                                            </Form>
+                                        </div>
+                                    }
+                                >
+                                    <Button size={"small"} type={"primary"}>
+                                        URL
+                                    </Button>
+                                </Popover>
+                                <Popover
+                                    trigger={"click"}
+                                    placement={"bottom"}
+                                    destroyTooltipOnHide={true}
+                                    content={
+                                        <div style={{width: 400}}>
+                                            <HTTPFuzzerHistorySelector
+                                                onSelect={(e) => {
+                                                    loadHistory(e)
+                                                }}
+                                            />
+                                        </div>
+                                    }
+                                >
+                                    <Button size={"small"} type={"link"} icon={<HistoryOutlined />} />
+                                </Popover>
+                            </Space>
+                        }
+                    />
+                }
+                secondNode={() => (
                     <AutoSpin spinning={false}>
                         {onlyOneResponse ? (
                             <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
@@ -1264,29 +1356,34 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 <Popover
                                                     title={"导出数据"}
                                                     trigger={["click"]}
-                                                    content={<>
-                                                        <Space>
-                                                            <Button
-                                                                size={"small"}
-                                                                type={"primary"}
-                                                                onClick={() => {
-                                                                    exportHTTPFuzzerResponse(successResults)
-                                                                }}
-                                                            >
-                                                                导出所有请求
-                                                            </Button>
-                                                            <Button
-                                                                size={"small"}
-                                                                type={"primary"}
-                                                                onClick={() => {
-                                                                    exportPayloadResponse(successResults)
-                                                                }}
-                                                            >
-                                                                仅导出 Payload
-                                                            </Button>
-                                                        </Space>
-                                                    </>}>
-                                                    <Button size={"small"} type={"link"}>导出数据</Button>
+                                                    content={
+                                                        <>
+                                                            <Space>
+                                                                <Button
+                                                                    size={"small"}
+                                                                    type={"primary"}
+                                                                    onClick={() => {
+                                                                        exportHTTPFuzzerResponse(successResults)
+                                                                    }}
+                                                                >
+                                                                    导出所有请求
+                                                                </Button>
+                                                                <Button
+                                                                    size={"small"}
+                                                                    type={"primary"}
+                                                                    onClick={() => {
+                                                                        exportPayloadResponse(successResults)
+                                                                    }}
+                                                                >
+                                                                    仅导出 Payload
+                                                                </Button>
+                                                            </Space>
+                                                        </>
+                                                    }
+                                                >
+                                                    <Button size={"small"} type={"link"}>
+                                                        导出数据
+                                                    </Button>
                                                 </Popover>
                                                 {/*<Input*/}
                                                 {/*    value={keyword}*/}
@@ -1301,7 +1398,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             </div>
                                         }
                                         failedResponses={failedResults}
-                                        successResponses={filterContent.length !== 0 ? filterContent : keyword ? [] : successResults}
+                                        successResponses={
+                                            filterContent.length !== 0 ? filterContent : keyword ? [] : successResults
+                                        }
                                     />
                                 ) : (
                                     <Result
@@ -1314,7 +1413,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 )}
                             </>
                         )}
-                    </AutoSpin>}/>
+                    </AutoSpin>
+                )}
+            />
             <Modal
                 visible={urlPacketShow}
                 title='从 URL 加载数据包'
@@ -1338,8 +1439,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     setUrlPacketShow(false)
                                 }
                             })
-                            .finally(() => {
-                            })
+                            .finally(() => {})
                     }}
                     size={"small"}
                 >

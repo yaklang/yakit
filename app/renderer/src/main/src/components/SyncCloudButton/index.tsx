@@ -252,7 +252,7 @@ interface ModalSyncSelect {
     loading: boolean
 }
 
-const ModalSyncSelect: React.FC<ModalSyncSelect> = (props) => {
+export const ModalSyncSelect: React.FC<ModalSyncSelect> = (props) => {
     const {visible, handleOk, handleCancel, loading} = props
     const [type, setType] = useState<number>(1)
     const onChange = useMemoizedFn((e) => {

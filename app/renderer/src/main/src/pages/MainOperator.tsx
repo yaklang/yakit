@@ -16,6 +16,7 @@ import {
     Spin,
     Tabs,
     Tag,
+    Tooltip,
     Typography
 } from "antd"
 import {ContentByRoute, MenuDataProps, NoScrollRoutes, Route, RouteMenuData} from "../routes/routeSpec"
@@ -30,7 +31,7 @@ import {
     ReloadOutlined,
     SettingOutlined
 } from "@ant-design/icons"
-import {failed, info, success} from "../utils/notification"
+import {failed, info, success, warn} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {YakLogoBanner} from "../utils/logo"
 import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
@@ -56,18 +57,18 @@ import {TrustList} from "./TrustList"
 import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
-import "./main.css"
 import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
 import {showConfigMenuItems} from "../utils/ConfigMenuItems"
 import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain"
-import "./main.css"
-import "./GlobalClass.scss"
+import "./main.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
 import {setRemoteValue} from "@/utils/kv"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
-import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy";
+import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
+import {ShareImport} from "./fuzzer/components/ShareImport"
+import {ShareImportIcon} from "@/assets/icons"
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -85,6 +86,7 @@ const singletonRoute: Route[] = [
     Route.ModManager,
     Route.ModManagerLegacy,
     Route.YakScript,
+    Route.AddYakitScript,
 
     // database
     Route.DB_Ports,
@@ -178,7 +180,7 @@ export interface MenuItemType {
 
 const Main: React.FC<MainProp> = (props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
-    const [status, setStatus] = useState<{ addr: string; isTLS: boolean }>()
+    const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
     const [collapsed, setCollapsed] = useState(false)
     const [hideMenu, setHideMenu] = useState(false)
 
@@ -188,7 +190,7 @@ const Main: React.FC<MainProp> = (props) => {
 
     const [notification, setNotification] = useState("")
 
-    const [pageCache, setPageCache] = useState<PageCache[]>([
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>([
         {
             verbose: "MITM",
             route: Route.HTTPHacker,
@@ -232,7 +234,7 @@ const Main: React.FC<MainProp> = (props) => {
         // Fetch User Defined Plugins
         ipcRenderer
             .invoke("GetAllMenuItem", {})
-            .then((data: { Groups: MenuItemGroup[] }) => {
+            .then((data: {Groups: MenuItemGroup[]}) => {
                 setMenuItems(data.Groups)
             })
             .catch((e: any) => failed("Update Menu Item Failed"))
@@ -251,7 +253,7 @@ const Main: React.FC<MainProp> = (props) => {
                         if (item.key === Route.GeneralModule) {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
-                                    icon: <EllipsisOutlined/>,
+                                    icon: <EllipsisOutlined />,
                                     key: `plugin:${i.Id}`,
                                     label: i.ScriptName
                                 } as unknown as MenuDataProps
@@ -297,8 +299,8 @@ const Main: React.FC<MainProp> = (props) => {
 
     // Tabs Bar Operation Function
     const getCacheIndex = (route: string) => {
-        const targets = pageCache.filter((i) => i.route === route)
-        return targets.length > 0 ? pageCache.indexOf(targets[0]) : -1
+        const targets = getPageCache().filter((i) => i.route === route)
+        return targets.length > 0 ? getPageCache().indexOf(targets[0]) : -1
     }
     const addTabPage = useMemoizedFn(
         (
@@ -393,20 +395,23 @@ const Main: React.FC<MainProp> = (props) => {
             })
         } else addTabPage(route as Route)
     })
-    const removePage = (route: string) => {
+    const removePage = (route: string, isClose: boolean = true) => {
         const targetIndex = getCacheIndex(route)
-
-        if (targetIndex > 0 && pageCache[targetIndex - 1]) {
-            const targetCache = pageCache[targetIndex - 1]
+        if (route === Route.AddYakitScript && isClose) {
+            ipcRenderer.invoke("tab-isClose")
+            return
+        }
+        if (targetIndex > 0 && getPageCache()[targetIndex - 1]) {
+            const targetCache = getPageCache()[targetIndex - 1]
             setCurrentTabKey(targetCache.route)
         }
-        if (targetIndex === 0 && pageCache[targetIndex + 1]) {
-            const targetCache = pageCache[targetIndex + 1]
+        if (targetIndex === 0 && getPageCache()[targetIndex + 1]) {
+            const targetCache = getPageCache()[targetIndex + 1]
             setCurrentTabKey(targetCache.route)
         }
-        if (targetIndex === 0 && pageCache.length === 1) setCurrentTabKey("" as any)
+        if (targetIndex === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
 
-        setPageCache(pageCache.filter((i) => i.route !== route))
+        setPageCache(getPageCache().filter((i) => i.route !== route))
 
         if (route === Route.HTTPFuzzer) delFuzzerList(1)
     }
@@ -640,10 +645,10 @@ const Main: React.FC<MainProp> = (props) => {
 
     // 加载补全
     useEffect(() => {
-        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
+        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
-                const total = JSON.parse(completionJson) as CompletionTotal;
+                const total = JSON.parse(completionJson) as CompletionTotal
                 console.info(total)
                 setCompletions(total)
             } catch (e) {
@@ -672,8 +677,7 @@ const Main: React.FC<MainProp> = (props) => {
                 .catch((e: any) => {
                     setEngineStatus("error")
                 })
-                .finally(() => {
-                })
+                .finally(() => {})
         }
         let id = setInterval(updateEngineStatus, 3000)
         return () => {
@@ -683,8 +687,7 @@ const Main: React.FC<MainProp> = (props) => {
         }
     }, [])
 
-    useHotkeys("Ctrl+Alt+T", () => {
-    })
+    useHotkeys("Ctrl+Alt+T", () => {})
 
     useEffect(() => {
         ipcRenderer.invoke("query-latest-notification").then((e: string) => {
@@ -702,7 +705,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         title: "Notification",
                                         content: (
                                             <>
-                                                <MDEditor.Markdown source={e}/>
+                                                <MDEditor.Markdown source={e} />
                                             </>
                                         )
                                     })
@@ -736,19 +739,27 @@ const Main: React.FC<MainProp> = (props) => {
     // Global Sending Function(全局发送功能|通过发送新增功能页面)
     const addFuzzer = useMemoizedFn((res: any) => {
         const {isHttps, request} = res || {}
+        const time = new Date().getTime().toString()
         if (request) {
-            const time = new Date().getTime().toString()
             addTabPage(Route.HTTPFuzzer, {
                 time: time,
                 node: ContentByRoute(Route.HTTPFuzzer, undefined, {
                     isHttps: isHttps || false,
                     request: request || "",
                     system: system,
-                    order: time
+                    order: time,
+                    shareContent: res.shareContent
                 })
             })
             addFuzzerList(time, request || "", isHttps || false)
         }
+    })
+    const addYakScript = useMemoizedFn((res: any) => {
+        const time = new Date().getTime().toString()
+        addTabPage(Route.AddYakitScript, {
+            time: time,
+            node: ContentByRoute(Route.AddYakitScript, undefined)
+        })
     })
     const addScanPort = useMemoizedFn((res: any) => {
         const {URL = ""} = res || {}
@@ -782,8 +793,7 @@ const Main: React.FC<MainProp> = (props) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {
-                })
+                .catch(() => {})
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === Route.PoC)
@@ -829,15 +839,19 @@ const Main: React.FC<MainProp> = (props) => {
         })
     })
 
-    const addPacketScan = useMemoizedFn((httpFlows: number[], https: boolean, request?: Uint8Array, keyword?: string) => {
-        addTabPage(Route.PacketScanPage, {
-            hideAdd: true,
-            node: ContentByRoute(Route.PacketScanPage, undefined, {
-                packetScan_FlowIds: httpFlows, packetScan_Https: https,
-                packetScan_HttpRequest: request, packetScan_Keyword: keyword,
+    const addPacketScan = useMemoizedFn(
+        (httpFlows: number[], https: boolean, request?: Uint8Array, keyword?: string) => {
+            addTabPage(Route.PacketScanPage, {
+                hideAdd: true,
+                node: ContentByRoute(Route.PacketScanPage, undefined, {
+                    packetScan_FlowIds: httpFlows,
+                    packetScan_Https: https,
+                    packetScan_HttpRequest: request,
+                    packetScan_Keyword: keyword
+                })
             })
-        })
-    })
+        }
+    )
 
     useEffect(() => {
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
@@ -848,13 +862,24 @@ const Main: React.FC<MainProp> = (props) => {
             if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
-            if (type === "exec-packet-scan") addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
-            console.info("send to tab: ", type)
-            console.info("MainOperator SendtoTab", data);
+            if (type === "exec-packet-scan")
+                addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
+            if (type === "add-yakit-script") addYakScript(data)
         })
 
         return () => {
             ipcRenderer.removeAllListeners("fetch-send-to-tab")
+        }
+    }, [])
+    useEffect(() => {
+        ipcRenderer.on("fetch-close-tab", (e, res: any) => {
+            const {router, singleNode} = res
+            if (singleNode) {
+                removePage(router, false)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-close-tab")
         }
     }, [])
 
@@ -878,6 +903,13 @@ const Main: React.FC<MainProp> = (props) => {
                 setPageCache(arr)
                 if (route === Route.HTTPFuzzer) delFuzzerList(1)
             }
+        })
+    })
+
+    const onShare = useMemoizedFn(() => {
+        const m = showModal({
+            title: "导入协作资源",
+            content: <ShareImport onClose={() => m.destroy()} />
         })
     })
     const bars = (props: any, TabBarDefault: any) => {
@@ -923,11 +955,11 @@ const Main: React.FC<MainProp> = (props) => {
                         <Col span={8}>
                             <Space>
                                 <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}}/>
+                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} />
                                 </div>
-                                <Divider type={"vertical"}/>
-                                <YakVersion/>
-                                <YakitVersion/>
+                                <Divider type={"vertical"} />
+                                <YakVersion />
+                                <YakitVersion />
                                 {!hideMenu && (
                                     <Button
                                         style={{marginLeft: 4, color: "#207ee8"}}
@@ -936,7 +968,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         onClick={(e) => {
                                             setCollapsed(!collapsed)
                                         }}
-                                        icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                                     />
                                 )}
                                 <Button
@@ -946,19 +978,20 @@ const Main: React.FC<MainProp> = (props) => {
                                     onClick={(e) => {
                                         updateMenuItems()
                                     }}
-                                    icon={<ReloadOutlined/>}
+                                    icon={<ReloadOutlined />}
                                 />
                             </Space>
                         </Col>
                         <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                            <PerformanceDisplay/>
-                            <RiskStatsTag professionalMode={true}/>
+                            <PerformanceDisplay />
+                            <RiskStatsTag professionalMode={true} />
                             <Space>
                                 {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                                <ReversePlatformStatus/>
+                                <ReversePlatformStatus />
                                 <Dropdown
+                                    overlayClassName='setting-menu'
                                     forceRender={true}
                                     overlay={
                                         <Menu>
@@ -990,7 +1023,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                         width: 800,
                                                         content: (
                                                             <div style={{width: 800}}>
-                                                                <ConfigGlobalReverse/>
+                                                                <ConfigGlobalReverse />
                                                             </div>
                                                         )
                                                     })
@@ -1023,18 +1056,21 @@ const Main: React.FC<MainProp> = (props) => {
                                                 onClick={() => {
                                                     const m = showModal({
                                                         title: "配置私有域",
-                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()}/>
+                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()} />
                                                     })
                                                     return m
                                                 }}
                                             >
                                                 <Button type={"link"}>配置私有域</Button>
                                             </Menu.Item>
+                                            <Menu.Item key={"share-menu"} onClick={() => onShare()}>
+                                                <Button type={"link"}>导入协作资源</Button>
+                                            </Menu.Item>
                                         </Menu>
                                     }
                                     trigger={["click"]}
                                 >
-                                    <Button icon={<SettingOutlined/>}>配置</Button>
+                                    <Button icon={<SettingOutlined />}>配置</Button>
                                 </Dropdown>
                                 {userInfo.isLogin ? (
                                     <div>
@@ -1071,7 +1107,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 <Button
                                     type={"link"}
                                     danger={true}
-                                    icon={<PoweroffOutlined/>}
+                                    icon={<PoweroffOutlined />}
                                     onClick={() => {
                                         if (winCloseFlag) {
                                             setWinCloseShow(true)
@@ -1124,7 +1160,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                                 return (
                                                     <Menu.SubMenu
-                                                        icon={<EllipsisOutlined/>}
+                                                        icon={<EllipsisOutlined />}
                                                         key={i.Group}
                                                         title={i.Group}
                                                     >
@@ -1132,7 +1168,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             if (item.YakScriptId > 0) {
                                                                 return (
                                                                     <MenuItem
-                                                                        icon={<EllipsisOutlined/>}
+                                                                        icon={<EllipsisOutlined />}
                                                                         key={`plugin:${item.Group}:${item.YakScriptId}`}
                                                                     >
                                                                         <Text ellipsis={{tooltip: true}}>
@@ -1143,7 +1179,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             }
                                                             return (
                                                                 <MenuItem
-                                                                    icon={<EllipsisOutlined/>}
+                                                                    icon={<EllipsisOutlined />}
                                                                     key={`batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`}
                                                                 >
                                                                     <Text ellipsis={{tooltip: true}}>
@@ -1213,7 +1249,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 {pageCache.length > 0 ? (
                                     <Tabs
                                         style={{display: "flex", flex: "1"}}
-                                        tabBarStyle={{marginBottom: 8}}
+                                        // tabBarStyle={{marginBottom: 8}}
                                         className='main-content-tabs yakit-layout-tabs'
                                         activeKey={currentTabKey}
                                         onChange={setCurrentTabKey}
@@ -1222,7 +1258,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         renderTabBar={(props, TabBarDefault) => {
                                             return bars(props, TabBarDefault)
                                         }}
-                                        hideAdd={true}
+                                        // hideAdd={true}
                                         onTabClick={(key, e) => {
                                             const divExisted = document.getElementById("yakit-cursor-menu")
                                             if (divExisted) {
@@ -1233,6 +1269,15 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                             }
                                         }}
+                                        addIcon={
+                                            <Tooltip title="导入协作资源">
+                                                <ShareImportIcon
+                                                    // @ts-ignore
+                                                    className='share-import-icon'
+                                                    onClick={() => onShare()}
+                                                />
+                                            </Tooltip>
+                                        }
                                     >
                                         {pageCache.map((i) => {
                                             return (
@@ -1260,7 +1305,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                     </>
                                                                 }
                                                             >
-                                                                <EditOutlined className='main-container-cion'/>
+                                                                <EditOutlined className='main-container-cion' />
                                                             </Popover>
                                                             <CloseOutlined
                                                                 className='main-container-cion'
@@ -1335,7 +1380,7 @@ const Main: React.FC<MainProp> = (props) => {
                 ]}
             >
                 <div style={{height: 40}}>
-                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
+                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
                     <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
                 </div>
                 <p style={{fontSize: 15, marginLeft: 37}}>
@@ -1388,12 +1433,12 @@ const Main: React.FC<MainProp> = (props) => {
                             setBugTestValue(
                                 value
                                     ? [
-                                        {
-                                            filter: option?.filter,
-                                            key: option?.key,
-                                            title: option?.title
-                                        }
-                                    ]
+                                          {
+                                              filter: option?.filter,
+                                              key: option?.key,
+                                              title: option?.title
+                                          }
+                                      ]
                                     : []
                             )
                     }}

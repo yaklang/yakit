@@ -15,7 +15,7 @@
     height: 100%;
 }
 
-.httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+.httphacker-tabs.ant-tabs-card>.ant-tabs-nav .ant-tabs-tab {
     padding: 6px 10px;
     font-size: 13px;
 }
@@ -32,25 +32,51 @@
     flex-direction: column;
 }
 
-.main-container-cion:hover{
+.main-container-cion:hover {
     color: #1890ff;
 }
 
-.yakit-layout-tabs.ant-tabs-top > .ant-tabs-nav {
+.yakit-layout-tabs.ant-tabs-top>.ant-tabs-nav {
     margin: 0 0 4px 0 !important;
 }
-.yakit-layout-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+
+.yakit-layout-tabs.ant-tabs-card>.ant-tabs-nav .ant-tabs-tab {
     padding: 6px 10px;
     font-size: 13px;
 }
 
 /* MainOperator页样式 */
-.yakit-main-layout{
+.yakit-main-layout {
     width: 100%;
     height: 100vh;
 }
-.main-laytou-header{
+
+.main-laytou-header {
     height: 60px;
     padding: 0;
     background-color: #fff;
+}
+
+.share-import-icon {
+    font-size: 16px;
+}
+
+.setting-menu {
+    .ant-dropdown-menu {
+        padding: 0;
+    }
+
+    .ant-dropdown-menu-item:hover,
+    .ant-dropdown-menu-submenu-title:hover {
+
+        background-color: #1890ff;
+
+        .ant-btn-link {
+            color: #fff;
+        }
+    }
+
+    .ant-btn-link:hover {
+        color: #fff;
+    }
 }

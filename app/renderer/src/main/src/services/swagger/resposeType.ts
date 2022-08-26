@@ -115,6 +115,18 @@ export declare namespace API {
         uuid: string
         user_id: number
     }
+    export interface ShareResponse {
+        share_id: string
+        extract_code?: string
+        token?: string
+    }
+    export interface ShareRequest {
+        expired_time: number
+        module: string
+        share_content: string
+        pwd: boolean
+        share_id?: string
+    }
     export interface SaveYakitPlugin {
         id?: number
         type?: string
@@ -276,6 +288,10 @@ export declare namespace API {
         keywords?: string
         plugin_type?: string
         tags?: string
+    }
+    export interface ExtractResponse {
+        extract_content: string
+        module: string
     }
     export interface DeletePluginUuid {
         uuid: string

@@ -36,7 +36,8 @@ import {
     CloudDownloadOutlined,
     DownloadOutlined,
     PoweroffOutlined,
-    InfoCircleOutlined
+    InfoCircleOutlined,
+    CloudUploadOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
@@ -69,7 +70,7 @@ import {findDOMNode} from "react-dom"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {RollingLoadList} from "@/components/RollingLoadList"
 import {setTimeout} from "timers"
-import {SyncCloudButton} from "@/components/SyncCloudButton/index"
+import {ModalSyncSelect, SyncCloudButton} from "@/components/SyncCloudButton/index"
 
 const {Search} = Input
 const {Option} = Select
@@ -566,6 +567,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 deletePluginRecordLocal={deletePluginRecordLocal}
                                 updatePluginRecordLocal={updatePluginRecordLocal}
                                 setUpdatePluginRecordLocal={setUpdatePluginRecordLocal}
+                                userInfo={userInfo}
                             />
                         )}
                         {plugSource === "user" && (
@@ -801,6 +803,7 @@ interface YakModuleProp {
     statisticsQueryLocal: QueryYakScriptRequest
     isShowFilter: boolean
     getYakScriptTagsAndType: () => void
+    userInfo: UserInfoProps
 }
 
 interface DeleteAllLocalPluginsRequest {
@@ -823,7 +826,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         setStatisticsQueryLocal,
         statisticsQueryLocal,
         isShowFilter,
-        getYakScriptTagsAndType
+        getYakScriptTagsAndType,
+        userInfo
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -833,8 +837,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
-    const [isFilter, setIsFilter] = useState(false)
-    const [isShowYAMLPOC, setIsShowYAMLPOC] = useState(false)
+    const [isFilter, setIsFilter] = useState<boolean>(false)
+    const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
+    const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
+    const [upLoading, setUpLoading] = useState<boolean>(false)
     useEffect(() => {
         const newQuery = {
             ...queryLocal,
@@ -865,7 +871,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     ...queryLocal,
                     Keyword: publicKeyword
                 })
-                onResetList()
+                // onResetList()
             }
         },
         [publicKeyword],
@@ -881,6 +887,14 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             setScript()
         }
     }, [isRefList])
+    useEffect(() => {
+        ipcRenderer.on("ref-local-script-list", (e, res: any) => {
+            onResetList()
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("ref-local-script-list")
+        }
+    }, [])
     const onRemoveLocalPlugin = useMemoizedFn(() => {
         const length = selectedRowKeysRecordLocal.length
         if (length === 0 || isSelectAllLocal) {
@@ -948,22 +962,9 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         onSelectAllLocal(false)
     })
     const onAdd = useMemoizedFn(() => {
-        let m = showDrawer({
-            title: "创建新插件",
-            width: "100%",
-            content: (
-                <>
-                    <YakScriptCreatorForm
-                        onChanged={(e) => {
-                            setRefresh(!refresh)
-                        }}
-                        onCreated={() => {
-                            m.destroy()
-                        }}
-                    />
-                </>
-            ),
-            keyboard: false
+        ipcRenderer.invoke("send-to-tab", {
+            type: "add-yakit-script",
+            data: {}
         })
     })
     const onImport = useMemoizedFn(() => {
@@ -985,6 +986,118 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             )
         })
     })
+    const onBatchUpload = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            warn("请先登录")
+            return
+        }
+        if (isSelectAllLocal) {
+            warn("上传不支持全选")
+            return
+        }
+        if (selectedRowKeysRecordLocal.length === 0) {
+            warn("请选择需要上传的本地数据")
+            return
+        }
+        const index = selectedRowKeysRecordLocal.findIndex((s) => s.UUID !== "")
+        if (index !== -1) {
+            warn("请选择未上传至云端的本地数据")
+            return
+        }
+        setUpLoading(false)
+        setVisibleSyncSelect(true)
+    })
+    const onSyncSelect = useMemoizedFn((type) => {
+        // 1 私密：个人账号 2公开：审核后同步云端
+        if (type === 1) {
+            upOnlineBatch("yakit/plugin/save")
+        } else {
+            upOnlineBatch("yakit/plugin")
+        }
+    })
+
+    const upOnlineBatch = useMemoizedFn(async (url: string) => {
+        const length = selectedRowKeysRecordLocal.length
+        const errList: any[] = []
+        setUpLoading(true)
+        for (let index = 0; index < length; index++) {
+            const element = selectedRowKeysRecordLocal[index]
+            const res = await upOnline(element, url)
+            if (res) {
+                errList.push(res)
+            }
+        }
+        if (errList.length > 0) {
+            const errString = errList
+                .filter((_, index) => index < 10)
+                .map((e) => {
+                    return `插件名：【${e.script_name}】，失败原因：${e.err}`
+                })
+            failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
+        } else {
+            success("批量上传成功")
+        }
+        setUpLoading(false)
+        setVisibleSyncSelect(false)
+        setTimeout(() => {
+            onResetList()
+        }, 200)
+    })
+
+    const upOnline = useMemoizedFn(async (params: YakScript, url: string) => {
+        const onlineParams: API.SaveYakitPlugin = {
+            type: params.Type,
+            script_name: params.ScriptName,
+            content: params.Content,
+            tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
+            params: params.Params.map((p) => ({
+                field: p.Field,
+                default_value: p.DefaultValue,
+                type_verbose: p.TypeVerbose,
+                field_verbose: p.FieldVerbose,
+                help: p.Help,
+                required: p.Required,
+                group: p.Group,
+                extra_setting: p.ExtraSetting
+            })),
+            help: params.Help,
+            default_open: false,
+            contributors: params.OnlineContributors || ""
+        }
+
+        return new Promise((resolve) => {
+            NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
+                method: "post",
+                url,
+                data: onlineParams
+            })
+                .then((res) => {
+                    resolve(false)
+                    // 上传后，先下载最新的然后删除本地旧的
+                    ipcRenderer
+                        .invoke("DownloadOnlinePluginById", {
+                            OnlineID: res.id,
+                            UUID: res.uuid
+                        } as DownloadOnlinePluginProps)
+                        .then((res) => {
+                            ipcRenderer
+                                .invoke("delete-yak-script", params.Id)
+                                .then(() => {})
+                                .catch((err) => {
+                                    failed("删除本地【" + params.ScriptName + "】失败:" + err)
+                                })
+                        })
+                })
+                .catch((err) => {
+                    const errObj = {
+                        script_name: params.ScriptName,
+                        err
+                    }
+                    resolve(errObj)
+                })
+        })
+    })
+
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
@@ -1040,6 +1153,17 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                             </Button>
                         )}
                     </Popconfirm>
+                    <Popconfirm title='上传不支持全选且只能上传未上传至云端的插件' onConfirm={() => onBatchUpload()}>
+                        {(size === "small" && (
+                            <Tooltip title='上传'>
+                                <UploadOutlined className='operation-icon' />
+                            </Tooltip>
+                        )) || (
+                            <Button size='small' type='primary'>
+                                上传
+                            </Button>
+                        )}
+                    </Popconfirm>
                     {(size === "small" && (
                         <>
                             <Tooltip title='新建'>
@@ -1065,11 +1189,26 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     )}
                 </Col>
             </Row>
+
+            <ModalSyncSelect
+                visible={visibleSyncSelect}
+                handleOk={onSyncSelect}
+                handleCancel={() => {
+                    if (upLoading) {
+                        warn("请等待插件上传完成后再关闭该modal框")
+                        return
+                    }
+                    setVisibleSyncSelect(false)
+                    onResetList()
+                }}
+                loading={upLoading}
+            />
+
             <div className='list-height'>
                 <YakModuleList
                     isGridLayout={size === "middle"}
                     numberLocalRoll={numberLocal}
-                    itemHeight={150}
+                    itemHeight={170}
                     currentScript={script}
                     onClicked={(info, index) => {
                         if (info?.Id === script?.Id) return
@@ -1221,7 +1360,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         setParams(newParams)
         setIsRef(!isRef)
         setListBodyLoading(true)
-        
+
         update(1, undefined, queryLocal)
         if (onSelectList) onSelectList([])
     }, [userInfo.isLogin, props.refresh])
@@ -1252,11 +1391,13 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         const index = selectedRowKeysRecord.findIndex((ele) => ele.Id === item.Id)
         if (index === -1) {
             selectedRowKeysRecord.push(item)
+            if (onSelectList) onSelectList([...selectedRowKeysRecord])
         } else {
-            selectedRowKeysRecord.splice(index, 1)
+            // selectedRowKeysRecord.splice(index, 1)
+            const newSelectedRowKeysRecord = selectedRowKeysRecord.filter((ele) => ele.Id !== item.Id)
+            if (onSelectList) onSelectList([...newSelectedRowKeysRecord])
         }
         if (setIsSelectAll) setIsSelectAll(false)
-        if (onSelectList) onSelectList([...selectedRowKeysRecord])
     })
     const onShare = useMemoizedFn((item: YakScript) => {
         Modal.info({
@@ -1384,7 +1525,10 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             </div>
             <div className='plugin-item-content'>
                 <div className='plugin-help content-ellipsis'>{plugin.Help || "No Description about it."}</div>
-                {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
+                <div className='plugin-type-body'>
+                    {PluginTypeText(plugin.Type)}
+                    {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
+                </div>
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
                         {plugin.HeadImg && <img alt='' src={plugin.HeadImg} />}
@@ -1395,6 +1539,32 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
             </div>
         </div>
     )
+}
+const PluginType = {
+    yak: "YAK 插件",
+    mitm: "MITM 插件",
+    "packet-hack": "数据包扫描",
+    "port-scan": "端口扫描插件",
+    codec: "CODEC插件",
+    nuclei: "YAML POC"
+}
+const PluginTypeText = (type) => {
+    switch (type) {
+        case "yak":
+            return <div className='plugin-type plugin-yak'>{PluginType[type]}</div>
+        case "mitm":
+            return <div className='plugin-type plugin-mitm'>{PluginType[type]}</div>
+        case "packet-hack":
+            return <div className='plugin-type plugin-packet-hack'>{PluginType[type]}</div>
+        case "port-scan":
+            return <div className='plugin-type plugin-port-scan'>{PluginType[type]}</div>
+        case "codec":
+            return <div className='plugin-type plugin-codec'>{PluginType[type]}</div>
+        case "nuclei":
+            return <div className='plugin-type plugin-nuclei'>{PluginType[type]}</div>
+        default:
+            break
+    }
 }
 
 const loadLocalYakitPluginCode = `yakit.AutoInitYakit()
@@ -2010,7 +2180,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     ...queryUser,
                     keywords: publicKeyword
                 })
-                onResetList()
+                // onResetList()
             }
         },
         [publicKeyword],
@@ -2198,7 +2368,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     ...queryOnline,
                     keywords: publicKeyword
                 })
-                onResetList()
+                // onResetList()
             }
         },
         [publicKeyword],
@@ -2543,7 +2713,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 loadMoreData={() => loadMoreData()}
                 rowKey='id'
                 isGridLayout={size === "middle"}
-                defItemHeight={151} // 139+12
+                defItemHeight={170}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
                 renderRow={(data: API.YakitPluginDetail, index: number) => (
@@ -2673,11 +2843,15 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                 <div className='plugin-help content-ellipsis' title={info.help}>
                     {info.help || "No Description about it."}
                 </div>
-                {(tags && tags.length > 0 && (
-                    <div className='plugin-tag' title={tagsString}>
-                        TAG:{tagsString}
-                    </div>
-                )) || <div className='plugin-tag'>&nbsp;</div>}
+                <div className='plugin-type-body'>
+                    {PluginTypeText(info.type)}
+                    {tags && tags.length > 0 && (
+                        <div className='plugin-tag' title={tagsString}>
+                            TAG:{tagsString}
+                        </div>
+                    )}
+                </div>
+
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
                         {info.head_img && <img alt='' src={info.head_img} />}
@@ -2696,15 +2870,6 @@ interface QueryComponentOnlineProps {
     setQueryOnline: (q: SearchPluginOnlineRequest) => void
     queryOnline: SearchPluginOnlineRequest
     user: boolean
-}
-
-const PluginType = {
-    yak: "YAK 插件",
-    mitm: "MITM 插件",
-    "packet-hack": "数据包扫描",
-    "port-scan": "端口扫描插件",
-    codec: "CODEC插件",
-    nuclei: "YAML POC"
 }
 
 const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {

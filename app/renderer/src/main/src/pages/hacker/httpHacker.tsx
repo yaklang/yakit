@@ -10,7 +10,7 @@ import {showDrawer} from "../../utils/showModal"
 import {HackerPlugin} from "./HackerPlugin"
 import ReactDOM from "react-dom"
 
-import "../main.css"
+import "../main.scss"
 import {useHotkeys} from "react-hotkeys-hook";
 import {info} from "../../utils/notification";
 

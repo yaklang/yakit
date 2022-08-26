@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useState, useRef} from "react"
 import {Button, Checkbox, Col, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal} from "antd"
 import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {YakScript, YakScriptParam} from "./schema"
@@ -15,10 +15,11 @@ import {CodecPluginTemplate} from "./data/CodecPluginTemplate"
 import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate"
 import {useCreation, useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import "./YakScriptCreator.css"
+import "./YakScriptCreator.scss"
 import {queryYakScriptList} from "../yakitStore/network"
 import {YakExecutorParam} from "./YakExecutorParams"
 import {SyncCloudButton} from "@/components/SyncCloudButton/index"
+import {Route} from "@/routes/routeSpec"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -126,6 +127,31 @@ export interface FromLayoutProps {
     wrapperCol: object
 }
 
+const defParams = {
+    Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n",
+    Tags: "",
+    Author: "",
+    Level: "",
+    IsHistory: false,
+    IsIgnore: false,
+    CreatedAt: 0,
+    Help: "",
+    Id: 0,
+    Params: [],
+    ScriptName: "",
+    Type: "yak",
+    IsGeneralModule: false,
+    PluginSelectorTypes: "mitm,port-scan",
+    UserId: 0,
+    OnlineId: 0,
+    OnlineScriptName: "",
+    OnlineContributors: "",
+    GeneralModuleVerbose: "",
+    GeneralModuleKey: "",
+    FromGit: "",
+    UUID: ""
+}
+
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
@@ -135,37 +161,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         return col
     }, [])
     const [fromLayout, setFromLayout] = useState<FromLayoutProps>(defFromLayout)
-    const [params, setParams] = useState<YakScript>(
-        props.modified || {
-            Content: "",
-            Tags: "",
-            Author: "",
-            Level: "",
-            IsHistory: false,
-            IsIgnore: false,
-            CreatedAt: 0,
-            Help: "",
-            Id: 0,
-            Params: [],
-            ScriptName: "",
-            Type: "yak",
-            IsGeneralModule: false,
-            PluginSelectorTypes: "mitm,port-scan",
-            UserId: 0,
-            OnlineId: 0,
-            OnlineScriptName: "",
-            OnlineContributors: "",
-            GeneralModuleVerbose: "",
-            GeneralModuleKey: "",
-            FromGit: "",
-            UUID: ""
-        }
-    )
+    const [params, setParams, getParams] = useGetState<YakScript>(props.modified || defParams)
     const [paramsLoading, setParamsLoading] = useState(false)
     const [modified, setModified] = useState<YakScript | undefined>(props.modified)
     const [fullscreen, setFullscreen] = useState(false)
     const [loading, setLoading] = useState(false)
-
+    const [visible, setVisible] = useState<boolean>(false)
+    const [saveLoading, setSaveLoading] = useState<boolean>(false)
     const isNucleiPoC = params.Type === "nuclei"
 
     const debugButton = (primary?: boolean) => {
@@ -174,7 +176,18 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         }
         return
     }
-
+    useEffect(() => {
+        ipcRenderer.on("fetch-tab-isClose", (e, res: any) => {
+            if (getParams().Id > 0) {
+                onCloseTab()
+                return
+            }
+            setVisible(true)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-tab-isClose")
+        }
+    }, [])
     useEffect(() => {
         if (props.fromLayout) {
             setFromLayout(props.fromLayout)
@@ -245,17 +258,34 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 ...props.modified
             })
     }, [props.modified])
-
+    const onCloseTab = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.AddYakitScript,
+                singleNode: true
+            })
+            .then(() => {
+                setVisible(false)
+            })
+    })
     // 仅保存本地
     const onSaveLocal = useMemoizedFn(() => {
         if (!params.ScriptName) {
             warn("请输入插件模块名!")
             return
         }
+        setSaveLoading(true)
         ipcRenderer
             .invoke("SaveYakScript", params)
             .then((data) => {
                 info("创建 / 保存 Yak 脚本成功")
+                setParams(data)
+                if (visible) {
+                    // model提示保存后的处理
+                    onCloseTab()
+                    setVisible(false)
+                    ipcRenderer.invoke("send-local-script-list")
+                }
                 props.onCreated && props.onCreated(data)
                 props.onChanged && props.onChanged(data)
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
@@ -263,7 +293,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             .catch((e: any) => {
                 failed(`保存 Yak 模块失败: ${e}`)
             })
+            .finally(() => {
+                setTimeout(() => {
+                    setSaveLoading(false)
+                }, 200)
+            })
     })
+
     return (
         <div>
             <Form {...fromLayout}>
@@ -531,7 +567,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 </Form.Item>
                 <Form.Item colon={false} label={" "}>
                     <Space>
-                        <Button type='primary' onClick={onSaveLocal}>
+                        <Button type='primary' onClick={onSaveLocal} loading={saveLoading}>
                             保存
                         </Button>
                         <SyncCloudButton
@@ -580,6 +616,33 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     </Space>
                 </Form.Item>
             </Form>
+
+            <Modal
+                visible={visible}
+                onCancel={() => setVisible(false)}
+                footer={[
+                    <Button key='link' onClick={() => setVisible(false)}>
+                        取消
+                    </Button>,
+                    <Button
+                        key='submit'
+                        onClick={() => {
+                            onCloseTab()
+                        }}
+                    >
+                        不保存
+                    </Button>,
+                    <Button key='back' type='primary' onClick={() => onSaveLocal()} loading={saveLoading}>
+                        保存
+                    </Button>
+                ]}
+            >
+                <div className='save-script'>
+                    <ExclamationCircleOutlined className='exclamation-icon' />
+                    <span className='title'>插件未保存</span>
+                    <div className='tip'>是否要保存该插件</div>
+                </div>
+            </Modal>
         </div>
     )
 }

@@ -69,5 +69,5 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
 const tokenOverdue = (res) => {
     if (res.userInfo) loginOutLocal(res.userInfo)
     setRemoteValue("token-online", "")
-    failed("登录过期，请重新登录")
+    failed("401,登录过期/未登录，请重新登录")
 }
