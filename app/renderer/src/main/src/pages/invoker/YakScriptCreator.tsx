@@ -167,6 +167,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const [fullscreen, setFullscreen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [visible, setVisible] = useState<boolean>(false)
+    const [saveLoading, setSaveLoading] = useState<boolean>(false)
     const isNucleiPoC = params.Type === "nuclei"
 
     const debugButton = (primary?: boolean) => {
@@ -273,6 +274,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             warn("请输入插件模块名!")
             return
         }
+        setSaveLoading(true)
         ipcRenderer
             .invoke("SaveYakScript", params)
             .then((data) => {
@@ -290,6 +292,11 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             })
             .catch((e: any) => {
                 failed(`保存 Yak 模块失败: ${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setSaveLoading(false)
+                }, 200)
             })
     })
 
@@ -560,7 +567,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 </Form.Item>
                 <Form.Item colon={false} label={" "}>
                     <Space>
-                        <Button type='primary' onClick={onSaveLocal}>
+                        <Button type='primary' onClick={onSaveLocal} loading={saveLoading}>
                             保存
                         </Button>
                         <SyncCloudButton
@@ -625,7 +632,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     >
                         不保存
                     </Button>,
-                    <Button key='back' type='primary' onClick={() => onSaveLocal()}>
+                    <Button key='back' type='primary' onClick={() => onSaveLocal()} loading={saveLoading}>
                         保存
                     </Button>
                 ]}
