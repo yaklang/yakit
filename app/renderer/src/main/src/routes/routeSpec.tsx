@@ -107,6 +107,17 @@ export enum Route {
     PacketScanPage = "packet-scan-page"
 }
 
+export function RouteNameToVerboseName(r: string) {
+    switch (r) {
+        case "packet-scan-page":
+            return "数据包扫描"
+        case "batch-executor-recover":
+            return "批量继续执行"
+        default:
+            return r
+    }
+}
+
 export interface MenuDataProps {
     key?: Route
     subMenuData?: MenuDataProps[]

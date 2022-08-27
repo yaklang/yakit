@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Modal, Radio, Switch} from "antd"
+import {Button, Modal, Radio, Switch, Tooltip} from "antd"
 import {ShareIcon} from "@/assets/icons"
 import {useMemoizedFn, useHover} from "ahooks"
 import {useStore} from "@/store"
@@ -8,6 +8,9 @@ import CopyToClipboard from "react-copy-to-clipboard"
 import "./index.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {CopyableField} from "@/utils/inputUtil";
+import {showByCursorMenu} from "@/utils/showByCursor";
+import {onImportShare} from "@/pages/fuzzer/components/ShareImport";
 
 interface ShareDataProps {
     module: string // 新建tab类型
@@ -73,9 +76,22 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
     })
     return (
         <>
-            <Button type='primary' icon={<ShareIcon />} onClick={getValue}>
-                分享
-            </Button>
+            <Tooltip title={"左键设置参数，右键可通过ID导入资源"}>
+                <Button type='default' icon={<ShareIcon/>} onClick={getValue} onContextMenuCapture={e => {
+                    showByCursorMenu({
+                        content: [
+                            {
+                                title: "通过 ID 导入资源", onClick: () => {
+                                    onImportShare()
+                                }
+                            },
+                            {title: "通过 ID 分享资源", onClick: getValue}
+                        ],
+                    }, e.clientX, e.clientY)
+                }}>
+                    分享
+                </Button>
+            </Tooltip>
             <Modal title='分享' visible={isModalVisible} onCancel={handleCancel} footer={null}>
                 <div className='content-value'>
                     <span className='label-text'>设置有效期：</span>
@@ -88,12 +104,12 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                 </div>
                 <div className='content-value'>
                     <span className='label-text'>密码：</span>
-                    <Switch checked={pwd} onChange={(checked) => setPwd(checked)} />
+                    <Switch checked={pwd} onChange={(checked) => setPwd(checked)}/>
                 </div>
                 {shareResData.share_id && (
                     <div className='content-value'>
                         <span className='label-text'>分享id：</span>
-                        <span>{shareResData.share_id}</span>
+                        <span><CopyableField text={shareResData.share_id}></CopyableField></span>
                     </div>
                 )}
                 {shareResData.extract_code && (
@@ -103,21 +119,24 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                     </div>
                 )}
                 <div className='btn-footer'>
-                    <Button type='primary' onClick={onShare} loading={shareLoading}>
+                    <Button type='primary'
+                            onClick={onShare} loading={shareLoading}
+                            disabled={!!shareResData?.share_id}
+                    >
                         生成分享密令
                     </Button>
                     {shareResData.share_id && (
                         <CopyToClipboard
                             text={
                                 shareResData.extract_code
-                                    ? `分享id：${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
-                                    : `分享id：${shareResData.share_id}`
+                                    ? `${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
+                                    : `${shareResData.share_id}`
                             }
                             onCopy={(text, ok) => {
                                 if (ok) success("已复制到粘贴板")
                             }}
                         >
-                            <Button>复制分享</Button>
+                            <Button type={!!shareResData?.share_id ? "primary" : "default"}>复制分享</Button>
                         </CopyToClipboard>
                     )}
                 </div>

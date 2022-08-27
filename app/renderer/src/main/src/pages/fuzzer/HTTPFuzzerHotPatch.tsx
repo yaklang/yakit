@@ -163,7 +163,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 />
             </div>
         </Form.Item>
-        <Form.Item help={"调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 1000 条"}>
+        <Form.Item help={"调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 300 条"}>
             <Button
                 loading={loading}
                 type="primary" htmlType="submit"

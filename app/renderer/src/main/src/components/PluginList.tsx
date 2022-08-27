@@ -166,8 +166,8 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                 extra={
                     !props.readOnly && (
                         <Space>
-                            {(selected || []).length > 0 ?
-                                <Tag color={"green"}>已选{selected?.length}</Tag> : undefined}
+                            {/*{(selected || []).length > 0 ?*/}
+                            {/*    <Tag color={"green"}>已选{selected?.length}</Tag> : undefined}*/}
                             <Input.Search onSearch={value => {
                                 search({limit: limit, keyword: value.trim()})
                             }} size={"small"} style={{width: 140}}/>

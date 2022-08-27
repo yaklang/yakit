@@ -6,6 +6,7 @@ import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
+import {showModal} from "@/utils/showModal";
 
 const layout = {
     labelCol: {span: 5},
@@ -23,6 +24,13 @@ interface ShareImportProps {
 
 interface pwdRequestProps {
     share_id: string
+}
+
+export function onImportShare() {
+    const m = showModal({
+        title: "导入协作资源",
+        content: <ShareImport onClose={() => m.destroy()}/>
+    })
 }
 
 export const ShareImport: React.FC<ShareImportProps> = (props) => {
@@ -107,11 +115,11 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
         <>
             <Form {...layout} name='control-hooks' onFinish={onFinish}>
                 <Form.Item name='share_id' label='分享id' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入分享id' />
+                    <Input placeholder='请输入分享id'/>
                 </Form.Item>
                 {isShowPassword && (
                     <Form.Item name='extract_code' label='密码' rules={[{required: true, message: "该项为必填"}]}>
-                        <Input placeholder='请输入密码' allowClear />
+                        <Input placeholder='请输入密码' allowClear/>
                     </Form.Item>
                 )}
                 <Form.Item {...tailLayout}>

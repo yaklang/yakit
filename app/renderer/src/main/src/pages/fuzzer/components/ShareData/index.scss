@@ -1,20 +1,22 @@
 .btn-footer {
-    margin-top: 24px;
+  margin-top: 24px;
+  margin-left: 90px;
+  margin-bottom: 32px;
 
-    button {
-        margin-right: 12px;
-    }
+  button {
+    margin-right: 12px;
+  }
 
 }
 
 .content-value {
-    display: flex;
-    align-items: center;
-    margin-top: 12px;
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
 
-    .label-text {
-        margin-right: 6px;
-        width: 85px;
-        text-align: right;
-    }
+  .label-text {
+    margin-right: 6px;
+    width: 85px;
+    text-align: right;
+  }
 }
