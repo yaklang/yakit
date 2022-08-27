@@ -74,24 +74,22 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                 }, 200)
             })
     })
+
+    const rightClick = useMemoizedFn((e: { clientX: number, clientY: number }) => {
+        showByCursorMenu({
+            content: [
+                {title: "分享当前 Web Fuzzer", onClick: getValue},
+                {title: "导入 Web Fuzzer", onClick: onImportShare}
+            ],
+        }, e.clientX, e.clientY)
+    })
+
     return (
         <>
-            <Tooltip title={"左键设置参数，右键可通过ID导入资源"}>
-                <Button type='default' icon={<ShareIcon/>} onClick={getValue} onContextMenuCapture={e => {
-                    showByCursorMenu({
-                        content: [
-                            {
-                                title: "通过 ID 导入资源", onClick: () => {
-                                    onImportShare()
-                                }
-                            },
-                            {title: "通过 ID 分享资源", onClick: getValue}
-                        ],
-                    }, e.clientX, e.clientY)
-                }}>
-                    分享
-                </Button>
-            </Tooltip>
+            <Button size={"small"} type='primary' icon={<ShareIcon/>} onClick={rightClick}
+                    onContextMenuCapture={rightClick}>
+                分享 / 导入
+            </Button>
             <Modal title='分享' visible={isModalVisible} onCancel={handleCancel} footer={null}>
                 <div className='content-value'>
                     <span className='label-text'>设置有效期：</span>
@@ -127,13 +125,12 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                     </Button>
                     {shareResData.share_id && (
                         <CopyToClipboard
-                            text={
-                                shareResData.extract_code
-                                    ? `${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
-                                    : `${shareResData.share_id}`
-                            }
+                            text={shareResData.extract_code
+                                ? `${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
+                                : `${shareResData.share_id}`}
                             onCopy={(text, ok) => {
-                                if (ok) success("已复制到粘贴板")
+                                if (ok)
+                                    success("已复制到粘贴板")
                             }}
                         >
                             <Button type={!!shareResData?.share_id ? "primary" : "default"}>复制分享</Button>
