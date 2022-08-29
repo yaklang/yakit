@@ -141,7 +141,7 @@
       published_at?: number;
       default_open: boolean;
       enable_plugin_selector?: boolean;
-      plugin_selector_types?: string;
+      plugin_selector_types?: string; 
       is_general_module?: boolean;
       download_total?: number;
       contributors?: string;

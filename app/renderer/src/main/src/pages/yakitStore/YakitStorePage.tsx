@@ -1010,19 +1010,19 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const onSyncSelect = useMemoizedFn((type) => {
         // 1 私密：个人账号 2公开：审核后同步云端
         if (type === 1) {
-            upOnlineBatch("yakit/plugin/save")
+            upOnlineBatch("yakit/plugin/save", 1)
         } else {
-            upOnlineBatch("yakit/plugin")
+            upOnlineBatch("yakit/plugin", 2)
         }
     })
 
-    const upOnlineBatch = useMemoizedFn(async (url: string) => {
+    const upOnlineBatch = useMemoizedFn(async (url: string, type: number) => {
         const length = selectedRowKeysRecordLocal.length
         const errList: any[] = []
         setUpLoading(true)
         for (let index = 0; index < length; index++) {
             const element = selectedRowKeysRecordLocal[index]
-            const res = await upOnline(element, url)
+            const res = await upOnline(element, url, type)
             if (res) {
                 errList.push(res)
             }
@@ -1044,7 +1044,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         }, 200)
     })
 
-    const upOnline = useMemoizedFn(async (params: YakScript, url: string) => {
+    const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
             script_name: params.ScriptName,
@@ -1061,8 +1061,12 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 extra_setting: p.ExtraSetting
             })),
             help: params.Help,
-            default_open: false,
-            contributors: params.OnlineContributors || ""
+            default_open: type === 1 ? false : true, // 1 个人账号
+            contributors: params.OnlineContributors || "",
+            //
+            enable_plugin_selector: params.EnablePluginSelector,
+            plugin_selector_types: params.PluginSelectorTypes,
+            is_general_module: params.IsGeneralModule
         }
 
         return new Promise((resolve) => {

@@ -26,8 +26,8 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
     const [loginshow, setLoginShow] = useState<boolean>(false)
     const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
-    // 保存在个人账号
-    const upOnlinePlugin = useMemoizedFn(() => {
+
+    const upOnlinePlugin = useMemoizedFn((url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
             script_name: params.ScriptName,
@@ -44,9 +44,12 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                 extra_setting: p.ExtraSetting
             })),
             help: params.Help,
-            default_open: false,
-            // contributors: params.Author
-            contributors: params.OnlineContributors || ""
+            default_open: type === 1 ? false : true, // 1 个人账号
+            contributors: params.OnlineContributors || "",
+            //
+            enable_plugin_selector: params.EnablePluginSelector,
+            plugin_selector_types: params.PluginSelectorTypes,
+            is_general_module: params.IsGeneralModule
         }
         if (params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
@@ -55,7 +58,7 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
         if (uploadLoading) uploadLoading(true)
         NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
             method: "post",
-            url: "yakit/plugin/save",
+            url,
             data: onlineParams
         })
             .then((res) => {
@@ -106,91 +109,6 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                 }, 200)
             })
     })
-    // 上传
-    const uploadOnline = (item: YakScript) => {
-        // if (!(userInfo.user_id == item.UserId || item.UserId == 0)) {
-        //     warn("只能上传本人创建的插件!")
-        //     return
-        // }
-        const params: API.NewYakitPlugin = {
-            type: item.Type,
-            script_name: item.ScriptName,
-            content: item.Content,
-            tags: item.Tags && item.Tags !== "null" ? item.Tags.split(",") : undefined,
-            params: item.Params.map((p) => ({
-                field: p.Field,
-                default_value: p.DefaultValue,
-                type_verbose: p.TypeVerbose,
-                field_verbose: p.FieldVerbose,
-                help: p.Help,
-                required: p.Required,
-                group: p.Group,
-                extra_setting: p.ExtraSetting
-            })),
-            help: item.Help,
-            default_open: false,
-            // contributors: item.OnlineContributors ? item.OnlineContributors : item.Author
-            contributors: item.OnlineContributors || ""
-        }
-        if (item.OnlineId) {
-            params.id = parseInt(`${item.OnlineId}`)
-        }
-        setLoading(true)
-        if (uploadLoading) uploadLoading(true)
-        NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
-            method: "post",
-            url: "yakit/plugin",
-            data: params
-        })
-            .then((res) => {
-                // 上传插件到商店后，需要调用下载商店插件接口，给本地保存远端插件Id DownloadOnlinePluginProps
-                ipcRenderer
-                    .invoke("DownloadOnlinePluginById", {
-                        OnlineID: res.id,
-                        UUID: res.uuid
-                    } as DownloadOnlinePluginProps)
-                    .then(() => {
-                        ipcRenderer
-                            .invoke("GetYakScriptByOnlineID", {
-                                OnlineID: res.id,
-                                UUID: res.uuid
-                            } as GetYakScriptByOnlineIDRequest)
-                            .then((newSrcipt: YakScript) => {
-                                setParams(newSrcipt)
-                                success("同步成功")
-                                setVisibleSyncSelect(false)
-                                ipcRenderer
-                                    .invoke("delete-yak-script", item.Id)
-                                    .then(() => {})
-                                    .catch((err) => {
-                                        failed("删除本地失败:" + err)
-                                    })
-                            })
-                            .catch((e) => {
-                                failed(`查询本地插件错误:${e}`)
-                            })
-                            .finally(() => {
-                                setTimeout(() => {
-                                    setLoading(false)
-                                    if (uploadLoading) uploadLoading(false)
-                                }, 200)
-                            })
-                    })
-                    .catch((err) => {
-                        failed("插件下载本地失败:" + err)
-                        setTimeout(() => {
-                            if (uploadLoading) uploadLoading(false)
-                        }, 200)
-                    })
-                success("插件上传成功")
-            })
-            .catch((err) => {
-                failed("插件上传失败:" + err)
-                setTimeout(() => {
-                    if (uploadLoading) uploadLoading(false)
-                }, 200)
-            })
-    }
     const onSyncCloud = useMemoizedFn(() => {
         if (!userInfo.isLogin) {
             Modal.confirm({
@@ -208,9 +126,9 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
         }
         if ((params.OnlineId as number) > 0) {
             if (params.OnlineIsPrivate) {
-                upOnlinePlugin()
+                upOnlinePlugin("yakit/plugin/save", 1)
             } else {
-                uploadOnline(params)
+                upOnlinePlugin("yakit/plugin", 2)
             }
         } else {
             setVisibleSyncSelect(true)
@@ -219,9 +137,9 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
     const onSyncSelect = useMemoizedFn((type) => {
         // 1 私密：个人账号 2公开：审核后同步云端
         if (type === 1) {
-            upOnlinePlugin()
+            upOnlinePlugin("yakit/plugin/save", 1)
         } else {
-            uploadOnline(params)
+            upOnlinePlugin("yakit/plugin", 2)
         }
     })
     return (
