@@ -62,7 +62,6 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
         if (shareResData.share_id) {
             params.share_id = shareResData.share_id
         }
-        console.log("params", params)
 
         setShareLoading(true)
         NetWorkApi<API.ShareRequest, API.ShareResponse>({
