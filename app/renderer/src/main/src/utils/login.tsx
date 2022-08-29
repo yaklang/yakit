@@ -12,10 +12,7 @@ export const loginOut = (userInfo: UserInfoProps) => {
         url: "logout/online"
     })
         .then((res) => {
-            ipcRenderer.send("user-sign-out")
-            ipcRenderer.invoke("DeletePluginByUserID", {
-                UserID: userInfo.user_id
-            })
+            loginOutLocal(userInfo)
         })
         .catch((e) => {})
         .finally(() => {
@@ -25,10 +22,13 @@ export const loginOut = (userInfo: UserInfoProps) => {
 
 export const loginOutLocal = (userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
-    ipcRenderer.send("user-sign-out")
-    ipcRenderer.invoke("DeletePluginByUserID", {
-        UserID: userInfo.user_id
-    })
+    ipcRenderer
+        .invoke("DeletePluginByUserID", {
+            UserID: userInfo.user_id
+        })
+        .finally(() => {
+            ipcRenderer.send("user-sign-out")
+        })
 }
 
 export const refreshToken = (userInfo: UserInfoProps) => {
