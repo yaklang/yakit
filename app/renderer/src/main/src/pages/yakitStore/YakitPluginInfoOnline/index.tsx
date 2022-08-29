@@ -373,7 +373,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                         </>
                                     )}
                                     <Button type='primary' onClick={() => setIsEdit(true)}>
-                                        修改作者
+                                        修改
                                     </Button>
                                 </>
                             )}
@@ -381,6 +381,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                     </div>
                     <Suspense fallback={<Spin />}>
                         <EditOnlinePluginDetails
+                            userInfo={userInfo}
                             pulgin={plugin}
                             visible={isEdit}
                             handleOk={() => {

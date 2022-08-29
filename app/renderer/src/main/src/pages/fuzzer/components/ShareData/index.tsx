@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Modal, Radio, Switch, Tooltip} from "antd"
+import {Button, Modal, Radio, Switch, InputNumber} from "antd"
 import {ShareIcon} from "@/assets/icons"
 import {useMemoizedFn, useHover} from "ahooks"
 import {useStore} from "@/store"
@@ -8,9 +8,9 @@ import CopyToClipboard from "react-copy-to-clipboard"
 import "./index.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {CopyableField} from "@/utils/inputUtil";
-import {showByCursorMenu} from "@/utils/showByCursor";
-import {onImportShare} from "@/pages/fuzzer/components/ShareImport";
+import {CopyableField} from "@/utils/inputUtil"
+import {showByCursorMenu} from "@/utils/showByCursor"
+import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 
 interface ShareDataProps {
     module: string // 新建tab类型
@@ -24,6 +24,9 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false)
     const [shareLoading, setShareLoading] = useState<boolean>(false)
     const [pwd, setPwd] = useState<boolean>(false)
+    const [shareNumber, setShareNumber] = useState<boolean>(false)
+    const [limit_num, setLimit_num] = useState<number>(1)
+
     const [shareResData, setShareResData] = useState<API.ShareResponse>({
         share_id: "",
         extract_code: ""
@@ -43,6 +46,8 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
         setIsModalVisible(false)
         setExpiredTime(15)
         setPwd(false)
+        setShareNumber(false)
+        setLimit_num(1)
     }
     const onShare = useMemoizedFn(() => {
         const params: API.ShareRequest = {
@@ -51,9 +56,14 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             module,
             pwd
         }
+        if (shareNumber) {
+            params.limit_num = limit_num
+        }
         if (shareResData.share_id) {
             params.share_id = shareResData.share_id
         }
+        console.log("params", params)
+
         setShareLoading(true)
         NetWorkApi<API.ShareRequest, API.ShareResponse>({
             url: "module/share",
@@ -75,22 +85,36 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             })
     })
 
-    const rightClick = useMemoizedFn((e: { clientX: number, clientY: number }) => {
-        showByCursorMenu({
-            content: [
-                {title: "分享当前 Web Fuzzer", onClick: getValue},
-                {title: "导入 Web Fuzzer", onClick: onImportShare}
-            ],
-        }, e.clientX, e.clientY)
+    const rightClick = useMemoizedFn((e: {clientX: number; clientY: number}) => {
+        showByCursorMenu(
+            {
+                content: [
+                    {title: "分享当前 Web Fuzzer", onClick: getValue},
+                    {title: "导入 Web Fuzzer", onClick: onImportShare}
+                ]
+            },
+            e.clientX,
+            e.clientY
+        )
     })
 
     return (
         <>
-            <Button size={"small"} type='primary' icon={<ShareIcon/>} onClick={rightClick}
-                    onContextMenuCapture={rightClick}>
+            <Button
+                size={"small"}
+                type='primary'
+                icon={<ShareIcon />}
+                onClick={rightClick}
+                onContextMenuCapture={rightClick}
+            >
                 分享 / 导入
             </Button>
-            <Modal title='分享' visible={isModalVisible} onCancel={handleCancel} footer={null}>
+            <Modal
+                title='分享'
+                visible={isModalVisible}
+                onCancel={handleCancel}
+                footer={null}
+            >
                 <div className='content-value'>
                     <span className='label-text'>设置有效期：</span>
                     <Radio.Group value={expiredTime} onChange={(e) => setExpiredTime(e.target.value)}>
@@ -102,12 +126,28 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                 </div>
                 <div className='content-value'>
                     <span className='label-text'>密码：</span>
-                    <Switch checked={pwd} onChange={(checked) => setPwd(checked)}/>
+                    <Switch checked={pwd} onChange={(checked) => setPwd(checked)} />
+                </div>
+                <div className='content-value'>
+                    <span className='label-text'>限制分享次数：</span>
+                    <Switch checked={shareNumber} onChange={(checked) => setShareNumber(checked)} />
+                    &emsp;
+                    {shareNumber && (
+                        <InputNumber
+                            min={1}
+                            value={limit_num}
+                            onChange={setLimit_num}
+                            size='small'
+                            formatter={(value) => `${value}次`}
+                        />
+                    )}
                 </div>
                 {shareResData.share_id && (
                     <div className='content-value'>
                         <span className='label-text'>分享id：</span>
-                        <span><CopyableField text={shareResData.share_id}></CopyableField></span>
+                        <span>
+                            <CopyableField text={shareResData.share_id}></CopyableField>
+                        </span>
                     </div>
                 )}
                 {shareResData.extract_code && (
@@ -117,20 +157,18 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                     </div>
                 )}
                 <div className='btn-footer'>
-                    <Button type='primary'
-                            onClick={onShare} loading={shareLoading}
-                            disabled={!!shareResData?.share_id}
-                    >
+                    <Button type='primary' onClick={onShare} loading={shareLoading} disabled={!!shareResData?.share_id}>
                         生成分享密令
                     </Button>
                     {shareResData.share_id && (
                         <CopyToClipboard
-                            text={shareResData.extract_code
-                                ? `${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
-                                : `${shareResData.share_id}`}
+                            text={
+                                shareResData.extract_code
+                                    ? `${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
+                                    : `${shareResData.share_id}`
+                            }
                             onCopy={(text, ok) => {
-                                if (ok)
-                                    success("已复制到粘贴板")
+                                if (ok) success("已复制到粘贴板")
                             }}
                         >
                             <Button type={!!shareResData?.share_id ? "primary" : "default"}>复制分享</Button>
