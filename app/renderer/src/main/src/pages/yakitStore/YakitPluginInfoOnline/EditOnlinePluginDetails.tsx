@@ -40,7 +40,9 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
                     ...value,
                     uuid: pulgin.uuid
                 }
-                // updatePluginUser(params)
+                console.log('params',params);
+                
+                updatePluginUser(params)
             })
             .catch((err) => {})
     })
@@ -54,12 +56,12 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
             }
         })
             .then((res) => {
-                success("修改插件作者成功")
+                success("修改插件成功")
                 onReset()
                 props.handleOk()
             })
             .catch((err) => {
-                failed("修改插件作者失败：" + err)
+                failed("修改插件失败：" + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
@@ -101,6 +103,8 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
         {wait: 200}
     ).run
     useEffect(() => {
+        console.log('pulgin',pulgin);
+        
         form.setFieldsValue({
             user_id: pulgin.authors,
             is_official: `${pulgin.official}`,

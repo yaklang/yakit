@@ -2799,7 +2799,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                     </div>
                     <div className='icon-body'>
                         <div className='text-icon'>
-                            {isShowAdmin ? (
+                            {isShowAdmin && (
                                 <div
                                     className={`text-icon-admin ${
                                         TagColor[["not", "success", "failed"][status]].split("|")[0]
@@ -2807,12 +2807,10 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                 >
                                     {TagColor[["not", "success", "failed"][status]].split("|")[1]}
                                 </div>
-                            ) : (
-                                !bind_me &&
-                                info.official && (
-                                    // @ts-ignore
-                                    <OfficialYakitLogoIcon className='text-icon-style' />
-                                )
+                            )}
+                            {!bind_me && info.official && (
+                                // @ts-ignore
+                                <OfficialYakitLogoIcon className='text-icon-style' />
                             )}
                             {bind_me && <>{(info.is_private === true && <LockOutlined />) || <OnlineCloudIcon />}</>}
                         </div>
