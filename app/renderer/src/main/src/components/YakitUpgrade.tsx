@@ -153,6 +153,14 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
                     <Button type={"link"} onClick={() => {
                         install(latestVersion)
                     }}>我已经下载，点此安装</Button>
+
+                    <Button type="link" danger={true} onClick={() => {
+                        ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
+                            }).catch((err: any) => {
+                            })
+                    }}>
+                        删除安装包
+                    </Button>
                 </Space>
             </Spin>
             {downloadProgress && <Progress percent={

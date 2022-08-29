@@ -7,11 +7,16 @@ import {failed} from "../../utils/notification";
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu";
 import {LineMenunIcon} from "../../assets/icons";
 import {callCopyToClipboard} from "../../utils/basic";
+import { ExportExcel } from "@/components/DataExport";
+import { useMemoizedFn } from "ahooks";
 
 export interface PortTableProp {
     data: YakitPort[]
 }
 
+const formatJson = (filterVal, jsonData) => {
+    return jsonData.map((v) => filterVal.map((j) => v[j]))
+}
 
 const {ipcRenderer} = window.require("electron");
 
@@ -25,6 +30,26 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
             setCheckedURL([])
         }
     }, [props.data])
+
+    // const getData = useMemoizedFn(() => {
+    //     // console.log(props.params["columns"])
+    //     return new Promise((resolve) => {
+    //         const header = props.params["columns"]
+    //         const exportData = formatJson(header, props.data)
+    //         const params = {
+    //             header,
+    //             exportData,
+    //             response: {
+    //                 Pagination: {
+    //                     Page: 1
+    //                 },
+    //                 Data: props.execResultsLog,
+    //                 Total: props.execResultsLog.length
+    //             }
+    //         }
+    //         resolve(params)
+    //     })
+    // })
 
     return <Table<YakitPort>
         size={"small"} bordered={true}
@@ -53,6 +78,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                             })
                         }}
                     >
+                        {/* <ExportExcel getData={getData} btnProps={{size: "small"}} fileName="开放端口"/> */}
                         <Button type="link" style={{height: 16}} icon={<LineMenunIcon/>}></Button>
                     </DropdownMenu>
                 </Col>

@@ -223,6 +223,13 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                     }}>
                         网络问题无法下载？手动下载
                     </Button>
+                    <Button type="link" danger={true} onClick={() => {
+                        ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
+                            }).catch((err: any) => {
+                            })
+                    }}>
+                        删除安装包
+                    </Button>
                 </Space>
             </Spin>
             {downloadProgress && <Progress percent={

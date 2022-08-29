@@ -53,6 +53,7 @@
     "react-scripts": "4.0.3",
     "react-sparklines": "^1.7.0",
     "rsuite-table": "^5.2.1",
+    "sass": "^1.54.5",
     "sass-resources-loader": "^2.2.5",
     "typescript": "^4.1.2",
     "web-vitals": "^1.0.1",
@@ -97,7 +98,6 @@
     ]
   },
   "devDependencies": {
-    "node-sass": "6.0.0",
     "prettier": "^2.4.1",
     "sass-loader": "^12.6.0"
   },
