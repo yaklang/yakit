@@ -90,7 +90,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         preLength.current = length
         preData.current = preData.current.concat(listByLength)
         return preData.current
-    }, [data.length, col, isRef])
+    }, [data.length, col, isRef, data && data[0]])
 
     const [list, scrollTo] = useVirtualList(originalList, {
         containerTarget: containerRef,
