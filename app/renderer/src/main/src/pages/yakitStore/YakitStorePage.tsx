@@ -875,7 +875,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             }
         },
         [publicKeyword],
-        {wait: 200}
+        {wait: 50}
     )
     const isRefListRef = useRef(true)
     useEffect(() => {
@@ -2188,7 +2188,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
             }
         },
         [publicKeyword],
-        {wait: 200}
+        {wait: 50}
     )
     const isRefListRef = useRef(true)
     useEffect(() => {
@@ -2376,7 +2376,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
             }
         },
         [publicKeyword],
-        {wait: 200}
+        {wait: 50}
     )
     const isRefListRef = useRef(true)
     useEffect(() => {
@@ -2534,6 +2534,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const [hasMore, setHasMore] = useState(false)
     const [isRef, setIsRef] = useState(false)
     const [listBodyLoading, setListBodyLoading] = useState(false)
+    const [recalculation, setRecalculation] = useState(false)
     const numberOnlineUser = useRef(0) // 我的插件 选择的插件index
     const numberOnline = useRef(0) // 插件商店 选择的插件index
     useEffect(() => {
@@ -2545,6 +2546,9 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             ...response,
             data: [...response.data]
         })
+        setTimeout(() => {
+            setRecalculation(!recalculation)
+        }, 100)
     }, [updatePluginRecord])
     useEffect(() => {
         if (!deletePluginRecord) return
@@ -2557,6 +2561,9 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             ...response,
             data: [...response.data]
         })
+        setTimeout(() => {
+            setRecalculation(!recalculation)
+        }, 100)
         onClicked()
     }, [deletePluginRecord?.id])
     useEffect(() => {
@@ -2710,6 +2717,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             <RollingLoadList<API.YakitPluginDetail>
                 numberRoll={number}
                 isRef={isRef}
+                recalculation={recalculation}
                 data={response.data}
                 page={response.pagemeta.page}
                 hasMore={hasMore}
