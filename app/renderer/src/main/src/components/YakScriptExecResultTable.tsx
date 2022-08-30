@@ -13,11 +13,12 @@ import {ManySelectOne} from "../utils/inputUtil"
 import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter"
 import {ExtractExecResultMessage} from "./yakitLogSchema"
 import {ExecResultLog} from "../pages/invoker/batch/ExecMessageViewer"
-import {DeleteOutlined, ReloadOutlined} from "@ant-design/icons"
+import {DeleteOutlined, ReloadOutlined, LoadingOutlined} from "@ant-design/icons"
 import {showByCursorContainer} from "../utils/showByCursor"
 import {divider} from "@uiw/react-md-editor"
 import {AutoCard} from "./AutoCard"
 import {useMemoizedFn} from "ahooks"
+import {failed, success} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -44,6 +45,7 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
     })
     const [total, setTotal] = useState<number>(0)
     const [loading, setLoading] = useState(false)
+    const [removeLoading, setRemoveLoading] = useState<boolean>(false)
     const [data, setData] = useState<ExecResult[]>([])
 
     const update = (page?: number, limit?: number, order?: string, orderBy?: string, sourceType?: string) => {
@@ -69,10 +71,21 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
         ipcRenderer.invoke("QueryYakScriptNameInExecResult", {}).then((e: {YakScriptNames: string[]}) => {
             setAvailableScriptNames(e.YakScriptNames)
         })
-
         update(1)
     }
-    const onRemoveAll = useMemoizedFn(() => {})
+    const onRemoveAll = useMemoizedFn(() => {
+        setRemoveLoading(true)
+        ipcRenderer
+            .invoke("DeleteYakScriptExec", {})
+            .then(() => {
+                reload()
+                success("删除成功")
+            })
+            .catch((err) => {
+                failed("删除失败：" + err)
+            })
+            .finally(() => setTimeout(() => setRemoveLoading(false), 200))
+    })
     useEffect(() => {
         reload()
     }, [props.trigger])
@@ -178,7 +191,11 @@ export const YakScriptExecResultTable: React.FC<YakScriptExecResultTableProp> = 
                                     okText='Yes'
                                     cancelText='No'
                                 >
-                                    <Button size={"small"} type={"link"} icon={<DeleteOutlined />} danger={true} />
+                                    {(removeLoading && (
+                                        <Button size={"small"} type={"link"} icon={<LoadingOutlined />} />
+                                    )) || (
+                                        <Button size={"small"} type={"link"} icon={<DeleteOutlined />} danger={true} />
+                                    )}
                                 </Popconfirm>
                             </div>
                         }
