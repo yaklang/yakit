@@ -246,6 +246,7 @@ service Yak {
   rpc GetTunnelServerExternalIP(GetTunnelServerExternalIPParams) returns (GetTunnelServerExternalIPResponse);
   rpc VerifyTunnelServerDomain(VerifyTunnelServerDomainParams) returns (VerifyTunnelServerDomainResponse) ;
   rpc StartFacades(StartFacadesParams) returns (stream ExecResult);
+  rpc StartFacadesWithYsoObject(StartFacadesWithYsoParams) returns (stream ExecResult);
   rpc ConfigGlobalReverse(ConfigGlobalReverseParams) returns (stream Empty);
   rpc AvailableLocalAddr(Empty) returns (AvailableLocalAddrResponse);
   rpc GetGlobalReverseServer(Empty) returns (GetGlobalReverseServerResponse);
@@ -265,6 +266,13 @@ service Yak {
   rpc QueryReport(QueryReportRequest) returns (Report);
   rpc DeleteReport(DeleteReportRequest) returns (Empty);
   rpc QueryAvailableReportFrom(Empty) returns (Fields);
+
+  //Yso
+  rpc GetAllYsoGadgetOptions(Empty) returns (YsoOptions);
+  rpc GetAllYsoClassOptions(YsoOptionsRequerst) returns (YsoOptions);
+  rpc GetAllYsoClassGeneraterOptions(YsoOptionsRequerst) returns (YsoClassOptionsResponse);
+  rpc GenerateYsoCode(YsoOptionsRequerst) returns (YsoCodeResponse);
+  rpc GenerateYsoBytes(YsoOptionsRequerst) returns (YsoBytesResponse);
 
   // DNSLog / ICMP / RandomTrigger
   rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
@@ -660,6 +668,33 @@ message FieldName {
 message Fields {
   repeated FieldName Values = 1;
 }
+//获取Gadget的Options
+message YsoOptions{
+  repeated string Names = 1;
+}
+//类生成器的参数
+message YsoClassGeneraterOptions{
+  string Key = 1;
+  string Value = 2;
+  string Type = 3;
+}
+message YsoClassOptionsResponse{
+  repeated YsoClassGeneraterOptions Options= 1;
+}
+//生成代码和字节码
+message YsoOptionsRequerst{
+  string Gadget = 1;
+  string Class = 2;
+  repeated YsoClassGeneraterOptions Options = 3;
+}
+
+message YsoCodeResponse{
+  string Code = 1;
+}
+message YsoBytesResponse{
+  string FileName = 1;
+  bytes Bytes = 2;
+}
 
 message QueryICMPTriggerRequest {
   int32 Length = 1;
@@ -891,7 +926,16 @@ message StartFacadesParams {
   // 验证端口是否转发成功
   bool Verify = 9;
 }
+message StartFacadesWithYsoParams {
+  // 端口复用的
+  bool IsRemote = 1;
+  int32 ReversePort = 2;
+  string ReverseHost = 4;
+  string Token = 5;
+  GetTunnelServerExternalIPParams BridgeParam = 6;
 
+  YsoOptionsRequerst GenerateClassParams = 7;
+}
 message GetAvailableBruteTypesResponse {
   repeated string Types = 1;
 }
@@ -1853,8 +1897,11 @@ message MITMResponse {
 
   string RemoteAddr = 32;
 
+  // 这里用来展示一些服务端通知，直接弹框就好
   bool haveNotification = 34;
   bytes notificationContent = 33;
+
+  // 这两个标志是用来设置 MITM 加载状态的，用于服务端控制用户端的 "加载中"
   bool haveLoadingSetter = 35;
   bool loadingFlag = 36;
 }
