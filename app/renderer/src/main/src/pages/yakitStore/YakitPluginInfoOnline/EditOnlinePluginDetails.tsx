@@ -40,13 +40,11 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
                     ...value,
                     uuid: pulgin.uuid
                 }
-                console.log('params',params);
-                
-                updatePluginUser(params)
+                updatePlugin(params)
             })
             .catch((err) => {})
     })
-    const updatePluginUser = useMemoizedFn((params: API.UpdatePluginRequest) => {
+    const updatePlugin = useMemoizedFn((params: API.UpdatePluginRequest) => {
         setLoading(true)
         NetWorkApi<API.UpdatePluginRequest, API.ActionSucceeded>({
             method: "post",
@@ -103,8 +101,6 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
         {wait: 200}
     ).run
     useEffect(() => {
-        console.log('pulgin',pulgin);
-        
         form.setFieldsValue({
             user_id: pulgin.authors,
             is_official: `${pulgin.official}`,
@@ -147,12 +143,14 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
                         </Form.Item>
                     </>
                 )}
-                <Form.Item name='is_private' label='私密/公开'>
-                    <Radio.Group>
-                        <Radio.Button value='true'>私密</Radio.Button>
-                        <Radio.Button value='false'>公开</Radio.Button>
-                    </Radio.Group>
-                </Form.Item>
+                {pulgin.user_id === userInfo.user_id && (
+                    <Form.Item name='is_private' label='私密/公开'>
+                        <Radio.Group>
+                            <Radio.Button value='true'>私密</Radio.Button>
+                            <Radio.Button value='false'>公开</Radio.Button>
+                        </Radio.Group>
+                    </Form.Item>
+                )}
             </Form>
         </Modal>
     )
