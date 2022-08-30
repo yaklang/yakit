@@ -355,11 +355,16 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         </div>
                         <div className='plugin-info-examine'>
                             {(isAdmin || userInfo.user_id === plugin.user_id) && (
-                                <Popconfirm title='是否删除插件?不可恢复' onConfirm={() => onRemove()}>
-                                    <Button type='primary' danger>
-                                        删除
+                                <>
+                                    <Popconfirm title='是否删除插件?不可恢复' onConfirm={() => onRemove()}>
+                                        <Button type='primary' danger>
+                                            删除
+                                        </Button>
+                                    </Popconfirm>
+                                    <Button type='primary' onClick={() => setIsEdit(true)}>
+                                        修改
                                     </Button>
-                                </Popconfirm>
+                                </>
                             )}
                             {isAdmin && !user && (
                                 <>
@@ -373,9 +378,6 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                     )}
                                 </>
                             )}
-                            <Button type='primary' onClick={() => setIsEdit(true)}>
-                                修改
-                            </Button>
                         </div>
                     </div>
                     <Suspense fallback={<Spin />}>
