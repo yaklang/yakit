@@ -1,25 +1,30 @@
-const {ipcMain} = require("electron");
+const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
-    const handlerHelper = require("./handleStreamWithContext");
+    const handlerHelper = require("./handleStreamWithContext")
 
-    const streamStartFacadesMap = new Map();
-    ipcMain.handle("cancel-StartFacades", handlerHelper.cancelHandler(streamStartFacadesMap));
+    const streamStartFacadesMap = new Map()
+    ipcMain.handle("cancel-StartFacades", handlerHelper.cancelHandler(streamStartFacadesMap))
     ipcMain.handle("StartFacades", (e, params, token) => {
-        let stream = getClient().StartFacades(params);
+        let stream = getClient().StartFacades(params)
         handlerHelper.registerHandler(win, stream, streamStartFacadesMap, token)
     })
+    const streamStartFacadesWithYsoObjectMap = new Map()
+    ipcMain.handle("cancel-StartFacadesWithYsoObject", handlerHelper.cancelHandler(streamStartFacadesWithYsoObjectMap))
+    ipcMain.handle("StartFacadesWithYsoObject", (e, params, token) => {
+        let stream = getClient().StartFacadesWithYsoObject(params)
+        handlerHelper.registerHandler(win, stream, streamStartFacadesWithYsoObjectMap, token)
+    })
 
-
-    let globalConfigServer = null;
+    let globalConfigServer = null
     ipcMain.handle("get-global-reverse-server-status", (e) => {
-        return !!globalConfigServer;
+        return !!globalConfigServer
     })
     ipcMain.handle("cancel-global-reverse-server-status", (e) => {
         if (globalConfigServer) {
-            globalConfigServer.cancel();
+            globalConfigServer.cancel()
             console.info("取消全局反连配置")
-            globalConfigServer = null;
+            globalConfigServer = null
         }
     })
     ipcMain.handle("ConfigGlobalReverse", (e, params) => {
@@ -31,14 +36,14 @@ module.exports = (win, getClient) => {
             return
         }
         console.info("开始配置全局反连")
-        globalConfigServer = getClient().ConfigGlobalReverse(params);
-        globalConfigServer.on("data", data => {
+        globalConfigServer = getClient().ConfigGlobalReverse(params)
+        globalConfigServer.on("data", (data) => {
             if (!win) {
                 return
             }
             win.webContents.send(`global-reverse-data`, data)
         })
-        globalConfigServer.on("error", error => {
+        globalConfigServer.on("error", (error) => {
             if (!win) {
                 return
             }

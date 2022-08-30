@@ -21,14 +21,14 @@ import {failed} from "../../utils/notification"
 import {LineConversionIcon} from "../../assets/icons"
 import {AutoCard} from "../../components/AutoCard"
 import {AutoSpin} from "../../components/AutoSpin"
-import {YakExecutorParam} from "../invoker/YakExecutorParams";
-import {YakScript, YakScriptParam} from "../invoker/schema";
-import {useMemoizedFn} from "ahooks";
-import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
-import {queryYakScriptList} from "../yakitStore/network";
+import {YakExecutorParam} from "../invoker/YakExecutorParams"
+import {YakScript, YakScriptParam} from "../invoker/schema"
+import {useMemoizedFn} from "ahooks"
+import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter"
+import {queryYakScriptList} from "../yakitStore/network"
 
 import "./style.css"
-import {Uint8ArrayToString} from "../../utils/str";
+import {Uint8ArrayToString} from "../../utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -36,12 +36,12 @@ export interface CodecType {
     key?: string
     verbose: string
     subTypes?: CodecType[]
-    params?: YakScriptParam[],
+    params?: YakScriptParam[]
     help?: React.ReactNode
     isYakScript?: boolean
 }
 
-const {Text} = Typography;
+const {Text} = Typography
 
 const generateSM4AmpAESParams = () => {
     return [
@@ -52,25 +52,43 @@ const generateSM4AmpAESParams = () => {
             TypeVerbose: "string",
             Help: "HEX(十六进制) 编码后的 KEY"
         },
-        {Field: "iv", FieldVerbose: "IV-初始块（HEX 编码）", TypeVerbose: "string", Help: "十六进制编码后的 IV（初始块）"},
+        {
+            Field: "iv",
+            FieldVerbose: "IV-初始块（HEX 编码）",
+            TypeVerbose: "string",
+            Help: "十六进制编码后的 IV（初始块）"
+        }
     ] as YakScriptParam[]
-};
-
-const SM4AmpAESEncHelp = () => {
-    return <>
-        <Text>加密：任何文本被加密成的 <Text mark={true}>结果经过 HEX 编码</Text></Text>
-        <br/>
-        <Text>密钥：<Text mark={true}>被 HEX 编码</Text> 的 <Text mark={true}>长度为16位</Text> 的字符串 （为兼容 Key 中不可见字符）</Text>
-    </>
 }
 
+const SM4AmpAESEncHelp = () => {
+    return (
+        <>
+            <Text>
+                加密：任何文本被加密成的 <Text mark={true}>结果经过 HEX 编码</Text>
+            </Text>
+            <br />
+            <Text>
+                密钥：<Text mark={true}>被 HEX 编码</Text> 的 <Text mark={true}>长度为16位</Text> 的字符串 （为兼容 Key
+                中不可见字符）
+            </Text>
+        </>
+    )
+}
 
 const SM4AmpAESDecHelp = () => {
-    return <>
-        <Text>解密：解密的密文需要经过 <Text mark={true}>HEX 编码</Text> 后作为输入</Text>
-        <br/>
-        <Text>密钥：<Text mark={true}>被 HEX 编码</Text> 的 <Text mark={true}>长度为16位</Text> 的字符串（为兼容 Key 中不可见字符）</Text>
-    </>
+    return (
+        <>
+            <Text>
+                解密：解密的密文需要经过 <Text mark={true}>HEX 编码</Text> 后作为输入
+            </Text>
+            <br />
+            <Text>
+                密钥：<Text mark={true}>被 HEX 编码</Text> 的 <Text mark={true}>长度为16位</Text> 的字符串（为兼容 Key
+                中不可见字符）
+            </Text>
+        </>
+    )
 }
 
 const EncAmpDecMenu: CodecType[] = [
@@ -78,14 +96,16 @@ const EncAmpDecMenu: CodecType[] = [
         verbose: "国密算法(sm4)对称加解密",
         subTypes: [
             {
-                key: "sm4-cbc-encrypt", verbose: "SM4-CBC 加密",
+                key: "sm4-cbc-encrypt",
+                verbose: "SM4-CBC 加密",
                 params: generateSM4AmpAESParams(),
-                help: SM4AmpAESEncHelp(),
+                help: SM4AmpAESEncHelp()
             },
             {
-                key: "sm4-cbc-decrypt", verbose: "SM4-CBC 解密",
+                key: "sm4-cbc-decrypt",
+                verbose: "SM4-CBC 解密",
                 params: generateSM4AmpAESParams(),
-                help: SM4AmpAESDecHelp(),
+                help: SM4AmpAESDecHelp()
             },
             {
                 key: "sm4-cfb-encrypt",
@@ -134,8 +154,8 @@ const EncAmpDecMenu: CodecType[] = [
                 verbose: "SM4-GCM 解密",
                 params: generateSM4AmpAESParams(),
                 help: SM4AmpAESDecHelp()
-            },
-        ],
+            }
+        ]
     },
     {
         verbose: "AES对称加解密",
@@ -163,10 +183,10 @@ const EncAmpDecMenu: CodecType[] = [
                 verbose: "AES-GCM 解密",
                 params: generateSM4AmpAESParams(),
                 help: SM4AmpAESDecHelp()
-            },
-        ],
+            }
+        ]
     }
-];
+]
 
 const CodecMenu: CodecType[] = [
     {key: "jwt-parse-weak", verbose: "JWT解析与弱密码"},
@@ -230,21 +250,21 @@ const CodecMenu: CodecType[] = [
             {key: "pretty-packet", verbose: "HTTP 数据包美化"},
             {key: "json-formatter", verbose: "JSON 美化（缩进4）"},
             {key: "json-formatter-2", verbose: "JSON 美化（缩进2）"},
-            {key: "json-inline", verbose: "JSON 压缩成一行"},
-        ],
+            {key: "json-inline", verbose: "JSON 压缩成一行"}
+        ]
     },
     {key: "fuzz", verbose: "模糊测试(标签同 Web Fuzzer)"},
     {
-        verbose: "HTTP", subTypes: [
+        verbose: "HTTP",
+        subTypes: [
             {key: "http-get-query", verbose: "解析 HTTP 参数"},
             {key: "pretty-packet", verbose: "HTTP 数据包美化"},
-            {key: "packet-from-url", verbose: "从 URL 中加载数据包"},
+            {key: "packet-from-url", verbose: "从 URL 中加载数据包"}
         ]
-    },
+    }
 ]
 
-export interface CodecPageProp {
-}
+export interface CodecPageProp {}
 
 const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [text, setText] = useState("")
@@ -256,9 +276,9 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [leftLine, setLeftLine] = useState<boolean>(true)
     const [rightLine, setRightLine] = useState<boolean>(false)
 
-    const [codecType, setCodecType] = useState<CodecType>();
-    const [params, setParams] = useState<YakExecutorParam[]>([]);
-    const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([]);
+    const [codecType, setCodecType] = useState<CodecType>()
+    const [params, setParams] = useState<YakExecutorParam[]>([])
+    const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([])
     const [pluginLoading, setPluginLoading] = useState<boolean>(false)
     const [pluginVisible, setPluginVisible] = useState<boolean>(false)
 
@@ -298,63 +318,64 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
     }, [])
 
     const renderCodecTypes = useMemoizedFn((items: CodecType[], notAutoExec?: boolean, isYakScript?: boolean) => {
-        return (
-            items.map((item) => {
-                if ((item.subTypes || []).length > 0) {
-                    return (
-                        <Dropdown
-                            key={item.verbose}
-                            overlay={
-                                <Menu activeKey={codecType?.key}>
-                                    {item.subTypes?.map((subItem) => {
-                                        return (
-                                            <Menu.Item
-                                                key={`${subItem.key}`}
-                                                onClick={() => {
-                                                    setCodecType(subItem)
-                                                    if (!notAutoExec) {
-                                                        codec(subItem.key || "", [], isYakScript)
-                                                    }
-                                                }}>
-                                                    <span>
-                                                        {subItem.verbose}
-                                                    </span>
-                                            </Menu.Item>
-                                        )
-                                    })}
-                                </Menu>
-                            }
-                            placement='bottomLeft'
-                        >
-                            <Button
-                                type={((item?.subTypes || []).filter(i => {
-                                    return i.key === codecType?.key
-                                })).length > 0 ? "primary" : undefined}
-                            >
-                                {item.verbose}
-                                <DownOutlined/>
-                            </Button>
-                        </Dropdown>
-                    )
-                } else {
-                    return (
+        return items.map((item) => {
+            if ((item.subTypes || []).length > 0) {
+                return (
+                    <Dropdown
+                        key={item.verbose}
+                        overlay={
+                            <Menu activeKey={codecType?.key}>
+                                {item.subTypes?.map((subItem) => {
+                                    return (
+                                        <Menu.Item
+                                            key={`${subItem.key}`}
+                                            onClick={() => {
+                                                setCodecType(subItem)
+                                                if (!notAutoExec) {
+                                                    codec(subItem.key || "", [], isYakScript)
+                                                }
+                                            }}
+                                        >
+                                            <span>{subItem.verbose}</span>
+                                        </Menu.Item>
+                                    )
+                                })}
+                            </Menu>
+                        }
+                        placement='bottomLeft'
+                    >
                         <Button
-                            key={item.key}
-                            type={codecType?.key === item.key ? "primary" : undefined}
-                            onClick={() => {
-                                setCodecType(item);
-                                if (!notAutoExec) {
-                                    codec(item.key || "", [], isYakScript)
-                                }
-                            }}
-                            style={{marginRight: 8}}
+                            type={
+                                (item?.subTypes || []).filter((i) => {
+                                    return i.key === codecType?.key
+                                }).length > 0
+                                    ? "primary"
+                                    : undefined
+                            }
                         >
                             {item.verbose}
+                            <DownOutlined />
                         </Button>
-                    )
-                }
-            })
-        )
+                    </Dropdown>
+                )
+            } else {
+                return (
+                    <Button
+                        key={item.key}
+                        type={codecType?.key === item.key ? "primary" : undefined}
+                        onClick={() => {
+                            setCodecType(item)
+                            if (!notAutoExec) {
+                                codec(item.key || "", [], isYakScript)
+                            }
+                        }}
+                        style={{marginRight: 8}}
+                    >
+                        {item.verbose}
+                    </Button>
+                )
+            }
+        })
     })
 
     const search = useMemoizedFn((keyword?: string) => {
@@ -362,16 +383,20 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
-                setCodecPlugin([{
-                    subTypes: i.map(script => {
-                        return {
-                            key: script.ScriptName,
-                            help: script.Help,
-                            verbose: script.ScriptName,
-                            isYakScript: true
-                        }
-                    }), key: "from-yakit-codec-plugin", verbose: "CODEC 社区插件"
-                }])
+                setCodecPlugin([
+                    {
+                        subTypes: i.map((script) => {
+                            return {
+                                key: script.ScriptName,
+                                help: script.Help,
+                                verbose: script.ScriptName,
+                                isYakScript: true
+                            }
+                        }),
+                        key: "from-yakit-codec-plugin",
+                        verbose: "CODEC 社区插件"
+                    }
+                ])
             },
             () => setTimeout(() => setPluginLoading(false), 300),
             10,
@@ -390,83 +415,110 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
     return (
         <AutoSpin spinning={loading}>
             <PageHeader
-                title={"Codec"} className={"codec-pageheader-title"}
-                subTitle={<>
-                    {codecType && <Tag color={"geekblue"}>当前类型：{codecType?.verbose}</Tag>}
-                    {codecType && (codecType?.params || []).length <= 0 &&
-                    <Button type={"primary"} size={"small"} onClick={e => {
-                        codec(codecType?.key || "", [], codecType?.isYakScript)
-                    }}>立即执行</Button>}
-                </>}
+                title={"Codec"}
+                className={"codec-pageheader-title"}
+                subTitle={
+                    <>
+                        {codecType && <Tag color={"geekblue"}>当前类型：{codecType?.verbose}</Tag>}
+                        {codecType && (codecType?.params || []).length <= 0 && (
+                            <Button
+                                type={"primary"}
+                                size={"small"}
+                                onClick={(e) => {
+                                    codec(codecType?.key || "", [], codecType?.isYakScript)
+                                }}
+                            >
+                                立即执行
+                            </Button>
+                        )}
+                    </>
+                }
             />
             <div className={"codec-function-bar"}>
                 <Space direction={"vertical"} style={{width: "100%"}}>
-                    <Space>
-                        {renderCodecTypes(CodecMenu)}
-                    </Space>
+                    <Space>{renderCodecTypes(CodecMenu)}</Space>
                     <Space>
                         {renderCodecTypes(EncAmpDecMenu, true)}
                         {/* {renderCodecTypes(codecPlugin, false, true)} */}
                         <Popover
-                            overlayClassName="codec-plugin-lib"
-                            trigger="hover"
-                            placement="bottomLeft"
+                            overlayClassName='codec-plugin-lib'
+                            trigger='hover'
+                            placement='bottomLeft'
                             visible={pluginVisible}
                             onVisibleChange={setPluginVisible}
                             content={
                                 <div style={{width: 250}}>
-                                    <Input placeholder="模糊搜索插件名" allowClear onChange={event => {
-                                        if (timer) {
-                                            clearTimeout(timer)
-                                            timer = null
-                                        }
-                                        timer = setTimeout(() => {
-                                            search(event.target.value)
-                                        }, 500);
-                                    }}></Input>
+                                    <Input
+                                        placeholder='模糊搜索插件名'
+                                        allowClear
+                                        onChange={(event) => {
+                                            if (timer) {
+                                                clearTimeout(timer)
+                                                timer = null
+                                            }
+                                            timer = setTimeout(() => {
+                                                search(event.target.value)
+                                            }, 500)
+                                        }}
+                                    ></Input>
                                     <List
                                         loading={pluginLoading}
-                                        size="small"
+                                        size='small'
                                         dataSource={codecPlugin[0]?.subTypes || []}
-                                        rowKey={row => row.key || ""}
-                                        renderItem={item => <List.Item>
-                                            <div style={{width: "100%", padding: "5px 7px"}} onClick={() => {
-                                                setCodecType(item)
-                                                codec(item.key || "", [], true)
-                                                setPluginVisible(false)
-                                            }}>
-                                                {item.key || ""}
-                                            </div>
-                                        </List.Item>}
+                                        rowKey={(row) => row.key || ""}
+                                        renderItem={(item) => (
+                                            <List.Item>
+                                                <div
+                                                    style={{width: "100%", padding: "5px 7px"}}
+                                                    onClick={() => {
+                                                        setCodecType(item)
+                                                        codec(item.key || "", [], true)
+                                                        setPluginVisible(false)
+                                                    }}
+                                                >
+                                                    {item.key || ""}
+                                                </div>
+                                            </List.Item>
+                                        )}
                                     />
                                 </div>
-                            }>
+                            }
+                        >
                             <Button
-                                type={(codecPlugin[0]?.subTypes || []).filter(item => codecType?.key === item.key).length !== 0 ? 'primary' : 'default'}>CODEC
-                                社区插件 <DownOutlined style={{fontSize: 10}}/></Button>
+                                type={
+                                    (codecPlugin[0]?.subTypes || []).filter((item) => codecType?.key === item.key)
+                                        .length !== 0
+                                        ? "primary"
+                                        : "default"
+                                }
+                            >
+                                CODEC 社区插件 <DownOutlined style={{fontSize: 10}} />
+                            </Button>
                         </Popover>
                     </Space>
-                    {codecType && codecType?.params && codecType.params.length > 0 && <Row
-                        style={{width: "100%"}}
-                        gutter={20}
-                    >
-                        <Col span={codecType?.help ? 18 : 24}>
-                            <Divider>设置参数</Divider>
-                            <YakScriptParamsSetter
-                                primaryParamsOnly={true} styleSize={"small"}
-                                Params={(codecType?.params || [])}
-                                onParamsConfirm={finalParams => {
-                                    setParams([...finalParams])
-                                    codec(codecType?.key || "", finalParams, codecType?.isYakScript)
-                                }}
-                                hideClearButton={true}
-                                submitVerbose={"执行"}
-                            />
-                        </Col>
-                        {codecType?.help && <Col span={6} style={{paddingTop: 30}}>
-                            <Alert type={"info"} message={codecType?.help}/>
-                        </Col>}
-                    </Row>}
+                    {codecType && codecType?.params && codecType.params.length > 0 && (
+                        <Row style={{width: "100%"}} gutter={20}>
+                            <Col span={codecType?.help ? 18 : 24}>
+                                <Divider>设置参数</Divider>
+                                <YakScriptParamsSetter
+                                    primaryParamsOnly={true}
+                                    styleSize={"small"}
+                                    Params={codecType?.params || []}
+                                    onParamsConfirm={(finalParams) => {
+                                        setParams([...finalParams])
+                                        codec(codecType?.key || "", finalParams, codecType?.isYakScript)
+                                    }}
+                                    hideClearButton={true}
+                                    submitVerbose={"执行"}
+                                />
+                            </Col>
+                            {codecType?.help && (
+                                <Col span={6} style={{paddingTop: 30}}>
+                                    <Alert type={"info"} message={codecType?.help} />
+                                </Col>
+                            )}
+                        </Row>
+                    )}
                 </Space>
             </div>
             <div className={"codec-content"}>
@@ -480,19 +532,19 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             refreshTrigger={refreshTrigger}
                             noHex={true}
                             noHeader={false}
-                            extra={(
+                            extra={
                                 <Space>
                                     <Button
                                         size={"small"}
                                         type={leftWidth ? "primary" : "link"}
-                                        icon={<ArrowsAltOutlined/>}
+                                        icon={<ArrowsAltOutlined />}
                                         onClick={() => {
                                             setLeftWidth(!leftWidth)
                                             setRightWidth(false)
                                         }}
                                     />
                                 </Space>
-                            )}
+                            }
                         />
                     </Col>
                     <Col flex='0 1 2%'>
@@ -514,22 +566,23 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             noTitle={true}
                             language={"html"}
                             readOnly={true}
-                            originValue={Buffer.from(result, "utf8")} hideSearch={true}
+                            originValue={Buffer.from(result, "utf8")}
+                            hideSearch={true}
                             noHex={true}
                             noHeader={false}
-                            extra={(
+                            extra={
                                 <Space>
                                     <Button
                                         size={"small"}
                                         type={rightWidth ? "primary" : "link"}
-                                        icon={<ArrowsAltOutlined/>}
+                                        icon={<ArrowsAltOutlined />}
                                         onClick={() => {
                                             setRightWidth(!rightWidth)
                                             setLeftWidth(false)
                                         }}
                                     />
                                 </Space>
-                            )}
+                            }
                         />
                     </Col>
                 </Row>
@@ -537,4 +590,4 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
         </AutoSpin>
     )
 }
-export default CodecPage;
+export default CodecPage
