@@ -237,6 +237,7 @@ service Yak {
   rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
   rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
   rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+  rpc DeleteYakScriptExec(Empty) returns (Empty);
 
   // Bruter
   rpc StartBrute(StartBruteParams) returns (stream ExecResult);
