@@ -52,7 +52,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     } = props
     const [vlistHeigth, setVListHeight] = useState(600)
     const [col, setCol] = useState<number>()
-    // const [recalculation, setRecalculation] = useState(false)
+    const [computeOriginalList, setComputeOriginalList] = useState(false)
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
     let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
@@ -61,6 +61,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const resetPre = useMemoizedFn(() => {
         preLength.current = 0
         preData.current = []
+        setComputeOriginalList(!computeOriginalList)
     })
     let originalList = useMemo(() => {
         if (!col) return []
@@ -77,8 +78,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 indexMapRef.current?.delete(`${element[rowKey || "Id"]}`)
             })
         }
-        console.log("data+++", data)
-        debugger
         for (let index = preLength.current; index < length; index += col) {
             if (index % col === 0) {
                 const arr: any = []
@@ -95,8 +94,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         preLength.current = length
         preData.current = preData.current.concat(listByLength)
         return preData.current
-    }, [data.length, col, preLength.current])
-
+    }, [data.length, col, isRef, computeOriginalList])
     const [list, scrollTo] = useVirtualList(originalList, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
@@ -181,8 +179,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         },
         {wait: 200, leading: false}
     )
-    console.log("list", list)
-
     return (
         <>
             <ReactResizeDetector

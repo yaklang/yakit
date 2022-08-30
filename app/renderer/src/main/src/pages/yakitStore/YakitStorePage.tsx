@@ -182,11 +182,13 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const onRefList = useMemoizedFn(() => {
         setPublicKeyword("")
         onResetPluginDetails()
-        setIsRefList(!isRefList)
         setScriptIdOnlineId(undefined)
         onResetNumber()
         getStatistics(width)
         onResetQuery()
+        setTimeout(() => {
+            setIsRefList(!isRefList)
+        }, 200);
     })
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const onFullScreen = useMemoizedFn(() => {
