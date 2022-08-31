@@ -393,4 +393,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteYakScriptExecResult", async (e, params) => {
         return await asyncDeleteYakScriptExecResult(params)
     })
+
+    const asyncDeleteYakScriptExec = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteYakScriptExec(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteYakScriptExec", async (e, params) => {
+        return await asyncDeleteYakScriptExec(params)
+    })
+
 }

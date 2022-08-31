@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef, ReactNode, useMemo} from "react"
 import ReactResizeDetector from "react-resize-detector"
-import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
+import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList, useDeepCompareEffect} from "ahooks"
 import {LoadingOutlined} from "@ant-design/icons"
 import "./index.scss"
 
@@ -13,7 +13,7 @@ interface RollingLoadListProps<T> {
     hasMore: boolean
     loading: boolean
     scrollToNumber?: number
-    isRef?: boolean
+    isRef?: boolean // 刷新全部
     classNameRow?: string
     classNameList?: string
     defItemHeight: number
@@ -21,6 +21,7 @@ interface RollingLoadListProps<T> {
     isGridLayout?: boolean
     defCol?: number
     defOverscan?: number
+    recalculation?: boolean //刷新局部 data中某个item值更新需要重新计算
 }
 
 const classNameWidth = {
@@ -46,10 +47,12 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         defOverscan,
         numberRoll,
         isGridLayout,
-        defCol
+        defCol,
+        recalculation
     } = props
     const [vlistHeigth, setVListHeight] = useState(600)
     const [col, setCol] = useState<number>()
+    const [computeOriginalList, setComputeOriginalList] = useState(false)
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
     let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
@@ -58,6 +61,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     const resetPre = useMemoizedFn(() => {
         preLength.current = 0
         preData.current = []
+        setComputeOriginalList(!computeOriginalList)
     })
     let originalList = useMemo(() => {
         if (!col) return []
@@ -90,8 +94,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         preLength.current = length
         preData.current = preData.current.concat(listByLength)
         return preData.current
-    }, [data.length, col, isRef])
-
+    }, [data.length, col, computeOriginalList])
     const [list, scrollTo] = useVirtualList(originalList, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
@@ -111,6 +114,9 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         [wrapperRef.current?.clientHeight, isRef],
         {wait: 200}
     )
+    useEffect(() => {
+        resetPre()
+    }, [recalculation])
     useEffect(() => {
         resetPre()
         scrollTo(0)
@@ -173,7 +179,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         },
         {wait: 200, leading: false}
     )
-
     return (
         <>
             <ReactResizeDetector

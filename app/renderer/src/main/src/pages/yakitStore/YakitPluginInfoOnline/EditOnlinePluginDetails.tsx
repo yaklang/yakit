@@ -1,17 +1,19 @@
 import React, {useState, useEffect} from "react"
-import {Form, Modal, Select} from "antd"
+import {Form, Modal, Radio, Select, Switch} from "antd"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {UserQuery} from "@/pages/TrustList"
 import {failed, success} from "@/utils/notification"
 import {OnlineUserItem} from "@/components/OnlineUserItem"
+import {UserInfoProps} from "@/store"
 
 const {Option} = Select
 
 interface EditOnlinePluginDetailsProps {
     pulgin: API.YakitPluginDetail
     visible: boolean
+    userInfo: UserInfoProps
     handleOk: () => void
     handleCancel: () => void
 }
@@ -22,43 +24,42 @@ const layout = {
 }
 
 const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) => {
-    const {visible, pulgin} = props
+    const {visible, pulgin, userInfo} = props
     const [userList, setUserList] = useState<API.UserOrdinaryResponse>({
         data: []
     })
-    const [appid, setAppid] = useState<string>("")
-    const [currentUser, setCurrentUser] = useState<string>()
     const [loading, setLoading] = useState<boolean>(false)
     const [form] = Form.useForm()
     const handleOk = useMemoizedFn(() => {
         form.validateFields()
             .then((value) => {
-                const params: API.UpdatePluginUser = {
+                if (value.user_id && isNaN(Number(value.user_id))) {
+                    delete value.user_id
+                }
+                const params: API.UpdatePluginRequest = {
                     ...value,
                     uuid: pulgin.uuid
                 }
-                updatePluginUser(params)
+                updatePlugin(params)
             })
-            .catch((err) => {
-            })
-        // props.handleOk()
+            .catch((err) => {})
     })
-    const updatePluginUser = useMemoizedFn((params: API.UpdatePluginUser) => {
+    const updatePlugin = useMemoizedFn((params: API.UpdatePluginRequest) => {
         setLoading(true)
-        NetWorkApi<API.UpdatePluginUser, API.ActionSucceeded>({
+        NetWorkApi<API.UpdatePluginRequest, API.ActionSucceeded>({
             method: "post",
-            url: "update/plugin/user",
+            url: "update/plugin",
             data: {
                 ...params
             }
         })
             .then((res) => {
-                success("修改插件作者成功")
+                success("修改插件成功")
                 onReset()
                 props.handleOk()
             })
             .catch((err) => {
-                failed("修改插件作者失败：" + err)
+                failed("修改插件失败：" + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
@@ -76,7 +77,7 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
     })
     const getUserList = useDebounceFn(
         useMemoizedFn((str: string) => {
-            if(!str){
+            if (!str) {
                 onReset()
                 return
             }
@@ -99,9 +100,16 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
         }),
         {wait: 200}
     ).run
+    useEffect(() => {
+        form.setFieldsValue({
+            user_id: pulgin.authors,
+            is_official: `${pulgin.official}`,
+            is_private: `${pulgin.is_private}`
+        })
+    }, [pulgin, visible])
     return (
         <Modal
-            title='修改作者'
+            title='修改'
             okText='确定'
             cancelText='取消'
             visible={visible}
@@ -110,21 +118,39 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
             confirmLoading={loading}
         >
             <Form {...layout} form={form} name='control-hooks'>
-                <Form.Item name='user_id' label='作者' rules={[{required: true, message: "该项为必填"}]}>
-                    <Select
-                        optionLabelProp='label'
-                        filterOption={() => true}
-                        placeholder='请输入用户名称搜索'
-                        showSearch
-                        onSearch={getUserList}
-                    >
-                        {(userList.data || []).map((info) => (
-                            <Option value={info.id} key={info.id} label={info.name}>
-                                <OnlineUserItem info={info} />
-                            </Option>
-                        ))}
-                    </Select>
-                </Form.Item>
+                {userInfo.role === "admin" && (
+                    <>
+                        <Form.Item name='user_id' label='作者'>
+                            <Select
+                                optionLabelProp='label'
+                                filterOption={() => true}
+                                placeholder='请输入用户名称搜索'
+                                showSearch
+                                onSearch={getUserList}
+                            >
+                                {(userList.data || []).map((info) => (
+                                    <Option value={info.id} key={info.id} label={info.name}>
+                                        <OnlineUserItem info={info} />
+                                    </Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item name='is_official' label='是否官方'>
+                            <Radio.Group>
+                                <Radio.Button value='true'>是</Radio.Button>
+                                <Radio.Button value='false'>否</Radio.Button>
+                            </Radio.Group>
+                        </Form.Item>
+                    </>
+                )}
+                {pulgin.user_id === userInfo.user_id && (
+                    <Form.Item name='is_private' label='私密/公开'>
+                        <Radio.Group>
+                            <Radio.Button value='true'>私密</Radio.Button>
+                            <Radio.Button value='false'>公开</Radio.Button>
+                        </Radio.Group>
+                    </Form.Item>
+                )}
             </Form>
         </Modal>
     )

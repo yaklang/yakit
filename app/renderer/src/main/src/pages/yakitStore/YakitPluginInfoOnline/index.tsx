@@ -108,7 +108,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     useEffect(() => {
         if (!plugin) return
         updatePlugin(plugin)
-    }, [plugin?.authors])
+    }, [plugin])
     const getPluginDetail = useMemoizedFn(() => {
         let url = "yakit/plugin/detail-unlogged"
         if (userInfo.isLogin) {
@@ -204,7 +204,6 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 if (plugin) {
                     const newPlugin = {...plugin, status}
                     setPlugin(newPlugin)
-                    updatePlugin(newPlugin)
                 }
                 success(`插件审核${status === 1 ? "通过" : "不通过"}`)
             })
@@ -274,7 +273,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         )
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
-
+    const isShowAdmin = isAdmin && !plugin.is_private
     return (
         <div className='plugin-info'>
             <Spin spinning={loading} style={{height: "100%"}}>
@@ -284,7 +283,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                     style={{marginBottom: 0, paddingBottom: 0}}
                     subTitle={
                         <Space>
-                            {((isAdmin && !user) || (user && !plugin.is_private)) && (
+                            {isShowAdmin && (
                                 <div className='plugin-status vertical-center'>
                                     <div
                                         className={`${
@@ -356,11 +355,16 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         </div>
                         <div className='plugin-info-examine'>
                             {(isAdmin || userInfo.user_id === plugin.user_id) && (
-                                <Popconfirm title='是否删除插件?不可恢复' onConfirm={() => onRemove()}>
-                                    <Button type='primary' danger>
-                                        删除
+                                <>
+                                    <Popconfirm title='是否删除插件?不可恢复' onConfirm={() => onRemove()}>
+                                        <Button type='primary' danger>
+                                            删除
+                                        </Button>
+                                    </Popconfirm>
+                                    <Button type='primary' onClick={() => setIsEdit(true)}>
+                                        修改
                                     </Button>
-                                </Popconfirm>
+                                </>
                             )}
                             {isAdmin && !user && (
                                 <>
@@ -372,15 +376,13 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                             </Button>
                                         </>
                                     )}
-                                    <Button type='primary' onClick={() => setIsEdit(true)}>
-                                        修改作者
-                                    </Button>
                                 </>
                             )}
                         </div>
                     </div>
                     <Suspense fallback={<Spin />}>
                         <EditOnlinePluginDetails
+                            userInfo={userInfo}
                             pulgin={plugin}
                             visible={isEdit}
                             handleOk={() => {

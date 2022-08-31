@@ -182,11 +182,13 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const onRefList = useMemoizedFn(() => {
         setPublicKeyword("")
         onResetPluginDetails()
-        setIsRefList(!isRefList)
         setScriptIdOnlineId(undefined)
         onResetNumber()
         getStatistics(width)
         onResetQuery()
+        setTimeout(() => {
+            setIsRefList(!isRefList)
+        }, 200)
     })
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const onFullScreen = useMemoizedFn(() => {
@@ -336,11 +338,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 bind_me: plugSource === "user"
             }
         })
-            .then((res) => {
+            .then((res:API.YakitSearch) => {
                 if (res.plugin_type) {
                     setTypeStatistics(res.plugin_type.map((ele) => ele.value))
                 }
-                if (res.tags.length === 0 && res.plugin_type.length === 0 && res.status?.length === 0) {
+                if (res.tags?.length === 0 && res.plugin_type?.length === 0 && res.status?.length === 0) {
                     setStatisticsIsNull(true)
                 } else {
                     setStatisticsIsNull(false)
@@ -875,7 +877,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             }
         },
         [publicKeyword],
-        {wait: 200}
+        {wait: 50}
     )
     const isRefListRef = useRef(true)
     useEffect(() => {
@@ -1010,19 +1012,19 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const onSyncSelect = useMemoizedFn((type) => {
         // 1 私密：个人账号 2公开：审核后同步云端
         if (type === 1) {
-            upOnlineBatch("yakit/plugin/save")
+            upOnlineBatch("yakit/plugin/save", 1)
         } else {
-            upOnlineBatch("yakit/plugin")
+            upOnlineBatch("yakit/plugin", 2)
         }
     })
 
-    const upOnlineBatch = useMemoizedFn(async (url: string) => {
+    const upOnlineBatch = useMemoizedFn(async (url: string, type: number) => {
         const length = selectedRowKeysRecordLocal.length
         const errList: any[] = []
         setUpLoading(true)
         for (let index = 0; index < length; index++) {
             const element = selectedRowKeysRecordLocal[index]
-            const res = await upOnline(element, url)
+            const res = await upOnline(element, url, type)
             if (res) {
                 errList.push(res)
             }
@@ -1044,7 +1046,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         }, 200)
     })
 
-    const upOnline = useMemoizedFn(async (params: YakScript, url: string) => {
+    const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = {
             type: params.Type,
             script_name: params.ScriptName,
@@ -1061,8 +1063,12 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 extra_setting: p.ExtraSetting
             })),
             help: params.Help,
-            default_open: false,
-            contributors: params.OnlineContributors || ""
+            default_open: type === 1 ? false : true, // 1 个人账号
+            contributors: params.OnlineContributors || "",
+            //
+            enable_plugin_selector: params.EnablePluginSelector,
+            plugin_selector_types: params.PluginSelectorTypes,
+            is_general_module: params.IsGeneralModule
         }
 
         return new Promise((resolve) => {
@@ -1337,6 +1343,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     Data: [...data]
                 })
                 if (props.setTotal) props.setTotal(item.Total || 0)
+                if (page === 1) {
+                    setIsRef(!isRef)
+                }
             })
             .catch((e: any) => {
                 failed("Query Local Yak Script failed: " + `${e}`)
@@ -1358,7 +1367,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             delete newParams.Tag
         }
         setParams(newParams)
-        setIsRef(!isRef)
         setListBodyLoading(true)
 
         update(1, undefined, queryLocal)
@@ -2184,7 +2192,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
             }
         },
         [publicKeyword],
-        {wait: 200}
+        {wait: 50}
     )
     const isRefListRef = useRef(true)
     useEffect(() => {
@@ -2372,7 +2380,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
             }
         },
         [publicKeyword],
-        {wait: 200}
+        {wait: 50}
     )
     const isRefListRef = useRef(true)
     useEffect(() => {
@@ -2530,6 +2538,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const [hasMore, setHasMore] = useState(false)
     const [isRef, setIsRef] = useState(false)
     const [listBodyLoading, setListBodyLoading] = useState(false)
+    const [recalculation, setRecalculation] = useState(false)
     const numberOnlineUser = useRef(0) // 我的插件 选择的插件index
     const numberOnline = useRef(0) // 插件商店 选择的插件index
     useEffect(() => {
@@ -2541,6 +2550,9 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             ...response,
             data: [...response.data]
         })
+        setTimeout(() => {
+            setRecalculation(!recalculation)
+        }, 100)
     }, [updatePluginRecord])
     useEffect(() => {
         if (!deletePluginRecord) return
@@ -2553,6 +2565,9 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             ...response,
             data: [...response.data]
         })
+        setTimeout(() => {
+            setRecalculation(!recalculation)
+        }, 100)
         onClicked()
     }, [deletePluginRecord?.id])
     useEffect(() => {
@@ -2564,7 +2579,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
     useEffect(() => {
-        setIsRef(!isRef)
         setListBodyLoading(true)
         if (!userInfo.isLogin && bind_me) {
             setTotal(0)
@@ -2613,6 +2627,9 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                     data: [...data]
                 })
                 setTotal(res.pagemeta.total)
+                if (page === 1) {
+                    setIsRef(!isRef)
+                }
             })
             .catch((err) => {
                 failed("插件列表获取失败:" + err)
@@ -2706,6 +2723,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
             <RollingLoadList<API.YakitPluginDetail>
                 numberRoll={number}
                 isRef={isRef}
+                recalculation={recalculation}
                 data={response.data}
                 page={response.pagemeta.page}
                 hasMore={hasMore}
@@ -2795,7 +2813,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                     </div>
                     <div className='icon-body'>
                         <div className='text-icon'>
-                            {isShowAdmin ? (
+                            {isShowAdmin && (
                                 <div
                                     className={`text-icon-admin ${
                                         TagColor[["not", "success", "failed"][status]].split("|")[0]
@@ -2803,12 +2821,10 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                 >
                                     {TagColor[["not", "success", "failed"][status]].split("|")[1]}
                                 </div>
-                            ) : (
-                                !bind_me &&
-                                info.official && (
-                                    // @ts-ignore
-                                    <OfficialYakitLogoIcon className='text-icon-style' />
-                                )
+                            )}
+                            {!bind_me && info.official && (
+                                // @ts-ignore
+                                <OfficialYakitLogoIcon className='text-icon-style' />
                             )}
                             {bind_me && <>{(info.is_private === true && <LockOutlined />) || <OnlineCloudIcon />}</>}
                         </div>
