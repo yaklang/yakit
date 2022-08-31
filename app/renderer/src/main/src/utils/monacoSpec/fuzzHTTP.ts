@@ -9,7 +9,72 @@ monaco.languages.registerCompletionItemProvider('http', {
     triggerCharacters: ["{"],
     // @ts-ignore
     provideCompletionItems: (model, position) => {
-        var suggestions = [];
+        var suggestions = [
+            {
+                kind: languages.CompletionItemKind.Snippet,
+                label: "User-Agent",
+                insertText: "User-Agent: ${1:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36}",
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "User-Agent",
+            } as languages.CompletionItem,
+            {
+                kind: languages.CompletionItemKind.Snippet,
+                label: "X-Forwarded-For",
+                insertText: "X-Forwarded-For: ${1:127.0.0.1}",
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "XFF 快捷设置",
+            } as languages.CompletionItem,
+            ...[
+                "Accept",
+                "Accept-Charset",
+                "Accept-Encoding",
+                "Accept-Language",
+                "Accept-Ranges",
+                "Cache-Control",
+                "Cc",
+                "Connection",
+                "Content-Id",
+                "Content-Language",
+                "Content-Length",
+                "Content-Transfer-Encoding",
+                "Content-Type",
+                "Cookie",
+                "Date",
+                "Dkim-Signature",
+                "Etag",
+                "Expires",
+                "From",
+                "Host",
+                "If-Modified-Since",
+                "If-None-Match",
+                "In-Reply-To",
+                "Last-Modified",
+                "Location",
+                "Message-Id",
+                "Mime-Version",
+                "Pragma",
+                "Received",
+                "Return-Path",
+                "Server",
+                "Set-Cookie",
+                "Subject",
+                "To",
+                // 自有安排
+                // "User-Agent",
+                // "X-Forwarded-For",
+                "Via",
+                "X-Imforwards",
+                "X-Powered-By",
+            ].map(i => {
+                return {
+                    kind: languages.CompletionItemKind.Snippet,
+                    label: i,
+                    insertText: i + ": ${1}",
+                    insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                    documentation: "Common HTTP Header"
+                } as languages.CompletionItem
+            }),
+        ];
         const line = model.getLineContent(position.lineNumber);
         if (position.column > 2) {
             const lastTwo = line.charAt(position.column - 3) + line.charAt(position.column - 2)

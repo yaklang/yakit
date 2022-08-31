@@ -308,8 +308,9 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
     return <HTTPPacketEditor
-        noHeader={true} {...props}
-        noPacketModifier={true} language={"yak"}
+        noHeader={true} language={"yak"}
+        {...props}
+        noPacketModifier={true}
         utf8={true}
         isResponse={true}
     />
@@ -591,12 +592,13 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                             return
                                         }
                                         newWebFuzzerTab(false, text).finally(() => {
-                                            Modal.info({
-                                                title: "注意",
-                                                content: (
-                                                    <>创建的新 WebFuzzer Tab 需用户自行判断是否开启 HTTPS</>
-                                                )
-                                            })
+                                            info(`创建的新 WebFuzzer Tab 需用户自行判断是否开启 HTTPS`)
+                                            // Modal.info({
+                                            //     title: "注意",
+                                            //     content: (
+                                            //         <></>
+                                            //     )
+                                            // })
                                         })
                                     } catch (e) {
                                         failed("editor exec codec failed")

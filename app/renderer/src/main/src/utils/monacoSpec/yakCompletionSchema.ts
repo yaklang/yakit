@@ -42,7 +42,7 @@ export const extraSuggestions: languages.CompletionItem[] = [
             insertText: "if ${1:err} != nil { die(${1:err}) }",
             insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
             documentation: "Snippets for input err quickly",
-        } as languages.CompletionItem
+        } as languages.CompletionItem,
     ]
 ;
 
