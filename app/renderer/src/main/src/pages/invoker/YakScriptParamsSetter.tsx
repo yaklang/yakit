@@ -720,6 +720,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "yak":
             return <div style={{height: 300, width: "100%"}}>
                 <YakCodeEditor
+                    language={"yak"}
                     originValue={Buffer.from(`${props.value || ""}`, "utf8")}
                     onChange={i => {
                         props.setValue(i.toString())
