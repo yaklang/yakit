@@ -62,13 +62,13 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
             data: onlineParams
         })
             .then((res) => {
-                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
                 ipcRenderer
                     .invoke("DownloadOnlinePluginById", {
                         OnlineID: res.id,
                         UUID: res.uuid
                     } as DownloadOnlinePluginProps)
                     .then(() => {
+                        setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
                         ipcRenderer
                             .invoke("GetYakScriptByOnlineID", {
                                 OnlineID: res.id,
@@ -98,13 +98,17 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                     .catch((err) => {
                         failed("插件下载本地失败:" + err)
                         setTimeout(() => {
+                            setLoading(false)
                             if (uploadLoading) uploadLoading(false)
                         }, 200)
                     })
             })
             .catch((err) => {
                 failed("插件上传失败:" + err)
+            })
+            .finally(() => {
                 setTimeout(() => {
+                    setLoading(false)
                     if (uploadLoading) uploadLoading(false)
                 }, 200)
             })

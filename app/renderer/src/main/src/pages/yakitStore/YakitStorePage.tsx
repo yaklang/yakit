@@ -188,7 +188,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         onResetQuery()
         setTimeout(() => {
             setIsRefList(!isRefList)
-        }, 200);
+        }, 200)
     })
     const [publicKeyword, setPublicKeyword] = useState<string>("")
     const onFullScreen = useMemoizedFn(() => {
@@ -338,11 +338,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 bind_me: plugSource === "user"
             }
         })
-            .then((res) => {
+            .then((res:API.YakitSearch) => {
                 if (res.plugin_type) {
                     setTypeStatistics(res.plugin_type.map((ele) => ele.value))
                 }
-                if (res.tags.length === 0 && res.plugin_type.length === 0 && res.status?.length === 0) {
+                if (res.tags?.length === 0 && res.plugin_type?.length === 0 && res.status?.length === 0) {
                     setStatisticsIsNull(true)
                 } else {
                     setStatisticsIsNull(false)
@@ -1343,6 +1343,9 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     Data: [...data]
                 })
                 if (props.setTotal) props.setTotal(item.Total || 0)
+                if (page === 1) {
+                    setIsRef(!isRef)
+                }
             })
             .catch((e: any) => {
                 failed("Query Local Yak Script failed: " + `${e}`)
@@ -1364,7 +1367,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             delete newParams.Tag
         }
         setParams(newParams)
-        setIsRef(!isRef)
         setListBodyLoading(true)
 
         update(1, undefined, queryLocal)
@@ -2577,7 +2579,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         setIsAdmin(userInfo.role === "admin")
     }, [userInfo.role])
     useEffect(() => {
-        setIsRef(!isRef)
         setListBodyLoading(true)
         if (!userInfo.isLogin && bind_me) {
             setTotal(0)
@@ -2626,6 +2627,9 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                     data: [...data]
                 })
                 setTotal(res.pagemeta.total)
+                if (page === 1) {
+                    setIsRef(!isRef)
+                }
             })
             .catch((err) => {
                 failed("插件列表获取失败:" + err)
