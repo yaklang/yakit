@@ -84,7 +84,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             })
     })
 
-    const rightClick = useMemoizedFn((e: {clientX: number; clientY: number}) => {
+    const rightClick = useMemoizedFn((e: { clientX: number; clientY: number }) => {
         showByCursorMenu(
             {
                 content: [
@@ -97,12 +97,14 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
         )
     })
 
+    const disabled = !!shareResData?.share_id
+
     return (
         <>
             <Button
                 size={"small"}
                 type='primary'
-                icon={<ShareIcon />}
+                icon={<ShareIcon/>}
                 onClick={rightClick}
                 onContextMenuCapture={rightClick}
             >
@@ -116,7 +118,8 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             >
                 <div className='content-value'>
                     <span className='label-text'>设置有效期：</span>
-                    <Radio.Group value={expiredTime} onChange={(e) => setExpiredTime(e.target.value)}>
+                    <Radio.Group disabled={disabled} value={expiredTime}
+                                 onChange={(e) => setExpiredTime(e.target.value)}>
                         <Radio.Button value={5}>5分钟</Radio.Button>
                         <Radio.Button value={15}>15分钟</Radio.Button>
                         <Radio.Button value={60}>1小时</Radio.Button>
@@ -125,11 +128,11 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                 </div>
                 <div className='content-value'>
                     <span className='label-text'>密码：</span>
-                    <Switch checked={pwd} onChange={(checked) => setPwd(checked)} />
+                    <Switch disabled={disabled} checked={pwd} onChange={(checked) => setPwd(checked)}/>
                 </div>
                 <div className='content-value'>
                     <span className='label-text'>限制分享次数：</span>
-                    <Switch checked={shareNumber} onChange={(checked) => setShareNumber(checked)} />
+                    <Switch disabled={disabled} checked={shareNumber} onChange={(checked) => setShareNumber(checked)}/>
                     &emsp;
                     {shareNumber && (
                         <InputNumber
@@ -156,7 +159,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                     </div>
                 )}
                 <div className='btn-footer'>
-                    <Button type='primary' onClick={onShare} loading={shareLoading} disabled={!!shareResData?.share_id}>
+                    <Button type='primary' onClick={onShare} loading={shareLoading} disabled={disabled}>
                         生成分享密令
                     </Button>
                     {shareResData.share_id && (
@@ -170,7 +173,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                                 if (ok) success("已复制到粘贴板")
                             }}
                         >
-                            <Button type={!!shareResData?.share_id ? "primary" : "default"}>复制分享</Button>
+                            <Button type={disabled ? "primary" : "default"}>复制分享</Button>
                         </CopyToClipboard>
                     )}
                 </div>
