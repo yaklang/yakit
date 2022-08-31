@@ -92,12 +92,8 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
     const [generaterRequest, setGeneraterRequest] = useState<YsoGeneraterRequest>({Gadget: "", Class: "", Options: []})
     const [showClassParamOptions, setShowClassParamOptions] = useState(false)
     const [supportedFacades, setSupportedFacades] = useState(false)
-    const [classParamOptionsForGadget, setClassParamOptionsForGadget] = useState<{[key: string]: any}>([])
-    const [generaterOptions, setGeneraterOptions] = useState<YsoClassGeneraterOptions[]>([])
-    const [classParamOptionsForClass, setClassParamOptionsForClass] = useState<{
-        [key: string]: any
-    }>([])
-
+    const [generaterOptionsForClass, setGeneraterOptionsForClass] = useState<YsoClassGeneraterOptions[]>([])
+    const [generaterOptionsForGadget, setGeneraterOptionsForGadget] = useState<YsoClassGeneraterOptions[]>([])
     // 加载Options
     useEffect(() => {
         if (useGadget) {
@@ -131,7 +127,6 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
         ipcRenderer
             .invoke("GetAllYsoClassOptions", {Gadget: "None"})
             .then((d: {Options: YsoRawOption[]}) => {
-                console.log(d.Options)
                 setOptionsIsLoading(true)
                 let classOptions: YsoOption[] = []
                 for (let option of d.Options) {
@@ -183,7 +178,6 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
         } else {
             value = v
         }
-
         setGeneraterRequest({
             Gadget: value[0],
             Class: value[1],
@@ -219,11 +213,10 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
                     setSupportedFacades(false)
                 }
                 if (useGadget) {
-                    setClassParamOptionsForGadget(paramsObj)
+                    setGeneraterOptionsForGadget(d.Options)
                 } else {
-                    setClassParamOptionsForClass(paramsObj)
+                    setGeneraterOptionsForClass(d.Options)
                 }
-                setGeneraterOptions(d.Options)
                 setShowClassParamOptions(true)
             })
             .catch((e: any) => {
@@ -294,7 +287,6 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
                     labelCol={{span: 6}}
                     wrapperCol={{span: 14}}
                     layout='horizontal'
-                    form={formInstance}
                     initialValues={defaultParamOptions}
                 >
                     <SwitchItem
@@ -332,7 +324,7 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
                             wrapperCol={{span: 14}}
                             layout='horizontal'
                             form={formInstance}
-                            initialValues={useGadget ? classParamOptionsForGadget : classParamOptionsForClass}
+                            initialValues={useGadget ? generaterOptionsForGadget : generaterOptionsForClass}
                         >
                             {() => {
                                 let paramElement: JSX.Element[] = []
@@ -356,8 +348,8 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
                                         )
                                     }
                                 }
+                                let generaterOptions = useGadget ? generaterOptionsForGadget : generaterOptionsForClass
                                 generaterOptions.forEach((item) => {
-                                    console.log(item)
                                     switch (item.Type) {
                                         case ParamType.String:
                                             pushElement(item.KeyVerbose, item.Key, <Input placeholder='' />)
@@ -407,11 +399,23 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
                                                         content: (
                                                             <FacadeOptions
                                                                 onStartFacades={(params: StartFacadeServerParams) => {
-                                                                    ipcRenderer.invoke("send-to-tab", {
-                                                                        type: "fuzzer",
-                                                                        // 这儿的编码为了保证不要乱动
-                                                                        data: {}
-                                                                    })
+                                                                    formInstance
+                                                                        .validateFields()
+                                                                        .then((vals: {[key: string]: any}) => {
+                                                                            ipcRenderer.invoke("send-to-tab", {
+                                                                                type: "facade-server",
+                                                                                // 这儿的编码为了保证不要乱动
+                                                                                data: {
+                                                                                    facadeParams: params,
+                                                                                    classParam: vals,
+                                                                                    classType: generaterRequest.Class
+                                                                                }
+                                                                            })
+                                                                        })
+                                                                        .catch(() => {
+                                                                            failed("获取form参数错误")
+                                                                        })
+
                                                                     m.destroy()
                                                                 }}
                                                             ></FacadeOptions>
