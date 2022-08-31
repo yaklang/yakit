@@ -237,6 +237,7 @@ service Yak {
   rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
   rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
   rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+  rpc DeleteYakScriptExec(Empty) returns (Empty);
 
   // Bruter
   rpc StartBrute(StartBruteParams) returns (stream ExecResult);
@@ -315,6 +316,9 @@ service Yak {
   // 设置通用存储
   rpc GetKey(GetKeyRequest) returns (GetKeyResult);
   rpc SetKey(SetKeyRequest) returns (Empty);
+  rpc DelKey(GetKeyRequest) returns (Empty);
+  rpc GetAllProcessEnvKey(Empty) returns (GetProcessEnvKeyResult);
+  rpc SetProcessEnvKey(SetKeyRequest) returns (Empty);
 
   // Online
   rpc GetOnlineProfile(Empty) returns (OnlineProfile);
@@ -444,6 +448,17 @@ message GetKeyRequest {
 
 message GetKeyResult {
   string Value = 1;
+}
+
+message GeneralStorage {
+  string Key = 1;
+  string Value = 2;
+  int64 ExpiredAt = 3;
+  bool ProcessEnv = 4;
+}
+
+message GetProcessEnvKeyResult {
+  repeated GeneralStorage Results = 1;
 }
 
 message SetSystemProxyRequest {
@@ -679,7 +694,7 @@ message YsoClassGeneraterOptions{
   string Type = 3;
 }
 message YsoClassOptionsResponse{
-  repeated YsoClassGeneraterOptions Options= 1;
+  repeated YsoClassGeneraterOptions Options = 1;
 }
 //生成代码和字节码
 message YsoOptionsRequerst{
