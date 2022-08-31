@@ -39,7 +39,7 @@ import { ReportViewerPage } from "../pages/assetViewer/ReportViewerPage"
 import { BatchExecutorPageEx } from "../pages/invoker/batch/BatchExecutorPageEx"
 import {PayloadGeneraterPage} from "../pages/payloadGenerater/PayloadGeneraterPage"
 import {PayloadGenerater_New} from "../pages/payloadGenerater/JavaPayloadPage"
-import {ReverseServer_New} from "../pages/reverseServer/ReverseServer_New"
+import {ReverseServer_New, StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
 
 import {
     ReadOnlyBatchExecutorByMenuItem,
@@ -275,6 +275,10 @@ interface ComponentParams {
 
     // yakit 插件日志详情参数
     YakScriptJournalDetailsId?: number
+    // facade server参数
+    facadeServerParams?: StartFacadeServerParams
+    classGeneraterParams?: {[key: string]: any}
+    classType?: string
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -304,7 +308,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         }
         return <ReadOnlyBatchExecutorByMenuItem MenuItemId={batchMenuItemId} />
     }
-
     switch (r) {
         case Route.ShellReceiver:
             return <ShellReceiverPage />
@@ -360,7 +363,13 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.PayloadGenerater_New:
             return <PayloadGenerater_New />
         case Route.ReverseServer_New:
-            return <ReverseServer_New />
+            return (
+                <ReverseServer_New
+                    facadeServerParams={params?.facadeServerParams}
+                    classGeneraterParams={params?.classGeneraterParams}
+                    classType={params?.classType}
+                />
+            )
         case Route.DB_Risk:
             return <RiskPage />
         case Route.DNSLog:

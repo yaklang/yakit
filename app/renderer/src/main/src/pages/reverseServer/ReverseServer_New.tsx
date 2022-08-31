@@ -36,7 +36,11 @@ export interface StartFacadeServerParams {
     ReversePort: number
     ReverseHost: string
 }
-export interface FacadeOptionsProp {}
+export interface FacadeOptionsProp {
+    facadeServerParams?: StartFacadeServerParams
+    classGeneraterParams?: {[key: string]: any}
+    classType?: string
+}
 interface NetInterface {
     Name: string
     Addr: string
@@ -60,13 +64,12 @@ enum ParamType {
     StringBool = "StringBool",
     StringPort = "StringPort"
 }
-export const ReverseServer_New: React.FC<FacadeOptionsProp> = () => {
+export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
     const [optionsIsLoading, setOptionsIsLoading] = useState(false)
     const [showClassParamOptions, setShowClassParamOptions] = useState(false)
     const [classParamOptions, setClassParamOptions] = useState<{[key: string]: any}>([])
     const [generaterRequest, setGeneraterRequest] = useState<YsoGeneraterRequest>({Gadget: "", Class: "", Options: []})
     const [facadesLoading, setFacadesLoading] = useState(false)
-    const [showBlockType, setShowBlockType] = useState("")
     const [yakCode, SetYakCode] = useState<string>("")
     // facades参数
     const [token, _, getToken] = useGetState(randomString(40))
@@ -75,7 +78,6 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = () => {
     const [facadesIsConnect, setFacadesIsConnect, getFacadesIsConnect] = useGetState(false)
     const [reverseAddr, setReverseAddr, getReverseAddr] = useGetState("")
     const [isClearLog, setIsClearLog, getIsClearLog] = useGetState(false)
-    const [className, setClassName] = useState("")
     const [supportedFacades, setSupportedFacades] = useState(false)
     const [classParamOptionsForClass, setClassParamOptionsForClass] = useState<{[key: string]: any}>([])
     const [options, setOptions] = useState<YsoOption[]>([])
@@ -161,16 +163,17 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = () => {
                 if (message.level !== "facades-msg") {
                     switch (message.level) {
                         case "error":
-                            failed(message.data)
+                            failed(`error: ${message.data}`)
+                            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+                            setFacadesIsConnect(false)
                             break
                         case "warning":
                             warn(message.data)
                             break
                         case "mirror_error":
-                            failed(message.data)
-                            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+                            failed(`mirror_error: ${message.data}`)
                             setFacadesIsConnect(false)
-                            setShowBlockType("")
+                            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
                             break
                         default:
                             info(JSON.stringify(message))
@@ -197,12 +200,12 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = () => {
         })
         ipcRenderer.on(`${token}-error`, (_, data) => {
             if (data) {
-                failed(`error: ${JSON.stringify(data)}`)
+                failed(`${JSON.stringify(data)}`)
+                setFacadesIsConnect(false)
             }
         })
         ipcRenderer.on(`${token}-end`, () => {
             setFacadesIsConnect(false)
-            setShowBlockType("")
         })
         const id = setInterval(() => {
             if (getIsClearLog()) {
@@ -238,75 +241,121 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = () => {
             // }
         }
     }, [token])
+    useEffect(() => {
+        if (props.classType && props.facadeServerParams && props.classGeneraterParams) {
+            setGeneraterRequest({...generaterRequest, Class: props.classType, Gadget: "None"})
+            setClassParamOptionsForClass(props.classGeneraterParams)
+            startFacadeServer(props.facadeServerParams).then(() => {
+                if (props.classGeneraterParams) applyClassOptions(props.classGeneraterParams)
+            })
+        }
+    }, [])
+    const startFacadeServer = useMemoizedFn((params: StartFacadeServerParams) => {
+        return new Promise<void>((resolve, reject) => {
+            let startFacadeParams = {
+                ...params,
+                GenerateClassParams: generaterRequest,
+                Token: token
+            }
+            if (startFacadeParams.IsRemote) {
+                // 这里应该做个加载提示
+                ipcRenderer
+                    .invoke("GetTunnelServerExternalIP", {
+                        Addr: params.BridgeParam.Addr,
+                        Secret: params.BridgeParam.Secret
+                    })
+                    .then((data: {IP: string}) => {
+                        setReverseAddr(`${data.IP}:${params.ReversePort}`)
+                        startFacadeParams.ReverseHost = data.IP
+                        ipcRenderer
+                            .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
+                            .then(() => {
+                                setFacadesLoading(true)
+                                setFacadesIsConnect(true)
+                                info("启动FacadeServer")
+                                loadAllClassForSelect()
+                                resolve()
+                            })
+                            .catch((e: any) => {
+                                failed("启动FacadeServer失败: " + `${e}`)
+                                setFacadesIsConnect(false)
+                                reject(e)
+                            })
+                            .finally()
+                    })
+                    .catch((e: any) => {
+                        failed("获取远程地址失败: " + `${e}`)
+                        ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+                        setFacadesIsConnect(false)
+                        reject(e)
+                    })
+                    .finally(() => {})
+            } else {
+                setReverseAddr(`${params.ReverseHost}:${params.ReversePort}`)
+                ipcRenderer
+                    .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
+                    .then(() => {
+                        setFacadesLoading(true)
+                        setFacadesIsConnect(true)
+                        info("启动FacadeServer")
+                        setIsClearLog(true)
+                        setLogs([])
+                        loadAllClassForSelect()
+                        resolve()
+                    })
+                    .catch((e: any) => {
+                        failed("启动FacadeServer失败: " + `${e}`)
+                        setFacadesIsConnect(false)
+                        reject(e)
+                    })
+                    .finally()
+            }
+        })
+    })
+    const applyClassOptions = useMemoizedFn((vals: {[key: string]: any}) => {
+        let genOptions: YsoClassGeneraterOptions[] = []
+        for (let key in vals) {
+            let value = vals[key]
+            if (value === undefined) {
+                continue
+            }
+            value = String(value)
+            if (value === "") {
+                continue
+            }
+            genOptions.push({
+                Key: key,
+                KeyVerbose: "",
+                Help: "",
+                Value: value,
+                Type: ""
+            })
+        }
+        generaterRequest.Options = genOptions
+        ipcRenderer
+            .invoke("ApplyClassToFacades", {
+                GenerateClassParams: generaterRequest,
+                Token: token
+            })
+            .then((res) => {
+                info("应用到FacadeServer成功")
+            })
+            .catch((err) => {
+                failed(`应用到FacadeServer失败${err}`)
+            })
+    })
     return (
         <>
-            {!facadesIsConnect && (
+            {!getFacadesIsConnect() && (
                 <div style={{marginTop: "3rem"}}>
                     <FacadeOptions
                         onStartFacades={(params: StartFacadeServerParams) => {
-                            let startFacadeParams = {
-                                ...params,
-                                GenerateClassParams: generaterRequest,
-                                Token: token
-                            }
-                            for (let i = 0; i < generaterRequest.Options.length; i++) {
-                                if (generaterRequest.Options[i].Key == "ClassName") {
-                                    setClassName(generaterRequest.Options[i].Value)
-                                }
-                            }
-                            if (startFacadeParams.IsRemote) {
-                                // 这里应该做个加载提示
-                                ipcRenderer
-                                    .invoke("GetTunnelServerExternalIP", {
-                                        Addr: params.BridgeParam.Addr,
-                                        Secret: params.BridgeParam.Secret
-                                    })
-                                    .then((data: {IP: string}) => {
-                                        setReverseAddr(`${data.IP}:${params.ReversePort}`)
-                                        startFacadeParams.ReverseHost = data.IP
-
-                                        ipcRenderer
-                                            .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
-                                            .then(() => {
-                                                setFacadesLoading(true)
-                                                setFacadesIsConnect(true)
-                                                info("启动FacadeServer")
-                                                loadAllClassForSelect()
-                                            })
-                                            .catch((e: any) => {
-                                                failed("启动FacadeServer失败: " + `${e}`)
-                                            })
-                                            .finally()
-                                    })
-                                    .catch((e: any) => {
-                                        failed("获取远程地址失败: " + `${e}`)
-                                        ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
-                                        setFacadesIsConnect(false)
-                                        setShowBlockType("")
-                                    })
-                                    .finally(() => {})
-                            } else {
-                                setReverseAddr(`${params.ReverseHost}:${params.ReversePort}`)
-                                ipcRenderer
-                                    .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
-                                    .then(() => {
-                                        setFacadesLoading(true)
-                                        setFacadesIsConnect(true)
-                                        info("启动FacadeServer")
-                                        setIsClearLog(true)
-                                        setLogs([])
-                                        loadAllClassForSelect()
-                                    })
-                                    .catch((e: any) => {
-                                        failed("启动FacadeServer失败: " + `${e}`)
-                                    })
-                                    .finally()
-                            }
+                            startFacadeServer(params)
                         }}
                     ></FacadeOptions>
                 </div>
             )}
-            {facadesIsConnect && (
+            {getFacadesIsConnect() && (
                 <Row style={{height: "100%", overflowY: "auto"}}>
                     <Col span={6} style={{overflowY: "auto"}}>
                         <Form labelCol={{span: 6}} wrapperCol={{span: 24}}>
@@ -385,44 +434,10 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = () => {
                                                     formInstance
                                                         .validateFields()
                                                         .then((vals: {[key: string]: any}) => {
-                                                            let genOptions: YsoClassGeneraterOptions[] = []
-                                                            for (let key in vals) {
-                                                                let value = vals[key]
-                                                                if (value === undefined) {
-                                                                    continue
-                                                                }
-                                                                value = String(value)
-                                                                if (value === "") {
-                                                                    continue
-                                                                }
-                                                                genOptions.push({
-                                                                    Key: key,
-                                                                    KeyVerbose: "",
-                                                                    Help: "",
-                                                                    Value: value,
-                                                                    Type: ""
-                                                                })
-                                                            }
-                                                            generaterRequest.Options = genOptions
-                                                            for (let i = 0; i < generaterRequest.Options.length; i++) {
-                                                                if (generaterRequest.Options[i].Key == "ClassName") {
-                                                                    setClassName(generaterRequest.Options[i].Value)
-                                                                }
-                                                            }
-                                                            ipcRenderer
-                                                                .invoke("ApplyClassToFacades", {
-                                                                    GenerateClassParams: generaterRequest,
-                                                                    Token: token
-                                                                })
-                                                                .then((res) => {
-                                                                    info("应用到FacadeServer成功")
-                                                                })
-                                                                .catch((err) => {
-                                                                    failed(`应用到FacadeServer失败${err}`)
-                                                                })
+                                                            applyClassOptions(vals)
                                                         })
-                                                        .catch((e) => {
-                                                            failed(`获取Form数据失败${e}`)
+                                                        .catch(() => {
+                                                            failed("获取form参数错误")
                                                         })
                                                 }}
                                             >
@@ -447,21 +462,21 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = () => {
                                     <Space direction={"vertical"}>
                                         HTTP反连地址
                                         <CopyableField
-                                            text={`http://${reverseAddr}/${className}`}
+                                            text={`http://${reverseAddr}/${generaterRequest.Class}`}
                                             style={{color: "blue", marginTop: "-12px"}}
                                         />
                                     </Space>
                                     <Space direction={"vertical"}>
                                         RMI反连地址
                                         <CopyableField
-                                            text={`rmi://${reverseAddr}/${className}`}
+                                            text={`rmi://${reverseAddr}/${generaterRequest.Class}`}
                                             style={{color: "blue", marginTop: "-12px"}}
                                         />
                                     </Space>
                                     <Space direction={"vertical"}>
                                         LDAP反连地址
                                         <CopyableField
-                                            text={`ldap://${reverseAddr}/${className}`}
+                                            text={`ldap://${reverseAddr}/${generaterRequest.Class}`}
                                             style={{color: "blue", marginTop: "-12px"}}
                                         />
                                     </Space>
