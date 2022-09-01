@@ -169,68 +169,72 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                     </Space>}/>
             </Spin>
             <Spin spinning={downloading}>
-                <Space>
-                    <Popconfirm
-                        visible={(isLatest || loading || latestLoading) ? false : undefined}
-                        title={`确定要更新版本: ${latestVersion}`}
-                        onConfirm={e => {
-                            setDownloading(true)
-                            ipcRenderer.invoke("download-latest-yak", latestVersion).then(() => {
-                                success("下载完毕")
-                                install(latestVersion)
-                            }).catch((e: any) => {
-                                failed("下载失败")
-                            }).finally(() => {
-                                setTimeout(() => setDownloading(false), 100)
-                            })
-                        }}
-                    >
-                        <Button
-                            type={"primary"} disabled={isLatest || loading || latestLoading}
+                <div style={{display: "flex"}}>
+                    <Space>
+                        <Popconfirm
+                            visible={(isLatest || loading || latestLoading) ? false : undefined}
+                            title={`确定要更新版本: ${latestVersion}`}
+                            onConfirm={e => {
+                                setDownloading(true)
+                                ipcRenderer.invoke("download-latest-yak", latestVersion).then(() => {
+                                    success("下载完毕")
+                                    install(latestVersion)
+                                }).catch((e: any) => {
+                                    failed("下载失败")
+                                }).finally(() => {
+                                    setTimeout(() => setDownloading(false), 100)
+                                })
+                            }}
                         >
-                            一键更新 Yak 引擎
-                        </Button>
-                    </Popconfirm>
-                    <Button type={"link"} onClick={() => {
-                        install(latestVersion)
-                    }}>我已经下载，点此安装</Button>
-                    <Button danger={true} size={"small"} onClick={() => {
-                        showModal({
-                            title: "yak 核心引擎下载链接",
-                            width: "60%",
-                            content: <Space direction={"vertical"}>
-                                <Space>
-                                    Windows(x64) 下载：
-                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_windows_amd64.exe</div>
-                                </Space>
-                                <Space>
-                                    MacOS(intel/m1) 下载：
-                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_darwin_amd64</div>
-                                </Space>
-                                <Space>
-                                    Linux(x64) 下载：
-                                    <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_linux_amd64</div>
-                                </Space>
-                                <Alert message={<div>
-                                    手动下载完成后 Windows 用户可以把引擎放在 %HOME%/yakit-projects/yak-engine/yak.exe 即可识别
-                                    <br/>
-                                    MacOS / Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
-                                </div>}>
+                            <Button
+                                type={"primary"} disabled={isLatest || loading || latestLoading}
+                            >
+                                一键更新 Yak 引擎
+                            </Button>
+                        </Popconfirm>
+                        <Button type={"link"} onClick={() => {
+                            install(latestVersion)
+                        }}>我已经下载，点此安装</Button>
+                        <Button danger={true} size={"small"} onClick={() => {
+                            showModal({
+                                title: "yak 核心引擎下载链接",
+                                width: "60%",
+                                content: <Space direction={"vertical"}>
+                                    <Space>
+                                        Windows(x64) 下载：
+                                        <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_windows_amd64.exe</div>
+                                    </Space>
+                                    <Space>
+                                        MacOS(intel/m1) 下载：
+                                        <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_darwin_amd64</div>
+                                    </Space>
+                                    <Space>
+                                        Linux(x64) 下载：
+                                        <div>https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersionWithoutV || "latest"}/yak_linux_amd64</div>
+                                    </Space>
+                                    <Alert message={<div>
+                                        手动下载完成后 Windows 用户可以把引擎放在 %HOME%/yakit-projects/yak-engine/yak.exe 即可识别
+                                        <br/>
+                                        MacOS / Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
+                                    </div>}>
 
-                                </Alert>
-                            </Space>
-                        })
-                    }}>
-                        网络问题无法下载？手动下载
-                    </Button>
-                    <Button type="link" danger={true} onClick={() => {
-                        ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
-                            }).catch((err: any) => {
+                                    </Alert>
+                                </Space>
                             })
-                    }}>
-                        删除安装包
-                    </Button>
-                </Space>
+                        }}>
+                            网络问题无法下载？手动下载
+                        </Button>
+                    </Space>
+                    <div style={{width: "100%", textAlign: "right"}}>
+                        <Button type="link" danger={true} onClick={() => {
+                            ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
+                                }).catch((err: any) => {
+                                })
+                        }}>
+                            删除安装包
+                        </Button>
+                    </div>
+                </div>
             </Spin>
             {downloadProgress && <Progress percent={
                 downloading ? Math.floor((downloadProgress?.percent || 0) * 100) : 100
