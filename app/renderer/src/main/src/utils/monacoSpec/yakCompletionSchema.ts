@@ -43,6 +43,57 @@ export const extraSuggestions: languages.CompletionItem[] = [
             insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
             documentation: "Snippets for input err quickly",
         } as languages.CompletionItem,
+        {
+            kind: languages.CompletionItemKind.Snippet,
+            label: "aes-cbc-pkcs7(pkcs) encrypt",
+            insertText: "data = \"${1:your-data}\"\n" +
+                "data = codec.PKCS7Padding([]byte(data))\n" +
+                "\n" +
+                "key, _ = codec.DecodeBase64(\"${2:key-base64}\")\n" +
+                "// key = codec.PKCS5Padding(key, 16)\n" +
+                "key = codec.PKCS7Padding(key)\n" +
+                "\n" +
+                "// 设置 iv\n" +
+                "// 如果不好设置 base64 的话，可以设置 iv = []byte(\"your-iv\")\n" +
+                "iv, _ = codec.DecodeBase64(\"${3:iv-base64}\")\n" +
+                "// iv = codec.PKCS5Padding(iv, 16)\n" +
+                "iv = codec.PKCS7Padding(iv)\n" +
+                "\n" +
+                "// 开始调用加密函数\n" +
+                "encryptData, err = codec.AESCBCEncrypt(key, data, iv)\n" +
+                "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
+                "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
+                "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n" +
+                "\n",
+            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "AES CBC PKCS7(PKCS5)",
+        } as languages.CompletionItem,
+        {
+            kind: languages.CompletionItemKind.Snippet,
+            label: "aes-ecb-pkcs7 encrypt",
+            insertText: "# 需要加密的原文\ndata = \"this is data\"\n" +
+                "# 用到的 AES KEY，如果是 base64 编码可用这个解码，不是的话，可直接使用 key = []byte(`your-aes-key...`)\nkey, err = codec.DecodeBase64(\"${1}\")\nkey = codec.PKCS7Padding(key)\n" +
+                "# PKCS7Padding(data) / PKCS5Padding(data, 16/*block size*/)\ndata = codec.PKCS7Padding([]byte(data))\n\n" +
+                "# 使用 AES ECB 加密内容，如果解密失败，可以查看 err 中错误原因\nencryptData, err = codec.AESECBEncrypt(key, data, nil)\n" +
+                "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
+                "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
+                "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n",
+            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "AES ECB PKCS7",
+        } as languages.CompletionItem,
+        {
+            kind: languages.CompletionItemKind.Snippet,
+            label: "aes-ecb-pkcs5 encrypt",
+            insertText: "# 需要加密的原文\ndata = \"this is data\"\n" +
+                "# 用到的 AES KEY，如果是 base64 编码可用这个解码，不是的话，可直接使用 key = []byte(`your-aes-key...`)\nkey, err = codec.DecodeBase64(\"${1}\")\nkey = codec.PKCS5Padding(key, 16)\n" +
+                "# PKCS7Padding(data) / PKCS5Padding(data, 16/*block size*/)\ndata = codec.PKCS5Padding([]byte(data), 16)\n\n" +
+                "# 使用 AES ECB 加密内容，如果解密失败，可以查看 err 中错误原因\nencryptData, err = codec.AESECBEncrypt(key, data, nil)\n" +
+                "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
+                "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
+                "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n",
+            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "AES ECB PKCS5",
+        } as languages.CompletionItem,
     ]
 ;
 
