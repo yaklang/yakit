@@ -15,7 +15,11 @@ export interface PortTableProp {
 }
 
 const formatJson = (filterVal, jsonData) => {
-    return jsonData.map((v) => filterVal.map((j) => v[j]))
+    return jsonData.map((v) => filterVal.map((j) => {
+        if(j === "host") return `${v.host}:${v.port}`
+        if(j === "timestamp") return `${formatTimestamp(v[j])}`
+        return v[j]
+    }))
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -31,33 +35,33 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
         }
     }, [props.data])
 
-    // const getData = useMemoizedFn(() => {
-    //     // console.log(props.params["columns"])
-    //     return new Promise((resolve) => {
-    //         const header = props.params["columns"]
-    //         const exportData = formatJson(header, props.data)
-    //         const params = {
-    //             header,
-    //             exportData,
-    //             response: {
-    //                 Pagination: {
-    //                     Page: 1
-    //                 },
-    //                 Data: props.execResultsLog,
-    //                 Total: props.execResultsLog.length
-    //             }
-    //         }
-    //         resolve(params)
-    //     })
-    // })
+    const getData = useMemoizedFn(() => {
+        return new Promise((resolve) => {
+            const header = ["主机地址", "HTML Title", "指纹", "扫描时间"];
+            const exportData = formatJson(["host", "htmlTitle", "fingerprint", "timestamp"], props.data)
+            const params = {
+                header,
+                exportData,
+                response: {
+                    Pagination: {
+                        Page: 1
+                    },
+                    Data: props.data,
+                    Total: props.data.length
+                }
+            }
+            resolve(params)
+        })
+    })
 
     return <Table<YakitPort>
         size={"small"} bordered={true}
-        rowKey={(row) => `${row.host}:${row.port}`}
+        rowKey={(row, index) => `${row.host}:${row.port}-${index}`}
         title={e => {
             return <Row>
                 <Col span={12}>开放端口 / Open Ports</Col>
                 <Col span={12} style={{textAlign: "right"}}>
+                    <ExportExcel getData={getData} btnProps={{size: "small"}} fileName="开放端口"/>
                     <DropdownMenu
                         menu={{
                             data: [
@@ -78,7 +82,6 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                             })
                         }}
                     >
-                        {/* <ExportExcel getData={getData} btnProps={{size: "small"}} fileName="开放端口"/> */}
                         <Button type="link" style={{height: 16}} icon={<LineMenunIcon/>}></Button>
                     </DropdownMenu>
                 </Col>

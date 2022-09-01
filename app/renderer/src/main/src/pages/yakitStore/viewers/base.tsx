@@ -468,7 +468,6 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
     }, [])
 
     const getData = useMemoizedFn(() => {
-        console.log(props)
         return new Promise((resolve) => {
             const header = props.params["columns"]
             const exportData = formatJson(header, tableData.current)
