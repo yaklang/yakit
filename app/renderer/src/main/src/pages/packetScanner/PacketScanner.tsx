@@ -1,20 +1,20 @@
-import React, {useEffect, useState} from "react"
-import {SimplePluginList} from "@/components/SimplePluginList"
-import {showDrawer, showModal} from "@/utils/showModal"
-import {ResizeBox} from "@/components/ResizeBox"
-import {getRemoteValue} from "@/utils/kv"
-import {Card, Col, Form, Layout, Row, Space} from "antd"
-import {PluginResultUI} from "@/pages/yakitStore/viewers/base"
-import {PacketScanForm} from "@/pages/packetScanner/PacketScanForm"
-import {randomString} from "@/utils/randomUtil"
-import {useCreation} from "ahooks"
-import {PacketScanResult} from "@/pages/packetScanner/PacketScanResult"
-import {HTTPPacketEditor} from "@/utils/editors"
-import {HttpFlowViewer} from "@/pages/packetScanner/HttpFlowViewer"
-import {genDefaultPagination, QueryYakScriptRequest} from "@/pages/invoker/schema"
-import {AutoCard} from "@/components/AutoCard"
+import React, { useEffect, useState } from "react"
+import { SimplePluginList } from "@/components/SimplePluginList"
+import { showDrawer, showModal } from "@/utils/showModal"
+import { ResizeBox } from "@/components/ResizeBox"
+import { getRemoteValue } from "@/utils/kv"
+import { Card, Col, Form, Layout, Row, Space } from "antd"
+import { PluginResultUI } from "@/pages/yakitStore/viewers/base"
+import { PacketScanForm } from "@/pages/packetScanner/PacketScanForm"
+import { randomString } from "@/utils/randomUtil"
+import { useCreation } from "ahooks"
+import { PacketScanResult } from "@/pages/packetScanner/PacketScanResult"
+import { HTTPPacketEditor } from "@/utils/editors"
+import { HttpFlowViewer } from "@/pages/packetScanner/HttpFlowViewer"
+import { genDefaultPagination, QueryYakScriptRequest } from "@/pages/invoker/schema"
+import { AutoCard } from "@/components/AutoCard"
 import ReactResizeDetector from "react-resize-detector"
-import {xtermFit} from "@/utils/xtermUtils"
+import { xtermFit } from "@/utils/xtermUtils"
 
 export interface PacketScannerProp {
     HttpFlowIds?: number[]
@@ -31,7 +31,7 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
         Keyword: props.Keyword,
         Pagination: genDefaultPagination(200)
     })
-    const {Https, HttpRequest, Keyword} = props
+    const { Https, HttpRequest, Keyword } = props
 
     useEffect(() => {
         getRemoteValue(PACKET_SCANNER_PRESET_PLUGIN_LIST).then((e: string) => {
@@ -40,12 +40,12 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
                     const result: string[] = JSON.parse(e)
                     setPresetPacketScanPlugin([...result])
                 }
-            } catch (e) {}
+            } catch (e) { }
         })
     }, [])
 
     return (
-        <div style={{height: "100%", width: "100%"}}>
+        <div style={{ height: "100%", width: "100%" }}>
             <ResizeBox
                 isVer={false}
                 firstNode={() => (
@@ -97,13 +97,14 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) 
             isVer={true}
             firstRatio='200px'
             firstMinSize={200}
-            freeze={true}
+            secondMinSize={200}
+            // freeze={true}
             firstNode={() => {
                 return (
-                    <Row gutter={8} style={{height: "100%"}}>
+                    <Row gutter={8} style={{ height: "100%" }}>
                         <Col span={16}>
                             {(props?.flowIds || []).length <= 0 ? (
-                                <div style={{height: "100%"}}>
+                                <div style={{ height: "100%" }}>
                                     <HTTPPacketEditor
                                         noTitle={true}
                                         noHeader={true}
@@ -112,7 +113,7 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) 
                                     />
                                 </div>
                             ) : (
-                                <div style={{height: "100%"}}>
+                                <div style={{ height: "100%" }}>
                                     <HttpFlowViewer ids={props.flowIds || []} />
                                 </div>
                             )}
@@ -144,7 +145,7 @@ export const execPacketScanFromRaw = (https: boolean, request: Uint8Array, keywr
     execPacketScanWithNewTab([], https, request, keywrod)
 }
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 export const execPacketScanWithNewTab = (
     httpFlowIds: number[],

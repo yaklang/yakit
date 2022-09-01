@@ -107,8 +107,6 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
-                    console.log("width", width, height)
-
                     if (firstRenderRef.current) {
                         perBodyWidth.current = width
                         perBodyHeight.current = height
@@ -117,9 +115,11 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                     }
                     if (isVer) {
                         if (perBodyHeight.current === height) return
+                        perBodyHeight.current = height
                         setBodyHeight(height)
                     } else {
                         if (perBodyWidth.current === width) return
+                        perBodyWidth.current = width
                         setBodyWidth(width)
                     }
                 }}
@@ -132,7 +132,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                 ref={firstRef}
                 style={{
                     width: isVer ? "100%" : firstRatio === "50%" ? `calc(100% - ${secondRatio})` : firstRatio,
-                    height: isVer ? firstRatio : "100%",
+                    height: isVer ? (firstRatio === "50%" ? `calc(100% - ${secondRatio} - 6px)` : firstRatio) : "100%",
                     padding: `${isVer ? "0 0 3px 0" : "0 3px 0 0 "}`,
                     overflow: "hidden"
                 }}
@@ -153,7 +153,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                 ref={secondRef}
                 style={{
                     width: isVer ? "100%" : firstRatio === "50%" ? secondRatio : `calc(100% - ${firstRatio})`,
-                    height: isVer ? secondRatio : "100%",
+                    height: isVer ? (firstRatio === "50%" ? secondRatio : `calc(100% - ${firstRatio} - 6px)`) : "100%",
                     padding: `${isVer ? "3px 0 0 0" : "0 0 0 3px"}`,
                     overflow: "hidden"
                 }}
