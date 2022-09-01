@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from "react"
-import {ResizeLine} from "./ResizeLine"
-import {useDebounce, useDebounceFn, useMemoizedFn, useThrottleFn} from "ahooks"
+import React, { useEffect, useRef, useState } from "react"
+import { ResizeLine } from "./ResizeLine"
+import { useDebounce, useDebounceFn, useMemoizedFn, useThrottleFn } from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 
 import "./ResizeBox.css"
@@ -90,11 +90,11 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
 
     const moveStart = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "block"
+            ; (maskRef.current as unknown as HTMLDivElement).style.display = "block"
     })
     const moveEnd = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "none"
+            ; (maskRef.current as unknown as HTMLDivElement).style.display = "none"
     })
 
     useEffect(() => {
@@ -103,7 +103,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
     }, [bodyWidth, bodyHeight])
 
     return (
-        <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className='resize-box'>
+        <div ref={bodyRef} style={{ ...style, flexFlow: `${isVer ? "column" : "row"}` }} className='resize-box'>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
@@ -131,7 +131,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
             <div
                 ref={firstRef}
                 style={{
-                    width: isVer ? "100%" : firstRatio,
+                    width: isVer ? "100%" : firstRatio === "50%" ? `calc(100% - ${secondRatio})` : firstRatio,
                     height: isVer ? firstRatio : "100%",
                     padding: `${isVer ? "0 0 3px 0" : "0 3px 0 0 "}`,
                     overflow: "hidden"
