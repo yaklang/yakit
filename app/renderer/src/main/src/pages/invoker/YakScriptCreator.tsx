@@ -20,6 +20,7 @@ import { queryYakScriptList } from "../yakitStore/network"
 import { YakExecutorParam } from "./YakExecutorParams"
 import { SyncCloudButton } from "@/components/SyncCloudButton/index"
 import { Route } from "@/routes/routeSpec"
+import { useStore } from "@/store"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -175,6 +176,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         setIsQueryByYakScriptName(!props.modified)
     }, [])
 
+    const { userInfo } = useStore()
     const debugButton = (primary?: boolean) => {
         if (loading) {
             return <Button disabled={true}>执行中...无法调试</Button>
@@ -351,6 +353,14 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     setSaveLoading(false)
                 }, 200)
             })
+    // 修改提交内容
+    const onSubmitEditContent = useMemoizedFn(() => {
+        console.log('params', params);
+        if (!userInfo.isLogin) {
+            warn('请先登录');
+            return
+        }
+        success("开发中...")
     })
 
     return (
@@ -622,16 +632,23 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         <Button type='primary' onClick={onSaveLocal} loading={saveLoading}>
                             保存
                         </Button>
-                        <SyncCloudButton
-                            params={params}
-                            setParams={(newSrcipt) => {
-                                setParams(newSrcipt)
-                                props.onCreated && props.onCreated(newSrcipt)
-                                props.onChanged && props.onChanged(newSrcipt)
-                            }}
-                        >
-                            <Button>同步至云端</Button>
-                        </SyncCloudButton>
+                        {
+                            (userInfo.user_id === params.UserId || params.UserId == 0) &&
+                            <SyncCloudButton
+                                params={params}
+                                setParams={(newSrcipt) => {
+                                    setParams(newSrcipt)
+                                    props.onCreated && props.onCreated(newSrcipt)
+                                    props.onChanged && props.onChanged(newSrcipt)
+                                }}
+                            >
+                                <Button>同步至云端</Button>
+                            </SyncCloudButton> ||
+                            <>
+                                <Button onClick={() => onSubmitEditContent()}>提交修改内容</Button>
+                            </>
+                        }
+
                         <Button
                             // type={primary ? "primary" : undefined}
                             disabled={[

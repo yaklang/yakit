@@ -1,28 +1,29 @@
-import React, {useEffect, useState} from "react"
-import {Button, Divider, Empty, Form, PageHeader, Popconfirm, Popover, Row, Space, Tabs, Tag, Tooltip, Card} from "antd"
-import {YakScript} from "../invoker/schema"
-import {failed, success} from "../../utils/notification"
-import {formatTimestamp} from "../../utils/timeUtil"
-import {CopyableField, InputItem} from "../../utils/inputUtil"
-import {YakEditor} from "../../utils/editors"
-import {showDrawer, showModal} from "../../utils/showModal"
-import {PluginExecutor} from "./PluginExecutor"
-import {DocumentEditor} from "./DocumentEditor"
+import React, { useEffect, useState } from "react"
+import { Button, Divider, Empty, Form, PageHeader, Popconfirm, Popover, Row, Space, Tabs, Tag, Tooltip, Card } from "antd"
+import { YakScript } from "../invoker/schema"
+import { failed, success } from "../../utils/notification"
+import { formatTimestamp } from "../../utils/timeUtil"
+import { CopyableField, InputItem } from "../../utils/inputUtil"
+import { YakEditor } from "../../utils/editors"
+import { showDrawer, showModal } from "../../utils/showModal"
+import { PluginExecutor } from "./PluginExecutor"
+import { DocumentEditor } from "./DocumentEditor"
 import MDEditor from "@uiw/react-md-editor"
-import {PluginHistoryTable} from "./PluginHistory"
-import {openABSFile} from "../../utils/openWebsite"
-import {BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, YakScriptCreatorForm} from "../invoker/YakScriptCreator"
-import {EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined, CloseOutlined} from "@ant-design/icons"
-import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
-import {getValue} from "../../utils/kv"
-import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
-import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/index"
+import { PluginHistoryTable } from "./PluginHistory"
+import { openABSFile } from "../../utils/openWebsite"
+import { BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, YakScriptCreatorForm } from "../invoker/YakScriptCreator"
+import { EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined, CloseOutlined } from "@ant-design/icons"
+import { YakScriptExecResultTable } from "../../components/YakScriptExecResultTable"
+import { getValue } from "../../utils/kv"
+import { useDebounceEffect, useGetState, useMemoizedFn } from "ahooks"
+import { YakitPluginInfoOnline } from "./YakitPluginInfoOnline/index"
 import "./PluginOperator.scss"
-import {ResizeBox} from "../../components/ResizeBox"
-import {SimplePluginList} from "../../components/SimplePluginList"
-import {YakExecutorParam} from "../invoker/YakExecutorParams"
-import {API} from "@/services/swagger/resposeType"
-import {GetYakScriptByOnlineIDRequest} from "./YakitStorePage"
+import { ResizeBox } from "../../components/ResizeBox"
+import { SimplePluginList } from "../../components/SimplePluginList"
+import { YakExecutorParam } from "../invoker/YakExecutorParams"
+import { API } from "@/services/swagger/resposeType"
+import { GetYakScriptByOnlineIDRequest } from "./YakitStorePage"
+import { YakitPluginOnlineJournal } from "./YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -38,7 +39,7 @@ export interface YakScriptOperatorProp {
     updatePluginOnline?: (p: API.YakitPluginDetail) => void
 }
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [script, setScript, getScript] = useGetState<YakScript>()
@@ -55,8 +56,8 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
 
     const updateGroups = () => {
         ipcRenderer
-            .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId})
-            .then((data: {Groups: string[]}) => {
+            .invoke("QueryGroupsByYakScriptId", { YakScriptId: props.yakScriptId })
+            .then((data: { Groups: string[] }) => {
                 setGroups(data.Groups)
             })
             .catch((e: any) => {
@@ -77,7 +78,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
 
         setLoading(true)
         ipcRenderer
-            .invoke("GetYakScriptById", {Id: yakScriptId})
+            .invoke("GetYakScriptById", { Id: yakScriptId })
             .then((e: YakScript) => {
                 getLocalScriptAfter(e)
             })
@@ -99,7 +100,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 YakScriptId: e?.Id,
                 YakScriptName: e?.ScriptName
             })
-            .then((data: {Markdown: string}) => {
+            .then((data: { Markdown: string }) => {
                 setMarkdown(data.Markdown)
             })
             .catch((e: any) => {
@@ -140,90 +141,90 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     if (props.setTrigger) props.setTrigger()
                                 }}
                                 fromLayout={{
-                                    labelCol: {span: 4},
-                                    wrapperCol: {span: 18}
+                                    labelCol: { span: 4 },
+                                    wrapperCol: { span: 18 }
                                 }}
                             />
                         </>
                     )) || (
-                        <PluginExecutor
-                            subTitle={
-                                <Space>
-                                    {script.Help && (
-                                        <Tooltip title={script.Help}>
-                                            <Button type={"link"} icon={<QuestionOutlined />} />
-                                        </Tooltip>
-                                    )}
-                                    <Space size={8}>
-                                        {/*{script?.ScriptName && (*/}
-                                        {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
-                                        {/*)}*/}
-                                        <Tooltip title={`插件id:${script.UUID || "-"}`}>
-                                            <p className='script-author'>作者:{script?.Author}</p>
-                                        </Tooltip>
-                                        {script?.Tags && script?.Tags !== "null"
-                                            ? (script?.Tags || "")
-                                                  .split(",")
-                                                  .filter((i) => !!i)
-                                                  .map((i) => {
-                                                      return (
-                                                          <Tag
-                                                              style={{marginLeft: 2, marginRight: 0}}
-                                                              key={`${i}`}
-                                                              color={"geekblue"}
-                                                          >
-                                                              {i}
-                                                          </Tag>
-                                                      )
-                                                  })
-                                            : "No Tags"}
-                                    </Space>
-                                </Space>
-                            }
-                            extraNode={
-                                !props.fromMenu && (
+                            <PluginExecutor
+                                subTitle={
                                     <Space>
-                                        <Tooltip placement='top' title={"插件管理"}>
-                                            <Button
-                                                type={"link"}
-                                                icon={<SettingOutlined />}
-                                                onClick={() => setSettingShow(!settingShow)}
-                                            />
-                                        </Tooltip>
-                                        <Tooltip placement='top' title={"编辑插件"}>
-                                            <Button
-                                                type={"link"}
-                                                icon={<EditOutlined />}
-                                                style={{color: "#a7a7a7"}}
-                                                onClick={(e) => {
-                                                    setIsEdit(true)
-                                                }}
-                                            />
-                                        </Tooltip>
+                                        {script.Help && (
+                                            <Tooltip title={script.Help}>
+                                                <Button type={"link"} icon={<QuestionOutlined />} />
+                                            </Tooltip>
+                                        )}
+                                        <Space size={8}>
+                                            {/*{script?.ScriptName && (*/}
+                                            {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
+                                            {/*)}*/}
+                                            <Tooltip title={`插件id:${script.UUID || "-"}`}>
+                                                <p className='script-author'>作者:{script?.Author}</p>
+                                            </Tooltip>
+                                            {script?.Tags && script?.Tags !== "null"
+                                                ? (script?.Tags || "")
+                                                    .split(",")
+                                                    .filter((i) => !!i)
+                                                    .map((i) => {
+                                                        return (
+                                                            <Tag
+                                                                style={{ marginLeft: 2, marginRight: 0 }}
+                                                                key={`${i}`}
+                                                                color={"geekblue"}
+                                                            >
+                                                                {i}
+                                                            </Tag>
+                                                        )
+                                                    })
+                                                : "No Tags"}
+                                        </Space>
                                     </Space>
-                                )
-                            }
-                            script={script}
-                            size={props.size}
-                            extraYakExecutorParams={extraParams}
-                            settingShow={settingShow}
-                            settingNode={
-                                <PluginManagement
-                                    style={{marginBottom: 10}}
-                                    script={script}
-                                    groups={groups}
-                                    update={() => {
-                                        if (props.setScript) props.setScript(undefined)
-                                    }}
-                                    updateGroups={updateGroups}
-                                    setScript={props.setScript}
-                                    deletePluginLocal={(value) => {
-                                        if (props.deletePluginLocal) props.deletePluginLocal(value)
-                                    }}
-                                />
-                            }
-                        />
-                    )}
+                                }
+                                extraNode={
+                                    !props.fromMenu && (
+                                        <Space>
+                                            <Tooltip placement='top' title={"插件管理"}>
+                                                <Button
+                                                    type={"link"}
+                                                    icon={<SettingOutlined />}
+                                                    onClick={() => setSettingShow(!settingShow)}
+                                                />
+                                            </Tooltip>
+                                            <Tooltip placement='top' title={"编辑插件"}>
+                                                <Button
+                                                    type={"link"}
+                                                    icon={<EditOutlined />}
+                                                    style={{ color: "#a7a7a7" }}
+                                                    onClick={(e) => {
+                                                        setIsEdit(true)
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </Space>
+                                    )
+                                }
+                                script={script}
+                                size={props.size}
+                                extraYakExecutorParams={extraParams}
+                                settingShow={settingShow}
+                                settingNode={
+                                    <PluginManagement
+                                        style={{ marginBottom: 10 }}
+                                        script={script}
+                                        groups={groups}
+                                        update={() => {
+                                            if (props.setScript) props.setScript(undefined)
+                                        }}
+                                        updateGroups={updateGroups}
+                                        setScript={props.setScript}
+                                        deletePluginLocal={(value) => {
+                                            if (props.deletePluginLocal) props.deletePluginLocal(value)
+                                        }}
+                                    />
+                                }
+                            />
+                        )}
                 </>
             )
         )
@@ -266,7 +267,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 if (props.setScript) props.setScript(newSrcipt)
                 getLocalScriptAfter(newSrcipt)
             })
-            .catch((e) => {})
+            .catch((e) => { })
             .finally(() => {
                 setTimeout(() => {
                     setTrigger(!trigger)
@@ -279,13 +280,13 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             refTabsAndOnlinePlugin()
         },
         [script?.OnlineId, props.yakScriptIdOnlineId],
-        {wait: 200}
+        { wait: 200 }
     )
 
     useEffect(() => {
         // 下载插件后，刷新
         ipcRenderer.on("ref-plugin-operator", async (e: any, data: any) => {
-            const {pluginOnlineId} = data
+            const { pluginOnlineId } = data
             if (getScript()?.OnlineId == pluginOnlineId || getPluginIdOnlineId() === pluginOnlineId) {
                 getYakScriptLocal(pluginOnlineId)
             }
@@ -298,7 +299,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         return (
             <Tabs
                 className='plugin-store-info'
-                style={{height: "100%"}}
+                style={{ height: "100%" }}
                 type={"card"}
                 tabPosition={"right"}
                 activeKey={activeKey}
@@ -313,7 +314,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     pluginTypes={script?.PluginSelectorTypes || "mitm,port-scan"}
                                     onSelected={(names) => {
                                         setExtraParams([
-                                            {Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: names.join("|")}
+                                            { Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: names.join("|") }
                                         ])
                                     }}
                                 />
@@ -419,7 +420,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     pluginTypes={script?.PluginSelectorTypes || "mitm,port-scan"}
                                     onSelected={(names) => {
                                         setExtraParams([
-                                            {Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: names.join("|")}
+                                            { Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: names.join("|") }
                                         ])
                                     }}
                                 />
@@ -432,7 +433,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文档"} key={"docs"} disabled={isDisabledLocal}>
                     {script && (
-                        <div style={{textAlign: "right", marginBottom: 10}}>
+                        <div style={{ textAlign: "right", marginBottom: 10 }}>
                             <Button
                                 onClick={(e) => {
                                     let m = showDrawer({
@@ -466,11 +467,11 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             <MDEditor.Markdown source={markdown} />
                         </div>
                     ) : (
-                        <Empty style={{marginTop: 80}} description={"插件作者未添加文档"} />
+                        <Empty style={{ marginTop: 80 }} description={"插件作者未添加文档"} />
                     )}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"源码"} key={"code"} disabled={isDisabledLocal}>
-                    <div style={{height: "100%"}}>
+                    <div style={{ height: "100%" }}>
                         <YakEditor
                             type={script?.Type === "nuclei" ? "yaml" : "yak"}
                             value={script?.Content}
@@ -498,6 +499,13 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             deletePluginLocal={(s) => {
                                 if (props.deletePluginLocal) props.deletePluginLocal(s)
                             }}
+                        />
+                    )}
+                </Tabs.TabPane>
+                <Tabs.TabPane tab={"日志"} key={"journal"} disabled={isDisabledOnline}>
+                    {pluginIdOnlineId && pluginIdOnlineId > 0 && (
+                        <YakitPluginOnlineJournal
+                            pluginId={pluginIdOnlineId}
                         />
                     )}
                 </Tabs.TabPane>
@@ -533,8 +541,8 @@ export interface AddToMenuActionFormProp {
 }
 
 export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) => {
-    const {script} = props
-    const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
+    const { script } = props
+    const updateGroups = props?.updateGroups ? props.updateGroups : () => { }
 
     const [params, setParams] = useState<{
         Group: string
@@ -580,12 +588,12 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
             >
                 <InputItem
                     label={"菜单选项名(展示名称)"}
-                    setValue={(Verbose) => setParams({...params, Verbose})}
+                    setValue={(Verbose) => setParams({ ...params, Verbose })}
                     value={params.Verbose}
                 />
                 <InputItem
                     label={"菜单分组"}
-                    setValue={(Group) => setParams({...params, Group})}
+                    setValue={(Group) => setParams({ ...params, Group })}
                     value={params.Group}
                 />
                 <Form.Item colon={false} label={" "}>
@@ -612,12 +620,12 @@ interface PluginManagementProps {
 }
 
 export const PluginManagement: React.FC<PluginManagementProps> = React.memo<PluginManagementProps>((props) => {
-    const {script, groups, style} = props
-    const update = props?.update ? props.update : () => {}
-    const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
+    const { script, groups, style } = props
+    const update = props?.update ? props.update : () => { }
+    const updateGroups = props?.updateGroups ? props.updateGroups : () => { }
 
     return (
-        <Space style={{...style}} direction={props.vertical ? "vertical" : "horizontal"}>
+        <Space style={{ ...style }} direction={props.vertical ? "vertical" : "horizontal"}>
             <Popover
                 title={`添加到左侧菜单栏中[${script?.Id}]`}
                 content={<>{script && <AddToMenuActionForm script={script} updateGroups={updateGroups} />}</>}
@@ -677,8 +685,8 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                                 .then((e) => {
                                     success("显示该模块")
                                 })
-                                .catch((e: any) => {})
-                                .finally(() => {})
+                                .catch((e: any) => { })
+                                .finally(() => { })
                         }}
                     >
                         <Button size={"small"}>取消隐藏 / 取消忽略</Button>
@@ -689,12 +697,12 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                     title={"忽略该模块将会导致模块在插件仓库不可见，需要在插件仓库中查看"}
                     onConfirm={() => {
                         ipcRenderer
-                            .invoke("IgnoreYakScript", {Id: script?.Id})
+                            .invoke("IgnoreYakScript", { Id: script?.Id })
                             .then((e) => {
                                 success("忽略该模块")
                             })
-                            .catch((e: any) => {})
-                            .finally(() => {})
+                            .catch((e: any) => { })
+                            .finally(() => { })
                     }}
                 >
                     <Button size={"small"} danger={true}>
@@ -723,7 +731,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                 onClick={() => {
                     ipcRenderer.invoke("send-to-tab", {
                         type: "plugin-store",
-                        data: {name: script.ScriptName, code: script.Content}
+                        data: { name: script.ScriptName, code: script.Content }
                     })
                 }}
             >
@@ -776,7 +784,7 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                             OutputDir: getLocalPath(),
                             OutputPluginDir: getPluginDirName()
                         })
-                        .then((data: {OutputDir: string}) => {
+                        .then((data: { OutputDir: string }) => {
                             showModal({
                                 title: "导出成功!",
                                 content: (
