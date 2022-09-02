@@ -1,12 +1,14 @@
 import { AutoCard } from "@/components/AutoCard"
-import { RollingLoadList } from "@/components/RollingLoadList";
+import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList";
 import { API } from "@/services/swagger/resposeType";
+import { getRandomInt } from "@/utils/randomUtil";
 import { LoadingOutlined } from "@ant-design/icons";
 import { useMemoizedFn } from "ahooks";
 import { Timeline, Button, Card, Spin } from "antd";
 import React, { useEffect, useState } from "react"
 import './YakitPluginOnlineJournal.scss'
 
+const { ipcRenderer } = window.require("electron")
 
 interface YakitPluginOnlineJournalProps {
     pluginId: number
@@ -14,59 +16,59 @@ interface YakitPluginOnlineJournalProps {
 
 const defData = [
     {
-        id: '1',
+        id: 1,
         time: '2022-8-25  13：53',
         content: '插件已删除',
     },
     {
-        id: '2',
+        id: 2,
         time: '2022-8-25  13：40',
         content: '通过张三的修改申请',
     },
     {
-        id: '3',
+        id: 3,
         time: '2022-8-25  13：40 ',
         content: '张三申请修改插件',
     },
     {
-        id: '4',
+        id: 4,
         time: '2022-8-25  13：20',
         content: '管理员桔子爱吃橘子修改插件',
     },
     {
-        id: '5',
+        id: 5,
         time: '2022-8-25  13：20',
         content: '管理员桔子爱吃橘子修改插件',
     },
     {
-        id: '6',
+        id: 6,
         time: '2022-8-25  13：20',
         content: '管理员桔子爱吃橘子修改插件',
     },
     {
-        id: '7',
+        id: 7,
         time: '2022-8-25  13：20',
         content: '管理员桔子爱吃橘子修改插件',
     },
     {
-        id: '8',
+        id: 8,
         time: '2022-8-25  13：20',
         content: '管理员桔子爱吃橘子修改插件',
     },
     {
-        id: '9',
+        id: 9,
         time: '2022-8-25  13：20',
         content: '管理员桔子爱吃橘子修改插件',
     },
     {
-        id: '10',
+        id: 10,
         time: '2022-8-25  13：20',
         content: '管理员桔子爱吃橘子修改插件',
     },
 ]
 
 interface JournalProps {
-    id: string
+    id: number
     time: string
     content: string
 }
@@ -119,8 +121,10 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
         setLoading(true)
         const newData: JournalProps[] = [];
         for (let index = resJournal.data.length; index < resJournal.data.length + 10; index++) {
-            const element: JournalProps = resJournal.data[0];
-            element.id = `${index}`
+            const element: JournalProps = {
+                ...resJournal.data[0],
+                id: getRandomInt(1000)
+            }
             newData.push(element)
         }
         setHasMore(resJournal.data.length < 40)
@@ -138,6 +142,14 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
         }, 500);
     })
 
+    const onGoDetails = useMemoizedFn((item: JournalProps) => {
+        ipcRenderer.invoke("send-to-tab", {
+            type: "yakit-plugin-journal-details",
+            data: {
+                YakScriptJournalDetailsId: item.id
+            }
+        })
+    })
     return (
         <div className="journal-content">
             <Spin spinning={lineLoading}>
@@ -151,10 +163,9 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                         rowKey='id'
                         defItemHeight={52}
                         renderRow={(item: JournalProps, index) => (
-                            <Timeline.Item>{index}-{item.time}&emsp;{item.content}<Button type="link" onClick={() => { setDetailsVisible(true) }}>详情</Button></Timeline.Item>
+                            <Timeline.Item>{index}-{item.time}&emsp;{item.content}<Button type="link" onClick={() => onGoDetails(item)}>详情</Button></Timeline.Item>
                         )}
                     />
-
                 </Timeline>
             </Spin>
         </div>

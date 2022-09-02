@@ -17,7 +17,7 @@ import {failed} from "../../../utils/notification"
 import {CVXterm} from "../../../components/CVXterm"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
-import {ExportExcel} from "../../../components/DataExport"
+import {ExportExcel} from "../../../components/DataExport/DataExport"
 import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useThrottle} from "ahooks"
 import "./base.scss"
 import {Risk} from "@/pages/risks/schema";

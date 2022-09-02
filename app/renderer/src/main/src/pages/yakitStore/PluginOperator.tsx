@@ -16,7 +16,7 @@ import { EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined, C
 import { YakScriptExecResultTable } from "../../components/YakScriptExecResultTable"
 import { getValue } from "../../utils/kv"
 import { useDebounceEffect, useGetState, useMemoizedFn } from "ahooks"
-import { YakitPluginInfoOnline } from "./YakitPluginInfoOnline/index"
+import { YakitPluginInfoOnline } from "./YakitPluginInfoOnline/YakitPluginInfoOnline"
 import "./PluginOperator.scss"
 import { ResizeBox } from "../../components/ResizeBox"
 import { SimplePluginList } from "../../components/SimplePluginList"
@@ -119,7 +119,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             script && (
                 <>
                     {(isEdit && (
-                        <>
+                        <div className="edit-plugin-body">
                             <div className='edit-plugin-title'>
                                 <div className='title content-ellipsis'>修改插件:{script.ScriptName}</div>
                                 <div>
@@ -132,20 +132,22 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     />
                                 </div>
                             </div>
-                            <YakScriptCreatorForm
-                                modified={script}
-                                noClose={true}
-                                setScript={setScript}
-                                onCreated={(i) => {
-                                    if (props.setScript) props.setScript(i)
-                                    if (props.setTrigger) props.setTrigger()
-                                }}
-                                fromLayout={{
-                                    labelCol: { span: 4 },
-                                    wrapperCol: { span: 18 }
-                                }}
-                            />
-                        </>
+                            <div className='edit-plugin-form'>
+                                <YakScriptCreatorForm
+                                    modified={script}
+                                    noClose={true}
+                                    setScript={setScript}
+                                    onCreated={(i) => {
+                                        if (props.setScript) props.setScript(i)
+                                        if (props.setTrigger) props.setTrigger()
+                                    }}
+                                    fromLayout={{
+                                        labelCol: { span: 4 },
+                                        wrapperCol: { span: 18 }
+                                    }}
+                                />
+                            </div>
+                        </div>
                     )) || (
                             <PluginExecutor
                                 subTitle={
@@ -463,7 +465,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         </div>
                     )}
                     {markdown ? (
-                        <div>
+                        <div className="docs-markdown">
                             <MDEditor.Markdown source={markdown} />
                         </div>
                     ) : (

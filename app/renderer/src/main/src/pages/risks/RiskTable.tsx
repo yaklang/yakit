@@ -17,7 +17,7 @@ import lowImg from "../../assets/riskDetails/low.png"
 import debugImg from "../../assets/riskDetails/debug.png"
 
 import "./RiskTable.css"
-import {ExportExcel} from "../../components/DataExport/index"
+import {ExportExcel} from "../../components/DataExport/DataExport"
 import {HTTPPacketEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"

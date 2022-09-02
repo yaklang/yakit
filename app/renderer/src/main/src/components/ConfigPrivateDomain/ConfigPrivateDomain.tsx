@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from "react"
 import {Button, Form, Input, Select} from "antd"
-import "./index.scss"
+import "./ConfigPrivateDomain.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success} from "@/utils/notification"
 import {loginOut} from "@/utils/login"

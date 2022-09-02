@@ -34,7 +34,7 @@ import {
     ExclamationCircleOutlined
 } from "@ant-design/icons"
 import numeral from "numeral"
-import "./index.scss"
+import "./YakitPluginInfoOnline.scss"
 import moment from "moment"
 import cloneDeep from "lodash/cloneDeep"
 import { showFullScreenMask } from "@/components/functionTemplate/showByContext"
@@ -51,9 +51,9 @@ import { fail } from "assert"
 
 const EditOnlinePluginDetails = React.lazy(() => import("./EditOnlinePluginDetails"))
 
-const {ipcRenderer} = window.require("electron")
-const {TabPane} = Tabs
-const limit = 40
+const { ipcRenderer } = window.require("electron")
+const { TabPane } = Tabs
+const limit = 20
 
 interface YakitPluginInfoOnlineProps {
     // info: API.YakitPluginDetail
@@ -99,6 +99,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const [isAdmin, setIsAdmin] = useState<boolean>(userInfo.role === "admin")
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
     const [isEdit, setIsEdit] = useState<boolean>(false)
+    const [tabKey, setTabKey] = useState<string>("1")
     useEffect(() => {
         if (pluginId >= 0) getPluginDetail()
     }, [pluginId])
@@ -275,7 +276,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
     const isShowAdmin = isAdmin && !plugin.is_private
     return (
-        <div className='plugin-info'>
+        <div className={`plugin-info`} id="plugin-info-scroll">
             <Spin spinning={loading} style={{ height: "100%" }}>
                 {/* PageHeader */}
                 <PageHeader
@@ -342,7 +343,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         </div>
                     }
                 />
-                <div className='plugin-body'>
+                <div className={`plugin-body ${tabKey === '1' && 'plugin-code-height' || ''}`}>
                     <div className='flex-space-between'>
                         <div className='vertical-center'>
                             <div className='preface-time'>
@@ -391,7 +392,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             handleCancel={() => setIsEdit(false)}
                         />
                     </Suspense>
-                    <Tabs defaultActiveKey='1'>
+                    <Tabs activeKey={tabKey} onChange={(e) => setTabKey(e)}>
                         <TabPane tab='源码' key='1'>
                             <YakEditor type={"yak"} value={plugin.content} readOnly={true} />
                         </TabPane>

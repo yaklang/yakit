@@ -11,7 +11,7 @@ import {startExecYakCode} from "../../utils/basic"
 import {OutputAsset} from "./outputAssetYakCode"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
-import {ExportExcel} from "../../components/DataExport"
+import {ExportExcel} from "../../components/DataExport/DataExport"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 
 export interface Domain {

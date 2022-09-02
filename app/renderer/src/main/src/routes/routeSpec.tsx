@@ -41,10 +41,11 @@ import {
     ReadOnlyBatchExecutorByMenuItem,
     ReadOnlyBatchExecutorByRecoverUid
 } from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
-import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
-import {AddYakitScript} from "@/pages/yakitStore/AddYakitScript"
-import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer";
-import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory";
+import { PacketScanner } from "@/pages/packetScanner/PacketScanner"
+import { AddYakitScript } from "@/pages/yakitStore/AddYakitScript/AddYakitScript"
+import { WebsocketFuzzer } from "@/pages/websocket/WebsocketFuzzer";
+import { WebsocketFlowHistory } from "@/pages/websocket/WebsocketFlowHistory";
+import { YakitPluginJournalDetails } from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginJournalDetails"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -52,7 +53,6 @@ const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
 export enum Route {
     MITM = "mitm",
     YakScript = "yakScript",
-    AddYakitScript = "新建插件",
     Codec = "codec",
     WebShellManager = "webShellManager",
     HistoryRequests = "historyRequests",
@@ -108,7 +108,11 @@ export enum Route {
     BatchExecutorRecover = "batch-executor-recover",
 
     // 数据包扫描
-    PacketScanPage = "packet-scan-page"
+    PacketScanPage = "packet-scan-page",
+
+    // 插件
+    AddYakitScript = "add-yakit-script",
+    YakitPluginJournalDetails = "yakit-plugin-journal-details",
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -119,6 +123,10 @@ export function RouteNameToVerboseName(r: string) {
             return "批量继续执行"
         case "websocket-fuzzer":
             return "Websocket Fuzzer"
+        case "add-yakit-script":
+            return "新建插件"
+        case "yakit-plugin-journal-details":
+            return "插件修改详情"
         default:
             return r
     }
@@ -249,9 +257,13 @@ interface ComponentParams {
     // websocket fuzzer 相关
     wsTls?: boolean
     wsRequest?: Uint8Array
+    
+    // yakit 插件日志详情参数
+    YakScriptJournalDetailsId?: number
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
+
     const routeStr = `${r}`
     // 处理社区插件（以插件 ID 添加的情况）
     if (routeStr.startsWith("plugin:")) {
@@ -360,7 +372,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.AddYakitScript:
             return <AddYakitScript />
         case Route.WebsocketHistory:
-            return <WebsocketFlowHistory/>
+            return <WebsocketFlowHistory />
+        case Route.YakitPluginJournalDetails:
+            return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0} />
         default:
             return <div />
     }

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, ReactNode, useMemo } from "react"
 import ReactResizeDetector from "react-resize-detector"
 import { useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList, useDeepCompareEffect } from "ahooks"
 import { LoadingOutlined } from "@ant-design/icons"
-import "./index.scss"
+import "./RollingLoadList.scss"
 
 interface RollingLoadListProps<T> {
     rowKey?: string

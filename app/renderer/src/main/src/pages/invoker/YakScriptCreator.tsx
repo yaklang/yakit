@@ -18,7 +18,7 @@ import cloneDeep from "lodash/cloneDeep"
 import "./YakScriptCreator.scss"
 import { queryYakScriptList } from "../yakitStore/network"
 import { YakExecutorParam } from "./YakExecutorParams"
-import { SyncCloudButton } from "@/components/SyncCloudButton/index"
+import { SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
 import { Route } from "@/routes/routeSpec"
 import { useStore } from "@/store"
 
@@ -366,188 +366,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     return (
         <div>
             <Form {...fromLayout}>
-                <SelectOne
-                    disabled={!!modified}
-                    label={"模块类型"}
-                    data={[
-                        { value: "yak", text: "Yak 原生模块" },
-                        { value: "mitm", text: "MITM 模块" },
-                        { value: "packet-hack", text: "Packet 检查" },
-                        { value: "port-scan", text: "端口扫描插件" },
-                        { value: "codec", text: "Codec 模块" },
-                        { value: "nuclei", text: "nuclei Yaml模块" }
-                    ]}
-                    setValue={(Type) => {
-                        if (["packet-hack", "codec", "nuclei"].includes(Type))
-                            setParams({
-                                ...params,
-                                Type,
-                                IsGeneralModule: false
-                            })
-                        else setParams({ ...params, Type })
-                    }}
-                    value={params.Type}
-                />
-                <InputItem
-                    label={"Yak 模块名"}
-                    required={true}
-                    setValue={(ScriptName) => setParams({ ...params, ScriptName })}
-                    value={params.ScriptName}
-                />
-                <InputItem label={"简要描述"} setValue={(Help) => setParams({ ...params, Help })} value={params.Help} />
-                <InputItem
-                    label={"模块作者"}
-                    setValue={(Author) => setParams({ ...params, Author })}
-                    value={params.Author}
-                />
-                <ManyMultiSelectForString
-                    label={"Tags"}
-                    data={[{ value: "教程", label: "教程" }]}
-                    mode={"tags"}
-                    setValue={(Tags) => setParams({ ...params, Tags })}
-                    value={params.Tags && params.Tags !== "null" ? params.Tags : ""}
-                />
-                {["yak", "mitm"].includes(params.Type) && (
-                    <Form.Item label={"增加参数"}>
-                        <Button
-                            type={"link"}
-                            onClick={() => {
-                                let m = showModal({
-                                    title: "添加新参数",
-                                    width: "60%",
-                                    content: (
-                                        <>
-                                            <CreateYakScriptParamForm
-                                                onCreated={(param) => {
-                                                    let flag = false
-                                                    const paramArr = (params.Params || []).map((item) => {
-                                                        if (item.Field === param.Field) {
-                                                            flag = true
-                                                            info(
-                                                                `参数 [${param.Field}]${param.FieldVerbose ? `(${param.FieldVerbose})` : ""
-                                                                } 已经存在，已覆盖旧参数`
-                                                            )
-                                                            return param
-                                                        }
-                                                        return item
-                                                    })
-                                                    if (!flag) paramArr.push(param)
-                                                    setParams({ ...params, Params: [...paramArr] })
-                                                    m.destroy()
-                                                }}
-                                            />
-                                        </>
-                                    )
-                                })
-                            }}
-                        >
-                            添加 / 设置一个参数 <PlusOutlined />
-                        </Button>
-                    </Form.Item>
-                )}
-                {params.Params.length > 0 ? (
-                    <Form.Item label={" "} colon={false}>
-                        <List
-                            size={"small"}
-                            bordered={true}
-                            pagination={false}
-                            renderItem={(p) => {
-                                return (
-                                    <List.Item key={p.Field}>
-                                        <Space size={1}>
-                                            {p.Required && <div className='form-item-required-title'>*</div>}
-                                            参数名：
-                                        </Space>
-                                        <Tag color={"geekblue"}>
-                                            {p.FieldVerbose && `${p.FieldVerbose} / `}
-                                            {p.Field}
-                                        </Tag>
-                                        类型：
-                                        <Tag color={"blue"}>
-                                            {p.TypeVerbose} {p.DefaultValue && `默认值：${p.DefaultValue}`}
-                                        </Tag>
-                                        {p.DefaultValue && `默认值为: ${p.DefaultValue}`}
-                                        {!isNucleiPoC && (
-                                            <Space style={{ marginLeft: 20 }}>
-                                                <Button
-                                                    size={"small"}
-                                                    onClick={() => {
-                                                        let m = showModal({
-                                                            title: `修改已知参数: ${p.FieldVerbose}(${p.Field})`,
-                                                            width: "60%",
-                                                            content: (
-                                                                <>
-                                                                    <CreateYakScriptParamForm
-                                                                        modifiedParam={p}
-                                                                        onCreated={(param) => {
-                                                                            setParams({
-                                                                                ...params,
-                                                                                Params: [
-                                                                                    ...params.Params.filter(
-                                                                                        (i) => i.Field !== param.Field
-                                                                                    ),
-                                                                                    param
-                                                                                ]
-                                                                            })
-                                                                            m.destroy()
-                                                                        }}
-                                                                    />
-                                                                </>
-                                                            )
-                                                        })
-                                                    }}
-                                                >
-                                                    修改参数
-                                                </Button>
-                                                <Popconfirm
-                                                    title={"确认要删除该参数吗？"}
-                                                    onConfirm={(e) => {
-                                                        setParamsLoading(true)
-                                                        setParams({
-                                                            ...params,
-                                                            Params: params.Params.filter((i) => i.Field !== p.Field)
-                                                        })
-                                                    }}
-                                                >
-                                                    <Button size={"small"} type={"link"} danger={true}>
-                                                        删除参数
-                                                    </Button>
-                                                </Popconfirm>
-                                            </Space>
-                                        )}
-                                    </List.Item>
-                                )
-                            }}
-                            dataSource={params.Params}
-                        ></List>
-                    </Form.Item>
-                ) : (
-                    ""
-                )}
-                {params.Type === "yak" && (
-                    <>
-                        <SwitchItem
-                            label={"启用插件联动 UI"}
-                            value={params.EnablePluginSelector}
-                            formItemStyle={{ marginBottom: 2 }}
-                            setValue={(EnablePluginSelector) => setParams({ ...params, EnablePluginSelector })}
-                        />
-                        {params.EnablePluginSelector && (
-                            <ManyMultiSelectForString
-                                label={"联动插件类型"}
-                                value={params.PluginSelectorTypes}
-                                data={["mitm", "port-scan"].map((i) => {
-                                    return { value: i, label: getPluginTypeVerbose(i) }
-                                })}
-                                mode={"multiple"}
-                                setValue={(res) => {
-                                    setParams({ ...params, PluginSelectorTypes: res })
-                                }}
-                                help={"通过 cli.String(`yakit-plugin-file`) 获取用户选择的插件"}
-                            />
-                        )}
-                    </>
-                )}
+                <YakScriptFormContent params={params} setParams={setParams} modified={modified} setParamsLoading={setParamsLoading} />
                 <Form.Item
                     label={"源码"}
                     help={
@@ -713,6 +532,204 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 </div>
             </Modal>
         </div>
+    )
+}
+
+interface YakScriptFormContentProps {
+    params: YakScript
+    setParams: (y: YakScript) => void
+    modified: YakScript | undefined
+    setParamsLoading: (b: boolean) => void
+}
+
+export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props) => {
+    const { params, modified, setParams, setParamsLoading } = props
+    const isNucleiPoC = params.Type === "nuclei"
+    return (
+        <>
+            <SelectOne
+                disabled={!!modified}
+                label={"模块类型"}
+                data={[
+                    { value: "yak", text: "Yak 原生模块" },
+                    { value: "mitm", text: "MITM 模块" },
+                    { value: "packet-hack", text: "Packet 检查" },
+                    { value: "port-scan", text: "端口扫描插件" },
+                    { value: "codec", text: "Codec 模块" },
+                    { value: "nuclei", text: "nuclei Yaml模块" }
+                ]}
+                setValue={(Type) => {
+                    if (["packet-hack", "codec", "nuclei"].includes(Type))
+                        setParams({
+                            ...params,
+                            Type,
+                            IsGeneralModule: false
+                        })
+                    else setParams({ ...params, Type })
+                }}
+                value={params.Type}
+            />
+            <InputItem
+                label={"Yak 模块名"}
+                required={true}
+                setValue={(ScriptName) => setParams({ ...params, ScriptName })}
+                value={params.ScriptName}
+            />
+            <InputItem label={"简要描述"} setValue={(Help) => setParams({ ...params, Help })} value={params.Help} />
+            <InputItem
+                label={"模块作者"}
+                setValue={(Author) => setParams({ ...params, Author })}
+                value={params.Author}
+            />
+            <ManyMultiSelectForString
+                label={"Tags"}
+                data={[{ value: "教程", label: "教程" }]}
+                mode={"tags"}
+                setValue={(Tags) => setParams({ ...params, Tags })}
+                value={params.Tags && params.Tags !== "null" ? params.Tags : ""}
+            />
+            {["yak", "mitm"].includes(params.Type) && (
+                <Form.Item label={"增加参数"}>
+                    <Button
+                        type={"link"}
+                        onClick={() => {
+                            let m = showModal({
+                                title: "添加新参数",
+                                width: "60%",
+                                content: (
+                                    <>
+                                        <CreateYakScriptParamForm
+                                            onCreated={(param) => {
+                                                let flag = false
+                                                const paramArr = (params.Params || []).map((item) => {
+                                                    if (item.Field === param.Field) {
+                                                        flag = true
+                                                        info(
+                                                            `参数 [${param.Field}]${param.FieldVerbose ? `(${param.FieldVerbose})` : ""
+                                                            } 已经存在，已覆盖旧参数`
+                                                        )
+                                                        return param
+                                                    }
+                                                    return item
+                                                })
+                                                if (!flag) paramArr.push(param)
+                                                setParams({ ...params, Params: [...paramArr] })
+                                                m.destroy()
+                                            }}
+                                        />
+                                    </>
+                                )
+                            })
+                        }}
+                    >
+                        添加 / 设置一个参数 <PlusOutlined />
+                    </Button>
+                </Form.Item>
+            )}
+            {params.Params.length > 0 ? (
+                <Form.Item label={" "} colon={false}>
+                    <List
+                        size={"small"}
+                        bordered={true}
+                        pagination={false}
+                        renderItem={(p) => {
+                            return (
+                                <List.Item key={p.Field}>
+                                    <Space size={1}>
+                                        {p.Required && <div className='form-item-required-title'>*</div>}
+                                        参数名：
+                                    </Space>
+                                    <Tag color={"geekblue"}>
+                                        {p.FieldVerbose && `${p.FieldVerbose} / `}
+                                        {p.Field}
+                                    </Tag>
+                                    类型：
+                                    <Tag color={"blue"}>
+                                        {p.TypeVerbose} {p.DefaultValue && `默认值：${p.DefaultValue}`}
+                                    </Tag>
+                                    {p.DefaultValue && `默认值为: ${p.DefaultValue}`}
+                                    {!isNucleiPoC && (
+                                        <Space style={{ marginLeft: 20 }}>
+                                            <Button
+                                                size={"small"}
+                                                onClick={() => {
+                                                    let m = showModal({
+                                                        title: `修改已知参数: ${p.FieldVerbose}(${p.Field})`,
+                                                        width: "60%",
+                                                        content: (
+                                                            <>
+                                                                <CreateYakScriptParamForm
+                                                                    modifiedParam={p}
+                                                                    onCreated={(param) => {
+                                                                        setParams({
+                                                                            ...params,
+                                                                            Params: [
+                                                                                ...params.Params.filter(
+                                                                                    (i) => i.Field !== param.Field
+                                                                                ),
+                                                                                param
+                                                                            ]
+                                                                        })
+                                                                        m.destroy()
+                                                                    }}
+                                                                />
+                                                            </>
+                                                        )
+                                                    })
+                                                }}
+                                            >
+                                                修改参数
+                                            </Button>
+                                            <Popconfirm
+                                                title={"确认要删除该参数吗？"}
+                                                onConfirm={(e) => {
+                                                    setParamsLoading(true)
+                                                    setParams({
+                                                        ...params,
+                                                        Params: params.Params.filter((i) => i.Field !== p.Field)
+                                                    })
+                                                }}
+                                            >
+                                                <Button size={"small"} type={"link"} danger={true}>
+                                                    删除参数
+                                                </Button>
+                                            </Popconfirm>
+                                        </Space>
+                                    )}
+                                </List.Item>
+                            )
+                        }}
+                        dataSource={params.Params}
+                    ></List>
+                </Form.Item>
+            ) : (
+                ""
+            )}
+            {params.Type === "yak" && (
+                <>
+                    <SwitchItem
+                        label={"启用插件联动 UI"}
+                        value={params.EnablePluginSelector}
+                        formItemStyle={{ marginBottom: 2 }}
+                        setValue={(EnablePluginSelector) => setParams({ ...params, EnablePluginSelector })}
+                    />
+                    {params.EnablePluginSelector && (
+                        <ManyMultiSelectForString
+                            label={"联动插件类型"}
+                            value={params.PluginSelectorTypes}
+                            data={["mitm", "port-scan"].map((i) => {
+                                return { value: i, label: getPluginTypeVerbose(i) }
+                            })}
+                            mode={"multiple"}
+                            setValue={(res) => {
+                                setParams({ ...params, PluginSelectorTypes: res })
+                            }}
+                            help={"通过 cli.String(`yakit-plugin-file`) 获取用户选择的插件"}
+                        />
+                    )}
+                </>
+            )}
+        </>
     )
 }
 

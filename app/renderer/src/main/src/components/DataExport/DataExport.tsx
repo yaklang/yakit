@@ -4,7 +4,7 @@ import {export_json_to_excel, CellSetting} from "./toExcel"
 import {failed} from "../../utils/notification"
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "../../pages/invoker/schema"
 import {useMemoizedFn} from "ahooks"
-import "./index.css"
+import "./DataExport.css"
 
 interface ExportExcelProps {
     btnProps?: ButtonProps

@@ -63,14 +63,14 @@ import {
 } from "ahooks"
 import { NetWorkApi } from "@/services/fetch"
 import { API } from "@/services/swagger/resposeType"
-import { DownloadOnlinePluginProps } from "../yakitStore/YakitPluginInfoOnline"
+import { DownloadOnlinePluginProps } from "./YakitPluginInfoOnline/YakitPluginInfoOnline"
 import { randomString } from "@/utils/randomUtil"
 import { OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon, ShareIcon } from "../../assets/icons"
 import { findDOMNode } from "react-dom"
 import { YakExecutorParam } from "../invoker/YakExecutorParams"
-import { RollingLoadList } from "@/components/RollingLoadList"
+import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
 import { setTimeout } from "timers"
-import { ModalSyncSelect, SyncCloudButton } from "@/components/SyncCloudButton/index"
+import { ModalSyncSelect, SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
 
 const { Search } = Input
 const { Option } = Select
@@ -647,6 +647,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         />
                                     </>
                                 }
+                                bodyStyle={{ height: 'calc(100% - 69px)' }}
                             >
                                 <PluginOperator
                                     yakScriptId={(script && script.Id) || 0}

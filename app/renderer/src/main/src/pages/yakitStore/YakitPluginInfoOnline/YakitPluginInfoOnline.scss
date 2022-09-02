@@ -2,6 +2,7 @@ $active-color:#036ffe;
 
 .plugin-info {
     height: 100%;
+    overflow-y: auto;
 
     .plugin-author {
         cursor: pointer;
@@ -51,7 +52,7 @@ $active-color:#036ffe;
 
     .plugin-body {
         padding: 0 24px 16px;
-        height: calc(100% - 60px);
+        // height: calc(100% - 60px);
 
         .ant-tabs {
             height: 100%;
@@ -116,6 +117,10 @@ $active-color:#036ffe;
             overflow: hidden !important;
         }
     }
+}
+
+.plugin-code-height {
+    height: calc(100% - 72px);
 }
 
 .comment-reply-dialog {

@@ -29,7 +29,7 @@ import {startExecYakCode} from "../../utils/basic"
 import {OutputAsset} from "./outputAssetYakCode"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
-import {ExportExcel} from "../../components/DataExport/index"
+import {ExportExcel} from "../../components/DataExport/DataExport"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 
