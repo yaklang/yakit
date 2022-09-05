@@ -93,6 +93,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const [urlInfo, setUrlInfo] = useState("监听中...")
     const [ipInfo, setIpInfo] = useState("")
 
+    // 当前正在劫持的请求/响应，是否是 Websocket
+    const [currentIsWebsocket, setCurrentIsWebsocket] = useState(false);
+    // 当前正在劫持的请求/响应
+    const [currentIsForResponse, setCurrentIsForResponse] = useState(false);
+
     // yakit log message
     const [logs, setLogs] = useState<ExecResultLog[]>([]);
     const latestLogs = useLatest<ExecResultLog[]>(logs);
@@ -301,6 +306,14 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     // 自动转发劫持，进行的操作
     const forwardHandler = useMemoizedFn((e: any, msg: MITMResponse) => {
+        if (msg?.RemoteAddr) {
+            setIpInfo(msg?.RemoteAddr)
+        } else {
+            setIpInfo("")
+        }
+        setCurrentIsWebsocket(!!msg?.isWebsocket)
+        setCurrentIsForResponse(!!msg?.forResponse)
+
         if (msg.forResponse) {
             if (!msg.response || !msg.responseId) {
                 failed("BUG: MITM 错误，未能获取到正确的 Response 或 Response ID")
@@ -335,9 +348,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     // setCurrentPacketId(msg.id)
                     setCurrentPacketInfo({currentPacket: msg.request, currentPacketId: msg.id, isHttp: msg.isHttps})
                     setUrlInfo(msg.url)
-                    ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
-                        setIpInfo(res)
-                    })
+                    // ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
+                    //     setIpInfo(res)
+                    // })
                 }
             }
         }
@@ -639,27 +652,54 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                             alignSelf: 'center',
                                             maxWidth: 300
                                         }}>{status === 'hijacking' ? '目标：监听中...' : `目标：${urlInfo}`}</Text>
-                                        {ipInfo && status !== 'hijacking' &&
-                                        <Tag
-                                            color='green'
-                                            title={ipInfo}
-                                            style={{
+                                        {
+                                            ipInfo && status !== 'hijacking' && (
+                                                <Tag
+                                                    color='green'
+                                                    title={ipInfo}
+                                                    style={{
+                                                        marginLeft: 5,
+                                                        alignSelf: "center",
+                                                        maxWidth: 140,
+                                                        cursor: "pointer"
+                                                    }}
+                                                >
+                                                    {`${ipInfo}`}
+                                                    <CopyToClipboard
+                                                        text={`${ipInfo}`}
+                                                        onCopy={(text, ok) => {
+                                                            if (ok) success("已复制到粘贴板")
+                                                        }}
+                                                    >
+                                                        <CopyOutlined style={{marginLeft: 5}}/>
+                                                    </CopyToClipboard>
+                                                </Tag>
+                                            )
+                                        }
+                                        {currentIsWebsocket && status !== "hijacking" ? (
+                                            <Tag color={"red"} style={{
                                                 marginLeft: 5,
                                                 alignSelf: "center",
                                                 maxWidth: 140,
                                                 cursor: "pointer"
-                                            }}
-                                        >
-                                            {`${ipInfo}`}
-                                            <CopyToClipboard
-                                                text={`${ipInfo}`}
-                                                onCopy={(text, ok) => {
-                                                    if (ok) success("已复制到粘贴板")
-                                                }}
-                                            >
-                                                <CopyOutlined style={{marginLeft: 5}}/>
-                                            </CopyToClipboard>
-                                        </Tag>
+                                            }}>Websocket {currentIsForResponse ? "响应" : "请求"}</Tag>
+                                        ) : (currentIsForResponse && status !== "hijacking" ?
+                                                <Tag color={"geekblue"}
+                                                     style={{
+                                                         marginLeft: 5,
+                                                         alignSelf: "center",
+                                                         maxWidth: 140,
+                                                         cursor: "pointer"
+                                                     }}
+                                                >HTTP 响应</Tag> :
+                                                <Tag color={"geekblue"}
+                                                     style={{
+                                                         marginLeft: 5,
+                                                         alignSelf: "center",
+                                                         maxWidth: 140,
+                                                         cursor: "pointer"
+                                                     }}
+                                                >HTTP 请求</Tag>)
                                         }
                                     </>
                                     }

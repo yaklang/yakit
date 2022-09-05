@@ -54,6 +54,7 @@ export interface MITMResponse extends MITMFilterSchema {
     isHttps: boolean,
     request: Uint8Array,
     url: string,
+    RemoteAddr?: string
     id: number
 
     forResponse?: boolean
@@ -62,6 +63,8 @@ export interface MITMResponse extends MITMFilterSchema {
 
     justContentReplacer?: boolean
     replacers?: MITMContentReplacerRule[]
+
+    isWebsocket?: boolean
 }
 
 export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL_PLUGIN";

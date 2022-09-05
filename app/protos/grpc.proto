@@ -172,6 +172,9 @@ service Yak {
   rpc FixUploadPacket(FixUploadPacketRequest) returns (FixUploadPacketResponse);
   rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
 
+  // WebSocket
+  rpc CreateWebsocketFuzzer(stream ClientWebsocketRequest) returns (ClientWebsocketResponse);
+
   // FuzzerResponse 对象转 HTTPFlow：以便分析和模糊测试
   rpc ConvertFuzzerResponseToHTTPFlow(FuzzerResponse) returns (HTTPFlow);
 
@@ -335,6 +338,35 @@ service Yak {
 
   rpc GetEngineDefaultProxy(Empty) returns (DefaultProxyResult);
   rpc SetEngineDefaultProxy(DefaultProxyResult) returns (Empty);
+}
+
+message ClientWebsocketRequest {
+  bool IsTLS = 1;
+  bytes UpgradeRequest = 2;
+
+  // 要发送到服务器的请求
+  bytes ToServer = 3;
+  repeated string Encode = 4;
+
+  // 是否允许 fuzz 标签渲染，然后发送
+  bool AllowToFuzz = 5;
+  int64 TotalTimeoutSeconds = 6;
+}
+
+message ClientWebsocketResponse {
+  // 切换协议是否成功
+  bool SwitchProtocolSucceeded = 2;
+
+  // 是 Websocket 数据帧吗？
+  bool IsDataFrame = 1;
+  // 服务器端返回了啥内容？
+  bytes FromServer = 4;
+  // 编码是啥样的？
+  repeated string GuessEncode = 5;
+
+  // 其他状态，以及出现问题的原因
+  string StatusVerbose = 6;
+  string ReasonVerbose = 7;
 }
 
 message DefaultProxyResult {
@@ -1919,6 +1951,10 @@ message MITMResponse {
   // 这两个标志是用来设置 MITM 加载状态的，用于服务端控制用户端的 "加载中"
   bool haveLoadingSetter = 35;
   bool loadingFlag = 36;
+
+  // Websocket 相关配置
+  bool isWebsocket = 37;
+  repeated string websocketEncode = 38;
 }
 
 message YakScriptHooks {
