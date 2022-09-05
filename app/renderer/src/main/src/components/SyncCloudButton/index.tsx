@@ -1,17 +1,17 @@
-import {YakScript} from "@/pages/invoker/schema"
+import { YakScript } from "@/pages/invoker/schema"
 import Login from "@/pages/Login"
-import {DownloadOnlinePluginProps} from "@/pages/yakitStore/YakitPluginInfoOnline"
-import {GetYakScriptByOnlineIDRequest} from "@/pages/yakitStore/YakitStorePage"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
-import {useStore} from "@/store"
-import {failed, success, warn} from "@/utils/notification"
-import {ExclamationCircleOutlined} from "@ant-design/icons"
-import {useMemoizedFn} from "ahooks"
-import {Button, Modal, Radio, Space} from "antd"
-import React, {ReactNode, useState} from "react"
+import { DownloadOnlinePluginProps } from "@/pages/yakitStore/YakitPluginInfoOnline"
+import { GetYakScriptByOnlineIDRequest } from "@/pages/yakitStore/YakitStorePage"
+import { NetWorkApi } from "@/services/fetch"
+import { API } from "@/services/swagger/resposeType"
+import { useStore } from "@/store"
+import { failed, success, warn } from "@/utils/notification"
+import { ExclamationCircleOutlined } from "@ant-design/icons"
+import { useMemoizedFn } from "ahooks"
+import { Button, Modal, Radio, Space } from "antd"
+import React, { ReactNode, useState } from "react"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 interface SyncCloudButtonProps {
     params: YakScript
@@ -20,8 +20,8 @@ interface SyncCloudButtonProps {
     uploadLoading?: (boolean) => void
 }
 export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
-    const {params, setParams, children, uploadLoading} = props
-    const {userInfo} = useStore()
+    const { params, setParams, children, uploadLoading } = props
+    const { userInfo } = useStore()
     // 登录框状态
     const [loginshow, setLoginShow] = useState<boolean>(false)
     const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
@@ -34,14 +34,14 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
             content: params.Content,
             tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
             params: params.Params.map((p) => ({
-                field: p.Field,
-                default_value: p.DefaultValue,
-                type_verbose: p.TypeVerbose,
-                field_verbose: p.FieldVerbose,
-                help: p.Help,
+                field: p.Field || '',
+                default_value: p.DefaultValue || '',
+                type_verbose: p.TypeVerbose || '',
+                field_verbose: p.FieldVerbose || '',
+                help: p.Help || '',
                 required: p.Required,
-                group: p.Group,
-                extra_setting: p.ExtraSetting
+                group: p.Group || '',
+                extra_setting: p.ExtraSetting || ''
             })),
             help: params.Help,
             default_open: type === 1 ? false : true, // 1 个人账号
@@ -80,7 +80,7 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                                 setVisibleSyncSelect(false)
                                 ipcRenderer
                                     .invoke("delete-yak-script", params.Id)
-                                    .then(() => {})
+                                    .then(() => { })
                                     .catch((err) => {
                                         failed("删除本地失败:" + err)
                                     })
@@ -124,7 +124,7 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                 onOk() {
                     setLoginShow(true)
                 },
-                onCancel() {}
+                onCancel() { }
             })
             return
         }
@@ -175,7 +175,7 @@ interface ModalSyncSelect {
 }
 
 export const ModalSyncSelect: React.FC<ModalSyncSelect> = (props) => {
-    const {visible, handleOk, handleCancel, loading} = props
+    const { visible, handleOk, handleCancel, loading } = props
     const [type, setType] = useState<number>(1)
     const onChange = useMemoizedFn((e) => {
         setType(e.target.value)

@@ -1053,14 +1053,14 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             content: params.Content,
             tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
             params: params.Params.map((p) => ({
-                field: p.Field,
-                default_value: p.DefaultValue,
-                type_verbose: p.TypeVerbose,
-                field_verbose: p.FieldVerbose,
-                help: p.Help,
+                field: p.Field||'',
+                default_value: p.DefaultValue||'',
+                type_verbose: p.TypeVerbose||'',
+                field_verbose: p.FieldVerbose||'',
+                help: p.Help||'',
                 required: p.Required,
-                group: p.Group,
-                extra_setting: p.ExtraSetting
+                group: p.Group||'',
+                extra_setting: p.ExtraSetting||''
             })),
             help: params.Help,
             default_open: type === 1 ? false : true, // 1 个人账号
