@@ -779,7 +779,7 @@ message YsoOptionsWithVerbose{
 }
 //已弃用
 message YsoOptions{
-  repeated YsoOption Options = 1;
+  repeated string Names = 1;
 }
 //类生成器的参数
 message YsoClassGeneraterOptionsWithVerbose{
@@ -796,10 +796,8 @@ message YsoClassOptionsResponseWithVerbose{
 //已弃用
 message YsoClassGeneraterOptions{
   string Key = 1;
-  string KeyVerbose = 2;
-  string Help = 3;
-  string Value = 4;
-  string Type = 5;
+  string Value = 2;
+  string Type = 3;
 }
 //已弃用
 message YsoClassOptionsResponse{
