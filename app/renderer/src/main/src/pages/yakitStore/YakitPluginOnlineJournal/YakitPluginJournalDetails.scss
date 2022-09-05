@@ -1,0 +1,18 @@
+.yak-editor-content {
+    display: flex;
+    align-items: center;
+
+    .yak-editor-item {
+        width: 50%;
+        height: 400px;
+
+        .yak-editor{
+            height: 366px;
+        }
+
+        p {
+            margin: 6px 0;
+        }
+        
+    }
+}
