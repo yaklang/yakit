@@ -226,14 +226,15 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             Field: "target",
                             FieldVerbose: "扫描的目标",
                             TypeVerbose: "string",
-                            Required: true
+                            Required: true,
+                            DefaultValue: ''
                         } as YakScriptParam,
                         {
                             Field: "ports",
                             FieldVerbose: "端口",
                             TypeVerbose: "string",
                             Required: false,
-                            DefaultValue: "80"
+                            DefaultValue: "80",
                         } as YakScriptParam
                     ]
                 })
@@ -243,9 +244,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     ...params,
                     Content: PacketHackPluginTemplate,
                     Params: [
-                        { Field: "request", TypeVerbose: "http-packet", Required: true } as YakScriptParam,
-                        { Field: "response", TypeVerbose: "http-packet", Required: false } as YakScriptParam,
-                        { Field: "isHttps", TypeVerbose: "bool" } as YakScriptParam
+                        { Field: "request", DefaultValue: '', TypeVerbose: "http-packet", Required: true } as YakScriptParam,
+                        { Field: "response", DefaultValue: '', TypeVerbose: "http-packet", Required: false } as YakScriptParam,
+                        { Field: "isHttps", DefaultValue: '', TypeVerbose: "bool" } as YakScriptParam
                     ]
                 })
                 return
@@ -538,8 +539,8 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 interface YakScriptFormContentProps {
     params: YakScript
     setParams: (y: YakScript) => void
-    modified: YakScript | undefined
-    setParamsLoading: (b: boolean) => void
+    modified?: YakScript | undefined
+    setParamsLoading?: (b: boolean) => void
 }
 
 export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props) => {
@@ -683,7 +684,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                             <Popconfirm
                                                 title={"确认要删除该参数吗？"}
                                                 onConfirm={(e) => {
-                                                    setParamsLoading(true)
+                                                    if (setParamsLoading) setParamsLoading(true)
                                                     setParams({
                                                         ...params,
                                                         Params: params.Params.filter((i) => i.Field !== p.Field)
@@ -695,7 +696,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                                 </Button>
                                             </Popconfirm>
                                         </Space>
-                                    )}
+                                    ) || '--'}
                                 </List.Item>
                             )
                         }}
