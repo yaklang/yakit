@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {ResizeBox} from "@/components/ResizeBox";
 import {AutoCard} from "@/components/AutoCard";
 import {useGetState, useMemoizedFn} from "ahooks";
-import {Button, Space} from "antd";
+import {Button, Popconfirm, Space} from "antd";
 import {YakEditor} from "@/utils/editors";
 import {StringToUint8Array} from "@/utils/str";
 import {randomString} from "@/utils/randomUtil";
@@ -35,6 +35,7 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
         ipcRenderer.on(`${token}-end`, (e, data) => {
             info("[CreateWebsocketFuzzer] finished")
             setToken(randomString(30))
+            setExecuting(false)
         })
         return () => {
             ipcRenderer.invoke("cancel-CreateWebsocketFuzzer", token)
@@ -47,10 +48,21 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
     const submit = useMemoizedFn(() => {
         ipcRenderer.invoke("CreateWebsocketFuzzer", {
             UpgradeRequest: getRequest(),
-            IsTLS: false,
+            IsTLS: true,
             ToServer: StringToUint8Array(getToServer()),
         }, getToken()).then(() => {
+            setExecuting(true)
         })
+    })
+
+    const cancel = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-CreateWebsocketFuzzer", getToken())
+    })
+
+    const sendToServer = useMemoizedFn(() => {
+        ipcRenderer.invoke("CreateWebsocketFuzzer", {
+            ToServer: StringToUint8Array(getToServer())
+        }, getToken())
     })
 
     return <ResizeBox
@@ -61,7 +73,17 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
                 bodyStyle={{padding: 0}}
                 extra={(
                     <Space>
-                        <Button
+                        {getExecuting() ? (
+                            <Popconfirm title={"确定要关闭 Websocket 连接吗？"} onConfirm={cancel}>
+                                <Button
+                                    size={"small"}
+                                    type={"primary"}
+                                    danger={true}
+                                >
+                                    关闭连接
+                                </Button>
+                            </Popconfirm>
+                        ) : <Button
                             size={"small"}
                             type={"primary"}
                             onClick={() => {
@@ -69,7 +91,7 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
                             }}
                         >
                             启动连接
-                        </Button>
+                        </Button>}
                     </Space>
                 )}
             >
@@ -78,6 +100,7 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
                     noLineNumber={true}
                     type={"http"}
                     valueBytes={getRequest()}
+                    noMiniMap={true}
                     setValue={s => {
                         setRequest(StringToUint8Array(s, "utf8"))
                     }}
@@ -90,7 +113,13 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
             return <AutoCard
                 size={"small"} bordered={false}
                 extra={<Space>
-                    <Button size={"small"} type={"primary"}>发送</Button>
+                    <Button
+                        size={"small"} type={"primary"}
+                        disabled={!getExecuting()}
+                        onClick={() => {
+                            sendToServer()
+                        }}
+                    >发送到服务器</Button>
                 </Space>}
                 bodyStyle={{padding: 0}}
                 title={"发送数据"}

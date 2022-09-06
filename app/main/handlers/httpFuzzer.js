@@ -229,7 +229,7 @@ module.exports = (win, getClient) => {
     const streamCreateWebsocketFuzzerMap = new Map();
     ipcMain.handle("cancel-CreateWebsocketFuzzer", handlerHelper.cancelHandler(streamCreateWebsocketFuzzerMap));
     ipcMain.handle("CreateWebsocketFuzzer", async (e, params, token) => {
-        if (token) {
+        if (!token) {
             throw Error(`no token set`)
         }
 

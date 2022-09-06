@@ -373,14 +373,20 @@ message ClientWebsocketResponse {
 
   // 是 Websocket 数据帧吗？
   bool IsDataFrame = 1;
-  // 服务器端返回了啥内容？
-  bytes FromServer = 4;
+  // 服务器端返回还是？
+  bool FromServer = 4;
   // 编码是啥样的？
   repeated string GuessEncode = 5;
 
   // 其他状态，以及出现问题的原因
   string StatusVerbose = 6;
   string ReasonVerbose = 7;
+
+  // DataLength
+  int64 DataLength = 8;
+  bytes Data = 9;
+
+  bool IsJson = 10;
 }
 
 message DefaultProxyResult {
