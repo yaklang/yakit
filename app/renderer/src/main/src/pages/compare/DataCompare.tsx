@@ -20,6 +20,8 @@ export const DataCompare: React.FC = (props) => {
     const [right, setRight] = useState<string>("")
 
     const codeComparisonRef = useRef<any>(null)
+    console.log('left', left);
+
     return (
         <AutoCard
             title={"数据对比"}
@@ -31,7 +33,7 @@ export const DataCompare: React.FC = (props) => {
                         type={!noWrap ? "primary" : "link"}
                         icon={<LineConversionIcon />}
                         onClick={() => {
-                            codeComparisonRef.current?.changeLineConversion()
+                            codeComparisonRef.current?.onChangeLineConversion()
                         }}
                     />
                 </Space>
@@ -61,15 +63,10 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     const [language, setLanguage] = useState<string>("")
     useImperativeHandle(ref, () => ({
         // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
-        // changeLineConversion 暴露给父组件的方法
-        changeLineConversion: (newVal) => {
-            debugger
+        onChangeLineConversion: (newVal) => {
             changeLineConversion()
         }
-    }));
-    // useEffect(() => {
-    //     setModelEditor({ content: leftCode, language: language }, { content: rightCode, language: language }, language)
-    // }, [leftCode,rightCode])
+    }), [leftCode, rightCode, noWrap]);
     const changeLineConversion = () => {
         if (!diffDivRef || !diffDivRef.current) return
         if (!diffEditorRef.current) return
@@ -81,11 +78,10 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
             enableSplitViewResizing: false,
             originalEditable: true,
             automaticLayout: true,
-            wordWrap: isWrap ? "off" : "on"
+            wordWrap: isWrap ? "off" : "on",
+
         })
-
         if (setNoWrap) setNoWrap(!noWrap)
-
         setModelEditor({ content: leftCode, language: language }, { content: rightCode, language: language }, language)
     }
     const setModelEditor = (left?: textModelProps, right?: textModelProps, language = "yak") => {

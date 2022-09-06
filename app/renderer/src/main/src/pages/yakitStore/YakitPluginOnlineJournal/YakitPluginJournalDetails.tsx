@@ -53,15 +53,13 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
     }, [])
     const { YakitPluginJournalDetailsId } = props;
     const [fullscreen, setFullscreen] = useState(false)
-    const [noWrap, setNoWrap] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakScript>(defParams)
+    const [leftCode, setLeftCode,] = useState<string>(defParams.Content)
+    const [rightCode, setRightCode,] = useState<string>("yakit.AutoInitYakit()\n\n# Input your code!\n\n55555\n\n",)
+
     const [rightParams, setRightParams, getRightParams] = useGetState<YakScript>({
         ...defParams,
-        Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n55555\n\n",
     })
-    const codeComparisonRef = useRef<any>(null)
-    console.log('getParams()',getParams());
-    
     return (
         <div>
             <Card title="修改详情" bordered={false}>
@@ -81,44 +79,12 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                                                 closable: false,
                                                 keyboard: false,
                                                 content: (
-                                                    <>
-                                                        <Card
-                                                            bordered={false}
-                                                            title="数据对比"
-                                                            extra={
-                                                                <Space>
-                                                                    <Button
-                                                                        type="link"
-                                                                        size="small"
-                                                                        icon={<FullscreenOutlined style={{ fontSize: 20 }} />}
-                                                                        onClick={() => { m.destroy(); setFullscreen(false) }}
-                                                                    />
-                                                                    <Button
-                                                                        size={"small"}
-                                                                        type={!noWrap ? "primary" : "link"}
-                                                                        icon={<LineConversionIcon />}
-                                                                        onClick={() => {
-                                                                            codeComparisonRef.current?.changeLineConversion()
-                                                                        }}
-                                                                    />
-                                                                </Space>
-                                                            }
-                                                            style={{ height: '100%' }}
-                                                            bodyStyle={{ height: '100%' }}
-                                                        >
-                                                            <CodeComparison
-                                                                ref={codeComparisonRef}
-                                                                noWrap={noWrap}
-                                                                setNoWrap={setNoWrap}
-                                                                leftCode={getParams().Content}
-                                                                setLeftCode={(v) => {
-                                                                    setParams({ ...getParams(), Content: v })
-                                                                }}
-                                                                rightCode={getRightParams().Content}
-                                                            // setRightCode={(v) => setRightParams({ ...getRightParams(), Content: v })}
-                                                            />
-                                                        </Card>
-                                                    </>
+                                                    <FullScreenCode
+                                                        leftCode={leftCode}
+                                                        setLeftCode={setLeftCode}
+                                                        rightCode={rightCode}
+                                                        onClose={() => { m.destroy(); setFullscreen(false) }}
+                                                    />
                                                 )
                                             })
                                         }}
@@ -135,7 +101,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                         }
                     >
                         {
-                            // !fullscreen &&
+                            !fullscreen &&
                             <div className="yak-editor-content">
                                 <div className="yak-editor-tip">
                                     <div>提交的代码</div>
@@ -143,10 +109,9 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                                 </div>
                                 <div className="yak-editor-item">
                                     <CodeComparison
-                                        leftCode={getParams().Content}
-                                        setLeftCode={(v) => setParams({ ...getParams(), Content: v })}
-                                        rightCode={getRightParams().Content}
-                                    // setRightCode={(v) => setRightParams({ ...getRightParams(), Content: v })}
+                                        leftCode={leftCode}
+                                        setLeftCode={setLeftCode}
+                                        rightCode={rightCode}
                                     />
                                 </div>
                             </div>
@@ -165,5 +130,54 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                 </Form>
             </Card>
         </div>
+    )
+}
+
+interface FullScreenCodeProps {
+    leftCode: string
+    setLeftCode: (s: string) => void
+    rightCode: string
+    onClose: () => void
+}
+
+
+const FullScreenCode: React.FC<FullScreenCodeProps> = (props) => {
+    const { leftCode, setLeftCode, rightCode, onClose } = props;
+    const [noWrap, setNoWrap] = useState<boolean>(false)
+    const fullCodeComparisonRef = useRef<any>(null)
+    return (
+        <Card
+            bordered={false}
+            title="数据对比"
+            extra={
+                <Space>
+                    <Button
+                        type="link"
+                        size="small"
+                        icon={<FullscreenOutlined style={{ fontSize: 20 }} />}
+                        onClick={() => onClose()}
+                    />
+                    <Button
+                        size={"small"}
+                        type={!noWrap ? "primary" : "link"}
+                        icon={<LineConversionIcon />}
+                        onClick={() => {
+                            fullCodeComparisonRef.current?.onChangeLineConversion()
+                        }}
+                    />
+                </Space>
+            }
+            style={{ height: 'calc(100% - 48px)' }}
+            bodyStyle={{ height: '100%', padding: 0 }}
+        >
+            <CodeComparison
+                ref={fullCodeComparisonRef}
+                noWrap={noWrap}
+                setNoWrap={setNoWrap}
+                leftCode={leftCode}
+                setLeftCode={setLeftCode}
+                rightCode={rightCode}
+            />
+        </Card>
     )
 }
