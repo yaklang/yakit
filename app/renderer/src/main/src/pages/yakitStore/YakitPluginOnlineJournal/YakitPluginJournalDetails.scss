@@ -1,18 +1,14 @@
 .yak-editor-content {
-    display: flex;
-    align-items: center;
+    height: 400px;
+
+    .yak-editor-tip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+    }
 
     .yak-editor-item {
-        width: 50%;
-        height: 400px;
-
-        .yak-editor{
-            height: 366px;
-        }
-
-        p {
-            margin: 6px 0;
-        }
-        
+        height: 356px;
     }
 }

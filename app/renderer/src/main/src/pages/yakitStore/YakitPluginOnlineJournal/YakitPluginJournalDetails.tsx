@@ -1,14 +1,15 @@
 import { FromLayoutProps, YakScriptFormContent, YakScriptLargeEditor } from "@/pages/invoker/YakScriptCreator"
 import { Route } from "@/routes/routeSpec"
 import { Button, Card, Form, Space } from "antd"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { useCreation, useGetState, useMemoizedFn } from "ahooks"
 import './YakitPluginJournalDetails.scss'
 import { YakScript } from "@/pages/invoker/schema"
 import { FullscreenOutlined } from "@ant-design/icons"
 import { showDrawer } from "@/utils/showModal"
 import { YakEditor } from "@/utils/editors"
-import { DataCompare } from "@/pages/compare/DataCompare"
+import { CodeComparison, DataCompare } from "@/pages/compare/DataCompare"
+import { LineConversionIcon } from "@/assets/icons"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -51,8 +52,16 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
         return col
     }, [])
     const { YakitPluginJournalDetailsId } = props;
-    const [params, setParams, getParams] = useGetState<YakScript>(defParams)
     const [fullscreen, setFullscreen] = useState(false)
+    const [noWrap, setNoWrap] = useState<boolean>(false)
+    const [params, setParams, getParams] = useGetState<YakScript>(defParams)
+    const [rightParams, setRightParams, getRightParams] = useGetState<YakScript>({
+        ...defParams,
+        Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n55555\n\n",
+    })
+    const codeComparisonRef = useRef<any>(null)
+    console.log('getParams()',getParams());
+    
     return (
         <div>
             <Card title="修改详情" bordered={false}>
@@ -68,13 +77,47 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                                         onClick={() => {
                                             setFullscreen(true)
                                             let m = showDrawer({
-                                                title: "Edit Code",
                                                 width: "100%",
                                                 closable: false,
                                                 keyboard: false,
                                                 content: (
                                                     <>
-                                                        <DataCompare />
+                                                        <Card
+                                                            bordered={false}
+                                                            title="数据对比"
+                                                            extra={
+                                                                <Space>
+                                                                    <Button
+                                                                        type="link"
+                                                                        size="small"
+                                                                        icon={<FullscreenOutlined style={{ fontSize: 20 }} />}
+                                                                        onClick={() => { m.destroy(); setFullscreen(false) }}
+                                                                    />
+                                                                    <Button
+                                                                        size={"small"}
+                                                                        type={!noWrap ? "primary" : "link"}
+                                                                        icon={<LineConversionIcon />}
+                                                                        onClick={() => {
+                                                                            codeComparisonRef.current?.changeLineConversion()
+                                                                        }}
+                                                                    />
+                                                                </Space>
+                                                            }
+                                                            style={{ height: '100%' }}
+                                                            bodyStyle={{ height: '100%' }}
+                                                        >
+                                                            <CodeComparison
+                                                                ref={codeComparisonRef}
+                                                                noWrap={noWrap}
+                                                                setNoWrap={setNoWrap}
+                                                                leftCode={getParams().Content}
+                                                                setLeftCode={(v) => {
+                                                                    setParams({ ...getParams(), Content: v })
+                                                                }}
+                                                                rightCode={getRightParams().Content}
+                                                            // setRightCode={(v) => setRightParams({ ...getRightParams(), Content: v })}
+                                                            />
+                                                        </Card>
                                                     </>
                                                 )
                                             })
@@ -91,30 +134,23 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                             </>
                         }
                     >
-                        {!fullscreen && (
+                        {
+                            // !fullscreen &&
                             <div className="yak-editor-content">
-                                <div className="yak-editor-item">
-                                    <p>提交的代码</p>
-                                    <div className="yak-editor">
-                                        <YakEditor
-                                            type={"yak"}
-                                            setValue={(Content) => setParams({ ...params, Content })}
-                                            value={params.Content}
-                                        />
-                                    </div>
+                                <div className="yak-editor-tip">
+                                    <div>提交的代码</div>
+                                    <div>最新的代码</div>
                                 </div>
                                 <div className="yak-editor-item">
-                                    <p>最新的代码</p>
-                                    <div className="yak-editor">
-                                        <YakEditor
-                                            type={"yak"}
-                                            setValue={(Content) => setParams({ ...params, Content })}
-                                            value={params.Content}
-                                        />
-                                    </div>
+                                    <CodeComparison
+                                        leftCode={getParams().Content}
+                                        setLeftCode={(v) => setParams({ ...getParams(), Content: v })}
+                                        rightCode={getRightParams().Content}
+                                    // setRightCode={(v) => setRightParams({ ...getRightParams(), Content: v })}
+                                    />
                                 </div>
                             </div>
-                        )}
+                        }
                     </Form.Item>
                     <Form.Item colon={false} label={" "}>
                         <Space>
