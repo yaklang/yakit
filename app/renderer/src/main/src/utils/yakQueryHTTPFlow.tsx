@@ -13,6 +13,7 @@ export interface YakQueryHTTPFlowRequest {
     HaveBody?: boolean
     SearchContentType?: string
     Keyword?: string
+    IsWebsocket?: boolean
 }
 
 export interface Paging {

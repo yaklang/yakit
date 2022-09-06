@@ -696,6 +696,8 @@ const Main: React.FC<MainProp> = (props) => {
     }, [])
 
     useHotkeys("Ctrl+Alt+T", () => {
+        addWebsocketFuzzer({})
+        addWebsocketHistory({})
     })
 
     useEffect(() => {
@@ -763,6 +765,16 @@ const Main: React.FC<MainProp> = (props) => {
             addFuzzerList(time, request || "", isHttps || false)
         }
     })
+
+    // websocket fuzzer 和 Fuzzer 类似
+    const addWebsocketFuzzer = useMemoizedFn((res: any) => {
+        addTabPage(Route.WebsocketFuzzer, {hideAdd: false, isRecord: false, node: undefined, time: ""})
+    })
+    // websocket fuzzer 和 Fuzzer 类似
+    const addWebsocketHistory = useMemoizedFn((res: any) => {
+        addTabPage(Route.WebsocketHistory, {hideAdd: false, isRecord: false, node: undefined, time: ""})
+    })
+
     const addYakScript = useMemoizedFn((res: any) => {
         const time = new Date().getTime().toString()
         addTabPage(Route.AddYakitScript, {

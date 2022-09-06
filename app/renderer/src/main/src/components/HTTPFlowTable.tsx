@@ -65,6 +65,9 @@ export interface HTTPFlow {
 
     // Placeholder
     IsPlaceholder?: boolean
+
+    IsWebsocket?: boolean
+    WebsocketHash?: string
 }
 
 export interface FuzzableParams {
@@ -343,6 +346,7 @@ export interface HTTPFlowTableProp {
     params?: YakQueryHTTPFlowRequest
     inViewport?: boolean
     onSearch?: (i: string) => any
+    title?: string
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -983,7 +987,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             />
             {!props.noHeader && (
                 <PageHeader
-                    title={"HTTP History"}
+                    title={props?.title ? props.title : "HTTP History"}
                     subTitle={
                         <Space>
                             {"所有相关请求都在这里"}
@@ -1036,7 +1040,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             <Row style={{margin: "5px 0 5px 5px"}}>
                 <Col span={12}>
                     <Space>
-                        <span>HTTP History</span>
+                        <span>{props?.title ? props.title : "HTTP History"}</span>
                         <Button
                             icon={<ReloadOutlined/>}
                             type={"link"}
@@ -1538,10 +1542,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                            ? TableRowColor(
-                                                rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                            )
-                                            : "#ffffff"
+                                                ? TableRowColor(
+                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                                )
+                                                : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")

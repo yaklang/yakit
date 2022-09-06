@@ -43,6 +43,8 @@ import {
 } from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
 import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
 import {AddYakitScript} from "@/pages/yakitStore/AddYakitScript"
+import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer";
+import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -64,6 +66,8 @@ export enum Route {
     PenTest = "pen-test",
     HTTPHacker = "httpHacker",
     HTTPFuzzer = "httpFuzzer",
+    WebsocketFuzzer = "websocket-fuzzer",
+    WebsocketHistory = "websocket-history",
 
     // 具体漏洞内容
     PoC = "poc",
@@ -294,6 +298,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                     shareContent={params?.shareContent}
                 />
             )
+        case Route.WebsocketFuzzer:
+            return <WebsocketFuzzer/>
         case Route.Codec:
             return <CodecPage />
         case Route.ModManager:
@@ -347,7 +353,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             )
         case Route.AddYakitScript:
             return <AddYakitScript />
-
+        case Route.WebsocketHistory:
+            return <WebsocketFlowHistory/>
         default:
             return <div />
     }
