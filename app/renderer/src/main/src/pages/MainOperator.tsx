@@ -107,7 +107,9 @@ const singletonRoute: Route[] = [
     Route.DNSLog,
     Route.BatchExecutorPage,
     Route.ICMPSizeLog,
-    Route.TCPPortLog
+    Route.TCPPortLog,
+
+    Route.WebsocketHistory,
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
