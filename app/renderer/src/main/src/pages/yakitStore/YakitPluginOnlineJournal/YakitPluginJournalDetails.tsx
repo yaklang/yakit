@@ -54,8 +54,8 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
     const { YakitPluginJournalDetailsId } = props;
     const [fullscreen, setFullscreen] = useState(false)
     const [params, setParams, getParams] = useGetState<YakScript>(defParams)
-    const [leftCode, setLeftCode,] = useState<string>(defParams.Content)
-    const [rightCode, setRightCode,] = useState<string>("yakit.AutoInitYakit()\n\n# Input your code!\n\n55555\n\n",)
+    const [originalCode, setOriginalCode,] = useState<string>(defParams.Content)
+    const [modifiedCode, setModifiedCode,] = useState<string>("yakit.AutoInitYakit()\n\n# Input your code!\n\n55555\n\n",)
 
     const [rightParams, setRightParams, getRightParams] = useGetState<YakScript>({
         ...defParams,
@@ -80,9 +80,9 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                                                 keyboard: false,
                                                 content: (
                                                     <FullScreenCode
-                                                        leftCode={leftCode}
-                                                        setLeftCode={setLeftCode}
-                                                        rightCode={rightCode}
+                                                        originalCode={originalCode}
+                                                        setModifiedCode={setModifiedCode}
+                                                        modifiedCode={modifiedCode}
                                                         onClose={() => { m.destroy(); setFullscreen(false) }}
                                                     />
                                                 )
@@ -104,14 +104,15 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                             !fullscreen &&
                             <div className="yak-editor-content">
                                 <div className="yak-editor-tip">
-                                    <div>申请人提交源码</div>
                                     <div>当前插件源码</div>
+                                    <div>申请人提交源码</div>
                                 </div>
                                 <div className="yak-editor-item">
                                     <CodeComparison
-                                        leftCode={leftCode}
-                                        setLeftCode={setLeftCode}
-                                        rightCode={rightCode}
+                                        leftCode={originalCode}
+                                        setRightCode={setModifiedCode}
+                                        rightCode={modifiedCode}
+                                        originalEditable={false}
                                     />
                                 </div>
                             </div>
@@ -134,17 +135,21 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
 }
 
 interface FullScreenCodeProps {
-    leftCode: string
-    setLeftCode: (s: string) => void
-    rightCode: string
+    originalCode: string
+    setModifiedCode: (s: string) => void
+    modifiedCode: string
     onClose: () => void
 }
 
 
 const FullScreenCode: React.FC<FullScreenCodeProps> = (props) => {
-    const { leftCode, setLeftCode, rightCode, onClose } = props;
+    const { originalCode, setModifiedCode, modifiedCode, onClose } = props;
     const [noWrap, setNoWrap] = useState<boolean>(false)
+    const [rightCode, setRightCode] = useState<string>(modifiedCode)
     const fullCodeComparisonRef = useRef<any>(null)
+    useEffect(() => {
+        setRightCode(modifiedCode)
+    }, [modifiedCode])
     return (
         <Card
             bordered={false}
@@ -170,14 +175,24 @@ const FullScreenCode: React.FC<FullScreenCodeProps> = (props) => {
             style={{ height: 'calc(100% - 48px)' }}
             bodyStyle={{ height: '100%', padding: 0 }}
         >
-            <CodeComparison
-                ref={fullCodeComparisonRef}
-                noWrap={noWrap}
-                setNoWrap={setNoWrap}
-                leftCode={leftCode}
-                setLeftCode={setLeftCode}
-                rightCode={rightCode}
-            />
+            <div className="yak-editor-tip">
+                <div>当前插件源码</div>
+                <div>申请人提交源码</div>
+            </div>
+            <div className="yak-editor-full-item">
+                <CodeComparison
+                    ref={fullCodeComparisonRef}
+                    noWrap={noWrap}
+                    setNoWrap={setNoWrap}
+                    leftCode={originalCode}
+                    setRightCode={(c) => {
+                        setRightCode(c)
+                        setModifiedCode(c)
+                    }}
+                    rightCode={rightCode}
+                    originalEditable={false}
+                />
+            </div>
         </Card>
     )
 }

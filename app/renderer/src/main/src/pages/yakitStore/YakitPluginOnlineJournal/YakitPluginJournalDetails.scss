@@ -1,14 +1,18 @@
 .yak-editor-content {
     height: 400px;
 
-    .yak-editor-tip {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 6px 0;
-    }
-
     .yak-editor-item {
         height: 356px;
     }
+}
+
+.yak-editor-tip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+
+.yak-editor-full-item {
+    height: calc(100% - 44px);
 }

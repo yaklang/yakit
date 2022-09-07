@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  */
 
- export declare namespace API {
+export declare namespace API {
     export interface YakitSearchData {
       value: string;
       count: number;
@@ -112,7 +112,7 @@
       role: string;
     }
     export interface UpdatePluginRequest {
-      uuid?: string;
+      uuid: string;
       user_id?: number;
       is_official?: string;
       is_private?: string;
@@ -141,7 +141,7 @@
       published_at?: number;
       default_open: boolean;
       enable_plugin_selector?: boolean;
-      plugin_selector_types?: string; 
+      plugin_selector_types?: string;
       is_general_module?: boolean;
       download_total?: number;
       contributors?: string;
@@ -322,6 +322,56 @@
       by_head_img: string;
       reply_num: number;
       is_stars?: boolean;
+    }
+    export interface ApplyPluginResponse {
+      type: string;
+      script_name: string;
+      default_open: boolean;
+      tags: string;
+      content: string;
+      params?: YakitPluginParam[];
+      user_id?: number;
+      /**
+       * 审核状态
+       */
+      status: number;
+      official: boolean;
+      help?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      contributors?: string;
+      uuid: string;
+      is_private: boolean;
+    }
+    export interface ApplyPluginLists extends GormBaseModel, ApplyPluginList {}
+    export interface ApplyPluginList {
+      user_name: string;
+      role?: string;
+      user_id?: number;
+      /**
+       * 合并状态 0 待处理  1合并  2拒绝
+       */
+      merge_status?: number;
+      plugin_id?: number;
+    }
+    export interface ApplyPluginDetail {
+      plugin_id: number;
+      /**
+       * 申请修改
+       */
+      up_plugin: ApplyPluginResponse[];
+      /**
+       * 当前插件数据/ 修改用户为admin时为修改前数据
+       */
+      merge_before_plugin: ApplyPluginResponse[];
+      /**
+       * 合并状态 0 待处理  1合并  2拒绝
+       */
+      merge_status: number;
+    }
+    export interface ApplyListResponses extends Paging {
+      data: ApplyPluginLists[];
     }
     export interface ActionSucceeded {
       /**

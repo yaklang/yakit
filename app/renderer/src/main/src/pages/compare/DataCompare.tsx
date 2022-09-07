@@ -20,8 +20,6 @@ export const DataCompare: React.FC = (props) => {
     const [right, setRight] = useState<string>("")
 
     const codeComparisonRef = useRef<any>(null)
-    console.log('left', left);
-
     return (
         <AutoCard
             title={"数据对比"}
@@ -48,14 +46,15 @@ interface CodeComparisonProps {
     noWrap?: boolean
     setNoWrap?: (b: boolean) => void
     leftCode: string
-    setLeftCode: (s: string) => void
+    setLeftCode?: (s: string) => void
     rightCode: string
     setRightCode?: (s: string) => void
     ref?: any
+    originalEditable?: boolean
 }
 
 export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((props, ref) => {
-    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode } = props;
+    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true } = props;
     const [token, setToken] = useState<string>("")
     const diffDivRef = useRef(null)
     const monaco = monacoEditor.editor
@@ -76,10 +75,9 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
         const isWrap = !noWrap
         diffEditorRef.current = monaco.createDiffEditor(diff, {
             enableSplitViewResizing: false,
-            originalEditable: true,
+            originalEditable,
             automaticLayout: true,
             wordWrap: isWrap ? "off" : "on",
-
         })
         if (setNoWrap) setNoWrap(!noWrap)
         setModelEditor({ content: leftCode, language: language }, { content: rightCode, language: language }, language)
@@ -87,7 +85,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     const setModelEditor = (left?: textModelProps, right?: textModelProps, language = "yak") => {
         const leftModel = monaco.createModel(left ? left.content : "", left ? left.language : language)
         leftModel.onDidChangeContent((e) => {
-            setLeftCode(leftModel.getValue())
+            if (setLeftCode) setLeftCode(leftModel.getValue())
         })
         const rightModel = monaco.createModel(right ? right.content : "", right ? right.language : language)
         if (setRightCode) rightModel.onDidChangeContent((e) => {
@@ -111,9 +109,9 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                 const diff = diffDivRef.current as unknown as HTMLDivElement
                 diffEditorRef.current = monaco.createDiffEditor(diff, {
                     enableSplitViewResizing: false,
-                    originalEditable: true,
+                    originalEditable,
                     automaticLayout: true,
-                    wordWrap: noWrap ? "off" : "on"
+                    wordWrap: noWrap ? "off" : "on",
                 })
 
                 setToken(res.token)
@@ -123,7 +121,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     if (info.type === 1) {
                         const { left } = info
                         setLanguage(left.language)
-                        setLeftCode(left.content)
+                        if (setLeftCode) setLeftCode(left.content)
                         setModelEditor(left, undefined, left.language)
                     }
 
@@ -135,7 +133,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     }
                 } else {
                     setLanguage("yak")
-                    setLeftCode(leftCode)
+                    if (setLeftCode) setLeftCode(leftCode)
                     if (setRightCode) setRightCode(rightCode)
                     setModelEditor({
                         content: leftCode,
@@ -151,7 +149,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
 
                     setModelEditor(left, right, language || left.language)
 
-                    if (res.info.type === 1) setLeftCode(left.content)
+                    if (res.info.type === 1) if (setLeftCode) setLeftCode(left.content)
                     if (res.info.type === 2) if (setRightCode) setRightCode(right.content)
                 })
             })
