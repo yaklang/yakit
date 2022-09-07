@@ -104,8 +104,8 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                             !fullscreen &&
                             <div className="yak-editor-content">
                                 <div className="yak-editor-tip">
-                                    <div>提交的代码</div>
-                                    <div>最新的代码</div>
+                                    <div>申请人提交源码</div>
+                                    <div>当前插件源码</div>
                                 </div>
                                 <div className="yak-editor-item">
                                     <CodeComparison
