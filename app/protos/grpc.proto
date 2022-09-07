@@ -387,6 +387,14 @@ message ClientWebsocketResponse {
   bytes Data = 9;
 
   bool IsJson = 10;
+  bool IsProtobuf = 11;
+
+  int64 DataFrameIndex = 12;
+  string WebsocketHash = 13;
+
+  // 设置大小
+  string DataSizeVerbose = 14;
+  string DataVerbose = 15;
 }
 
 message DefaultProxyResult {

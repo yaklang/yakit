@@ -10,6 +10,7 @@ import {failed, info} from "@/utils/notification";
 
 export interface WebsocketClientOperatorProp {
     request?: Uint8Array
+    onToken: (i: string) => any
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -23,13 +24,18 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
     //    这个要通过 finished 的时候来搞
     const [_token, setToken, getToken] = useGetState(randomString(30));
 
+    useEffect(() => {
+        props.onToken(getToken())
+    }, [getToken()])
+
     // 数据通道
     useEffect(() => {
         const token = getToken()
-        ipcRenderer.on(`${token}-data`, async (e, data: any) => {
-            console.info(data)
-        })
+
         ipcRenderer.on(`${token}-error`, (e, error) => {
+            if (`${error}`.includes(`Cancelled on client`)) {
+                return
+            }
             failed(`[CreateWebsocketFuzzer] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
@@ -39,7 +45,6 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
         })
         return () => {
             ipcRenderer.invoke("cancel-CreateWebsocketFuzzer", token)
-            ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
