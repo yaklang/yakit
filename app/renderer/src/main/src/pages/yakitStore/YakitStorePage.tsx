@@ -628,6 +628,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             type='link'
                                             onClick={() => {
                                                 onRefList()
+                                                onFullScreen()
                                             }}
                                         >
                                             返回
