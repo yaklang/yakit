@@ -4,7 +4,7 @@ import {
     Card,
     Col,
     Collapse,
-    Descriptions,
+    Descriptions, Empty,
     PageHeader,
     Row, Skeleton,
     Space,
@@ -345,6 +345,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     return <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
         <ResizeBox
             firstNode={() => {
+                if (flow === undefined) {
+                    return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
+                }
                 if (flow?.IsWebsocket) {
                     return <HTTPFlowForWebsocketViewer flow={flow}/>
                 }
@@ -361,6 +364,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             }}
             firstMinSize={300}
             secondNode={() => {
+                if (flow === undefined) {
+                    return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
+                }
                 if (flow?.IsWebsocket) {
                     return <WebsocketFrameHistory websocketHash={flow.WebsocketHash||""}/>
                 }
