@@ -13,7 +13,7 @@ export interface WebsocketFlowViewerProp {
 }
 
 
-interface WebsocketFlowFromFuzzer {
+export interface WebsocketFlowFromFuzzer {
     SwitchProtocolSucceeded: boolean
     IsDataFrame: boolean
     FromServer: boolean
@@ -29,6 +29,9 @@ interface WebsocketFlowFromFuzzer {
     DataFrameIndex: number
     DataSizeVerbose: string
     DataVerbose: string
+
+    IsUpgradeResponse: boolean
+    UpgradeResponse: Uint8Array
 }
 
 const {ipcRenderer} = window.require("electron");

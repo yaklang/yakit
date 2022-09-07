@@ -395,6 +395,10 @@ message ClientWebsocketResponse {
   // 设置大小
   string DataSizeVerbose = 14;
   string DataVerbose = 15;
+
+  // 升级
+  bool IsUpgradeResponse = 16;
+  bytes UpgradeResponse = 17;
 }
 
 message DefaultProxyResult {
