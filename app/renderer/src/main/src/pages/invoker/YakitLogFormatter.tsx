@@ -1,6 +1,5 @@
 import React from "react";
-import {Button, Card, Col, Divider, Row, Space, Table, Tag, Timeline, Typography} from "antd";
-import ReactJson from "react-json-view";
+import {Button, Card, Col, Divider, Row, Space, Tag, Timeline} from "antd";
 import {formatTimestamp} from "../../utils/timeUtil";
 import {showModal} from "../../utils/showModal";
 import {GraphData} from "../graph/base";
@@ -13,7 +12,7 @@ import {CodeViewer} from "../../utils/codeViewer";
 import {YakEditor} from "../../utils/editors";
 import {AutoCard} from "../../components/AutoCard";
 import MDEditor from "@uiw/react-md-editor";
-import {openABSFile, openABSFileLocated} from "../../utils/openWebsite";
+import {openABSFileLocated} from "../../utils/openWebsite";
 import {callCopyToClipboard} from "../../utils/basic";
 import {RiskDetails} from "../risks/RiskTable";
 import {Risk} from "../risks/schema";
@@ -101,22 +100,11 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                 return <div>Risk</div>
             }
         case "json":
-            try {
-                const obj = JSON.parse(props.data);
-                return <Space direction={"vertical"} style={{width: "100%"}}>
-                    {props.timestamp > 0 &&
-                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
-                    <Card title={"JSON 结果输出"} size={"small"}>
-                        <ReactJson src={obj} enableClipboard={false} collapsed={!!props.isCollapsed}/>
-                    </Card>
-                </Space>
-            } catch (e) {
-                return <Space>
-                    {props.timestamp > 0 &&
-                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
-                    <CodeViewer value={`${props.data}`} height={150} width={"100%"} mode={"json"}/>
-                </Space>
-            }
+            return <Space>
+                {props.timestamp > 0 &&
+                <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
+                <CodeViewer value={`${props.data}`} height={150} width={"100%"} mode={"json"}/>
+            </Space>
         case "markdown":
             return <MDEditor.Markdown source={props.data}/>
         case "text":
@@ -144,7 +132,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                         <Button onClick={e => showModal({
                             title: "JSON 数据",
                             content: <>
-                                <ReactJson src={obj}/>
+                                {JSON.stringify(obj)}
                             </>
                         })}>JSON</Button>
                     ]}
@@ -188,7 +176,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                         <Button onClick={e => showModal({
                             title: "JSON 数据",
                             content: <>
-                                <ReactJson src={graphData}/>
+                                {JSON.stringify(graphData)}
                             </>
                         })}>JSON</Button>
                     ]}

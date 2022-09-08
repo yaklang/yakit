@@ -1,18 +1,8 @@
-import React, {useEffect, useState} from "react";
-import {Button, Card, Col, Collapse, Divider, Empty, List, Popconfirm, Row, Space, Tabs, Tag} from "antd";
-import {EditorProps, HTTPPacketEditor, YakCodeEditor, YakEditor} from "../../utils/editors";
-import {genDefaultPagination, YakScript, YakScriptHookItem, YakScriptHooks} from "../invoker/schema";
-import {YakExecutorParam} from "../invoker/YakExecutorParams";
-import {showModal} from "../../utils/showModal";
-import {YakModuleList} from "../yakitStore/YakitStorePage";
+import React from "react";
+import {Button, Card, Col, List, Popconfirm, Row, Space} from "antd";
+import {genDefaultPagination, YakScriptHookItem, YakScriptHooks} from "../invoker/schema";
 import {HTTPFlowMiniTable} from "../../components/HTTPFlowMiniTable";
-import {YakitLogViewers} from "../invoker/YakitLogFormatter";
-import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
-import ReactJson from "react-json-view";
-import {SelectOne} from "../../utils/inputUtil";
-import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter";
 import "../main.scss";
-import {MITMPluginOperatorProps} from "./MITMPluginOperator";
 import {MITMPluginListProp} from "./MITMPluginList";
 
 

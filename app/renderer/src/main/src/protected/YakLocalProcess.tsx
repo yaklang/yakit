@@ -1,17 +1,11 @@
 import React, {useEffect, useState} from "react"
 import {CopyableField} from "../utils/inputUtil"
 import {Button, Card, Col, Form, List, Popconfirm, Row, Space, Tag, Tooltip} from "antd"
-import ReactJson from "react-json-view"
 import {failed, info} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {YakUpgrade} from "../components/YakUpgrade"
 import {useMemoizedFn} from "ahooks"
 import {ToolOutlined} from "@ant-design/icons"
-import {refreshToken} from "@/utils/login"
-import {useStore} from "@/store/index"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 
 export interface YakLocalProcessProp {
     onConnected?: (port: number, host: string) => any
@@ -290,7 +284,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                                                     title: "YakProcess 详情",
                                                                                     content: (
                                                                                         <>
-                                                                                            <ReactJson src={i} />
+                                                                                            {JSON.stringify(i)}
                                                                                         </>
                                                                                     )
                                                                                 })

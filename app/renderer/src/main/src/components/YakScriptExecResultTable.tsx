@@ -7,15 +7,11 @@ import {
     QueryGeneralRequest,
     QueryGeneralResponse
 } from "../pages/invoker/schema"
-import {yakQueryHTTPFlow, YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
-import ReactJson from "react-json-view"
-import {ManySelectOne} from "../utils/inputUtil"
 import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter"
 import {ExtractExecResultMessage} from "./yakitLogSchema"
 import {ExecResultLog} from "../pages/invoker/batch/ExecMessageViewer"
-import {DeleteOutlined, ReloadOutlined, LoadingOutlined} from "@ant-design/icons"
+import {DeleteOutlined, LoadingOutlined, ReloadOutlined} from "@ant-design/icons"
 import {showByCursorContainer} from "../utils/showByCursor"
-import {divider} from "@uiw/react-md-editor"
 import {AutoCard} from "./AutoCard"
 import {useMemoizedFn} from "ahooks"
 import {failed, success} from "@/utils/notification"

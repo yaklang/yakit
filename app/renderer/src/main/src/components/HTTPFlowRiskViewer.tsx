@@ -3,8 +3,6 @@ import {Button, Card, Descriptions, Divider, Space, Switch, Tag} from "antd";
 import {LogLevelToCode} from "./HTTPFlowTable";
 import {CopyableField} from "../utils/inputUtil";
 import {showModal} from "../utils/showModal";
-import {divider} from "@uiw/react-md-editor";
-import ReactJson from "react-json-view";
 import {CodeViewer} from "../utils/codeViewer";
 
 export interface HTTPFlowRiskViewerProp {
@@ -47,7 +45,7 @@ export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
                         title: "JSON Object",
                         width: "50%",
                         content: <div style={{overflow: "auto"}}>
-                            <ReactJson src={props.risk}/>
+                            {JSON.stringify(props.risk)}
                         </div>
                     })
                 }}>JSON</Button>

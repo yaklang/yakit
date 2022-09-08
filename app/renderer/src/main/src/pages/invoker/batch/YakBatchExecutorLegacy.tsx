@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {
     Button,
-    Col,
     Divider,
     Form,
     Input,
@@ -15,13 +14,11 @@ import {
     Tag,
     Typography
 } from "antd";
-import {InputInteger, InputItem} from "../../../utils/inputUtil";
-import ReactJson from "react-json-view";
-import {YakScriptManagerPage, YakScriptOperator} from "../YakScriptManager";
+import {InputInteger} from "../../../utils/inputUtil";
+import {YakScriptOperator} from "../YakScriptManager";
 import {randomString} from "../../../utils/randomUtil";
 import {ExecResult, YakScript} from "../schema";
 import {info} from "../../../utils/notification";
-import {YakitLogFormatter} from "../YakitLogFormatter";
 import {ExecResultsViewer} from "./ExecMessageViewer";
 import {showModal} from "../../../utils/showModal";
 import {YakEditor} from "../../../utils/editors";
