@@ -996,6 +996,9 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             params
         })
             .then((res) => {
+                if (!res.data) {
+                    res.data = []
+                }
                 const item = res
                 const newCommentChildResponses = {
                     data: page === 1 ? item.data : commentChildResponses.data.concat(item.data),
