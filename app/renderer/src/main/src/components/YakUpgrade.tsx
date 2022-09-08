@@ -216,9 +216,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                                         手动下载完成后 Windows 用户可以把引擎放在 %HOME%/yakit-projects/yak-engine/yak.exe 即可识别
                                         <br/>
                                         MacOS / Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
-                                    </div>}>
-
-                                    </Alert>
+                                    </div>}/>
                                 </Space>
                             })
                         }}>
@@ -228,8 +226,8 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                     <div style={{width: "100%", textAlign: "right"}}>
                         <Button type="link" danger={true} onClick={() => {
                             ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
-                                }).catch((err: any) => {
-                                })
+                            }).catch((err: any) => {
+                            })
                         }}>
                             删除安装包
                         </Button>

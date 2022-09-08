@@ -30,11 +30,12 @@ import {useThrottleFn} from "ahooks";
 import {saveValue} from "./kv";
 import {callCopyToClipboard} from "./basic";
 
-export interface OneLineProp extends JSX.ElementChildrenAttribute {
+export interface OneLineProp {
     width?: string | number
     overflow?: string
     maxWidth?: string | any
     title?: string
+    children?: React.ReactNode
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
@@ -595,7 +596,7 @@ const EditableTags: React.FC<EditableTagsProps> = (p) => {
         setValue("");
         p.onCreated && p.onCreated(value)
     };
-    const inputRef = useRef<Input>(null);
+    const inputRef = useRef<any>(null);
 
     useEffect(() => {
         if (inputVisible) {

@@ -475,7 +475,7 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 ]}
                 setValue={(i) => setParams({...params, Proto: [i]})}
                 value={(params.Proto || []).length > 0 ? params.Proto[0] : "tcp"}
-            ></SelectOne>
+            />
             {(params.Mode === "all" || params.Mode === "syn") && (
                 <>
                     <Divider orientation={"left"}>SYN 配置</Divider>

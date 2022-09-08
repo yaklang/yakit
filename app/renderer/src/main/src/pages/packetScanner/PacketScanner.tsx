@@ -76,7 +76,7 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
                         httpRequest={HttpRequest}
                     />
                 )}
-            ></ResizeBox>
+            />
         </div>
     )
 }
@@ -133,7 +133,7 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) 
             secondNode={() => {
                 return <PacketScanResult token={token} />
             }}
-        ></ResizeBox>
+        />
     )
 })
 

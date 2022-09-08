@@ -117,9 +117,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
                         <CopyableField mark={true} text={`ping -c 4 -s ${sizeNow} ${host}`}/>}
                     <div>命令</div>
                 </Space>
-            </Space>}>
-
-            </Alert>
+            </Space>}/>
             <Table<ICMPSizeLoggerInfo>
                 size={"small"}
                 dataSource={records}

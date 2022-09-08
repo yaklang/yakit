@@ -123,9 +123,7 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
                 <SelectOne size={"small"} data={[
                     {value: "request", text: "请求"},
                     {value: "response", text: "响应"},
-                ]} value={mode} setValue={setMode} formItemStyle={{marginBottom: 0}}>
-
-                </SelectOne>
+                ]} value={mode} setValue={setMode} formItemStyle={{marginBottom: 0}}/>
                 {websocketBuildFinished ? <Tag color={"green"}>已建立连接</Tag> : <Tag color={"orange"}>连接未建立</Tag>}
             </Space>}
                 bodyStyle={{padding: 0}}

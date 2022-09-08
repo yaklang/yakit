@@ -11,6 +11,7 @@ export interface CollapseParagraphProps {
     rows?: number
     isLine?: boolean
     valueConfig?: ParagraphProps
+    children?: React.ReactNode
 }
 
 export const CollapseParagraph: React.FC<CollapseParagraphProps> = (props) => {

@@ -78,8 +78,6 @@ const SingleHttpFlowViewer: React.FC<SingleHttpFlowViewerProps> = React.memo(pro
 
                 </Space>
             )}
-        >
-
-        </HTTPPacketEditor>
+        />
     )
 })

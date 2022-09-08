@@ -104,9 +104,7 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
                     </Space>
                 </Space> : <Spin/>}
                 {randomPort > 0 && !loading ? <CopyableField text={`${randomPort}`}/> : <Spin/>}
-            </Space>}>
-
-            </Alert>
+            </Space>}/>
             <Table<RandomPortTriggerNotification>
                 size={"small"}
                 pagination={false}

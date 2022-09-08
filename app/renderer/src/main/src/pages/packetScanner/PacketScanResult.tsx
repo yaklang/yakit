@@ -20,8 +20,5 @@ export const PacketScanResult: React.FC<PacketScanResultProp> = (props) => {
         feature={infoState.featureMessageState}
         statusCards={infoState.statusState}
         onXtermRef={setXtermRef}
-    >
-
-    </PluginResultUI>
-
+    />
 };

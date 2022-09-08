@@ -161,7 +161,5 @@ export const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = (props) =>
         </AutoCard> : <Empty description={"选择 Websocket Data Frame 以查看详情"}>
 
         </Empty>}
-    >
-
-    </ResizeBox>
+    />
 };

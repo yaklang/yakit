@@ -92,9 +92,7 @@ export const MITMContentReplacerImport: React.FC<MITMContentReplacerImportProp> 
                     setValue={e => {
                         setParams({...params, JsonRaw: Buffer.from(e)})
                     }}
-                >
-
-                </YakEditor>}
+                />}
             </div>
         </Form.Item>
         <SwitchItem label={"全部替换"} setValue={ReplaceAll => setParams({...params, ReplaceAll})}

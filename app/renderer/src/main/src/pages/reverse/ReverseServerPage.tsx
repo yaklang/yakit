@@ -234,8 +234,7 @@ export const ReverseServerPage: React.FC<ReverseServerPageProp> = (props) => {
                         本地 HTTPS 反连 <CopyableField
                         text={`https://${bridgeIP && params.ConnectParam?.Addr ? bridgeIP : "127.0.0.1"}:${params.LocalFacadePort}/${reverseToken}`}/>
                     </Space>
-                </Space>}>
-            </Alert>}
+                </Space>}/>}
         </PageHeader>
         <Row>
             <div style={{width: "100%"}}>

@@ -381,7 +381,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 />
             }}
             secondMinSize={300}
-        >
-        </ResizeBox>
+        />
     </AutoSpin>
 }

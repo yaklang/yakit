@@ -73,6 +73,6 @@ export const BatchExecutorPageEx: React.FC<BatchExecutorPageExProp> = (props) =>
                 isAll={isAll}
                 executeHistory={executeHistory}
             />}
-        ></ResizeBox>
+        />
     )
 }

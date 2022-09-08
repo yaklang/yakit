@@ -201,9 +201,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                                 setBuildTemp(r)
                                 setEncodeTemp(undefined)
                             }}
-                        >
-
-                        </ManySelectOne>
+                        />
                         {buildTemp && <Form.Item label={" "} colon={false}>
                             <Card bordered={true} title={"基础标签"} size={"small"} extra={[
                                 <Button
@@ -235,9 +233,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                             data={encodeOperators.map(i => {
                                 return {value: i.name, text: i.name}
                             })}
-                        >
-
-                        </ManySelectOne>
+                        />
                         {/* {encodeTemp && <Form.Item
                             label={" "} colon={false}
                             help={"本标签一般负责对 Payload 进行编码等处理，可以嵌套在一个普通(基础)标签外部"}

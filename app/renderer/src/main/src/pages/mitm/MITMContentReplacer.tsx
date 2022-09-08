@@ -287,9 +287,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             setRules([...rules])
                         }} value={i.ExtraTag.join(",")}
                         formItemStyle={{marginBottom: 0}}
-                    >
-
-                    </ManyMultiSelectForString>
+                    />
                 },
                 {
                     title: "操作", render: (i: MITMContentReplacerRule) => <Space>

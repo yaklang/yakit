@@ -900,7 +900,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                         </Descriptions.Item>
                     )}
                     <Descriptions.Item label='详情' span={3}>
-                        <div style={{maxHeight: 180, overflow: "auto"}}>{info.Details || "-"}</div>
+                        <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Details}` || "-"}</div>
                     </Descriptions.Item>
                 </>
             )}

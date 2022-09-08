@@ -321,7 +321,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             firstMinSize={"300px"}
                             firstRatio={"320px"}
                             secondNode={executor()}
-                        ></ResizeBox>
+                        />
                     )}
                     {/* {script && (
                         <PluginExecutor
@@ -427,7 +427,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             firstMinSize={"300px"}
                             firstRatio={"320px"}
                             secondNode={executor()}
-                        ></ResizeBox>
+                        />
                     )}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文档"} key={"docs"} disabled={isDisabledLocal}>
