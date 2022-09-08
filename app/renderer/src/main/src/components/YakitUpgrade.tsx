@@ -128,32 +128,44 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
                     </Space>}/>
             </Spin>
             <Spin spinning={downloading}>
-                <Space>
-                    <Popconfirm
-                        visible={(isLatest || loading || latestLoading) ? false : undefined}
-                        title={`确定要更新版本: ${latestVersion}`}
-                        onConfirm={e => {
-                            setDownloading(true)
-                            ipcRenderer.invoke("download-latest-yakit", latestVersion).then(() => {
-                                success("下载完毕")
-                                install(latestVersion)
-                            }).catch((e: any) => {
-                                failed("下载失败")
-                            }).finally(() => {
-                                setTimeout(() => setDownloading(false), 100)
-                            })
-                        }}
-                    >
-                        <Button
-                            type={"primary"} disabled={isLatest || loading || latestLoading}
+                <div style={{display: "flex"}}>
+                    <Space>
+                        <Popconfirm
+                            visible={(isLatest || loading || latestLoading) ? false : undefined}
+                            title={`确定要更新版本: ${latestVersion}`}
+                            onConfirm={e => {
+                                setDownloading(true)
+                                ipcRenderer.invoke("download-latest-yakit", latestVersion).then(() => {
+                                    success("下载完毕")
+                                    install(latestVersion)
+                                }).catch((e: any) => {
+                                    failed("下载失败")
+                                }).finally(() => {
+                                    setTimeout(() => setDownloading(false), 100)
+                                })
+                            }}
                         >
-                            一键下载最新版 Yakit
+                            <Button
+                                type={"primary"} disabled={isLatest || loading || latestLoading}
+                            >
+                                一键下载最新版 Yakit
+                            </Button>
+                        </Popconfirm>
+                        <Button type={"link"} onClick={() => {
+                            install(latestVersion)
+                        }}>我已经下载，点此安装</Button>
+
+                    </Space>
+                    <div style={{width: "100%", textAlign: "right"}}>
+                        <Button type="link" danger={true} onClick={() => {
+                            ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
+                                }).catch((err: any) => {
+                                })
+                        }}>
+                            删除安装包
                         </Button>
-                    </Popconfirm>
-                    <Button type={"link"} onClick={() => {
-                        install(latestVersion)
-                    }}>我已经下载，点此安装</Button>
-                </Space>
+                    </div>
+                </div>
             </Spin>
             {downloadProgress && <Progress percent={
                 downloading ? Math.floor((downloadProgress?.percent || 0) * 100) : 100

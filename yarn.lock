@@ -1826,13 +1826,6 @@ rc@^1.2.8:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-infinite-scroll-component@^6.1.0:
-  version "6.1.0"
-  resolved "https://registry.npmmirror.com/react-infinite-scroll-component/-/react-infinite-scroll-component-6.1.0.tgz#7e511e7aa0f728ac3e51f64a38a6079ac522407f"
-  integrity sha512-SQu5nCqy8DxQWpnUVLx7V7b7LcA37aM7tvoWjTLZp1dk6EJibM5/4EJKzOnl07/BsM1Y40sKLuqjCwwH/xV0TQ==
-  dependencies:
-    throttle-debounce "^2.1.0"
-
 read-config-file@6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/read-config-file/-/read-config-file-6.2.0.tgz#71536072330bcd62ba814f91458b12add9fc7ade"
@@ -2149,11 +2142,6 @@ temp-file@^3.4.0:
   dependencies:
     async-exit-hook "^2.0.1"
     fs-extra "^10.0.0"
-
-throttle-debounce@^2.1.0:
-  version "2.3.0"
-  resolved "https://registry.npmmirror.com/throttle-debounce/-/throttle-debounce-2.3.0.tgz#fd31865e66502071e411817e241465b3e9c372e2"
-  integrity sha512-H7oLPV0P7+jgvrk+6mwwwBDmxTaxnu9HMXmloNLXwnNO0ZxZ31Orah2n8lU1eMPvsaowP2CX+USCgyovXfdOFQ==
 
 throttleit@^1.0.0:
   version "1.0.0"

@@ -97,8 +97,8 @@
     ]
   },
   "devDependencies": {
-    "node-sass": "6.0.0",
     "prettier": "^2.4.1",
+    "sass": "^1.54.8",
     "sass-loader": "^12.6.0"
   },
   "resolutions": {

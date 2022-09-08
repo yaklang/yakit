@@ -286,7 +286,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 {(finalFeatures || []).map((i, index) => {
                     return (
                         <Tabs.TabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
-                            <YakitFeatureRender params={i.params} feature={i.feature} execResultsLog={feature || []}/>
+                            <YakitFeatureRender params={i.params} feature={i.feature} execResultsLog={feature || []} excelName={YakitFeatureTabName(i.feature, i.params)} />
                         </Tabs.TabPane>
                     )
                 })}
@@ -375,6 +375,7 @@ export interface YakitFeatureRenderProp {
     feature: string
     params: any
     execResultsLog: ExecResultLog[]
+    excelName?: string
 }
 
 export const YakitFeatureTabName = (feature: string, params: any) => {
@@ -599,7 +600,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
             return (
                 <div style={{height: "100%", display: "flex", flexFlow: "column", overflowY: "auto"}}>
                     <div className='btn-body'>
-                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='爆破结果'/>
+                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName={props.excelName || "输出表"}/>
                     </div>
                     <BasicTable columns={columns} data={tableData.current} loading={loading}/>
                 </div>
