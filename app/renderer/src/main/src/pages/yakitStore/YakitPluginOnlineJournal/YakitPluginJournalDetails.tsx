@@ -13,6 +13,7 @@ import { LineConversionIcon } from "@/assets/icons"
 import { failed } from "@/utils/notification"
 import { NetWorkApi } from "@/services/fetch"
 import { API } from "@/services/swagger/resposeType"
+import { onLocalScriptToOnlinePlugin } from "@/components/SyncCloudButton/SyncCloudButton"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -64,7 +65,6 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
     const [originalCode, setOriginalCode,] = useState<string>(defParams.Content)
     const [modifiedCode, setModifiedCode,] = useState<string>("yakit.AutoInitYakit()\n\n# Input your code!\n\n55555\n\n",)
     useEffect(() => {
-        console.log('YakitPluginJournalDetailsId', YakitPluginJournalDetailsId);
         if (!YakitPluginJournalDetailsId) return
         getJournalDetails(YakitPluginJournalDetailsId)
     }, [YakitPluginJournalDetailsId])
@@ -78,6 +78,11 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
             },
         }).then((res) => {
             console.log('详情', res);
+            if (res.user_role === 'admin') {
+
+            } else {
+                // setOriginalCode(res.merge_before_plugin)
+            }
         }).catch((err) => {
             failed("获取插件日志详情失败:" + err)
         })
@@ -86,6 +91,15 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                     setLoading(false)
                 }, 200)
             })
+    })
+    const onMergePlugin = useMemoizedFn((merge_plugin: boolean) => {
+        const newParams = onLocalScriptToOnlinePlugin(params);
+        const mergePlugin: API.MergePluginRequest = {
+            ...newParams,
+            id: YakitPluginJournalDetailsId,
+            merge_plugin,
+        }
+        console.log('mergePlugin', mergePlugin);
     })
     return (
         <Spin spinning={loading}>
@@ -172,10 +186,10 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                     </Form.Item>
                     <Form.Item colon={false} label={" "}>
                         <Space>
-                            <Button type='primary' danger onClick={() => { }} >
+                            <Button type='primary' danger onClick={() => onMergePlugin(false)} >
                                 拒绝
                             </Button>
-                            <Button type='primary' onClick={() => { }} >
+                            <Button type='primary' onClick={() => onMergePlugin(true)} >
                                 同意
                             </Button>
                         </Space>

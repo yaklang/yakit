@@ -20,8 +20,8 @@ interface SyncCloudButtonProps {
     uploadLoading?: (boolean) => void
 }
 
-export const onLocalScriptToOnlinePlugin = (params: YakScript, type: number) => {
-    const onlineParams: API.SaveYakitPlugin = {
+export const onLocalScriptToOnlinePlugin = (params: YakScript, type?: number) => {
+    const onlineParams = {
         type: params.Type,
         script_name: params.ScriptName,
         content: params.Content || '',
@@ -37,12 +37,15 @@ export const onLocalScriptToOnlinePlugin = (params: YakScript, type: number) => 
             extra_setting: p.ExtraSetting || ''
         })),
         help: params.Help || '',
-        default_open: type === 1 ? false : true, // 1 个人账号
         contributors: params.OnlineContributors || "",
+        default_open: false, // 这个字段暂时无用
         //
         enable_plugin_selector: params.EnablePluginSelector,
         plugin_selector_types: params.PluginSelectorTypes,
         is_general_module: params.IsGeneralModule
+    }
+    if (type) {
+        onlineParams.default_open = type === 1 ? false : true
     }
     return onlineParams
 }

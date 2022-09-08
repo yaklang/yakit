@@ -17,59 +17,6 @@ interface YakitPluginOnlineJournalProps {
     pluginId: number
 }
 
-const defData = [
-    {
-        id: 1,
-        time: '2022-8-25  13：53',
-        content: '插件已删除',
-    },
-    {
-        id: 2,
-        time: '2022-8-25  13：40',
-        content: '通过张三的修改申请',
-    },
-    {
-        id: 3,
-        time: '2022-8-25  13：40 ',
-        content: '张三申请修改插件',
-    },
-    {
-        id: 4,
-        time: '2022-8-25  13：20',
-        content: '管理员桔子爱吃橘子修改插件',
-    },
-    {
-        id: 5,
-        time: '2022-8-25  13：20',
-        content: '管理员桔子爱吃橘子修改插件',
-    },
-    {
-        id: 6,
-        time: '2022-8-25  13：20',
-        content: '管理员桔子爱吃橘子修改插件',
-    },
-    {
-        id: 7,
-        time: '2022-8-25  13：20',
-        content: '管理员桔子爱吃橘子修改插件',
-    },
-    {
-        id: 8,
-        time: '2022-8-25  13：20',
-        content: '管理员桔子爱吃橘子修改插件',
-    },
-    {
-        id: 9,
-        time: '2022-8-25  13：20',
-        content: '管理员桔子爱吃橘子修改插件',
-    },
-    {
-        id: 10,
-        time: '2022-8-25  13：20',
-        content: '管理员桔子爱吃橘子修改插件',
-    },
-]
-
 interface JournalProps {
     id: number
     time: string

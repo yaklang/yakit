@@ -397,28 +397,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             okText: '继续提交',
             cancelText: '关闭',
             onOk() {
+                const newParams = onLocalScriptToOnlinePlugin(params);
                 const onlineParams: API.ApplyPluginRequest = {
+                    ...newParams,
                     id: parseInt(`${params.OnlineId}`),
-                    type: params.Type,
-                    content: params.Content || '',
-                    params: params.Params.map((p) => ({
-                        field: p.Field || '',
-                        default_value: p.DefaultValue || '',
-                        type_verbose: p.TypeVerbose || '',
-                        field_verbose: p.FieldVerbose || '',
-                        help: p.Help || '',
-                        required: p.Required,
-                        group: p.Group || '',
-                        extra_setting: p.ExtraSetting || ''
-                    })),
-                    help: params.Help || '',
-                    tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
-                    // default_open: false,
-                    script_name: params.ScriptName,
-                    contributors: params.OnlineContributors || "",
-                    enable_plugin_selector: params.EnablePluginSelector,
-                    plugin_selector_types: params.PluginSelectorTypes,
-                    is_general_module: params.IsGeneralModule
                 }
                 setUpdateLoading(true)
                 NetWorkApi<API.ApplyPluginRequest, API.ActionSucceeded>({
