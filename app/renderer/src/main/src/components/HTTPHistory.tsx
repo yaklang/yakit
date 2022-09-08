@@ -6,6 +6,7 @@ import {ResizeBox} from "./ResizeBox"
 import {AutoCard} from "./AutoCard"
 import {useInViewport} from "ahooks";
 import {Spin} from "antd";
+import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow";
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -13,6 +14,8 @@ export interface HTTPPacketFuzzable {
 }
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {
+    websocket?: boolean
+    title?: string
 }
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
@@ -29,21 +32,25 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     return (
         <AutoCard bodyStyle={{margin: 0, padding: 0, overflow: "hidden"}}>
             <ResizeBox
-                firstNode={
+                firstNode={() =>
                     <HTTPFlowTable
                         noHeader={true}
+                        params={props?.websocket ? {
+                            OnlyWebsocket: true
+                        } as YakQueryHTTPFlowRequest : undefined}
                         inViewport={inViewport}
                         // tableHeight={200}
                         // tableHeight={selected ? 164 : undefined}
                         onSelected={(i) => setSelectedHTTPFlow(i)}
                         paginationPosition={"topRight"}
                         onSearch={setHighlightSearch}
+                        title={props?.title}
                     />
                 }
                 firstMinSize={160}
                 isVer={true}
                 secondMinSize={50}
-                secondNode={
+                secondNode={() =>
                     <div style={{width: "100%", height: "100%"}} ref={ref}>
                         <HTTPFlowDetailMini
                             noHeader={true}

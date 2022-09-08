@@ -4,7 +4,7 @@ import {
     Card,
     Col,
     Collapse,
-    Descriptions,
+    Descriptions, Empty,
     PageHeader,
     Row, Skeleton,
     Space,
@@ -20,7 +20,7 @@ import {
     PlusCircleOutlined,
 } from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable";
-import {HTTPPacketEditor, YakEditor} from "../utils/editors";
+import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors";
 import {failed} from "../utils/notification";
 import {FuzzableParamList} from "./FuzzableParamList";
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
@@ -31,6 +31,8 @@ import {ResizeBox} from "./ResizeBox";
 import ReactResizeDetector from "react-resize-detector";
 import {Buffer} from "buffer";
 import {Uint8ArrayToString} from "@/utils/str";
+import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer";
+import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -338,30 +340,46 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     //         </AutoSpin>
     //     </>
     // }
+    const spinning = (!flow || loading);
 
-    return <AutoSpin spinning={(!flow || loading)} tip={"选择想要查看的请求 / 等待加载"}>
-        {/*<ReactResizeDetector onResize={(h, w) => {*/}
-        {/*    console.info(h, w)*/}
-        {/*}}/>*/}
+    return <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
         <ResizeBox
-            firstNode={<HTTPPacketEditor
-                originValue={(flow?.Request) || new Uint8Array} readOnly={true}
-                sendToWebFuzzer={!!props.sendToWebFuzzer}
-                defaultHeight={props.defaultHeight}
-                loading={loading}
-                defaultHttps={props.defaultHttps}
-                hideSearch={true}
-                defaultSearchKeyword={props.search}
-            />}
+            firstNode={() => {
+                if (flow === undefined) {
+                    return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
+                }
+                if (flow?.IsWebsocket) {
+                    return <HTTPFlowForWebsocketViewer flow={flow}/>
+                }
+                return <HTTPPacketEditor
+                    originValue={(flow?.Request) || new Uint8Array} readOnly={true}
+                    sendToWebFuzzer={!!props.sendToWebFuzzer}
+                    defaultHeight={props.defaultHeight}
+                    loading={loading}
+                    defaultHttps={props.defaultHttps}
+                    hideSearch={true}
+                    noHex={true}
+                    defaultSearchKeyword={props.search}
+                />
+            }}
             firstMinSize={300}
-            secondNode={<HTTPPacketEditor
-                isResponse={true}
-                loading={loading}
-                originValue={(flow?.Response) || new Uint8Array}
-                readOnly={true} defaultHeight={props.defaultHeight}
-                hideSearch={true}
-                defaultSearchKeyword={props.search}
-            />}
+            secondNode={() => {
+                if (flow === undefined) {
+                    return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
+                }
+                if (flow?.IsWebsocket) {
+                    return <WebsocketFrameHistory websocketHash={flow.WebsocketHash||""}/>
+                }
+                return <HTTPPacketEditor
+                    isResponse={true}
+                    noHex={true}
+                    loading={loading}
+                    originValue={(flow?.Response) || new Uint8Array}
+                    readOnly={true} defaultHeight={props.defaultHeight}
+                    hideSearch={true}
+                    defaultSearchKeyword={props.search}
+                />
+            }}
             secondMinSize={300}
         >
         </ResizeBox>

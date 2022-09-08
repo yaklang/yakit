@@ -1,5 +1,20 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
-import {Button, Col, Empty, Form, Input, PageHeader, Popconfirm, Popover, Row, Select, Space, Tag, Tooltip} from "antd"
+import {
+    Button,
+    Checkbox,
+    Col,
+    Empty,
+    Form,
+    Input,
+    PageHeader,
+    Popconfirm,
+    Popover,
+    Row,
+    Select,
+    Space,
+    Tag,
+    Tooltip
+} from "antd"
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../utils/showByCursor"
 import {showDrawer} from "../utils/showModal"
@@ -65,6 +80,9 @@ export interface HTTPFlow {
 
     // Placeholder
     IsPlaceholder?: boolean
+
+    IsWebsocket?: boolean
+    WebsocketHash?: string
 }
 
 export interface FuzzableParams {
@@ -343,6 +361,7 @@ export interface HTTPFlowTableProp {
     params?: YakQueryHTTPFlowRequest
     inViewport?: boolean
     onSearch?: (i: string) => any
+    title?: string
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -746,9 +765,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     })
 
     // 第一次启动的时候加载一下
+    // OnlyWebsocket 变的时候加载一下
     useEffect(() => {
         update(1)
-    }, [])
+    }, [
+        params.OnlyWebsocket
+    ])
 
     const scrollTableTo = useMemoizedFn((size: number) => {
         if (!tableRef || !tableRef.current) return
@@ -966,6 +988,52 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [props.inViewport])
 
+    const clearHistoryAction = useMemoizedFn((e: MouseEvent) => {
+        showByCursorMenu({
+            content: [
+                {
+                    title: "重置请求 ID", onClick: () => {
+                        ipcRenderer
+                            .invoke("DeleteHTTPFlows", {DeleteAll: true})
+                            .then(() => {
+
+                            })
+                            .catch((e: any) => {
+                                failed(`历史记录删除失败: ${e}`)
+                            }).finally(() => update(1))
+                    }
+                },
+                {
+                    title: "不重置请求 ID", onClick: () => {
+                        const newParams = {
+                            Filter: {
+                                ...params
+                            },
+                            DeleteAll: false
+                        }
+                        ipcRenderer
+                            .invoke("DeleteHTTPFlows", newParams)
+                            .then((i: HTTPFlow) => {
+                                setParams(props.params || {SourceType: "mitm"})
+                            })
+                            .catch((e: any) => {
+                                failed(`历史记录删除失败: ${e}`)
+                            })
+                        setLoading(true)
+                        info("正在删除...如自动刷新失败请手动刷新")
+                        setCompareLeft({content: "", language: "http"})
+                        setCompareRight({content: "", language: "http"})
+                        setCompareState(0)
+                        setTimeout(() => {
+                            update(1)
+                            if (props.onSelected) props.onSelected(undefined)
+                        }, 400)
+                    }
+                }
+            ]
+        }, e.clientX, e.clientY)
+    })
+
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -983,7 +1051,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             />
             {!props.noHeader && (
                 <PageHeader
-                    title={"HTTP History"}
+                    title={props?.title ? props.title : "HTTP History"}
                     subTitle={
                         <Space>
                             {"所有相关请求都在这里"}
@@ -1036,7 +1104,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             <Row style={{margin: "5px 0 5px 5px"}}>
                 <Col span={12}>
                     <Space>
-                        <span>HTTP History</span>
+                        <span>{props?.title ? props.title : "HTTP History"}</span>
                         <Button
                             icon={<ReloadOutlined/>}
                             type={"link"}
@@ -1071,55 +1139,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 update(1)
                             }}
                         />
-                        {props.noHeader && (
-                            <Popconfirm
-                                title={"确定想要删除所有记录吗？不可恢复"}
-                                onConfirm={(e) => {
-                                    const newParams = {
-                                        Filter: {
-                                            ...params
-                                        },
-                                        DeleteAll: false
-                                    }
-                                    ipcRenderer
-                                        .invoke("DeleteHTTPFlows", newParams)
-                                        .then((i: HTTPFlow) => {
-                                            setParams(props.params || {SourceType: "mitm"})
-                                        })
-                                        .catch((e: any) => {
-                                            failed(`历史记录删除失败: ${e}`)
-                                        })
-                                    setLoading(true)
-                                    info("正在删除...如自动刷新失败请手动刷新")
-                                    setCompareLeft({content: "", language: "http"})
-                                    setCompareRight({content: "", language: "http"})
-                                    setCompareState(0)
-                                    setTimeout(() => {
-                                        update(1)
-                                        if (props.onSelected) props.onSelected(undefined)
-                                    }, 400)
-                                }}
-                            >
-                                <Button danger={true} size={"small"}>
-                                    删除当前筛选
-                                </Button>
-                            </Popconfirm>
-                        )}
-                        {props.noHeader && <Popconfirm
-                            title={"删除全部数据并重置索引？"}
-                            onConfirm={() => {
-                                ipcRenderer
-                                    .invoke("DeleteHTTPFlows", {DeleteAll: true})
-                                    .then(() => {
-
-                                    })
-                                    .catch((e: any) => {
-                                        failed(`历史记录删除失败: ${e}`)
-                                    }).finally(() => update(1))
+                        {props.noHeader && <Button danger={true} size={"small"}
+                                                   onClick={e => clearHistoryAction(e as any)}
+                                                   onContextMenu={e => clearHistoryAction(e as any)}
+                        >清空 HTTP History</Button>}
+                        <Checkbox
+                            checked={params.OnlyWebsocket}
+                            onChange={() => {
+                                setParams({...params, OnlyWebsocket: !params.OnlyWebsocket})
                             }}
-                        >
-                            <Button type={"link"} danger={true}>重置数据库</Button>
-                        </Popconfirm>}
+                        >只看 Websocket</Checkbox>
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                 </Col>
@@ -1538,10 +1567,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                            ? TableRowColor(
-                                                rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                            )
-                                            : "#ffffff"
+                                                ? TableRowColor(
+                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                                )
+                                                : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")

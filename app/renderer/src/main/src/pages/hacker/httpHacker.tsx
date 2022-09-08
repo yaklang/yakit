@@ -13,6 +13,7 @@ import ReactDOM from "react-dom"
 import "../main.scss"
 import {useHotkeys} from "react-hotkeys-hook";
 import {info} from "../../utils/notification";
+import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory";
 
 export interface HTTPHackerProp {
 }
@@ -73,6 +74,11 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                         <HTTPHistory/>
                     </div>
                 </Tabs.TabPane>
+                {/*<Tabs.TabPane tab={"Websocket History"} key={"wshistory"} closable={false} forceRender={false}>*/}
+                {/*    <div style={{height: "100%"}}>*/}
+                {/*        <WebsocketFlowHistory/>*/}
+                {/*    </div>*/}
+                {/*</Tabs.TabPane>*/}
                 <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
                     <YakScriptExecResultTable/>
                 </Tabs.TabPane>

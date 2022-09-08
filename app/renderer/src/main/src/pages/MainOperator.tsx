@@ -107,7 +107,9 @@ const singletonRoute: Route[] = [
     Route.DNSLog,
     Route.BatchExecutorPage,
     Route.ICMPSizeLog,
-    Route.TCPPortLog
+    Route.TCPPortLog,
+
+    Route.WebsocketHistory,
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -696,6 +698,7 @@ const Main: React.FC<MainProp> = (props) => {
     }, [])
 
     useHotkeys("Ctrl+Alt+T", () => {
+        addWebsocketHistory({})
     })
 
     useEffect(() => {
@@ -763,6 +766,20 @@ const Main: React.FC<MainProp> = (props) => {
             addFuzzerList(time, request || "", isHttps || false)
         }
     })
+
+    // websocket fuzzer 和 Fuzzer 类似
+    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean, request: Uint8Array } ) => {
+        addTabPage(Route.WebsocketFuzzer, {
+            hideAdd: false, isRecord: false, node: ContentByRoute(Route.WebsocketFuzzer, undefined, {
+                wsRequest: res.request, wsTls: res.tls,
+            }), time: "",
+        })
+    })
+    // websocket fuzzer 和 Fuzzer 类似
+    const addWebsocketHistory = useMemoizedFn((res: any) => {
+        addTabPage(Route.WebsocketHistory, {hideAdd: false, isRecord: false, node: undefined, time: ""})
+    })
+
     const addYakScript = useMemoizedFn((res: any) => {
         const time = new Date().getTime().toString()
         addTabPage(Route.AddYakitScript, {
@@ -867,6 +884,7 @@ const Main: React.FC<MainProp> = (props) => {
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
             const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
+            if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
             if (type === "scan-port") addScanPort(data)
             if (type === "brute") addBrute(data)
             if (type === "bug-test") addBugTest(1, data)
