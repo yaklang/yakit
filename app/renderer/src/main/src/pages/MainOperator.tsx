@@ -698,7 +698,6 @@ const Main: React.FC<MainProp> = (props) => {
     }, [])
 
     useHotkeys("Ctrl+Alt+T", () => {
-        addWebsocketFuzzer({})
         addWebsocketHistory({})
     })
 
@@ -769,8 +768,12 @@ const Main: React.FC<MainProp> = (props) => {
     })
 
     // websocket fuzzer 和 Fuzzer 类似
-    const addWebsocketFuzzer = useMemoizedFn((res: any) => {
-        addTabPage(Route.WebsocketFuzzer, {hideAdd: false, isRecord: false, node: undefined, time: ""})
+    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean, request: Uint8Array } ) => {
+        addTabPage(Route.WebsocketFuzzer, {
+            hideAdd: false, isRecord: false, node: ContentByRoute(Route.WebsocketFuzzer, undefined, {
+                wsRequest: res.request, wsTls: res.tls,
+            }), time: "",
+        })
     })
     // websocket fuzzer 和 Fuzzer 类似
     const addWebsocketHistory = useMemoizedFn((res: any) => {
@@ -881,6 +884,7 @@ const Main: React.FC<MainProp> = (props) => {
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
             const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
+            if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
             if (type === "scan-port") addScanPort(data)
             if (type === "brute") addBrute(data)
             if (type === "bug-test") addBugTest(1, data)

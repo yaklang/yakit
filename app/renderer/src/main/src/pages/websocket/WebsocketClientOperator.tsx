@@ -14,6 +14,7 @@ import {SettingFilled} from "@ant-design/icons";
 import {AutoSpin} from "@/components/AutoSpin";
 
 export interface WebsocketClientOperatorProp {
+    tls?: boolean
     request?: Uint8Array
     onToken: (i: string) => any
 }
@@ -30,7 +31,7 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
     const [mode, setMode] = useState<"request" | "response">("request");
 
     // 额外参数
-    const [tls, setTls] = useState(false);
+    const [tls, setTls] = useState(!!props.tls);
     const [timeoutSeconds, setTimeoutSeconds] = useState(3600);
     const [proxy, setProxy] = useState("");
 

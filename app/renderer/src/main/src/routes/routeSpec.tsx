@@ -117,6 +117,8 @@ export function RouteNameToVerboseName(r: string) {
             return "数据包扫描"
         case "batch-executor-recover":
             return "批量继续执行"
+        case "websocket-fuzzer":
+            return "Websocket Fuzzer"
         default:
             return r
     }
@@ -243,6 +245,10 @@ interface ComponentParams {
 
     // 分享的初始化参数
     shareContent?: string
+
+    // websocket fuzzer 相关
+    wsTls?: boolean
+    wsRequest?: Uint8Array
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -299,7 +305,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                 />
             )
         case Route.WebsocketFuzzer:
-            return <WebsocketFuzzer/>
+            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case Route.Codec:
             return <CodecPage />
         case Route.ModManager:

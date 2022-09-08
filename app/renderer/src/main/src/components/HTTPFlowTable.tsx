@@ -1,5 +1,20 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
-import {Button, Col, Empty, Form, Input, PageHeader, Popconfirm, Popover, Row, Select, Space, Tag, Tooltip} from "antd"
+import {
+    Button,
+    Checkbox,
+    Col,
+    Empty,
+    Form,
+    Input,
+    PageHeader,
+    Popconfirm,
+    Popover,
+    Row,
+    Select,
+    Space,
+    Tag,
+    Tooltip
+} from "antd"
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../utils/showByCursor"
 import {showDrawer} from "../utils/showModal"
@@ -750,9 +765,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     })
 
     // 第一次启动的时候加载一下
+    // OnlyWebsocket 变的时候加载一下
     useEffect(() => {
         update(1)
-    }, [])
+    }, [
+        params.OnlyWebsocket
+    ])
 
     const scrollTableTo = useMemoizedFn((size: number) => {
         if (!tableRef || !tableRef.current) return
@@ -970,6 +988,52 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [props.inViewport])
 
+    const clearHistoryAction = useMemoizedFn((e: MouseEvent) => {
+        showByCursorMenu({
+            content: [
+                {
+                    title: "重置请求 ID", onClick: () => {
+                        ipcRenderer
+                            .invoke("DeleteHTTPFlows", {DeleteAll: true})
+                            .then(() => {
+
+                            })
+                            .catch((e: any) => {
+                                failed(`历史记录删除失败: ${e}`)
+                            }).finally(() => update(1))
+                    }
+                },
+                {
+                    title: "不重置请求 ID", onClick: () => {
+                        const newParams = {
+                            Filter: {
+                                ...params
+                            },
+                            DeleteAll: false
+                        }
+                        ipcRenderer
+                            .invoke("DeleteHTTPFlows", newParams)
+                            .then((i: HTTPFlow) => {
+                                setParams(props.params || {SourceType: "mitm"})
+                            })
+                            .catch((e: any) => {
+                                failed(`历史记录删除失败: ${e}`)
+                            })
+                        setLoading(true)
+                        info("正在删除...如自动刷新失败请手动刷新")
+                        setCompareLeft({content: "", language: "http"})
+                        setCompareRight({content: "", language: "http"})
+                        setCompareState(0)
+                        setTimeout(() => {
+                            update(1)
+                            if (props.onSelected) props.onSelected(undefined)
+                        }, 400)
+                    }
+                }
+            ]
+        }, e.clientX, e.clientY)
+    })
+
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -1075,55 +1139,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 update(1)
                             }}
                         />
-                        {props.noHeader && (
-                            <Popconfirm
-                                title={"确定想要删除所有记录吗？不可恢复"}
-                                onConfirm={(e) => {
-                                    const newParams = {
-                                        Filter: {
-                                            ...params
-                                        },
-                                        DeleteAll: false
-                                    }
-                                    ipcRenderer
-                                        .invoke("DeleteHTTPFlows", newParams)
-                                        .then((i: HTTPFlow) => {
-                                            setParams(props.params || {SourceType: "mitm"})
-                                        })
-                                        .catch((e: any) => {
-                                            failed(`历史记录删除失败: ${e}`)
-                                        })
-                                    setLoading(true)
-                                    info("正在删除...如自动刷新失败请手动刷新")
-                                    setCompareLeft({content: "", language: "http"})
-                                    setCompareRight({content: "", language: "http"})
-                                    setCompareState(0)
-                                    setTimeout(() => {
-                                        update(1)
-                                        if (props.onSelected) props.onSelected(undefined)
-                                    }, 400)
-                                }}
-                            >
-                                <Button danger={true} size={"small"}>
-                                    删除当前筛选
-                                </Button>
-                            </Popconfirm>
-                        )}
-                        {props.noHeader && <Popconfirm
-                            title={"删除全部数据并重置索引？"}
-                            onConfirm={() => {
-                                ipcRenderer
-                                    .invoke("DeleteHTTPFlows", {DeleteAll: true})
-                                    .then(() => {
-
-                                    })
-                                    .catch((e: any) => {
-                                        failed(`历史记录删除失败: ${e}`)
-                                    }).finally(() => update(1))
+                        {props.noHeader && <Button danger={true} size={"small"}
+                                                   onClick={e => clearHistoryAction(e as any)}
+                                                   onContextMenu={e => clearHistoryAction(e as any)}
+                        >清空 HTTP History</Button>}
+                        <Checkbox
+                            checked={params.OnlyWebsocket}
+                            onChange={() => {
+                                setParams({...params, OnlyWebsocket: !params.OnlyWebsocket})
                             }}
-                        >
-                            <Button type={"link"} danger={true}>重置数据库</Button>
-                        </Popconfirm>}
+                        >只看 Websocket</Checkbox>
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                 </Col>
