@@ -51,6 +51,8 @@ import { WebsocketFuzzer } from "@/pages/websocket/WebsocketFuzzer";
 import { WebsocketFlowHistory } from "@/pages/websocket/WebsocketFlowHistory";
 import { YakitPluginJournalDetails } from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginJournalDetails"
 import { OnlinePluginRecycleBin } from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
+import { JavaPayloadPage } from "@/pages/payloadGenerater/NewJavaPayloadPage"
+import { NewReverseServerPage } from "@/pages/reverseServer/NewReverseServerPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -361,15 +363,17 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.PayloadGenerater:
             return <PayloadGeneraterPage />
         case Route.PayloadGenerater_New:
-            return <PayloadGenerater_New />
+            // return <PayloadGenerater_New />
+            return <JavaPayloadPage />
         case Route.ReverseServer_New:
-            return (
-                <ReverseServer_New
-                    facadeServerParams={params?.facadeServerParams}
-                    classGeneraterParams={params?.classGeneraterParams}
-                    classType={params?.classType}
-                />
-            )
+            return <NewReverseServerPage />
+            // return (
+            //     <ReverseServer_New
+            //         facadeServerParams={params?.facadeServerParams}
+            //         classGeneraterParams={params?.classGeneraterParams}
+            //         classType={params?.classType}
+            //     />
+            // )
         case Route.DB_Risk:
             return <RiskPage />
         case Route.DNSLog:

@@ -1,0 +1,61 @@
+.java-payload-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    overflow: hidden auto;
+}
+
+.form-common-style {
+    .form-item-label-title {
+        position: relative;
+        padding-right: 20px;
+        .question-icon {
+            position: absolute;
+            font-size: 12px;
+            color: gray;
+            right: 6px;
+            top: 2px;
+        }
+    }
+
+    .form-item-options-title {
+        display: flex;
+        justify-content: space-between;
+        .question-icon {
+            color: gray;
+            right: 6px;
+        }
+    }
+    .form-type-btn {
+        margin-bottom: 0;
+        .ant-btn {
+            padding: 4px 6px;
+        }
+        .primary-btn {
+            color: #fff;
+            border-color: #40a9ff;
+            background: #40a9ff;
+        }
+        .other-btn {
+            color: #40a9ff;
+            border-color: #40a9ff;
+            background: #fff;
+        }
+        .ant-btn + .ant-btn {
+            margin-left: 8px;
+        }
+    }
+}
+
+.payload-form-body {
+    max-width: 678px;
+    width: 100%;
+    padding: 0 24px;
+}
+
+.payload-small-form-body {
+    max-width: 448px;
+    width: 100%;
+    padding: 0 24px;
+}

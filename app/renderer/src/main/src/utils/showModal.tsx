@@ -32,6 +32,7 @@ export const BaseModal: React.FC<BaseModalProp> = (props) => {
 
 export interface ShowModalProps extends BaseModalProp {
     content?: React.ReactNode;
+    modalAfterClose?: () => any
 }
 
 export const showModal = (props: ShowModalProps) => {
@@ -49,6 +50,7 @@ export const showModal = (props: ShowModalProps) => {
                         setter = r
                     }}
                     afterClose={() => {
+                        if(props.modalAfterClose) props.modalAfterClose()
                         const unmountResult = ReactDOM.unmountComponentAtNode(div);
                         if (unmountResult && div.parentNode) {
                             div.parentNode.removeChild(div);

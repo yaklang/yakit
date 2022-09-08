@@ -1,0 +1,72 @@
+.reverse-server-page-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    overflow: hidden auto;
+    .setting-reverse-server-wrapper {
+        padding: 24px;
+    }
+}
+
+.setting-reverse-server-wrapper {
+    max-width: 678px;
+    width: 100%;
+    padding: 0 24px;
+}
+
+.start-reverse-server-wrapper {
+    width: 100%;
+    display: flex;
+    .setting-wrapper {
+        width: 416px;
+        padding: 19px 24px 0 24px;
+        display: flex;
+        flex-direction: column;
+
+        .setting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 44px;
+            .header-title {
+                font-weight: 500;
+                font-size: 16px;
+            }
+            .icon-style {
+                color: red;
+                font-size: 18px;
+                cursor: pointer;
+            }
+        }
+
+        .payload-small-form-body {
+            padding: 0;
+        }
+
+        .setting-display {
+            .setting-display-opt {
+                height: 44;
+                line-height: 22px;
+            }
+            .setting-display-opt + .setting-display-opt {
+                margin-top: 20px;
+            }
+        }
+    }
+    .setting-hidden-wrapper {
+        flex: 0;
+        overflow: hidden;
+    }
+    .ver-divider {
+        height: auto;
+        margin: 0;
+    }
+    .ver-hidden-divider {
+        width: 0;
+        height: 0;
+    }
+    .table-wrapper {
+        flex: 1;
+    }
+}
