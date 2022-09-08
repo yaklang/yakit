@@ -53,7 +53,7 @@ const EditOnlinePluginDetails = React.lazy(() => import("./EditOnlinePluginDetai
 
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
-const limit = 5
+const limit = 40
 
 interface YakitPluginInfoOnlineProps {
     // info: API.YakitPluginDetail
