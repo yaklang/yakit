@@ -107,7 +107,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
             const containerHeight = containerRef.current?.clientHeight
             const wrapperHeight = wrapperRef.current?.clientHeight
-            if (wrapperHeight <= containerHeight) {
+            if (wrapperHeight && wrapperHeight <= containerHeight) {
                 loadMoreData()
             }
         },

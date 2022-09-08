@@ -336,7 +336,8 @@ const Main: React.FC<MainProp> = (props) => {
                         {
                             verbose: tabName,
                             route: route,
-                            singleNode: ContentByRoute(route),
+                            // singleNode: ContentByRoute(route),
+                            singleNode: nodeParams && nodeParams.node ? nodeParams.node || <></> : ContentByRoute(route),
                             multipleNode: []
                         }
                     ])

@@ -273,6 +273,23 @@ export declare namespace API {
       root_id?: number;
       message?: string;
     }
+    export interface MergePluginRequest {
+      /**
+       * 申请列表id
+       */
+      id: number;
+      merge_plugin: boolean;
+      type?: string;
+      content?: string;
+      params?: YakitPluginParam[];
+      help?: string;
+      tags?: string[];
+      script_name?: string;
+      contributors?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+    }
     export interface GormBaseModel {
       id: number;
       created_at: number;
@@ -344,6 +361,22 @@ export declare namespace API {
       uuid: string;
       is_private: boolean;
     }
+    export interface ApplyPluginRequest {
+      /**
+       * 申请列表id
+       */
+      id: number;
+      type?: string;
+      content?: string;
+      params?: YakitPluginParam[];
+      help?: string;
+      tags?: string[];
+      script_name?: string;
+      contributors?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+    }
     export interface ApplyPluginLists extends GormBaseModel, ApplyPluginList {}
     export interface ApplyPluginList {
       user_name: string;
@@ -356,6 +389,8 @@ export declare namespace API {
       plugin_id?: number;
     }
     export interface ApplyPluginDetail {
+      user_id: number;
+      user_role: string;
       plugin_id: number;
       /**
        * 申请修改

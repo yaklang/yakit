@@ -1,10 +1,13 @@
 import { AutoCard } from "@/components/AutoCard"
 import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList";
+import { NetWorkApi } from "@/services/fetch";
 import { API } from "@/services/swagger/resposeType";
+import { failed } from "@/utils/notification";
 import { getRandomInt } from "@/utils/randomUtil";
 import { LoadingOutlined } from "@ant-design/icons";
 import { useMemoizedFn } from "ahooks";
 import { Timeline, Button, Card, Spin } from "antd";
+import moment from "moment";
 import React, { useEffect, useState } from "react"
 import './YakitPluginOnlineJournal.scss'
 
@@ -73,9 +76,8 @@ interface JournalProps {
     content: string
 }
 
-interface ResJournalProps {
-    data: JournalProps[]
-    pagemeta: API.PageMeta
+interface SearchApplyUpdatePluginRequest {
+
 }
 
 
@@ -86,63 +88,61 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
     const [lineLoading, setLineLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(true)
 
-    const [resJournal, setResJournal] = useState<ResJournalProps>({
+    const [resJournal, setResJournal] = useState<API.ApplyListResponses>({
         pagemeta: {
             page: 1,
             limit: 10,
-            total: 50,
-            total_page: 5
+            total: 0,
+            total_page: 1,
         },
         data: []
     })
+    const [isRef, setIsRef] = useState(false)
     useEffect(() => {
-        if (pluginId >= 0) getJournalList()
+        if (pluginId >= 0) getJournalList(1)
     }, [pluginId])
-    const getJournalList = useMemoizedFn(() => {
-        setLineLoading(true)
-        const newData: JournalProps[] = [];
-        for (let index = 0; index < 10; index++) {
-            const element: JournalProps = defData[index];
-            newData.push(element)
+    const getJournalList = useMemoizedFn((page: number) => {
+        const payload = {
+            ...resJournal.pagemeta,
+            page
         }
-        setHasMore(resJournal.data.length < 40)
-        setResJournal({
-            data: resJournal.data.concat(newData),
-            pagemeta: {
-                page: resJournal.pagemeta.page + 1,
-                limit: 10,
-                total: 50,
-                total_page: 5
+        setLineLoading(true)
+        NetWorkApi<SearchApplyUpdatePluginRequest, API.ApplyListResponses>({
+            method: "get",
+            url: 'apply/update/plugin',
+            params: {
+                page: payload.page,
+                limit: payload.limit,
+                id: pluginId
+            },
+        }).then((res) => {
+            if (!res.data) {
+                res.data = []
             }
+            const data = payload.page === 1 ? res.data : resJournal.data.concat(res.data)
+            const isMore = res.data.length < resJournal.pagemeta.limit
+            setHasMore(!isMore)
+            setResJournal({
+                ...resJournal,
+                data: [...data]
+            })
+            if (payload.page === 1) {
+                setIsRef(!isRef)
+            }
+        }).catch((err) => {
+            failed("获取插件日志列表失败:" + err)
         })
-        setLineLoading(false)
+            .finally(() => {
+                setTimeout(() => {
+                    setLineLoading(false)
+                }, 200)
+            })
     })
     const loadMoreData = useMemoizedFn(() => {
-        setLoading(true)
-        const newData: JournalProps[] = [];
-        for (let index = resJournal.data.length; index < resJournal.data.length + 10; index++) {
-            const element: JournalProps = {
-                ...resJournal.data[0],
-                id: getRandomInt(1000)
-            }
-            newData.push(element)
-        }
-        setHasMore(resJournal.data.length < 40)
-        setTimeout(() => {
-            setResJournal({
-                data: resJournal.data.concat(newData),
-                pagemeta: {
-                    page: resJournal.pagemeta.page + 1,
-                    limit: 10,
-                    total: 50,
-                    total_page: 5
-                }
-            })
-            setLoading(false)
-        }, 500);
+        getJournalList(resJournal.pagemeta.page + 1)
     })
 
-    const onGoDetails = useMemoizedFn((item: JournalProps) => {
+    const onGoDetails = useMemoizedFn((item: API.ApplyPluginLists) => {
         ipcRenderer.invoke("send-to-tab", {
             type: "yakit-plugin-journal-details",
             data: {
@@ -154,7 +154,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
         <div className="journal-content">
             <Spin spinning={lineLoading}>
                 <Timeline>
-                    <RollingLoadList<JournalProps>
+                    <RollingLoadList<API.ApplyPluginLists>
                         data={resJournal.data}
                         page={resJournal.pagemeta.page}
                         hasMore={hasMore}
@@ -162,8 +162,14 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                         loadMoreData={() => loadMoreData()}
                         rowKey='id'
                         defItemHeight={52}
-                        renderRow={(item: JournalProps, index) => (
-                            <Timeline.Item>{index}-{item.time}&emsp;{item.content}<Button type="link" onClick={() => onGoDetails(item)}>详情</Button></Timeline.Item>
+                        renderRow={(item: API.ApplyPluginLists, index) => (
+                            <Timeline.Item>
+                                {item.id}-
+                                {moment.unix(item.created_at).format("YYYY-MM-DD HH:mm")}
+                                &emsp;
+                                {item.role === 'admin' && `管理员${item.user_name}修改插件` || `${item.user_name}申请修改插件`}
+                                <Button type="link" onClick={() => onGoDetails(item)}>详情</Button>
+                            </Timeline.Item>
                         )}
                     />
                 </Timeline>

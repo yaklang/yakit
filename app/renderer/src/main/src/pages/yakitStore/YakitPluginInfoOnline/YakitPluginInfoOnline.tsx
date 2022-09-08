@@ -65,7 +65,7 @@ interface YakitPluginInfoOnlineProps {
     deletePluginLocal?: (s: YakScript) => void
 }
 
-interface SearchPluginDetailRequest {
+export interface SearchPluginDetailRequest {
     id: number
 }
 

@@ -1,15 +1,18 @@
 import { FromLayoutProps, YakScriptFormContent, YakScriptLargeEditor } from "@/pages/invoker/YakScriptCreator"
 import { Route } from "@/routes/routeSpec"
-import { Button, Card, Form, Space } from "antd"
+import { Button, Card, Checkbox, Form, Space, Spin, Tooltip } from "antd"
 import React, { useEffect, useRef, useState } from "react"
 import { useCreation, useGetState, useMemoizedFn } from "ahooks"
 import './YakitPluginJournalDetails.scss'
 import { YakScript } from "@/pages/invoker/schema"
-import { FullscreenOutlined } from "@ant-design/icons"
+import { FullscreenOutlined, QuestionCircleOutlined } from "@ant-design/icons"
 import { showDrawer } from "@/utils/showModal"
 import { YakEditor } from "@/utils/editors"
 import { CodeComparison, DataCompare } from "@/pages/compare/DataCompare"
 import { LineConversionIcon } from "@/assets/icons"
+import { failed } from "@/utils/notification"
+import { NetWorkApi } from "@/services/fetch"
+import { API } from "@/services/swagger/resposeType"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -42,6 +45,9 @@ const defParams = {
     UUID: ""
 }
 
+interface SearchApplyUpdateDetailRequest {
+    id: number
+}
 
 export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps> = (props) => {
     const defFromLayout = useCreation(() => {
@@ -52,16 +58,37 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
         return col
     }, [])
     const { YakitPluginJournalDetailsId } = props;
-    const [fullscreen, setFullscreen] = useState(false)
+    const [fullscreen, setFullscreen] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakScript>(defParams)
     const [originalCode, setOriginalCode,] = useState<string>(defParams.Content)
     const [modifiedCode, setModifiedCode,] = useState<string>("yakit.AutoInitYakit()\n\n# Input your code!\n\n55555\n\n",)
-
-    const [rightParams, setRightParams, getRightParams] = useGetState<YakScript>({
-        ...defParams,
+    useEffect(() => {
+        console.log('YakitPluginJournalDetailsId', YakitPluginJournalDetailsId);
+        if (!YakitPluginJournalDetailsId) return
+        getJournalDetails(YakitPluginJournalDetailsId)
+    }, [YakitPluginJournalDetailsId])
+    const getJournalDetails = useMemoizedFn((id: number) => {
+        setLoading(true)
+        NetWorkApi<SearchApplyUpdateDetailRequest, API.ApplyPluginDetail>({
+            method: "get",
+            url: 'apply/update/detail',
+            params: {
+                id
+            },
+        }).then((res) => {
+            console.log('详情', res);
+        }).catch((err) => {
+            failed("获取插件日志详情失败:" + err)
+        })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
     })
     return (
-        <div>
+        <Spin spinning={loading}>
             <Card title="修改详情" bordered={false}>
                 <Form {...defFromLayout}>
                     <YakScriptFormContent params={params} setParams={setParams} />
@@ -96,6 +123,31 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                                     >
                                         大屏模式
                                     </Button>
+                                    {!["packet-hack", "codec", "nuclei"].includes(params.Type) && (
+                                        <Checkbox
+                                            name={"默认启动"}
+                                            style={{
+                                                marginBottom: 12,
+                                                marginTop: 6
+                                            }}
+                                            checked={params.IsGeneralModule}
+                                            onChange={() =>
+                                                setParams({
+                                                    ...params,
+                                                    IsGeneralModule: !params.IsGeneralModule
+                                                })
+                                            }
+                                        >
+                                            默认启动{" "}
+                                            <Tooltip
+                                                title={
+                                                    "设置默认启动后，将在恰当时候启动该插件(Yak插件不会自动启动，但会自动增加在左侧基础安全工具菜单栏)"
+                                                }
+                                            >
+                                                <Button type={"link"} icon={<QuestionCircleOutlined />} />
+                                            </Tooltip>
+                                        </Checkbox>
+                                    )}
                                 </Space>
                             </>
                         }
@@ -130,7 +182,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                     </Form.Item>
                 </Form>
             </Card>
-        </div>
+        </Spin>
     )
 }
 

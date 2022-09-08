@@ -70,7 +70,7 @@ import { findDOMNode } from "react-dom"
 import { YakExecutorParam } from "../invoker/YakExecutorParams"
 import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
 import { setTimeout } from "timers"
-import { ModalSyncSelect, SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
+import { ModalSyncSelect, onLocalScriptToOnlinePlugin, SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
 
 const { Search } = Input
 const { Option } = Select
@@ -1044,30 +1044,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     })
 
     const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
-        const onlineParams: API.SaveYakitPlugin = {
-            type: params.Type,
-            script_name: params.ScriptName,
-            content: params.Content,
-            tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
-            params: params.Params.map((p) => ({
-                field: p.Field || '',
-                default_value: p.DefaultValue || '',
-                type_verbose: p.TypeVerbose || '',
-                field_verbose: p.FieldVerbose || '',
-                help: p.Help || '',
-                required: p.Required,
-                group: p.Group || '',
-                extra_setting: p.ExtraSetting || ''
-            })),
-            help: params.Help,
-            default_open: type === 1 ? false : true, // 1 个人账号
-            contributors: params.OnlineContributors || "",
-            //
-            enable_plugin_selector: params.EnablePluginSelector,
-            plugin_selector_types: params.PluginSelectorTypes,
-            is_general_module: params.IsGeneralModule
-        }
-
+        const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
         return new Promise((resolve) => {
             NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
                 method: "post",

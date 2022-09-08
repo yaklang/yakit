@@ -18,9 +18,12 @@ import cloneDeep from "lodash/cloneDeep"
 import "./YakScriptCreator.scss"
 import { queryYakScriptList } from "../yakitStore/network"
 import { YakExecutorParam } from "./YakExecutorParams"
-import { SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
+import { onLocalScriptToOnlinePlugin, SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
 import { Route } from "@/routes/routeSpec"
 import { useStore } from "@/store"
+import { API } from "@/services/swagger/resposeType"
+import { NetWorkApi } from "@/services/fetch"
+import { SearchPluginDetailRequest } from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -170,12 +173,12 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const [visible, setVisible] = useState<boolean>(false)
     const [saveLoading, setSaveLoading] = useState<boolean>(false)
     const [isQueryByYakScriptName, setIsQueryByYakScriptName] = useState<boolean>(false)
-    const isNucleiPoC = params.Type === "nuclei"
-
     useEffect(() => {
         setIsQueryByYakScriptName(!props.modified)
     }, [])
 
+    const [updateLoading, setUpdateLoading] = useState<boolean>(false)
+    const [isByMeCreatOnlienPlugin, setIsByMeCreatOnlienPlugin] = useState<boolean>(true)
     const { userInfo } = useStore()
     const debugButton = (primary?: boolean) => {
         if (loading) {
@@ -263,11 +266,34 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     }, [params.Type])
 
     useEffect(() => {
-        if (props.modified)
+        if (props.modified) {
             setParams({
                 ...props.modified
             })
+            getPluginDetail(props.modified?.OnlineId)
+        }
     }, [props.modified])
+    const getPluginDetail = useMemoizedFn((pluginId) => {
+        if (!userInfo.isLogin) return
+        if (pluginId as number === 0) return
+        NetWorkApi<SearchPluginDetailRequest, API.YakitPluginDetailResponse>({
+            method: "get",
+            url: "yakit/plugin/detail",
+            params: {
+                id: pluginId
+            }
+        })
+            .then((res: API.YakitPluginDetailResponse) => {
+                if (res.data.user_id === userInfo.user_id) {
+                    setIsByMeCreatOnlienPlugin(true)
+                } else {
+                    setIsByMeCreatOnlienPlugin(false)
+                }
+            })
+            .catch((err) => {
+                failed("插件详情获取失败:" + err)
+            })
+    })
     const onCloseTab = useMemoizedFn(() => {
         ipcRenderer
             .invoke("send-close-tab", {
@@ -354,14 +380,66 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     setSaveLoading(false)
                 }, 200)
             })
+    })
     // 修改提交内容
     const onSubmitEditContent = useMemoizedFn(() => {
-        console.log('params', params);
         if (!userInfo.isLogin) {
             warn('请先登录');
             return
         }
-        success("开发中...")
+        Modal.confirm({
+            title: '提交的内容不会覆盖本地数据！',
+            icon: <ExclamationCircleOutlined />,
+            content: <div>
+                <p>提交的内容只会展示给插件作者看，待审核通过后才会更新在插件商店中。</p>
+                <p>提交的内容不会覆盖本地的代码，如需要保存本地，请先关闭该弹窗，在页面上点击【保存】按钮后，再点击【提交修改内容】</p>
+            </div>,
+            okText: '继续提交',
+            cancelText: '关闭',
+            onOk() {
+                const onlineParams: API.ApplyPluginRequest = {
+                    id: parseInt(`${params.OnlineId}`),
+                    type: params.Type,
+                    content: params.Content || '',
+                    params: params.Params.map((p) => ({
+                        field: p.Field || '',
+                        default_value: p.DefaultValue || '',
+                        type_verbose: p.TypeVerbose || '',
+                        field_verbose: p.FieldVerbose || '',
+                        help: p.Help || '',
+                        required: p.Required,
+                        group: p.Group || '',
+                        extra_setting: p.ExtraSetting || ''
+                    })),
+                    help: params.Help || '',
+                    tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
+                    // default_open: false,
+                    script_name: params.ScriptName,
+                    contributors: params.OnlineContributors || "",
+                    enable_plugin_selector: params.EnablePluginSelector,
+                    plugin_selector_types: params.PluginSelectorTypes,
+                    is_general_module: params.IsGeneralModule
+                }
+                setUpdateLoading(true)
+                NetWorkApi<API.ApplyPluginRequest, API.ActionSucceeded>({
+                    method: "post",
+                    url: 'apply/update/plugin',
+                    data: onlineParams
+                }).then((res) => {
+                    success('提交成功')
+                }).catch((err) => {
+                    failed("提交失败:" + err)
+                })
+                    .finally(() => {
+                        setTimeout(() => {
+                            setUpdateLoading(false)
+                        }, 200)
+                    })
+            },
+            onCancel() {
+            },
+        });
+
     })
 
     return (
@@ -453,7 +531,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             保存
                         </Button>
                         {
-                            (userInfo.user_id === params.UserId || params.UserId == 0) &&
+                            isByMeCreatOnlienPlugin &&
                             <SyncCloudButton
                                 params={params}
                                 setParams={(newSrcipt) => {
@@ -463,9 +541,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 }}
                             >
                                 <Button>同步至云端</Button>
-                            </SyncCloudButton> ||
+                            </SyncCloudButton>
+                            ||
                             <>
-                                <Button onClick={() => onSubmitEditContent()}>提交修改内容</Button>
+                                <Button onClick={() => onSubmitEditContent()} loading={updateLoading}>提交修改内容</Button>
                             </>
                         }
 
