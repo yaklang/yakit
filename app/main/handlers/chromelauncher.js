@@ -18,6 +18,7 @@ module.exports = (win, getClient) => {
         return launch({
             chromeFlags: [
                 `--proxy-server=http://${hostRaw}:${portInt}`,
+                `--proxy-bypass-list="<-loopback>"`,
                 // `--ignore-certificate-errors-spki-list`,
                 `--ignore-certificate-errors`,
                 `--ignore-urlfetcher-cert-requests`,
