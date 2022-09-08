@@ -929,6 +929,7 @@ const Main: React.FC<MainProp> = (props) => {
             if (type === "yakit-plugin-journal-details") addYakPluginJournalDetails(data)
             if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
             if (type === "facade-server") addFacadeServer(data)
+            if (type === "add-yak-running") addYakRunning(data)
             console.info("send to tab: ", type)
         })
 
