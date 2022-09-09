@@ -452,7 +452,7 @@ export const PayloadGeneraterPage: React.FC<PayloadGeneraterPageProp> = React.me
                                     form={formInstance}
                                     initialValues={classParamOptions}
                                 >
-                                    {() => {
+                                    {(() => {
                                         let paramElement: JSX.Element[] = []
                                         const pushElement = (name: string, element: JSX.Element) => {
                                             paramElement.push(
@@ -476,7 +476,7 @@ export const PayloadGeneraterPage: React.FC<PayloadGeneraterPageProp> = React.me
                                             }
                                         })
                                         return paramElement
-                                    }}
+                                    })()}
                                 </Form>
                                 {supportedFacades && (
                                     <Button

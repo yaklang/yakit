@@ -381,7 +381,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                                 form={formInstance}
                                 initialValues={classParamOptionsForClass}
                             >
-                                {() => {
+                                {(() => {
                                     let paramElement: JSX.Element[] = []
                                     const pushElement = (
                                         key: string,
@@ -455,7 +455,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                                     )
 
                                     return paramElement
-                                }}
+                                })()}
                             </Form>
                             <Form.Item>
                                 <Space direction={"vertical"}>

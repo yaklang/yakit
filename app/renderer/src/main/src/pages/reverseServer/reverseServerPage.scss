@@ -3,7 +3,7 @@
     height: 100%;
     display: flex;
     justify-content: center;
-    overflow: hidden auto;
+    overflow: hidden;
     .setting-reverse-server-wrapper {
         padding: 24px;
     }
@@ -17,12 +17,15 @@
 
 .start-reverse-server-wrapper {
     width: 100%;
+    height: 100%;
     display: flex;
+    overflow: hidden;
     .setting-wrapper {
         width: 416px;
         padding: 19px 24px 0 24px;
         display: flex;
         flex-direction: column;
+        overflow: hidden auto;
 
         .setting-header {
             display: flex;
@@ -68,5 +71,6 @@
     }
     .table-wrapper {
         flex: 1;
+        overflow: hidden;
     }
 }
