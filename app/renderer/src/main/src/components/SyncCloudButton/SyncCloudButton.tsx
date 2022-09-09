@@ -62,7 +62,6 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
 
     const upOnlinePlugin = useMemoizedFn((url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
-        console.log('onlineParams', onlineParams);
         if (params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
         }

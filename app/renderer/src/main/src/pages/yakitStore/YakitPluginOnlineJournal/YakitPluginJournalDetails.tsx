@@ -82,7 +82,6 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
         getJournalDetails(YakitPluginJournalDetailsId)
     }, [])
     const getJournalDetails = useMemoizedFn((id: number) => {
-        console.log('id', id);
         setLoading(true)
         setOriginalCode("")
         setModifiedCode("")
@@ -93,7 +92,6 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                 id
             },
         }).then((res) => {
-            console.log('详情', res);
             let originalItem = res.merge_before_plugin || {} // 线上当前插件最新的数据
             let modifiedItem = res.up_plugin || {}// 提交人 提交的插件数据
             if (res.user_role === 'admin') {
@@ -138,7 +136,6 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                 OnlineIsPrivate: modifiedItem.is_private,
                 // HeadImg: ''
             }
-            console.log('localParams', localParams);
             setJournalDetails(res)
             setParams(localParams)
             setOriginalCode(originalItem?.content || '')
@@ -160,7 +157,6 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
             content: modifiedCode,
             merge_plugin,
         }
-        console.log('mergePlugin', mergePlugin);
         setLoading(true)
         NetWorkApi<API.MergePluginRequest, API.ActionSucceeded>({
             method: "post",

@@ -124,8 +124,6 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             }
         })
             .then((res) => {
-                console.log('线上res', res);
-
                 setPlugin(res.data)
             })
             .catch((err) => {
@@ -277,7 +275,6 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
     const isShowAdmin = isAdmin && !plugin.is_private
-    console.log('plugin', plugin);
 
     return (
         <div className={`plugin-info`} id="plugin-info-scroll">

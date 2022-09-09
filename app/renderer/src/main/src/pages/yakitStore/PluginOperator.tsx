@@ -88,7 +88,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptById", { Id: yakScriptId })
             .then((e: YakScript) => {
-                console.log('获取本地插件e', e);
                 getLocalScriptAfter(e)
             })
             .catch((e: any) => {
@@ -319,12 +318,9 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log('prompt_res', res);
-
                 setIsShowJournalDot(res)
             })
             .catch((err) => {
-                console.log('获取日志红点失败', err)
                 // failed("获取日志红点失败:" + err)
             })
     })

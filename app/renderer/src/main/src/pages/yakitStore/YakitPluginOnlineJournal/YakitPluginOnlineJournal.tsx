@@ -66,7 +66,6 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
             if (!res.data) {
                 res.data = []
             }
-            console.log('res.data', res.data);
             const data = payload.page === 1 ? res.data : resJournal.data.concat(res.data)
             const isMore = res.data.length < resJournal.pagemeta.limit
             setHasMore(!isMore)

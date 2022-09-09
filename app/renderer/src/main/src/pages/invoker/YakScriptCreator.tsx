@@ -402,9 +402,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     ...newParams,
                     id: parseInt(`${params.OnlineId}`),
                 }
-                console.log('提交的params', params);
-                console.log('提交的onlineParams', onlineParams);
-
                 setUpdateLoading(true)
                 NetWorkApi<API.ApplyPluginRequest, API.ActionSucceeded>({
                     method: "post",
