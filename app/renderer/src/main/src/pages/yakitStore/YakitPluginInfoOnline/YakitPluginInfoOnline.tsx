@@ -124,6 +124,8 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             }
         })
             .then((res) => {
+                console.log('线上res', res);
+
                 setPlugin(res.data)
             })
             .catch((err) => {
@@ -275,6 +277,8 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
     const isShowAdmin = isAdmin && !plugin.is_private
+    console.log('plugin', plugin);
+
     return (
         <div className={`plugin-info`} id="plugin-info-scroll">
             <Spin spinning={loading} style={{ height: "100%" }}>
@@ -299,9 +303,6 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                     <Button type={"link"} icon={<QuestionOutlined />} />
                                 </Tooltip>
                             )}
-                            <Tooltip title={`插件id:${plugin?.uuid || "-"}`}>
-                                <p className='plugin-author'>作者:{plugin.authors}</p>
-                            </Tooltip>
                             {(tags &&
                                 tags.length > 0 &&
                                 tags.map((i) => (
@@ -344,6 +345,9 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                     }
                 />
                 <div className={`plugin-body ${tabKey === '1' && 'plugin-code-height' || ''}`}>
+                    <Tooltip title={`插件id:${plugin?.uuid || "-"}`} placement="topLeft">
+                        <div className='plugin-author'>作者:{plugin.authors}&emsp;{plugin.submitter && `协作者:${plugin.submitter}`}</div>
+                    </Tooltip>
                     <div className='flex-space-between'>
                         <div className='vertical-center'>
                             <div className='preface-time'>

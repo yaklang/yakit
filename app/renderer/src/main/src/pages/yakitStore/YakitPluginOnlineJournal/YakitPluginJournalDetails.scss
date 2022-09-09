@@ -16,3 +16,20 @@
 .yak-editor-full-item {
     height: calc(100% - 44px);
 }
+
+.journal-details-body {
+    height: 100%;
+
+    .ant-spin-nested-loading {
+        height: 100%;
+    }
+
+    .ant-card {
+        height: 100%;
+    }
+
+    .ant-card-body {
+        height: calc(100% - 60px);
+        overflow-y: auto
+    }
+}

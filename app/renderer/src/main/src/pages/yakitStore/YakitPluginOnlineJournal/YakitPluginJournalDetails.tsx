@@ -14,6 +14,7 @@ import { failed } from "@/utils/notification"
 import { NetWorkApi } from "@/services/fetch"
 import { API } from "@/services/swagger/resposeType"
 import { onLocalScriptToOnlinePlugin } from "@/components/SyncCloudButton/SyncCloudButton"
+import { useStore } from "@/store"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -59,17 +60,32 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
         return col
     }, [])
     const { YakitPluginJournalDetailsId } = props;
+    const [journalDetailsId, setJournalDetailsId] = useState<number>(0)
     const [fullscreen, setFullscreen] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
+    const [journalDetails, setJournalDetails] = useState<API.ApplyPluginDetail>({
+        plugin_user_id: 0,
+        apply_user_id: 0,
+        user_role: '',
+        plugin_id: 0,
+        up_plugin: { params: [] },
+        merge_before_plugin: { params: [] },
+        merge_status: 0
+    })
     const [params, setParams, getParams] = useGetState<YakScript>(defParams)
-    const [originalCode, setOriginalCode,] = useState<string>(defParams.Content)
-    const [modifiedCode, setModifiedCode,] = useState<string>("yakit.AutoInitYakit()\n\n# Input your code!\n\n55555\n\n",)
+    const [originalCode, setOriginalCode,] = useState<string>("")
+    const [modifiedCode, setModifiedCode,] = useState<string>("")
+    const { userInfo } = useStore()
     useEffect(() => {
         if (!YakitPluginJournalDetailsId) return
+        setJournalDetailsId(YakitPluginJournalDetailsId)
         getJournalDetails(YakitPluginJournalDetailsId)
-    }, [YakitPluginJournalDetailsId])
+    }, [])
     const getJournalDetails = useMemoizedFn((id: number) => {
+        console.log('id', id);
         setLoading(true)
+        setOriginalCode("")
+        setModifiedCode("")
         NetWorkApi<SearchApplyUpdateDetailRequest, API.ApplyPluginDetail>({
             method: "get",
             url: 'apply/update/detail',
@@ -78,11 +94,55 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
             },
         }).then((res) => {
             console.log('详情', res);
+            let originalItem = res.merge_before_plugin || {} // 线上当前插件最新的数据
+            let modifiedItem = res.up_plugin || {}// 提交人 提交的插件数据
             if (res.user_role === 'admin') {
-
-            } else {
-                // setOriginalCode(res.merge_before_plugin)
+                originalItem = res.up_plugin || {};// 管理员 提交的插件数据且是最新的数据
+                modifiedItem = res.merge_before_plugin || {};//  管理员提交之前的插件数据
             }
+            const localParams: YakScript = {
+                Id: 0,
+                Content: modifiedItem.content || '',
+                Type: modifiedItem.type || '',
+                Params: modifiedItem.params && modifiedItem.params.map(p => ({
+                    Field: p.field || '',
+                    DefaultValue: p.default_value || '',
+                    TypeVerbose: p.type_verbose || '',
+                    FieldVerbose: p.field_verbose || '',
+                    Help: p.help || '',
+                    // Value:p.value||'',
+                    Required: p.required || false,
+                    Group: p.group || '',
+                    ExtraSetting: p.extra_setting || '',
+                    BuildInParam: p.buildIn_param || false,
+                })) || [],
+                CreatedAt: 0,
+                ScriptName: modifiedItem.script_name || '',
+                Help: modifiedItem.help || '',
+                Level: '',
+                Author: modifiedItem.contributors || '',
+                Tags: modifiedItem.tags && modifiedItem.tags !== "null" ? JSON.parse(modifiedItem.tags).join(",") : '',
+                IsHistory: false,
+                // IsIgnore:false,
+                IsGeneralModule: modifiedItem.is_general_module,
+                // GeneralModuleVerbose:modifiedItem.gen,
+                // GeneralModuleKey:modifiedItem
+                // FromGit:modifiedItem
+                EnablePluginSelector: modifiedItem.enable_plugin_selector,
+                PluginSelectorTypes: modifiedItem.plugin_selector_types,
+                OnlineId: 0,
+                OnlineScriptName: '',
+                OnlineContributors: '',
+                UserId: modifiedItem.user_id || 0,
+                UUID: modifiedItem.uuid || '',
+                OnlineIsPrivate: modifiedItem.is_private,
+                // HeadImg: ''
+            }
+            console.log('localParams', localParams);
+            setJournalDetails(res)
+            setParams(localParams)
+            setOriginalCode(originalItem?.content || '')
+            setModifiedCode(modifiedItem?.content || '')
         }).catch((err) => {
             failed("获取插件日志详情失败:" + err)
         })
@@ -96,107 +156,129 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
         const newParams = onLocalScriptToOnlinePlugin(params);
         const mergePlugin: API.MergePluginRequest = {
             ...newParams,
-            id: YakitPluginJournalDetailsId,
+            id: journalDetailsId,
+            content: modifiedCode,
             merge_plugin,
         }
         console.log('mergePlugin', mergePlugin);
+        setLoading(true)
+        NetWorkApi<API.MergePluginRequest, API.ActionSucceeded>({
+            method: "post",
+            url: 'merge/apply',
+            data: mergePlugin,
+        }).then((res) => {
+            // 同意后刷新页面，重新获取最新的数据
+            getJournalDetails(journalDetailsId)
+        }).catch((err) => {
+            failed("操作失败:" + err)
+        })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
     })
     return (
-        <Spin spinning={loading}>
-            <Card title="修改详情" bordered={false}>
-                <Form {...defFromLayout}>
-                    <YakScriptFormContent params={params} setParams={setParams} />
-                    <Form.Item
-                        label={"源码"}
-                        help={
-                            <>
-                                <Space>
-                                    <Button
-                                        icon={<FullscreenOutlined />}
-                                        onClick={() => {
-                                            setFullscreen(true)
-                                            let m = showDrawer({
-                                                width: "100%",
-                                                closable: false,
-                                                keyboard: false,
-                                                content: (
-                                                    <FullScreenCode
-                                                        originalCode={originalCode}
-                                                        setModifiedCode={setModifiedCode}
-                                                        modifiedCode={modifiedCode}
-                                                        onClose={() => { m.destroy(); setFullscreen(false) }}
-                                                    />
-                                                )
-                                            })
-                                        }}
-                                        type={"link"}
-                                        style={{
-                                            marginBottom: 12,
-                                            marginTop: 6
-                                        }}
-                                    >
-                                        大屏模式
-                                    </Button>
-                                    {!["packet-hack", "codec", "nuclei"].includes(params.Type) && (
-                                        <Checkbox
-                                            name={"默认启动"}
+        <div className="journal-details-body">
+            <Spin spinning={loading}>
+                <Card title="修改详情" bordered={false}>
+                    <Form {...defFromLayout}>
+                        <YakScriptFormContent params={params} setParams={setParams} modified={params} isShowAuthor={false} />
+                        <Form.Item
+                            label={"源码"}
+                            help={
+                                <>
+                                    <Space>
+                                        <Button
+                                            icon={<FullscreenOutlined />}
+                                            onClick={() => {
+                                                setFullscreen(true)
+                                                let m = showDrawer({
+                                                    width: "100%",
+                                                    closable: false,
+                                                    keyboard: false,
+                                                    content: (
+                                                        <FullScreenCode
+                                                            originalCode={originalCode}
+                                                            setModifiedCode={setModifiedCode}
+                                                            modifiedCode={modifiedCode}
+                                                            onClose={() => { m.destroy(); setFullscreen(false) }}
+                                                        />
+                                                    )
+                                                })
+                                            }}
+                                            type={"link"}
                                             style={{
                                                 marginBottom: 12,
                                                 marginTop: 6
                                             }}
-                                            checked={params.IsGeneralModule}
-                                            onChange={() =>
-                                                setParams({
-                                                    ...params,
-                                                    IsGeneralModule: !params.IsGeneralModule
-                                                })
-                                            }
                                         >
-                                            默认启动{" "}
-                                            <Tooltip
-                                                title={
-                                                    "设置默认启动后，将在恰当时候启动该插件(Yak插件不会自动启动，但会自动增加在左侧基础安全工具菜单栏)"
+                                            大屏模式
+                                        </Button>
+                                        {!["packet-hack", "codec", "nuclei"].includes(params.Type) && (
+                                            <Checkbox
+                                                name={"默认启动"}
+                                                style={{
+                                                    marginBottom: 12,
+                                                    marginTop: 6
+                                                }}
+                                                checked={params.IsGeneralModule}
+                                                onChange={() =>
+                                                    setParams({
+                                                        ...params,
+                                                        IsGeneralModule: !params.IsGeneralModule
+                                                    })
                                                 }
                                             >
-                                                <Button type={"link"} icon={<QuestionCircleOutlined />} />
-                                            </Tooltip>
-                                        </Checkbox>
-                                    )}
-                                </Space>
-                            </>
-                        }
-                    >
+                                                默认启动{" "}
+                                                <Tooltip
+                                                    title={
+                                                        "设置默认启动后，将在恰当时候启动该插件(Yak插件不会自动启动，但会自动增加在左侧基础安全工具菜单栏)"
+                                                    }
+                                                >
+                                                    <Button type={"link"} icon={<QuestionCircleOutlined />} />
+                                                </Tooltip>
+                                            </Checkbox>
+                                        )}
+                                    </Space>
+                                </>
+                            }
+                        >
+                            {
+                                !fullscreen && originalCode && modifiedCode &&
+                                <div className="yak-editor-content">
+                                    <div className="yak-editor-tip">
+                                        <div>当前插件源码</div>
+                                        <div>申请人提交源码</div>
+                                    </div>
+                                    <div className="yak-editor-item">
+                                        <CodeComparison
+                                            leftCode={originalCode}
+                                            setRightCode={setModifiedCode}
+                                            rightCode={modifiedCode}
+                                            originalEditable={false}
+                                        />
+                                    </div>
+                                </div>
+                            }
+                        </Form.Item>
                         {
-                            !fullscreen &&
-                            <div className="yak-editor-content">
-                                <div className="yak-editor-tip">
-                                    <div>当前插件源码</div>
-                                    <div>申请人提交源码</div>
-                                </div>
-                                <div className="yak-editor-item">
-                                    <CodeComparison
-                                        leftCode={originalCode}
-                                        setRightCode={setModifiedCode}
-                                        rightCode={modifiedCode}
-                                        originalEditable={false}
-                                    />
-                                </div>
-                            </div>
+                            journalDetails.plugin_user_id === userInfo.user_id && journalDetails.merge_status === 0 &&
+                            <Form.Item colon={false} label={" "}>
+                                <Space>
+                                    <Button type='primary' danger onClick={() => onMergePlugin(false)} >
+                                        拒绝
+                                    </Button>
+                                    <Button type='primary' onClick={() => onMergePlugin(true)} >
+                                        同意
+                                    </Button>
+                                </Space>
+                            </Form.Item>
                         }
-                    </Form.Item>
-                    <Form.Item colon={false} label={" "}>
-                        <Space>
-                            <Button type='primary' danger onClick={() => onMergePlugin(false)} >
-                                拒绝
-                            </Button>
-                            <Button type='primary' onClick={() => onMergePlugin(true)} >
-                                同意
-                            </Button>
-                        </Space>
-                    </Form.Item>
-                </Form>
-            </Card>
-        </Spin>
+                    </Form>
+                </Card>
+            </Spin>
+        </div>
     )
 }
 

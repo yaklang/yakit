@@ -74,6 +74,10 @@ export declare namespace API {
       contributors?: string;
       uuid: string;
       is_private: boolean;
+      /**
+       * 提交修改插件合并的的人
+       */
+      submitter?: string;
     }
     export interface UserOrdinaryResponse {
       data: UserList[];
@@ -341,25 +345,27 @@ export declare namespace API {
       is_stars?: boolean;
     }
     export interface ApplyPluginResponse {
-      type: string;
+      type?: string;
       script_name: string;
-      default_open: boolean;
-      tags: string;
-      content: string;
+      tags?: string;
+      content?: string;
+      published_at?: number;
       params?: YakitPluginParam[];
       user_id?: number;
       /**
        * 审核状态
        */
-      status: number;
-      official: boolean;
+      status?: number;
+      official?: boolean;
       help?: string;
       enable_plugin_selector?: boolean;
       plugin_selector_types?: string;
       is_general_module?: boolean;
       contributors?: string;
-      uuid: string;
-      is_private: boolean;
+      uuid?: string;
+      is_private?: boolean;
+      stars?: number;
+      download_total?: number;
     }
     export interface ApplyPluginRequest {
       /**
@@ -385,25 +391,69 @@ export declare namespace API {
       /**
        * 合并状态 0 待处理  1合并  2拒绝
        */
-      merge_status?: number;
+      merge_status: number;
       plugin_id?: number;
     }
     export interface ApplyPluginDetail {
-      user_id: number;
+      plugin_user_id: number;
+      apply_user_id: number;
       user_role: string;
       plugin_id: number;
-      /**
-       * 申请修改
-       */
-      up_plugin: ApplyPluginResponse[];
+      up_plugin: ApplyPluginDetailUpPlugin;
       /**
        * 当前插件数据/ 修改用户为admin时为修改前数据
        */
-      merge_before_plugin: ApplyPluginResponse[];
+      merge_before_plugin: ApplyPluginDetailMergeBeforePlugin;
       /**
        * 合并状态 0 待处理  1合并  2拒绝
        */
       merge_status: number;
+    }
+    export interface ApplyPluginDetailMergeBeforePlugin {
+      type?: string;
+      script_name?: string;
+      tags?: string;
+      content?: string;
+      published_at?: number;
+      params?: YakitPluginParam[];
+      user_id?: number;
+      /**
+       * 审核状态
+       */
+      status?: number;
+      official?: boolean;
+      help?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      contributors?: string;
+      uuid?: string;
+      is_private?: boolean;
+      stars?: number;
+      download_total?: number;
+    }
+    export interface ApplyPluginDetailUpPlugin {
+      type?: string;
+      script_name?: string;
+      tags?: string;
+      content?: string;
+      published_at?: number;
+      params?: YakitPluginParam[];
+      user_id?: number;
+      /**
+       * 审核状态
+       */
+      status?: number;
+      official?: boolean;
+      help?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      contributors?: string;
+      uuid?: string;
+      is_private?: boolean;
+      stars?: number;
+      download_total?: number;
     }
     export interface ApplyListResponses extends Paging {
       data: ApplyPluginLists[];

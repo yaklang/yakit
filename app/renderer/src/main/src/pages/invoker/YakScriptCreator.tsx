@@ -275,7 +275,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     }, [props.modified])
     const getPluginDetail = useMemoizedFn((pluginId) => {
         if (!userInfo.isLogin) return
-        if (pluginId as number === 0) return
+        if (pluginId as number == 0) return
         NetWorkApi<SearchPluginDetailRequest, API.YakitPluginDetailResponse>({
             method: "get",
             url: "yakit/plugin/detail",
@@ -291,7 +291,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 }
             })
             .catch((err) => {
-                failed("插件详情获取失败:" + err)
+                failed("插件详情获取失败666:" + err)
             })
     })
     const onCloseTab = useMemoizedFn(() => {
@@ -402,6 +402,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     ...newParams,
                     id: parseInt(`${params.OnlineId}`),
                 }
+                console.log('提交的params', params);
+                console.log('提交的onlineParams', onlineParams);
+
                 setUpdateLoading(true)
                 NetWorkApi<API.ApplyPluginRequest, API.ActionSucceeded>({
                     method: "post",
@@ -602,10 +605,11 @@ interface YakScriptFormContentProps {
     setParams: (y: YakScript) => void
     modified?: YakScript | undefined
     setParamsLoading?: (b: boolean) => void
+    isShowAuthor?: boolean
 }
 
 export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props) => {
-    const { params, modified, setParams, setParamsLoading } = props
+    const { params, modified, setParams, setParamsLoading, isShowAuthor = true } = props
     const isNucleiPoC = params.Type === "nuclei"
     return (
         <>
@@ -638,11 +642,14 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                 value={params.ScriptName}
             />
             <InputItem label={"简要描述"} setValue={(Help) => setParams({ ...params, Help })} value={params.Help} />
-            <InputItem
-                label={"模块作者"}
-                setValue={(Author) => setParams({ ...params, Author })}
-                value={params.Author}
-            />
+            {
+                isShowAuthor &&
+                <InputItem
+                    label={"模块作者"}
+                    setValue={(Author) => setParams({ ...params, Author })}
+                    value={params.Author}
+                />
+            }
             <ManyMultiSelectForString
                 label={"Tags"}
                 data={[{ value: "教程", label: "教程" }]}

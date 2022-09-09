@@ -650,6 +650,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 bodyStyle={{ height: 'calc(100% - 69px)' }}
                             >
                                 <PluginOperator
+                                    userInfo={userInfo}
                                     yakScriptId={(script && script.Id) || 0}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
                                     setTrigger={() => { }}

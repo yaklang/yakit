@@ -12,6 +12,16 @@
             height: 100%;
         }
     }
+
+    .ant-tabs-tab:hover {
+        .ant-badge {
+            color: #40a9ff;
+        }
+    }
+
+    .journal-active {
+        color: #1890ff;
+    }
 }
 
 .script-author {

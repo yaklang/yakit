@@ -4,12 +4,6 @@ $active-color:#036ffe;
     height: 100%;
     overflow-y: auto;
 
-    .plugin-author {
-        cursor: pointer;
-        color: #999999;
-        margin-bottom: 0
-    }
-
     .ant-spin-nested-loading {
         height: 100%;
     }
@@ -52,7 +46,16 @@ $active-color:#036ffe;
 
     .plugin-body {
         padding: 0 24px 16px;
-        // height: calc(100% - 60px);
+
+        .plugin-author {
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            word-break: break-all
+        }
 
         .ant-tabs {
             height: 100%;
@@ -120,7 +123,7 @@ $active-color:#036ffe;
 }
 
 .plugin-code-height {
-    height: calc(100% - 72px);
+    height: calc(100% - 94px);
 }
 
 .comment-reply-dialog {

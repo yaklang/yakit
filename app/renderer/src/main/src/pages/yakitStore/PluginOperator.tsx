@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { Button, Divider, Empty, Form, PageHeader, Popconfirm, Popover, Row, Space, Tabs, Tag, Tooltip, Card } from "antd"
+import { Button, Divider, Empty, Form, PageHeader, Popconfirm, Popover, Row, Space, Tabs, Tag, Tooltip, Card, Badge } from "antd"
 import { YakScript } from "../invoker/schema"
 import { failed, success } from "../../utils/notification"
 import { formatTimestamp } from "../../utils/timeUtil"
@@ -24,6 +24,8 @@ import { YakExecutorParam } from "../invoker/YakExecutorParams"
 import { API } from "@/services/swagger/resposeType"
 import { GetYakScriptByOnlineIDRequest } from "./YakitStorePage"
 import { YakitPluginOnlineJournal } from "./YakitPluginOnlineJournal/YakitPluginOnlineJournal"
+import { UserInfoProps } from "@/store"
+import { NetWorkApi } from "@/services/fetch"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -37,11 +39,18 @@ export interface YakScriptOperatorProp {
 
     deletePluginOnline?: (p: API.YakitPluginDetail) => void
     updatePluginOnline?: (p: API.YakitPluginDetail) => void
+
+    userInfo?: UserInfoProps
+}
+
+interface PromptRequest {
+    id: number
 }
 
 const { ipcRenderer } = window.require("electron")
 
 export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
+    const { userInfo } = props
     const [script, setScript, getScript] = useGetState<YakScript>()
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
@@ -49,7 +58,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [markdown, setMarkdown] = useState("")
     const [trigger, setTrigger] = useState(false)
     const [extraParams, setExtraParams] = useState<YakExecutorParam[]>()
-    const [details, setDetails] = useState(true)
+    const [isShowJournalDot, setIsShowJournalDot] = useState(false)
     const [isEdit, setIsEdit] = useState(false)
 
     const [settingShow, setSettingShow] = useState<boolean>(false)
@@ -75,11 +84,11 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
 
     const getYakScriptById = useMemoizedFn((yakScriptId: number) => {
         updateGroups()
-
         setLoading(true)
         ipcRenderer
             .invoke("GetYakScriptById", { Id: yakScriptId })
             .then((e: YakScript) => {
+                console.log('获取本地插件e', e);
                 getLocalScriptAfter(e)
             })
             .catch((e: any) => {
@@ -107,7 +116,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 setMarkdown("")
             })
     })
-
     useEffect(() => {
         update()
     }, [props.yakScriptId])
@@ -297,6 +305,30 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             ipcRenderer.removeAllListeners("ref-plugin-operator")
         }
     }, [])
+    useEffect(() => {
+        if (userInfo?.isLogin) getJournalDot()
+    }, [userInfo?.isLogin, pluginIdOnlineId, activeKey])
+
+    const getJournalDot = useMemoizedFn(() => {
+        if (!pluginIdOnlineId) return
+        NetWorkApi<PromptRequest, boolean>({
+            method: "get",
+            url: 'apply/prompt',
+            params: {
+                id: pluginIdOnlineId
+            }
+        })
+            .then((res) => {
+                console.log('prompt_res', res);
+
+                setIsShowJournalDot(res)
+            })
+            .catch((err) => {
+                console.log('获取日志红点失败', err)
+                // failed("获取日志红点失败:" + err)
+            })
+    })
+
     const defaultContent = () => {
         return (
             <Tabs
@@ -489,7 +521,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     {script && <YakScriptExecResultTable YakScriptName={script.ScriptName} trigger={trigger} />}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"线上"} key={"online"} disabled={isDisabledOnline}>
-                    {pluginIdOnlineId && pluginIdOnlineId > 0 && (
+                    {pluginIdOnlineId && pluginIdOnlineId > 0 && activeKey === 'online' && (
                         <YakitPluginInfoOnline
                             pluginId={pluginIdOnlineId}
                             deletePlugin={(p) => {
@@ -504,8 +536,14 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         />
                     )}
                 </Tabs.TabPane>
-                <Tabs.TabPane tab={"日志"} key={"journal"} disabled={isDisabledOnline}>
-                    {pluginIdOnlineId && pluginIdOnlineId > 0 && (
+                <Tabs.TabPane
+                    tab={isShowJournalDot ?
+                        <Badge dot offset={[5, -5]}><span className={`${activeKey === 'journal' && 'journal-active' || ''}`}>日志</span></Badge>
+                        : '日志'}
+                    key={"journal"}
+                    disabled={isDisabledOnline}
+                >
+                    {pluginIdOnlineId && pluginIdOnlineId > 0 && activeKey === 'journal' && (
                         <YakitPluginOnlineJournal
                             pluginId={pluginIdOnlineId}
                         />

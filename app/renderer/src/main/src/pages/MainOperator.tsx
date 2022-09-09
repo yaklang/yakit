@@ -111,7 +111,6 @@ const singletonRoute: Route[] = [
     Route.WebsocketHistory,
     // 插件
     Route.AddYakitScript,
-    Route.YakitPluginJournalDetails,
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -336,8 +335,7 @@ const Main: React.FC<MainProp> = (props) => {
                         {
                             verbose: tabName,
                             route: route,
-                            // singleNode: ContentByRoute(route),
-                            singleNode: nodeParams && nodeParams.node ? nodeParams.node || <></> : ContentByRoute(route),
+                            singleNode: ContentByRoute(route),
                             multipleNode: []
                         }
                     ])
@@ -771,7 +769,7 @@ const Main: React.FC<MainProp> = (props) => {
     })
 
     // websocket fuzzer 和 Fuzzer 类似
-    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean, request: Uint8Array } ) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean, request: Uint8Array }) => {
         addTabPage(Route.WebsocketFuzzer, {
             hideAdd: false, isRecord: false, node: ContentByRoute(Route.WebsocketFuzzer, undefined, {
                 wsRequest: res.request, wsTls: res.tls,
@@ -780,7 +778,7 @@ const Main: React.FC<MainProp> = (props) => {
     })
     // websocket fuzzer 和 Fuzzer 类似
     const addWebsocketHistory = useMemoizedFn((res: any) => {
-        addTabPage(Route.WebsocketHistory, {hideAdd: false, isRecord: false, node: undefined, time: ""})
+        addTabPage(Route.WebsocketHistory, { hideAdd: false, isRecord: false, node: undefined, time: "" })
     })
 
     const addYakScript = useMemoizedFn((res: any) => {
@@ -794,7 +792,8 @@ const Main: React.FC<MainProp> = (props) => {
         const time = new Date().getTime().toString()
         addTabPage(Route.YakitPluginJournalDetails, {
             time: time,
-            node: ContentByRoute(Route.YakitPluginJournalDetails, undefined, { YakScriptJournalDetailsId: res.YakScriptJournalDetailsId })
+            node: ContentByRoute(Route.YakitPluginJournalDetails, undefined, { YakScriptJournalDetailsId: res.YakScriptJournalDetailsId }),
+            hideAdd: true
         })
     })
     const addScanPort = useMemoizedFn((res: any) => {

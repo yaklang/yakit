@@ -32,12 +32,14 @@ export const onLocalScriptToOnlinePlugin = (params: YakScript, type?: number) =>
             type_verbose: p.TypeVerbose || '',
             field_verbose: p.FieldVerbose || '',
             help: p.Help || '',
-            required: p.Required,
+            // value:p.Value||'',
+            required: p.Required || false,
             group: p.Group || '',
-            extra_setting: p.ExtraSetting || ''
-        })),
+            extra_setting: p.ExtraSetting || '',
+            // buildIn_param: p.BuildInParam || ''
+        })) || [],
         help: params.Help || '',
-        contributors: params.OnlineContributors || "",
+        contributors: params.OnlineContributors || params.Author || '',
         default_open: false, // 这个字段暂时无用
         //
         enable_plugin_selector: params.EnablePluginSelector,
@@ -60,6 +62,7 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
 
     const upOnlinePlugin = useMemoizedFn((url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+        console.log('onlineParams', onlineParams);
         if (params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
         }

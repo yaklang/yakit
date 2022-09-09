@@ -4,7 +4,7 @@ import { NetWorkApi } from "@/services/fetch";
 import { API } from "@/services/swagger/resposeType";
 import { failed } from "@/utils/notification";
 import { getRandomInt } from "@/utils/randomUtil";
-import { LoadingOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useMemoizedFn } from "ahooks";
 import { Timeline, Button, Card, Spin } from "antd";
 import moment from "moment";
@@ -66,6 +66,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
             if (!res.data) {
                 res.data = []
             }
+            console.log('res.data', res.data);
             const data = payload.page === 1 ? res.data : resJournal.data.concat(res.data)
             const isMore = res.data.length < resJournal.pagemeta.limit
             setHasMore(!isMore)
@@ -97,6 +98,18 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
             }
         })
     })
+    const showDot = useMemoizedFn((status) => {
+        switch (status) {
+            case 0:
+                return <InfoCircleOutlined />
+            case 1: //1合并
+                return <CheckCircleOutlined style={{ color: '#52c41a' }} />
+            case 2: //2拒绝
+                return <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+            default:
+                return <InfoCircleOutlined />
+        }
+    })
     return (
         <div className="journal-content">
             <Spin spinning={lineLoading}>
@@ -110,8 +123,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                         rowKey='id'
                         defItemHeight={52}
                         renderRow={(item: API.ApplyPluginLists, index) => (
-                            <Timeline.Item>
-                                {item.id}-
+                            <Timeline.Item dot={showDot(item.merge_status)}>
                                 {moment.unix(item.created_at).format("YYYY-MM-DD HH:mm")}
                                 &emsp;
                                 {item.role === 'admin' && `管理员${item.user_name}修改插件` || `${item.user_name}申请修改插件`}
