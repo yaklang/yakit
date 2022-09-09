@@ -50,7 +50,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
     const [types, setTypes, getTypes] = useGetState<string>("")
 
     let newData: ReverseNotification[] = useMemo(() => {
-        setLoading(true)
+        // setLoading(true)
         let lists = [...data]
         if (hasToken) lists = lists.filter((item) => !!item.token)
         if (types) {
@@ -58,7 +58,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
             lists = lists.filter((i) => typeArr.includes(i.type))
         }
 
-        setTimeout(() => setLoading(false), 200)
+        // setTimeout(() => setLoading(false), 200)
         return lists
     }, [data, hasToken, useDebounce(types, {wait: 1000})])
 
@@ -70,7 +70,13 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                     <div className='header-extra'>
                         <div className='extra-opt'>
                             <div className='opt-title'>只看Token</div>
-                            <Switch checked={hasToken} onChange={(check) => setHasToken(check)} />
+                            <Switch
+                                checked={hasToken}
+                                onChange={(check) => {
+                                    setHasToken(check)
+                                    setLoading(true)
+                                }}
+                            />
                         </div>
 
                         <div className='extra-opt'>
@@ -83,6 +89,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                 options={DefaultType}
                                 onChange={(newValue: string[]) => {
                                     setTypes(newValue.length === 0 ? "" : newValue.join(","))
+                                    setLoading(true)
                                 }}
                                 maxTagCount='responsive'
                             />

@@ -4,7 +4,6 @@ import {InputNumber, Button, Form, Cascader, Switch, Input, Select, Spin, Toolti
 import {QuestionOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
-import {StartFacadeServerParams} from "./FacadesOptions"
 import {
     FacadesRequest,
     SettingReverseParamsInfo,
@@ -22,7 +21,7 @@ export interface JavaPayloadPageProp {}
 export interface YsoGeneraterRequest {
     Gadget: string
     Class: string
-    Options: {key: string; value: string | number | boolean}[]
+    Options: {Key: string; Value: string | number | boolean}[]
 }
 
 interface ParamsProps {
@@ -58,7 +57,13 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
     const paramsRef = useRef<ParamsRefProps>({useGadget: true, ...DefaultParams})
     const formListRef = useRef<FormList[]>([])
     const formBindRef = useRef<FormBindInfo>({})
-    const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>()
+    const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>({
+        BridgeParam: {Addr: "", Secret: ""},
+        IsRemote: false,
+        ReversePort: 8085,
+        ReverseHost: "127.0.0.1"
+    })
+    const [remoteIp, setRemoteIp] = useState<string>("")
 
     const btnSubmit = useMemoizedFn(
         (
@@ -87,18 +92,18 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             Options: []
         }
         for (let name in dataRef) {
-            if (!excludeKey.includes(name)) data.Options.push({key: name, value: dataRef[name]})
+            if (!excludeKey.includes(name)) data.Options.push({Key: name, Value: dataRef[name]})
         }
         return data
     })
 
-    const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo) => {
+    const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo, remoteIp: string) => {
         let startFacadeParams: FacadesRequest = {
             ...params,
             GenerateClassParams: {...convertRequest()},
             Token: token
         }
-        if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = startFacadeParams.BridgeParam.Addr
+        if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remoteIp
 
         ipcRenderer
             .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
@@ -115,9 +120,11 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             width: "40%",
             content: (
                 <SettingReverseServer
-                    setServer={(params: StartFacadeServerParams) => {
-                        setAddrParams(params)
-                        startFacadeServer(params)
+                    defaultSetting={addrParams}
+                    setServer={(params) => {
+                        setAddrParams(params.setting)
+                        setRemoteIp(params.remoteIp)
+                        startFacadeServer(params.setting, params.remoteIp)
 
                         m.destroy()
                         setTimeout(() => setLoading(false), 300)
@@ -244,6 +251,7 @@ interface YsoOptionInfo {
 interface OptionInfo {
     Name: string
     NameVerbose: string | React.ReactNode
+    Label: string
     Help: string
     isLeaf?: boolean
     children?: OptionInfo[]
@@ -323,6 +331,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                         ) : (
                             item.NameVerbose
                         ),
+                        Label: item.NameVerbose,
                         isLeaf: false,
                         children: []
                     }
@@ -355,6 +364,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             ) : (
                                 item.NameVerbose
                             ),
+                            Label: item.NameVerbose,
                             isLeaf: true
                         }
                         return info
@@ -442,8 +452,8 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                 <Form
                     form={formInstance}
                     name='form'
-                    labelCol={{span: 6}}
-                    wrapperCol={{span: 18}}
+                    labelCol={{span: isShowGadget ? 4 : 6}}
+                    wrapperCol={{span: isShowGadget ? 20 : 18}}
                     colon={false}
                     initialValues={{...paramsRef.current}}
                     autoComplete='off'
@@ -503,7 +513,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                 value={!params.Gadget ? [] : [params.Gadget, params.Class]}
                                 placeholder='请选择利用链'
                                 onChange={(value: any[]) => {
-                                    if (value.length === 0) cleatParams()
+                                    if (!value || value.length === 0) cleatParams()
                                     else {
                                         setParamsValue([
                                             {key: "Gadget", value: value[0]},
@@ -512,6 +522,10 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                         // 防止此操作干扰上面的赋值操作
                                         setTimeout(() => loadGeneraterFormList(value), 200)
                                     }
+                                }}
+                                displayRender={(label, selectedOptions) => {
+                                    const diplay = (selectedOptions || []).map((item) => item.Label).join(" / ")
+                                    return <>{diplay}</>
                                 }}
                             />
                         ) : (

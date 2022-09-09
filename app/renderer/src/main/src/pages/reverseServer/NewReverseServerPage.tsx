@@ -17,6 +17,8 @@ import {
 } from "../payloadGenerater/NewJavaPayloadPage"
 
 import "./reverseServerPage.scss"
+import {getRemoteValue} from "@/utils/kv"
+import {E} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -42,15 +44,21 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
     const [status, setStatus] = useState<"setting" | "start">("setting")
     const [token, setToken, getToken] = useGetState(randomString(40))
     const [loading, setLoading] = useState<boolean>(false)
-    const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>()
+    const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>({
+        BridgeParam: {Addr: "", Secret: ""},
+        IsRemote: false,
+        ReversePort: 8085,
+        ReverseHost: "127.0.0.1"
+    })
+    const [remoteIp, setRemoteIp] = useState<string>("")
 
-    const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo) => {
+    const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo, remoteIp: string) => {
         let startFacadeParams: FacadesRequest = {
             ...params,
             GenerateClassParams: {Gadget: "", Class: "", Options: []},
             Token: token
         }
-        if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = startFacadeParams.BridgeParam.Addr
+        if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remoteIp
 
         ipcRenderer
             .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
@@ -67,9 +75,11 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
         <div className='reverse-server-page-wrapper'>
             {status === "setting" && (
                 <SettingReverseServer
+                    defaultSetting={{...addrParams}}
                     setServer={(setting) => {
-                        setAddrParams(setting)
-                        startFacadeServer(setting)
+                        setAddrParams(setting.setting)
+                        setRemoteIp(setting.remoteIp)
+                        startFacadeServer(setting.setting, setting.remoteIp)
                     }}
                 />
             )}
@@ -98,19 +108,41 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
 }
 
 export interface SettingReverseServerProp {
-    setServer: (setting: SettingReverseParamsInfo) => any
+    defaultSetting: SettingReverseParamsInfo
+    setServer: (params: {setting: SettingReverseParamsInfo; remoteIp: string}) => any
+}
+interface NetInterface {
+    Name: string
+    Addr: string
+    IP: string
 }
 
+export const BRIDGE_ADDR = "yak-bridge-addr"
+export const BRIDGE_SECRET = "yak-bridge-secret"
 export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) => {
     const [formInstance] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
-    const [params, setParams] = useState<SettingReverseParamsInfo>({
-        BridgeParam: {Addr: "", Secret: ""},
-        IsRemote: false,
-        ReversePort: 8085,
-        ReverseHost: "127.0.0.1"
-    })
+    const [params, setParams, getParams] = useGetState<SettingReverseParamsInfo>({...props.defaultSetting})
     const remoteIp = useRef<string>("")
+
+    useEffect(() => {
+        getRemoteValue(BRIDGE_ADDR)
+            .then((addr: string) => {
+                if (!!addr) {
+                    params.BridgeParam.Addr = addr
+                    getRemoteValue(BRIDGE_SECRET).then((secret: string) => {
+                        params.BridgeParam.Secret = secret
+                        setValue({...params, IsRemote: true})
+                    })
+                }
+            })
+            .finally(() => {
+                ipcRenderer.invoke("AvailableLocalAddr", {}).then((data: {Interfaces: NetInterface[]}) => {
+                    const arr = (data.Interfaces || []).filter((i) => i.IP !== "127.0.0.1")
+                    if (arr.length !== 1) setValue({...getParams(), ReverseHost: arr[0].IP})
+                })
+            })
+    }, [])
 
     const setValue = useMemoizedFn((data: SettingReverseParamsInfo) => {
         formInstance.setFieldsValue({...data})
@@ -120,7 +152,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
     const submit = useMemoizedFn(() => {
         if (params.IsRemote) remoteAddrConvert()
         else {
-            props.setServer({...params})
+            props.setServer({setting: {...params}, remoteIp: ""})
             remoteIp.current = ""
         }
     })
@@ -142,10 +174,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
 
     useEffect(() => {
         if (!loading && params.IsRemote && !!remoteIp.current) {
-            props.setServer({
-                ...params,
-                BridgeParam: {Addr: remoteIp.current, Secret: params.BridgeParam.Secret}
-            })
+            props.setServer({setting: {...params}, remoteIp: remoteIp.current})
             remoteIp.current = ""
         }
     }, [loading])
@@ -155,17 +184,12 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
             <Spin spinning={loading}>
                 <Form
                     form={formInstance}
-                    initialValues={{
-                        BridgeParam: {Addr: "", Secret: ""},
-                        IsRemote: false,
-                        ReversePort: 8085,
-                        ReverseHost: "127.0.0.1"
-                    }}
+                    initialValues={{...props.defaultSetting}}
                     labelCol={{span: 8}}
                     wrapperCol={{span: 16}}
                     onFinish={submit}
                 >
-                    <Form.Item label='启用公网反连' name='IsRemote'>
+                    <Form.Item label='启用公网穿透' name='IsRemote'>
                         <Switch checked={params.IsRemote} onChange={(IsRemote) => setValue({...params, IsRemote})} />
                     </Form.Item>
 
@@ -173,7 +197,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                         <>
                             <Form.Item
                                 label='Bridge地址'
-                                name='BridgeParam[Addr]'
+                                name={["BridgeParam", "Addr"]}
                                 rules={[{required: true, message: "请输入Bridge地址"}]}
                             >
                                 <Input
@@ -185,7 +209,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                                     }}
                                 />
                             </Form.Item>
-                            <Form.Item label='密码' name='BridgeParam[Secret]'>
+                            <Form.Item label='密码' name={["BridgeParam", "Secret"]}>
                                 <Input
                                     allowClear={true}
                                     value={params.BridgeParam.Secret}
@@ -326,7 +350,8 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
         ipcRenderer.on(`${token}-end`, () => stop(true))
         const id = setInterval(() => {
             const datas = dataRef.current
-            if (datas.length <= 0) return
+
+            if (getData().length === 0) setData([...datas])
             if (getData().length > 0 && datas[0].uuid !== getData()[0].uuid) setData([...datas])
         }, 1000)
         return () => {
@@ -346,7 +371,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
             Options: []
         }
         for (let name in dataRef) {
-            if (!excludeKey.includes(name)) data.Options.push({key: name, value: dataRef[name]})
+            if (!excludeKey.includes(name)) data.Options.push({Key: name, Value: dataRef[name]})
         }
         return data
     }
@@ -384,11 +409,11 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                     </div>
                     <div className='setting-display-opt'>
                         <div>RMI反连地址</div>
-                        <CopyableField text={`http://${reverseAddr}/${classRequest.Class}`} style={{color: "blue"}} />
+                        <CopyableField text={`rmi://${reverseAddr}/${classRequest.Class}`} style={{color: "blue"}} />
                     </div>
                     <div className='setting-display-opt'>
                         <div>LDAP反连地址</div>
-                        <CopyableField text={`http://${reverseAddr}/${classRequest.Class}`} style={{color: "blue"}} />
+                        <CopyableField text={`ldap://${reverseAddr}/${classRequest.Class}`} style={{color: "blue"}} />
                     </div>
                 </div>
             </div>

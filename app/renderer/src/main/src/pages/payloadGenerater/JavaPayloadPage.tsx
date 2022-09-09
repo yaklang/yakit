@@ -326,7 +326,7 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
                             form={formInstance}
                             initialValues={useGadget ? generaterOptionsForGadget : generaterOptionsForClass}
                         >
-                            {() => {
+                            {(() => {
                                 let paramElement: JSX.Element[] = []
                                 const pushElement = (
                                     key: string,
@@ -448,7 +448,7 @@ export const PayloadGenerater_New: React.FC<PayloadGeneraterPageProp> = React.me
                                 }
 
                                 return paramElement
-                            }}
+                            })()}
                         </Form>
                     )}
                 </Form>
