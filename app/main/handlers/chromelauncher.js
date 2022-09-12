@@ -15,10 +15,15 @@ module.exports = (win, getClient) => {
             throw Error(`host: ${hostRaw} is invalid or illegal`)
         }
 
+        // https://peter.sh/experiments/chromium-command-line-switches/
+        // opts:
+        //   --no-system-proxy-config-service ⊗	Do not use system proxy configuration service.
+        //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
         return launch({
             chromeFlags: [
+                `--no-system-proxy-config-service`,
+                `--proxy-bypass-list=<-loopback>`,
                 `--proxy-server=http://${hostRaw}:${portInt}`,
-                `--proxy-bypass-list="<-loopback>"`,
                 // `--ignore-certificate-errors-spki-list`,
                 `--ignore-certificate-errors`,
                 `--ignore-urlfetcher-cert-requests`,
