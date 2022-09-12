@@ -112,4 +112,52 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SetEngineDefaultProxy", async (e, params) => {
         return await asyncSetEngineDefaultProxy(params)
     })
+
+    // asyncGetAllProcessEnvKey wrapper
+    const asyncGetAllProcessEnvKey = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllProcessEnvKey(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllProcessEnvKey", async (e, params) => {
+        return await asyncGetAllProcessEnvKey(params)
+    })
+
+    // asyncSetProcessEnvKey wrapper
+    const asyncSetProcessEnvKey = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetProcessEnvKey(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetProcessEnvKey", async (e, params) => {
+        return await asyncSetProcessEnvKey(params)
+    })
+
+    // asyncDelKey wrapper
+    const asyncDelKey = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DelKey(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DelKey", async (e, params) => {
+        return await asyncDelKey(params)
+    })
 }
