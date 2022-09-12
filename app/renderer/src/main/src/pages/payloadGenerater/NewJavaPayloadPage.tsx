@@ -50,6 +50,20 @@ const DefaultParams: ParamsProps = {
     Class: ""
 }
 
+export const convertRequest = (value: ParamsRefProps) => {
+    const dataRef = value
+    const excludeKey = ["useGadget", "Gadget", "Class"]
+    const data: YsoGeneraterRequest = {
+        Gadget: dataRef.Gadget,
+        Class: dataRef.Class,
+        Options: []
+    }
+    for (let name in dataRef) {
+        if (!excludeKey.includes(name)) data.Options.push({Key: name, Value: dataRef[name]})
+    }
+    return data
+}
+
 export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props) => {
     const [status, setStatus] = useState<"setting" | "start">("setting")
     const [token, setToken] = useState<string>(randomString(40))
@@ -77,30 +91,13 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             formBindRef.current = formBind
 
             if (type === "server") startServer()
-            if (type === "copy") copyPayload()
-            if (type === "yakRun") sendYakRunning()
         }
     )
-
-    // 把表单参数转换成后端需要的结构
-    const convertRequest = useMemoizedFn(() => {
-        const dataRef = paramsRef.current
-        const excludeKey = ["useGadget", "Gadget", "Class"]
-        const data: YsoGeneraterRequest = {
-            Gadget: dataRef.Gadget,
-            Class: dataRef.Class,
-            Options: []
-        }
-        for (let name in dataRef) {
-            if (!excludeKey.includes(name)) data.Options.push({Key: name, Value: dataRef[name]})
-        }
-        return data
-    })
 
     const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo, remoteIp: string) => {
         let startFacadeParams: FacadesRequest = {
             ...params,
-            GenerateClassParams: {...convertRequest()},
+            GenerateClassParams: {...convertRequest({...paramsRef.current})},
             Token: token
         }
         if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remoteIp
@@ -134,56 +131,6 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             modalAfterClose: () => setTimeout(() => setLoading(false), 300)
         })
     })
-    const copyPayload = useMemoizedFn(() => {
-        const generaterRequest = convertRequest()
-        ipcRenderer
-            .invoke("GenerateYsoBytes", generaterRequest)
-            .then((d: {Bytes: Uint8Array; FileName: string}) => {
-                success("生成字节码成功")
-                ipcRenderer
-                    .invoke("BytesToBase64", {
-                        Bytes: d.Bytes
-                    })
-                    .then((res: {Base64: string}) => {
-                        ipcRenderer
-                            .invoke("copy-clipboard", res.Base64)
-                            .then(() => {
-                                success("复制Base64成功")
-                            })
-                            .catch((err) => {
-                                failed(`${err}`)
-                            })
-                    })
-                    .catch((err) => {
-                        failed(`${err}`)
-                    })
-            })
-            .catch((e: any) => {
-                failed("生成字节码失败: " + `${e}`)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 300))
-    })
-    const sendYakRunning = useMemoizedFn(() => {
-        const generaterRequest = convertRequest()
-        ipcRenderer
-            .invoke("GenerateYsoCode", generaterRequest)
-            .then((d: {Code: string}) => {
-                success("生成代码成功")
-                setTimeout(() => {
-                    ipcRenderer.invoke("send-to-tab", {
-                        type: "add-yak-running",
-                        data: {
-                            name: `${generaterRequest.Gadget}/${generaterRequest.Class}-${new Date().getTime()}`,
-                            code: d.Code
-                        }
-                    })
-                }, 300)
-            })
-            .catch((e: any) => {
-                failed("生成代码失败: " + `${e}`)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 300))
-    })
 
     return (
         <div className='java-payload-wrapper'>
@@ -203,6 +150,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                     setLoading={setLoading}
                     token={token}
                     addr={addrParams}
+                    remoteIp={remoteIp}
                     stop={(isCancel) => {
                         if (!isCancel) ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
                         setStatus("setting")
@@ -288,8 +236,64 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
     const submit = useMemoizedFn((type: "server" | "copy" | "yakRun" | "apply") => {
         formInstance.validateFields().then(() => {
             setLoading(true)
-            btnSubmit(type, {...paramsRef.current}, [...formList], {...formBindRef.current})
+            if (type === "copy") {
+                copyPayload({...paramsRef.current})
+            } else if (type === "yakRun") {
+                sendYakRunning({...paramsRef.current})
+            } else {
+                btnSubmit(type, {...paramsRef.current}, [...formList], {...formBindRef.current})
+            }
         })
+    })
+    const copyPayload = useMemoizedFn((value: ParamsRefProps) => {
+        const generaterRequest = convertRequest(value)
+        ipcRenderer
+            .invoke("GenerateYsoBytes", generaterRequest)
+            .then((d: {Bytes: Uint8Array; FileName: string}) => {
+                success("生成字节码成功")
+                ipcRenderer
+                    .invoke("BytesToBase64", {
+                        Bytes: d.Bytes
+                    })
+                    .then((res: {Base64: string}) => {
+                        ipcRenderer
+                            .invoke("copy-clipboard", res.Base64)
+                            .then(() => {
+                                success("复制Base64成功")
+                            })
+                            .catch((err) => {
+                                failed(`${err}`)
+                            })
+                    })
+                    .catch((err) => {
+                        failed(`${err}`)
+                    })
+            })
+            .catch((e: any) => {
+                failed("生成字节码失败: " + `${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const sendYakRunning = useMemoizedFn((value: ParamsRefProps) => {
+        const generaterRequest = convertRequest(value)
+        ipcRenderer
+            .invoke("GenerateYsoCode", generaterRequest)
+            .then((d: {Code: string}) => {
+                success("生成代码成功")
+                setTimeout(() => {
+                    ipcRenderer.invoke("send-to-tab", {
+                        type: "add-yak-running",
+                        data: {
+                            name: `${generaterRequest.Gadget}/${generaterRequest.Class}-${new Date().getTime()}`,
+                            code: d.Code
+                        }
+                    })
+                }, 300)
+            })
+            .catch((e: any) => {
+                failed("生成代码失败: " + `${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
     })
     const cleatParams = useMemoizedFn(() => {
         paramsRef.current = {useGadget, ...DefaultParams}
@@ -460,17 +464,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                     layout={isShowGadget ? "horizontal" : "vertical"}
                 >
                     {isShowGadget && (
-                        <Form.Item
-                            label={
-                                <div className='form-item-label-title'>
-                                    使用利用链
-                                    <Tooltip placement='bottom' title='关闭则不使用利用链,只生成Class'>
-                                        <QuestionOutlined className='question-icon' />
-                                    </Tooltip>
-                                </div>
-                            }
-                            name='useGadget'
-                        >
+                        <Form.Item label='使用利用链' name='useGadget' help='关闭则不使用利用链,只生成恶意类'>
                             <Switch
                                 checked={useGadget}
                                 onChange={(check) => {
@@ -524,7 +518,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                     }
                                 }}
                                 displayRender={(label, selectedOptions) => {
-                                    const diplay = (selectedOptions || []).map((item) => item.Label).join(" / ")
+                                    const diplay = (selectedOptions || []).map((item: any) => item.Label).join(" / ")
                                     return <>{diplay}</>
                                 }}
                             />
@@ -649,7 +643,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                         )
                     })}
 
-                    <Form.Item wrapperCol={isShowGadget ? {offset: 6} : undefined} className='form-type-btn'>
+                    <Form.Item wrapperCol={isShowGadget ? {offset: 4} : undefined} className='form-type-btn'>
                         {isShowGadget && !useGadget && (
                             <Button loading={btnLoading} type='primary' onClick={() => submit("server")}>
                                 启动反连服务

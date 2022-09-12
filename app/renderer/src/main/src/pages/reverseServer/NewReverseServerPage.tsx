@@ -9,16 +9,16 @@ import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
 import {PoweroffOutlined} from "@ant-design/icons"
 import {ReverseNotification, ReverseTable} from "./ReverseTable"
 import {
+    convertRequest,
     FormBindInfo,
     FormList,
     ParamsRefProps,
     PayloadForm,
     YsoGeneraterRequest
 } from "../payloadGenerater/NewJavaPayloadPage"
+import {getRemoteValue} from "@/utils/kv"
 
 import "./reverseServerPage.scss"
-import {getRemoteValue} from "@/utils/kv"
-import {E} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -89,6 +89,7 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
                     setLoading={setLoading}
                     token={getToken()}
                     addr={addrParams}
+                    remoteIp={remoteIp}
                     stop={(isCancel) => {
                         if (!isCancel) ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
                         setStatus("setting")
@@ -126,22 +127,43 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
     const remoteIp = useRef<string>("")
 
     useEffect(() => {
-        getRemoteValue(BRIDGE_ADDR)
-            .then((addr: string) => {
-                if (!!addr) {
-                    params.BridgeParam.Addr = addr
-                    getRemoteValue(BRIDGE_SECRET).then((secret: string) => {
-                        params.BridgeParam.Secret = secret
-                        setValue({...params, IsRemote: true})
+        const initParams = {...params}
+        if (initParams.ReverseHost !== "127.0.0.1") return
+
+        setLoading(true)
+        getRemoteValue(BRIDGE_ADDR).then((addr: string) => {
+            if (!!addr) {
+                initParams.BridgeParam.Addr = addr
+                getRemoteValue(BRIDGE_SECRET)
+                    .then((secret: string) => {
+                        initParams.BridgeParam.Secret = secret
+                        initParams.IsRemote = true
                     })
-                }
-            })
-            .finally(() => {
-                ipcRenderer.invoke("AvailableLocalAddr", {}).then((data: {Interfaces: NetInterface[]}) => {
-                    const arr = (data.Interfaces || []).filter((i) => i.IP !== "127.0.0.1")
-                    if (arr.length !== 1) setValue({...getParams(), ReverseHost: arr[0].IP})
-                })
-            })
+                    .finally(() => {
+                        ipcRenderer
+                            .invoke("AvailableLocalAddr", {})
+                            .then((data: {Interfaces: NetInterface[]}) => {
+                                const arr = (data.Interfaces || []).filter((i) => i.IP !== "127.0.0.1")
+                                if (arr.length > 0) initParams.ReverseHost = arr[0].IP
+                            })
+                            .finally(() => {
+                                setValue({...initParams})
+                                setTimeout(() => setLoading(false), 300)
+                            })
+                    })
+            } else {
+                ipcRenderer
+                    .invoke("AvailableLocalAddr", {})
+                    .then((data: {Interfaces: NetInterface[]}) => {
+                        const arr = (data.Interfaces || []).filter((i) => i.IP !== "127.0.0.1")
+                        if (arr.length > 0) initParams.ReverseHost = arr[0].IP
+                    })
+                    .finally(() => {
+                        setValue({...initParams})
+                        setTimeout(() => setLoading(false), 300)
+                    })
+            }
+        })
     }, [])
 
     const setValue = useMemoizedFn((data: SettingReverseParamsInfo) => {
@@ -265,6 +287,7 @@ export interface StartReverseServerProp {
     setLoading: (value: boolean) => any
     token: string
     addr: SettingReverseParamsInfo
+    remoteIp: string
     stop: (isCancel?: boolean) => any
     apply: (params: ApplyFacadesRequest) => any
 
@@ -277,6 +300,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
     const {
         token,
         addr,
+        remoteIp,
         stop,
         apply,
         paramsData = {useGadget: false, Gadget: "", Class: ""},
@@ -284,18 +308,12 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
         formBind = {},
         ...rest
     } = props
-    const reverseAddr = addr.IsRemote
-        ? `${addr.BridgeParam.Addr}:${addr.ReversePort}`
-        : `${addr.ReverseHost}:${addr.ReversePort}`
+    const reverseAddr = addr.IsRemote ? `${remoteIp}:${addr.ReversePort}` : `${addr.ReverseHost}:${addr.ReversePort}`
 
     const dataRef = useRef<ReverseNotification[]>([])
     const [data, setData, getData] = useGetState<ReverseNotification[]>([])
 
-    const [classRequest, setClassRequest] = useState<YsoGeneraterRequest>({
-        Gadget: paramsData.Gadget,
-        Class: paramsData.Class,
-        Options: []
-    })
+    const [classRequest, setClassRequest] = useState<ParamsRefProps>({...paramsData})
 
     const [isExtra, setIsExtra] = useState<boolean>(false)
 
@@ -362,22 +380,9 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
         }
     }, [token])
 
-    const convertRequest = (value: ParamsRefProps) => {
-        const dataRef = value
-        const excludeKey = ["useGadget", "Gadget", "Class"]
-        const data: YsoGeneraterRequest = {
-            Gadget: dataRef.Gadget,
-            Class: dataRef.Class,
-            Options: []
-        }
-        for (let name in dataRef) {
-            if (!excludeKey.includes(name)) data.Options.push({Key: name, Value: dataRef[name]})
-        }
-        return data
-    }
     const btnSubmit = useMemoizedFn((type: "server" | "copy" | "yakRun" | "apply", value: ParamsRefProps) => {
         const data = convertRequest(value)
-        setClassRequest({...data})
+        setClassRequest({...value})
         if (type === "apply") apply({Token: token, GenerateClassParams: {...data}})
     })
 
@@ -405,15 +410,24 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                 <div className='setting-display'>
                     <div className='setting-display-opt'>
                         <div>HTTP反连地址</div>
-                        <CopyableField text={`http://${reverseAddr}/${classRequest.Class}`} style={{color: "blue"}} />
+                        <CopyableField
+                            text={`http://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                            style={{color: "blue"}}
+                        />
                     </div>
                     <div className='setting-display-opt'>
                         <div>RMI反连地址</div>
-                        <CopyableField text={`rmi://${reverseAddr}/${classRequest.Class}`} style={{color: "blue"}} />
+                        <CopyableField
+                            text={`rmi://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                            style={{color: "blue"}}
+                        />
                     </div>
                     <div className='setting-display-opt'>
                         <div>LDAP反连地址</div>
-                        <CopyableField text={`ldap://${reverseAddr}/${classRequest.Class}`} style={{color: "blue"}} />
+                        <CopyableField
+                            text={`ldap://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                            style={{color: "blue"}}
+                        />
                     </div>
                 </div>
             </div>

@@ -48,6 +48,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [hasToken, setHasToken] = useState<boolean>(false)
     const [types, setTypes, getTypes] = useGetState<string>("")
+    // const dataRef = useRef<ReverseNotification[]>([])
 
     let newData: ReverseNotification[] = useMemo(() => {
         // setLoading(true)
@@ -58,7 +59,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
             lists = lists.filter((i) => typeArr.includes(i.type))
         }
 
-        // setTimeout(() => setLoading(false), 200)
+        setTimeout(() => setLoading(false), 200)
         return lists
     }, [data, hasToken, useDebounce(types, {wait: 1000})])
 
@@ -89,7 +90,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                 options={DefaultType}
                                 onChange={(newValue: string[]) => {
                                     setTypes(newValue.length === 0 ? "" : newValue.join(","))
-                                    setLoading(true)
+                                    // setLoading(true)
                                 }}
                                 maxTagCount='responsive'
                             />
