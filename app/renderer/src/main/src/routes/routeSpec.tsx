@@ -28,7 +28,6 @@ import { HTTPHistory } from "../components/HTTPHistory"
 import { PortAssetTable } from "../pages/assetViewer/PortAssetPage"
 import { YakScriptExecResultTable } from "../components/YakScriptExecResultTable"
 import { DomainAssetPage } from "../pages/assetViewer/DomainAssetPage"
-import { ReverseServerPage } from "../pages/reverse/ReverseServerPage"
 import { RiskPage } from "../pages/risks/RiskPage"
 import { DNSLogPage } from "../pages/dnslog/DNSLogPage"
 import { HTTPFuzzerPage } from "../pages/fuzzer/HTTPFuzzerPage"
@@ -37,9 +36,10 @@ import { ICMPSizeLoggerPage } from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import { RandomPortLogPage } from "../pages/randomPortLog/RandomPortLogPage"
 import { ReportViewerPage } from "../pages/assetViewer/ReportViewerPage"
 import { BatchExecutorPageEx } from "../pages/invoker/batch/BatchExecutorPageEx"
-import {PayloadGeneraterPage} from "../pages/payloadGenerater/PayloadGeneraterPage"
-import {PayloadGenerater_New} from "../pages/payloadGenerater/JavaPayloadPage"
-import {ReverseServer_New, StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
+// import {ReverseServerPage} from "../pages/reverse/ReverseServerPage"
+// import {PayloadGeneraterPage} from "../pages/payloadGenerater/PayloadGeneraterPage"
+// import {PayloadGenerater_New} from "../pages/payloadGenerater/JavaPayloadPage"
+import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
 
 import {
     ReadOnlyBatchExecutorByMenuItem,
@@ -77,7 +77,7 @@ export enum Route {
     WebsocketHistory = "websocket-history",
 
     // 具体漏洞内容
-    PoC = "poc",
+    PoC= "poc",
 
     // Payload 管理
     PayloadManager = "payload-manager",
@@ -105,9 +105,9 @@ export enum Route {
     // 反连
     PayloadGenerater_New = "PayloadGenerater_New",
     ReverseServer_New = "ReverseServer_New",
-    PayloadGenerater = "payload-generater",
+    // PayloadGenerater = "payload-generater",
     ReverseManager = `reverse`,
-    ReverseServer = "reverse-server",
+    // ReverseServer = "reverse-server",
     ShellReceiver = "shellReceiver",
     DNSLog = "dnslog",
     ICMPSizeLog = "icmp-sizelog",
@@ -202,10 +202,10 @@ export const RouteMenuData: MenuDataProps[] = [
         label: "反连管理",
         icon: <AppstoreOutlined />,
         subMenuData: [
-            {key: Route.ReverseServer_New, label: "新反连服务器", icon: <OneToOneOutlined />},
-            {key: Route.PayloadGenerater_New, label: "新JavaPayload", icon: <OneToOneOutlined />},
-            {key: Route.PayloadGenerater, label: "JavaPayload", icon: <OneToOneOutlined />},
-            {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined />},
+            {key: Route.ReverseServer_New, label: "反连服务器", icon: <OneToOneOutlined />},
+            {key: Route.PayloadGenerater_New, label: "JavaPayload", icon: <OneToOneOutlined />},
+            // {key: Route.PayloadGenerater, label: "JavaPayload", icon: <OneToOneOutlined />},
+            // {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined />},
             {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined />},
             {key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined />},
             {key: Route.ICMPSizeLog, label: "ICMP-SizeLog", icon: <OneToOneOutlined />},
@@ -358,22 +358,14 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <DomainAssetPage />
         case Route.DB_ExecResults:
             return <YakScriptExecResultTable />
-        case Route.ReverseServer:
-            return <ReverseServerPage />
-        case Route.PayloadGenerater:
-            return <PayloadGeneraterPage />
+        // case Route.ReverseServer:
+        //     return <ReverseServerPage />
+        // case Route.PayloadGenerater:
+        //     return <PayloadGeneraterPage />
         case Route.PayloadGenerater_New:
-            // return <PayloadGenerater_New />
             return <JavaPayloadPage />
         case Route.ReverseServer_New:
             return <NewReverseServerPage />
-            // return (
-            //     <ReverseServer_New
-            //         facadeServerParams={params?.facadeServerParams}
-            //         classGeneraterParams={params?.classGeneraterParams}
-            //         classType={params?.classType}
-            //     />
-            // )
         case Route.DB_Risk:
             return <RiskPage />
         case Route.DNSLog:
