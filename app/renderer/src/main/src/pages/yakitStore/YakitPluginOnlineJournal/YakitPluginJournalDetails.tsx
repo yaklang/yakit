@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { useCreation, useGetState, useMemoizedFn } from "ahooks"
 import './YakitPluginJournalDetails.scss'
 import { YakScript } from "@/pages/invoker/schema"
-import { FullscreenOutlined, QuestionCircleOutlined } from "@ant-design/icons"
+import { FullscreenOutlined, QuestionCircleOutlined, FullscreenExitOutlined } from "@ant-design/icons"
 import { showDrawer } from "@/utils/showModal"
 import { YakEditor } from "@/utils/editors"
 import { CodeComparison, DataCompare } from "@/pages/compare/DataCompare"
@@ -54,8 +54,8 @@ interface SearchApplyUpdateDetailRequest {
 export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps> = (props) => {
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
-            labelCol: { span: 5 },
-            wrapperCol: { span: 14 }
+            labelCol: { span: 2 },
+            wrapperCol: { span: 22 }
         }
         return col
     }, [])
@@ -94,10 +94,6 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
         }).then((res) => {
             let originalItem = res.merge_before_plugin || {} // 线上当前插件最新的数据
             let modifiedItem = res.up_plugin || {}// 提交人 提交的插件数据
-            if (res.user_role === 'admin') {
-                originalItem = res.up_plugin || {};// 管理员 提交的插件数据且是最新的数据
-                modifiedItem = res.merge_before_plugin || {};//  管理员提交之前的插件数据
-            }
             const localParams: YakScript = {
                 Id: 0,
                 Content: modifiedItem.content || '',
@@ -244,7 +240,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                                 !fullscreen && originalCode && modifiedCode &&
                                 <div className="yak-editor-content">
                                     <div className="yak-editor-tip">
-                                        <div>当前插件源码</div>
+                                        <div>插件源码</div>
                                         <div>申请人提交源码</div>
                                     </div>
                                     <div className="yak-editor-item">
@@ -303,7 +299,7 @@ const FullScreenCode: React.FC<FullScreenCodeProps> = (props) => {
                     <Button
                         type="link"
                         size="small"
-                        icon={<FullscreenOutlined style={{ fontSize: 20 }} />}
+                        icon={<FullscreenExitOutlined style={{ fontSize: 20 }} />}
                         onClick={() => onClose()}
                     />
                     <Button
@@ -320,7 +316,7 @@ const FullScreenCode: React.FC<FullScreenCodeProps> = (props) => {
             bodyStyle={{ height: '100%', padding: 0 }}
         >
             <div className="yak-editor-tip">
-                <div>当前插件源码</div>
+                <div>插件源码</div>
                 <div>申请人提交源码</div>
             </div>
             <div className="yak-editor-full-item">
