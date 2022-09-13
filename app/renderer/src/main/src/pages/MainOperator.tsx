@@ -89,7 +89,7 @@ const WindowsCloseFlag = "windows-close-flag"
 const singletonRoute: Route[] = [
     Route.HTTPHacker,
     Route.ShellReceiver,
-    Route.ReverseServer,
+    // Route.ReverseServer,
     Route.PayloadManager,
     Route.ModManager,
     Route.ModManagerLegacy,
