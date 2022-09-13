@@ -1,6 +1,6 @@
 import React, {ReactNode} from "react"
 import {GithubOutlined, QqOutlined, WechatOutlined, SearchOutlined} from "@ant-design/icons"
-import "./index.scss"
+import "./OnlineUserItem.scss"
 
 const PlatformIcon: {[key: string]: ReactNode} = {
     github: <GithubOutlined />,

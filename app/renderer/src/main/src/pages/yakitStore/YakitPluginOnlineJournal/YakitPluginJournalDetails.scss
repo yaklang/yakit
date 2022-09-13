@@ -1,0 +1,35 @@
+.yak-editor-content {
+    height: 400px;
+
+    .yak-editor-item {
+        height: 356px;
+    }
+}
+
+.yak-editor-tip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+
+.yak-editor-full-item {
+    height: calc(100% - 44px);
+}
+
+.journal-details-body {
+    height: 100%;
+
+    .ant-spin-nested-loading {
+        height: 100%;
+    }
+
+    .ant-card {
+        height: 100%;
+    }
+
+    .ant-card-body {
+        height: calc(100% - 60px);
+        overflow-y: auto
+    }
+}

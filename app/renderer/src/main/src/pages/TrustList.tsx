@@ -9,7 +9,7 @@ import {failed, info} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {OnlineUserItem} from "@/components/OnlineUserItem"
+import {OnlineUserItem} from "@/components/OnlineUserItem/OnlineUserItem"
 
 const {Search} = Input
 const {ipcRenderer, contextBridge} = window.require("electron")

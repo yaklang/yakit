@@ -1,5 +1,27 @@
-.plugin-store-info .ant-tabs-content {
-    height: 100%;
+.plugin-store-info {
+    .docs-markdown {
+        height: calc(100% - 32px);
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .ant-tabs-content {
+        height: 100%;
+
+        .ant-tabs {
+            height: 100%;
+        }
+    }
+
+    .ant-tabs-tab:hover {
+        .ant-badge {
+            color: #40a9ff;
+        }
+    }
+
+    .journal-active {
+        color: #1890ff;
+    }
 }
 
 .script-author {
@@ -8,18 +30,27 @@
     margin-bottom: 0
 }
 
-.edit-plugin-title {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0 12px;
-    border-bottom: 1px solid #f0f0f0;
-    margin-bottom: 12px;
+.edit-plugin-body {
+    height: 100%;
 
-    .title {
-        margin: 0;
-        color: rgba(0, 0, 0, 0.85);
-        font-weight: 500;
-        font-size: 16px;
-        line-height: 22px;
+    .edit-plugin-title {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0 12px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 12px;
+
+        .title {
+            margin: 0;
+            color: rgba(0, 0, 0, 0.85);
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 22px;
+        }
+    }
+
+    .edit-plugin-form {
+        height: calc(100% - 41px);
+        overflow-y: auto;
     }
 }

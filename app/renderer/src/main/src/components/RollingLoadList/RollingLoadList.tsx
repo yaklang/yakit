@@ -1,8 +1,8 @@
-import React, {useEffect, useState, useRef, ReactNode, useMemo} from "react"
+import React, { useEffect, useState, useRef, ReactNode, useMemo } from "react"
 import ReactResizeDetector from "react-resize-detector"
-import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList, useDeepCompareEffect} from "ahooks"
-import {LoadingOutlined} from "@ant-design/icons"
-import "./index.scss"
+import { useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList, useDeepCompareEffect } from "ahooks"
+import { LoadingOutlined } from "@ant-design/icons"
+import "./RollingLoadList.scss"
 
 interface RollingLoadListProps<T> {
     rowKey?: string
@@ -107,12 +107,12 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
             const containerHeight = containerRef.current?.clientHeight
             const wrapperHeight = wrapperRef.current?.clientHeight
-            if (wrapperHeight <= containerHeight) {
+            if (wrapperHeight && wrapperHeight <= containerHeight) {
                 loadMoreData()
             }
         },
         [wrapperRef.current?.clientHeight, isRef],
-        {wait: 200}
+        { wait: 200 }
     )
     useEffect(() => {
         resetPre()
@@ -135,7 +135,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         }
     })
 
-    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
+    const { width } = useSize(document.querySelector("body")) || { width: 0, height: 0 }
     useDebounceEffect(
         () => {
             resetPre()
@@ -146,7 +146,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             }
         },
         [isGridLayout, width],
-        {wait: 200, leading: true}
+        { wait: 200, leading: true }
     )
     const onComputeItemHeight = useMemoizedFn(() => {
         if (!width) return
@@ -177,7 +177,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 }
             }
         },
-        {wait: 200, leading: false}
+        { wait: 200, leading: false }
     )
     return (
         <>
@@ -194,8 +194,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshRate={50}
             />
             <div
-                className={`container ${classNameList}`}
-                style={{height: vlistHeigth}}
+                className={`container ${classNameList || ''}`}
+                style={{ height: vlistHeigth }}
                 ref={containerRef}
                 onScroll={() => onScrollCapture.run()}
             >
@@ -211,7 +211,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                                 >
                                     {itemArr.map((ele, number) => (
                                         <div
-                                            className={`${col && classNameWidth[col]} ${classNameRow}`}
+                                            className={`${col && classNameWidth[col]} ${classNameRow || ''}`}
                                             key={ele[rowKey || "Id"]}
                                             id={ele[rowKey || "Id"]}
                                         >

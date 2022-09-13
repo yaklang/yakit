@@ -63,14 +63,15 @@ import {
 } from "ahooks"
 import { NetWorkApi } from "@/services/fetch"
 import { API } from "@/services/swagger/resposeType"
-import { DownloadOnlinePluginProps } from "../yakitStore/YakitPluginInfoOnline"
+import { DownloadOnlinePluginProps } from "./YakitPluginInfoOnline/YakitPluginInfoOnline"
 import { randomString } from "@/utils/randomUtil"
 import { OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon, ShareIcon } from "../../assets/icons"
 import { findDOMNode } from "react-dom"
 import { YakExecutorParam } from "../invoker/YakExecutorParams"
-import { RollingLoadList } from "@/components/RollingLoadList"
+import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
 import { setTimeout } from "timers"
-import { ModalSyncSelect, SyncCloudButton } from "@/components/SyncCloudButton/index"
+import { ModalSyncSelect, onLocalScriptToOnlinePlugin, SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
+import { fullscreen } from "@uiw/react-md-editor"
 
 const { Search } = Input
 const { Option } = Select
@@ -177,7 +178,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .finally(() => { })
     }, [])
     useEffect(() => {
-        if (!userInfo.isLogin) onResetPluginDetails()
+        onRefList()
     }, [userInfo.isLogin])
     const onRefList = useMemoizedFn(() => {
         setPublicKeyword("")
@@ -186,6 +187,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         onResetNumber()
         getStatistics(width)
         onResetQuery()
+        setFullScreen(false)
         setTimeout(() => {
             setIsRefList(!isRefList)
         }, 200)
@@ -628,7 +630,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             type='link'
                                             onClick={() => {
                                                 onRefList()
-                                                onFullScreen()
                                             }}
                                         >
                                             返回
@@ -647,8 +648,10 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         />
                                     </>
                                 }
+                                bodyStyle={{ height: 'calc(100% - 69px)' }}
                             >
                                 <PluginOperator
+                                    userInfo={userInfo}
                                     yakScriptId={(script && script.Id) || 0}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
                                     setTrigger={() => { }}
@@ -679,109 +682,112 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             <Empty style={{ marginTop: 100 }}>在左侧所选模块查看详情</Empty>
                         )}
                     </div>
-                )}
-                {isFull && !isShowFilter && (
-                    <div className='plugin-statistics'>
-                        <Spin spinning={statisticsLoading}>
-                            {plugSource === "online" && (
-                                <div className='opt-list'>
-                                    <div className='opt-header'>排序顺序</div>
-                                    <div
-                                        className={`opt-list-item ${statisticsQueryOnline.order_by === "stars" && "opt-list-item-selected"
-                                            }`}
-                                        onClick={() => onSearch("order_by", "stars")}
-                                    >
-                                        <span className='item-name content-ellipsis'>按热度</span>
+                )
+                }
+                {
+                    isFull && !isShowFilter && (
+                        <div className='plugin-statistics'>
+                            <Spin spinning={statisticsLoading}>
+                                {plugSource === "online" && (
+                                    <div className='opt-list'>
+                                        <div className='opt-header'>排序顺序</div>
+                                        <div
+                                            className={`opt-list-item ${statisticsQueryOnline.order_by === "stars" && "opt-list-item-selected"
+                                                }`}
+                                            onClick={() => onSearch("order_by", "stars")}
+                                        >
+                                            <span className='item-name content-ellipsis'>按热度</span>
+                                        </div>
+                                        <div
+                                            className={`opt-list-item ${statisticsQueryOnline.order_by === "created_at" && "opt-list-item-selected"
+                                                }`}
+                                            onClick={() => onSearch("order_by", "created_at")}
+                                        >
+                                            <span className='item-name content-ellipsis'>按时间</span>
+                                        </div>
                                     </div>
-                                    <div
-                                        className={`opt-list-item ${statisticsQueryOnline.order_by === "created_at" && "opt-list-item-selected"
-                                            }`}
-                                        onClick={() => onSearch("order_by", "created_at")}
-                                    >
-                                        <span className='item-name content-ellipsis'>按时间</span>
+                                )}
+                                {plugSource === "user" && userInfo.isLogin && (
+                                    <div className='opt-list'>
+                                        <div className='opt-header'>私密/公开</div>
+                                        <div
+                                            className={`opt-list-item ${statisticsQueryUser.is_private === "true" && "opt-list-item-selected"
+                                                }`}
+                                            onClick={() => onSearch("is_private", "true")}
+                                        >
+                                            <span className='item-name content-ellipsis'>私密</span>
+                                        </div>
+                                        <div
+                                            className={`opt-list-item ${statisticsQueryUser.is_private === "false" && "opt-list-item-selected"
+                                                }`}
+                                            onClick={() => onSearch("is_private", "false")}
+                                        >
+                                            <span className='item-name content-ellipsis'>公开</span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                            {plugSource === "user" && userInfo.isLogin && (
-                                <div className='opt-list'>
-                                    <div className='opt-header'>私密/公开</div>
-                                    <div
-                                        className={`opt-list-item ${statisticsQueryUser.is_private === "true" && "opt-list-item-selected"
-                                            }`}
-                                        onClick={() => onSearch("is_private", "true")}
-                                    >
-                                        <span className='item-name content-ellipsis'>私密</span>
-                                    </div>
-                                    <div
-                                        className={`opt-list-item ${statisticsQueryUser.is_private === "false" && "opt-list-item-selected"
-                                            }`}
-                                        onClick={() => onSearch("is_private", "false")}
-                                    >
-                                        <span className='item-name content-ellipsis'>公开</span>
-                                    </div>
-                                </div>
-                            )}
-                            {(statisticsIsNull && <Empty description='暂无统计数据' />) || (
-                                <>
-                                    {Object.entries(
-                                        plugSource === "local"
-                                            ? yakScriptTagsAndType || {}
-                                            : statisticsDataOnlineOrUser || {}
-                                    ).map((item) => {
-                                        const queryName = item[0]
-                                        const statisticsList = item[1]
-                                        const title = queryTitle[queryName]
-                                        let current: string = ""
-                                        if (plugSource === "local") {
-                                            current = statisticsQueryLocal[queryName]
-                                        }
-                                        if (plugSource === "user") {
-                                            current = statisticsQueryUser[queryName]
-                                        }
-                                        if (plugSource === "online") {
-                                            current = statisticsQueryOnline[queryName]
-                                        }
-                                        // if(y)
-                                        if (
-                                            (queryName === "status" &&
-                                                plugSource === "user" &&
-                                                statisticsQueryUser.is_private !== "false") ||
-                                            (queryName === "status" &&
-                                                plugSource === "online" &&
-                                                userInfo.role !== "admin")
-                                        ) {
-                                            return <></>
-                                        }
+                                )}
+                                {(statisticsIsNull && <Empty description='暂无统计数据' />) || (
+                                    <>
+                                        {Object.entries(
+                                            plugSource === "local"
+                                                ? yakScriptTagsAndType || {}
+                                                : statisticsDataOnlineOrUser || {}
+                                        ).map((item) => {
+                                            const queryName = item[0]
+                                            const statisticsList = item[1]
+                                            const title = queryTitle[queryName]
+                                            let current: string = ""
+                                            if (plugSource === "local") {
+                                                current = statisticsQueryLocal[queryName]
+                                            }
+                                            if (plugSource === "user") {
+                                                current = statisticsQueryUser[queryName]
+                                            }
+                                            if (plugSource === "online") {
+                                                current = statisticsQueryOnline[queryName]
+                                            }
+                                            // if(y)
+                                            if (
+                                                (queryName === "status" &&
+                                                    plugSource === "user" &&
+                                                    statisticsQueryUser.is_private !== "false") ||
+                                                (queryName === "status" &&
+                                                    plugSource === "online" &&
+                                                    userInfo.role !== "admin")
+                                            ) {
+                                                return <></>
+                                            }
 
-                                        return (
-                                            statisticsList &&
-                                            statisticsList.length > 0 && (
-                                                <div key={title} className='opt-list'>
-                                                    <div className='opt-header'>{title}</div>
-                                                    {statisticsList.map((ele) => (
-                                                        <div
-                                                            key={`${ele.value || ele.Value}-${plugSource}`}
-                                                            className={`opt-list-item ${current?.includes(ele.value || ele.Value) &&
-                                                                "opt-list-item-selected"
-                                                                }`}
-                                                            onClick={() => onSearch(queryName, ele.value || ele.Value)}
-                                                        >
-                                                            <span className='item-name content-ellipsis'>
-                                                                {showName(queryName, ele.value || ele.Value)}
-                                                            </span>
-                                                            <span>{ele.count || ele.Total}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                            return (
+                                                statisticsList &&
+                                                statisticsList.length > 0 && (
+                                                    <div key={title} className='opt-list'>
+                                                        <div className='opt-header'>{title}</div>
+                                                        {statisticsList.map((ele) => (
+                                                            <div
+                                                                key={`${ele.value || ele.Value}-${plugSource}`}
+                                                                className={`opt-list-item ${current?.includes(ele.value || ele.Value) &&
+                                                                    "opt-list-item-selected"
+                                                                    }`}
+                                                                onClick={() => onSearch(queryName, ele.value || ele.Value)}
+                                                            >
+                                                                <span className='item-name content-ellipsis'>
+                                                                    {showName(queryName, ele.value || ele.Value)}
+                                                                </span>
+                                                                <span>{ele.count || ele.Total}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )
                                             )
-                                        )
-                                    })}
-                                </>
-                            )}
-                        </Spin>
-                    </div>
-                )}
-            </div>
+                                        })}
+                                    </>
+                                )}
+                            </Spin>
+                        </div>
+                    )
+                }
+            </div >
         </>
     )
 }
@@ -1043,30 +1049,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     })
 
     const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
-        const onlineParams: API.SaveYakitPlugin = {
-            type: params.Type,
-            script_name: params.ScriptName,
-            content: params.Content,
-            tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
-            params: params.Params.map((p) => ({
-                field: p.Field || '',
-                default_value: p.DefaultValue || '',
-                type_verbose: p.TypeVerbose || '',
-                field_verbose: p.FieldVerbose || '',
-                help: p.Help || '',
-                required: p.Required,
-                group: p.Group || '',
-                extra_setting: p.ExtraSetting || ''
-            })),
-            help: params.Help,
-            default_open: type === 1 ? false : true, // 1 个人账号
-            contributors: params.OnlineContributors || "",
-            //
-            enable_plugin_selector: params.EnablePluginSelector,
-            plugin_selector_types: params.PluginSelectorTypes,
-            is_general_module: params.IsGeneralModule
-        }
-
+        const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
         return new Promise((resolve) => {
             NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
                 method: "post",

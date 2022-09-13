@@ -5,7 +5,7 @@ import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {UserQuery} from "@/pages/TrustList"
 import {failed, success} from "@/utils/notification"
-import {OnlineUserItem} from "@/components/OnlineUserItem"
+import {OnlineUserItem} from "@/components/OnlineUserItem/OnlineUserItem"
 import {UserInfoProps} from "@/store"
 
 const {Option} = Select

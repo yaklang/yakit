@@ -2,7 +2,7 @@ import {YakScriptCreatorForm} from "@/pages/invoker/YakScriptCreator"
 import {Route} from "@/routes/routeSpec"
 import {Modal} from "antd"
 import React, {useEffect, useState} from "react"
-import "./index.scss"
+import "./AddYakitScript.scss"
 
 const {ipcRenderer} = window.require("electron")
 

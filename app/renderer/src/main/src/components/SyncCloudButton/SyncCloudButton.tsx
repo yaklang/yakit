@@ -1,6 +1,6 @@
 import { YakScript } from "@/pages/invoker/schema"
 import Login from "@/pages/Login"
-import { DownloadOnlinePluginProps } from "@/pages/yakitStore/YakitPluginInfoOnline"
+import { DownloadOnlinePluginProps } from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import { GetYakScriptByOnlineIDRequest } from "@/pages/yakitStore/YakitStorePage"
 import { NetWorkApi } from "@/services/fetch"
 import { API } from "@/services/swagger/resposeType"
@@ -19,6 +19,39 @@ interface SyncCloudButtonProps {
     children: ReactNode
     uploadLoading?: (boolean) => void
 }
+
+export const onLocalScriptToOnlinePlugin = (params: YakScript, type?: number) => {
+    const onlineParams = {
+        type: params.Type,
+        script_name: params.ScriptName,
+        content: params.Content || '',
+        tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
+        params: params.Params.map((p) => ({
+            field: p.Field || '',
+            default_value: p.DefaultValue || '',
+            type_verbose: p.TypeVerbose || '',
+            field_verbose: p.FieldVerbose || '',
+            help: p.Help || '',
+            // value:p.Value||'',
+            required: p.Required || false,
+            group: p.Group || '',
+            extra_setting: p.ExtraSetting || '',
+            // buildIn_param: p.BuildInParam || ''
+        })) || [],
+        help: params.Help || '',
+        contributors: params.OnlineContributors || params.Author || '',
+        default_open: false, // 这个字段暂时无用
+        //
+        enable_plugin_selector: params.EnablePluginSelector,
+        plugin_selector_types: params.PluginSelectorTypes,
+        is_general_module: params.IsGeneralModule
+    }
+    if (type) {
+        onlineParams.default_open = type === 1 ? false : true
+    }
+    return onlineParams
+}
+
 export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
     const { params, setParams, children, uploadLoading } = props
     const { userInfo } = useStore()
@@ -28,29 +61,7 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
 
     const upOnlinePlugin = useMemoizedFn((url: string, type: number) => {
-        const onlineParams: API.SaveYakitPlugin = {
-            type: params.Type,
-            script_name: params.ScriptName,
-            content: params.Content,
-            tags: params.Tags && params.Tags !== "null" ? params.Tags.split(",") : undefined,
-            params: params.Params.map((p) => ({
-                field: p.Field || '',
-                default_value: p.DefaultValue || '',
-                type_verbose: p.TypeVerbose || '',
-                field_verbose: p.FieldVerbose || '',
-                help: p.Help || '',
-                required: p.Required,
-                group: p.Group || '',
-                extra_setting: p.ExtraSetting || ''
-            })),
-            help: params.Help,
-            default_open: type === 1 ? false : true, // 1 个人账号
-            contributors: params.OnlineContributors || "",
-            //
-            enable_plugin_selector: params.EnablePluginSelector,
-            plugin_selector_types: params.PluginSelectorTypes,
-            is_general_module: params.IsGeneralModule
-        }
+        const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
         if (params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
         }

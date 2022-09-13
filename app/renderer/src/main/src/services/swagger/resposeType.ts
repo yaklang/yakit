@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  */
 
- export declare namespace API {
+export declare namespace API {
     export interface YakitSearchData {
       value: string;
       count: number;
@@ -74,6 +74,10 @@
       contributors?: string;
       uuid: string;
       is_private: boolean;
+      /**
+       * 提交修改插件合并的的人
+       */
+      submitter?: string;
     }
     export interface UserOrdinaryResponse {
       data: UserList[];
@@ -112,7 +116,7 @@
       role: string;
     }
     export interface UpdatePluginRequest {
-      uuid?: string;
+      uuid: string;
       user_id?: number;
       is_official?: string;
       is_private?: string;
@@ -141,7 +145,7 @@
       published_at?: number;
       default_open: boolean;
       enable_plugin_selector?: boolean;
-      plugin_selector_types?: string; 
+      plugin_selector_types?: string;
       is_general_module?: boolean;
       download_total?: number;
       contributors?: string;
@@ -273,6 +277,23 @@
       root_id?: number;
       message?: string;
     }
+    export interface MergePluginRequest {
+      /**
+       * 申请列表id
+       */
+      id: number;
+      merge_plugin: boolean;
+      type?: string;
+      content?: string;
+      params?: YakitPluginParam[];
+      help?: string;
+      tags?: string[];
+      script_name?: string;
+      contributors?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+    }
     export interface GormBaseModel {
       id: number;
       created_at: number;
@@ -322,6 +343,120 @@
       by_head_img: string;
       reply_num: number;
       is_stars?: boolean;
+    }
+    export interface ApplyPluginResponse {
+      type?: string;
+      script_name: string;
+      tags?: string;
+      content?: string;
+      published_at?: number;
+      params?: YakitPluginParam[];
+      user_id?: number;
+      /**
+       * 审核状态
+       */
+      status?: number;
+      official?: boolean;
+      help?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      contributors?: string;
+      uuid?: string;
+      is_private?: boolean;
+      stars?: number;
+      download_total?: number;
+    }
+    export interface ApplyPluginRequest {
+      /**
+       * 申请列表id
+       */
+      id: number;
+      type?: string;
+      content?: string;
+      params?: YakitPluginParam[];
+      help?: string;
+      tags?: string[];
+      script_name?: string;
+      contributors?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+    }
+    export interface ApplyPluginLists extends GormBaseModel, ApplyPluginList {}
+    export interface ApplyPluginList {
+      user_name: string;
+      role?: string;
+      user_id?: number;
+      /**
+       * 合并状态 0 待处理  1合并  2拒绝
+       */
+      merge_status: number;
+      plugin_id?: number;
+    }
+    export interface ApplyPluginDetail {
+      plugin_user_id: number;
+      apply_user_id: number;
+      user_role: string;
+      plugin_id: number;
+      up_plugin: ApplyPluginDetailUpPlugin;
+      /**
+       * 当前插件数据/ 修改用户为admin时为修改前数据
+       */
+      merge_before_plugin: ApplyPluginDetailMergeBeforePlugin;
+      /**
+       * 合并状态 0 待处理  1合并  2拒绝
+       */
+      merge_status: number;
+    }
+    export interface ApplyPluginDetailMergeBeforePlugin {
+      type?: string;
+      script_name?: string;
+      tags?: string;
+      content?: string;
+      published_at?: number;
+      params?: YakitPluginParam[];
+      user_id?: number;
+      /**
+       * 审核状态
+       */
+      status?: number;
+      official?: boolean;
+      help?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      contributors?: string;
+      uuid?: string;
+      is_private?: boolean;
+      stars?: number;
+      download_total?: number;
+    }
+    export interface ApplyPluginDetailUpPlugin {
+      type?: string;
+      script_name?: string;
+      tags?: string;
+      content?: string;
+      published_at?: number;
+      params?: YakitPluginParam[];
+      user_id?: number;
+      /**
+       * 审核状态
+       */
+      status?: number;
+      official?: boolean;
+      help?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      contributors?: string;
+      uuid?: string;
+      is_private?: boolean;
+      stars?: number;
+      download_total?: number;
+    }
+    export interface ApplyListResponses extends Paging {
+      data: ApplyPluginLists[];
     }
     export interface ActionSucceeded {
       /**

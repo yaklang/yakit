@@ -1,0 +1,24 @@
+.journal-content {
+    height: 100%;
+
+    .ant-spin-nested-loading {
+        height: 100%;
+    }
+
+    .ant-timeline {
+        height: 100%;
+    }
+
+    .ant-timeline-item-last {
+        padding-bottom: 0;
+    }
+
+    .ant-timeline-item-head-custom {
+        top: 8.5px;
+        left: 8px;
+    }
+
+    .ant-timeline-item-tail {
+        left: 7px;
+    }
+}

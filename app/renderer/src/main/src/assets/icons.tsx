@@ -223,8 +223,8 @@ const ShareImport = () => (
                 d='M5.33333 4.6665H3.33333C2.59695 4.6665 2 5.26346 2 5.99984V11.9998C2 12.7362 2.59695 13.3332 3.33333 13.3332H12.6667C13.403 13.3332 14 12.7362 14 11.9998V5.99984C14 5.26346 13.403 4.6665 12.6667 4.6665H10.6667M10 7.33317L8 9.33317M8 9.33317L6 7.33317M8 9.33317L8 2.6665'
                 stroke='currentColor'
                 strokeWidth='1'
-                stroke-linecap='round'
-                stroke-linejoin='round'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
         </g>
     </svg>

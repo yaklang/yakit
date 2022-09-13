@@ -6,7 +6,17 @@
     word-break: break-all;
 }
 
-.justify-space-between{
+.justify-space-between {
     display: flex;
     justify-content: space-between;
+}
+
+.monaco-editor,
+.monaco-editor-background,
+.monaco-editor .inputarea.ime-input {
+    background-color: #e8e9e8 !important;
+}
+
+.monaco-editor .margin {
+    background-color: #e8e9e8 !important;
 }

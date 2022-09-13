@@ -2,12 +2,7 @@ $active-color:#036ffe;
 
 .plugin-info {
     height: 100%;
-
-    .plugin-author {
-        cursor: pointer;
-        color: #999999;
-        margin-bottom: 0
-    }
+    overflow-y: auto;
 
     .ant-spin-nested-loading {
         height: 100%;
@@ -51,7 +46,16 @@ $active-color:#036ffe;
 
     .plugin-body {
         padding: 0 24px 16px;
-        height: calc(100% - 60px);
+
+        .plugin-author {
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            word-break: break-all
+        }
 
         .ant-tabs {
             height: 100%;
@@ -116,6 +120,10 @@ $active-color:#036ffe;
             overflow: hidden !important;
         }
     }
+}
+
+.plugin-code-height {
+    height: calc(100% - 94px);
 }
 
 .comment-reply-dialog {
@@ -317,7 +325,7 @@ $active-color:#036ffe;
         }
 
         .comment-reply {
-            margin-top: 12px;
+            margin-top: 8px;
             font-size: 12px;
         }
 
@@ -329,7 +337,7 @@ $active-color:#036ffe;
             align-items: center;
             color: #999ea8;
             font-size: 12px;
-            margin-bottom: 12px;
+            // margin-bottom: 12px;
 
             .func-comment-and-star {
                 display: flex;
