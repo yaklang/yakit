@@ -96,6 +96,10 @@
     .col {
         display: flex;
         align-items: center;
+
+        .recycle {
+            display: flex;
+        }
     }
 
     .col-flex-end {

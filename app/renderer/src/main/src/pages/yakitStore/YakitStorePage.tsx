@@ -65,7 +65,7 @@ import { NetWorkApi } from "@/services/fetch"
 import { API } from "@/services/swagger/resposeType"
 import { DownloadOnlinePluginProps } from "./YakitPluginInfoOnline/YakitPluginInfoOnline"
 import { randomString } from "@/utils/randomUtil"
-import { OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon, ShareIcon } from "../../assets/icons"
+import { OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon, ShareIcon, RecycleIcon } from "../../assets/icons"
 import { findDOMNode } from "react-dom"
 import { YakExecutorParam } from "../invoker/YakExecutorParams"
 import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
@@ -2212,7 +2212,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         <Tag color='blue'>已选{isSelectAllUser ? totalUser : selectedRowKeysRecordUser.length}条</Tag>
                     )}
                     <Tag>Total:{totalUser}</Tag>
-                    <a>回收站</a>
+                    <div className="recycle"><RecycleIcon />回收站</div>
                 </Col>
                 <Col span={8} className='col-flex-end'>
                     {isShowFilter && (
