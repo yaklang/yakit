@@ -2204,7 +2204,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
-                <Col span={12} className='col'>
+                <Col span={16} className='col'>
                     <Checkbox checked={isSelectAllUser} onChange={(e) => onSelectAllUser(e.target.checked)}>
                         全选
                     </Checkbox>
@@ -2212,8 +2212,9 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         <Tag color='blue'>已选{isSelectAllUser ? totalUser : selectedRowKeysRecordUser.length}条</Tag>
                     )}
                     <Tag>Total:{totalUser}</Tag>
+                    <a>回收站</a>
                 </Col>
-                <Col span={12} className='col-flex-end'>
+                <Col span={8} className='col-flex-end'>
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
