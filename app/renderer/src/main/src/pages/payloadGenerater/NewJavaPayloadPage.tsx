@@ -66,7 +66,7 @@ export const convertRequest = (value: ParamsRefProps) => {
 
 export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props) => {
     const [status, setStatus] = useState<"setting" | "start">("setting")
-    const [token, setToken] = useState<string>(randomString(40))
+    const [token, setToken, getToken] = useGetState<string>(randomString(40))
     const [loading, setLoading] = useState<boolean>(false)
     const paramsRef = useRef<ParamsRefProps>({useGadget: true, ...DefaultParams})
     const formListRef = useRef<FormList[]>([])
@@ -95,10 +95,11 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
     )
 
     const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo, remoteIp: string) => {
+        const classData = {...convertRequest({...paramsRef.current})}
         let startFacadeParams: FacadesRequest = {
             ...params,
-            GenerateClassParams: {...convertRequest({...paramsRef.current})},
-            Token: token
+            GenerateClassParams: {...classData},
+            Token: getToken()
         }
         if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remoteIp
 
@@ -107,6 +108,16 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             .then(() => {
                 info("启动FacadeServer")
                 setStatus("start")
+                setTimeout(() => {
+                    ipcRenderer
+                        .invoke("ApplyClassToFacades", {
+                            Token: getToken(),
+                            GenerateClassParams: {...classData}
+                        })
+                        // .then((res) => info("应用到FacadeServer成功"))
+                        .catch((err) => failed(`应用到FacadeServer失败${err}`))
+                        .finally(() => setTimeout(() => setLoading(false), 300))
+                }, 500)
             })
             .catch((e: any) => {
                 failed("启动FacadeServer失败: " + `${e}`)
