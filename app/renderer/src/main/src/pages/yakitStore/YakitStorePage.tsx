@@ -71,6 +71,7 @@ import { YakExecutorParam } from "../invoker/YakExecutorParams"
 import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
 import { setTimeout } from "timers"
 import { ModalSyncSelect, onLocalScriptToOnlinePlugin, SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
+import { fullscreen } from "@uiw/react-md-editor"
 
 const { Search } = Input
 const { Option } = Select
@@ -628,7 +629,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             type='link'
                                             onClick={() => {
                                                 onRefList()
-                                                onFullScreen()
+                                                if (fullscreen) {
+                                                    setFullScreen(false)
+                                                }
                                             }}
                                         >
                                             返回
@@ -681,109 +684,112 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             <Empty style={{ marginTop: 100 }}>在左侧所选模块查看详情</Empty>
                         )}
                     </div>
-                )}
-                {isFull && !isShowFilter && (
-                    <div className='plugin-statistics'>
-                        <Spin spinning={statisticsLoading}>
-                            {plugSource === "online" && (
-                                <div className='opt-list'>
-                                    <div className='opt-header'>排序顺序</div>
-                                    <div
-                                        className={`opt-list-item ${statisticsQueryOnline.order_by === "stars" && "opt-list-item-selected"
-                                            }`}
-                                        onClick={() => onSearch("order_by", "stars")}
-                                    >
-                                        <span className='item-name content-ellipsis'>按热度</span>
+                )
+                }
+                {
+                    isFull && !isShowFilter && (
+                        <div className='plugin-statistics'>
+                            <Spin spinning={statisticsLoading}>
+                                {plugSource === "online" && (
+                                    <div className='opt-list'>
+                                        <div className='opt-header'>排序顺序</div>
+                                        <div
+                                            className={`opt-list-item ${statisticsQueryOnline.order_by === "stars" && "opt-list-item-selected"
+                                                }`}
+                                            onClick={() => onSearch("order_by", "stars")}
+                                        >
+                                            <span className='item-name content-ellipsis'>按热度</span>
+                                        </div>
+                                        <div
+                                            className={`opt-list-item ${statisticsQueryOnline.order_by === "created_at" && "opt-list-item-selected"
+                                                }`}
+                                            onClick={() => onSearch("order_by", "created_at")}
+                                        >
+                                            <span className='item-name content-ellipsis'>按时间</span>
+                                        </div>
                                     </div>
-                                    <div
-                                        className={`opt-list-item ${statisticsQueryOnline.order_by === "created_at" && "opt-list-item-selected"
-                                            }`}
-                                        onClick={() => onSearch("order_by", "created_at")}
-                                    >
-                                        <span className='item-name content-ellipsis'>按时间</span>
+                                )}
+                                {plugSource === "user" && userInfo.isLogin && (
+                                    <div className='opt-list'>
+                                        <div className='opt-header'>私密/公开</div>
+                                        <div
+                                            className={`opt-list-item ${statisticsQueryUser.is_private === "true" && "opt-list-item-selected"
+                                                }`}
+                                            onClick={() => onSearch("is_private", "true")}
+                                        >
+                                            <span className='item-name content-ellipsis'>私密</span>
+                                        </div>
+                                        <div
+                                            className={`opt-list-item ${statisticsQueryUser.is_private === "false" && "opt-list-item-selected"
+                                                }`}
+                                            onClick={() => onSearch("is_private", "false")}
+                                        >
+                                            <span className='item-name content-ellipsis'>公开</span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                            {plugSource === "user" && userInfo.isLogin && (
-                                <div className='opt-list'>
-                                    <div className='opt-header'>私密/公开</div>
-                                    <div
-                                        className={`opt-list-item ${statisticsQueryUser.is_private === "true" && "opt-list-item-selected"
-                                            }`}
-                                        onClick={() => onSearch("is_private", "true")}
-                                    >
-                                        <span className='item-name content-ellipsis'>私密</span>
-                                    </div>
-                                    <div
-                                        className={`opt-list-item ${statisticsQueryUser.is_private === "false" && "opt-list-item-selected"
-                                            }`}
-                                        onClick={() => onSearch("is_private", "false")}
-                                    >
-                                        <span className='item-name content-ellipsis'>公开</span>
-                                    </div>
-                                </div>
-                            )}
-                            {(statisticsIsNull && <Empty description='暂无统计数据' />) || (
-                                <>
-                                    {Object.entries(
-                                        plugSource === "local"
-                                            ? yakScriptTagsAndType || {}
-                                            : statisticsDataOnlineOrUser || {}
-                                    ).map((item) => {
-                                        const queryName = item[0]
-                                        const statisticsList = item[1]
-                                        const title = queryTitle[queryName]
-                                        let current: string = ""
-                                        if (plugSource === "local") {
-                                            current = statisticsQueryLocal[queryName]
-                                        }
-                                        if (plugSource === "user") {
-                                            current = statisticsQueryUser[queryName]
-                                        }
-                                        if (plugSource === "online") {
-                                            current = statisticsQueryOnline[queryName]
-                                        }
-                                        // if(y)
-                                        if (
-                                            (queryName === "status" &&
-                                                plugSource === "user" &&
-                                                statisticsQueryUser.is_private !== "false") ||
-                                            (queryName === "status" &&
-                                                plugSource === "online" &&
-                                                userInfo.role !== "admin")
-                                        ) {
-                                            return <></>
-                                        }
+                                )}
+                                {(statisticsIsNull && <Empty description='暂无统计数据' />) || (
+                                    <>
+                                        {Object.entries(
+                                            plugSource === "local"
+                                                ? yakScriptTagsAndType || {}
+                                                : statisticsDataOnlineOrUser || {}
+                                        ).map((item) => {
+                                            const queryName = item[0]
+                                            const statisticsList = item[1]
+                                            const title = queryTitle[queryName]
+                                            let current: string = ""
+                                            if (plugSource === "local") {
+                                                current = statisticsQueryLocal[queryName]
+                                            }
+                                            if (plugSource === "user") {
+                                                current = statisticsQueryUser[queryName]
+                                            }
+                                            if (plugSource === "online") {
+                                                current = statisticsQueryOnline[queryName]
+                                            }
+                                            // if(y)
+                                            if (
+                                                (queryName === "status" &&
+                                                    plugSource === "user" &&
+                                                    statisticsQueryUser.is_private !== "false") ||
+                                                (queryName === "status" &&
+                                                    plugSource === "online" &&
+                                                    userInfo.role !== "admin")
+                                            ) {
+                                                return <></>
+                                            }
 
-                                        return (
-                                            statisticsList &&
-                                            statisticsList.length > 0 && (
-                                                <div key={title} className='opt-list'>
-                                                    <div className='opt-header'>{title}</div>
-                                                    {statisticsList.map((ele) => (
-                                                        <div
-                                                            key={`${ele.value || ele.Value}-${plugSource}`}
-                                                            className={`opt-list-item ${current?.includes(ele.value || ele.Value) &&
-                                                                "opt-list-item-selected"
-                                                                }`}
-                                                            onClick={() => onSearch(queryName, ele.value || ele.Value)}
-                                                        >
-                                                            <span className='item-name content-ellipsis'>
-                                                                {showName(queryName, ele.value || ele.Value)}
-                                                            </span>
-                                                            <span>{ele.count || ele.Total}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                            return (
+                                                statisticsList &&
+                                                statisticsList.length > 0 && (
+                                                    <div key={title} className='opt-list'>
+                                                        <div className='opt-header'>{title}</div>
+                                                        {statisticsList.map((ele) => (
+                                                            <div
+                                                                key={`${ele.value || ele.Value}-${plugSource}`}
+                                                                className={`opt-list-item ${current?.includes(ele.value || ele.Value) &&
+                                                                    "opt-list-item-selected"
+                                                                    }`}
+                                                                onClick={() => onSearch(queryName, ele.value || ele.Value)}
+                                                            >
+                                                                <span className='item-name content-ellipsis'>
+                                                                    {showName(queryName, ele.value || ele.Value)}
+                                                                </span>
+                                                                <span>{ele.count || ele.Total}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )
                                             )
-                                        )
-                                    })}
-                                </>
-                            )}
-                        </Spin>
-                    </div>
-                )}
-            </div>
+                                        })}
+                                    </>
+                                )}
+                            </Spin>
+                        </div>
+                    )
+                }
+            </div >
         </>
     )
 }
