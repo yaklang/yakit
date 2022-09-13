@@ -96,10 +96,6 @@
     .col {
         display: flex;
         align-items: center;
-
-        .recycle {
-            display: flex;
-        }
     }
 
     .col-flex-end {
@@ -115,6 +111,23 @@
     .show-yaml-poc {
         display: flex;
         align-items: center;
+    }
+}
+
+.user-col {
+    .ant-divider-vertical {
+        border-left: 1px solid #d9d9d9;
+        margin: 0 4px;
+        height: 16px;
+    }
+
+    .recycle {
+        display: flex;
+        cursor: pointer;
+
+        span {
+            margin-left: 4px;
+        }
     }
 }
 

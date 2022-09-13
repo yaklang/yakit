@@ -20,7 +20,8 @@ import {
     Switch,
     Radio,
     Modal,
-    Typography
+    Typography,
+    Divider
 } from "antd"
 import {
     ReloadOutlined,
@@ -2201,10 +2202,16 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
         setRefresh(!refresh)
         onSelectAllUser(false)
     })
+    const onGoRecycleBin = useMemoizedFn(() => {
+        if(!userInfo.isLogin){
+            warn('请先登陆')
+            return
+        }
+    })
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
-                <Col span={16} className='col'>
+                <Col span={16} className='col user-col'>
                     <Checkbox checked={isSelectAllUser} onChange={(e) => onSelectAllUser(e.target.checked)}>
                         全选
                     </Checkbox>
@@ -2212,7 +2219,8 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         <Tag color='blue'>已选{isSelectAllUser ? totalUser : selectedRowKeysRecordUser.length}条</Tag>
                     )}
                     <Tag>Total:{totalUser}</Tag>
-                    <div className="recycle"><RecycleIcon />回收站</div>
+                    <Divider type="vertical" />
+                    <div className="recycle" onClick={onGoRecycleBin}><RecycleIcon /><span>回收站</span></div>
                 </Col>
                 <Col span={8} className='col-flex-end'>
                     {isShowFilter && (
@@ -2774,7 +2782,7 @@ export const RandomTagColor: string[] = [
     "color-bgColor-red"
 ]
 
-const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
+export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const { isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, bind_me } = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
