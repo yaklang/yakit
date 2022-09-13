@@ -5,13 +5,13 @@ import { failed } from "@/utils/notification"
 import { useMemoizedFn } from "ahooks"
 import { Button, Card, Checkbox, Col, Row, Spin, Tag, Input } from "antd"
 import { useEffect, useState } from "react"
-import { PluginItemOnline } from "../YakitStorePage"
-import './RecycleBin.scss'
+import { PluginItemOnline, SearchPluginOnlineRequest } from "../YakitStorePage"
+import './OnlinePluginRecycleBin.scss'
 import '../YakitStorePage.scss'
 
 const { Search } = Input
 
-export const RecycleBin: React.FC = () => {
+export const OnlinePluginRecycleBin: React.FC = () => {
     const [keyword, setKeyword] = useState<string>("")
     const [selectedRowKeysRecord, setSelectedRowKeysRecordUser] = useState<API.YakitPluginDetail[]>([])
     const [total, setTotal] = useState<number>(0)
@@ -26,8 +26,11 @@ export const RecycleBin: React.FC = () => {
     })
     return (
         <Card
+            bordered={false}
+            bodyStyle={{ padding: 0, height: "calc(100% - 64px)" }}
+            style={{ border: 0, height: "100%", }}
             title={
-                <div className="recycle-search">
+                <div className="search-input-body">
                     <Search
                         placeholder='输入关键字搜索'
                         size="middle"
@@ -41,6 +44,7 @@ export const RecycleBin: React.FC = () => {
                 </div>
             }
             size={"small"}
+            className='left-list'
         >
             <div className='height-100'>
                 <Row className='row-body' gutter={12}>
@@ -54,8 +58,8 @@ export const RecycleBin: React.FC = () => {
                         <Tag>Total:{total}</Tag>
                     </Col>
                     <Col span={8} className='col-flex-end'>
-                        <Button>删除</Button>
-                        <Button>还原</Button>
+                        <Button type="primary" size="small" danger>删除</Button>
+                        <Button type="primary" size="small" >还原</Button>
                     </Col>
                 </Row>
                 <div className='list-height'>
@@ -100,7 +104,7 @@ const YakRecycleBinList: React.FC<YakRecycleBinListProps> = (props) => {
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
         pagemeta: {
-            limit: 20,
+            limit: 40,
             page: 1,
             total: 0,
             total_page: 1
@@ -126,15 +130,23 @@ const YakRecycleBinList: React.FC<YakRecycleBinListProps> = (props) => {
             page,
             limit: 10,
             total: 0,
-            total_page: 0
+            total_page: 0,
+            order_by: 'stars',
+            order: 'desc',
+            bind_me: false
         }
         setLoading(true)
-        NetWorkApi<RecycleBinRequest, API.YakitPluginListResponse>({
+        NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
-            url: 'yakit/plugin/unlogged',
+            url: 'yakit/plugin',
             params: {
-                ...payload
+                page: payload.page,
+                order_by: payload.order_by,
+                limit: payload.limit,
+                order: payload.order,
+                bind_me: false
             },
+            data: payload
         })
             .then((res) => {
                 if (!res.data) {

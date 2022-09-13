@@ -88,7 +88,7 @@ export interface GetYakScriptByOnlineIDRequest {
     UUID: string
 }
 
-interface SearchPluginOnlineRequest extends API.GetPluginWhere {
+export interface SearchPluginOnlineRequest extends API.GetPluginWhere {
     order_by: string
     order?: string
     page?: number
@@ -2203,10 +2203,14 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
         onSelectAllUser(false)
     })
     const onGoRecycleBin = useMemoizedFn(() => {
-        if(!userInfo.isLogin){
+        if (!userInfo.isLogin) {
             warn('请先登陆')
             return
         }
+        ipcRenderer.invoke("send-to-tab", {
+            type: "online-plugin-recycle-bin",
+            data: {}
+        })
     })
     return (
         <div className='height-100'>
