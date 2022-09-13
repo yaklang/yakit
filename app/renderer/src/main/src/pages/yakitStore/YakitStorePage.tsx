@@ -178,7 +178,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .finally(() => { })
     }, [])
     useEffect(() => {
-        if (!userInfo.isLogin) onResetPluginDetails()
+        onRefList()
     }, [userInfo.isLogin])
     const onRefList = useMemoizedFn(() => {
         setPublicKeyword("")
@@ -187,6 +187,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         onResetNumber()
         getStatistics(width)
         onResetQuery()
+        setFullScreen(false)
         setTimeout(() => {
             setIsRefList(!isRefList)
         }, 200)
@@ -629,9 +630,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             type='link'
                                             onClick={() => {
                                                 onRefList()
-                                                if (fullscreen) {
-                                                    setFullScreen(false)
-                                                }
                                             }}
                                         >
                                             返回
