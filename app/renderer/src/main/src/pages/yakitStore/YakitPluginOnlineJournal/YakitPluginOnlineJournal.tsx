@@ -10,6 +10,7 @@ import { Timeline, Button, Card, Spin, Popover } from "antd";
 import moment from "moment";
 import React, { useEffect, useState } from "react"
 import { CodeComparisonDiff } from "./YakitPluginJournalDetails";
+import ReactResizeDetector from "react-resize-detector"
 import './YakitPluginOnlineJournal.scss'
 
 const { ipcRenderer } = window.require("electron")
@@ -36,6 +37,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [visible, setVisible] = useState<boolean>(false)
     const [currentId, setCurrentId] = useState<number>(0)
+    const [width, setWidth] = useState(0)
     const [resJournal, setResJournal] = useState<API.ApplyListResponses>({
         pagemeta: {
             page: 1,
@@ -111,8 +113,21 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                 return <InfoCircleOutlined />
         }
     })
+
     return (
         <div className="journal-content">
+            <ReactResizeDetector
+                onResize={(width) => {
+                    if (!width) {
+                        return
+                    }
+                    setWidth(width)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
             <Spin spinning={lineLoading}>
                 <Timeline>
                     <RollingLoadList<API.ApplyPluginLists>
@@ -139,8 +154,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                                         trigger={["click"]}
                                         placement="bottomLeft"
                                         getPopupContainer={(e) => (e)}
-                                        overlayStyle={{ top: 12, left: 24, width: '100%' }}
-                                        style={{ top: 24 }}
+                                        overlayStyle={{ top: 12, left: 24, width: `calc(${width}px - 40px)` }}
                                     >
                                         <div className="journal-item-content">
                                             <div className="journal-text content-ellipsis" onClick={(e) => { e.stopPropagation() }}>
@@ -148,8 +162,10 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                                                 &emsp;
                                                 {item.role === 'admin' && `管理员${item.user_name}修改插件` || `${item.user_name}申请修改插件`}
                                             </div>
-                                            <Button type="link" onClick={(e) => { e.stopPropagation(); onGoDetails(item) }}>详情</Button>
-                                            <a href="#">code</a>
+                                            <div className="journal-item-operation">
+                                                <Button type="link" onClick={(e) => { e.stopPropagation(); onGoDetails(item) }}>详情</Button>
+                                                <a href="#">code</a>
+                                            </div>
                                         </div>
                                     </Popover>
                                 </div>

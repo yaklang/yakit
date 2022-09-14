@@ -1,13 +1,17 @@
 .journal-content {
     height: 100%;
 
+    .container {
+        overflow-x: hidden;
+    }
+
     .journal-list-item {
         position: relative;
-        width: 100%;
+        max-width: 100%;
         height: 32px;
 
         .list-code-diff {
-            height: 200px;
+            height: 400px;
 
             .yak-editor-tip {
                 padding-top: 0;
@@ -23,17 +27,23 @@
         }
 
         .ant-popover-content {
-            margin-right: 24px;
+            margin-right: 16px;
         }
 
         .journal-item-content {
             display: flex;
             align-items: center;
-            width: 100%;
+            max-width: 100%;
             position: relative;
+            width: fit-content;
 
             .journal-text {
                 max-width: calc(100% - 100px);
+                width: fit-content;
+            }
+
+            .journal-item-operation {
+                width: 100px;
             }
         }
     }
