@@ -768,7 +768,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                 >
                                     {tabList.map((item, index) => {
                                         return (
-                                            <TabPane tab={item.tab} key={`${index}`}>
+                                            <TabPane tab={item.isFile?item.tab:`(未保存)${item.tab}`} key={`${index}`}>
                                                 <div style={{height: "100%"}}>
                                                     <AutoSpin spinning={executing}>
                                                         <div style={{height: "100%"}}>
