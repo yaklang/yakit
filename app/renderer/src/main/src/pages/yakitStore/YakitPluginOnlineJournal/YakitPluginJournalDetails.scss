@@ -1,3 +1,7 @@
+.code-comparison-diff {
+    height: 100%;
+}
+
 .yak-editor-content {
     height: 400px;
 
@@ -31,5 +35,9 @@
     .ant-card-body {
         height: calc(100% - 60px);
         overflow-y: auto
+    }
+
+    .ant-form-item {
+        margin-bottom: 12px;
     }
 }

@@ -6,9 +6,10 @@ import { failed } from "@/utils/notification";
 import { getRandomInt } from "@/utils/randomUtil";
 import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useMemoizedFn } from "ahooks";
-import { Timeline, Button, Card, Spin } from "antd";
+import { Timeline, Button, Card, Spin, Popover } from "antd";
 import moment from "moment";
 import React, { useEffect, useState } from "react"
+import { CodeComparisonDiff } from "./YakitPluginJournalDetails";
 import './YakitPluginOnlineJournal.scss'
 
 const { ipcRenderer } = window.require("electron")
@@ -30,11 +31,11 @@ interface SearchApplyUpdatePluginRequest {
 
 export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> = (props) => {
     const { pluginId, } = props;
-    const [detailsVisible, setDetailsVisible] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
     const [lineLoading, setLineLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(true)
-
+    const [visible, setVisible] = useState<boolean>(false)
+    const [currentId, setCurrentId] = useState<number>(0)
     const [resJournal, setResJournal] = useState<API.ApplyListResponses>({
         pagemeta: {
             page: 1,
@@ -46,14 +47,14 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
     })
     const [isRef, setIsRef] = useState(false)
     useEffect(() => {
-        if (pluginId >= 0) getJournalList(1)
+        if (pluginId >= 0) { setLineLoading(true); getJournalList(1) }
     }, [pluginId])
     const getJournalList = useMemoizedFn((page: number) => {
         const payload = {
             ...resJournal.pagemeta,
             page
         }
-        setLineLoading(true)
+        setLoading(true)
         NetWorkApi<SearchApplyUpdatePluginRequest, API.ApplyListResponses>({
             method: "get",
             url: 'apply/update/plugin',
@@ -67,7 +68,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                 res.data = []
             }
             const data = payload.page === 1 ? res.data : resJournal.data.concat(res.data)
-            const isMore = res.data.length < resJournal.pagemeta.limit
+            const isMore = res.data.length < resJournal.pagemeta.limit || data.length === res.pagemeta.total
             setHasMore(!isMore)
             setResJournal({
                 ...resJournal,
@@ -82,6 +83,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
             .finally(() => {
                 setTimeout(() => {
                     setLineLoading(false)
+                    setLoading(false)
                 }, 200)
             })
     })
@@ -120,13 +122,37 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                         loading={loading}
                         loadMoreData={() => loadMoreData()}
                         rowKey='id'
-                        defItemHeight={52}
+                        defItemHeight={32}
                         renderRow={(item: API.ApplyPluginLists, index) => (
                             <Timeline.Item dot={showDot(item.merge_status)}>
-                                {moment.unix(item.created_at).format("YYYY-MM-DD HH:mm")}
-                                &emsp;
-                                {item.role === 'admin' && `管理员${item.user_name}修改插件` || `${item.user_name}申请修改插件`}
-                                <Button type="link" onClick={() => onGoDetails(item)}>详情</Button>
+                                <div className="journal-list-item">
+                                    <Popover
+                                        content={
+                                            <div className="list-code-diff">
+                                                <CodeComparisonDiff
+                                                    originalCode={item.merge_before_plugin?.content || ''}
+                                                    rightCode={item.up_plugin?.content || ''}
+                                                    readOnly={true}
+                                                />
+                                            </div>
+                                        }
+                                        trigger={["click"]}
+                                        placement="bottomLeft"
+                                        getPopupContainer={(e) => (e)}
+                                        overlayStyle={{ top: 12, left: 24, width: '100%' }}
+                                        style={{ top: 24 }}
+                                    >
+                                        <div className="journal-item-content">
+                                            <div className="journal-text content-ellipsis" onClick={(e) => { e.stopPropagation() }}>
+                                                {moment.unix(item.created_at).format("YYYY-MM-DD HH:mm")}
+                                                &emsp;
+                                                {item.role === 'admin' && `管理员${item.user_name}修改插件` || `${item.user_name}申请修改插件`}
+                                            </div>
+                                            <Button type="link" onClick={(e) => { e.stopPropagation(); onGoDetails(item) }}>详情</Button>
+                                            <a href="#">code</a>
+                                        </div>
+                                    </Popover>
+                                </div>
                             </Timeline.Item>
                         )}
                     />

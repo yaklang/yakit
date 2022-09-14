@@ -1316,7 +1316,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
-                const isMore = item.Data.length < item.Pagination.Limit
+                const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
                 setHasMore(!isMore)
                 if (newParams.Pagination.Page > 1 && isSelectAll) {
                     if (onSelectList) onSelectList(data)
@@ -2603,7 +2603,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                     res.data = []
                 }
                 const data = page === 1 ? res.data : response.data.concat(res.data)
-                const isMore = res.data.length < res.pagemeta.limit
+                const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
                 setHasMore(!isMore)
                 if (payload.page > 1 && isSelectAll) {
                     onSelectList(data)
