@@ -537,6 +537,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             <Select
                                 allowClear={true}
                                 placeholder='请选择恶意类'
+                                optionLabelProp="NameVerbose"
                                 value={params.Class}
                                 onChange={(value) => {
                                     if (!!value) {
