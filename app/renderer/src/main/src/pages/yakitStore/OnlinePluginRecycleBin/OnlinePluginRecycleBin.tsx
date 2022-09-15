@@ -9,7 +9,7 @@ import { defQueryOnline, PluginItemOnline, SearchPluginOnlineRequest, YakModuleO
 import './OnlinePluginRecycleBin.scss'
 import '../YakitStorePage.scss'
 import { useStore } from "@/store"
-import { LoadingOutlined } from "@ant-design/icons"
+import { LoadingOutlined, ReloadOutlined } from "@ant-design/icons"
 import { tips } from "@/alibaba/ali-react-table-dist/dist/pipeline/features"
 
 const { Search } = Input
@@ -90,9 +90,9 @@ export const OnlinePluginRecycleBin: React.FC = () => {
     const onTips = useMemoizedFn((type: boolean) => {
         let typeTest = type ? '删除' : '还原'
         if (isSelectAll || selectedRowKeysRecord.length === 0) {
-            return `是否${typeTest}所有的数据?${type && '不可恢复'}`
+            return `是否${typeTest}所有的数据?${type && '不可恢复' || ''}`
         } else {
-            return `是否${typeTest}所选择的的数据?${type && '不可恢复'}`
+            return `是否${typeTest}所选择的的数据?${type && '不可恢复' || ''}`
         }
     })
 
@@ -101,6 +101,17 @@ export const OnlinePluginRecycleBin: React.FC = () => {
         setSelectedRowKeysRecord([])
         setIsSelectAll(false)
     })
+    const onRefList = useMemoizedFn(() => {
+        setQueryRecycleBin({
+            ...queryRecycleBin,
+            keywords: ''
+        })
+        setSelectedRowKeysRecord([])
+        setIsSelectAll(false)
+        setTimeout(() => {
+            setRefresh(!refresh)
+        }, 200)
+    })
     return (
         <Card
             bordered={false}
@@ -108,6 +119,10 @@ export const OnlinePluginRecycleBin: React.FC = () => {
             style={{ border: 0, height: "100%", }}
             title={
                 <div className="recycle-search-input">
+                    <div className="recycle-left">
+                        <div className="recycle-left-title">插件回收站</div>
+                        <ReloadOutlined className="recycle-left-refresh" onClick={onRefList} />
+                    </div>
                     <Search
                         placeholder='输入关键字搜索'
                         size="middle"
@@ -143,14 +158,16 @@ export const OnlinePluginRecycleBin: React.FC = () => {
                             onConfirm={() => onBatchOperation(true)}
                             okText="Yes"
                             cancelText="No"
+                            placement="topRight"
                         >
                             <Button type="primary" size="small" danger disabled={!userInfo.isLogin}>删除</Button>
                         </Popconfirm>
                         <Popconfirm
-                            title={onTips(true)}
+                            title={onTips(false)}
                             onConfirm={() => onBatchOperation(false)}
                             okText="Yes"
                             cancelText="No"
+                            placement="topRight"
                         >
                             <Button type="primary" size="small" disabled={!userInfo.isLogin}>还原</Button>
                         </Popconfirm>
