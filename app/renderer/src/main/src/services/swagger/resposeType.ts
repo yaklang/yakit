@@ -309,6 +309,7 @@ export declare namespace API {
         bind_me: boolean;
         is_private?: string;
         tags?: string;
+        recycle: boolean;
     }
     export interface GetPluginUnloggedWhere {
         keywords?: string;

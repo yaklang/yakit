@@ -291,7 +291,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 }
             })
             .catch((err) => {
-                failed("插件详情获取失败666:" + err)
+                failed("插件详情获取失败:" + err)
             })
     })
     const onCloseTab = useMemoizedFn(() => {

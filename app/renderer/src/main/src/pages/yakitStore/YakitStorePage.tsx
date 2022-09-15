@@ -119,7 +119,8 @@ const defQueryOnline: SearchPluginOnlineRequest = {
     status: "",
     bind_me: false,
     is_private: "",
-    tags: ""
+    tags: "",
+    recycle: false
 }
 
 const defQueryLocal: QueryYakScriptRequest = {
@@ -2594,7 +2595,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 order_by: payload.order_by,
                 limit: payload.limit,
                 order: payload.order,
-                bind_me: payload.bind_me
+                bind_me: payload.bind_me,
+                recycle: payload.recycle
             },
             data: payload
         })
@@ -2602,6 +2604,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 if (!res.data) {
                     res.data = []
                 }
+                console.log('res',res);
+                
                 const data = page === 1 ? res.data : response.data.concat(res.data)
                 const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
                 setHasMore(!isMore)
