@@ -2582,7 +2582,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
     }, [userInfo.role])
     useEffect(() => {
         setListBodyLoading(true)
-        if (!userInfo.isLogin && bind_me) {
+        if (!userInfo.isLogin && (bind_me || queryOnline.recycle)) {
             setTotal(0)
         } else {
             search(1)
@@ -2601,7 +2601,6 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         if (!bind_me) {
             delete payload.is_private
         }
-        console.log('payload',payload);
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -2620,7 +2619,6 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
                 if (!res.data) {
                     res.data = []
                 }
-                console.log('res',res)
                 const data = page === 1 ? res.data : response.data.concat(res.data)
                 const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
                 setHasMore(!isMore)
@@ -2715,7 +2713,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
                 setTimeout(() => setLoading(false), 200)
             })
     })
-    if (!userInfo.isLogin && bind_me) {
+    if (!userInfo.isLogin && (bind_me || queryOnline.recycle)) {
         return (
             <List
                 dataSource={[]}
@@ -2775,11 +2773,12 @@ interface PluginListOptProps {
     isAdmin: boolean
     info: API.YakitPluginDetail
     onClick: (info: API.YakitPluginDetail) => any
-    onDownload: (info: API.YakitPluginDetail, callback) => any
-    onStarred: (info: API.YakitPluginDetail) => any
+    onDownload?: (info: API.YakitPluginDetail, callback) => any
+    onStarred?: (info: API.YakitPluginDetail) => any
     onSelect: (info: API.YakitPluginDetail) => any
     selectedRowKeysRecord: API.YakitPluginDetail[]
-    bind_me: boolean
+    bind_me: boolean,
+    extra?: ReactNode
 }
 
 export const RandomTagColor: string[] = [
@@ -2792,17 +2791,19 @@ export const RandomTagColor: string[] = [
 
 export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
-    const { isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, bind_me } = props
+    const { isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, bind_me, extra } = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const [status, setStatus] = useState<number>(info.status)
     useEffect(() => {
         setStatus(info.status)
     }, [info.status, info.id])
     const add = useMemoizedFn(async () => {
-        setLoading(true)
-        onDownload(info, () => {
-            setLoading(false)
-        })
+        if (onDownload) {
+            setLoading(true)
+            onDownload(info, () => {
+                setLoading(false)
+            })
+        }
     })
     const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private)
     const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
@@ -2835,18 +2836,24 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                     </div>
                 </div>
                 <div className='plugin-item-right'>
-                    {(loading && <LoadingOutlined className='plugin-down' />) || (
-                        <div
-                            className='plugin-down'
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                add()
-                            }}
-                            title='添加到插件仓库'
-                        >
-                            <DownloadOutlined className='operation-icon ' />
-                        </div>
-                    )}
+                    {
+                        extra && extra ||
+                        <>
+                            {(loading && <LoadingOutlined className='plugin-down' />) || (
+                                <div
+                                    className='plugin-down'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        add()
+                                    }}
+                                    title='添加到插件仓库'
+                                >
+                                    <DownloadOutlined className='operation-icon ' />
+                                </div>
+                            )}
+                        </>
+                    }
+
                 </div>
                 <SelectIcon
                     //  @ts-ignore

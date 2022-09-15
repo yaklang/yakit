@@ -113,7 +113,7 @@ export declare namespace API {
     export interface UpPluginRecycleRequest {
       ids?: number[];
       keywords?: string;
-      delete: boolean;
+      dump: boolean;
     }
     export interface UpdateUserRole {
         appid: string;

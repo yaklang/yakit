@@ -3,12 +3,14 @@ import { NetWorkApi } from "@/services/fetch"
 import { API } from "@/services/swagger/resposeType"
 import { failed } from "@/utils/notification"
 import { useMemoizedFn } from "ahooks"
-import { Button, Card, Checkbox, Col, Row, Spin, Tag, Input } from "antd"
+import { Button, Card, Checkbox, Col, Row, Spin, Tag, Input, Popconfirm } from "antd"
 import { useEffect, useState } from "react"
 import { defQueryOnline, PluginItemOnline, SearchPluginOnlineRequest, YakModuleOnlineList } from "../YakitStorePage"
 import './OnlinePluginRecycleBin.scss'
 import '../YakitStorePage.scss'
 import { useStore } from "@/store"
+import { LoadingOutlined } from "@ant-design/icons"
+import { tips } from "@/alibaba/ali-react-table-dist/dist/pipeline/features"
 
 const { Search } = Input
 
@@ -18,9 +20,11 @@ export const OnlinePluginRecycleBin: React.FC = () => {
         recycle: true
     })
     const [selectedRowKeysRecord, setSelectedRowKeysRecord] = useState<API.YakitPluginDetail[]>([])
+    const [currentItem, setCurrentItem] = useState<API.YakitPluginDetail>()
     const [total, setTotal] = useState<number>(0)
     const [refresh, setRefresh] = useState(false)
     const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
+    const [recycleLoading, setRecycleLoading] = useState<boolean>(false)
     const { userInfo } = useStore()
     const onSelectAll = useMemoizedFn((checked) => {
         setIsSelectAll(checked)
@@ -28,18 +32,87 @@ export const OnlinePluginRecycleBin: React.FC = () => {
             setSelectedRowKeysRecord([]) // 清除本地
         }
     })
+    const onSelect = useMemoizedFn((item: API.YakitPluginDetail) => {
+        const index = selectedRowKeysRecord.findIndex((ele) => ele.id === item.id)
+        if (index === -1) {
+            selectedRowKeysRecord.push(item)
+        } else {
+            selectedRowKeysRecord.splice(index, 1)
+        }
+        setIsSelectAll(false)
+        setSelectedRowKeysRecord([...selectedRowKeysRecord])
+    })
+    const onReduction = (item: API.YakitPluginDetail) => {
+        setCurrentItem(item)
+        const params: API.UpPluginRecycleRequest = {
+            dump: false,
+            ids: [item.id]
+        }
+        onReductionOrRemove(params)
+    }
+    const onBatchOperation = useMemoizedFn((type: boolean) => {
+        let params: API.UpPluginRecycleRequest = {
+            dump: type,
+        }
+        if (isSelectAll || selectedRowKeysRecord.length === 0) {
+            params = {
+                ...params,
+                keywords: queryRecycleBin.keywords
+            }
+            // 默认删除全部
+            onReductionOrRemove(params)
+        } else {
+            params = {
+                ...params,
+                ids: selectedRowKeysRecord.map(ele => ele.id)
+            }
+            onReductionOrRemove(params)
+        }
+    })
+    const onReductionOrRemove = (params: API.UpPluginRecycleRequest) => {
+        setRecycleLoading(true)
+        NetWorkApi<API.UpPluginRecycleRequest, API.ActionSucceeded>({
+            method: "post",
+            url: "yakit/plugin/recycle",
+            data: params
+        })
+            .then((res) => {
+                onRefresh()
+            })
+            .catch((err) => {
+                failed("还原或者删除失败:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => setRecycleLoading(false), 200)
+            })
+    }
+
+    const onTips = useMemoizedFn((type: boolean) => {
+        let typeTest = type ? '删除' : '还原'
+        if (isSelectAll || selectedRowKeysRecord.length === 0) {
+            return `是否${typeTest}所有的数据?${type && '不可恢复'}`
+        } else {
+            return `是否${typeTest}所选择的的数据?${type && '不可恢复'}`
+        }
+    })
+
+    const onRefresh = useMemoizedFn(() => {
+        setRefresh(!refresh)
+        setSelectedRowKeysRecord([])
+        setIsSelectAll(false)
+    })
     return (
         <Card
             bordered={false}
             bodyStyle={{ padding: 0, height: "calc(100% - 64px)" }}
             style={{ border: 0, height: "100%", }}
             title={
-                <div className="search-input-body">
+                <div className="recycle-search-input">
                     <Search
                         placeholder='输入关键字搜索'
                         size="middle"
                         enterButton="搜索"
-                        onSearch={() => setRefresh(!refresh)}
+                        onSearch={() => onRefresh()}
                         value={queryRecycleBin.keywords}
                         onChange={(e) => {
                             setQueryRecycleBin({
@@ -65,20 +138,25 @@ export const OnlinePluginRecycleBin: React.FC = () => {
                         <Tag>Total:{total}</Tag>
                     </Col>
                     <Col span={8} className='col-flex-end'>
-                        <Button type="primary" size="small" danger>删除</Button>
-                        <Button type="primary" size="small" >还原</Button>
+                        <Popconfirm
+                            title={onTips(true)}
+                            onConfirm={() => onBatchOperation(true)}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <Button type="primary" size="small" danger disabled={!userInfo.isLogin}>删除</Button>
+                        </Popconfirm>
+                        <Popconfirm
+                            title={onTips(true)}
+                            onConfirm={() => onBatchOperation(false)}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <Button type="primary" size="small" disabled={!userInfo.isLogin}>还原</Button>
+                        </Popconfirm>
                     </Col>
                 </Row>
                 <div className='list-height'>
-                    {/* <YakRecycleBinList
-                        keyword={keyword}
-                        selectedRowKeysRecord={selectedRowKeysRecord}
-                        onSelectList={setSelectedRowKeysRecordUser} //选择一个
-                        isSelectAll={isSelectAll}
-                        setIsSelectAll={setIsSelectAll}
-                        setTotal={setTotal}
-                        refresh={refresh}
-                    /> */}
                     <YakModuleOnlineList
                         size="middle"
                         currentId={0}
@@ -88,159 +166,25 @@ export const OnlinePluginRecycleBin: React.FC = () => {
                         isSelectAll={isSelectAll}
                         setIsSelectAll={setIsSelectAll}
                         setTotal={setTotal}
-                        onClicked={(info, index) => {
-
-                        }}
+                        onClicked={(info, index) => { }}
                         userInfo={userInfo}
                         bind_me={false}
                         refresh={refresh}
+                        renderRow={(data: API.YakitPluginDetail, index: number) => (
+                            <PluginItemOnline
+                                currentId={0}
+                                isAdmin={userInfo.role === 'admin'}
+                                info={data}
+                                selectedRowKeysRecord={selectedRowKeysRecord}
+                                onSelect={onSelect}
+                                onClick={(info) => { }}
+                                bind_me={true}
+                                extra={currentItem && currentItem.id === data.id && recycleLoading && <LoadingOutlined className='plugin-down' /> || <a href="#" onClick={() => onReduction(data)}>还原</a>}
+                            />
+                        )}
                     />
                 </div>
             </div>
         </Card>
     )
 }
-
-// interface RecycleBinRequest extends API.PageMeta {
-//     keyword: string
-// }
-// interface YakRecycleBinListProps {
-//     keyword: string
-//     setTotal: (n: number) => void
-//     selectedRowKeysRecord: API.YakitPluginDetail[]
-//     onSelectList: (m: API.YakitPluginDetail[]) => void
-//     isSelectAll: boolean
-//     refresh: boolean
-//     setIsSelectAll: (b: boolean) => void
-// }
-
-// const YakRecycleBinList: React.FC<YakRecycleBinListProps> = (props) => {
-//     const {
-//         keyword,
-//         setTotal,
-//         selectedRowKeysRecord,
-//         onSelectList,
-//         isSelectAll,
-//         refresh,
-//         setIsSelectAll
-//     } = props
-//     const [response, setResponse] = useState<API.YakitPluginListResponse>({
-//         data: [],
-//         pagemeta: {
-//             limit: 40,
-//             page: 1,
-//             total: 0,
-//             total_page: 1
-//         }
-//     })
-//     const [loading, setLoading] = useState(false)
-//     const [hasMore, setHasMore] = useState(false)
-//     const [isRef, setIsRef] = useState(false)
-//     const [listBodyLoading, setListBodyLoading] = useState(false)
-
-//     useEffect(() => {
-//         if (isSelectAll) {
-//             onSelectList([...response.data])
-//         }
-//     }, [isSelectAll])
-//     useEffect(() => {
-//         setListBodyLoading(true)
-//         search(1)
-//     }, [refresh,])
-//     const search = useMemoizedFn((page: number) => {
-//         const payload = {
-//             keyword,
-//             page,
-//             limit: 10,
-//             total: 0,
-//             total_page: 0,
-//             order_by: 'stars',
-//             order: 'desc',
-//             bind_me: false
-//         }
-//         setLoading(true)
-//         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
-//             method: "get",
-//             url: 'yakit/plugin',
-//             params: {
-//                 page: payload.page,
-//                 order_by: payload.order_by,
-//                 limit: payload.limit,
-//                 order: payload.order,
-//                 bind_me: false
-//             },
-//             data: payload
-//         })
-//             .then((res) => {
-//                 if (!res.data) {
-//                     res.data = []
-//                 }
-//                 const data = page === 1 ? res.data : response.data.concat(res.data)
-//                 const isMore = res.data.length < res.pagemeta.limit
-//                 setHasMore(!isMore)
-//                 if (payload.page > 1 && isSelectAll) {
-//                     onSelectList(data)
-//                 }
-//                 setResponse({
-//                     ...res,
-//                     data: [...data]
-//                 })
-//                 setTotal(res.pagemeta.total)
-//                 if (page === 1) {
-//                     setIsRef(!isRef)
-//                 }
-//             })
-//             .catch((err) => {
-//                 failed("插件列表获取失败:" + err)
-//             })
-//             .finally(() => {
-//                 setTimeout(() => {
-//                     setLoading(false)
-//                     setListBodyLoading(false)
-//                 }, 200)
-//             })
-//     })
-//     const loadMoreData = useMemoizedFn(() => {
-//         if (hasMore) search(response.pagemeta.page + 1)
-//     })
-//     const onSelect = useMemoizedFn((item: API.YakitPluginDetail) => {
-//         const index = selectedRowKeysRecord.findIndex((ele) => ele.id === item.id)
-//         if (index === -1) {
-//             selectedRowKeysRecord.push(item)
-//         } else {
-//             selectedRowKeysRecord.splice(index, 1)
-//         }
-//         setIsSelectAll(false)
-//         onSelectList([...selectedRowKeysRecord])
-//     })
-//     return (
-//         <Spin spinning={listBodyLoading}>
-//             <RollingLoadList<API.YakitPluginDetail>
-//                 isRef={isRef}
-//                 data={response.data}
-//                 page={response.pagemeta.page}
-//                 hasMore={hasMore}
-//                 loading={loading}
-//                 loadMoreData={() => loadMoreData()}
-//                 rowKey='id'
-//                 isGridLayout={true}
-//                 defItemHeight={170}
-//                 classNameRow='plugin-list'
-//                 classNameList='plugin-list-body'
-//                 renderRow={(data: API.YakitPluginDetail, index: number) => (
-//                     <PluginItemOnline
-//                         currentId={0}
-//                         isAdmin={false}
-//                         info={data}
-//                         selectedRowKeysRecord={selectedRowKeysRecord}
-//                         onSelect={onSelect}
-//                         onClick={(info) => { }}
-//                         onDownload={() => { }}
-//                         onStarred={() => { }}
-//                         bind_me={true}
-//                     />
-//                 )}
-//             />
-//         </Spin>
-//     )
-// }
