@@ -110,7 +110,7 @@ interface PluginSearchStatisticsRequest {
 }
 
 const typeOnline = "yak,mitm,packet-hack,port-scan,codec,nuclei"
-const defQueryOnline: SearchPluginOnlineRequest = {
+export const defQueryOnline: SearchPluginOnlineRequest = {
     keywords: "",
     order_by: "stars",
     order: "desc",
@@ -2503,10 +2503,11 @@ interface YakModuleOnlineListProps {
     deletePluginRecord?: API.YakitPluginDetail
     updatePluginRecord?: API.YakitPluginDetail
     size: "middle" | "small"
-    number?: number
+    number?: number,
+    renderRow?: (data: API.YakitPluginDetail, index: number) => ReactNode
 }
 
-const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
+export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const {
         queryOnline,
         setTotal,
@@ -2522,7 +2523,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         refresh,
         size,
         number,
-        setIsSelectAll
+        setIsSelectAll,
+        renderRow
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
@@ -2599,6 +2601,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         if (!bind_me) {
             delete payload.is_private
         }
+        console.log('payload',payload);
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -2617,6 +2620,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 if (!res.data) {
                     res.data = []
                 }
+                console.log('res',res)
                 const data = page === 1 ? res.data : response.data.concat(res.data)
                 const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
                 setHasMore(!isMore)
@@ -2735,7 +2739,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 defItemHeight={170}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
-                renderRow={(data: API.YakitPluginDetail, index: number) => (
+                renderRow={(data: API.YakitPluginDetail, index: number) => renderRow && renderRow(data, index) || (
                     <PluginItemOnline
                         currentId={currentId}
                         isAdmin={isAdmin}
