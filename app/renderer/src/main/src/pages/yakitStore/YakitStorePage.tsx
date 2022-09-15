@@ -2604,8 +2604,6 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 if (!res.data) {
                     res.data = []
                 }
-                console.log('res',res);
-                
                 const data = page === 1 ? res.data : response.data.concat(res.data)
                 const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
                 setHasMore(!isMore)
