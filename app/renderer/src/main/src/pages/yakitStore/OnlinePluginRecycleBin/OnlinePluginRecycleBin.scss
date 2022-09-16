@@ -1,0 +1,26 @@
+.recycle-search-input {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 12px;
+
+    .ant-input-group-wrapper {
+        max-width: 500px;
+    }
+
+    .recycle-left {
+        display: flex;
+        align-items: center;
+
+        .recycle-left-title {
+            font-size: 16px;
+            margin-right: 12px;
+        }
+
+        .recycle-left-refresh {
+            color: #1890ff;
+            font-size: 16px;
+        }
+    }
+
+
+}

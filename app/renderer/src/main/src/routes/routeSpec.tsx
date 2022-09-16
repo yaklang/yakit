@@ -46,6 +46,7 @@ import { AddYakitScript } from "@/pages/yakitStore/AddYakitScript/AddYakitScript
 import { WebsocketFuzzer } from "@/pages/websocket/WebsocketFuzzer";
 import { WebsocketFlowHistory } from "@/pages/websocket/WebsocketFlowHistory";
 import { YakitPluginJournalDetails } from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginJournalDetails"
+import { OnlinePluginRecycleBin } from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -113,6 +114,7 @@ export enum Route {
     // 插件
     AddYakitScript = "add-yakit-script",
     YakitPluginJournalDetails = "yakit-plugin-journal-details",
+    OnlinePluginRecycleBin = 'online-plugin-recycle-bin'
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -127,6 +129,8 @@ export function RouteNameToVerboseName(r: string) {
             return "新建插件"
         case "yakit-plugin-journal-details":
             return "插件修改详情"
+        case "online-plugin-recycle-bin":
+            return "线上插件回收站"
         default:
             return r
     }
@@ -375,6 +379,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <WebsocketFlowHistory />
         case Route.YakitPluginJournalDetails:
             return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0} />
+        case Route.OnlinePluginRecycleBin:
+            return <OnlinePluginRecycleBin />
         default:
             return <div />
     }

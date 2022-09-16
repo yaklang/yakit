@@ -111,6 +111,7 @@ const singletonRoute: Route[] = [
     Route.WebsocketHistory,
     // 插件
     Route.AddYakitScript,
+    Route.OnlinePluginRecycleBin
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -796,6 +797,13 @@ const Main: React.FC<MainProp> = (props) => {
             hideAdd: true
         })
     })
+    const addOnlinePluginRecycleBin = useMemoizedFn((res: any) => {
+        const time = new Date().getTime().toString()
+        addTabPage(Route.OnlinePluginRecycleBin, {
+            time: time,
+            node: ContentByRoute(Route.OnlinePluginRecycleBin, undefined)
+        })
+    })
     const addScanPort = useMemoizedFn((res: any) => {
         const { URL = "" } = res || {}
         if (URL) {
@@ -903,6 +911,7 @@ const Main: React.FC<MainProp> = (props) => {
                 addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
             if (type === "add-yakit-script") addYakScript(data)
             if (type === "yakit-plugin-journal-details") addYakPluginJournalDetails(data)
+            if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
         })
 
         return () => {

@@ -110,6 +110,11 @@ export declare namespace API {
         role: string;
         user_id: number;
     }
+    export interface UpPluginRecycleRequest {
+      ids?: number[];
+      keywords?: string;
+      dump: boolean;
+    }
     export interface UpdateUserRole {
         appid: string;
         operation: string;

@@ -20,7 +20,8 @@ import {
     Switch,
     Radio,
     Modal,
-    Typography
+    Typography,
+    Divider
 } from "antd"
 import {
     ReloadOutlined,
@@ -65,7 +66,7 @@ import { NetWorkApi } from "@/services/fetch"
 import { API } from "@/services/swagger/resposeType"
 import { DownloadOnlinePluginProps } from "./YakitPluginInfoOnline/YakitPluginInfoOnline"
 import { randomString } from "@/utils/randomUtil"
-import { OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon, ShareIcon } from "../../assets/icons"
+import { OfficialYakitLogoIcon, SelectIcon, OnlineCloudIcon, ImportIcon, ShareIcon, RecycleIcon } from "../../assets/icons"
 import { findDOMNode } from "react-dom"
 import { YakExecutorParam } from "../invoker/YakExecutorParams"
 import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
@@ -87,7 +88,7 @@ export interface GetYakScriptByOnlineIDRequest {
     UUID: string
 }
 
-interface SearchPluginOnlineRequest extends API.GetPluginWhere {
+export interface SearchPluginOnlineRequest extends API.GetPluginWhere {
     order_by: string
     order?: string
     page?: number
@@ -109,7 +110,7 @@ interface PluginSearchStatisticsRequest {
 }
 
 const typeOnline = "yak,mitm,packet-hack,port-scan,codec,nuclei"
-const defQueryOnline: SearchPluginOnlineRequest = {
+export const defQueryOnline: SearchPluginOnlineRequest = {
     keywords: "",
     order_by: "stars",
     order: "desc",
@@ -2201,10 +2202,20 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
         setRefresh(!refresh)
         onSelectAllUser(false)
     })
+    const onGoRecycleBin = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            warn('请先登陆')
+            return
+        }
+        ipcRenderer.invoke("send-to-tab", {
+            type: "online-plugin-recycle-bin",
+            data: {}
+        })
+    })
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
-                <Col span={12} className='col'>
+                <Col span={16} className='col user-col'>
                     <Checkbox checked={isSelectAllUser} onChange={(e) => onSelectAllUser(e.target.checked)}>
                         全选
                     </Checkbox>
@@ -2212,8 +2223,10 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                         <Tag color='blue'>已选{isSelectAllUser ? totalUser : selectedRowKeysRecordUser.length}条</Tag>
                     )}
                     <Tag>Total:{totalUser}</Tag>
+                    <Divider type="vertical" />
+                    <div className="recycle" onClick={onGoRecycleBin}><RecycleIcon /><span>回收站</span></div>
                 </Col>
-                <Col span={12} className='col-flex-end'>
+                <Col span={8} className='col-flex-end'>
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
@@ -2490,10 +2503,11 @@ interface YakModuleOnlineListProps {
     deletePluginRecord?: API.YakitPluginDetail
     updatePluginRecord?: API.YakitPluginDetail
     size: "middle" | "small"
-    number?: number
+    number?: number,
+    renderRow?: (data: API.YakitPluginDetail, index: number) => ReactNode
 }
 
-const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
+export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const {
         queryOnline,
         setTotal,
@@ -2509,7 +2523,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
         refresh,
         size,
         number,
-        setIsSelectAll
+        setIsSelectAll,
+        renderRow
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
@@ -2567,7 +2582,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     }, [userInfo.role])
     useEffect(() => {
         setListBodyLoading(true)
-        if (!userInfo.isLogin && bind_me) {
+        if (!userInfo.isLogin && (bind_me || queryOnline.recycle)) {
             setTotal(0)
         } else {
             search(1)
@@ -2698,7 +2713,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 setTimeout(() => setLoading(false), 200)
             })
     })
-    if (!userInfo.isLogin && bind_me) {
+    if (!userInfo.isLogin && (bind_me || queryOnline.recycle)) {
         return (
             <List
                 dataSource={[]}
@@ -2722,7 +2737,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 defItemHeight={170}
                 classNameRow='plugin-list'
                 classNameList='plugin-list-body'
-                renderRow={(data: API.YakitPluginDetail, index: number) => (
+                renderRow={(data: API.YakitPluginDetail, index: number) => renderRow && renderRow(data, index) || (
                     <PluginItemOnline
                         currentId={currentId}
                         isAdmin={isAdmin}
@@ -2758,11 +2773,12 @@ interface PluginListOptProps {
     isAdmin: boolean
     info: API.YakitPluginDetail
     onClick: (info: API.YakitPluginDetail) => any
-    onDownload: (info: API.YakitPluginDetail, callback) => any
-    onStarred: (info: API.YakitPluginDetail) => any
+    onDownload?: (info: API.YakitPluginDetail, callback) => any
+    onStarred?: (info: API.YakitPluginDetail) => any
     onSelect: (info: API.YakitPluginDetail) => any
     selectedRowKeysRecord: API.YakitPluginDetail[]
-    bind_me: boolean
+    bind_me: boolean,
+    extra?: ReactNode
 }
 
 export const RandomTagColor: string[] = [
@@ -2773,19 +2789,21 @@ export const RandomTagColor: string[] = [
     "color-bgColor-red"
 ]
 
-const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
+export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
-    const { isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, bind_me } = props
+    const { isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, bind_me, extra } = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const [status, setStatus] = useState<number>(info.status)
     useEffect(() => {
         setStatus(info.status)
     }, [info.status, info.id])
     const add = useMemoizedFn(async () => {
-        setLoading(true)
-        onDownload(info, () => {
-            setLoading(false)
-        })
+        if (onDownload) {
+            setLoading(true)
+            onDownload(info, () => {
+                setLoading(false)
+            })
+        }
     })
     const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private)
     const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
@@ -2818,18 +2836,24 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                     </div>
                 </div>
                 <div className='plugin-item-right'>
-                    {(loading && <LoadingOutlined className='plugin-down' />) || (
-                        <div
-                            className='plugin-down'
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                add()
-                            }}
-                            title='添加到插件仓库'
-                        >
-                            <DownloadOutlined className='operation-icon ' />
-                        </div>
-                    )}
+                    {
+                        extra && extra ||
+                        <>
+                            {(loading && <LoadingOutlined className='plugin-down' />) || (
+                                <div
+                                    className='plugin-down'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        add()
+                                    }}
+                                    title='添加到插件仓库'
+                                >
+                                    <DownloadOutlined className='operation-icon ' />
+                                </div>
+                            )}
+                        </>
+                    }
+
                 </div>
                 <SelectIcon
                     //  @ts-ignore
