@@ -119,7 +119,8 @@ const defQueryOnline: SearchPluginOnlineRequest = {
     status: "",
     bind_me: false,
     is_private: "",
-    tags: ""
+    tags: "",
+    recycle: false
 }
 
 const defQueryLocal: QueryYakScriptRequest = {
@@ -1316,7 +1317,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
-                const isMore = item.Data.length < item.Pagination.Limit
+                const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
                 setHasMore(!isMore)
                 if (newParams.Pagination.Page > 1 && isSelectAll) {
                     if (onSelectList) onSelectList(data)
@@ -2594,7 +2595,8 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                 order_by: payload.order_by,
                 limit: payload.limit,
                 order: payload.order,
-                bind_me: payload.bind_me
+                bind_me: payload.bind_me,
+                recycle: payload.recycle
             },
             data: payload
         })
@@ -2603,7 +2605,7 @@ const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
                     res.data = []
                 }
                 const data = page === 1 ? res.data : response.data.concat(res.data)
-                const isMore = res.data.length < res.pagemeta.limit
+                const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
                 setHasMore(!isMore)
                 if (payload.page > 1 && isSelectAll) {
                     onSelectList(data)

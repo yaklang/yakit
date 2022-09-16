@@ -477,7 +477,7 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
                     data: page === 1 ? res.data : commentResponses.data.concat(res.data),
                     pagemeta: res.pagemeta
                 }
-                const isMore = res.data.length < limit
+                const isMore = res.data.length < limit || newCommentResponses.data.length === commentResponses.pagemeta.total
                 setHasMore(!isMore)
                 setCommentResponses({
                     data: [...newCommentResponses.data],
@@ -1005,7 +1005,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     data: page === 1 ? item.data : commentChildResponses.data.concat(item.data),
                     pagemeta: item.pagemeta
                 }
-                const isMore = item.data.length < limit
+                const isMore = item.data.length < limit || newCommentChildResponses.data.length === commentChildResponses.pagemeta.total
                 setHasMore(!isMore)
                 setCommentChildResponses({
                     data: [...newCommentChildResponses.data],

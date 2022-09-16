@@ -205,15 +205,13 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                             const itemArr = i.data as any
                             return (
                                 <div
-                                    className={`${isGridLayout && col && col > 1 && "display-flex"}`}
+                                    className={`${isGridLayout && col && col > 1 && "display-flex" || ''}`}
                                     key={itemArr.map((ele) => ele[rowKey || "Id"]).join("-")}
-                                    id={itemArr.map((ele) => ele[rowKey || "Id"]).join("-")}
                                 >
                                     {itemArr.map((ele, number) => (
                                         <div
                                             className={`${col && classNameWidth[col]} ${classNameRow || ''}`}
                                             key={ele[rowKey || "Id"]}
-                                            id={ele[rowKey || "Id"]}
                                         >
                                             {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0)}
                                         </div>

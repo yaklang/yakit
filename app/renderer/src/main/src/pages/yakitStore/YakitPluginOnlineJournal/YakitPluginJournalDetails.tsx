@@ -54,8 +54,8 @@ interface SearchApplyUpdateDetailRequest {
 export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps> = (props) => {
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
-            labelCol: { span: 2 },
-            wrapperCol: { span: 22 }
+            labelCol: { span: 3 },
+            wrapperCol: { span: 21 }
         }
         return col
     }, [])
@@ -70,11 +70,13 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
         plugin_id: 0,
         up_plugin: { params: [] },
         merge_before_plugin: { params: [] },
-        merge_status: 0
+        merge_status: 0,
+        user_name: ''
     })
     const [params, setParams, getParams] = useGetState<YakScript>(defParams)
     const [originalCode, setOriginalCode,] = useState<string>("")
     const [modifiedCode, setModifiedCode,] = useState<string>("")
+    const [disabled, setDisabled] = useState<boolean>(false)
     const { userInfo } = useStore()
     useEffect(() => {
         if (!YakitPluginJournalDetailsId) return
@@ -132,6 +134,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                 OnlineIsPrivate: modifiedItem.is_private,
                 // HeadImg: ''
             }
+            setDisabled(!(res.plugin_user_id === userInfo.user_id && res.merge_status === 0))
             setJournalDetails(res)
             setParams(localParams)
             setOriginalCode(originalItem?.content || '')
@@ -173,9 +176,9 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
     return (
         <div className="journal-details-body">
             <Spin spinning={loading}>
-                <Card title="修改详情" bordered={false}>
+                <Card title="修改详情" bordered={false} bodyStyle={{ padding: '24px 12px' }} extra={`修改人:${journalDetails.user_name || '-'}`}>
                     <Form {...defFromLayout}>
-                        <YakScriptFormContent params={params} setParams={setParams} modified={params} isShowAuthor={false} />
+                        <YakScriptFormContent disabled={disabled} params={params} setParams={setParams} modified={params} isShowAuthor={false} />
                         <Form.Item
                             label={"源码"}
                             help={
@@ -195,6 +198,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                                                             setModifiedCode={setModifiedCode}
                                                             modifiedCode={modifiedCode}
                                                             onClose={() => { m.destroy(); setFullscreen(false) }}
+                                                            readOnly={disabled}
                                                         />
                                                     )
                                                 })
@@ -221,6 +225,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                                                         IsGeneralModule: !params.IsGeneralModule
                                                     })
                                                 }
+                                                disabled={disabled}
                                             >
                                                 默认启动{" "}
                                                 <Tooltip
@@ -238,24 +243,17 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                         >
                             {
                                 !fullscreen && originalCode && modifiedCode &&
-                                <div className="yak-editor-content">
-                                    <div className="yak-editor-tip">
-                                        <div>插件源码</div>
-                                        <div>申请人提交源码</div>
-                                    </div>
-                                    <div className="yak-editor-item">
-                                        <CodeComparison
-                                            leftCode={originalCode}
-                                            setRightCode={setModifiedCode}
-                                            rightCode={modifiedCode}
-                                            originalEditable={false}
-                                        />
-                                    </div>
-                                </div>
+                                <CodeComparisonDiff
+                                    originalCode={originalCode}
+                                    setRightCode={setModifiedCode}
+                                    rightCode={modifiedCode}
+                                    readOnly={disabled}
+                                    className="yak-editor-content"
+                                />
                             }
                         </Form.Item>
                         {
-                            journalDetails.plugin_user_id === userInfo.user_id && journalDetails.merge_status === 0 &&
+                            !disabled &&
                             <Form.Item colon={false} label={" "}>
                                 <Space>
                                     <Button type='primary' danger onClick={() => onMergePlugin(false)} >
@@ -279,11 +277,12 @@ interface FullScreenCodeProps {
     setModifiedCode: (s: string) => void
     modifiedCode: string
     onClose: () => void
+    readOnly: boolean
 }
 
 
 const FullScreenCode: React.FC<FullScreenCodeProps> = (props) => {
-    const { originalCode, setModifiedCode, modifiedCode, onClose } = props;
+    const { originalCode, setModifiedCode, modifiedCode, onClose, readOnly } = props;
     const [noWrap, setNoWrap] = useState<boolean>(false)
     const [rightCode, setRightCode] = useState<string>(modifiedCode)
     const fullCodeComparisonRef = useRef<any>(null)
@@ -315,24 +314,51 @@ const FullScreenCode: React.FC<FullScreenCodeProps> = (props) => {
             style={{ height: 'calc(100% - 48px)' }}
             bodyStyle={{ height: '100%', padding: 0 }}
         >
-            <div className="yak-editor-tip">
-                <div>插件源码</div>
-                <div>申请人提交源码</div>
-            </div>
-            <div className="yak-editor-full-item">
-                <CodeComparison
-                    ref={fullCodeComparisonRef}
-                    noWrap={noWrap}
-                    setNoWrap={setNoWrap}
-                    leftCode={originalCode}
-                    setRightCode={(c) => {
-                        setRightCode(c)
-                        setModifiedCode(c)
-                    }}
-                    rightCode={rightCode}
-                    originalEditable={false}
-                />
-            </div>
+            <CodeComparisonDiff
+                fullCodeComparisonRef={fullCodeComparisonRef}
+                originalCode={originalCode}
+                noWrap={noWrap}
+                setNoWrap={setNoWrap}
+                setRightCode={(c) => {
+                    if (setRightCode) setRightCode(c)
+                    if (setModifiedCode) setModifiedCode(c)
+                }}
+                rightCode={rightCode}
+                readOnly={readOnly}
+            />
         </Card>
     )
+}
+
+interface CodeComparisonDiffProps {
+    fullCodeComparisonRef?: any
+    originalCode: string
+    readOnly: boolean
+    noWrap?: boolean
+    setNoWrap?: (b: boolean) => void
+    rightCode: string
+    setRightCode?: (s: string) => void
+    className?: string
+}
+
+export const CodeComparisonDiff: React.FC<CodeComparisonDiffProps> = (props) => {
+    const { fullCodeComparisonRef, noWrap, setNoWrap, originalCode, setRightCode, rightCode, readOnly, className = '' } = props;
+    return <div className={`code-comparison-diff ${className}`}>
+        <div className="yak-editor-tip">
+            <div>插件源码</div>
+            <div>申请人提交源码</div>
+        </div>
+        <div className="yak-editor-full-item">
+            <CodeComparison
+                ref={fullCodeComparisonRef}
+                noWrap={noWrap}
+                setNoWrap={(e) => { if (setNoWrap) setNoWrap(e) }}
+                leftCode={originalCode}
+                setRightCode={setRightCode}
+                rightCode={rightCode}
+                originalEditable={false}
+                readOnly={readOnly}
+            />
+        </div>
+    </div>
 }

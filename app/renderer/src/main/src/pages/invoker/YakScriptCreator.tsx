@@ -291,7 +291,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 }
             })
             .catch((err) => {
-                failed("插件详情获取失败666:" + err)
+                failed("插件详情获取失败:" + err)
             })
     })
     const onCloseTab = useMemoizedFn(() => {
@@ -603,10 +603,11 @@ interface YakScriptFormContentProps {
     modified?: YakScript | undefined
     setParamsLoading?: (b: boolean) => void
     isShowAuthor?: boolean
+    disabled?: boolean
 }
 
 export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props) => {
-    const { params, modified, setParams, setParamsLoading, isShowAuthor = true } = props
+    const { params, modified, setParams, setParamsLoading, isShowAuthor = true, disabled } = props
     const isNucleiPoC = params.Type === "nuclei"
     return (
         <>
@@ -637,14 +638,16 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                 required={true}
                 setValue={(ScriptName) => setParams({ ...params, ScriptName })}
                 value={params.ScriptName}
+                disable={disabled}
             />
-            <InputItem label={"简要描述"} setValue={(Help) => setParams({ ...params, Help })} value={params.Help} />
+            <InputItem label={"简要描述"} setValue={(Help) => setParams({ ...params, Help })} value={params.Help} disable={disabled} />
             {
                 isShowAuthor &&
                 <InputItem
                     label={"模块作者"}
                     setValue={(Author) => setParams({ ...params, Author })}
                     value={params.Author}
+                    disable={disabled}
                 />
             }
             <ManyMultiSelectForString
@@ -653,12 +656,14 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                 mode={"tags"}
                 setValue={(Tags) => setParams({ ...params, Tags })}
                 value={params.Tags && params.Tags !== "null" ? params.Tags : ""}
+                disabled={disabled}
             />
             {["yak", "mitm"].includes(params.Type) && (
                 <Form.Item label={"增加参数"}>
                     <Button
                         type={"link"}
                         onClick={() => {
+                            if (disabled) return
                             let m = showModal({
                                 title: "添加新参数",
                                 width: "60%",
@@ -687,6 +692,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                 )
                             })
                         }}
+                        disabled={disabled}
                     >
                         添加 / 设置一个参数 <PlusOutlined />
                     </Button>
@@ -743,6 +749,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                                         )
                                                     })
                                                 }}
+                                                disabled={disabled}
                                             >
                                                 修改参数
                                             </Button>
@@ -756,7 +763,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                                     })
                                                 }}
                                             >
-                                                <Button size={"small"} type={"link"} danger={true}>
+                                                <Button size={"small"} type={"link"} danger={true} disabled={disabled}>
                                                     删除参数
                                                 </Button>
                                             </Popconfirm>
@@ -774,10 +781,10 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
             {params.Type === "yak" && (
                 <>
                     <SwitchItem
-                        label={"启用插件联动 UI"}
+                        label="启用插件联动 UI"
                         value={params.EnablePluginSelector}
-                        formItemStyle={{ marginBottom: 2 }}
                         setValue={(EnablePluginSelector) => setParams({ ...params, EnablePluginSelector })}
+                        disabled={disabled}
                     />
                     {params.EnablePluginSelector && (
                         <ManyMultiSelectForString
@@ -791,6 +798,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                 setParams({ ...params, PluginSelectorTypes: res })
                             }}
                             help={"通过 cli.String(`yakit-plugin-file`) 获取用户选择的插件"}
+                            disabled={disabled}
                         />
                     )}
                 </>

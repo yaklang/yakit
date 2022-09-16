@@ -51,10 +51,11 @@ interface CodeComparisonProps {
     setRightCode?: (s: string) => void
     ref?: any
     originalEditable?: boolean
+    readOnly?: boolean
 }
 
 export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((props, ref) => {
-    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true } = props;
+    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true,readOnly } = props;
     const [token, setToken] = useState<string>("")
     const diffDivRef = useRef(null)
     const monaco = monacoEditor.editor
@@ -78,12 +79,13 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
             originalEditable,
             automaticLayout: true,
             wordWrap: isWrap ? "off" : "on",
+            readOnly,
         })
         if (setNoWrap) setNoWrap(!noWrap)
         setModelEditor({ content: leftCode, language: language }, { content: rightCode, language: language }, language)
     }
     const setModelEditor = (left?: textModelProps, right?: textModelProps, language = "yak") => {
-        const leftModel = monaco.createModel(left ? left.content : "", left ? left.language : language)
+        const leftModel = monaco.createModel(left ? left.content : "", left ? left.language : language,)
         leftModel.onDidChangeContent((e) => {
             if (setLeftCode) setLeftCode(leftModel.getValue())
         })
@@ -112,6 +114,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     originalEditable,
                     automaticLayout: true,
                     wordWrap: noWrap ? "off" : "on",
+                    readOnly
                 })
 
                 setToken(res.token)
