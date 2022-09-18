@@ -1,13 +1,13 @@
-import React, {memo, useEffect, useRef, useState} from "react"
+import React, {memo, MouseEventHandler, useEffect, useRef, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
-import {Button, Empty, Form, Input, List, Popconfirm, Space} from "antd"
+import {Button, Empty, Form, Input, List, Popconfirm, Popover, Space} from "antd"
 import {SelectOne} from "../../utils/inputUtil"
-import {PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
+import {DownloadOutlined, PoweroffOutlined, ReloadOutlined, SaveOutlined, ThunderboltOutlined} from "@ant-design/icons"
 import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
 import {EditorProps, YakCodeEditor} from "../../utils/editors"
 import {YakModuleList} from "../yakitStore/YakitStorePage"
 import {genDefaultPagination, YakScript, YakScriptHooks} from "../invoker/schema"
-import {useMap, useMemoizedFn} from "ahooks"
+import {useGetState, useMap, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {MITMPluginTemplateShort} from "../invoker/data/MITMPluginTamplate"
@@ -15,6 +15,7 @@ import {MITMYakScriptLoader} from "./MITMYakScriptLoader"
 import {failed} from "../../utils/notification"
 import {StringToUint8Array} from "../../utils/str"
 import "./MITMPluginList.scss"
+import {showByCursorMenu} from "@/utils/showByCursor";
 
 export const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
 
@@ -48,6 +49,9 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         setRefreshTrigger(!refreshTrigger)
     })
     const [loading, setLoading] = useState(false);
+
+    // 接受被选择的插件列表，用于保存缓存之类的
+    const [_selected, setSelectedPlugins, getSelectedPlugins] = useGetState<string[]>([]);
 
     // 热加载模块持久化
     useEffect(() => {
@@ -105,6 +109,27 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         }
     }, [])
 
+    const handleSavePluginOp = useMemoizedFn((e?: { clientX: number, clientY: number }) => {
+        if (!e) {
+            return
+        }
+        showByCursorMenu({
+            content: [
+                {
+                    title: "保存当前插件配置", onClick: () => {
+                        const loaded = hooksItem.filter(i => !!i.name).map(i => i.name);
+                        alert(JSON.stringify(loaded))
+                    },
+                },
+                {
+                    title: "加载用户插件配置", onClick: () => {
+                        const loaded = hooksItem.filter(i => !!i.name).map(i => i.name);
+                        alert(JSON.stringify(loaded))
+                    },
+                }
+            ],
+        }, e.clientX, e.clientY)
+    })
 
     return (
         <AutoCard
@@ -112,7 +137,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             bodyStyle={{padding: 0, overflowY: "auto"}}
             loading={!initialed || loading}
             title={
-                <Space>
+                <Space size={0}>
                     <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()} layout={"inline"}>
                         <SelectOne
                             data={[
@@ -124,13 +149,16 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                             formItemStyle={{marginBottom: 2}}
                             setValue={setMode}
                         />
-                        {mode === "all" && <Form.Item style={{marginBottom: 0}}>
+                        {mode === "all" && <Form.Item style={{marginBottom: 0, width: 120}}>
                             <Input.Search onSearch={value => {
                                 setSearchKeyword(value)
                             }}>
 
                             </Input.Search>
                         </Form.Item>}
+                        {/*{mode !== "hot-patch" && <Form.Item style={{marginBottom: 0}}>*/}
+
+                        {/*</Form.Item>}*/}
                     </Form>
                     {mode === "hot-patch" && (
                         <Popconfirm
@@ -163,6 +191,13 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 加载当前代码
                             </Button>
                         )}
+                        {!userDefined && <Button
+                            size={"small"}
+                            icon={<ThunderboltOutlined/>}
+                            style={{marginLeft: 0, paddingLeft: 0}}
+                            onContextMenu={handleSavePluginOp}
+                            onClick={handleSavePluginOp}
+                        />}
                         {/*: <Button*/}
                         {/*    size={"small"} type={"primary"}*/}
                         {/*    onClick={() => {*/}
@@ -206,6 +241,9 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             {mode === "all" && (
                 <div className='mitm-http-list'>
                     <YakModuleList
+                        onSelectList={selected => {
+                            setSelectedPlugins(selected.map(i => i.ScriptName))
+                        }}
                         itemHeight={43}
                         onClicked={(script) => {
                         }}
