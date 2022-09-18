@@ -154,7 +154,8 @@ export const RouteMenuData: MenuDataProps[] = [
         icon: <AimOutlined />,
         subMenuData: [
             { key: Route.HTTPHacker, label: "MITM", icon: <FireOutlined /> },
-            { key: Route.HTTPFuzzer, label: "Web Fuzzer", icon: <AimOutlined /> }
+            { key: Route.HTTPFuzzer, label: "Web Fuzzer", icon: <AimOutlined /> },
+            { key: Route.WebsocketFuzzer, label: "Websocket Fuzzer", icon: <AimOutlined /> }
         ]
     },
     {
@@ -261,7 +262,7 @@ interface ComponentParams {
     // websocket fuzzer 相关
     wsTls?: boolean
     wsRequest?: Uint8Array
-    
+
     // yakit 插件日志详情参数
     YakScriptJournalDetailsId?: number
 }
