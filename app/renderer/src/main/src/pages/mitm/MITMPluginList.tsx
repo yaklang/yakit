@@ -11,11 +11,13 @@ import {useDebounceFn, useMap, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {MITMPluginTemplateShort} from "../invoker/data/MITMPluginTamplate"
-import {MITMYakScriptLoader} from "./MITMYakScriptLoader"
-import {failed} from "../../utils/notification"
+import {clearMITMPluginCache, MITMYakScriptLoader} from "./MITMYakScriptLoader"
+import {failed, info} from "../../utils/notification"
 import {StringToUint8Array} from "../../utils/str"
 import "./MITMPluginList.scss"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
+import {queryYakScriptList} from "../yakitStore/network"
+import {enableMITMPluginMode} from "./MITMServerHijacking"
 
 export const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
 
@@ -113,18 +115,33 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
 
     const [checkAll, setCheckAll] = useState<boolean>(false)
     const [tagsLoading, setTagsLoading] = useState<boolean>(false)
-    const [indeterminate, setIndeterminate] = useState(true)
+    // const [indeterminate, setIndeterminate] = useState(true)
     const [refresh, setRefresh] = useState(true)
+    const [total, setTotal] = useState<number>(0)
     const [tagsList, setTagsList] = useState<TagsProps[]>([])
     const [tag, setTag] = useState<string[]>([])
     const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Tags")
+    const [listNames, setListNames] = useState<string[]>([])
     const onCheckAllChange = (e: CheckboxChangeEvent) => {
-        setIndeterminate(false)
-        setCheckAll(e.target.checked)
+        const {checked} = e.target
+        if (checked) {
+            enableMITMPluginMode(listNames).then(() => {
+                info("启动 MITM 插件成功")
+            })
+        } else {
+            ipcRenderer.invoke("mitm-remove-hook", {
+                HookName: [],
+                RemoveHookID: listNames
+            } as any)
+        }
+        setCheckAll(checked)
     }
     useEffect(() => {
         getYakScriptTags()
     }, [])
+    // useEffect(() => {
+    //     setIndeterminate(hooks.size !== total)
+    // }, [hooks])
     const getYakScriptTags = useMemoizedFn(() => {
         setTagsLoading(true)
         ipcRenderer
@@ -143,6 +160,26 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         }),
         {wait: 200}
     ).run
+    const getAllSatisfyScript = useMemoizedFn((limit: number) => {
+        queryYakScriptList(
+            "mitm,port-scan",
+            (data, t) => {
+                console.log("data", data)
+                setTotal(t || 0)
+                setListNames(data.map((i) => i.ScriptName))
+            },
+            undefined,
+            limit || 300,
+            undefined,
+            searchKeyword,
+            {
+                Tag: tag,
+                Type: "mitm,port-scan",
+                Keyword: "",
+                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+            }
+        )
+    })
     return (
         <AutoCard
             bordered={false}
@@ -175,7 +212,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 </Popconfirm>
                             )}
                             {mode === "all" && (
-                                <Checkbox indeterminate={indeterminate} onChange={onCheckAllChange} checked={checkAll}>
+                                <Checkbox onChange={onCheckAllChange} checked={checkAll}>
                                     全选
                                 </Checkbox>
                             )}
@@ -277,6 +314,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                         refresh={refresh}
                         itemHeight={43}
                         onClicked={(script) => {}}
+                        setTotal={getAllSatisfyScript}
                         onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                             return (
                                 <MITMYakScriptLoader
@@ -288,6 +326,11 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                         setMode("hot-patch")
                                     }}
                                     onSubmitYakScriptId={props.onSubmitYakScriptId}
+                                    onRemoveHook={(name: string) => {
+                                        if (hooks.get(name)) {
+                                            setCheckAll(false)
+                                        }
+                                    }}
                                 />
                             )
                         }}
