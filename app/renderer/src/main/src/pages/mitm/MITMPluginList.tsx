@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
-import {Button, Empty, Form, Input, List, Popconfirm, Space} from "antd"
+import {Button, Checkbox, Empty, Form, Input, List, Popconfirm, Space} from "antd"
 import {SelectOne} from "../../utils/inputUtil"
 import {PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
 import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
@@ -15,6 +15,7 @@ import {MITMYakScriptLoader} from "./MITMYakScriptLoader"
 import {failed} from "../../utils/notification"
 import {StringToUint8Array} from "../../utils/str"
 import "./MITMPluginList.scss"
+import {CheckboxChangeEvent} from "antd/lib/checkbox"
 
 export const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
 
@@ -43,11 +44,11 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>())
     const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
     const [refreshTrigger, setRefreshTrigger] = useState(false)
-    const [searchKeyword, setSearchKeyword] = useState("");
+    const [searchKeyword, setSearchKeyword] = useState("")
     const refresh = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
     })
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false)
 
     // 热加载模块持久化
     useEffect(() => {
@@ -61,7 +62,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
 
     // 设置用户模式
     const userDefined = mode === "hot-patch"
-    let hooksItem: { name: string }[] = []
+    let hooksItem: {name: string}[] = []
     hooks.forEach((value, key) => {
         if (value) {
             hooksItem.push({name: key})
@@ -105,15 +106,20 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         }
     }, [])
 
-
+    const [checkAll, setCheckAll] = useState<boolean>(false)
+    const [indeterminate, setIndeterminate] = useState(true)
+    const onCheckAllChange = (e: CheckboxChangeEvent) => {
+        setIndeterminate(false)
+        setCheckAll(e.target.checked)
+    }
     return (
         <AutoCard
             bordered={false}
             bodyStyle={{padding: 0, overflowY: "auto"}}
             loading={!initialed || loading}
             title={
-                <Space>
-                    <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()} layout={"inline"}>
+                <div className='mitm-card-title'>
+                    <div className='mitm-card-select'>
                         <SelectOne
                             data={[
                                 {text: "热加载", value: "hot-patch"},
@@ -123,27 +129,38 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                             value={mode}
                             formItemStyle={{marginBottom: 2}}
                             setValue={setMode}
+                            size='small'
                         />
-                        {mode === "all" && <Form.Item style={{marginBottom: 0}}>
-                            <Input.Search onSearch={value => {
-                                setSearchKeyword(value)
-                            }}>
-
-                            </Input.Search>
-                        </Form.Item>}
-                    </Form>
-                    {mode === "hot-patch" && (
-                        <Popconfirm
-                            title={"确认重置热加载代码？"}
-                            onConfirm={() => {
-                                setScript(MITMPluginTemplateShort)
-                                refresh()
-                            }}
-                        >
-                            <Button type={"link"} icon={<ReloadOutlined/>} size={"small"}/>
-                        </Popconfirm>
-                    )}
-                </Space>
+                        <div className='mitm-card-select-right'>
+                            {mode === "hot-patch" && (
+                                <Popconfirm
+                                    title={"确认重置热加载代码？"}
+                                    onConfirm={() => {
+                                        setScript(MITMPluginTemplateShort)
+                                        refresh()
+                                    }}
+                                >
+                                    <Button type={"link"} icon={<ReloadOutlined />} size={"small"} />
+                                </Popconfirm>
+                            )}
+                            {mode === "all" && (
+                                <Checkbox indeterminate={indeterminate} onChange={onCheckAllChange} checked={checkAll}>
+                                    全选
+                                </Checkbox>
+                            )}
+                        </div>
+                    </div>
+                    <div>
+                        {mode === "all" && (
+                            <Input.Search
+                                onSearch={(value) => {
+                                    setSearchKeyword(value)
+                                }}
+                                size='small'
+                            ></Input.Search>
+                        )}
+                    </div>
+                </div>
             }
             size={"small"}
             extra={
@@ -163,23 +180,6 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 加载当前代码
                             </Button>
                         )}
-                        {/*: <Button*/}
-                        {/*    size={"small"} type={"primary"}*/}
-                        {/*    onClick={() => {*/}
-                        {/*        enablePlugin()*/}
-                        {/*    }}*/}
-                        {/*>加载插件</Button>}*/}
-                        <Button
-                            danger={true}
-                            size={"small"}
-                            type={"primary"}
-                            onClick={() => {
-                                props.onExit && props.onExit()
-                            }}
-                            icon={<PoweroffOutlined/>}
-                        >
-                            停止
-                        </Button>
                     </Space>
                 </>
             }
@@ -207,8 +207,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                 <div className='mitm-http-list'>
                     <YakModuleList
                         itemHeight={43}
-                        onClicked={(script) => {
-                        }}
+                        onClicked={(script) => {}}
                         searchKeyword={searchKeyword}
                         onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                             return (
@@ -252,7 +251,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                         </>
                     ) : (
                         <>
-                            <Empty description={"未启用 MITM 插件"}/>
+                            <Empty description={"未启用 MITM 插件"} />
                         </>
                     )}
                 </>

@@ -8,8 +8,28 @@
     .plugin-list {
         padding: 0px !important;
         margin-bottom: 0px;
+
         .ant-list-item {
             padding: 0px;
+        }
+    }
+}
+
+.mitm-card-title {
+    .mitm-card-select {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+
+        .mitm-card-select-right {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+
+            .ant-checkbox-wrapper {
+                margin-left: 4px;
+            }
         }
     }
 }
