@@ -35,8 +35,8 @@ import {
     generateYakCodeByRequest,
     RequestToYakCodeTemplate
 } from "../pages/invoker/fromPacketToYakCode"
-import {execPacketScan} from "@/pages/packetScanner/PacketScanner";
-import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup";
+import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
+import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -348,7 +348,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail id={flow.Id} onClose={onClosed}/>
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
         </div>
     )
 }
@@ -768,9 +768,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // OnlyWebsocket 变的时候加载一下
     useEffect(() => {
         update(1)
-    }, [
-        params.OnlyWebsocket
-    ])
+    }, [params.OnlyWebsocket])
 
     const scrollTableTo = useMemoizedFn((size: number) => {
         if (!tableRef || !tableRef.current) return
@@ -866,7 +864,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             const a = originOffsetLength - offsetDeltaData.length
                             scrollTableTo(
                                 (originDataLength + 1 + MAX_ROW_COUNT - originOffsetLength) * ROW_HEIGHT -
-                                tableClientHeight
+                                    tableClientHeight
                             )
                         }
                     }, 50)
@@ -989,49 +987,54 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     }, [props.inViewport])
 
     const clearHistoryAction = useMemoizedFn((e: MouseEvent) => {
-        showByCursorMenu({
-            content: [
-                {
-                    title: "重置请求 ID", onClick: () => {
-                        ipcRenderer
-                            .invoke("DeleteHTTPFlows", {DeleteAll: true})
-                            .then(() => {
-
-                            })
-                            .catch((e: any) => {
-                                failed(`历史记录删除失败: ${e}`)
-                            }).finally(() => update(1))
-                    }
-                },
-                {
-                    title: "不重置请求 ID", onClick: () => {
-                        const newParams = {
-                            Filter: {
-                                ...params
-                            },
-                            DeleteAll: false
+        showByCursorMenu(
+            {
+                content: [
+                    {
+                        title: "重置请求 ID",
+                        onClick: () => {
+                            ipcRenderer
+                                .invoke("DeleteHTTPFlows", {DeleteAll: true})
+                                .then(() => {})
+                                .catch((e: any) => {
+                                    failed(`历史记录删除失败: ${e}`)
+                                })
+                                .finally(() => update(1))
                         }
-                        ipcRenderer
-                            .invoke("DeleteHTTPFlows", newParams)
-                            .then((i: HTTPFlow) => {
-                                setParams(props.params || {SourceType: "mitm"})
-                            })
-                            .catch((e: any) => {
-                                failed(`历史记录删除失败: ${e}`)
-                            })
-                        setLoading(true)
-                        info("正在删除...如自动刷新失败请手动刷新")
-                        setCompareLeft({content: "", language: "http"})
-                        setCompareRight({content: "", language: "http"})
-                        setCompareState(0)
-                        setTimeout(() => {
-                            update(1)
-                            if (props.onSelected) props.onSelected(undefined)
-                        }, 400)
+                    },
+                    {
+                        title: "不重置请求 ID",
+                        onClick: () => {
+                            const newParams = {
+                                Filter: {
+                                    ...params
+                                },
+                                DeleteAll: false
+                            }
+                            ipcRenderer
+                                .invoke("DeleteHTTPFlows", newParams)
+                                .then((i: HTTPFlow) => {
+                                    setParams(props.params || {SourceType: "mitm"})
+                                })
+                                .catch((e: any) => {
+                                    failed(`历史记录删除失败: ${e}`)
+                                })
+                            setLoading(true)
+                            info("正在删除...如自动刷新失败请手动刷新")
+                            setCompareLeft({content: "", language: "http"})
+                            setCompareRight({content: "", language: "http"})
+                            setCompareState(0)
+                            setTimeout(() => {
+                                update(1)
+                                if (props.onSelected) props.onSelected(undefined)
+                            }, 400)
+                        }
                     }
-                }
-            ]
-        }, e.clientX, e.clientY)
+                ]
+            },
+            e.clientX,
+            e.clientY
+        )
     })
 
     return (
@@ -1056,7 +1059,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         <Space>
                             {"所有相关请求都在这里"}
                             <Button
-                                icon={<ReloadOutlined/>}
+                                icon={<ReloadOutlined />}
                                 type={"link"}
                                 onClick={(e) => {
                                     update(1)
@@ -1106,7 +1109,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     <Space>
                         <span>{props?.title ? props.title : "HTTP History"}</span>
                         <Button
-                            icon={<ReloadOutlined/>}
+                            icon={<ReloadOutlined />}
                             type={"link"}
                             size={"small"}
                             onClick={(e) => {
@@ -1139,16 +1142,24 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 update(1)
                             }}
                         />
-                        {props.noHeader && <Button danger={true} size={"small"}
-                                                   onClick={e => clearHistoryAction(e as any)}
-                                                   onContextMenu={e => clearHistoryAction(e as any)}
-                        >清空 HTTP History</Button>}
+                        {props.noHeader && (
+                            <Button
+                                danger={true}
+                                size={"small"}
+                                onClick={(e) => clearHistoryAction(e as any)}
+                                onContextMenu={(e) => clearHistoryAction(e as any)}
+                            >
+                                清空 HTTP History
+                            </Button>
+                        )}
                         <Checkbox
                             checked={params.OnlyWebsocket}
                             onChange={() => {
                                 setParams({...params, OnlyWebsocket: !params.OnlyWebsocket})
                             }}
-                        >只看 Websocket</Checkbox>
+                        >
+                            只看 Websocket
+                        </Checkbox>
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                 </Col>
@@ -1203,7 +1214,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.Methods ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1260,7 +1271,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.StatusCode ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1307,7 +1318,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.SearchURL ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1348,9 +1359,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return rowData[dataKey]
                                 ? `${rowData[dataKey]}`
-                                    .split("|")
-                                    .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                                    .join(", ")
+                                      .split("|")
+                                      .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                                      .join(", ")
                                 : ""
                         }
                     },
@@ -1399,7 +1410,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.HaveBody ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1465,7 +1476,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.HaveCommonParams ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1474,7 +1485,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return (
                                 <Space>
-                                    {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && <CheckOutlined/>}
+                                    {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && <CheckOutlined />}
                                 </Space>
                             )
                         }
@@ -1523,9 +1534,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             return "请求大小"
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
-                            return (
-                                <div>{rowData?.RequestSizeVerbose || "-"}</div>
-                            )
+                            return <div>{rowData?.RequestSizeVerbose || "-"}</div>
                         }
                     },
                     {
@@ -1567,10 +1576,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                                ? TableRowColor(
-                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                                )
-                                                : "#ffffff"
+                                            ? TableRowColor(
+                                                  rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                              )
+                                            : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
@@ -1631,15 +1640,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     onClick: () => {
                                         const flow = rowData as HTTPFlow
                                         if (!flow) return
-                                        generateCSRFPocByRequest(flow.Request, e => {
+                                        generateCSRFPocByRequest(flow.Request, (e) => {
                                             callCopyToClipboard(e)
                                         })
                                     }
                                 },
                                 {
                                     title: "复制为 Yak PoC 模版",
-                                    onClick: () => {
-                                    },
+                                    onClick: () => {},
                                     subMenuItems: [
                                         {
                                             title: "数据包 PoC 模版",
@@ -1687,8 +1695,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
                                                 const existedTags = flow.Tags
                                                     ? flow.Tags.split("|").filter(
-                                                        (i) => !!i && !i.startsWith("YAKIT_COLOR_")
-                                                    )
+                                                          (i) => !!i && !i.startsWith("YAKIT_COLOR_")
+                                                      )
                                                     : []
                                                 existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
                                                 ipcRenderer
@@ -1714,8 +1722,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }
                                         }
                                     }),
-                                    onClick: () => {
-                                    }
+                                    onClick: () => {}
                                 },
                                 {
                                     title: "移除颜色",
@@ -1752,8 +1759,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 },
                                 {
                                     title: "发送到对比器",
-                                    onClick: () => {
-                                    },
+                                    onClick: () => {},
                                     subMenuItems: [
                                         {
                                             title: "发送到对比器左侧",
@@ -1778,20 +1784,58 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     ]
                                 },
                                 {
-                                    title: "删除该记录",
-                                    onClick: () => {
-                                        setLoading(true)
-                                        ipcRenderer
-                                            .invoke("DeleteHTTPFlows", {
-                                                Id: [rowData.Id]
-                                            })
-                                            .then(() => {
-                                                info("删除成功")
-                                                update()
-                                            })
-                                            .finally(() => setTimeout(() => setLoading(false), 100))
-                                    },
-                                    danger: true
+                                    title: "屏蔽",
+                                    onClick: () => {},
+                                    subMenuItems: [
+                                        {
+                                            title: "屏蔽该记录",
+                                            onClick: () => {
+                                                setLoading(true)
+                                                ipcRenderer
+                                                    .invoke("DeleteHTTPFlows", {
+                                                        Id: [rowData.Id]
+                                                    })
+                                                    .then(() => {
+                                                        info("屏蔽成功")
+                                                        update()
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            },
+                                            danger: true
+                                        },
+                                        {
+                                            title: "屏蔽URL",
+                                            onClick: () => {
+                                                setLoading(true)
+                                                const flow = rowData as HTTPFlow
+                                                ipcRenderer
+                                                    .invoke("DeleteHTTPFlows", {
+                                                        URLPrefix: flow?.Url
+                                                    })
+                                                    .then(() => {
+                                                        info("屏蔽成功")
+                                                        update()
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            }
+                                        },
+                                        {
+                                            title: "屏蔽域名",
+                                            onClick: () => {
+                                                setLoading(true)
+                                                const flow = rowData as HTTPFlow
+                                                ipcRenderer
+                                                    .invoke("DeleteHTTPFlows", {
+                                                        URLPrefix: flow?.HostPort?.split(":")[0]
+                                                    })
+                                                    .then(() => {
+                                                        info("屏蔽成功")
+                                                        update()
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            }
+                                        }
+                                    ]
                                 }
                             ]
                         },
