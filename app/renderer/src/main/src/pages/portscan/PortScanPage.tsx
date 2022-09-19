@@ -377,24 +377,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                 <Tabs className='scan-port-tabs' tabBarStyle={{marginBottom: 5}}>
                                     <Tabs.TabPane tab={"扫描端口列表"} key={"scanPort"} forceRender>
                                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
-                                            <div style={{textAlign: "right", marginBottom: 8}}>
-                                                {loading ? (
-                                                    <Tag color={"green"}>正在执行...</Tag>
-                                                ) : (
-                                                    <Tag>闲置中...</Tag>
-                                                )}
-                                            </div>
-
-                                            <div style={{width: "100%", height: 178, overflow: "hidden"}}>
-                                                <CVXterm
-                                                    ref={xtermRef}
-                                                    options={{
-                                                        convertEol: true,
-                                                        disableStdin: true
-                                                    }}
-                                                />
-                                            </div>
-
                                             <Row style={{marginTop: 6}} gutter={6}>
                                                 <Col span={24}>
                                                     <OpenPortTableViewer data={openPorts}/>
@@ -416,6 +398,27 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 feature={infoState.featureMessageState}
                                                 statusCards={infoState.statusState}
                                             />
+                                        </div>
+                                    </Tabs.TabPane>
+                                    <Tabs.TabPane tab={"Console"} key={"console"} forceRender>
+                                        <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
+                                        <div style={{textAlign: "right", marginBottom: 8}}>
+                                                {loading ? (
+                                                    <Tag color={"green"}>正在执行...</Tag>
+                                                ) : (
+                                                    <Tag>闲置中...</Tag>
+                                                )}
+                                            </div>
+
+                                            <div style={{width: "100%", height: 178, overflow: "hidden"}}>
+                                                <CVXterm
+                                                    ref={xtermRef}
+                                                    options={{
+                                                        convertEol: true,
+                                                        disableStdin: true
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
                                     </Tabs.TabPane>
                                 </Tabs>
