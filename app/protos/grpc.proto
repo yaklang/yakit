@@ -149,6 +149,7 @@ service Yak {
   rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
   rpc ExecutePacketYakScript(ExecutePacketYakScriptParams) returns (stream ExecResult);
   rpc ExecuteBatchPacketYakScript(ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
+  rpc GetYakScriptTags(Empty) returns (GetYakScriptTagsResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -197,6 +198,7 @@ service Yak {
   rpc SavePayload(SavePayloadRequest) returns (Empty);
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
+  rpc UpdatePayload(UpdatePayloadRequest) returns (Empty);
 
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
@@ -584,6 +586,15 @@ message AutoDecodeResponse {
 
 message ExtractDataToFileResult {
   string FilePath = 1;
+}
+
+message GetYakScriptTagsResponse {
+  repeated Tags Tag = 1;
+}
+
+message Tags {
+  string Value = 1;
+  int32 Total = 2;
 }
 
 message ExtractDataToFileRequest {
@@ -1456,6 +1467,11 @@ message SavePayloadRequest {
   string Group = 2;
   string Content = 3;
   repeated string FileName = 4;
+}
+
+message UpdatePayloadRequest{
+  string Group = 1;
+  string OldGroup = 2;
 }
 
 message DeletePayloadByGroupRequest {
