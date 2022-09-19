@@ -13,6 +13,8 @@
             padding: 0px;
         }
     }
+
+
 }
 
 .mitm-card-title {
@@ -32,4 +34,11 @@
             }
         }
     }
+}
+
+.mitm-card-select-option {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding-right: 8px;
 }

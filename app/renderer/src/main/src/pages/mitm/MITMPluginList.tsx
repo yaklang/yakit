@@ -1,13 +1,13 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
-import {Button, Checkbox, Empty, Form, Input, List, Popconfirm, Space} from "antd"
+import {Button, Checkbox, Empty, Form, Input, List, Popconfirm, Select, Space} from "antd"
 import {SelectOne} from "../../utils/inputUtil"
-import {PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
+import {PoweroffOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
 import {EditorProps, YakCodeEditor} from "../../utils/editors"
 import {YakModuleList} from "../yakitStore/YakitStorePage"
 import {genDefaultPagination, YakScript, YakScriptHooks} from "../invoker/schema"
-import {useMap, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMap, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {MITMPluginTemplateShort} from "../invoker/data/MITMPluginTamplate"
@@ -37,6 +37,11 @@ const updateHooks = () => {
     })
 }
 
+interface TagsProps {
+    Value: string
+    Total: number
+}
+
 export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     const [initialed, setInitialed] = useState(false)
     const [script, setScript] = useState(MITMPluginTemplateShort)
@@ -45,7 +50,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
     const [refreshTrigger, setRefreshTrigger] = useState(false)
     const [searchKeyword, setSearchKeyword] = useState("")
-    const refresh = useMemoizedFn(() => {
+    const onRefresh = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
     })
     const [loading, setLoading] = useState(false)
@@ -107,11 +112,37 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     }, [])
 
     const [checkAll, setCheckAll] = useState<boolean>(false)
+    const [tagsLoading, setTagsLoading] = useState<boolean>(false)
     const [indeterminate, setIndeterminate] = useState(true)
+    const [refresh, setRefresh] = useState(true)
+    const [tagsList, setTagsList] = useState<TagsProps[]>([])
+    const [tag, setTag] = useState<string[]>([])
+    const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Tags")
     const onCheckAllChange = (e: CheckboxChangeEvent) => {
         setIndeterminate(false)
         setCheckAll(e.target.checked)
     }
+    useEffect(() => {
+        getYakScriptTags()
+    }, [])
+    const getYakScriptTags = useMemoizedFn(() => {
+        setTagsLoading(true)
+        ipcRenderer
+            .invoke("GetYakScriptTags", {})
+            .then((res) => {
+                setTagsList(res.Tag)
+            })
+            .catch((err) => {
+                failed("获取tag列表失败：" + err)
+            })
+            .finally(() => setTimeout(() => setTagsLoading(false), 100))
+    })
+    const onDeselect = useDebounceFn(
+        useMemoizedFn(() => {
+            setRefresh(!refresh)
+        }),
+        {wait: 200}
+    ).run
     return (
         <AutoCard
             bordered={false}
@@ -137,7 +168,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                     title={"确认重置热加载代码？"}
                                     onConfirm={() => {
                                         setScript(MITMPluginTemplateShort)
-                                        refresh()
+                                        onRefresh()
                                     }}
                                 >
                                     <Button type={"link"} icon={<ReloadOutlined />} size={"small"} />
@@ -150,14 +181,45 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                             )}
                         </div>
                     </div>
-                    <div>
+                    <div className='mitm-card-search'>
                         {mode === "all" && (
-                            <Input.Search
-                                onSearch={(value) => {
-                                    setSearchKeyword(value)
-                                }}
-                                size='small'
-                            ></Input.Search>
+                            <Input.Group compact>
+                                <Select style={{width: "27%"}} value={searchType} size='small' onSelect={setSearchType}>
+                                    <Select.Option value='Tags'>Tag</Select.Option>
+                                    <Select.Option value='Keyword'>关键字</Select.Option>
+                                </Select>
+                                {(searchType === "Tags" && (
+                                    <Select
+                                        mode='tags'
+                                        size='small'
+                                        onChange={(e) => setTag(e as string[])}
+                                        style={{width: "73%"}}
+                                        loading={tagsLoading}
+                                        onBlur={() => {
+                                            setRefresh(!refresh)
+                                        }}
+                                        onDeselect={onDeselect}
+                                    >
+                                        {tagsList.map((item) => (
+                                            <Select.Option value={item.Value}>
+                                                <div className='mitm-card-select-option'>
+                                                    <span>{item.Value}</span>
+                                                    <span>{item.Total}</span>
+                                                </div>
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                )) || (
+                                    <Input.Search
+                                        onSearch={() => {
+                                            setRefresh(!refresh)
+                                        }}
+                                        onChange={(e) => setSearchKeyword(e.target.value)}
+                                        size='small'
+                                        style={{width: "73%"}}
+                                    />
+                                )}
+                            </Input.Group>
                         )}
                     </div>
                 </div>
@@ -206,9 +268,15 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             {mode === "all" && (
                 <div className='mitm-http-list'>
                     <YakModuleList
+                        queryLocal={{
+                            Tag: tag,
+                            Type: "mitm,port-scan",
+                            Keyword: searchKeyword,
+                            Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+                        }}
+                        refresh={refresh}
                         itemHeight={43}
                         onClicked={(script) => {}}
-                        searchKeyword={searchKeyword}
                         onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                             return (
                                 <MITMYakScriptLoader

@@ -1239,7 +1239,8 @@ export interface YakModuleListProp {
     setUpdatePluginRecordLocal?: (y: YakScript) => any
     numberLocalRoll?: number
     isGridLayout?: boolean
-    searchKeyword?: string
+    // searchKeyword?: string
+    tag?:string[]
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -1313,6 +1314,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
+        console.log('newParams',newParams);
+        
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
@@ -1348,23 +1351,15 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             ...params,
             ...queryLocal
         }
-        if (!queryLocal.Tag) {
-            delete newParams.Tag
-        }
+        // if (!queryLocal.Tag) {
+        //     delete newParams.Tag
+        // }
         setParams(newParams)
         setListBodyLoading(true)
 
         update(1, undefined, queryLocal)
         if (onSelectList) onSelectList([])
     }, [userInfo.isLogin, props.refresh])
-
-    useEffect(() => {
-        setParams({ ...params, Keyword: props.searchKeyword })
-        if (!props.searchKeyword) {
-            return
-        }
-        update(1, undefined, { Keyword: props.searchKeyword, Pagination: genDefaultPagination() })
-    }, [props.searchKeyword])
 
     useEffect(() => {
         if (!deletePluginRecordLocal) return
