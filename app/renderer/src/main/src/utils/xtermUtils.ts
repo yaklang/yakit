@@ -20,6 +20,6 @@ export const xtermFit = (xtermRef: any, columns?: number, rows?: number) => {
 
 export const xtermClear = (xtermRef: any, columns?: number, rows?: number) => {
     if (xtermRef && xtermRef?.current && xtermRef.current.terminal) {
-        xtermRef.current.terminal.clear();
+        xtermRef.current.terminal.reset();
     }
 };
