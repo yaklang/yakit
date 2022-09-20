@@ -1525,6 +1525,7 @@ message QueryYakScriptRequest {
   repeated string IncludedScriptNames = 10;
   repeated string Tag = 11;
   bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
+  int64 UserId = 13;
 }
 
 message QueryYakScriptResponse {
