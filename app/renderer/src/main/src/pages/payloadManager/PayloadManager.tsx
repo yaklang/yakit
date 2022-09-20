@@ -179,26 +179,24 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
         ipcRenderer
             .invoke("GetAllPayload", {Group: name})
             .then((res) => {
-                console.log('res',res);
-                
-                // const data = res?.Data.map((ele) => ele.Content).join(",")
-                // const time = new Date().valueOf()
-                // const path = `${codePath}${codePath ? "/" : ""}${name}(${time}).txt`
-                // ipcRenderer.invoke("show-save-dialog", path).then((res) => {
-                //     if (res.canceled) return
-                //     const name = res.name
-                //     ipcRenderer
-                //         .invoke("write-file", {
-                //             route: res.filePath,
-                //             data
-                //         })
-                //         .then(() => {
-                //             success(`【${name}】下载成功`)
-                //         })
-                //         .catch((e) => {
-                //             failed(`【${name}】下载失败:` + e)
-                //         })
-                // })
+                const data = res?.Data.map((ele) => ele.Content).join("\r\n")
+                const time = new Date().valueOf()
+                const path = `${codePath}${codePath ? "/" : ""}${name}(${time}).txt`
+                ipcRenderer.invoke("show-save-dialog", path).then((res) => {
+                    if (res.canceled) return
+                    const name = res.name
+                    ipcRenderer
+                        .invoke("write-file", {
+                            route: res.filePath,
+                            data
+                        })
+                        .then(() => {
+                            success(`【${name}】下载成功`)
+                        })
+                        .catch((e) => {
+                            failed(`【${name}】下载失败:` + e)
+                        })
+                })
             })
             .catch((e) => {
                 failed(`获取【${name}】全部内容失败` + e)
@@ -292,11 +290,12 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                         <Button.Group style={{width: "100%", textAlign: "left"}}>
                                             <Button
                                                 style={{width: "100%", textAlign: "left"}}
-                                                type={selected === element ? "primary" : undefined}
+                                                type={selected === element ? "primary" : "default"}
                                                 onClick={(e: any) => {
                                                     if (e.target.nodeName === "INPUT") return
                                                     setSelected(element)
                                                 }}
+                                                ghost={selected === element}
                                             >
                                                 字典分组名：
                                                 {(updateItem.OldGroup === element && (
@@ -333,12 +332,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
 
                                             <Button
                                                 type={selected === element ? "primary" : undefined}
-                                                icon={
-                                                    <UploadIcon
-                                                        // @ts-ignore
-                                                        style={{color: selected === element ? "" : "#1890ff"}}
-                                                    />
-                                                }
+                                                icon={<UploadIcon />}
                                                 onClick={() => onDownload(element)}
                                             />
                                             {props.selectorHandle && (

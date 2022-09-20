@@ -848,6 +848,8 @@ interface YakModuleProp {
 interface DeleteAllLocalPluginsRequest {
     Keywords?: string
     Type?: string
+    UserId?:number
+    UserName?:string
 }
 
 export const YakModule: React.FC<YakModuleProp> = (props) => {
@@ -952,7 +954,9 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         if (length === 0 || isSelectAllLocal) {
             const paramsRemove: DeleteAllLocalPluginsRequest = {
                 Keywords: queryLocal.Keyword,
-                Type: queryLocal.Type
+                Type: queryLocal.Type,
+                UserId:queryLocal.UserId,
+                UserName:queryLocal.UserName,
             }
             // 全部删除
             ipcRenderer
@@ -1388,10 +1392,13 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
+        console.log('newParams',newParams);
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
+                console.log('item',item);
+                
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
                 setHasMore(!isMore)
@@ -2007,6 +2014,8 @@ interface DownloadOnlinePluginByTokenRequest {
     PluginType?: string
     Status?: string
     IsPrivate?: string
+    UserName?: string
+    UserId?: number
 }
 
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
@@ -2054,7 +2063,9 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     Keywords: query?.keywords,
                     PluginType: query?.plugin_type,
                     Status: query?.status,
-                    IsPrivate: query?.is_private
+                    IsPrivate: query?.is_private,
+                    UserId:query?.user_id,
+                    UserName:query?.user_name
                 }
             }
             ipcRenderer
