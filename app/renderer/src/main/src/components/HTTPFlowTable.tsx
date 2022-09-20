@@ -1824,9 +1824,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             onClick: () => {
                                                 setLoading(true)
                                                 const flow = rowData as HTTPFlow
+                                                const host = flow?.Url?.split(":")[0] +":"+ flow?.Url?.split(":")[1]
+                                                console.log("host",host)
                                                 ipcRenderer
                                                     .invoke("DeleteHTTPFlows", {
-                                                        URLPrefix: flow?.HostPort?.split(":")[0]
+                                                        URLPrefix: host
                                                     })
                                                     .then(() => {
                                                         info("屏蔽成功")
