@@ -470,6 +470,8 @@ message DeletePluginByUserIDRequest {
 message DeleteLocalPluginsByWhereRequest {
   string Keywords = 1;
   string Type = 2;
+  int64  UserId = 3;
+  string UserName = 4;
 }
 
 message DownloadOnlinePluginProgress {
@@ -486,6 +488,8 @@ message DownloadOnlinePluginByTokenRequest {
   string Status = 5;
   string IsPrivate = 6;
   string Tags = 7;
+  string UserName = 8;
+  int64  UserId = 9;
 }
 
 message DownloadOnlinePluginByIdRequest {
@@ -1526,6 +1530,7 @@ message QueryYakScriptRequest {
   repeated string Tag = 11;
   bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
   int64 UserId = 13;
+  string UserName = 14;
 }
 
 message QueryYakScriptResponse {
