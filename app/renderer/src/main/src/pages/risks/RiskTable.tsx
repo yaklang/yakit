@@ -671,7 +671,9 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                         className={`opt-list-item ${isSelected("type", value) ? "selected" : ""}`}
                                         onClick={() => filterSelect("type", value)}
                                     >
-                                        <span>{item.Verbose}</span>
+                                        <span className='item-name' title={item.Verbose}>
+                                            {item.Verbose}
+                                        </span>
                                         <span>{item.Total}</span>
                                     </div>
                                 )

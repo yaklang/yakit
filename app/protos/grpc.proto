@@ -1806,6 +1806,14 @@ message QueryHTTPFlowRequest {
   string Keyword = 14;
 
   bool OnlyWebsocket = 15;
+
+  // 查询包含在这个 URL 中的搜索结果
+  repeated string IncludeInUrl = 16;
+  // 不查询当前 URL 中的结果
+  repeated string ExcludeInUrl = 17;
+  // 仅查看当前 IP 对应的结果或不包含
+  repeated string IncludeInIP = 18;
+  repeated string ExcludeInIP = 19;
 }
 
 message DeleteHTTPFlowRequest {

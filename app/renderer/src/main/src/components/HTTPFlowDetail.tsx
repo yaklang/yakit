@@ -34,6 +34,8 @@ import {Uint8ArrayToString} from "@/utils/str";
 import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer";
 import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory";
 
+import styles from "./hTTPFlowDetail.module.scss"
+
 const {ipcRenderer} = window.require("electron");
 
 export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any;
@@ -267,16 +269,16 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     <Col span={12}>
                         <Collapse defaultActiveKey={"request"}>
                             <Collapse.Panel key={"request"} header={"Request Headers"}>
-                                <Descriptions bordered={true} column={1} size={"small"}>
+                                <Descriptions className={styles["http-flow-detail-descriptions"]} bordered={true} column={2} size={"small"}>
                                     {(flow?.RequestHeader || []).sort((i, e) => {
                                         return i.Header.localeCompare(e.Header)
                                     }).map(i => {
-                                        return <Descriptions.Item key={i.Header} label={<Text style={{width: 240}}>
+                                        return <Descriptions.Item key={i.Header} span={2} label={<Text style={{width: 240}}>
                                             <Tag>{i.Header}</Tag>
                                         </Text>}>
                                             <Text
                                                 copyable={true}
-                                                style={{maxWidth: 500}}
+                                                style={{width: "100%", maxWidth: "100%"}}
                                                 ellipsis={{tooltip: true}}>{i.Value}</Text>
                                         </Descriptions.Item>
                                     })}
@@ -287,16 +289,16 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     <Col span={12}>
                         <Collapse defaultActiveKey={"response"}>
                             <Collapse.Panel key={"response"} header={"Response Headers"}>
-                                <Descriptions bordered={true} column={1} size={"small"}>
+                                <Descriptions className={styles["http-flow-detail-descriptions"]} bordered={true} column={2} size={"small"}>
                                     {(flow?.ResponseHeader || []).sort((i, e) => {
                                         return i.Header.localeCompare(e.Header)
                                     }).map(i => {
-                                        return <Descriptions.Item key={i.Header} label={<Text style={{width: 240}}>
+                                        return <Descriptions.Item key={i.Header} span={2} label={<Text style={{width: 240}}>
                                             <Tag>{i.Header}</Tag>
                                         </Text>}>
                                             <Text
                                                 copyable={true}
-                                                style={{maxWidth: 500}}
+                                                style={{width:"100%", maxWidth: "100%"}}
                                                 ellipsis={{tooltip: true}}>{i.Value}</Text>
                                         </Descriptions.Item>
                                     })}
