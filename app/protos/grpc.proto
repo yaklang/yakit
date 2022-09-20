@@ -199,6 +199,7 @@ service Yak {
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
   rpc UpdatePayload(UpdatePayloadRequest) returns (Empty);
+  rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse);
 
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
@@ -1501,6 +1502,15 @@ message Payload {
   bytes ContentBytes = 3;
   string Content = 4;
 }
+
+message GetAllPayloadRequest {
+  string Group = 1;
+}
+
+message GetAllPayloadResponse {
+  repeated Payload Data = 1;
+}
+
 
 message QueryYakScriptRequest {
   Paging Pagination = 1;
