@@ -87,6 +87,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
             .then((data: {Groups: string[]}) => {
+                console.log("data.Groups", data.Groups)
                 setGroups(data.Groups || [])
             })
             .catch((e: any) => {
@@ -153,6 +154,13 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
         })
     }, [])
     const onUpdatePayload = useMemoizedFn(() => {
+        if (updateItem.OldGroup === updateItem.Group) {
+            setUpdateItem({
+                OldGroup: "",
+                Group: ""
+            })
+            return
+        }
         ipcRenderer
             .invoke("UpdatePayload", updateItem)
             .then(() => {
@@ -161,6 +169,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                     OldGroup: "",
                     Group: ""
                 })
+                success("修改成功")
             })
             .catch((e: any) => {
                 failed("更新失败：" + e)
