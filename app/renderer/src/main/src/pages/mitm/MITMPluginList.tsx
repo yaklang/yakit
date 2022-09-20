@@ -164,7 +164,6 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         queryYakScriptList(
             "mitm,port-scan",
             (data, t) => {
-                console.log("data", data)
                 setTotal(t || 0)
                 setListNames(data.map((i) => i.ScriptName))
             },

@@ -1314,8 +1314,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
-        console.log('newParams',newParams);
-        
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
