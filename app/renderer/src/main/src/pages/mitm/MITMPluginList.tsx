@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
-import {Button, Checkbox, Empty, Form, Input, List, Popconfirm, Select, Space} from "antd"
+import {Button, Checkbox, Empty, Form, Input, List, Popconfirm, Select, Space, Tag} from "antd"
 import {SelectOne} from "../../utils/inputUtil"
 import {PoweroffOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
@@ -257,6 +257,21 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 )}
                             </Input.Group>
                         )}
+                        {tag.map((i) => {
+                            return (
+                                <Tag
+                                    key={i}
+                                    style={{marginBottom: 2}}
+                                    color={"blue"}
+                                    onClose={() => {
+                                        setTag(tag.filter((element) => i !== element))
+                                    }}
+                                    closable={true}
+                                >
+                                    {i}
+                                </Tag>
+                            )
+                        })}
                     </div>
                 </div>
             }

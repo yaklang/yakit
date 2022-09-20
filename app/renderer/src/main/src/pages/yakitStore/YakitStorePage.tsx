@@ -524,16 +524,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         }
     })
     const [searchType, setSearchType] = useState<"userName" | "keyword">("keyword")
-    const onSelectSearch=useMemoizedFn((v:"userName" | "keyword")=>{
-        setSearchType(v)
-        if(plugSource==='online'){
-            setStatisticsQueryOnline({
-                ...statisticsQueryOnline,
-                keywords:v==="keyword"?statisticsQueryOnline.keywords:'',
-                user_name:v==="userName"?statisticsQueryOnline.user_name:''
-            })
-        }
-    })
+
     return (
         <>
             <div className='plugin-store'>
@@ -563,10 +554,16 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             </Col>
                             <Col span={12}>
                                 <Input.Group className='search-input-body'>
-                                    <Select value={searchType} onSelect={(v)=>onSelectSearch(v)}>
-                                        <Option value="keyword">关键字</Option>
-                                        <Option value="userName">按作者</Option>
-                                    </Select>
+                                    {plugSource !== "user"&&isFull && (
+                                        <Select
+                                            value={searchType}
+                                            onSelect={setSearchType}
+                                            size={isFull ? "middle" : "small"}
+                                        >
+                                            <Option value='keyword'>关键字</Option>
+                                            <Option value='userName'>按作者</Option>
+                                        </Select>
+                                    )}
                                     <Search
                                         placeholder='输入关键字搜索'
                                         size={isFull ? "middle" : "small"}
@@ -602,6 +599,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 updatePluginRecordLocal={updatePluginRecordLocal}
                                 setUpdatePluginRecordLocal={setUpdatePluginRecordLocal}
                                 userInfo={userInfo}
+                                searchType={searchType}
                             />
                         )}
                         {plugSource === "user" && (
@@ -638,6 +636,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 deletePluginRecordOnline={deletePluginRecordOnline}
                                 setListLoading={setListLoading}
                                 updatePluginRecordOnline={updatePluginRecordOnline}
+                                searchType={searchType}
                             />
                         )}
                     </Spin>
@@ -840,6 +839,7 @@ interface YakModuleProp {
     isShowFilter: boolean
     getYakScriptTagsAndType: () => void
     userInfo: UserInfoProps
+    searchType: "userName" | "keyword"
 }
 
 interface DeleteAllLocalPluginsRequest {
@@ -863,7 +863,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         statisticsQueryLocal,
         isShowFilter,
         getYakScriptTagsAndType,
-        userInfo
+        userInfo,
+        searchType
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -2340,6 +2341,7 @@ interface YakModuleOnlineProps {
     setStatisticsQueryOnline: (q: SearchPluginOnlineRequest) => void
     statisticsQueryOnline: SearchPluginOnlineRequest
     isShowFilter: boolean
+    searchType: "userName" | "keyword"
 }
 
 export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
@@ -2357,7 +2359,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         setNumberOnline,
         statisticsQueryOnline,
         setStatisticsQueryOnline,
-        isShowFilter
+        isShowFilter,
+        searchType
     } = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...statisticsQueryOnline
@@ -2368,6 +2371,21 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllOnline, setIsSelectAllOnline] = useState<boolean>(false)
+    useEffect(() => {
+        if (searchType === "keyword") {
+            setQueryOnline({
+                ...queryOnline,
+                keywords: publicKeyword,
+                user_name: ""
+            })
+        } else {
+            setQueryOnline({
+                ...queryOnline,
+                keywords: "",
+                user_name: publicKeyword
+            })
+        }
+    }, [searchType, publicKeyword])
     useEffect(() => {
         const newQuery = {
             ...queryOnline,
@@ -2396,19 +2414,6 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
             setIsFilter(true)
         }
     }, [queryOnline])
-    useDebounceEffect(
-        () => {
-            if (publicKeyword !== queryOnline.keywords) {
-                setQueryOnline({
-                    ...queryOnline,
-                    keywords: publicKeyword
-                })
-                // onResetList()
-            }
-        },
-        [publicKeyword],
-        {wait: 50}
-    )
     const isRefListRef = useRef(true)
     useEffect(() => {
         if (isRefListRef.current) {
@@ -2428,6 +2433,17 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const onResetList = useMemoizedFn(() => {
         setRefresh(!refresh)
         onSelectAllOnline(false)
+    })
+    const onSetUserId = useMemoizedFn((item: number) => {
+        setQueryOnline({
+            ...queryOnline,
+            user_id: item
+        })
+        if (item) {
+            setTimeout(() => {
+                setRefresh(!refresh)
+            }, 100)
+        }
     })
     return (
         <div className='height-100'>
@@ -2509,6 +2525,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     refresh={refresh}
                     deletePluginRecord={deletePluginRecordOnline}
                     updatePluginRecord={updatePluginRecordOnline}
+                    onSetUserId={onSetUserId}
                 />
             </div>
         </div>
@@ -2532,6 +2549,7 @@ interface YakModuleOnlineListProps {
     size: "middle" | "small"
     number?: number
     renderRow?: (data: API.YakitPluginDetail, index: number) => ReactNode
+    onSetUserId?: (u: number) => void
 }
 
 export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
@@ -2551,7 +2569,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         size,
         number,
         setIsSelectAll,
-        renderRow
+        renderRow,
+        onSetUserId
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
@@ -2628,6 +2647,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         if (!bind_me) {
             delete payload.is_private
         }
+        console.log("payload", payload)
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -2643,8 +2663,13 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
             data: payload
         })
             .then((res) => {
+                console.log("res", res)
+
                 if (!res.data) {
                     res.data = []
+                }
+                if (payload.user_id && onSetUserId) {
+                    onSetUserId(0)
                 }
                 const data = page === 1 ? res.data : response.data.concat(res.data)
                 const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
@@ -2783,6 +2808,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
                             onDownload={addLocalLab}
                             onStarred={starredPlugin}
                             bind_me={bind_me}
+                            onSetUserId={onSetUserId}
                         />
                     )
                 }
@@ -2808,6 +2834,7 @@ interface PluginListOptProps {
     selectedRowKeysRecord: API.YakitPluginDetail[]
     bind_me: boolean
     extra?: ReactNode
+    onSetUserId?: (u: number) => any
 }
 
 export const RandomTagColor: string[] = [
@@ -2820,8 +2847,19 @@ export const RandomTagColor: string[] = [
 
 export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
-    const {isAdmin, info, onClick, onDownload, onStarred, onSelect, selectedRowKeysRecord, currentId, bind_me, extra} =
-        props
+    const {
+        isAdmin,
+        info,
+        onClick,
+        onDownload,
+        onStarred,
+        onSelect,
+        selectedRowKeysRecord,
+        currentId,
+        bind_me,
+        extra,
+        onSetUserId
+    } = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const [status, setStatus] = useState<number>(info.status)
     useEffect(() => {
@@ -2910,7 +2948,16 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
 
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
-                        {info.head_img && <img alt='' src={info.head_img} />}
+                        {info.head_img && (
+                            <img
+                                alt=''
+                                src={info.head_img}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (onSetUserId) onSetUserId(info.user_id || 0)
+                                }}
+                            />
+                        )}
                         <div className='plugin-item-author content-ellipsis'>{info.authors || "anonymous"}</div>
                     </div>
                     <div className='plugin-item-time'>{formatDate(info.created_at)}</div>
