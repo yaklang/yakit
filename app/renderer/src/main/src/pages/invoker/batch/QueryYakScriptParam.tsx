@@ -369,13 +369,10 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
             },
             Tag: props.simpleFilter.tags.split(",")
         }
-        console.log("payload", payload)
-
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", payload)
             .then((item: QueryYakScriptsResponse) => {
-                console.log("item", item)
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit
                 setHasMore(!isMore)

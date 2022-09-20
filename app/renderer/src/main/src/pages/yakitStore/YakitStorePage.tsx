@@ -554,7 +554,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             </Col>
                             <Col span={12}>
                                 <Input.Group className='search-input-body'>
-                                    {plugSource !== "user"&&isFull && (
+                                    {plugSource !== "user" && isFull && (
                                         <Select
                                             value={searchType}
                                             onSelect={setSearchType}
@@ -2647,7 +2647,6 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         if (!bind_me) {
             delete payload.is_private
         }
-        console.log("payload", payload)
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -2663,8 +2662,6 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
             data: payload
         })
             .then((res) => {
-                console.log("res", res)
-
                 if (!res.data) {
                     res.data = []
                 }

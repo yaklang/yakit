@@ -87,7 +87,6 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
             .then((data: {Groups: string[]}) => {
-                console.log("data.Groups", data.Groups)
                 setGroups(data.Groups || [])
             })
             .catch((e: any) => {
