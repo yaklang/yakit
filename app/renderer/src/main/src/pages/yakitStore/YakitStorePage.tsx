@@ -1131,7 +1131,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         })
     })
     const onSetUser = useMemoizedFn((item: PluginUserInfoLocalProps) => {
-        setQueryLocal({
+        setStatisticsQueryLocal({
             ...queryLocal,
             UserId: item.UserId
         })
@@ -2461,6 +2461,12 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         if (!statisticsQueryOnline.tags) {
             delete newQuery.tags
         }
+        if (statisticsQueryOnline.user_id === 0) {
+            setUserInfoOnline({
+                head_img: "",
+                user_id: 0
+            })
+        }
         setQueryOnline(newQuery)
         onResetList()
     }, [statisticsQueryOnline])
@@ -2480,8 +2486,6 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         } else {
             setIsFilter(true)
         }
-        console.log('queryOnline',queryOnline);
-        
     }, [queryOnline])
     const isRefListRef = useRef(true)
     useEffect(() => {
@@ -2504,7 +2508,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         onSelectAllOnline(false)
     })
     const onSetUser = useMemoizedFn((item: PluginUserInfoOnlineProps) => {
-        setQueryOnline({
+        setStatisticsQueryOnline({
             ...queryOnline,
             user_id: item.user_id
         })

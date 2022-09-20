@@ -117,4 +117,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("UpdatePayload", async (e, params) => {
         return await asyncUpdatePayload(params)
     })
+
+    const asyncGetAllPayload = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllPayload(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllPayload", async (e, params) => {
+        return await asyncGetAllPayload(params)
+    })
 }

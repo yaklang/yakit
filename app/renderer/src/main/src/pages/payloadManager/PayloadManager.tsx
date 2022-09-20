@@ -176,24 +176,33 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
     })
 
     const onDownload = useMemoizedFn((name: string) => {
-        const data = response?.Data.map((ele) => ele.Content).join(",")
-        const time = new Date().valueOf()
-        const path = `${codePath}${codePath ? "/" : ""}${name}(${time}).txt`
-        ipcRenderer.invoke("show-save-dialog", path).then((res) => {
-            if (res.canceled) return
-            const name = res.name
-            ipcRenderer
-                .invoke("write-file", {
-                    route: res.filePath,
-                    data
-                })
-                .then(() => {
-                    success(`【${name}】下载成功`)
-                })
-                .catch((e) => {
-                    failed(`【${name}】下载失败:` + e)
-                })
-        })
+        ipcRenderer
+            .invoke("GetAllPayload", {Group: name})
+            .then((res) => {
+                console.log('res',res);
+                
+                // const data = res?.Data.map((ele) => ele.Content).join(",")
+                // const time = new Date().valueOf()
+                // const path = `${codePath}${codePath ? "/" : ""}${name}(${time}).txt`
+                // ipcRenderer.invoke("show-save-dialog", path).then((res) => {
+                //     if (res.canceled) return
+                //     const name = res.name
+                //     ipcRenderer
+                //         .invoke("write-file", {
+                //             route: res.filePath,
+                //             data
+                //         })
+                //         .then(() => {
+                //             success(`【${name}】下载成功`)
+                //         })
+                //         .catch((e) => {
+                //             failed(`【${name}】下载失败:` + e)
+                //         })
+                // })
+            })
+            .catch((e) => {
+                failed(`获取【${name}】全部内容失败` + e)
+            })
     })
 
     return (
