@@ -1160,6 +1160,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         >
                             只看 Websocket
                         </Checkbox>
+                        <Checkbox 
+                        // checked={}
+                        // onChange={()=>setParams({...params,})}
+                        >
+                            只看屏蔽数据</Checkbox>
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                 </Col>
@@ -1784,11 +1789,29 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     ]
                                 },
                                 {
-                                    title: "屏蔽",
+                                    title:"屏蔽",
                                     onClick: () => {},
                                     subMenuItems: [
                                         {
-                                            title: "屏蔽该记录",
+                                            title:"屏蔽该记录",
+                                            onClick: () => {}
+                                        },
+                                        {
+                                            title:"屏蔽URL",
+                                            onClick: () => {}
+                                        },
+                                        {
+                                            title:"屏蔽域名",
+                                            onClick: () => {}
+                                        },
+                                    ]
+                                },
+                                {
+                                    title: "删除",
+                                    onClick: () => {},
+                                    subMenuItems: [
+                                        {
+                                            title: "删除该记录",
                                             onClick: () => {
                                                 setLoading(true)
                                                 ipcRenderer
@@ -1796,7 +1819,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                         Id: [rowData.Id]
                                                     })
                                                     .then(() => {
-                                                        info("屏蔽成功")
+                                                        info("删除成功")
                                                         update()
                                                     })
                                                     .finally(() => setTimeout(() => setLoading(false), 100))
@@ -1804,7 +1827,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             danger: true
                                         },
                                         {
-                                            title: "屏蔽URL",
+                                            title: "删除URL",
                                             onClick: () => {
                                                 setLoading(true)
                                                 const flow = rowData as HTTPFlow
@@ -1813,25 +1836,25 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                         URLPrefix: flow?.Url
                                                     })
                                                     .then(() => {
-                                                        info("屏蔽成功")
+                                                        info("删除成功")
                                                         update()
                                                     })
                                                     .finally(() => setTimeout(() => setLoading(false), 100))
                                             }
                                         },
                                         {
-                                            title: "屏蔽域名",
+                                            title: "删除域名",
                                             onClick: () => {
                                                 setLoading(true)
                                                 const flow = rowData as HTTPFlow
-                                                const host = flow?.Url?.split(":")[0] +":"+ flow?.Url?.split(":")[1]
+                                                const host = flow?.HostPort?.split(":")[0]
                                                 console.log("host",host)
                                                 ipcRenderer
                                                     .invoke("DeleteHTTPFlows", {
                                                         URLPrefix: host
                                                     })
                                                     .then(() => {
-                                                        info("屏蔽成功")
+                                                        info("删除成功")
                                                         update()
                                                     })
                                                     .finally(() => setTimeout(() => setLoading(false), 100))

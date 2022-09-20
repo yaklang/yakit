@@ -401,7 +401,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         </div>
                                     </Tabs.TabPane>
                                     <Tabs.TabPane tab={"Console"} key={"console"} forceRender>
-                                        <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
+                                        <div style={{width: "100%", height: "100%", overflow: "hidden auto",display:"flex",flexDirection:"column"}}>
                                         <div style={{textAlign: "right", marginBottom: 8}}>
                                                 {loading ? (
                                                     <Tag color={"green"}>正在执行...</Tag>
@@ -410,7 +410,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 )}
                                             </div>
 
-                                            <div style={{width: "100%", height: 178, overflow: "hidden"}}>
+                                            <div style={{width: "100%", flex:1, overflow: "hidden"}}>
                                                 <CVXterm
                                                     ref={xtermRef}
                                                     options={{
