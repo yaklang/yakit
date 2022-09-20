@@ -1846,6 +1846,7 @@ message QueryHTTPFlowRequest {
   // 仅查看当前 IP 对应的结果或不包含
   repeated string IncludeInIP = 18;
   repeated string ExcludeInIP = 19;
+  int64 Id = 20;
 }
 
 message DeleteHTTPFlowRequest {
