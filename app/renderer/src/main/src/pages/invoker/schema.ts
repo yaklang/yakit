@@ -116,7 +116,7 @@ export interface YakScript {
     UserId: number
     UUID: string
     OnlineIsPrivate?: boolean
-    HeadImg?:string
+    HeadImg?: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
@@ -133,6 +133,8 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     IncludedScriptNames?: string[]
     Tag?: string[]
     NoResultReturn?: boolean
+    UserId?: number
+    UserName?: string
 }
 
 /*

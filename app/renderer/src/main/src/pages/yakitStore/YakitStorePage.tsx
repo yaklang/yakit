@@ -132,13 +132,15 @@ export const defQueryOnline: SearchPluginOnlineRequest = {
     bind_me: false,
     is_private: "",
     tags: "",
-    recycle: false
+    recycle: false,
+    user_id: 0
 }
 
 const defQueryLocal: QueryYakScriptRequest = {
     Type: "yak,mitm,codec,packet-hack,port-scan",
     Keyword: "",
-    Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+    Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+    UserId: 0
 }
 
 const statusType = {
@@ -201,6 +203,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         getStatistics(width)
         onResetQuery()
         setFullScreen(false)
+        setSearchType("keyword")
         setTimeout(() => {
             setIsRefList(!isRefList)
         }, 200)
@@ -878,6 +881,25 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
     const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
     const [upLoading, setUpLoading] = useState<boolean>(false)
+    const [userInfoLocal, setUserInfoLocal] = useState<PluginUserInfoLocalProps>({
+        UserId: 0,
+        HeadImg: ""
+    })
+    useEffect(() => {
+        if (searchType === "keyword") {
+            setQueryLocal({
+                ...queryLocal,
+                Keyword: publicKeyword,
+                UserName: ""
+            })
+        } else {
+            setQueryLocal({
+                ...queryLocal,
+                Keyword: "",
+                UserName: publicKeyword
+            })
+        }
+    }, [searchType, publicKeyword])
     useEffect(() => {
         const newQuery = {
             ...queryLocal,
@@ -891,6 +913,12 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         } else {
             setIsShowYAMLPOC(false)
         }
+        if (statisticsQueryLocal.UserId === 0) {
+            setUserInfoLocal({
+                UserId: 0,
+                HeadImg: ""
+            })
+        }
         setQueryLocal(newQuery)
         onResetList()
     }, [statisticsQueryLocal])
@@ -901,19 +929,6 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             setIsFilter(true)
         }
     }, [queryLocal])
-    useDebounceEffect(
-        () => {
-            if (publicKeyword !== queryLocal.Keyword) {
-                setQueryLocal({
-                    ...queryLocal,
-                    Keyword: publicKeyword
-                })
-                // onResetList()
-            }
-        },
-        [publicKeyword],
-        {wait: 50}
-    )
     const isRefListRef = useRef(true)
     useEffect(() => {
         if (isRefListRef.current) {
@@ -1115,7 +1130,17 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 })
         })
     })
-
+    const onSetUser = useMemoizedFn((item: PluginUserInfoLocalProps) => {
+        setQueryLocal({
+            ...queryLocal,
+            UserId: item.UserId
+        })
+        setUserInfoLocal(item)
+        onSelectAllLocal(false)
+        setTimeout(() => {
+            setRefresh(!refresh)
+        }, 100)
+    })
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
@@ -1137,6 +1162,21 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                         />
                         <span>&nbsp;&nbsp;展示YAML POC</span>
                     </div>
+                    {userInfoLocal.HeadImg && (
+                        <img
+                            alt=''
+                            src={userInfoLocal.HeadImg}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                if (onSetUser)
+                                    onSetUser({
+                                        UserId: 0,
+                                        HeadImg: ""
+                                    })
+                            }}
+                            className='plugin-headImg'
+                        />
+                    )}
                 </Col>
                 <Col span={size === "small" ? 4 : 12} className='col-flex-end'>
                     {isShowFilter && (
@@ -1245,6 +1285,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     onSelectList={setSelectedRowKeysRecordLocal}
                     updatePluginRecordLocal={updatePluginRecordLocal}
                     setUpdatePluginRecordLocal={setUpdatePluginRecordLocal}
+                    onSetUser={onSetUser}
                 />
             </div>
         </div>
@@ -1272,6 +1313,7 @@ export interface YakModuleListProp {
     isGridLayout?: boolean
     // searchKeyword?: string
     tag?: string[]
+    onSetUser?: (u: PluginUserInfoLocalProps) => void
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -1294,7 +1336,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         setUpdatePluginRecordLocal,
         numberLocalRoll,
         isGridLayout,
-        setIsSelectAll
+        setIsSelectAll,
+        onSetUser
     } = props
 
     // 全局登录状态
@@ -1380,12 +1423,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             ...params,
             ...queryLocal
         }
-        // if (!queryLocal.Tag) {
-        //     delete newParams.Tag
-        // }
         setParams(newParams)
         setListBodyLoading(true)
-
         update(1, undefined, queryLocal)
         if (onSelectList) onSelectList([])
     }, [userInfo.isLogin, props.refresh])
@@ -1413,7 +1452,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
             selectedRowKeysRecord.push(item)
             if (onSelectList) onSelectList([...selectedRowKeysRecord])
         } else {
-            // selectedRowKeysRecord.splice(index, 1)
             const newSelectedRowKeysRecord = selectedRowKeysRecord.filter((ele) => ele.Id !== item.Id)
             if (onSelectList) onSelectList([...newSelectedRowKeysRecord])
         }
@@ -1457,11 +1495,17 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                             if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
                         }}
                         onShare={onShare}
+                        onSetUser={onSetUser}
                     />
                 )}
             />
         </Spin>
     )
+}
+
+interface PluginUserInfoLocalProps {
+    UserId: number
+    HeadImg: string
 }
 
 interface PluginListLocalProps {
@@ -1475,10 +1519,12 @@ interface PluginListLocalProps {
     onShare: (info: YakScript) => any
     selectedRowKeysRecord: YakScript[]
     setUpdatePluginRecordLocal: (y: YakScript) => any
+    onSetUser?: (u: PluginUserInfoLocalProps) => any
 }
 
 export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
-    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare} = props
+    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare, onSetUser} =
+        props
     const {userInfo, maxWidth, onClicked} = props
     const [uploadLoading, setUploadLoading] = useState(false)
     const updateListItem = useMemoizedFn((updatePlugin: YakScript) => {
@@ -1552,7 +1598,20 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                 </div>
                 <div className='plugin-item-footer'>
                     <div className='plugin-item-footer-left'>
-                        {plugin.HeadImg && <img alt='' src={plugin.HeadImg} />}
+                        {plugin.HeadImg && (
+                            <img
+                                alt=''
+                                src={plugin.HeadImg}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (onSetUser)
+                                        onSetUser({
+                                            UserId: plugin.UserId,
+                                            HeadImg: plugin.HeadImg || ""
+                                        })
+                                }}
+                            />
+                        )}
                         <div className='plugin-item-author content-ellipsis'>{plugin.Author || "anonymous"}</div>
                     </div>
                     <div className='plugin-item-time'>{formatDate(plugin.CreatedAt)}</div>
@@ -2326,6 +2385,10 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     )
 }
 
+interface PluginUserInfoOnlineProps {
+    head_img: string
+    user_id: number
+}
 interface YakModuleOnlineProps {
     plugin?: API.YakitPluginDetail
     setPlugin: (u?: API.YakitPluginDetail) => void
@@ -2371,6 +2434,10 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isSelectAllOnline, setIsSelectAllOnline] = useState<boolean>(false)
+    const [userInfoOnline, setUserInfoOnline] = useState<PluginUserInfoOnlineProps>({
+        head_img: "",
+        user_id: 0
+    })
     useEffect(() => {
         if (searchType === "keyword") {
             setQueryOnline({
@@ -2413,6 +2480,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         } else {
             setIsFilter(true)
         }
+        console.log('queryOnline',queryOnline);
+        
     }, [queryOnline])
     const isRefListRef = useRef(true)
     useEffect(() => {
@@ -2434,21 +2503,21 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         setRefresh(!refresh)
         onSelectAllOnline(false)
     })
-    const onSetUserId = useMemoizedFn((item: number) => {
+    const onSetUser = useMemoizedFn((item: PluginUserInfoOnlineProps) => {
         setQueryOnline({
             ...queryOnline,
-            user_id: item
+            user_id: item.user_id
         })
-        if (item) {
-            setTimeout(() => {
-                setRefresh(!refresh)
-            }, 100)
-        }
+        setUserInfoOnline(item)
+        onSelectAllOnline(false)
+        setTimeout(() => {
+            setRefresh(!refresh)
+        }, 100)
     })
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
-                <Col span={12} className='col'>
+                <Col span={16} className='col'>
                     <Checkbox checked={isSelectAllOnline} onChange={(e) => onSelectAllOnline(e.target.checked)}>
                         全选
                     </Checkbox>
@@ -2458,8 +2527,23 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                         </Tag>
                     )}
                     <Tag>Total:{totalUserOnline}</Tag>
+                    {userInfoOnline.head_img && (
+                        <img
+                            alt=''
+                            src={userInfoOnline.head_img}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                if (onSetUser)
+                                    onSetUser({
+                                        user_id: 0,
+                                        head_img: ""
+                                    })
+                            }}
+                            className='plugin-headImg'
+                        />
+                    )}
                 </Col>
-                <Col span={12} className='col-flex-end'>
+                <Col span={8} className='col-flex-end'>
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
@@ -2525,7 +2609,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     refresh={refresh}
                     deletePluginRecord={deletePluginRecordOnline}
                     updatePluginRecord={updatePluginRecordOnline}
-                    onSetUserId={onSetUserId}
+                    onSetUser={onSetUser}
                 />
             </div>
         </div>
@@ -2549,7 +2633,7 @@ interface YakModuleOnlineListProps {
     size: "middle" | "small"
     number?: number
     renderRow?: (data: API.YakitPluginDetail, index: number) => ReactNode
-    onSetUserId?: (u: number) => void
+    onSetUser?: (u: PluginUserInfoOnlineProps) => void
 }
 
 export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
@@ -2570,7 +2654,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         number,
         setIsSelectAll,
         renderRow,
-        onSetUserId
+        onSetUser
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
@@ -2647,6 +2731,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         if (!bind_me) {
             delete payload.is_private
         }
+        console.log("payload", payload)
+
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -2662,11 +2748,9 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
             data: payload
         })
             .then((res) => {
+                console.log("res", res)
                 if (!res.data) {
                     res.data = []
-                }
-                if (payload.user_id && onSetUserId) {
-                    onSetUserId(0)
                 }
                 const data = page === 1 ? res.data : response.data.concat(res.data)
                 const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
@@ -2805,7 +2889,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
                             onDownload={addLocalLab}
                             onStarred={starredPlugin}
                             bind_me={bind_me}
-                            onSetUserId={onSetUserId}
+                            onSetUser={onSetUser}
                         />
                     )
                 }
@@ -2831,7 +2915,7 @@ interface PluginListOptProps {
     selectedRowKeysRecord: API.YakitPluginDetail[]
     bind_me: boolean
     extra?: ReactNode
-    onSetUserId?: (u: number) => any
+    onSetUser?: (u: PluginUserInfoOnlineProps) => any
 }
 
 export const RandomTagColor: string[] = [
@@ -2855,7 +2939,7 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
         currentId,
         bind_me,
         extra,
-        onSetUserId
+        onSetUser
     } = props
     const tags: string[] = info.tags ? JSON.parse(info.tags) : []
     const [status, setStatus] = useState<number>(info.status)
@@ -2951,7 +3035,11 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                 src={info.head_img}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    if (onSetUserId) onSetUserId(info.user_id || 0)
+                                    if (onSetUser)
+                                        onSetUser({
+                                            user_id: info.user_id || 0,
+                                            head_img: info.head_img
+                                        })
                                 }}
                             />
                         )}
