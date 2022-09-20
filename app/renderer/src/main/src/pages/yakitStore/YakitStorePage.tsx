@@ -524,6 +524,16 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         }
     })
     const [searchType, setSearchType] = useState<"userName" | "keyword">("keyword")
+    const onSelectSearch=useMemoizedFn((v:"userName" | "keyword")=>{
+        setSearchType(v)
+        if(plugSource==='online'){
+            setStatisticsQueryOnline({
+                ...statisticsQueryOnline,
+                keywords:v==="keyword"?statisticsQueryOnline.keywords:'',
+                user_name:v==="userName"?statisticsQueryOnline.user_name:''
+            })
+        }
+    })
     return (
         <>
             <div className='plugin-store'>
@@ -553,7 +563,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             </Col>
                             <Col span={12}>
                                 <Input.Group className='search-input-body'>
-                                    <Select value={searchType} onSelect={setSearchType}>
+                                    <Select value={searchType} onSelect={(v)=>onSelectSearch(v)}>
                                         <Option value="keyword">关键字</Option>
                                         <Option value="userName">按作者</Option>
                                     </Select>
