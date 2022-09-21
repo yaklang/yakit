@@ -483,9 +483,23 @@
     color: #FF8787;
 }
 
-.plugin-headImg{
+.plugin-headImg {
     height: 24px;
     width: 24px;
     border-radius: 50%;
     margin-left: 4px;
+    position: relative;
+
+    img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+    }
+
+    .img-mask {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+    }
 }

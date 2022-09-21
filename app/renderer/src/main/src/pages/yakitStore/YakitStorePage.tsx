@@ -2547,19 +2547,20 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     )}
                     <Tag>Total:{totalUserOnline}</Tag>
                     {userInfoOnline.head_img && (
-                        <img
-                            alt=''
-                            src={userInfoOnline.head_img}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                if (onSetUser)
-                                    onSetUser({
-                                        user_id: 0,
-                                        head_img: ""
-                                    })
-                            }}
-                            className='plugin-headImg'
-                        />
+                        <div className='plugin-headImg'>
+                            <img
+                                alt=''
+                                src={userInfoOnline.head_img}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (onSetUser)
+                                        onSetUser({
+                                            user_id: 0,
+                                            head_img: ""
+                                        })
+                                }}
+                            />
+                        </div>
                     )}
                 </Col>
                 <Col span={8} className='col-flex-end'>
