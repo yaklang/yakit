@@ -182,7 +182,6 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                 Group: name
             })
             .then((res) => {
-                console.log("res?.Data", res?.Data)
                 const data = res?.Data.map((ele) => ele.Content).join("\r\n")
                 const time = new Date().valueOf()
                 const path = `${codePath}${codePath ? "/" : ""}${name}-${time}.txt`

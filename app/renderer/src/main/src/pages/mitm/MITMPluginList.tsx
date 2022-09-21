@@ -102,7 +102,6 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                     tmp.set(hook.YakScriptName, true)
                 })
             })
-            // console.log("tmp", tmp)
             handlers.setAll(tmp)
         })
         updateHooks()
@@ -159,8 +158,6 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         {wait: 200}
     ).run
     const getAllSatisfyScript = useMemoizedFn((limit: number) => {
-        console.log("limit", limit)
-
         queryYakScriptList(
             "mitm,port-scan",
             (data, t) => {
