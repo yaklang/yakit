@@ -398,7 +398,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 ActualAddr: actualHost,
                 HotPatchCode: hotPatchCode,
                 HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
-                Filter: getFilter(),
+                Filter: {...getFilter(),
+                    StatusCode:getFilter().StatusCode.filter((i) => !!i),
+                    Keywords:getFilter().Keywords.filter((i) => !!i),
+                    Regexps:getFilter().Regexps.filter((i) => !!i),
+                },
                 DelayMinSeconds: minDelaySeconds,
                 DelayMaxSeconds: maxDelaySeconds
             },
@@ -815,6 +819,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
         setFilter(shareContent.advancedConfiguration.getFilter)
     })
+
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8} style={{marginBottom: 8}}>
@@ -1171,7 +1176,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             disable={loading}
                                             value={getFilter().StatusCode.join(",")}
                                             setValue={(e) => {
-                                                setFilter({...getFilter(), StatusCode: e.split(",").filter((i) => !!i)})
+                                                setFilter({...getFilter(), StatusCode: e.split(",")})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0}}}
                                         />
@@ -1183,7 +1188,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             value={getFilter().Keywords.join(",")}
                                             disable={loading}
                                             setValue={(e) => {
-                                                setFilter({...getFilter(), Keywords: e.split(",").filter((i) => !!i)})
+                                                setFilter({...getFilter(), Keywords: e.split(",")})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0}}}
                                         />
@@ -1195,7 +1200,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             value={getFilter().Regexps.join(",")}
                                             disable={loading}
                                             setValue={(e) => {
-                                                setFilter({...getFilter(), Regexps: e.split(",").filter((i) => !!i)})
+                                                setFilter({...getFilter(), Regexps: e.split(",")})
                                             }}
                                             extraFormItemProps={{style: {marginBottom: 0, marginTop: 2}}}
                                         />
