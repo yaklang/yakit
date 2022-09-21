@@ -1850,8 +1850,8 @@ message QueryHTTPFlowRequest {
   repeated string IncludeInIP = 18;
   repeated string ExcludeInIP = 19;
 
-  repeated string IncludeId = 20;
-  repeated string ExcludeId = 21;
+  repeated int64 IncludeId = 20;
+  repeated int64 ExcludeId = 21;
 }
 
 message DeleteHTTPFlowRequest {
