@@ -178,11 +178,14 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
     const onDownload = useMemoizedFn((name: string) => {
         setDownloadLoading(true)
         ipcRenderer
-            .invoke("GetAllPayload", {Group: name})
+            .invoke("GetAllPayload", {
+                Group: name
+            })
             .then((res) => {
+                console.log("res?.Data", res?.Data)
                 const data = res?.Data.map((ele) => ele.Content).join("\r\n")
                 const time = new Date().valueOf()
-                const path = `${codePath}${codePath ? "/" : ""}${name}(${time}).txt`
+                const path = `${codePath}${codePath ? "/" : ""}${name}-${time}.txt`
                 ipcRenderer.invoke("show-save-dialog", path).then((res) => {
                     if (res.canceled) return
                     const name = res.name
