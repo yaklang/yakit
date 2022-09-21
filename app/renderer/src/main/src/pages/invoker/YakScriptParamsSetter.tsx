@@ -40,6 +40,7 @@ export interface YakScriptParamsSetterProps {
 
     styleSize?: "big" | "small"
     loading?: boolean
+    ScriptName?: string
 }
 
 const YAKIT_PLUGIN_DEBUG_PARAMS = "YAKIT_PLUGIN_DEBUG_PARAMS"
@@ -106,7 +107,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
             form.resetFields()
             form.setFieldsValue({originParams: cloneParams})
         } else {
-            getRemoteValue(YAKIT_PLUGIN_DEBUG_PARAMS).then(data => {
+            getRemoteValue(`${YAKIT_PLUGIN_DEBUG_PARAMS}${props?.ScriptName}`).then(data => {
                 try {
                     const debugParams = JSON.parse(data) as { Key: string, Value: string }[];
                     debugParams.forEach(value => {
@@ -190,7 +191,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         >
             <TypeVerboseToInput
                 TypeVerbose={i.TypeVerbose}
-                value={i.Value || i.DefaultValue}
+                values={i.Value}
                 placeholder={i.DefaultValue}
                 defaultValue={i.DefaultValue}
                 disabled={disabled}
@@ -421,7 +422,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
         });
 
         if (props.saveDebugParams) {
-            setRemoteValue(YAKIT_PLUGIN_DEBUG_PARAMS, JSON.stringify(finalParams))
+            setRemoteValue(`${YAKIT_PLUGIN_DEBUG_PARAMS}${props?.ScriptName}`, JSON.stringify(finalParams))
         }
 
         props.onParamsConfirm(finalParams)
@@ -654,7 +655,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
 
 export interface TypeVerboseToInputProp {
     TypeVerbose: string
-    value: string | boolean | number
+    values: string | boolean | number
     placeholder?: string
     defaultValue?: string
     setValue: (s: string | boolean | number) => any
@@ -665,15 +666,14 @@ export interface TypeVerboseToInputProp {
 
 export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
     useEffect(() => {
-        props.setValue(props.value)
+        props.setValue(props.values)
     }, [])
-
     switch ((props.TypeVerbose).toLowerCase()) {
         case "int":
         case "integer":
             return <InputNumber
                 required={!!props.baseRequired}
-                value={props.value as number} onChange={e => props.setValue(e)}
+                value={props.values as number} onChange={e => props.setValue(e)}
                 step={1}
                 disabled={!!props.disabled}
             />
@@ -681,7 +681,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
             return <InputNumber
                 step={1} min={1}
                 required={!!props.baseRequired}
-                value={props.value as number} onChange={e => props.setValue(e)}
+                value={props.values as number} onChange={e => props.setValue(e)}
                 disabled={!!props.disabled}
             />
         case "float":
@@ -690,17 +690,17 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "double":
             return <InputNumber
                 required={!!props.baseRequired}
-                value={props.value as number} onChange={e => props.setValue(e)}
+                value={props.values as number} onChange={e => props.setValue(e)}
                 step={0.1}
                 disabled={!!props.disabled}
             />
         case "bool":
         case "boolean":
-            return <Switch checked={props.value as boolean} disabled={!!props.disabled} onChange={props.setValue}/>
+            return <Switch checked={props.values as boolean} disabled={!!props.disabled} onChange={props.setValue}/>
         case "textarea":
         case "text":
             return <Input.TextArea
-                value={props.value as string} rows={3}
+                value={props.values as string} rows={3}
                 onChange={e => {
                     props.setValue(e.target.value)
                 }} placeholder={props.placeholder}
@@ -711,7 +711,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
             return <div style={{height: 300, width: "100%"}}>
                 <HTTPPacketEditor
                     noHeader={true} noHex={true}
-                    originValue={new Buffer((props?.value || "") as string)}
+                    originValue={new Buffer((props?.values || "") as string)}
                     onChange={i => {
                         props.setValue(i.toString())
                     }}
@@ -721,7 +721,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
             return <div style={{height: 300, width: "100%"}}>
                 <YakCodeEditor
                     language={"yak"}
-                    originValue={Buffer.from(`${props.value || ""}`, "utf8")}
+                    originValue={Buffer.from(`${props.values || ""}`, "utf8")}
                     onChange={i => {
                         props.setValue(i.toString())
                     }}
@@ -731,7 +731,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "string":
         default:
             return <Input
-                value={props.value as string}
+                value={props.values as string}
                 onChange={e => {
                     props.setValue(e.target.value)
                 }} placeholder={props.placeholder}
