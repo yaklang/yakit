@@ -1508,7 +1508,8 @@ message Payload {
 }
 
 message GetAllPayloadRequest {
-  string Group = 1;
+  Paging Pagination = 1;
+  string Group = 2;
 }
 
 message GetAllPayloadResponse {
@@ -1846,7 +1847,9 @@ message QueryHTTPFlowRequest {
   // 仅查看当前 IP 对应的结果或不包含
   repeated string IncludeInIP = 18;
   repeated string ExcludeInIP = 19;
-  int64 Id = 20;
+
+  repeated int64 IncludeId = 20;
+  repeated int64 ExcludeId = 21;
 }
 
 message DeleteHTTPFlowRequest {
