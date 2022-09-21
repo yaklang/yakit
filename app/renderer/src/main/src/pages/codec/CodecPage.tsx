@@ -261,6 +261,8 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
     const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([]);
     const [pluginLoading, setPluginLoading] = useState<boolean>(false)
     const [pluginVisible, setPluginVisible] = useState<boolean>(false)
+
+    const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
     let timer: any = null
 
     const codec = (t: string, params?: YakExecutorParam[], isYakScript?: boolean) => {
@@ -382,6 +384,9 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
         search()
     }, [])
 
+    const refresh = useMemoizedFn(() => {
+        setRefreshTrigger(!refreshTrigger)
+    })
     return (
         <AutoSpin spinning={loading}>
             <PageHeader
@@ -472,6 +477,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                             language={"html"}
                             originValue={Buffer.from(text, "utf8")} hideSearch={true}
                             onChange={i => setText(Uint8ArrayToString(i, "utf8"))}
+                            refreshTrigger={refreshTrigger}
                             noHex={true}
                             noHeader={false}
                             extra={(
@@ -498,6 +504,7 @@ const CodecPage: React.FC<CodecPageProp> = (props) => {
                                     const right = result
                                     setText(right)
                                     setResult(left)
+                                    refresh()
                                 }}
                             />
                         </div>
