@@ -322,6 +322,7 @@ export interface SelectOneProps extends InputBase {
     value?: any
     help?: string
     colon?: boolean
+    placeholder?:string
     size?: any
 
     setValue?(a: any): any
@@ -677,6 +678,7 @@ export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
         <Select
             value={p.value} onChange={e => p.setValue && p.setValue(e)}
             disabled={p.disabled} size={p.size}
+            placeholder={p.placeholder}
         >
             {p.data.map(e => <Select.Option key={e.value} value={e.value}>
                 {e.text}
