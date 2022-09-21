@@ -848,8 +848,8 @@ interface YakModuleProp {
 interface DeleteAllLocalPluginsRequest {
     Keywords?: string
     Type?: string
-    UserId?:number
-    UserName?:string
+    UserId?: number
+    UserName?: string
 }
 
 export const YakModule: React.FC<YakModuleProp> = (props) => {
@@ -955,9 +955,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             const paramsRemove: DeleteAllLocalPluginsRequest = {
                 Keywords: queryLocal.Keyword,
                 Type: queryLocal.Type,
-                UserId:queryLocal.UserId,
-                UserName:queryLocal.UserName,
+                UserId: queryLocal.UserId,
+                UserName: queryLocal.UserName
             }
+
             // 全部删除
             ipcRenderer
                 .invoke("DeleteLocalPluginsByWhere", paramsRemove)
@@ -1392,13 +1393,10 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
-        console.log('newParams',newParams);
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
-                console.log('item',item);
-                
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
                 setHasMore(!isMore)
@@ -1604,7 +1602,12 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
                 </div>
                 <div className='plugin-item-footer'>
-                    <div className='plugin-item-footer-left'>
+                    <div
+                        className='plugin-item-footer-left'
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
                         {plugin.HeadImg && (
                             <img
                                 alt=''
@@ -2064,10 +2067,11 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     PluginType: query?.plugin_type,
                     Status: query?.status,
                     IsPrivate: query?.is_private,
-                    UserId:query?.user_id,
-                    UserName:query?.user_name
+                    UserId: query?.user_id,
+                    UserName: query?.user_name
                 }
             }
+
             ipcRenderer
                 .invoke("DownloadOnlinePluginAll", addParams, taskToken)
                 .then(() => {})
@@ -2746,8 +2750,6 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         if (!bind_me) {
             delete payload.is_private
         }
-        console.log("payload", payload)
-
         setLoading(true)
         NetWorkApi<SearchPluginOnlineRequest, API.YakitPluginListResponse>({
             method: "get",
@@ -2763,7 +2765,6 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
             data: payload
         })
             .then((res) => {
-                console.log("res", res)
                 if (!res.data) {
                     res.data = []
                 }
@@ -3043,7 +3044,12 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                 </div>
 
                 <div className='plugin-item-footer'>
-                    <div className='plugin-item-footer-left'>
+                    <div
+                        className='plugin-item-footer-left'
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
                         {info.head_img && (
                             <img
                                 alt=''

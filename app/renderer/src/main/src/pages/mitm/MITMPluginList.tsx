@@ -138,10 +138,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     }
     useEffect(() => {
         getYakScriptTags()
-    }, [])
-    // useEffect(() => {
-    //     setIndeterminate(hooks.size !== total)
-    // }, [hooks])
+    }, [searchType])
     const getYakScriptTags = useMemoizedFn(() => {
         setTagsLoading(true)
         ipcRenderer
@@ -235,6 +232,8 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                             setRefresh(!refresh)
                                         }}
                                         onDeselect={onDeselect}
+                                        maxTagCount='responsive'
+                                        value={tag}
                                     >
                                         {tagsList.map((item) => (
                                             <Select.Option value={item.Value}>
@@ -257,21 +256,23 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 )}
                             </Input.Group>
                         )}
-                        {tag.map((i) => {
-                            return (
-                                <Tag
-                                    key={i}
-                                    style={{marginBottom: 2}}
-                                    color={"blue"}
-                                    onClose={() => {
-                                        setTag(tag.filter((element) => i !== element))
-                                    }}
-                                    closable={true}
-                                >
-                                    {i}
-                                </Tag>
-                            )
-                        })}
+                        <div className='mitm-card-tag'>
+                            {tag.map((i) => {
+                                return (
+                                    <Tag
+                                        key={i}
+                                        style={{marginBottom: 2}}
+                                        color={"blue"}
+                                        onClose={() => {
+                                            setTag(tag.filter((element) => i !== element))
+                                        }}
+                                        closable={true}
+                                    >
+                                        {i}
+                                    </Tag>
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
             }

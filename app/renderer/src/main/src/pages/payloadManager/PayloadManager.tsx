@@ -15,7 +15,7 @@ import {
     Space,
     Input
 } from "antd"
-import {DeleteOutlined, EditOutlined, ThunderboltFilled} from "@ant-design/icons"
+import {DeleteOutlined, EditOutlined, LoadingOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {showModal} from "../../utils/showModal"
@@ -174,8 +174,9 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                 failed("更新失败：" + e)
             })
     })
-
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
     const onDownload = useMemoizedFn((name: string) => {
+        setDownloadLoading(true)
         ipcRenderer
             .invoke("GetAllPayload", {Group: name})
             .then((res) => {
@@ -200,6 +201,11 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
             })
             .catch((e) => {
                 failed(`获取【${name}】全部内容失败` + e)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setDownloadLoading(false)
+                }, 100)
             })
     })
 
@@ -284,6 +290,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                         <List<string>
                             style={{height: 200}}
                             dataSource={groups}
+                            loading={downloadLoading}
                             renderItem={(element, index) => {
                                 return (
                                     <List.Item id={index.toString()}>
