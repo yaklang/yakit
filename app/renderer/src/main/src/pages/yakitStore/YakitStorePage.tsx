@@ -38,7 +38,8 @@ import {
     DownloadOutlined,
     PoweroffOutlined,
     InfoCircleOutlined,
-    CloudUploadOutlined
+    CloudUploadOutlined,
+    CloseOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
@@ -2560,6 +2561,9 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                                         })
                                 }}
                             />
+                            <div className="img-mask">
+                                <CloseOutlined className="img-mask-icon"/>
+                            </div>
                         </div>
                     )}
                 </Col>

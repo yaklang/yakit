@@ -490,6 +490,14 @@
     margin-left: 4px;
     position: relative;
 
+    &:hover {
+        .img-mask {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+
     img {
         width: 100%;
         height: 100%;
@@ -497,9 +505,17 @@
     }
 
     .img-mask {
+        display: none;
         position: absolute;
         width: 100%;
         height: 100%;
         border-radius: 50%;
+        background-color: rgba(0,0,0,0.25);
+        top: 0;
+        right: 0;
+
+        .img-mask-icon {
+            color: #fff;
+        }
     }
 }
