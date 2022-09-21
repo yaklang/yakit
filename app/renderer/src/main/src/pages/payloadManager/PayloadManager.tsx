@@ -67,7 +67,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
     const [params, setParams] = useState<QueryPayloadParams>({
         Keyword: "",
         Group: "",
-        Pagination: {Page: 1, Limit: 20, Order: "desc", OrderBy: "updated_at"}
+        Pagination: {Page: 1, Limit: 20, Order: "asc", OrderBy: "updated_at"}
     })
     const [selectedRows, setSelectedRows] = useState<Payload[]>([])
     const [loading, setLoading] = useState(false)
