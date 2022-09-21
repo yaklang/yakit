@@ -1169,19 +1169,22 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                         <span>&nbsp;&nbsp;展示YAML POC</span>
                     </div>
                     {userInfoLocal.HeadImg && (
-                        <img
-                            alt=''
-                            src={userInfoLocal.HeadImg}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                if (onSetUser)
-                                    onSetUser({
-                                        UserId: 0,
-                                        HeadImg: ""
-                                    })
-                            }}
-                            className='plugin-headImg'
-                        />
+                        <div className='plugin-headImg'>
+                            <img alt='' src={userInfoLocal.HeadImg} />
+                            <div
+                                className='img-mask'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (onSetUser)
+                                        onSetUser({
+                                            UserId: 0,
+                                            HeadImg: ""
+                                        })
+                                }}
+                            >
+                                <CloseOutlined className='img-mask-icon' />
+                            </div>
+                        </div>
                     )}
                 </Col>
                 <Col span={size === "small" ? 4 : 12} className='col-flex-end'>
@@ -2549,9 +2552,9 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     <Tag>Total:{totalUserOnline}</Tag>
                     {userInfoOnline.head_img && (
                         <div className='plugin-headImg'>
-                            <img
-                                alt=''
-                                src={userInfoOnline.head_img}
+                            <img alt='' src={userInfoOnline.head_img} />
+                            <div
+                                className='img-mask'
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     if (onSetUser)
@@ -2560,9 +2563,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                                             head_img: ""
                                         })
                                 }}
-                            />
-                            <div className="img-mask">
-                                <CloseOutlined className="img-mask-icon"/>
+                            >
+                                <CloseOutlined className='img-mask-icon' />
                             </div>
                         </div>
                     )}
