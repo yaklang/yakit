@@ -1508,8 +1508,7 @@ message Payload {
 }
 
 message GetAllPayloadRequest {
-  Paging Pagination = 1;
-  string Group = 2;
+  string Group = 1;
 }
 
 message GetAllPayloadResponse {
