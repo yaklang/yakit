@@ -668,6 +668,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
     useEffect(() => {
         props.setValue(props.values)
     }, [])
+
     switch ((props.TypeVerbose).toLowerCase()) {
         case "int":
         case "integer":
@@ -696,7 +697,11 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
             />
         case "bool":
         case "boolean":
-            return <Switch checked={props.values as boolean} disabled={!!props.disabled} onChange={props.setValue}/>
+            let value = props.values
+            if(typeof value ==="string"){
+                value=JSON.parse(value)
+            }
+            return <Switch checked={value as boolean} disabled={!!props.disabled} onChange={props.setValue}/>
         case "textarea":
         case "text":
             return <Input.TextArea
