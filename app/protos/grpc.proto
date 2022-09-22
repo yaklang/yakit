@@ -149,7 +149,6 @@ service Yak {
   rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
   rpc ExecutePacketYakScript(ExecutePacketYakScriptParams) returns (stream ExecResult);
   rpc ExecuteBatchPacketYakScript(ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
-  rpc GetYakScriptTags(Empty) returns (GetYakScriptTagsResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -198,8 +197,6 @@ service Yak {
   rpc SavePayload(SavePayloadRequest) returns (Empty);
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
-  rpc UpdatePayload(UpdatePayloadRequest) returns (Empty);
-  rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse);
 
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
@@ -470,8 +467,6 @@ message DeletePluginByUserIDRequest {
 message DeleteLocalPluginsByWhereRequest {
   string Keywords = 1;
   string Type = 2;
-  int64  UserId = 3;
-  string UserName = 4;
 }
 
 message DownloadOnlinePluginProgress {
@@ -488,8 +483,6 @@ message DownloadOnlinePluginByTokenRequest {
   string Status = 5;
   string IsPrivate = 6;
   string Tags = 7;
-  string UserName = 8;
-  int64  UserId = 9;
 }
 
 message DownloadOnlinePluginByIdRequest {
@@ -528,6 +521,8 @@ message GeneralStorage {
   string Value = 2;
   int64 ExpiredAt = 3;
   bool ProcessEnv = 4;
+  string Verbose = 5;
+  string Group = 6;
 }
 
 message GetProcessEnvKeyResult {
@@ -591,15 +586,6 @@ message AutoDecodeResponse {
 
 message ExtractDataToFileResult {
   string FilePath = 1;
-}
-
-message GetYakScriptTagsResponse {
-  repeated Tags Tag = 1;
-}
-
-message Tags {
-  string Value = 1;
-  int32 Total = 2;
 }
 
 message ExtractDataToFileRequest {
@@ -785,10 +771,10 @@ message YsoClassGeneraterOptionsWithVerbose{
   string Help = 3;
   string Value = 4;
   string Type = 5;
-  map<string,YsoClassOptionsResponseWithVerbose> BindOptions = 6;
+  map<string, YsoClassOptionsResponseWithVerbose> BindOptions = 6;
 }
 message YsoClassOptionsResponseWithVerbose{
-  repeated YsoClassGeneraterOptionsWithVerbose Options= 1;
+  repeated YsoClassGeneraterOptionsWithVerbose Options = 1;
 }
 //已弃用
 message YsoClassGeneraterOptions{
@@ -1474,11 +1460,6 @@ message SavePayloadRequest {
   repeated string FileName = 4;
 }
 
-message UpdatePayloadRequest{
-  string Group = 1;
-  string OldGroup = 2;
-}
-
 message DeletePayloadByGroupRequest {
   string Group = 1;
 }
@@ -1507,15 +1488,6 @@ message Payload {
   string Content = 4;
 }
 
-message GetAllPayloadRequest {
-  string Group = 1;
-}
-
-message GetAllPayloadResponse {
-  repeated Payload Data = 1;
-}
-
-
 message QueryYakScriptRequest {
   Paging Pagination = 1;
   string Type = 2;
@@ -1529,8 +1501,6 @@ message QueryYakScriptRequest {
   repeated string IncludedScriptNames = 10;
   repeated string Tag = 11;
   bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
-  int64 UserId = 13;
-  string UserName = 14;
 }
 
 message QueryYakScriptResponse {
@@ -1846,9 +1816,6 @@ message QueryHTTPFlowRequest {
   // 仅查看当前 IP 对应的结果或不包含
   repeated string IncludeInIP = 18;
   repeated string ExcludeInIP = 19;
-
-  repeated int64 IncludeId = 20;
-  repeated int64 ExcludeId = 21;
 }
 
 message DeleteHTTPFlowRequest {
