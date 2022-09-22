@@ -234,6 +234,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                         onDeselect={onDeselect}
                                         maxTagCount='responsive'
                                         value={tag}
+                                        allowClear={true}
                                     >
                                         {tagsList.map((item) => (
                                             <Select.Option value={item.Value}>
