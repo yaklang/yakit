@@ -1852,6 +1852,8 @@ message QueryHTTPFlowRequest {
 
   repeated int64 IncludeId = 20;
   repeated int64 ExcludeId = 21;
+
+  repeated string IncludeInWhere = 22;
 }
 
 message DeleteHTTPFlowRequest {
