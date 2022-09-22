@@ -1,20 +1,21 @@
-import React, {useEffect, useRef, useState} from "react";
-import {Button, Checkbox, Divider, Form, Input, List, Popconfirm, Space, Spin, Tag} from "antd";
-import {SearchOutlined} from '@ant-design/icons';
-import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema";
-import {FieldName} from "../../risks/RiskTable";
-import {useDebounce, useMemoizedFn} from "ahooks";
-import {AutoCard} from "../../../components/AutoCard";
-import {ItemSelects} from "../../../components/baseTemplate/FormItemUtil";
-import {PluginListOptInfo} from "../../../components/businessTemplate/yakitPlugin";
+import React, {useEffect, useRef, useState} from "react"
+import {Button, Checkbox, Divider, Form, Input, List, Popconfirm, Space, Spin, Tag} from "antd"
+import {SearchOutlined} from "@ant-design/icons"
+import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema"
+import {FieldName} from "../../risks/RiskTable"
+import {useDebounce, useMemoizedFn} from "ahooks"
+import {AutoCard} from "../../../components/AutoCard"
+import {ItemSelects} from "../../../components/baseTemplate/FormItemUtil"
+import {PluginListOptInfo} from "../../../components/businessTemplate/yakitPlugin"
 
 import "./QueryYakScriptParam.css"
-import {useHotkeys} from "react-hotkeys-hook";
-import {showDrawer, showModal} from "../../../utils/showModal";
-import {ImportConfig, SaveConfig} from "./SaveConfig";
-import {info} from "../../../utils/notification";
-import {startExecYakCode} from "../../../utils/basic";
-import {ImportMenuConfig} from "./consts_importConfigYakCode";
+import {useHotkeys} from "react-hotkeys-hook"
+import {showDrawer, showModal} from "../../../utils/showModal"
+import {ImportConfig, SaveConfig} from "./SaveConfig"
+import {info} from "../../../utils/notification"
+import {startExecYakCode} from "../../../utils/basic"
+import {ImportMenuConfig} from "./consts_importConfigYakCode"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 
 export interface QueryYakScriptParamProp {
     params: SimpleQueryYakScriptSchema
@@ -34,7 +35,7 @@ export interface SimpleQueryYakScriptSchema {
     include: string[]
 }
 
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = React.memo((props) => {
     const {loading, allTag, onAllTag, isAll, onIsAll, historyTask} = props
@@ -47,11 +48,11 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
     }, [selectLoading])
 
     // 设置本地搜索 tags 的状态
-    const [searchTag, setSearchTag] = useState("");
+    const [searchTag, setSearchTag] = useState("")
     // 用于存储 tag 的搜索与结果
-    const [topTags, setTopTags] = useState<FieldName[]>([]);
-    const [topN, setTopN] = useState(15);
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [topTags, setTopTags] = useState<FieldName[]>([])
+    const [topN, setTopN] = useState(15)
+    const [selectedTags, setSelectedTags] = useState<string[]>([])
 
     // 更新搜索，这个也可以用于后端保存
     const [params, setParams] = useState<SimpleQueryYakScriptSchema>(props.params)
@@ -61,20 +62,21 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
     }, [params])
 
     // 辅助变量
-    const [updateTagsSelectorTrigger, setUpdateTagsSelector] = useState(false);
+    const [updateTagsSelectorTrigger, setUpdateTagsSelector] = useState(false)
 
     // 设置最大最小值
-    const [minTagWeight, setMinTagWeight] = useState(1);
-    const [maxTagWeight, setMaxTagWeight] = useState(2000);
+    const [minTagWeight, setMinTagWeight] = useState(1)
+    const [maxTagWeight, setMaxTagWeight] = useState(2000)
 
     useEffect(() => {
-        let count = 0;
-        const showTags = allTag.filter(d => {
+        let count = 0
+        const showTags = allTag.filter((d) => {
             if (
-                count <= topN // 限制数量
-                && d.Total >= minTagWeight && d.Total <= maxTagWeight
-                && !selectedTags.includes(d.Name)
-                && d.Name.toLowerCase().includes(searchTag.toLowerCase()) // 设置搜索结果
+                count <= topN && // 限制数量
+                d.Total >= minTagWeight &&
+                d.Total <= maxTagWeight &&
+                !selectedTags.includes(d.Name) &&
+                d.Name.toLowerCase().includes(searchTag.toLowerCase()) // 设置搜索结果
             ) {
                 count++
                 return true
@@ -89,7 +91,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         useDebounce(searchTag, {wait: 500}),
         useDebounce(selectedTags, {wait: 500}),
         useDebounce(topN, {wait: 500}),
-        updateTagsSelectorTrigger,
+        updateTagsSelectorTrigger
     ])
 
     const updateTagsSelector = () => {
@@ -100,7 +102,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             type: params.type,
             tags: selectedTags.join(","),
             include: params.include,
-            exclude: [],
+            exclude: []
         })
     })
 
@@ -127,13 +129,15 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             setItemSelects([])
             setSearchTag("")
             setParams({type: params.type, tags: "", include: [], exclude: []})
-        }, 200);
+        }, 200)
     })
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
                 <Spin spinning={selectLoading}>
-                    <div className="select-render-all" onClick={selectedAll}>全选</div>
+                    <div className='select-render-all' onClick={selectedAll}>
+                        全选
+                    </div>
                     {originNode}
                 </Spin>
             </div>
@@ -146,12 +150,15 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             width: "50%",
             content: (
                 <>
-                    <SaveConfig QueryConfig={params} onSave={filename => {
-                        info(`保存到 ${filename}`)
-                        m.destroy()
-                    }}/>
+                    <SaveConfig
+                        QueryConfig={params}
+                        onSave={(filename) => {
+                            info(`保存到 ${filename}`)
+                            m.destroy()
+                        }}
+                    />
                 </>
-            ),
+            )
         })
     })
     useHotkeys("alt+p", saveConfigTemplate)
@@ -161,9 +168,9 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             width: "50%",
             content: (
                 <>
-                    <ImportConfig/>
+                    <ImportConfig />
                 </>
-            ),
+            )
         })
     })
     useHotkeys("alt+u", importConfigTemplate)
@@ -175,10 +182,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             title={"选择插件"}
             extra={
                 <Space>
-                    <Popconfirm
-                        title={"强制更新讲重新构建 Tags 索引"}
-                        onConfirm={() => onAllTag()}
-                    >
+                    <Popconfirm title={"强制更新讲重新构建 Tags 索引"} onConfirm={() => onAllTag()}>
                         <a href={"#"}>强制更新 Tags</a>
                     </Popconfirm>
                     <Popconfirm
@@ -199,9 +203,9 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             loading={loading}
             bodyStyle={{display: "flex", flexDirection: "column", overflow: "hidden"}}
         >
-            <div className="div-width-100" style={{maxHeight: 237}}>
-                <div className="div-width-100">
-                    <Form size="small">
+            <div className='div-width-100' style={{maxHeight: 237}}>
+                <div className='div-width-100'>
+                    <Form size='small'>
                         <ItemSelects
                             item={{
                                 style: {marginBottom: 0},
@@ -218,8 +222,12 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                                 optValue: "Name",
                                 optionLabelProp: "Name",
                                 renderOpt: (info: FieldName) => {
-                                    return <div style={{display: "flex", justifyContent: "space-between"}}>
-                                        <span>{info.Name}</span><span>{info.Total}</span></div>
+                                    return (
+                                        <div style={{display: "flex", justifyContent: "space-between"}}>
+                                            <span>{info.Name}</span>
+                                            <span>{info.Total}</span>
+                                        </div>
+                                    )
                                 },
                                 value: itemSelects,
                                 onSearch: (keyword: string) => setSearchTag(keyword),
@@ -229,7 +237,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                                         setItemSelects([])
                                         setSearchTag("")
                                     } else {
-                                        const filters = itemSelects.filter(item => !selectedTags.includes(item))
+                                        const filters = itemSelects.filter((item) => !selectedTags.includes(item))
                                         setSelectedTags(selectedTags.concat(filters))
                                         setItemSelects([])
                                         setSearchTag("")
@@ -249,15 +257,11 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                     </Form>
                 </div>
 
-                <Divider style={{margin: "6px 0"}}/>
+                <Divider style={{margin: "6px 0"}} />
 
                 {(isAll || selectedTags.length !== 0) && (
                     <div className='div-width-100 div-height-100' style={{maxHeight: 200}}>
-                        <AutoCard
-                            size='small'
-                            bordered={false}
-                            bodyStyle={{overflow: "hidden auto", padding: 2}}
-                        >
+                        <AutoCard size='small' bordered={false} bodyStyle={{overflow: "hidden auto", padding: 2}}>
                             {isAll ? (
                                 <Tag
                                     style={{marginBottom: 2}}
@@ -306,11 +310,12 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                         })
                     }}
                     onExclude={(i) => {
-                        const existedInTag = isAll ? true :
-                            params.tags
-                                .split(",")
-                                .filter((tag) => !!tag)
-                                .filter((tag) => i.Tags.includes(tag)).length > 0
+                        const existedInTag = isAll
+                            ? true
+                            : params.tags
+                                  .split(",")
+                                  .filter((tag) => !!tag)
+                                  .filter((tag) => i.Tags.includes(tag)).length > 0
 
                         if (existedInTag) {
                             setParams({
@@ -329,7 +334,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             </div>
         </AutoCard>
     )
-});
+})
 
 interface SearchYakScriptForFilterProp {
     simpleFilter: SimpleQueryYakScriptSchema
@@ -345,22 +350,44 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
         Keyword: "",
         Pagination: genDefaultPagination(20),
         Type: "mitm,port-scan,nuclei"
-    });
+    })
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
         Data: [],
         Pagination: genDefaultPagination(20),
         Total: 0
-    });
+    })
     const [loading, setLoading] = useState(false)
-    const data = response.Data;
+    const [hasMore, setHasMore] = useState(false)
+    const [isRef, setIsRef] = useState(false)
 
-    const update = useMemoizedFn(() => {
+    const update = useMemoizedFn((page: number) => {
+        const payload = {
+            ...params,
+            Pagination: {
+                ...params.Pagination,
+                Page: page
+            },
+            Tag: props.simpleFilter.tags.split(",")
+        }
         setLoading(true)
-        ipcRenderer.invoke("QueryYakScript", {...params,}).then((data: QueryYakScriptsResponse) => {
-            setResponse(data)
-        }).catch(e => {
-            console.info(e)
-        }).finally(() => setTimeout(() => setLoading(false), 300))
+        ipcRenderer
+            .invoke("QueryYakScript", payload)
+            .then((item: QueryYakScriptsResponse) => {
+                const data = page === 1 ? item.Data : response.Data.concat(item.Data)
+                const isMore = item.Data.length < item.Pagination.Limit
+                setHasMore(!isMore)
+                setResponse({
+                    ...item,
+                    Data: [...data]
+                })
+                if (page === 1) {
+                    setIsRef(!isRef)
+                }
+            })
+            .catch((e) => {
+                console.info(e)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
     const onSelect = useMemoizedFn((selected: boolean, item: YakScript) => {
@@ -372,27 +399,70 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
     })
 
     useEffect(() => {
-        update()
-    }, [useDebounce(params.Keyword, {wait: 500})])
+        update(1)
+    }, [useDebounce(params.Keyword, {wait: 500}), props.simpleFilter])
+    const loadMoreData = useMemoizedFn(() => {
+        update(Number(response.Pagination.Page) + 1)
+    })
 
     return (
         <AutoCard
             title={
                 <Input
                     allowClear={true}
-                    prefix={<SearchOutlined/>}
-                    placeholder="搜索插件"
+                    prefix={<SearchOutlined />}
+                    placeholder='搜索插件'
                     value={params.Keyword}
                     onChange={(e) => setParams({...params, Keyword: e.target.value})}
                 />
             }
-            loading={loading}
             size={"small"}
             bordered={false}
             headStyle={{padding: 0, borderBottom: "0px"}}
             bodyStyle={{padding: "0 0 12px 0", overflow: "hidden auto"}}
         >
-            <List
+            <RollingLoadList<YakScript>
+                isRef={isRef}
+                data={response.Data}
+                page={response.Pagination.Page}
+                hasMore={hasMore}
+                loading={loading}
+                loadMoreData={loadMoreData}
+                defItemHeight={36}
+                renderRow={(item: YakScript, index) => {
+                    const haveBeenExcluded = props.simpleFilter.exclude.includes(item.ScriptName)
+                    let selected = false
+
+                    if (!haveBeenExcluded) {
+                        if (props.isAll) {
+                            selected = true
+                        } else {
+                            props.simpleFilter.tags.split(",").forEach((e) => {
+                                if (!e) return
+
+                                if (item.Tags.includes(e)) {
+                                    selected = true
+                                    return
+                                }
+                            })
+                            if (!selected) {
+                                selected = props.simpleFilter.include.includes(item.ScriptName)
+                            }
+                        }
+                    }
+
+                    return (
+                        <AutoCard size={"small"} style={{marginBottom: 4}} bodyStyle={{padding: "6px 12px"}}>
+                            <PluginListOptInfo
+                                info={item}
+                                selected={selected}
+                                onSelect={() => onSelect(selected, item)}
+                            />
+                        </AutoCard>
+                    )
+                }}
+            />
+            {/* <List
                 pagination={false}
                 dataSource={data}
                 split={false}
@@ -428,7 +498,7 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
                         </AutoCard>
                     )
                 }}
-            ></List>
+            ></List> */}
         </AutoCard>
     )
-});
+})

@@ -1,6 +1,21 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Col, Form, List, PageHeader, Popconfirm, Row, Table, Tag, Upload, Typography, Select, Space} from "antd"
-import {DeleteOutlined, ThunderboltFilled} from "@ant-design/icons"
+import {
+    Button,
+    Col,
+    Form,
+    List,
+    PageHeader,
+    Popconfirm,
+    Row,
+    Table,
+    Tag,
+    Upload,
+    Typography,
+    Select,
+    Space,
+    Input
+} from "antd"
+import {DeleteOutlined, EditOutlined, LoadingOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {showModal} from "../../utils/showModal"
@@ -12,7 +27,8 @@ import {AutoCard} from "../../components/AutoCard"
 import "./PayloadManager.css"
 import {useMemoizedFn} from "ahooks"
 import {AutoSpin} from "../../components/AutoSpin"
-import {randomString} from "@/utils/randomUtil";
+import {randomString} from "@/utils/randomUtil"
+import {UploadIcon} from "@/assets/icons"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -35,6 +51,11 @@ export interface QueryPayloadParams extends QueryGeneralRequest {
     Keyword: string
 }
 
+interface UpdatePayloadRequest {
+    OldGroup: string
+    Group: string
+}
+
 function fuzzTag(i: string) {
     return `{{x(${i})}}`
 }
@@ -46,7 +67,7 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
     const [params, setParams] = useState<QueryPayloadParams>({
         Keyword: "",
         Group: "",
-        Pagination: {Page: 1, Limit: 20, Order: "desc", OrderBy: "updated_at"}
+        Pagination: {Page: 1, Limit: 20, Order: "asc", OrderBy: "updated_at"}
     })
     const [selectedRows, setSelectedRows] = useState<Payload[]>([])
     const [loading, setLoading] = useState(false)
@@ -55,12 +76,17 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
         onChange: (selectedRowKeys, selectedRows) => setSelectedRows(selectedRows),
         fixed: true
     }
+    const [updateItem, setUpdateItem] = useState<UpdatePayloadRequest>({
+        OldGroup: "",
+        Group: ""
+    })
+    const [codePath, setCodePath] = useState<string>("")
     const pagination: PaginationSchema | undefined = response?.Pagination
 
     const updateGroup = () => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
-            .then((data: { Groups: string[] }) => {
+            .then((data: {Groups: string[]}) => {
                 setGroups(data.Groups || [])
             })
             .catch((e: any) => {
@@ -114,6 +140,77 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
         updateDict()
     }, [selected])
 
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-code-path").then((path: string) => {
+            ipcRenderer
+                .invoke("is-exists-file", path)
+                .then(() => {
+                    setCodePath("")
+                })
+                .catch(() => {
+                    setCodePath(path)
+                })
+        })
+    }, [])
+    const onUpdatePayload = useMemoizedFn(() => {
+        if (updateItem.OldGroup === updateItem.Group) {
+            setUpdateItem({
+                OldGroup: "",
+                Group: ""
+            })
+            return
+        }
+        ipcRenderer
+            .invoke("UpdatePayload", updateItem)
+            .then(() => {
+                updateGroup()
+                setUpdateItem({
+                    OldGroup: "",
+                    Group: ""
+                })
+                success("修改成功")
+            })
+            .catch((e: any) => {
+                failed("更新失败：" + e)
+            })
+    })
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
+    const onDownload = useMemoizedFn((name: string) => {
+        setDownloadLoading(true)
+        ipcRenderer
+            .invoke("GetAllPayload", {
+                Group: name
+            })
+            .then((res) => {
+                const data = res?.Data.map((ele) => ele.Content).join("\r\n")
+                const time = new Date().valueOf()
+                const path = `${codePath}${codePath ? "/" : ""}${name}-${time}.txt`
+                ipcRenderer.invoke("show-save-dialog", path).then((res) => {
+                    if (res.canceled) return
+                    const name = res.name
+                    ipcRenderer
+                        .invoke("write-file", {
+                            route: res.filePath,
+                            data
+                        })
+                        .then(() => {
+                            success(`【${name}】下载成功`)
+                        })
+                        .catch((e) => {
+                            failed(`【${name}】下载失败:` + e)
+                        })
+                })
+            })
+            .catch((e) => {
+                failed(`获取【${name}】全部内容失败` + e)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setDownloadLoading(false)
+                }, 100)
+            })
+    })
+
     return (
         <div className='payload-manager-page'>
             <PageHeader
@@ -124,117 +221,166 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                 <Col span={8}>
                     <AutoCard
                         title={"选择 / 查看已有字典"}
-                        size={"small"} loading={loading}
+                        size={"small"}
+                        loading={loading}
                         bordered={false}
                         bodyStyle={{overflow: "auto"}}
                         extra={
-                            !props.readOnly && <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()}>
-                                <Form.Item style={{marginBottom: 0}} label={" "} colon={false}>
-                                    <Button.Group>
-                                        <Button
-                                            size={"small"}
-                                            onClick={() => {
-                                                let m = showModal({
-                                                    title: "创建新的 Payload 组/字典",
-                                                    content: (
-                                                        <>
-                                                            <CreatePayloadGroup
-                                                                onLoading={() => {
-                                                                    setLoading(true)
-                                                                }}
-                                                                onLoadingFinished={() => {
-                                                                    setTimeout(() => setLoading(false), 300)
-                                                                }}
-                                                                Group={""}
-                                                                onFinished={(e) => {
-                                                                    info("创建/修改 Payload 字典/组成功")
-                                                                    updateGroup()
-                                                                    m.destroy()
-                                                                }}
-                                                            />
-                                                        </>
-                                                    ),
-                                                    width: "60%"
-                                                })
-                                            }}
-                                        >
-                                            新增 / 扩充字典
-                                        </Button>
-                                        <Button
-                                            size={"small"}
-                                            onClick={() => {
-                                                let m = showModal({
-                                                    title: "上传新的 Payload 组/字典",
-                                                    content: (
-                                                        <>
-                                                            <UploadPayloadGroup
-                                                                Group={""}
-                                                                onFinished={(e) => {
-                                                                    info("上传 Payload 字典/组成功")
-                                                                    updateGroup()
-                                                                    m.destroy()
-                                                                }}
-                                                            />
-                                                        </>
-                                                    ),
-                                                    width: "60%",
-                                                    maskClosable: false
-                                                })
-                                            }}
-                                        >
-                                            上传字典
-                                        </Button>
-                                    </Button.Group>
-                                </Form.Item>
-                            </Form>
+                            !props.readOnly && (
+                                <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()}>
+                                    <Form.Item style={{marginBottom: 0}} label={" "} colon={false}>
+                                        <Button.Group>
+                                            <Button
+                                                size={"small"}
+                                                onClick={() => {
+                                                    let m = showModal({
+                                                        title: "创建新的 Payload 组/字典",
+                                                        content: (
+                                                            <>
+                                                                <CreatePayloadGroup
+                                                                    onLoading={() => {
+                                                                        setLoading(true)
+                                                                    }}
+                                                                    onLoadingFinished={() => {
+                                                                        setTimeout(() => setLoading(false), 300)
+                                                                    }}
+                                                                    Group={""}
+                                                                    onFinished={(e) => {
+                                                                        info("创建/修改 Payload 字典/组成功")
+                                                                        updateGroup()
+                                                                        m.destroy()
+                                                                    }}
+                                                                />
+                                                            </>
+                                                        ),
+                                                        width: "60%"
+                                                    })
+                                                }}
+                                            >
+                                                新增 / 扩充字典
+                                            </Button>
+                                            <Button
+                                                size={"small"}
+                                                onClick={() => {
+                                                    let m = showModal({
+                                                        title: "上传新的 Payload 组/字典",
+                                                        content: (
+                                                            <>
+                                                                <UploadPayloadGroup
+                                                                    Group={""}
+                                                                    onFinished={(e) => {
+                                                                        info("上传 Payload 字典/组成功")
+                                                                        updateGroup()
+                                                                        m.destroy()
+                                                                    }}
+                                                                />
+                                                            </>
+                                                        ),
+                                                        width: "60%",
+                                                        maskClosable: false
+                                                    })
+                                                }}
+                                            >
+                                                上传字典
+                                            </Button>
+                                        </Button.Group>
+                                    </Form.Item>
+                                </Form>
+                            )
                         }
                     >
                         <List<string>
                             style={{height: 200}}
                             dataSource={groups}
+                            loading={downloadLoading}
                             renderItem={(element, index) => {
                                 return (
                                     <List.Item id={index.toString()}>
                                         <Button.Group style={{width: "100%", textAlign: "left"}}>
                                             <Button
                                                 style={{width: "100%", textAlign: "left"}}
-                                                type={selected === element ? "primary" : undefined}
-                                                onClick={(e) => setSelected(element)}
+                                                type={selected === element ? "primary" : "default"}
+                                                onClick={(e: any) => {
+                                                    if (e.target.nodeName === "INPUT") return
+                                                    setSelected(element)
+                                                }}
+                                                ghost={selected === element}
                                             >
-                                                字典分组名：{element}
+                                                字典分组名：
+                                                {(updateItem.OldGroup === element && (
+                                                    <Input
+                                                        size='small'
+                                                        value={updateItem.Group}
+                                                        onChange={(e) => {
+                                                            setUpdateItem({...updateItem, Group: e.target.value})
+                                                        }}
+                                                        onPressEnter={onUpdatePayload}
+                                                        onBlur={onUpdatePayload}
+                                                        style={{width: "70%"}}
+                                                    />
+                                                )) ||
+                                                    element}
                                             </Button>
-                                            {props.selectorHandle && <Popconfirm title={"确定要使用该字典？"}
-                                                                                 onConfirm={() => {
-                                                                                     props.selectorHandle && props.selectorHandle(fuzzTag(element))
-                                                                                 }}
-                                            >
-                                                <Button type={"primary"} icon={<ThunderboltFilled/>}/>
-                                            </Popconfirm>}
-                                            {!props.readOnly && <Popconfirm
-                                                title={"确定删除该字典吗？"}
-                                                onConfirm={(e) => {
-                                                    ipcRenderer
-                                                        .invoke("DeletePayloadByGroup", {
+                                            <Button
+                                                type={selected === element ? "primary" : undefined}
+                                                icon={<EditOutlined />}
+                                                onClick={(e) => {
+                                                    if (!updateItem.OldGroup) {
+                                                        setUpdateItem({
+                                                            OldGroup: element,
                                                             Group: element
                                                         })
-                                                        .then(() => {
-                                                            updateGroup()
-                                                            if (selected === element) {
-                                                                setSelected("")
-                                                                setResponse(undefined)
-                                                            }
+                                                    } else {
+                                                        setUpdateItem({
+                                                            OldGroup: "",
+                                                            Group: ""
                                                         })
-                                                        .catch((e: any) => {
-                                                            failed("Delete Payload By Group failed")
-                                                        })
+                                                    }
                                                 }}
-                                            >
-                                                <Button
-                                                    danger={true}
-                                                    icon={<DeleteOutlined/>}
-                                                    type={selected === element ? "primary" : undefined}
-                                                />
-                                            </Popconfirm>}
+                                            />
+
+                                            <Button
+                                                type={selected === element ? "primary" : undefined}
+                                                icon={<UploadIcon />}
+                                                onClick={() => onDownload(element)}
+                                            />
+                                            {props.selectorHandle && (
+                                                <Popconfirm
+                                                    title={"确定要使用该字典？"}
+                                                    onConfirm={() => {
+                                                        props.selectorHandle && props.selectorHandle(fuzzTag(element))
+                                                    }}
+                                                >
+                                                    <Button type={"primary"} icon={<ThunderboltFilled />} />
+                                                </Popconfirm>
+                                            )}
+                                            {!props.readOnly && (
+                                                <Popconfirm
+                                                    title={"确定删除该字典吗？"}
+                                                    onConfirm={(e) => {
+                                                        ipcRenderer
+                                                            .invoke("DeletePayloadByGroup", {
+                                                                Group: element
+                                                            })
+                                                            .then(() => {
+                                                                updateGroup()
+                                                                if (selected === element) {
+                                                                    setSelected("")
+                                                                    setResponse(undefined)
+                                                                }
+                                                            })
+                                                            .catch((e: any) => {
+                                                                failed("Delete Payload By Group failed")
+                                                            })
+                                                    }}
+                                                >
+                                                    <Button
+                                                        danger={true}
+                                                        icon={<DeleteOutlined />}
+                                                        type={selected === element ? "primary" : undefined}
+                                                    />
+                                                </Popconfirm>
+                                            )}
                                         </Button.Group>
                                     </List.Item>
                                 )
@@ -258,13 +404,19 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                         bordered={false}
                         bodyStyle={{overflow: "auto", padding: 0}}
                         extra={
-                            props.readOnly ?
-                                (
-                                    !!props.selectorHandle ? <Button size={"small"} type={"primary"} onClick={() => {
-                                        props.selectorHandle && props.selectorHandle(`{{x(${selected})}}`)
-                                    }}>
+                            props.readOnly ? (
+                                !!props.selectorHandle ? (
+                                    <Button
+                                        size={"small"}
+                                        type={"primary"}
+                                        onClick={() => {
+                                            props.selectorHandle && props.selectorHandle(`{{x(${selected})}}`)
+                                        }}
+                                    >
                                         选择该Fuzz标签
-                                    </Button> : <CopyToClipboard
+                                    </Button>
+                                ) : (
+                                    <CopyToClipboard
                                         text={`{{x(${selected})}}`}
                                         onCopy={(text, ok) => {
                                             if (ok) success("已复制到粘贴板")
@@ -272,7 +424,9 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                     >
                                         <Button size={"small"}>复制Fuzz标签</Button>
                                     </CopyToClipboard>
-                                ) : <Form
+                                )
+                            ) : (
+                                <Form
                                     size={"small"}
                                     onSubmitCapture={(e) => {
                                         e.preventDefault()
@@ -297,21 +451,30 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                                 {" "}
                                                 Search{" "}
                                             </Button>
-                                            {!!props.selectorHandle ? <Button type={"primary"} onClick={() => {
-                                                props.selectorHandle && props.selectorHandle(`{{x(${selected})}}`)
-                                            }}>
-                                                选择该Fuzz标签
-                                            </Button> : <CopyToClipboard
-                                                text={`{{x(${selected})}}`}
-                                                onCopy={(text, ok) => {
-                                                    if (ok) success("已复制到粘贴板")
-                                                }}
-                                            >
-                                                <Button>复制Fuzz标签</Button>
-                                            </CopyToClipboard>}
+                                            {!!props.selectorHandle ? (
+                                                <Button
+                                                    type={"primary"}
+                                                    onClick={() => {
+                                                        props.selectorHandle &&
+                                                            props.selectorHandle(`{{x(${selected})}}`)
+                                                    }}
+                                                >
+                                                    选择该Fuzz标签
+                                                </Button>
+                                            ) : (
+                                                <CopyToClipboard
+                                                    text={`{{x(${selected})}}`}
+                                                    onCopy={(text, ok) => {
+                                                        if (ok) success("已复制到粘贴板")
+                                                    }}
+                                                >
+                                                    <Button>复制Fuzz标签</Button>
+                                                </CopyToClipboard>
+                                            )}
                                         </Button.Group>
                                     </Form.Item>
                                 </Form>
+                            )
                         }
                     >
                         <Table<Payload>
@@ -381,12 +544,12 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         IsFile: false
     })
     const [groups, setGroups] = useState<string[]>([])
-    const [token, setToken] = useState("");
+    const [token, setToken] = useState("")
 
     const updateGroup = () => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
-            .then((data: { Groups: string[] }) => {
+            .then((data: {Groups: string[]}) => {
                 setGroups(data.Groups || [])
             })
             .catch((e: any) => {
@@ -399,9 +562,8 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     }, [])
 
     useEffect(() => {
-        const token = randomString(40);
-        ipcRenderer.on(`${token}-data`, async (e, data: any) => {
-        })
+        const token = randomString(40)
+        ipcRenderer.on(`${token}-data`, async (e, data: any) => {})
         ipcRenderer.on(`${token}-error`, (e, error) => {
             failed(`字典上传失败:  ${error}`)
         })
@@ -428,9 +590,8 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         return
                     }
 
-
                     if (!!token) {
-                        ipcRenderer.invoke("SavePayloadStream", {...params}, token).then(e => {
+                        ipcRenderer.invoke("SavePayloadStream", {...params}, token).then((e) => {
                             info("开始上传字典")
                         })
                     } else {
@@ -448,8 +609,6 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                                 props.onLoadingFinished && props.onLoadingFinished()
                             })
                     }
-
-
                 }}
                 wrapperCol={{span: 14}}
                 labelCol={{span: 6}}
@@ -466,13 +625,17 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         }}
                     >
                         {groups.map((item) => {
-                            return <Option key={item} value={item}>{item}</Option>
+                            return (
+                                <Option key={item} value={item}>
+                                    {item}
+                                </Option>
+                            )
                         })}
                     </Select>
                 </Form.Item>
                 <Form.Item label={"字典内容"}>
                     <div style={{height: 300}}>
-                        <YakEditor setValue={(Content) => setParams({...params, Content})} value={params.Content}/>
+                        <YakEditor setValue={(Content) => setParams({...params, Content})} value={params.Content} />
                     </div>
                 </Form.Item>
                 <Form.Item colon={false} label={" "}>
@@ -505,15 +668,15 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     const [uploadLoading, setUploadLoading] = useState(false)
     const [groups, setGroups] = useState<string[]>([])
     // 防抖
-    const routes = useRef<{ path: string, type: string }[]>([])
-    const [token, setToken] = useState("");
+    const routes = useRef<{path: string; type: string}[]>([])
+    const [token, setToken] = useState("")
     const timer = useRef<any>()
-    const [progress, setProgress] = useState<SavePayloadProgress>();
+    const [progress, setProgress] = useState<SavePayloadProgress>()
 
     const updateGroup = () => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
-            .then((data: { Groups: string[] }) => {
+            .then((data: {Groups: string[]}) => {
                 setGroups(data.Groups || [])
             })
             .catch((e: any) => {
@@ -526,7 +689,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
     }, [])
 
     useEffect(() => {
-        const token = randomString(40);
+        const token = randomString(40)
         ipcRenderer.on(`${token}-data`, async (e, data: any) => {
             setProgress(data)
         })
@@ -550,7 +713,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
 
     const fetchContent = useMemoizedFn(async () => {
         setUploadLoading(true)
-        let content: string = ''
+        let content: string = ""
         for (let item of routes.current) {
             await ipcRenderer.invoke("fetch-file-content", item.path).then((res: string) => {
                 let info = res
@@ -563,18 +726,18 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                     for (let str of strs) if (str.replace(/\s+/g, "")) arr.push(str)
                     info = arr.join("\n")
                 }
-                content = content ? content + '\n' + info : info
+                content = content ? content + "\n" + info : info
             })
         }
 
-        setParams({...params, Content: params.Content ? params.Content + '\n' + content : content})
+        setParams({...params, Content: params.Content ? params.Content + "\n" + content : content})
         routes.current = []
         timer.current = null
         setTimeout(() => setUploadLoading(false), 100)
     })
     const fetchRoute = useMemoizedFn(() => {
         setUploadLoading(true)
-        const arr: string[] = routes.current.map(item => item.path)
+        const arr: string[] = routes.current.map((item) => item.path)
 
         setParams({
             ...params,
@@ -588,14 +751,21 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
 
     return (
         <div>
-            <AutoSpin spinning={uploadLoading} tip={<div>
-                {progress && <Space direction={"vertical"}>
-                    <div>进度：{((progress?.Progress || 0) * 100).toFixed(4)} %</div>
-                    <div>已处理大小：{progress.HandledBytesVerbose}</div>
-                    <div>文件总大小：{progress.TotalBytesVerbose}</div>
-                    <div>耗时：{progress.CostDurationVerbose}</div>
-                </Space>}
-            </div>}>
+            <AutoSpin
+                spinning={uploadLoading}
+                tip={
+                    <div>
+                        {progress && (
+                            <Space direction={"vertical"}>
+                                <div>进度：{((progress?.Progress || 0) * 100).toFixed(4)} %</div>
+                                <div>已处理大小：{progress.HandledBytesVerbose}</div>
+                                <div>文件总大小：{progress.TotalBytesVerbose}</div>
+                                <div>耗时：{progress.CostDurationVerbose}</div>
+                            </Space>
+                        )}
+                    </div>
+                }
+            >
                 <Form
                     onSubmitCapture={(e) => {
                         e.preventDefault()
@@ -607,7 +777,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
 
                         if (!!token) {
                             setUploadLoading(true)
-                            ipcRenderer.invoke("SavePayloadStream", {...params}, token).then(e => {
+                            ipcRenderer.invoke("SavePayloadStream", {...params}, token).then((e) => {
                                 info("开始上传字典")
                             })
                         } else {
@@ -641,7 +811,11 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                             }}
                         >
                             {groups.map((item) => {
-                                return <Option value={item} key={item}>{item}</Option>
+                                return (
+                                    <Option value={item} key={item}>
+                                        {item}
+                                    </Option>
+                                )
                             })}
                         </Select>
                     </Form.Item>
@@ -657,7 +831,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                                 failed(`${f.name}非txt或csv文件，请上传txt、csv格式文件！`)
                                 return false
                             }
-                            if (f.size > (2 * 1024 * 1024)) {
+                            if (f.size > 2 * 1024 * 1024) {
                                 failed(`字典文件过大，请使用字典路径方式上传`)
                                 return false
                             }
@@ -719,7 +893,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                                     IsFile: Content ? true : false
                                 })
                             }}
-                            value={params.FileName?.join('\n')}
+                            value={params.FileName?.join("\n")}
                             textarea={true}
                             autoSize={{minRows: 1, maxRows: 5}}
                             isBubbing={true}
