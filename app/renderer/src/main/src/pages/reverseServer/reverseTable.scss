@@ -2,7 +2,9 @@
     width: 100%;
     height: 100%;
     padding: 0 24px;
-    overflow: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     .reverse-table-header {
         width: 100%;
         height: 64px;
@@ -28,9 +30,14 @@
                 }
             }
             .extra-opt + .extra-opt {
-                margin-left: 8px;
+                margin-left: 16px;
             }
         }
+    }
+
+    .reverse-table-body {
+        flex: 1;
+        overflow: auto;
     }
 
     .tag-wrapper {
