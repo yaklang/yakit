@@ -293,6 +293,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     noPacketModifier?: boolean
     noTitle?: boolean
     noHex?: boolean
+    noMinimap?: boolean
 
     extraEditorProps?: EditorProps | any
 
@@ -333,6 +334,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
     const [fontSize, setFontSize] = useState(12);
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
     const [noWordwrap, setNoWordwrap] = useState(false);
+
+    // 操作系统类型
+    const [system, setSystem] = useState<string>()
+
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
+    }, [])
+
 
     const highlightActive = useMemoizedFn((search: string, regexp?: boolean) => {
         if (!monacoEditor) {
@@ -567,6 +576,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             <div style={{flex: 1}}>
                 {empty && props.emptyOr}
                 {mode === "text" && !empty && <YakEditor
+                    noMiniMap={props.noMinimap}
                     loading={props.loading}
                     // type={"html"}
                     type={props.language || (isResponse ? "html" : "http")}
@@ -583,6 +593,12 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                         ...[
                             {
                                 label: "新建 WebFuzzer", contextMenuGroupId: "auto-suggestion",
+                                keybindings: [
+                                    (system === "Darwin"
+                                        ? monaco.KeyMod.WinCtrl
+                                        : monaco.KeyMod.CtrlCmd) |
+                                    monaco.KeyCode.KEY_R
+                                ],
                                 id: "new-web-fuzzer-tab", run: (e) => {
                                     try {
                                         // @ts-ignore

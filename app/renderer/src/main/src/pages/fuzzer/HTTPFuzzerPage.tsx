@@ -1218,6 +1218,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         refreshTrigger={refreshTrigger}
                         hideSearch={true}
                         bordered={true}
+                        noMinimap={true}
                         utf8={true}
                         originValue={StringToUint8Array(request)}
                         actions={[

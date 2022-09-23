@@ -157,6 +157,7 @@ service Yak {
   rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
+  rpc QueryHTTPFlowsIds(QueryHTTPFlowsIdsRequest) returns (QueryHTTPFlowsIdsResponse);
 
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
@@ -1816,6 +1817,10 @@ message QueryHTTPFlowRequest {
   // 仅查看当前 IP 对应的结果或不包含
   repeated string IncludeInIP = 18;
   repeated string ExcludeInIP = 19;
+
+  repeated int64 ExcludeId = 20;
+
+  repeated string IncludeInWhere = 21;
 }
 
 message DeleteHTTPFlowRequest {
@@ -1825,6 +1830,14 @@ message DeleteHTTPFlowRequest {
 
   string URLPrefix = 3;
   QueryHTTPFlowRequest Filter = 5;
+}
+
+message QueryHTTPFlowsIdsRequest {
+  repeated string IncludeInWhere = 1;
+}
+
+message QueryHTTPFlowsIdsResponse {
+  repeated HTTPFlow Data = 1;
 }
 
 message HTTPHeader {

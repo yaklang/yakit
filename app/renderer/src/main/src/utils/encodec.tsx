@@ -101,6 +101,9 @@ export const MonacoEditorCodecActions: MonacoEditorActions[] = [
     {id: "unicode-encode", label: "Unicode 编码（\\uXXXX 编码）"},
     {id: "base64-url-encode", label: "先 Base64 后 URL 编码"},
     {id: "url-base64-decode", label: "先 URL 后 Base64 解码"},
+    {id: "hex-decode", label: "HEX 解码（十六进制解码）"},
+    {id: "hex-encode", label: "HEX 编码（十六进制编码）"},
+    {id: "jwt-parse-weak", label: "JWT 解析（同时测试弱 Key）"},
 ].map(i => {
     return {id: i.id, label: i.label, contextMenuGroupId: "codec", run: editorCodecHandlerFactory(i.id as CodecType)}
 });

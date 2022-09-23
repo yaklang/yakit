@@ -165,6 +165,12 @@ monaco.languages.registerCompletionItemProvider('http', {
                             insertText: 'hexdec(${1:testname})}}',
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                         },
+                        {
+                            label: "repeat(重复一定次数发包)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'repeat(${1:10})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
                     ]
                 }
             }
