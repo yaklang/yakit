@@ -48,7 +48,7 @@ export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
                 return (
                     <Column key={item.dataKey} {...(restCol as ColumnProps)} onResize={(columnWidth,dataKey)=>{
                         setColsWidth({...colsWidth,[dataKey||""]:columnWidth})
-                    }} width={colsWidth.hasOwnProperty(item.dataKey)?colsWidth[item.dataKey]:undefined}>
+                    }} width={colsWidth.hasOwnProperty(item.dataKey)?colsWidth[item.dataKey]:item.width}>
                         <HeaderCell>{item.headRender()}</HeaderCell>
                         <CellRender
                             dataKey={item.dataKey}
