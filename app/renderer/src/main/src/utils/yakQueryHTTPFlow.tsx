@@ -14,7 +14,7 @@ export interface YakQueryHTTPFlowRequest {
     SearchContentType?: string
     Keyword?: string
     OnlyWebsocket?: boolean,
-    IncludeInWhere?: number[],
+    ExcludeInUrl?: string[],
     ExcludeId?: number[],
 }
 

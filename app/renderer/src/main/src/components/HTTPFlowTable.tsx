@@ -564,7 +564,7 @@ const ROW_HEIGHT = 42
 const MAX_ROW_COUNT = Math.abs(OFFSET_LIMIT * 2)
 
 interface shieldData {
-    id: number[],
+    data:(string|number)[],
 }
 
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
@@ -598,8 +598,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // 用于记录适合
     const [_scrollY, setScrollYRaw, getScrollY] = useGetState(0)
     const setScrollY = useThrottleFn(setScrollYRaw, {wait: 300}).run
-    // 屏蔽Checkbox
-    const [shieldChecked,setShieldChecked] = useState<boolean>(false)
     // 如果这个大于等于 0 ，就 Lock 住，否则忽略
     const [_trigger, setLockedScroll, getLockedScroll] = useGetState(-1)
     const lockScrollTimeout = (size: number, timeout: number) => {
@@ -608,7 +606,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     }
     // 屏蔽数据
     const [shieldData,setShieldData,getShieldData] = useGetState<shieldData>({
-        id:[],
+        data:[]
     })
     
     const tableRef = useRef(null)
@@ -724,7 +722,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 try {
                     const cacheData = JSON.parse(data)
                     setShieldData({
-                        id:cacheData?.id||[],
+                        data:cacheData?.data||[],
                     })
                 } catch (e) {
                     update(1)
@@ -738,19 +736,20 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             // 持久化存储
             setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(getShieldData())) 
             // setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify({
-            //     id:[],
+            //     data:[],
             // }))
             // console.log("清空缓存")
-            // 是否点击屏蔽
-            if(shieldChecked){
-                if(shieldData.id.length===0) {
-                    setShieldChecked(false)
+            let idArr:number[] = []
+            let urlArr:string[] = []
+            shieldData.data.map((item)=>{
+                if (typeof item === "string"){
+                    urlArr = [...urlArr,item]
                 }
-                setParams({...params, IncludeInWhere: shieldData?.id})
-            }
-            else{
-                setParams({...params, ExcludeId: shieldData?.id})
-            } 
+                else{
+                    idArr = [...idArr,item]
+                }
+            })
+            setParams({...params,ExcludeId:idArr,ExcludeInUrl:urlArr})
         }
         
     },[shieldData])
@@ -827,7 +826,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         if(!isOneceLoading.current){
             update()
         }
-    },[params.ExcludeId,params.IncludeInWhere])
+    },[params.ExcludeId,params.ExcludeInUrl])
     const scrollTableTo = useMemoizedFn((size: number) => {
         if (!tableRef || !tableRef.current) return
         const table = tableRef.current as unknown as {
@@ -1094,16 +1093,20 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         )
     })
 
-    // 保留数组中重复的数据
-    const filterUnique = arr => arr.filter(i => arr.indexOf(i) !== arr.lastIndexOf(i))
     // 保留数组中非重复数据
     const filterNonUnique = arr => arr.filter(i => arr.indexOf(i) === arr.lastIndexOf(i))
     // 数组去重
     const filterItem = arr => arr.filter((item,index) => arr.indexOf(item) === index)
 
+    // 取消屏蔽筛选
+    const cancleFilter = (value) => {
+        const newArr = filterNonUnique([...getShieldData().data,value])
+        const newObj = {...shieldData,data:newArr}
+        setShieldData(newObj)
+    }
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
-        <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
+        <div className="http-flow-table" ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
@@ -1168,9 +1171,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     ]}
                 />
             )}
-            <Row style={{margin: "5px 0 5px 5px"}}>
-                <Col span={12}>
-                    <Space>
+            <div className="filter-box">
+                  <div className="filter-box-item filter-box-item-left">
+                  <Space>
                         <span>{props?.title ? props.title : "HTTP History"}</span>
                         <Button
                             icon={<ReloadOutlined />}
@@ -1224,25 +1227,32 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         >
                             只看 Websocket
                         </Checkbox>
-                        {<Checkbox 
-                        checked={shieldChecked}
-                        disabled={!(!!shieldData.id.length)}
-                        onChange={(e)=>{
-                            let { checked } = e.target
-                            setShieldChecked(checked)
-                            checked?setParams({...params,ExcludeId:undefined,IncludeInWhere:shieldData?.id})
-                            :setParams({...params,IncludeInWhere:undefined,ExcludeId:shieldData?.id})
                         
-                        }}
-                        >
-                            只看屏蔽数据</Checkbox>}
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
-                </Col>
-                <Col span={12} style={{textAlign: "right"}}>
+                  </div>
+                  <div className="filter-box-item">
                     <Tag>{total} Records</Tag>
-                </Col>
-            </Row>
+                 </div>          
+            </div>
+            <div className='title-header'>
+                        {shieldData?.data.map((item:(number|string))=>
+                            (<div className='title-selected-tag' key={item}>
+                            <Tooltip title={item}>
+                            <div className='tag-name-style'>
+                                {typeof item === "string"&&item.length>=20?`${item.slice(0,20)}...`:
+                                item}
+                            </div>
+                            </Tooltip>
+                            <div
+                                className='tag-del-style'
+                                onClick={() => cancleFilter(item)}
+                            >
+                                x
+                            </div>
+                        </div>)
+                        )
+            }</div>
             <TableResizableColumn
                 tableRef={tableRef}
                 virtualized={true}
@@ -1859,64 +1869,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         }
                                     ]
                                 },
-                                shieldChecked?{
-                                    title:"取消屏蔽",
-                                    onClick: () => {},
-                                    subMenuItems: [
-                                        {
-                                            title:"取消屏蔽该记录",
-                                            onClick: () => {
-                                                const id = parseInt(rowData?.Id)
-                                                const newArr = [...shieldData.id,id]  
-                                                const newObj = {...shieldData,id:filterNonUnique(newArr)}
-                                                setShieldData(newObj)
-                                            }
-                                        },
-                                        {
-                                            title:"取消屏蔽URL",
-                                            onClick: () => {
-                                                let Url = rowData?.Url
-                                                setLoading(true)
-                                                ipcRenderer
-                                                    .invoke("QueryHTTPFlowsIds", {
-                                                        IncludeInWhere: [Url]
-                                                    })
-                                                    .then((data:YakQueryHTTPFlowResponse) => {
-                                                        const offsetDeltaData = data?.Data || []
-                                                        const idArr = offsetDeltaData.map((item)=>typeof item?.Id === "string"?parseInt(item?.Id):item?.Id )
-                                                        // 根据URL拿到ID数组
-                                                        const sameArr = filterUnique([...shieldData.id,...idArr])
-                                                        const newArr = filterNonUnique([...shieldData.id,...sameArr])
-                                                        const newObj = {...shieldData,id:newArr}
-                                                        setShieldData(newObj)
-                                                    })
-                                                    .finally(() => setTimeout(() => setLoading(false), 100))
-                                            }
-                                        },
-                                        {
-                                            title:"取消屏蔽域名",
-                                            onClick: () => {
-                                                const host = rowData?.HostPort?.split(":")[0]||""
-                                                // 根据host拿到对应ID数组
-                                                setLoading(true)
-                                                ipcRenderer
-                                                    .invoke("QueryHTTPFlowsIds", {
-                                                        IncludeInWhere: [host]
-                                                    })
-                                                    .then((data:YakQueryHTTPFlowResponse) => {
-                                                        const offsetDeltaData = data?.Data || []
-                                                        const idArr = offsetDeltaData.map((item)=>typeof item?.Id === "string"?parseInt(item?.Id):item?.Id )
-                                                        // 根据host拿到对应ID数组
-                                                        const sameArr = filterUnique([...shieldData.id,...idArr])
-                                                        const newArr = filterNonUnique([...shieldData.id,...sameArr])
-                                                        const newObj = {...shieldData,id:newArr}
-                                                        setShieldData(newObj)
-                                                    })
-                                                    .finally(() => setTimeout(() => setLoading(false), 100))
-                                            }
-                                        },
-                                    ]
-                                }:{
+                                {
                                     title:"屏蔽",
                                     onClick: () => {},
                                     subMenuItems: [
@@ -1924,8 +1877,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             title:"屏蔽该记录",
                                             onClick: () => {
                                                 const id = parseInt(rowData?.Id)
-                                                const newArr = filterItem([...shieldData.id,id])
-                                                const newObj = {...shieldData,id:newArr}
+                                                const newArr = filterItem([...shieldData.data,id])
+                                                const newObj = {...shieldData,data:newArr}
                                                 setShieldData(newObj)
                                             }
                                         },
@@ -1933,40 +1886,23 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             title:"屏蔽URL",
                                             onClick: () => {
                                                 let Url = rowData?.Url
-                                                setLoading(true)
-                                                ipcRenderer
-                                                    .invoke("QueryHTTPFlowsIds", {
-                                                        IncludeInWhere: [Url]
-                                                    })
-                                                    .then((data:YakQueryHTTPFlowResponse) => {
-                                                        const offsetDeltaData = data?.Data || []
-                                                        const idArr = offsetDeltaData.map((item)=>typeof item?.Id === "string"?parseInt(item?.Id):item?.Id )
-                                                        // 根据URL拿到ID数组
-                                                        const newArr = filterItem([...shieldData.id,...idArr])
-                                                        const newObj = {...shieldData,id:newArr}
-                                                        setShieldData(newObj)
-                                                    })
-                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                                // 根据URL拿到ID数组
+                                                const newArr = filterItem([...shieldData.data,Url])
+                                                const newObj = {...shieldData,data:newArr}
+                                                setShieldData(newObj)
+                                                   
                                             }
                                         },
                                         {
                                             title:"屏蔽域名",
                                             onClick: () => {
                                                 const host = rowData?.HostPort?.split(":")[0]||""
-                                                setLoading(true)
-                                                ipcRenderer
-                                                    .invoke("QueryHTTPFlowsIds", {
-                                                        IncludeInWhere: [host]
-                                                    })
-                                                    .then((data:YakQueryHTTPFlowResponse) => {
-                                                        const offsetDeltaData = data?.Data || []
-                                                        const idArr = offsetDeltaData.map((item)=>typeof item?.Id === "string"?parseInt(item?.Id):item?.Id )
-                                                        // 根据host拿到对应ID数组
-                                                        const newArr = filterItem([...shieldData.id,...idArr])
-                                                        const newObj = {...shieldData,id:newArr}
-                                                        setShieldData(newObj)
-                                                    })
-                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                               
+                                                // 根据host拿到对应ID数组
+                                                const newArr = filterItem([...shieldData.data,host])
+                                                const newObj = {...shieldData,data:newArr}
+                                                setShieldData(newObj)
+                                                   
                                             }
                                         },
                                     ]

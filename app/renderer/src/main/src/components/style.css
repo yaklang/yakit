@@ -36,3 +36,57 @@
     height: 16px;
     border-radius: 2px;
 }
+
+.http-flow-table .filter-box{
+    display: flex;
+    margin: 5px 0 5px 5px;
+}
+.http-flow-table .filter-box .filter-box-item{
+    display: inline-block;
+}
+.http-flow-table .filter-box .filter-box-item-left{
+    flex: 1;
+}
+.http-flow-table .filter-box .filter-box-item-left .title-selected-tag {
+    display: flex;
+    height: 20px;
+    font-size: 12px;
+    color: #7e7e7e;
+    border: 1px solid #a9a9a9;
+    border-radius: 2px;
+    margin: 2px;
+}
+.http-flow-table .title-header{
+    margin-top: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-flow: wrap;
+    align-items: center;
+    min-height: 40px;
+    border: 1px solid #f1f1f1;
+    border-radius: 4px;
+    background-color: #fafafa;
+    padding: 4px;
+    
+}
+.http-flow-table .title-header .title-selected-tag {
+    display: flex;
+    height: 20px;
+    font-size: 12px;
+    color: #7e7e7e;
+    border: 1px solid #a9a9a9;
+    border-radius: 2px;
+    margin: 2px;
+}
+.http-flow-table .title-header .title-selected-tag .tag-name-style {
+    height: 100%;
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+.http-flow-table .title-header .title-selected-tag .tag-del-style {
+    height: 100%;
+    margin-left: 6px;
+    margin-right: 6px;
+    cursor: pointer;
+}

@@ -23,22 +23,6 @@ module.exports = (win, getClient) => {
         return await asyncDeleteHTTPFlows(params)
     })
 
-    // asyncDeleteHTTPFlows wrapper
-    const asyncQueryHTTPFlowsIds = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().QueryHTTPFlowsIds(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    ipcMain.handle("QueryHTTPFlowsIds", async (e, params) => {
-        return await asyncQueryHTTPFlowsIds(params)
-    })
-
     ipcMain.handle("query-http-flows", async (e, params) => {
         getClient().QueryHTTPFlows(params, (err, data) => {
             if (err && win) {
