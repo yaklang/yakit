@@ -76,7 +76,7 @@ import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
-import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment";
+import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -192,7 +192,7 @@ export interface MenuItemType {
 
 const Main: React.FC<MainProp> = (props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
-    const [status, setStatus] = useState<{ addr: string; isTLS: boolean }>()
+    const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
     const [collapsed, setCollapsed] = useState(false)
     const [hideMenu, setHideMenu] = useState(false)
 
@@ -246,7 +246,7 @@ const Main: React.FC<MainProp> = (props) => {
         // Fetch User Defined Plugins
         ipcRenderer
             .invoke("GetAllMenuItem", {})
-            .then((data: { Groups: MenuItemGroup[] }) => {
+            .then((data: {Groups: MenuItemGroup[]}) => {
                 setMenuItems(data.Groups)
             })
             .catch((e: any) => failed("Update Menu Item Failed"))
@@ -657,7 +657,7 @@ const Main: React.FC<MainProp> = (props) => {
 
     // 加载补全
     useEffect(() => {
-        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
+        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
                 const total = JSON.parse(completionJson) as CompletionTotal
@@ -689,8 +689,7 @@ const Main: React.FC<MainProp> = (props) => {
                 .catch((e: any) => {
                     setEngineStatus("error")
                 })
-                .finally(() => {
-                })
+                .finally(() => {})
         }
         let id = setInterval(updateEngineStatus, 3000)
         return () => {
@@ -771,11 +770,15 @@ const Main: React.FC<MainProp> = (props) => {
     })
 
     // websocket fuzzer 和 Fuzzer 类似
-    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean, request: Uint8Array }) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
         addTabPage(Route.WebsocketFuzzer, {
-            hideAdd: false, isRecord: false, node: ContentByRoute(Route.WebsocketFuzzer, undefined, {
-                wsRequest: res.request, wsTls: res.tls,
-            }), time: "",
+            hideAdd: false,
+            isRecord: false,
+            node: ContentByRoute(Route.WebsocketFuzzer, undefined, {
+                wsRequest: res.request,
+                wsTls: res.tls
+            }),
+            time: ""
         })
     })
     // websocket fuzzer 和 Fuzzer 类似
@@ -794,7 +797,9 @@ const Main: React.FC<MainProp> = (props) => {
         const time = new Date().getTime().toString()
         addTabPage(Route.YakitPluginJournalDetails, {
             time: time,
-            node: ContentByRoute(Route.YakitPluginJournalDetails, undefined, {YakScriptJournalDetailsId: res.YakScriptJournalDetailsId}),
+            node: ContentByRoute(Route.YakitPluginJournalDetails, undefined, {
+                YakScriptJournalDetailsId: res.YakScriptJournalDetailsId
+            }),
             hideAdd: true
         })
     })
@@ -828,7 +833,6 @@ const Main: React.FC<MainProp> = (props) => {
     const [bugUrl, setBugUrl] = useState<string>("")
     const addBugTest = useMemoizedFn((type: number, res?: any) => {
         const {URL = ""} = res || {}
-
         if (type === 1 && URL) {
             setBugUrl(URL)
             ipcRenderer
@@ -837,8 +841,7 @@ const Main: React.FC<MainProp> = (props) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {
-                })
+                .catch(() => {})
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === Route.PoC)
@@ -988,7 +991,6 @@ const Main: React.FC<MainProp> = (props) => {
             />
         )
     }
-
     return (
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
@@ -997,7 +999,7 @@ const Main: React.FC<MainProp> = (props) => {
                         <Col span={8}>
                             <Space>
                                 <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}}/>
+                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} />
                                 </div>
                                 <Divider type={"vertical"}/>
                                 <YakVersion/>
@@ -1025,8 +1027,8 @@ const Main: React.FC<MainProp> = (props) => {
                             </Space>
                         </Col>
                         <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                            <PerformanceDisplay/>
-                            <RiskStatsTag professionalMode={true}/>
+                            <PerformanceDisplay />
+                            <RiskStatsTag professionalMode={true} />
                             <Space>
                                 {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
@@ -1065,7 +1067,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                         width: 800,
                                                         content: (
                                                             <div style={{width: 800}}>
-                                                                <ConfigGlobalReverse/>
+                                                                <ConfigGlobalReverse />
                                                             </div>
                                                         )
                                                     })
@@ -1320,7 +1322,7 @@ const Main: React.FC<MainProp> = (props) => {
                                             }
                                         }}
                                         addIcon={
-                                            <Tooltip title="导入协作资源">
+                                            <Tooltip title='导入协作资源'>
                                                 <ShareImportIcon
                                                     // @ts-ignore
                                                     className='share-import-icon'
@@ -1430,7 +1432,7 @@ const Main: React.FC<MainProp> = (props) => {
                 ]}
             >
                 <div style={{height: 40}}>
-                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
+                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
                     <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
                 </div>
                 <p style={{fontSize: 15, marginLeft: 37}}>
@@ -1479,18 +1481,20 @@ const Main: React.FC<MainProp> = (props) => {
                         optText: "title",
                         optValue: "key",
                         value: (bugTestValue || [])[0]?.key,
-                        onChange: (value, option: any) =>
+                        onChange: (value, option: any) => {
+                            const {record} = option
                             setBugTestValue(
                                 value
                                     ? [
-                                        {
-                                            filter: option?.filter,
-                                            key: option?.key,
-                                            title: option?.title
-                                        }
-                                    ]
+                                          {
+                                              filter: record?.filter,
+                                              key: record?.key,
+                                              title: record?.title
+                                          }
+                                      ]
                                     : []
                             )
+                        }
                     }}
                 />
             </Modal>
