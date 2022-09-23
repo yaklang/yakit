@@ -158,6 +158,7 @@ service Yak {
   rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
+  rpc QueryHTTPFlowsIds(QueryHTTPFlowsIdsRequest) returns (QueryHTTPFlowsIdsResponse);
 
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
@@ -528,6 +529,8 @@ message GeneralStorage {
   string Value = 2;
   int64 ExpiredAt = 3;
   bool ProcessEnv = 4;
+  string Verbose = 5;
+  string Group = 6;
 }
 
 message GetProcessEnvKeyResult {
@@ -785,10 +788,10 @@ message YsoClassGeneraterOptionsWithVerbose{
   string Help = 3;
   string Value = 4;
   string Type = 5;
-  map<string,YsoClassOptionsResponseWithVerbose> BindOptions = 6;
+  map<string, YsoClassOptionsResponseWithVerbose> BindOptions = 6;
 }
 message YsoClassOptionsResponseWithVerbose{
-  repeated YsoClassGeneraterOptionsWithVerbose Options= 1;
+  repeated YsoClassGeneraterOptionsWithVerbose Options = 1;
 }
 //已弃用
 message YsoClassGeneraterOptions{
@@ -1847,8 +1850,9 @@ message QueryHTTPFlowRequest {
   repeated string IncludeInIP = 18;
   repeated string ExcludeInIP = 19;
 
-  repeated int64 IncludeId = 20;
-  repeated int64 ExcludeId = 21;
+  repeated int64 ExcludeId = 20;
+
+  repeated string IncludeInWhere = 21;
 }
 
 message DeleteHTTPFlowRequest {
@@ -1858,6 +1862,14 @@ message DeleteHTTPFlowRequest {
 
   string URLPrefix = 3;
   QueryHTTPFlowRequest Filter = 5;
+}
+
+message QueryHTTPFlowsIdsRequest {
+  repeated string IncludeInWhere = 1;
+}
+
+message QueryHTTPFlowsIdsResponse {
+  repeated HTTPFlow Data = 1;
 }
 
 message HTTPHeader {
