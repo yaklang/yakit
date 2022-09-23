@@ -41,6 +41,7 @@ import {ContentUploadInput} from "../../../components/functionTemplate/ContentUp
 import "./YakBatchExecutors.css"
 import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam"
 import {ReadOnlyBatchExecutor, ReadOnlyBatchExecutorByMenuItem} from "./ReadOnlyBatchExecutorByMenuItem"
+import {defTargetRequest} from "./BatchExecutorPage"
 
 const {ipcRenderer} = window.require("electron")
 export const CustomBugList = "custom-bug-list"
@@ -167,13 +168,12 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
 
     const addTab = useMemoizedFn((res: any) => {
         const {type = [], data = ""} = res
-
         setTabList(
             tabList.concat(
                 type.map((item, index) => {
                     item.key = `${item.key}-${listCount + index}`
                     item.title = `${item.title}-${listCount + index}`
-                    item.sendTarget = data
+                    item.sendTarget = (data && JSON.parse(data) && JSON.parse(data).join(",")) || ""
                     return item
                 })
             )
@@ -269,7 +269,6 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                 setTimeout(() => setLoading(false), 300)
             })
     }, [])
-
     return (
         <div style={{width: "100%", height: "100%"}}>
             <Tabs
@@ -386,6 +385,10 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
                                         type: "nuclei,port-scan,mitm"
                                     }
                                 }
+                                initTargetRequest={{
+                                    ...defTargetRequest,
+                                    target: item?.sendTarget || ""
+                                }}
                             />
                             {/*<BugTestExecutor keyword={item.key} verbose={item.title}*/}
                             {/*                 sendTarget={item?.sendTarget}></BugTestExecutor>*/}
