@@ -1481,24 +1481,15 @@ const Main: React.FC<MainProp> = (props) => {
                         optText: "title",
                         optValue: "key",
                         value: (bugTestValue || [])[0]?.key,
-                        onChange: (value) => {
-                            const option: BugInfoProps = BugList.concat(bugList).find((ele) => ele.key === value) || {
-                                filter: {
-                                    type: "",
-                                    tags: "",
-                                    exclude: [],
-                                    include: []
-                                },
-                                key: "",
-                                title: ""
-                            }
+                        onChange: (value, option: any) => {
+                            const {record} = option
                             setBugTestValue(
                                 value
                                     ? [
                                           {
-                                              filter: option?.filter,
-                                              key: option?.key,
-                                              title: option?.title
+                                              filter: record?.filter,
+                                              key: record?.key,
+                                              title: record?.title
                                           }
                                       ]
                                     : []

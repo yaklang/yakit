@@ -5,7 +5,7 @@ import {DraggerProps} from "antd/lib/upload"
 import {TextAreaProps} from "antd/lib/input"
 
 import "./FormItemUtil.css"
-import {ManyMultiSelectForString} from "../../utils/inputUtil";
+import {ManyMultiSelectForString} from "../../utils/inputUtil"
 
 const {Item} = Form
 const {Dragger} = Upload
@@ -260,9 +260,15 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                     const flag = Object.prototype.toString.call(item) === "[object Object]"
                     const value = flag ? item[optValue] : item
                     const title = flag ? item[optText] : item
-                    
+
                     return (
-                        <Option key={value || index} value={value} title={title} disabled={item[optDisabled]}>
+                        <Option
+                            key={value || index}
+                            value={value}
+                            title={title}
+                            disabled={item[optDisabled]}
+                            record={item}
+                        >
                             {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
                         </Option>
                     )
@@ -290,7 +296,13 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                             const title = flag ? item[optText] : item
 
                             return (
-                                <Option key={value || index} value={value} title={title} disabled={item[optDisabled]}>
+                                <Option
+                                    key={value || index}
+                                    value={value}
+                                    title={title}
+                                    disabled={item[optDisabled]}
+                                    record={item}
+                                >
                                     {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
                                 </Option>
                             )
