@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from "react"
-import {Form, Button, Input, Switch, InputNumber, Divider, Spin} from "antd"
+import {Form, Button, Input, Switch, InputNumber, Divider, Spin, PageHeader, Alert, Typography, Space} from "antd"
 import {CopyableField} from "../../utils/inputUtil"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {randomString} from "../../utils/randomUtil"
@@ -13,6 +13,7 @@ import {
     FormBindInfo,
     FormList,
     ParamsRefProps,
+    PayloadCode,
     PayloadForm,
     YsoGeneraterRequest
 } from "../payloadGenerater/NewJavaPayloadPage"
@@ -21,12 +22,9 @@ import {getRemoteValue} from "@/utils/kv"
 import "./reverseServerPage.scss"
 
 const {ipcRenderer} = window.require("electron")
+const {Text} = Typography
 
-export interface FacadeOptionsProp {
-    facadeServerParams?: SettingReverseParamsInfo
-    classGeneraterParams?: {[key: string]: any}
-    classType?: string
-}
+export interface FacadeOptionsProp {}
 
 export interface SettingReverseParamsInfo {
     IsRemote: boolean
@@ -41,9 +39,8 @@ interface ApplyFacadesRequest {
 export type FacadesRequest = SettingReverseParamsInfo & ApplyFacadesRequest
 
 export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
-    const [status, setStatus] = useState<"setting" | "start">("setting")
+    const [status, setStatus] = useState<"setting" | "start">("start")
     const [token, setToken, getToken] = useGetState(randomString(40))
-    const [loading, setLoading] = useState<boolean>(false)
     const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>({
         BridgeParam: {Addr: "", Secret: ""},
         IsRemote: false,
@@ -74,19 +71,24 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
     return (
         <div className='reverse-server-page-wrapper'>
             {status === "setting" && (
-                <SettingReverseServer
-                    defaultSetting={{...addrParams}}
-                    setServer={(setting) => {
-                        setAddrParams(setting.setting)
-                        setRemoteIp(setting.remoteIp)
-                        startFacadeServer(setting.setting, setting.remoteIp)
-                    }}
-                />
+                <PageHeader
+                    className=' reverse-server-pagehead'
+                    backIcon={false}
+                    title='反连服务器'
+                    subTitle='使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连'
+                >
+                    <SettingReverseServer
+                        defaultSetting={{...addrParams}}
+                        setServer={(setting) => {
+                            setAddrParams(setting.setting)
+                            setRemoteIp(setting.remoteIp)
+                            startFacadeServer(setting.setting, setting.remoteIp)
+                        }}
+                    />
+                </PageHeader>
             )}
             {status === "start" && addrParams && (
                 <StartReverseServer
-                    loading={loading}
-                    setLoading={setLoading}
                     token={getToken()}
                     addr={addrParams}
                     remoteIp={remoteIp}
@@ -94,13 +96,6 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
                         if (!isCancel) ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
                         setStatus("setting")
                         setToken(randomString(40))
-                    }}
-                    apply={(params) => {
-                        ipcRenderer
-                            .invoke("ApplyClassToFacades", {...params})
-                            .then((res) => info("应用到FacadeServer成功"))
-                            .catch((err) => failed(`应用到FacadeServer失败${err}`))
-                            .finally(() => setTimeout(() => setLoading(false), 300))
                     }}
                 />
             )}
@@ -112,7 +107,7 @@ export interface SettingReverseServerProp {
     defaultSetting: SettingReverseParamsInfo
     setServer: (params: {setting: SettingReverseParamsInfo; remoteIp: string}) => any
 }
-interface NetInterface {
+export interface NetInterface {
     Name: string
     Addr: string
     IP: string
@@ -123,7 +118,7 @@ export const BRIDGE_SECRET = "yak-bridge-secret"
 export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) => {
     const [formInstance] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<SettingReverseParamsInfo>({...props.defaultSetting})
+    const [params, setParams] = useState<SettingReverseParamsInfo>({...props.defaultSetting})
     const remoteIp = useRef<string>("")
 
     useEffect(() => {
@@ -207,20 +202,41 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                 <Form
                     form={formInstance}
                     initialValues={{...props.defaultSetting}}
-                    labelCol={{span: 8}}
-                    wrapperCol={{span: 16}}
+                    labelCol={{span: 5}}
+                    wrapperCol={{span: 19}}
                     onFinish={submit}
                 >
-                    <Form.Item label='启用公网穿透' name='IsRemote'>
+                    <Form.Item
+                        label='启用公网穿透'
+                        name='IsRemote'
+                        help={
+                            params.IsRemote && (
+                                <Alert
+                                    className='setting-isremote-hint'
+                                    type={"success"}
+                                    message={
+                                        <div>
+                                            在自己的服务器安装 yak 核心引擎，执行{" "}
+                                            <Text code={true} copyable={true}>
+                                                yak bridge --secret [your-pass]
+                                            </Text>{" "}
+                                            启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
+                                            <Text style={{color: "#999"}}>yak version {`>=`} v1.0.11-sp9</Text>
+                                        </div>
+                                    }
+                                />
+                            )
+                        }
+                    >
                         <Switch checked={params.IsRemote} onChange={(IsRemote) => setValue({...params, IsRemote})} />
                     </Form.Item>
 
                     {params.IsRemote && (
                         <>
                             <Form.Item
-                                label='Bridge地址'
+                                label='公网Bridge地址'
                                 name={["BridgeParam", "Addr"]}
-                                rules={[{required: true, message: "请输入Bridge地址"}]}
+                                rules={[{required: true, message: ""}]}
                             >
                                 <Input
                                     allowClear={true}
@@ -244,11 +260,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                         </>
                     )}
                     {!params.IsRemote && (
-                        <Form.Item
-                            label='反连地址'
-                            name='ReverseHost'
-                            rules={[{required: true, message: "请输入反连地址"}]}
-                        >
+                        <Form.Item label='反连地址' name='ReverseHost' rules={[{required: true, message: ""}]}>
                             <Input
                                 allowClear={true}
                                 value={params.ReverseHost}
@@ -256,11 +268,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                             />
                         </Form.Item>
                     )}
-                    <Form.Item
-                        label='反连端口'
-                        name='ReversePort'
-                        rules={[{required: true, message: "请输入反连端口"}]}
-                    >
+                    <Form.Item label='反连端口' name='ReversePort' rules={[{required: true, message: ""}]}>
                         <InputNumber
                             width='100%'
                             min={0}
@@ -283,44 +291,31 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
 }
 
 export interface StartReverseServerProp {
-    loading: boolean
-    setLoading: (value: boolean) => any
     token: string
     addr: SettingReverseParamsInfo
     remoteIp: string
     stop: (isCancel?: boolean) => any
-    apply: (params: ApplyFacadesRequest) => any
-
-    // java-payload页面传递数据
-    paramsData?: ParamsRefProps
-    formLists?: FormList[]
-    formBind?: FormBindInfo
 }
 export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
-    const {
-        token,
-        addr,
-        remoteIp,
-        stop,
-        apply,
-        paramsData = {useGadget: false, Gadget: "", Class: ""},
-        formLists = [],
-        formBind = {},
-        ...rest
-    } = props
+    const {token, addr, remoteIp, stop} = props
     const reverseAddr = addr.IsRemote ? `${remoteIp}:${addr.ReversePort}` : `${addr.ReverseHost}:${addr.ReversePort}`
 
+    const [loading, setLoading] = useState<boolean>(false)
     const dataRef = useRef<ReverseNotification[]>([])
     const [data, setData, getData] = useGetState<ReverseNotification[]>([])
+    const totalRef = useRef<number>(0)
 
-    const [classRequest, setClassRequest] = useState<ParamsRefProps>({...paramsData})
+    const [classRequest, setClassRequest] = useState<ParamsRefProps>({useGadget: false, Gadget: "", Class: ""})
 
     const [isExtra, setIsExtra] = useState<boolean>(false)
+    const [isShowCode, setIsShowCode] = useState<boolean>(false)
+    const [codeExtra, setCodeExtra] = useState<boolean>(false)
 
     useEffect(() => {
         if (!token) return
 
         dataRef.current = []
+        totalRef.current = 0
         setData([])
         ipcRenderer.on(`${token}-data`, (_, data) => {
             if (!data.IsMessage) {
@@ -354,7 +349,10 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                         break
                     }
                 }
-                if (!isUpdata) datas.unshift(obj)
+                if (!isUpdata) {
+                    datas.unshift(obj)
+                    totalRef.current = totalRef.current + 1
+                }
 
                 if (datas.length > 100) datas.pop()
             } catch (e) {}
@@ -380,60 +378,91 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
         }
     }, [token])
 
-    const btnSubmit = useMemoizedFn((type: "server" | "copy" | "yakRun" | "apply", value: ParamsRefProps) => {
-        const data = convertRequest(value)
-        setClassRequest({...value})
-        if (type === "apply") apply({Token: token, GenerateClassParams: {...data}})
-    })
-
     const clearData = () => {
         dataRef.current = []
+        totalRef.current = 0
         setData([])
     }
 
+    const onApply = useMemoizedFn((value: ParamsRefProps) => {
+        const data = convertRequest(value)
+        setClassRequest({...value})
+        ipcRenderer
+            .invoke("ApplyClassToFacades", {Token: token, GenerateClassParams: {...data}})
+            .then((res) => info("应用到FacadeServer成功"))
+            .catch((err) => failed(`应用到FacadeServer失败${err}`))
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+
     return (
         <div className='start-reverse-server-wrapper'>
-            <div className={isExtra ? "setting-hidden-wrapper" : "setting-wrapper"}>
-                <div className='setting-header'>
-                    <div className='header-title'>反连资源</div>
-                    <PoweroffOutlined className='icon-style' onClick={() => stop()} />
+            <div className={`payload-${isExtra ? (codeExtra ? "extra-" : "") : "hidden-"}wrapper payload-container`}>
+                <div className={`payload-${isShowCode ? (codeExtra ? "hidden-" : "code-") : ""}setting`}>
+                    <PayloadForm
+                        isReverse={true}
+                        isShowCode={isShowCode}
+                        showCode={() => setIsShowCode(!isShowCode)}
+                        paramsData={{useGadget: false, Gadget: "", Class: ""}}
+                        loading={loading}
+                        setLoading={setLoading}
+                        onApply={onApply}
+                    />
                 </div>
-                <PayloadForm
-                    isShowGadget={false}
-                    {...rest}
-                    paramsData={{...paramsData}}
-                    formLists={[...formLists]}
-                    formBind={{...formBind}}
-                    btnSubmit={btnSubmit}
-                />
-                <Divider />
-                <div className='setting-display'>
-                    <div className='setting-display-opt'>
-                        <div>HTTP反连地址</div>
-                        <CopyableField
-                            text={`http://${reverseAddr}/${classRequest?.ClassName || ""}`}
-                            style={{color: "blue"}}
-                        />
-                    </div>
-                    <div className='setting-display-opt'>
-                        <div>RMI反连地址</div>
-                        <CopyableField
-                            text={`rmi://${reverseAddr}/${classRequest?.ClassName || ""}`}
-                            style={{color: "blue"}}
-                        />
-                    </div>
-                    <div className='setting-display-opt'>
-                        <div>LDAP反连地址</div>
-                        <CopyableField
-                            text={`ldap://${reverseAddr}/${classRequest?.ClassName || ""}`}
-                            style={{color: "blue"}}
-                        />
-                    </div>
+                <div className={`payload-${isShowCode ? "" : "hidden-"}code`}>
+                    <PayloadCode isMin={true} codeExtra={codeExtra} onExtra={() => setCodeExtra(!codeExtra)} />
                 </div>
             </div>
-            <Divider type='vertical' className={isExtra ? "ver-hidden-divider" : "ver-divider"} />
-            <div className='table-wrapper'>
-                <ReverseTable data={data} isExtra={isExtra} setIsExtra={setIsExtra} clearData={clearData} />
+
+            <div className={`reverse-${codeExtra ? "hidden-" : ""}wrapper`}>
+                <div className='reverse-body'>
+                    <PageHeader
+                        className='reverse-server-pagehead'
+                        backIcon={false}
+                        title='反连服务器'
+                        subTitle='使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连'
+                        extra={[
+                            <div key='isExtra'>
+                                Payload 配置:{" "}
+                                <Switch size='small' checked={isExtra} onChange={(checked) => setIsExtra(checked)} />
+                            </div>,
+                            <Button key='close' type='primary' danger={true} size='small'>
+                                关闭反连
+                            </Button>
+                        ]}
+                    >
+                        <Alert
+                            type={"info"}
+                            message={
+                                <Space direction={"vertical"}>
+                                    <div className='addr-body'>
+                                        HTTP反连地址&nbsp;&nbsp;
+                                        <CopyableField
+                                            text={`http://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                                            style={{color: "blue"}}
+                                        />
+                                    </div>
+                                    <div className='addr-body'>
+                                        RMI反连地址&nbsp;&nbsp;
+                                        <CopyableField
+                                            text={`rmi://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                                            style={{color: "blue"}}
+                                        />
+                                    </div>
+                                    <div className='addr-body'>
+                                        LDAP反连地址&nbsp;&nbsp;
+                                        <CopyableField
+                                            text={`ldap://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                                            style={{color: "blue"}}
+                                        />
+                                    </div>
+                                </Space>
+                            }
+                        ></Alert>
+                    </PageHeader>
+                    <div className='reverse-server-data'>
+                        <ReverseTable data={data} clearData={clearData} />
+                    </div>
+                </div>
             </div>
         </div>
     )

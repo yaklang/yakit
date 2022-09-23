@@ -1,11 +1,23 @@
 .reverse-server-page-wrapper {
     width: 100%;
     height: 100%;
-    display: flex;
-    justify-content: center;
     overflow: hidden;
-    .setting-reverse-server-wrapper {
-        padding: 24px;
+
+    .setting-reverse-server-pagehead {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        .ant-page-header-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            .setting-reverse-server-wrapper {
+                margin-top: 40px;
+            }
+        }
     }
 }
 
@@ -13,6 +25,9 @@
     max-width: 678px;
     width: 100%;
     padding: 0 24px;
+    .setting-isremote-hint {
+        margin: 10px 0 24px 0;
+    }
 }
 
 .start-reverse-server-wrapper {
@@ -20,6 +35,73 @@
     height: 100%;
     display: flex;
     overflow: hidden;
+
+    .payload-wrapper {
+        width: 416px;
+        height: 100%;
+    }
+    .payload-hidden-wrapper {
+        flex: 0;
+        overflow: hidden;
+    }
+    .payload-extra-wrapper {
+        width: 100%;
+        height: 100%;
+        .payload-hidden-setting {
+            flex: 0;
+            overflow: hidden;
+        }
+    }
+    .payload-container {
+        display: flex;
+        flex-direction: column;
+        .payload-setting {
+            flex: 1;
+            overflow: hidden;
+        }
+        .payload-code-setting {
+            flex: 3;
+            overflow: hidden;
+        }
+        
+        .payload-code {
+            flex: 5;
+            overflow: hidden;
+        }
+        .payload-hidden-code {
+            flex: 0;
+            overflow: hidden;
+        }
+    }
+
+    .reverse-wrapper {
+        flex: 1;
+        overflow: hidden;
+        .reverse-body {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            .reverse-server-pagehead {
+                width: 100%;
+                padding: 16px 24px 0 24px;
+                .addr-body {
+                    display: flex;
+                    align-items: center;
+                }
+            }
+
+            .reverse-server-data {
+                flex: 1;
+                overflow: hidden;
+            }
+        }
+    }
+    .reverse-hidden-wrapper {
+        flex: 0;
+        overflow: hidden;
+    }
+
     .setting-wrapper {
         width: 416px;
         padding: 19px 24px 0 24px;

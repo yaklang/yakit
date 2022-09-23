@@ -1,18 +1,50 @@
-import React, {useRef, useEffect, useState} from "react"
+import React, {useRef, useEffect, useState, useMemo} from "react"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {InputNumber, Button, Form, Cascader, Switch, Input, Select, Spin, Tooltip} from "antd"
-import {QuestionOutlined, ThunderboltFilled} from "@ant-design/icons"
-import {failed, info, success} from "../../utils/notification"
+import {
+    InputNumber,
+    Button,
+    Form,
+    Cascader,
+    Switch,
+    Input,
+    Select,
+    Tooltip,
+    Radio,
+    Alert,
+    Space,
+    PageHeader
+} from "antd"
+import {
+    QuestionOutlined,
+    ExclamationCircleOutlined,
+    ThunderboltOutlined,
+    DownloadOutlined,
+    CopyOutlined,
+    FullscreenOutlined
+} from "@ant-design/icons"
+import {failed, info, success, warn} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
 import {
+    BRIDGE_ADDR,
+    BRIDGE_SECRET,
     FacadesRequest,
+    NetInterface,
     SettingReverseParamsInfo,
     SettingReverseServer,
     StartReverseServer
 } from "../reverseServer/NewReverseServerPage"
 import {randomString} from "@/utils/randomUtil"
+import {AutoCard} from "@/components/AutoCard"
+import {AutoSpin} from "@/components/AutoSpin"
 
 import "./javaPayloadPage.scss"
+import {YakCodeEditor} from "@/utils/editors"
+import {callCopyToClipboard} from "@/utils/basic"
+import {CopyableField} from "@/utils/inputUtil"
+import {ReverseNotification, ReverseTable} from "../reverseServer/ReverseTable"
+import {getRemoteValue} from "@/utils/kv"
+import {ExtractExecResultMessage} from "@/components/yakitLogSchema"
+import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,12 +97,22 @@ export const convertRequest = (value: ParamsRefProps) => {
 }
 
 export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props) => {
-    const [status, setStatus] = useState<"setting" | "start">("setting")
-    const [token, setToken, getToken] = useGetState<string>(randomString(40))
     const [loading, setLoading] = useState<boolean>(false)
+    const [token, setToken, getToken] = useGetState<string>(randomString(40))
+
     const paramsRef = useRef<ParamsRefProps>({useGadget: true, ...DefaultParams})
-    const formListRef = useRef<FormList[]>([])
-    const formBindRef = useRef<FormBindInfo>({})
+    const [params, setParams] = useState<ParamsRefProps>({useGadget: true, ...DefaultParams})
+
+    const [showAddr, setShowAddr] = useState<boolean>(false)
+    /**
+     * @name 反连服务器参数初始值
+     */
+    const addrParamsRef = useRef<SettingReverseParamsInfo>({
+        BridgeParam: {Addr: "", Secret: ""},
+        IsRemote: false,
+        ReversePort: 8085,
+        ReverseHost: "127.0.0.1"
+    })
     const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>({
         BridgeParam: {Addr: "", Secret: ""},
         IsRemote: false,
@@ -79,123 +121,423 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
     })
     const [remoteIp, setRemoteIp] = useState<string>("")
 
-    const btnSubmit = useMemoizedFn(
-        (
-            type: "server" | "copy" | "yakRun" | "apply",
-            value: ParamsRefProps,
-            formList: FormList[],
-            formBind: FormBindInfo
-        ) => {
-            paramsRef.current = value
-            formListRef.current = formList
-            formBindRef.current = formBind
+    const [isStart, setIsStart] = useState<boolean>(false)
+    const [codeExtra, setCodeExtra] = useState<boolean>(false)
+    const [tableExtra, setTableExtra] = useState<boolean>(false)
 
-            if (type === "server") startServer()
+    const [dataLoading, setDataLoading] = useState<boolean>(false)
+    const dataRef = useRef<ReverseNotification[]>([])
+    const [data, setData, getData] = useGetState<ReverseNotification[]>([])
+    const totalRef = useRef<number>(0)
+
+    const reverseAddr = useMemo(() => {
+        const host = addrParams.IsRemote
+            ? `${remoteIp}:${addrParams.ReversePort}`
+            : `${addrParams.ReverseHost}:${addrParams.ReversePort}`
+        return host
+    }, [addrParams, remoteIp])
+
+    // 获取系统全局配置的反连参数和本地反连IP
+    useEffect(() => {
+        const initParams = addrParamsRef.current
+
+        // setLoading(true)
+        getRemoteValue(BRIDGE_ADDR).then((addr: string) => {
+            if (!!addr) {
+                initParams.BridgeParam.Addr = addr
+                getRemoteValue(BRIDGE_SECRET)
+                    .then((secret: string) => {
+                        initParams.BridgeParam.Secret = secret
+                        initParams.IsRemote = true
+                    })
+                    .finally(() => {
+                        ipcRenderer
+                            .invoke("AvailableLocalAddr", {})
+                            .then((data: {Interfaces: NetInterface[]}) => {
+                                const arr = (data.Interfaces || []).filter((i) => i.IP !== "127.0.0.1")
+                                if (arr.length > 0) initParams.ReverseHost = arr[0].IP
+                            })
+                            .finally(() => {
+                                setAddrParams({...initParams})
+                                // setTimeout(() => setLoading(false), 300)
+                            })
+                    })
+            } else {
+                ipcRenderer
+                    .invoke("AvailableLocalAddr", {})
+                    .then((data: {Interfaces: NetInterface[]}) => {
+                        const arr = (data.Interfaces || []).filter((i) => i.IP !== "127.0.0.1")
+                        if (arr.length > 0) initParams.ReverseHost = arr[0].IP
+                    })
+                    .finally(() => {
+                        setAddrParams({...initParams})
+                        // setTimeout(() => setLoading(false), 300)
+                    })
+            }
+        })
+    }, [])
+    // 实时接收反连数据
+    useEffect(() => {
+        if (!token) return
+
+        dataRef.current = []
+        totalRef.current = 0
+        setData([])
+        ipcRenderer.on(`${token}-data`, (_, data) => {
+            if (!data.IsMessage) {
+                return
+            }
+            const datas = dataRef.current
+            try {
+                const message = ExtractExecResultMessage(data) as ExecResultLog
+                if (message.level !== "facades-msg") {
+                    switch (message.level) {
+                        case "error":
+                        case "mirror_error":
+                            failed(`${message.level}: ${message.data}`)
+                            stopReverse()
+                            break
+                        case "warning":
+                            warn(message.data)
+                            break
+                        default:
+                            info(JSON.stringify(message))
+                    }
+                    return
+                }
+                const obj = JSON.parse(message.data) as ReverseNotification
+                obj.timestamp = message.timestamp
+                let isUpdata = false
+                for (let i = 0; i < datas.length; i++) {
+                    if (datas[i].connect_hash === obj.connect_hash) {
+                        datas[i] = obj
+                        isUpdata = true
+                        break
+                    }
+                }
+                if (!isUpdata) {
+                    datas.unshift(obj)
+                    totalRef.current = totalRef.current + 1
+                }
+
+                if (datas.length > 100) datas.pop()
+            } catch (e) {}
+        })
+        ipcRenderer.on(`${token}-error`, (_, data) => {
+            if (data) {
+                failed(`${JSON.stringify(data)}`)
+                stopReverse(true)
+            }
+        })
+        ipcRenderer.on(`${token}-end`, () => stopReverse(true))
+        const id = setInterval(() => {
+            const datas = dataRef.current
+
+            if (getData().length === 0) setData([...datas])
+            if (getData().length > 0 && datas[0].uuid !== getData()[0].uuid) setData([...datas])
+        }, 1000)
+        return () => {
+            clearInterval(id)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-data`)
         }
-    )
+    }, [token])
 
-    const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo, remoteIp: string) => {
-        const classData = {...convertRequest({...paramsRef.current})}
+    // 关闭接收反连数据监听
+    const stopReverse = (isCancel?: boolean) => {
+        if (!isCancel) ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+        setToken(randomString(40))
+        setIsStart(false)
+    }
+    // 清空现存反连数据
+    const clearReverseData = () => {
+        dataRef.current = []
+        totalRef.current = 0
+        setData([])
+    }
+
+    /**
+     * @name 启动反连服务器
+     */
+    const startUpFacadeServer = (value: ParamsRefProps, addr: SettingReverseParamsInfo, remote: string) => {
+        const classData = {...convertRequest({...value})}
         let startFacadeParams: FacadesRequest = {
-            ...params,
+            ...addr,
             GenerateClassParams: {...classData},
             Token: getToken()
         }
-        if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remoteIp
+        if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remote
+        console.log(startFacadeParams)
+        setLoading(false)
+        // ipcRenderer
+        //     .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
+        //     .then(() => {
+        //         info("启动FacadeServer")
+        //         setTimeout(() => {
+        //             ipcRenderer
+        //                 .invoke("ApplyClassToFacades", {
+        //                     Token: getToken(),
+        //                     GenerateClassParams: {...classData}
+        //                 })
+        //                 // .then((res) => info("应用到FacadeServer成功"))
+        //                 .catch((err) => failed(`应用到FacadeServer失败${err}`))
+        //                 .finally(() => setTimeout(() => setLoading(false), 300))
+        //         }, 500)
+        //     })
+        //     .catch((e: any) => {
+        //         failed("启动FacadeServer失败: " + `${e}`)
+        //     })
+        //     .finally(() => setTimeout(() => setLoading(false), 300))
+    }
+    /**
+     * @name 启动带有payload配置的反连
+     */
+    const onStart = useMemoizedFn((value: ParamsRefProps) => {
+        if (isStart) {
+            stopReverse()
+            setTimeout(() => setLoading(false), 200)
+        } else {
+            // 判断反连服务器参数是否有误
+            let reverseAddr = addrParamsRef.current
+            if (showAddr) {
+                reverseAddr = {...addrParams}
+                let hint = "开启高级配置后,"
+                if (reverseAddr.IsRemote) {
+                    if (!reverseAddr.BridgeParam.Addr) hint += "请填写公网IP,"
+                } else {
+                    if (!reverseAddr.BridgeParam.Addr) hint += "请填写反连IP,"
+                }
+                if (!reverseAddr.ReversePort && reverseAddr.ReversePort !== 0) hint += "请填写端口号"
+                if (hint !== "开启高级配置后,") {
+                    failed(hint)
+                    return
+                }
+            }
 
-        ipcRenderer
-            .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
-            .then(() => {
-                info("启动FacadeServer")
-                setStatus("start")
-                setTimeout(() => {
-                    ipcRenderer
-                        .invoke("ApplyClassToFacades", {
-                            Token: getToken(),
-                            GenerateClassParams: {...classData}
-                        })
-                        // .then((res) => info("应用到FacadeServer成功"))
-                        .catch((err) => failed(`应用到FacadeServer失败${err}`))
-                        .finally(() => setTimeout(() => setLoading(false), 300))
-                }, 500)
-            })
-            .catch((e: any) => {
-                failed("启动FacadeServer失败: " + `${e}`)
-            })
+            // 生成启动反连服务器的后端请求参数
+            if (reverseAddr.IsRemote) {
+                ipcRenderer
+                    .invoke("GetTunnelServerExternalIP", {
+                        Addr: reverseAddr.BridgeParam.Addr,
+                        Secret: reverseAddr.BridgeParam.Secret
+                    })
+                    .then((data: {IP: string}) => {
+                        setRemoteIp(data.IP)
+                        startUpFacadeServer(value, reverseAddr, data.IP)
+                    })
+                    .catch((e: any) => failed("获取远程地址失败: " + `${e}`))
+            } else startUpFacadeServer(value, reverseAddr, "")
+        }
     })
-    const startServer = useMemoizedFn(() => {
-        const m = showModal({
-            width: "40%",
-            content: (
-                <SettingReverseServer
-                    defaultSetting={addrParams}
-                    setServer={(params) => {
-                        setAddrParams(params.setting)
-                        setRemoteIp(params.remoteIp)
-                        startFacadeServer(params.setting, params.remoteIp)
-
-                        m.destroy()
-                        setTimeout(() => setLoading(false), 300)
-                    }}
-                ></SettingReverseServer>
-            ),
-            modalAfterClose: () => setTimeout(() => setLoading(false), 300)
-        })
+    /**
+     * @name 给反连应用payload配置
+     */
+    const onApply = useMemoizedFn((value: ParamsRefProps) => {
+        const data = convertRequest(value)
+        if (isStart) {
+            ipcRenderer
+                .invoke("ApplyClassToFacades", {Token: token, GenerateClassParams: {...data}})
+                .then((res) => info("应用到FacadeServer成功"))
+                .catch((err) => failed(`应用到FacadeServer失败${err}`))
+                .finally(() => setTimeout(() => setLoading(false), 300))
+        }
     })
 
     return (
         <div className='java-payload-wrapper'>
-            {status === "setting" && (
-                <PayloadForm
-                    loading={loading}
-                    setLoading={setLoading}
-                    paramsData={{...paramsRef.current}}
-                    formLists={[...formListRef.current]}
-                    formBind={{...formBindRef.current}}
-                    btnSubmit={btnSubmit}
-                />
-            )}
-            {status === "start" && addrParams && (
-                <StartReverseServer
-                    loading={loading}
-                    setLoading={setLoading}
-                    token={token}
-                    addr={addrParams}
-                    remoteIp={remoteIp}
-                    stop={(isCancel) => {
-                        if (!isCancel) ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
-                        setStatus("setting")
-                        setToken(randomString(40))
-                    }}
-                    apply={(value) => {
-                        ipcRenderer
-                            .invoke("ApplyClassToFacades", {...value})
-                            .then((res) => info("应用到FacadeServer成功"))
-                            .catch((err) => failed(`应用到FacadeServer失败${err}`))
-                            .finally(() => setTimeout(() => setLoading(false), 300))
-                    }}
-                    paramsData={{...paramsRef.current}}
-                    formLists={[...formListRef.current]}
-                    formBind={{...formBindRef.current}}
-                />
-            )}
+            <div className={`payload-${tableExtra ? "hidden" : "info"}-wrapper`}>
+                <div className='wrapper-body'>
+                    <div className={`body-${codeExtra ? "hidden-" : ""}left`}>
+                        <PayloadForm
+                            paramsData={{...params}}
+                            loading={loading}
+                            setLoading={setLoading}
+                            onStart={onStart}
+                            onApply={onApply}
+                            extraNode={
+                                isStart ? (
+                                    <></>
+                                ) : params.useGadget ? (
+                                    <Form size='small' labelCol={{span: 8}} wrapperCol={{span: 16}}>
+                                        <Form.Item
+                                            label={
+                                                <div className='form-item-label-title'>
+                                                    高级设置
+                                                    <Tooltip placement='bottom' title='配置反连服务器参数'>
+                                                        <ExclamationCircleOutlined className='question-icon' />
+                                                    </Tooltip>
+                                                </div>
+                                            }
+                                        >
+                                            <Switch checked={showAddr} onChange={(check) => setShowAddr(check)} />
+                                        </Form.Item>
+                                        {showAddr && (
+                                            <>
+                                                <Form.Item
+                                                    label='启用公网穿透'
+                                                    // help={
+                                                    //     params.IsRemote && (
+                                                    //         <Alert
+                                                    //             className='setting-isremote-hint'
+                                                    //             type={"success"}
+                                                    //             message={
+                                                    //                 <div>
+                                                    //                     在自己的服务器安装 yak 核心引擎，执行{" "}
+                                                    //                     <Text code={true} copyable={true}>
+                                                    //                         yak bridge --secret [your-pass]
+                                                    //                     </Text>{" "}
+                                                    //                     启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
+                                                    //                     <Text style={{color: "#999"}}>
+                                                    //                         yak version {`>=`} v1.0.11-sp9
+                                                    //                     </Text>
+                                                    //                 </div>
+                                                    //             }
+                                                    //         />
+                                                    //     )
+                                                    // }
+                                                >
+                                                    <Switch
+                                                        checked={addrParams.IsRemote}
+                                                        onChange={(IsRemote) =>
+                                                            setAddrParams({...addrParams, IsRemote})
+                                                        }
+                                                    />
+                                                </Form.Item>
+
+                                                {addrParams.IsRemote && (
+                                                    <>
+                                                        <Form.Item label='公网Bridge地址'>
+                                                            <Input
+                                                                allowClear={true}
+                                                                value={addrParams.BridgeParam.Addr}
+                                                                onChange={(e) => {
+                                                                    addrParams.BridgeParam.Addr = e.target.value
+                                                                    setAddrParams({...addrParams})
+                                                                }}
+                                                            />
+                                                        </Form.Item>
+                                                        <Form.Item label='密码'>
+                                                            <Input
+                                                                allowClear={true}
+                                                                value={addrParams.BridgeParam.Secret}
+                                                                onChange={(e) => {
+                                                                    addrParams.BridgeParam.Secret = e.target.value
+                                                                    setAddrParams({...addrParams})
+                                                                }}
+                                                            />
+                                                        </Form.Item>
+                                                    </>
+                                                )}
+                                                {!addrParams.IsRemote && (
+                                                    <Form.Item label='反连地址'>
+                                                        <Input
+                                                            allowClear={true}
+                                                            value={addrParams.ReverseHost}
+                                                            onChange={(e) =>
+                                                                setAddrParams({
+                                                                    ...addrParams,
+                                                                    ReverseHost: e.target.value
+                                                                })
+                                                            }
+                                                        />
+                                                    </Form.Item>
+                                                )}
+                                                <Form.Item label='反连端口'>
+                                                    <InputNumber
+                                                        width='100%'
+                                                        min={0}
+                                                        max={65535}
+                                                        precision={0}
+                                                        value={addrParams.ReversePort}
+                                                        onChange={(ReversePort) =>
+                                                            setAddrParams({...addrParams, ReversePort})
+                                                        }
+                                                    />
+                                                </Form.Item>
+                                            </>
+                                        )}
+                                    </Form>
+                                ) : (
+                                    <></>
+                                )
+                            }
+                        />
+                    </div>
+
+                    <div className='body-right'>
+                        <PayloadCode codeExtra={codeExtra} onExtra={() => setCodeExtra(!codeExtra)} />
+                    </div>
+                </div>
+            </div>
+
+            <div className={`reverse-${isStart && !codeExtra ? "info" : "hidden"}-wrapper`}>
+                <div className='wrapper-body'>
+                    <div className='body-left'>
+                        <AutoCard title='反连地址' className='info-addr-card' size='small' bodyStyle={{padding: 16}}>
+                            <Alert
+                                type={"info"}
+                                className='addr-alert'
+                                style={{alignItems: "baseline", height: "100%"}}
+                                message={
+                                    <Space direction={"vertical"}>
+                                        <div className='addr-body'>
+                                            HTTP反连地址&nbsp;&nbsp;
+                                            <CopyableField
+                                                width={340}
+                                                text={`http://${reverseAddr}/${params?.ClassName || ""}`}
+                                                style={{color: "blue"}}
+                                            />
+                                        </div>
+                                        <div className='addr-body'>
+                                            RMI反连地址&nbsp;&nbsp;
+                                            <CopyableField
+                                                width={340}
+                                                text={`rmi://${reverseAddr}/${params?.ClassName || ""}`}
+                                                style={{color: "blue"}}
+                                            />
+                                        </div>
+                                        <div className='addr-body'>
+                                            LDAP反连地址&nbsp;&nbsp;
+                                            <CopyableField
+                                                width={340}
+                                                text={`ldap://${reverseAddr}/${params?.ClassName || ""}`}
+                                                style={{color: "blue"}}
+                                            />
+                                        </div>
+                                    </Space>
+                                }
+                            ></Alert>
+                        </AutoCard>
+                    </div>
+
+                    <div className='body-right'>
+                        <ReverseTable
+                            isShowExtra={true}
+                            isExtra={tableExtra}
+                            onExtra={() => setTableExtra(!tableExtra)}
+                            data={data}
+                            clearData={clearReverseData}
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     )
 })
 
 interface PayloadFormProp {
-    isShowGadget?: boolean
+    isReverse?: boolean
+    isShowCode?: boolean
+    showCode?: () => any
+    isStart?: boolean
+    paramsData: ParamsRefProps
+
     loading: boolean
     setLoading: (value: boolean) => any
-    paramsData: ParamsRefProps
-    formLists?: FormList[]
-    formBind?: FormBindInfo
-    btnSubmit: (
-        type: "server" | "copy" | "yakRun" | "apply",
-        value: ParamsRefProps,
-        formList: FormList[],
-        formBind: FormBindInfo
-    ) => any
+    onStart?: (value: ParamsRefProps) => any
+    onApply: (value: ParamsRefProps) => any
+    extraNode?: React.ReactNode
 }
 
 interface YsoClassGeneraterOptions extends FormList {
@@ -224,12 +566,23 @@ enum FormParamsType {
 }
 
 export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
-    const {isShowGadget = true, loading, setLoading, paramsData, formLists = [], formBind = {}, btnSubmit} = props
+    const {
+        isReverse = false,
+        isShowCode = false,
+        showCode,
+        isStart,
+        paramsData,
+        loading,
+        setLoading,
+        onStart,
+        onApply,
+        extraNode
+    } = props
 
     const isInit = useRef<boolean>(true)
 
     const [formInstance] = Form.useForm()
-    const [useGadget, setUseGadget, getUseGadget] = useGetState<boolean>(isShowGadget ? paramsData.useGadget : false)
+    const [useGadget, setUseGadget, getUseGadget] = useGetState<boolean>(!isReverse ? paramsData.useGadget : false)
     const paramsRef = useRef<ParamsRefProps>({...paramsData})
     const [params, setParams] = useState<ParamsProps>({...paramsData})
 
@@ -238,81 +591,35 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
         setParams({...paramsRef.current})
         formInstance.setFieldsValue({...paramsRef.current})
     })
-
-    const [btnLoading, setBtnLoading] = useState<boolean>(false)
-    const [options, setOptions] = useState<OptionInfo[]>([])
-    const [formList, setFormList] = useState<FormList[]>([...formLists])
-    const formBindRef = useRef<FormBindInfo>({...formBind})
-
-    const submit = useMemoizedFn((type: "server" | "copy" | "yakRun" | "apply") => {
-        formInstance.validateFields().then(() => {
-            setLoading(true)
-            if (type === "copy") {
-                copyPayload({...paramsRef.current})
-            } else if (type === "yakRun") {
-                sendYakRunning({...paramsRef.current})
-            } else {
-                btnSubmit(type, {...paramsRef.current}, [...formList], {...formBindRef.current})
-            }
-        })
-    })
-    const copyPayload = useMemoizedFn((value: ParamsRefProps) => {
-        const generaterRequest = convertRequest(value)
-        ipcRenderer
-            .invoke("GenerateYsoBytes", generaterRequest)
-            .then((d: {Bytes: Uint8Array; FileName: string}) => {
-                success("生成字节码成功")
-                ipcRenderer
-                    .invoke("BytesToBase64", {
-                        Bytes: d.Bytes
-                    })
-                    .then((res: {Base64: string}) => {
-                        ipcRenderer
-                            .invoke("copy-clipboard", res.Base64)
-                            .then(() => {
-                                success("复制Base64成功")
-                            })
-                            .catch((err) => {
-                                failed(`${err}`)
-                            })
-                    })
-                    .catch((err) => {
-                        failed(`${err}`)
-                    })
-            })
-            .catch((e: any) => {
-                failed("生成字节码失败: " + `${e}`)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 300))
-    })
-    const sendYakRunning = useMemoizedFn((value: ParamsRefProps) => {
-        const generaterRequest = convertRequest(value)
-        ipcRenderer
-            .invoke("GenerateYsoCode", generaterRequest)
-            .then((d: {Code: string}) => {
-                success("生成代码成功")
-                setTimeout(() => {
-                    ipcRenderer.invoke("send-to-tab", {
-                        type: "add-yak-running",
-                        data: {
-                            name: `${generaterRequest.Gadget}/${generaterRequest.Class}-${new Date().getTime()}`,
-                            code: d.Code
-                        }
-                    })
-                }, 300)
-            })
-            .catch((e: any) => {
-                failed("生成代码失败: " + `${e}`)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 300))
-    })
     const cleatParams = useMemoizedFn(() => {
         paramsRef.current = {useGadget, ...DefaultParams}
         setParams({...DefaultParams})
         formInstance.setFieldsValue({useGadget, ...DefaultParams})
-        // formInstance.resetFields()
         setFormList([])
         formBindRef.current = {}
+    })
+
+    const [btnLoading, setBtnLoading] = useState<boolean>(false)
+    const [options, setOptions] = useState<OptionInfo[]>([])
+    const [formList, setFormList] = useState<FormList[]>([])
+    const formBindRef = useRef<FormBindInfo>({})
+
+    const formStart = useMemoizedFn(() => {
+        if (!onStart) return
+        if (isStart) {
+            onStart({...paramsRef.current})
+        } else {
+            formInstance.validateFields().then(() => {
+                setLoading(true)
+                onStart({...paramsRef.current})
+            })
+        }
+    })
+    const formApply = useMemoizedFn(() => {
+        formInstance.validateFields().then(() => {
+            setLoading(true)
+            onApply({...paramsRef.current})
+        })
     })
 
     useEffect(() => {
@@ -462,21 +769,82 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
     })
 
     return (
-        <div className={`${isShowGadget ? "payload-form-body" : "payload-small-form-body"} form-common-style`}>
-            <Spin spinning={loading}>
+        <AutoCard
+            className='setting-payload-wrapper'
+            size='small'
+            bodyStyle={{padding: "20px 16px", overflow: "auto"}}
+            title={
+                <div>
+                    JavaPayload 配置
+                    <Tooltip placement='bottom' title='配置序列化Payload或恶意类'>
+                        <ExclamationCircleOutlined className='setting-payload-icon' />
+                    </Tooltip>
+                </div>
+            }
+            extra={
+                <div>
+                    {!isReverse && (
+                        <Button
+                            loading={btnLoading || loading}
+                            className='setting-payload-btn'
+                            type='primary'
+                            ghost={true}
+                            danger={isStart}
+                            size='small'
+                            onClick={formStart}
+                        >
+                            {isStart ? "关闭反连" : "启动反连"}
+                        </Button>
+                    )}
+                    {isReverse && (
+                        <Button
+                            className='setting-payload-btn'
+                            type='primary'
+                            danger={isShowCode}
+                            ghost={true}
+                            size='small'
+                            onClick={showCode}
+                        >
+                            {isShowCode ? "关闭代码" : "显示代码"}
+                        </Button>
+                    )}
+                    <Button
+                        loading={btnLoading || loading}
+                        className='setting-payload-btn'
+                        size='small'
+                        type='primary'
+                        onClick={formApply}
+                    >
+                        生成
+                    </Button>
+                </div>
+            }
+        >
+            <AutoSpin wrapperClassName='form-common-style' spinning={loading}>
                 <Form
                     form={formInstance}
                     name='form'
-                    labelCol={{span: isShowGadget ? 4 : 6}}
-                    wrapperCol={{span: isShowGadget ? 20 : 18}}
+                    size='small'
+                    labelCol={{span: 8}}
+                    wrapperCol={{span: 16}}
                     colon={false}
                     initialValues={{...paramsRef.current}}
                     autoComplete='off'
-                    layout={isShowGadget ? "horizontal" : "vertical"}
                 >
-                    {isShowGadget && (
-                        <Form.Item label='使用利用链' name='useGadget' help='关闭则不使用利用链,只生成恶意类'>
+                    {!isReverse && (
+                        <Form.Item
+                            label={
+                                <div className='form-item-label-title'>
+                                    使用利用链
+                                    <Tooltip placement='bottom' title='关闭则不使用利用链,只生成恶意类'>
+                                        <ExclamationCircleOutlined className='question-icon' />
+                                    </Tooltip>
+                                </div>
+                            }
+                            name='useGadget'
+                        >
                             <Switch
+                                disabled={isStart}
                                 checked={useGadget}
                                 onChange={(check) => {
                                     setUseGadget(check)
@@ -487,23 +855,17 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                     )}
 
                     <Form.Item
-                        label={
-                            <div className='form-item-label-title'>
-                                {useGadget ? "利用链" : "恶意类"}
-                                {/* <Tooltip placement='bottom' title='关闭则不使用利用链,只生成Class'>
-                                    <QuestionOutlined className='question-icon' />
-                                </Tooltip> */}
-                            </div>
-                        }
+                        label={useGadget ? "利用链" : "恶意类"}
                         rules={[
+                            {required: true, message: ""},
                             () => ({
                                 validator(_, value) {
                                     if (getUseGadget()) {
                                         if (Array.isArray(value) && value.length > 0) return Promise.resolve()
-                                        return Promise.reject(new Error("请选择利用链"))
+                                        return Promise.reject(new Error(""))
                                     } else {
                                         if (!!value) return Promise.resolve()
-                                        return Promise.reject(new Error("请选择恶意类"))
+                                        return Promise.reject(new Error(""))
                                     }
                                 }
                             })
@@ -537,7 +899,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             <Select
                                 allowClear={true}
                                 placeholder='请选择恶意类'
-                                optionLabelProp="NameVerbose"
+                                optionLabelProp='NameVerbose'
                                 value={params.Class}
                                 onChange={(value) => {
                                     if (!!value) {
@@ -572,11 +934,11 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                         const flag = judgeBindValue(item.Key)
                         if (!flag) return <div key={item.Key}></div>
 
-                        let hint = "请填写内容"
-                        if (item.Type === FormParamsType.String || item.Type === FormParamsType.Base64Bytes)
-                            hint = `请填写${item.KeyVerbose}`
-                        if (item.Type === FormParamsType.StringPort) hint = `请输入${item.KeyVerbose}`
-                        if (item.Type === FormParamsType.StringBool) hint = `请开关${item.KeyVerbose}`
+                        let hint = ""
+                        // if (item.Type === FormParamsType.String || item.Type === FormParamsType.Base64Bytes)
+                        //     hint = `请填写${item.KeyVerbose}`
+                        // if (item.Type === FormParamsType.StringPort) hint = `请输入${item.KeyVerbose}`
+                        // if (item.Type === FormParamsType.StringBool) hint = `请开关${item.KeyVerbose}`
 
                         return (
                             <Form.Item
@@ -586,13 +948,14 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                         {item.KeyVerbose}
                                         {!!item.Help && (
                                             <Tooltip placement='bottom' title={item.Help}>
-                                                <QuestionOutlined className='question-icon' />
+                                                <ExclamationCircleOutlined className='question-icon' />
                                             </Tooltip>
                                         )}
                                     </div>
                                 }
                                 name={item.Key}
                                 rules={[
+                                    {required: true, message: ""},
                                     () => ({
                                         validator(_, value) {
                                             if (
@@ -654,36 +1017,128 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             </Form.Item>
                         )
                     })}
+                </Form>
+                {extraNode}
+            </AutoSpin>
+        </AutoCard>
+    )
+})
 
-                    <Form.Item wrapperCol={isShowGadget ? {offset: 4} : undefined} className='form-type-btn'>
-                        {isShowGadget && !useGadget && (
-                            <Button loading={btnLoading} type='primary' onClick={() => submit("server")}>
-                                启动反连服务
-                            </Button>
-                        )}
-                        {!isShowGadget && (
-                            <Button loading={btnLoading} type='primary' onClick={() => submit("apply")}>
-                                应用
-                            </Button>
-                        )}
+interface PayloadCodeProp {
+    isMin?: boolean
+    codeExtra: boolean
+    onExtra: () => any
+}
+
+const CodeType: {value: string; label: string}[] = [
+    {value: "base64", label: "BASE64"},
+    {value: "hex", label: "HEX"},
+    {value: "javadump", label: "JavaDump"},
+    {value: "yak", label: "YAK"}
+]
+
+export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
+    const {isMin = false, codeExtra, onExtra} = props
+
+    const [type, setType] = useState<string>("base64")
+
+    const typeChange = useMemoizedFn((value: string) => {
+        setType(value)
+    })
+
+    const codeOperate = useMemoizedFn((value: "yakRunning" | "download" | "copy" | "extra") => {
+        if (value === "yakRunning") {
+            return
+            ipcRenderer.invoke("send-to-tab", {
+                type: "add-yak-running",
+                data: {
+                    name: `${123}/${321}-${new Date().getTime()}`,
+                    code: "123"
+                }
+            })
+        }
+        if (value === "download") {
+        }
+        if (value === "copy") callCopyToClipboard("123")
+        if (value === "extra") onExtra()
+    })
+
+    return (
+        <AutoCard
+            className='code-payload-wrapper'
+            size='small'
+            bodyStyle={{padding: 0, overflow: "hidden"}}
+            title={
+                <div>
+                    代码
+                    <Radio.Group
+                        className='code-type-radio'
+                        size='small'
+                        buttonStyle='solid'
+                        value={type}
+                        onChange={({target: {value}}) => typeChange(value)}
+                    >
+                        {CodeType.map((item) => (
+                            <Radio.Button key={item.value} value={item.value}>
+                                {item.label}
+                            </Radio.Button>
+                        ))}
+                    </Radio.Group>
+                </div>
+            }
+            extra={
+                isMin && !codeExtra ? (
+                    <div>
                         <Button
-                            loading={btnLoading}
-                            className={useGadget ? "primary-btn" : "other-btn"}
-                            onClick={() => submit("copy")}
-                        >
-                            复制 Payload
-                        </Button>
+                            type='link'
+                            size='small'
+                            icon={<ThunderboltOutlined />}
+                            onClick={() => codeOperate("yakRunning")}
+                        />
                         <Button
-                            loading={btnLoading}
-                            className='other-btn'
-                            icon={<ThunderboltFilled style={{color: "#40a9ff"}} />}
-                            onClick={() => submit("yakRun")}
+                            type='link'
+                            size='small'
+                            icon={<DownloadOutlined />}
+                            onClick={() => codeOperate("download")}
+                        />
+                        <Button type='link' size='small' icon={<CopyOutlined />} onClick={() => codeOperate("copy")} />
+                        <Button
+                            type='link'
+                            size='small'
+                            icon={<FullscreenOutlined />}
+                            onClick={() => codeOperate("extra")}
+                        />
+                    </div>
+                ) : (
+                    <div className='extra-btns'>
+                        <Button
+                            type='primary'
+                            ghost={true}
+                            size='small'
+                            icon={<ThunderboltOutlined />}
+                            onClick={() => codeOperate("yakRunning")}
                         >
                             Yak Runner
                         </Button>
-                    </Form.Item>
-                </Form>
-            </Spin>
-        </div>
+                        <Button type='primary' size='small' ghost={true} onClick={() => codeOperate("download")}>
+                            下载文件
+                        </Button>
+                        <Button type='primary' size='small' onClick={() => codeOperate("copy")}>
+                            复制代码
+                        </Button>
+                        <Button
+                            type='link'
+                            size='small'
+                            icon={<FullscreenOutlined />}
+                            onClick={() => codeOperate("extra")}
+                        />
+                    </div>
+                )
+            }
+        >
+            <AutoSpin spinning={false}>
+                <YakCodeEditor readOnly={true} originValue={Buffer.from(JSON.stringify("123"), "utf8")} />
+            </AutoSpin>
+        </AutoCard>
     )
 })
