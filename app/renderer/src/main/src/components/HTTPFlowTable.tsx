@@ -37,7 +37,7 @@ import {
 } from "../pages/invoker/fromPacketToYakCode"
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
-
+import {getRemoteValue, setRemoteValue} from "@/utils/kv";
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPHeaderItem {
@@ -563,6 +563,10 @@ const OFFSET_STEP = 20
 const ROW_HEIGHT = 42
 const MAX_ROW_COUNT = Math.abs(OFFSET_LIMIT * 2)
 
+interface shieldData {
+    id: number[],
+}
+
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>(props.params || {SourceType: "mitm"})
@@ -575,6 +579,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     // const [autoReload, setAutoReload, getAutoReload] = useGetState(false);
     const autoReloadRef = useRef<boolean>(false)
+    const isOneceLoading = useRef<boolean>(true)
     const autoReload = autoReloadRef.current
     const setAutoReload = (b: boolean) => {
         autoReloadRef.current = b
@@ -593,15 +598,22 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // 用于记录适合
     const [_scrollY, setScrollYRaw, getScrollY] = useGetState(0)
     const setScrollY = useThrottleFn(setScrollYRaw, {wait: 300}).run
-
+    // 屏蔽Checkbox
+    const [shieldChecked,setShieldChecked] = useState<boolean>(false)
     // 如果这个大于等于 0 ，就 Lock 住，否则忽略
     const [_trigger, setLockedScroll, getLockedScroll] = useGetState(-1)
     const lockScrollTimeout = (size: number, timeout: number) => {
         setLockedScroll(size)
         setTimeout(() => setLockedScroll(-1), timeout)
     }
-
+    // 屏蔽数据
+    const [shieldData,setShieldData,getShieldData] = useGetState<shieldData>({
+        id:[],
+    })
+    
     const tableRef = useRef(null)
+
+    const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
     const ref = useHotkeys("ctrl+r, enter", (e) => {
         const selected = getSelected()
@@ -705,6 +717,44 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [compareRight])
 
+    useEffect(()=>{
+        // 判断是否第一次加载页面
+        if(isOneceLoading.current){
+            getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA).then(data => {
+                try {
+                    const cacheData = JSON.parse(data)
+                    setShieldData({
+                        id:cacheData?.id||[],
+                    })
+                } catch (e) {
+                    update(1)
+                    failed("加载屏蔽参数失败")
+                }
+            }).finally(() => {
+                isOneceLoading.current = false
+            })
+        }
+        else{
+            // 持久化存储
+            setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(getShieldData())) 
+            // setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify({
+            //     id:[],
+            // }))
+            // console.log("清空缓存")
+            // 是否点击屏蔽
+            if(shieldChecked){
+                if(shieldData.id.length===0) {
+                    setShieldChecked(false)
+                }
+                setParams({...params, IncludeInWhere: shieldData?.id})
+            }
+            else{
+                setParams({...params, ExcludeId: shieldData?.id})
+            } 
+        }
+        
+    },[shieldData])
+
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, sourceType?: string, noLoading?: boolean) => {
             const paginationProps = {
@@ -721,7 +771,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             //     SourceType: sourceType, ...params,
             //     Pagination: {...paginationProps},
             // })
-            ipcRenderer
+                ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: sourceType,
                     ...params,
@@ -736,6 +786,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     failed(`query HTTP Flow failed: ${e}`)
                 })
                 .finally(() => setTimeout(() => setLoading(false), 300))
+            
         }
     )
 
@@ -764,12 +815,19 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         return min
     })
 
-    // 第一次启动的时候加载一下
+    // 第一次启动的时候等待缓存条件加载
     // OnlyWebsocket 变的时候加载一下
     useEffect(() => {
-        update(1)
+        if(!isOneceLoading.current){
+            update(1)
+        }
     }, [params.OnlyWebsocket])
 
+    useEffect(()=>{
+        if(!isOneceLoading.current){
+            update()
+        }
+    },[params.ExcludeId,params.IncludeInWhere])
     const scrollTableTo = useMemoizedFn((size: number) => {
         if (!tableRef || !tableRef.current) return
         const table = tableRef.current as unknown as {
@@ -787,7 +845,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Order: "desc",
                 OrderBy: "id"
             }
-
             const offsetId = getNewestId()
             // 查询数据
             ipcRenderer
@@ -1037,6 +1094,13 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         )
     })
 
+    // 保留数组中重复的数据
+    const filterUnique = arr => arr.filter(i => arr.indexOf(i) !== arr.lastIndexOf(i))
+    // 保留数组中非重复数据
+    const filterNonUnique = arr => arr.filter(i => arr.indexOf(i) === arr.lastIndexOf(i))
+    // 数组去重
+    const filterItem = arr => arr.filter((item,index) => arr.indexOf(item) === index)
+
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -1160,11 +1224,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         >
                             只看 Websocket
                         </Checkbox>
-                        <Checkbox 
-                        // checked={}
-                        // onChange={()=>setParams({...params,})}
+                        {<Checkbox 
+                        checked={shieldChecked}
+                        disabled={!(!!shieldData.id.length)}
+                        onChange={(e)=>{
+                            let { checked } = e.target
+                            setShieldChecked(checked)
+                            checked?setParams({...params,ExcludeId:undefined,IncludeInWhere:shieldData?.id})
+                            :setParams({...params,IncludeInWhere:undefined,ExcludeId:shieldData?.id})
+                        
+                        }}
                         >
-                            只看屏蔽数据</Checkbox>
+                            只看屏蔽数据</Checkbox>}
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                 </Col>
@@ -1788,21 +1859,115 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         }
                                     ]
                                 },
-                                {
+                                shieldChecked?{
+                                    title:"取消屏蔽",
+                                    onClick: () => {},
+                                    subMenuItems: [
+                                        {
+                                            title:"取消屏蔽该记录",
+                                            onClick: () => {
+                                                const id = parseInt(rowData?.Id)
+                                                const newArr = [...shieldData.id,id]  
+                                                const newObj = {...shieldData,id:filterNonUnique(newArr)}
+                                                setShieldData(newObj)
+                                            }
+                                        },
+                                        {
+                                            title:"取消屏蔽URL",
+                                            onClick: () => {
+                                                let Url = rowData?.Url
+                                                setLoading(true)
+                                                ipcRenderer
+                                                    .invoke("QueryHTTPFlowsIds", {
+                                                        IncludeInWhere: [Url]
+                                                    })
+                                                    .then((data:YakQueryHTTPFlowResponse) => {
+                                                        const offsetDeltaData = data?.Data || []
+                                                        const idArr = offsetDeltaData.map((item)=>typeof item?.Id === "string"?parseInt(item?.Id):item?.Id )
+                                                        // 根据URL拿到ID数组
+                                                        const sameArr = filterUnique([...shieldData.id,...idArr])
+                                                        const newArr = filterNonUnique([...shieldData.id,...sameArr])
+                                                        const newObj = {...shieldData,id:newArr}
+                                                        setShieldData(newObj)
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            }
+                                        },
+                                        {
+                                            title:"取消屏蔽域名",
+                                            onClick: () => {
+                                                const host = rowData?.HostPort?.split(":")[0]||""
+                                                // 根据host拿到对应ID数组
+                                                setLoading(true)
+                                                ipcRenderer
+                                                    .invoke("QueryHTTPFlowsIds", {
+                                                        IncludeInWhere: [host]
+                                                    })
+                                                    .then((data:YakQueryHTTPFlowResponse) => {
+                                                        const offsetDeltaData = data?.Data || []
+                                                        const idArr = offsetDeltaData.map((item)=>typeof item?.Id === "string"?parseInt(item?.Id):item?.Id )
+                                                        // 根据host拿到对应ID数组
+                                                        const sameArr = filterUnique([...shieldData.id,...idArr])
+                                                        const newArr = filterNonUnique([...shieldData.id,...sameArr])
+                                                        const newObj = {...shieldData,id:newArr}
+                                                        setShieldData(newObj)
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            }
+                                        },
+                                    ]
+                                }:{
                                     title:"屏蔽",
                                     onClick: () => {},
                                     subMenuItems: [
                                         {
                                             title:"屏蔽该记录",
-                                            onClick: () => {}
+                                            onClick: () => {
+                                                const id = parseInt(rowData?.Id)
+                                                const newArr = filterItem([...shieldData.id,id])
+                                                const newObj = {...shieldData,id:newArr}
+                                                setShieldData(newObj)
+                                            }
                                         },
                                         {
                                             title:"屏蔽URL",
-                                            onClick: () => {}
+                                            onClick: () => {
+                                                let Url = rowData?.Url
+                                                setLoading(true)
+                                                ipcRenderer
+                                                    .invoke("QueryHTTPFlowsIds", {
+                                                        IncludeInWhere: [Url]
+                                                    })
+                                                    .then((data:YakQueryHTTPFlowResponse) => {
+                                                        const offsetDeltaData = data?.Data || []
+                                                        const idArr = offsetDeltaData.map((item)=>typeof item?.Id === "string"?parseInt(item?.Id):item?.Id )
+                                                        // 根据URL拿到ID数组
+                                                        const newArr = filterItem([...shieldData.id,...idArr])
+                                                        const newObj = {...shieldData,id:newArr}
+                                                        setShieldData(newObj)
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            }
                                         },
                                         {
                                             title:"屏蔽域名",
-                                            onClick: () => {}
+                                            onClick: () => {
+                                                const host = rowData?.HostPort?.split(":")[0]||""
+                                                setLoading(true)
+                                                ipcRenderer
+                                                    .invoke("QueryHTTPFlowsIds", {
+                                                        IncludeInWhere: [host]
+                                                    })
+                                                    .then((data:YakQueryHTTPFlowResponse) => {
+                                                        const offsetDeltaData = data?.Data || []
+                                                        const idArr = offsetDeltaData.map((item)=>typeof item?.Id === "string"?parseInt(item?.Id):item?.Id )
+                                                        // 根据host拿到对应ID数组
+                                                        const newArr = filterItem([...shieldData.id,...idArr])
+                                                        const newObj = {...shieldData,id:newArr}
+                                                        setShieldData(newObj)
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            }
                                         },
                                     ]
                                 },
@@ -1848,7 +2013,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                 setLoading(true)
                                                 const flow = rowData as HTTPFlow
                                                 const host = flow?.HostPort?.split(":")[0]
-                                                console.log("host",host)
                                                 ipcRenderer
                                                     .invoke("DeleteHTTPFlows", {
                                                         URLPrefix: host
