@@ -1,0 +1,79 @@
+.table-virtual-resize-container {
+    height: 100%;
+    overflow-anchor: none;
+    overflow-y: auto;
+}
+
+.virtual-table {
+    display: flex;
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: auto;
+    width: max-content;
+
+
+
+    .virtual-table-col {
+        position: relative;
+        // width: 100%;
+
+        .virtual-table-title {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            background-color: #F9FBFF;
+            padding: 6px 8px 6px 12px;
+            height: 28px;
+            border: 1px solid #EAECF3;
+            border-right: 0;
+            // position: absolute;
+            width: 100%;
+            min-width: max-content;
+        }
+
+        .virtual-table-row-list {
+            // padding-top: 28px;
+            // height: calc(100% - 28px);
+
+            .virtual-table-row {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                width: fit-content;
+                max-width: 500px;
+                word-break: break-all;
+                padding: 6px 12px;
+                height: 28px;
+                background: #FFFFFF;
+                border: 1px solid #EAECF3;
+                border-top: 0;
+                border-right: 0;
+            }
+
+            .virtual-table-row-ellipsis {
+                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                -webkit-box-orient: vertical;
+
+            }
+        }
+
+        &:first-child {
+            .virtual-table-title {
+                border-radius: 4px 0px 0px 0px;
+            }
+        }
+
+        &:last-child {
+            .virtual-table-title {
+                border-right: 1px solid #EAECF3;
+                border-radius: 0px 4px 0px 0px;
+            }
+        }
+    }
+
+
+}

@@ -38,6 +38,8 @@ import {
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
+import {TableVirtualResize} from "./TableVirtualResize/TableVirtualResize"
+
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPHeaderItem {
@@ -674,13 +676,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             return
         }
         // 如果上点的话，应该是选择更新的内容
-        // for (let i = 0; i < data.length; i++) {
-        //     if (data[i]?.Id == (getSelected()?.Id as number) - 1) {
-        //         setSelected(data[i])
-        //         return
-        //     }
-        // }
-
         for (let i = 0; i < dataLength; i++) {
             if (data[i]?.Id === getSelected()?.Id) {
                 if (i === dataLength - 1) {
@@ -1227,7 +1222,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         >
                             只看 Websocket
                         </Checkbox>
-                        
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                   </div>
@@ -1963,61 +1957,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     ]
                                 }
                             ]
-                        },
-                        event.clientX,
-                        event.clientY
-                    )
-                }}
-                onRowClick={(rowDate: any) => {
-                    if (!rowDate.Hash) return
-                    if (rowDate.Hash !== selected?.Hash) {
-                        setSelected(rowDate)
-                    } else {
-                        // setSelected(undefined)
-                    }
-                }}
-                onScroll={(scrollX, scrollY) => {
-                    if (!props.inViewport) {
-                        return
-                    }
-                    setScrollY(scrollY)
-                    // 防止无数据触发加载
-                    if (data.length === 0 && !getAutoReload()) {
-                        setAutoReload(true)
-                        return
-                    }
-
-                    // 根据页面展示内容决定是否自动刷新
-                    let contextHeight = (data.length + 1) * ROW_HEIGHT // +1 是要把表 title 算进去
-                    let offsetY = scrollY + tableContentHeight
-                    if (contextHeight < tableContentHeight) {
-                        setAutoReload(true)
-                        return
-                    }
-                    setAutoReload(false)
-
-                    // 向下刷新数据
-                    if (contextHeight <= offsetY) {
-                        setAutoReload(false)
-                        scrollUpdateButt(tableContentHeight)
-                        return
-                    }
-
-                    // 锁住滚轮
-                    if (getLockedScroll() > 0 && getLockedScroll() >= scrollY) {
-                        if (scrollY === getLockedScroll()) {
-                            return
-                        }
-                        // scrollTableTo(getLockedScroll())
-                        return
-                    }
-                    const toTop = scrollY <= 0
-                    if (toTop) {
-                        lockScrollTimeout(ROW_HEIGHT, 600)
-                        scrollUpdateTop()
-                    }
-                }}
-            />
+                        },event.clientX,
+                        event.clientY)
+                    }}
+                />
         </div>
         // </AutoCard>
     )
