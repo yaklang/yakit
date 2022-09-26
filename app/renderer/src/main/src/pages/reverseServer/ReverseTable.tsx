@@ -52,7 +52,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
     const [types, setTypes, getTypes] = useGetState<string>("")
 
     let newData: ReverseNotification[] = useMemo(() => {
-        setLoading(true)
+        // setLoading(true)
         let lists = [...data]
         if (hasToken) lists = lists.filter((item) => !!item.token)
         if (types) {
@@ -62,12 +62,15 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
 
         setTimeout(() => setLoading(false), 200)
         return lists
-    }, [hasToken, useDebounce(types, {wait: 1000})])
+    }, [data, hasToken, useDebounce(types, {wait: 1000})])
 
     return (
         <div className='reverse-table-wrapper'>
             <div className='reverse-table-header'>
-                <div className='header-title'>返回结果</div>
+                <div className='header-title'>
+                    返回结果
+                    {total !== undefined && <div className='header-title-total'>Total {total}</div>}
+                </div>
                 <Spin spinning={!!loading}>
                     <div className='header-extra'>
                         <div className='extra-opt'>
@@ -117,7 +120,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
             <div className='reverse-table-body'>
                 <Table<ReverseNotification>
                     size='small'
-                    dataSource={newData}
+                    dataSource={[...newData]}
                     bordered={true}
                     pagination={false}
                     rowKey={(i) => i.uuid}

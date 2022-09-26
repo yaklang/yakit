@@ -19,6 +19,20 @@
             font-weight: 500;
             font-size: 16px;
             color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            .header-title-total {
+                margin-left: 4px;
+                height: 20px;
+                box-sizing: border-box;
+                display: inline-flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 1px 8px;
+                border: 1px solid #d9d9d9;
+                border-radius: 2px;
+                font-size: 12px;
+            }
         }
         .header-extra {
             display: flex;

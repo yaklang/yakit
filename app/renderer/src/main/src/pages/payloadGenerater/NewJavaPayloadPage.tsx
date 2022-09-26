@@ -1,43 +1,26 @@
 import React, {useRef, useEffect, useState, useMemo} from "react"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {
-    InputNumber,
-    Button,
-    Form,
-    Cascader,
-    Switch,
-    Input,
-    Select,
-    Tooltip,
-    Radio,
-    Alert,
-    Space,
-    PageHeader
-} from "antd"
+import {InputNumber, Button, Form, Cascader, Switch, Input, Select, Tooltip, Radio, Alert, Space} from "antd"
 import {
     QuestionOutlined,
     ExclamationCircleOutlined,
     ThunderboltOutlined,
     DownloadOutlined,
     CopyOutlined,
-    FullscreenOutlined
+    FullscreenOutlined,
+    FullscreenExitOutlined
 } from "@ant-design/icons"
 import {failed, info, success, warn} from "../../utils/notification"
-import {showModal} from "../../utils/showModal"
 import {
     BRIDGE_ADDR,
     BRIDGE_SECRET,
     FacadesRequest,
     NetInterface,
-    SettingReverseParamsInfo,
-    SettingReverseServer,
-    StartReverseServer
+    SettingReverseParamsInfo
 } from "../reverseServer/NewReverseServerPage"
 import {randomString} from "@/utils/randomUtil"
 import {AutoCard} from "@/components/AutoCard"
 import {AutoSpin} from "@/components/AutoSpin"
-
-import "./javaPayloadPage.scss"
 import {YakCodeEditor} from "@/utils/editors"
 import {callCopyToClipboard} from "@/utils/basic"
 import {CopyableField} from "@/utils/inputUtil"
@@ -45,6 +28,11 @@ import {ReverseNotification, ReverseTable} from "../reverseServer/ReverseTable"
 import {getRemoteValue} from "@/utils/kv"
 import {ExtractExecResultMessage} from "@/components/yakitLogSchema"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
+import HexEditor from "react-hex-editor"
+import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {saveAs} from "file-saver"
+
+import "./javaPayloadPage.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -102,6 +90,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
 
     const paramsRef = useRef<ParamsRefProps>({useGadget: true, ...DefaultParams})
     const [params, setParams] = useState<ParamsRefProps>({useGadget: true, ...DefaultParams})
+    const [codeRefresh, setCodeRefresh] = useState<boolean>(false)
 
     const [showAddr, setShowAddr] = useState<boolean>(false)
     /**
@@ -113,6 +102,9 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
         ReversePort: 8085,
         ReverseHost: "127.0.0.1"
     })
+    /**
+     * @name 用户自定义反连服务器参数
+     */
     const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>({
         BridgeParam: {Addr: "", Secret: ""},
         IsRemote: false,
@@ -125,23 +117,23 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
     const [codeExtra, setCodeExtra] = useState<boolean>(false)
     const [tableExtra, setTableExtra] = useState<boolean>(false)
 
-    const [dataLoading, setDataLoading] = useState<boolean>(false)
     const dataRef = useRef<ReverseNotification[]>([])
     const [data, setData, getData] = useGetState<ReverseNotification[]>([])
     const totalRef = useRef<number>(0)
 
     const reverseAddr = useMemo(() => {
-        const host = addrParams.IsRemote
-            ? `${remoteIp}:${addrParams.ReversePort}`
-            : `${addrParams.ReverseHost}:${addrParams.ReversePort}`
+        const addrSetting = showAddr ? addrParams : addrParamsRef.current
+        const host = addrSetting.IsRemote
+            ? `${remoteIp}:${addrSetting.ReversePort}`
+            : `${addrSetting.ReverseHost}:${addrSetting.ReversePort}`
         return host
-    }, [addrParams, remoteIp])
+    }, [showAddr, addrParams, remoteIp])
 
     // 获取系统全局配置的反连参数和本地反连IP
     useEffect(() => {
         const initParams = addrParamsRef.current
 
-        // setLoading(true)
+        setLoading(true)
         getRemoteValue(BRIDGE_ADDR).then((addr: string) => {
             if (!!addr) {
                 initParams.BridgeParam.Addr = addr
@@ -159,7 +151,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                             })
                             .finally(() => {
                                 setAddrParams({...initParams})
-                                // setTimeout(() => setLoading(false), 300)
+                                setTimeout(() => setLoading(false), 300)
                             })
                     })
             } else {
@@ -171,7 +163,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                     })
                     .finally(() => {
                         setAddrParams({...initParams})
-                        // setTimeout(() => setLoading(false), 300)
+                        setTimeout(() => setLoading(false), 300)
                     })
             }
         })
@@ -215,6 +207,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                         break
                     }
                 }
+
                 if (!isUpdata) {
                     datas.unshift(obj)
                     totalRef.current = totalRef.current + 1
@@ -246,7 +239,11 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
 
     // 关闭接收反连数据监听
     const stopReverse = (isCancel?: boolean) => {
-        if (!isCancel) ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+        if (!isCancel) {
+            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token).then(() => {
+                success("已关闭FacadeServer")
+            })
+        }
         setToken(randomString(40))
         setIsStart(false)
     }
@@ -268,27 +265,34 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             Token: getToken()
         }
         if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remote
-        console.log(startFacadeParams)
+
         setLoading(false)
-        // ipcRenderer
-        //     .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
-        //     .then(() => {
-        //         info("启动FacadeServer")
-        //         setTimeout(() => {
-        //             ipcRenderer
-        //                 .invoke("ApplyClassToFacades", {
-        //                     Token: getToken(),
-        //                     GenerateClassParams: {...classData}
-        //                 })
-        //                 // .then((res) => info("应用到FacadeServer成功"))
-        //                 .catch((err) => failed(`应用到FacadeServer失败${err}`))
-        //                 .finally(() => setTimeout(() => setLoading(false), 300))
-        //         }, 500)
-        //     })
-        //     .catch((e: any) => {
-        //         failed("启动FacadeServer失败: " + `${e}`)
-        //     })
-        //     .finally(() => setTimeout(() => setLoading(false), 300))
+        ipcRenderer
+            .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
+            .then(() => {
+                setTimeout(() => {
+                    ipcRenderer
+                        .invoke("ApplyClassToFacades", {
+                            Token: getToken(),
+                            GenerateClassParams: {...classData}
+                        })
+                        .then((res) => {
+                            paramsRef.current = {...value}
+                            info("启动FacadeServer")
+                            setIsStart(true)
+                            setCodeRefresh(!codeRefresh)
+                        })
+                        .catch((err) => {
+                            failed(`应用到FacadeServer失败${err}`)
+                            stopReverse()
+                        })
+                        .finally(() => setTimeout(() => setLoading(false), 300))
+                }, 200)
+            })
+            .catch((e: any) => {
+                failed("启动FacadeServer失败: " + `${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
     }
     /**
      * @name 启动带有payload配置的反连
@@ -327,6 +331,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                         startUpFacadeServer(value, reverseAddr, data.IP)
                     })
                     .catch((e: any) => failed("获取远程地址失败: " + `${e}`))
+                    .finally(() => setTimeout(() => setLoading(false), 300))
             } else startUpFacadeServer(value, reverseAddr, "")
         }
     })
@@ -335,13 +340,21 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
      */
     const onApply = useMemoizedFn((value: ParamsRefProps) => {
         const data = convertRequest(value)
+        paramsRef.current = {...value}
         if (isStart) {
             ipcRenderer
                 .invoke("ApplyClassToFacades", {Token: token, GenerateClassParams: {...data}})
                 .then((res) => info("应用到FacadeServer成功"))
                 .catch((err) => failed(`应用到FacadeServer失败${err}`))
                 .finally(() => setTimeout(() => setLoading(false), 300))
+        } else {
+            setTimeout(() => setLoading(false), 300)
         }
+        setCodeRefresh(!codeRefresh)
+    })
+
+    const changeCodeExtra = useMemoizedFn(() => {
+        setCodeExtra(!codeExtra)
     })
 
     return (
@@ -350,7 +363,9 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                 <div className='wrapper-body'>
                     <div className={`body-${codeExtra ? "hidden-" : ""}left`}>
                         <PayloadForm
+                            isStart={isStart}
                             paramsData={{...params}}
+                            setParamsData={(value) => setParams({...value})}
                             loading={loading}
                             setLoading={setLoading}
                             onStart={onStart}
@@ -358,7 +373,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                             extraNode={
                                 isStart ? (
                                     <></>
-                                ) : params.useGadget ? (
+                                ) : !params.useGadget ? (
                                     <Form size='small' labelCol={{span: 8}} wrapperCol={{span: 16}}>
                                         <Form.Item
                                             label={
@@ -374,29 +389,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                         </Form.Item>
                                         {showAddr && (
                                             <>
-                                                <Form.Item
-                                                    label='启用公网穿透'
-                                                    // help={
-                                                    //     params.IsRemote && (
-                                                    //         <Alert
-                                                    //             className='setting-isremote-hint'
-                                                    //             type={"success"}
-                                                    //             message={
-                                                    //                 <div>
-                                                    //                     在自己的服务器安装 yak 核心引擎，执行{" "}
-                                                    //                     <Text code={true} copyable={true}>
-                                                    //                         yak bridge --secret [your-pass]
-                                                    //                     </Text>{" "}
-                                                    //                     启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
-                                                    //                     <Text style={{color: "#999"}}>
-                                                    //                         yak version {`>=`} v1.0.11-sp9
-                                                    //                     </Text>
-                                                    //                 </div>
-                                                    //             }
-                                                    //         />
-                                                    //     )
-                                                    // }
-                                                >
+                                                <Form.Item label='启用公网穿透'>
                                                     <Switch
                                                         checked={addrParams.IsRemote}
                                                         onChange={(IsRemote) =>
@@ -466,7 +459,12 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                     </div>
 
                     <div className='body-right'>
-                        <PayloadCode codeExtra={codeExtra} onExtra={() => setCodeExtra(!codeExtra)} />
+                        <PayloadCode
+                            codeExtra={codeExtra}
+                            data={paramsRef.current}
+                            RefreshTrigger={codeRefresh}
+                            onExtra={changeCodeExtra}
+                        />
                     </div>
                 </div>
             </div>
@@ -485,7 +483,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                             HTTP反连地址&nbsp;&nbsp;
                                             <CopyableField
                                                 width={340}
-                                                text={`http://${reverseAddr}/${params?.ClassName || ""}`}
+                                                text={`http://${reverseAddr}/${paramsRef.current?.ClassName || ""}`}
                                                 style={{color: "blue"}}
                                             />
                                         </div>
@@ -493,7 +491,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                             RMI反连地址&nbsp;&nbsp;
                                             <CopyableField
                                                 width={340}
-                                                text={`rmi://${reverseAddr}/${params?.ClassName || ""}`}
+                                                text={`rmi://${reverseAddr}/${paramsRef.current?.ClassName || ""}`}
                                                 style={{color: "blue"}}
                                             />
                                         </div>
@@ -501,7 +499,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                             LDAP反连地址&nbsp;&nbsp;
                                             <CopyableField
                                                 width={340}
-                                                text={`ldap://${reverseAddr}/${params?.ClassName || ""}`}
+                                                text={`ldap://${reverseAddr}/${paramsRef.current?.ClassName || ""}`}
                                                 style={{color: "blue"}}
                                             />
                                         </div>
@@ -516,6 +514,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                             isShowExtra={true}
                             isExtra={tableExtra}
                             onExtra={() => setTableExtra(!tableExtra)}
+                            total={totalRef.current}
                             data={data}
                             clearData={clearReverseData}
                         />
@@ -532,6 +531,7 @@ interface PayloadFormProp {
     showCode?: () => any
     isStart?: boolean
     paramsData: ParamsRefProps
+    setParamsData: (value: ParamsRefProps) => any
 
     loading: boolean
     setLoading: (value: boolean) => any
@@ -572,6 +572,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
         showCode,
         isStart,
         paramsData,
+        setParamsData,
         loading,
         setLoading,
         onStart,
@@ -589,6 +590,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
     const setParamsValue = useMemoizedFn((args: {key: string; value: string | number | boolean}[]) => {
         for (let item of args) paramsRef.current[item.key] = item.value
         setParams({...paramsRef.current})
+        setParamsData({...paramsRef.current})
         formInstance.setFieldsValue({...paramsRef.current})
     })
     const cleatParams = useMemoizedFn(() => {
@@ -783,7 +785,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
             }
             extra={
                 <div>
-                    {!isReverse && (
+                    {!isReverse && !useGadget && (
                         <Button
                             loading={btnLoading || loading}
                             className='setting-payload-btn'
@@ -848,6 +850,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                 checked={useGadget}
                                 onChange={(check) => {
                                     setUseGadget(check)
+                                    setParamsData({...paramsRef.current, useGadget: check})
                                     setTimeout(() => cleatParams(), 300)
                                 }}
                             />
@@ -1018,7 +1021,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                         )
                     })}
                 </Form>
-                {extraNode}
+                {!!extraNode && extraNode}
             </AutoSpin>
         </AutoCard>
     )
@@ -1027,40 +1030,122 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
 interface PayloadCodeProp {
     isMin?: boolean
     codeExtra: boolean
+    data: ParamsRefProps
+    RefreshTrigger: boolean
     onExtra: () => any
 }
 
 const CodeType: {value: string; label: string}[] = [
     {value: "base64", label: "BASE64"},
     {value: "hex", label: "HEX"},
-    {value: "javadump", label: "JavaDump"},
+    // {value: "javadump", label: "JavaDump"},
     {value: "yak", label: "YAK"}
 ]
 
 export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
-    const {isMin = false, codeExtra, onExtra} = props
+    const {isMin = false, codeExtra, data, RefreshTrigger, onExtra} = props
 
+    const [loading, setLoading] = useState<boolean>(false)
     const [type, setType] = useState<string>("base64")
+    const [code, setCode] = useState<string>("")
+    const [hex, setHex] = useState<Uint8Array>(new Uint8Array())
+
+    useEffect(() => convertCode(type), [RefreshTrigger])
 
     const typeChange = useMemoizedFn((value: string) => {
         setType(value)
+        convertCode(value)
+    })
+
+    /**
+     * @name 生成各种类型代码
+     */
+    const convertCode = useMemoizedFn((type: string) => {
+        if (!data.Class || !data.Gadget) return
+        switch (type) {
+            case "base64":
+                convertBase64()
+                return
+            case "hex":
+                convertHex()
+                return
+            case "yak":
+                convertYak()
+                return
+        }
     })
 
     const codeOperate = useMemoizedFn((value: "yakRunning" | "download" | "copy" | "extra") => {
         if (value === "yakRunning") {
-            return
             ipcRenderer.invoke("send-to-tab", {
                 type: "add-yak-running",
                 data: {
-                    name: `${123}/${321}-${new Date().getTime()}`,
-                    code: "123"
+                    name: `${data.Class}/${data.Gadget}-${new Date().getTime()}`,
+                    code: code
                 }
             })
         }
         if (value === "download") {
+            saveABSFileToOpen(`${type}-${data.Class}-${data.Gadget}`, type === "hex" ? hex : code)
         }
-        if (value === "copy") callCopyToClipboard("123")
+
+        if (value === "copy") callCopyToClipboard(code)
         if (value === "extra") onExtra()
+    })
+
+    const convertBase64 = useMemoizedFn(() => {
+        setLoading(true)
+        const request = convertRequest(data)
+        ipcRenderer
+            .invoke("GenerateYsoBytes", request)
+            .then((d: {Bytes: Uint8Array; FileName: string}) => {
+                ipcRenderer
+                    .invoke("BytesToBase64", {
+                        Bytes: d.Bytes
+                    })
+                    .then((res: {Base64: string}) => {
+                        success("生成Base64成功")
+                        setCode(res.Base64)
+                    })
+                    .catch((err) => {
+                        failed(`${err}`)
+                    })
+            })
+            .catch((e: any) => {
+                failed("生成Base64失败: " + `${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const convertHex = useMemoizedFn(() => {
+        setLoading(true)
+        const request = convertRequest(data)
+        ipcRenderer
+            .invoke("GenerateYsoBytes", request)
+            .then((d: {Bytes: Uint8Array; FileName: string}) => {
+                success("生成字节码成功")
+                setHex(d.Bytes)
+            })
+            .catch((e: any) => {
+                failed("生成字节码失败: " + `${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    // const convertJava = useMemoizedFn(() => {
+    //     const request = convertRequest(data)
+    // })
+    const convertYak = useMemoizedFn(() => {
+        setLoading(true)
+        const request = convertRequest(data)
+        ipcRenderer
+            .invoke("GenerateYsoCode", request)
+            .then((d: {Code: string}) => {
+                success("生成代码成功")
+                setCode(d.Code)
+            })
+            .catch((e: any) => {
+                failed("生成代码失败: " + `${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
     return (
@@ -1090,54 +1175,82 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 isMin && !codeExtra ? (
                     <div>
                         <Button
+                            loading={loading}
                             type='link'
                             size='small'
                             icon={<ThunderboltOutlined />}
+                            disabled={type === "hex"}
                             onClick={() => codeOperate("yakRunning")}
                         />
                         <Button
+                            loading={loading}
                             type='link'
                             size='small'
                             icon={<DownloadOutlined />}
                             onClick={() => codeOperate("download")}
                         />
-                        <Button type='link' size='small' icon={<CopyOutlined />} onClick={() => codeOperate("copy")} />
+                        <Button
+                            loading={loading}
+                            type='link'
+                            size='small'
+                            icon={<CopyOutlined />}
+                            disabled={type === "hex"}
+                            onClick={() => codeOperate("copy")}
+                        />
                         <Button
                             type='link'
                             size='small'
-                            icon={<FullscreenOutlined />}
+                            icon={codeExtra ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                             onClick={() => codeOperate("extra")}
                         />
                     </div>
                 ) : (
                     <div className='extra-btns'>
                         <Button
+                            loading={loading}
                             type='primary'
                             ghost={true}
                             size='small'
                             icon={<ThunderboltOutlined />}
+                            disabled={type === "hex"}
                             onClick={() => codeOperate("yakRunning")}
                         >
                             Yak Runner
                         </Button>
-                        <Button type='primary' size='small' ghost={true} onClick={() => codeOperate("download")}>
+                        <Button
+                            loading={loading}
+                            type='primary'
+                            size='small'
+                            ghost={true}
+                            onClick={() => codeOperate("download")}
+                        >
                             下载文件
                         </Button>
-                        <Button type='primary' size='small' onClick={() => codeOperate("copy")}>
+                        <Button
+                            loading={loading}
+                            type='primary'
+                            size='small'
+                            disabled={type === "hex"}
+                            onClick={() => codeOperate("copy")}
+                        >
                             复制代码
                         </Button>
                         <Button
                             type='link'
                             size='small'
-                            icon={<FullscreenOutlined />}
+                            icon={codeExtra ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                             onClick={() => codeOperate("extra")}
                         />
                     </div>
                 )
             }
         >
-            <AutoSpin spinning={false}>
-                <YakCodeEditor readOnly={true} originValue={Buffer.from(JSON.stringify("123"), "utf8")} />
+            <AutoSpin spinning={loading}>
+                {type === "hex" ? (
+                    <HexEditor showAscii={true} data={hex} showRowLabels={true} showColumnLabels={false} nonce={0} />
+                ) : (
+                    <YakCodeEditor readOnly={true} originValue={Buffer.from(code, "utf8")} />
+                )}
             </AutoSpin>
         </AutoCard>
     )
