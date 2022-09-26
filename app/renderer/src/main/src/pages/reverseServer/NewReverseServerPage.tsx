@@ -6,12 +6,9 @@ import {randomString} from "../../utils/randomUtil"
 import {failed, warn, info} from "../../utils/notification"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
-import {PoweroffOutlined} from "@ant-design/icons"
 import {ReverseNotification, ReverseTable} from "./ReverseTable"
 import {
     convertRequest,
-    FormBindInfo,
-    FormList,
     ParamsRefProps,
     PayloadCode,
     PayloadForm,
@@ -39,7 +36,7 @@ interface ApplyFacadesRequest {
 export type FacadesRequest = SettingReverseParamsInfo & ApplyFacadesRequest
 
 export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
-    const [status, setStatus] = useState<"setting" | "start">("start")
+    const [status, setStatus] = useState<"setting" | "start">("setting")
     const [token, setToken, getToken] = useGetState(randomString(40))
     const [addrParams, setAddrParams] = useState<SettingReverseParamsInfo>({
         BridgeParam: {Addr: "", Secret: ""},
@@ -72,7 +69,7 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
         <div className='reverse-server-page-wrapper'>
             {status === "setting" && (
                 <PageHeader
-                    className=' reverse-server-pagehead'
+                    className='reverse-server-page-head'
                     backIcon={false}
                     title='反连服务器'
                     subTitle='使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连'
@@ -306,6 +303,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
     const totalRef = useRef<number>(0)
 
     const [classRequest, setClassRequest] = useState<ParamsRefProps>({useGadget: false, Gadget: "", Class: ""})
+    const [codeRefresh, setCodeRefresh] = useState<boolean>(false)
 
     const [isExtra, setIsExtra] = useState<boolean>(false)
     const [isShowCode, setIsShowCode] = useState<boolean>(false)
@@ -392,6 +390,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
             .then((res) => info("应用到FacadeServer成功"))
             .catch((err) => failed(`应用到FacadeServer失败${err}`))
             .finally(() => setTimeout(() => setLoading(false), 300))
+        setCodeRefresh(!codeRefresh)
     })
 
     return (
@@ -401,15 +400,25 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                     <PayloadForm
                         isReverse={true}
                         isShowCode={isShowCode}
-                        showCode={() => setIsShowCode(!isShowCode)}
+                        showCode={() => {
+                            setIsShowCode(!isShowCode)
+                            setCodeRefresh(!codeRefresh)
+                        }}
                         paramsData={{useGadget: false, Gadget: "", Class: ""}}
+                        setParamsData={() => {}}
                         loading={loading}
                         setLoading={setLoading}
                         onApply={onApply}
                     />
                 </div>
                 <div className={`payload-${isShowCode ? "" : "hidden-"}code`}>
-                    <PayloadCode isMin={true} codeExtra={codeExtra} onExtra={() => setCodeExtra(!codeExtra)} />
+                    <PayloadCode
+                        isMin={true}
+                        codeExtra={codeExtra}
+                        data={{...classRequest}}
+                        RefreshTrigger={codeRefresh}
+                        onExtra={() => setCodeExtra(!codeExtra)}
+                    />
                 </div>
             </div>
 
@@ -425,7 +434,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                 Payload 配置:{" "}
                                 <Switch size='small' checked={isExtra} onChange={(checked) => setIsExtra(checked)} />
                             </div>,
-                            <Button key='close' type='primary' danger={true} size='small'>
+                            <Button key='close' type='primary' danger={true} size='small' onClick={() => stop()}>
                                 关闭反连
                             </Button>
                         ]}
@@ -460,7 +469,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                         ></Alert>
                     </PageHeader>
                     <div className='reverse-server-data'>
-                        <ReverseTable data={data} clearData={clearData} />
+                        <ReverseTable total={totalRef.current} data={data} clearData={clearData} />
                     </div>
                 </div>
             </div>
