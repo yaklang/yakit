@@ -17,7 +17,9 @@ import {
     Tabs,
     Tag,
     Tooltip,
-    Typography
+    Typography,
+    Upload,
+    Avatar
 } from "antd"
 import {
     ContentByRoute,
@@ -36,7 +38,8 @@ import {
     MenuUnfoldOutlined,
     PoweroffOutlined,
     ReloadOutlined,
-    SettingOutlined
+    SettingOutlined,
+    CameraOutlined
 } from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
@@ -61,6 +64,7 @@ import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
 import {MainTabs} from "./MainTabs"
 import Login from "./Login"
 import {TrustList} from "./TrustList"
+import SetPassword from "./SetPassword";
 import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
@@ -112,7 +116,9 @@ const singletonRoute: Route[] = [
     Route.WebsocketHistory,
     // 插件
     Route.AddYakitScript,
-    Route.OnlinePluginRecycleBin
+    Route.OnlinePluginRecycleBin,
+    // 管理
+    Route.AccountAdminPage
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -184,11 +190,98 @@ export interface fuzzerInfoProp {
 export interface MenuItemType {
     key: string
     label?: ReactNode
-    title: string
+    title?: string
+    render?: (info: any) => ReactNode
     icon?: ReactNode
     danger?: boolean
     disabled?: boolean
 }
+
+export interface SetUserInfoProp  {
+    userInfo:UserInfoProps
+}
+
+// 可上传文件类型
+const FileType = ["image/png", "image/jpeg", "image/png"]
+
+// 用户信息
+const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
+    const [token, setToken] = useState<string>()
+    const {userInfo} = props
+    console.log("userInfo",userInfo)
+
+    useEffect(() => {
+        const token = randomString(40)
+        ipcRenderer.on(`${token}-data`, async (e, data: any) => {})
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            failed(`头像上传失败:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e, data) => {
+            info("头像上传完毕")
+        })
+        setToken(token)
+        return () => {
+            ipcRenderer.invoke("cancel-SavePayloadStream", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [])
+
+    const setAvatar = useMemoizedFn(async(file) => {
+        await ipcRenderer
+            .invoke("upload-img", { path: file.path, type: file.type })
+            .then((res) => {
+                console.log("图片地址：",res.data)
+            })
+            .catch((err) => {
+                fail("头像上传失败")
+            })
+            .finally(() => {
+                
+            })
+    })
+    return(
+        <div className="dropdown-menu-user-info">
+            <Upload.Dragger
+                        className='author-upload-dragger'
+                        accept={FileType.join(",")}
+                        // accept=".jpg, .jpeg, .png"
+                        multiple={false}
+                        maxCount={1}
+                        showUploadList={false}
+                        beforeUpload={(f) => {
+                            if (!FileType.includes(f.type)) {
+                                failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
+                                return false
+                            }
+                            console.log(f)
+                            setAvatar(f)
+                            return false
+                        }}
+                        >
+            <div className="img-box">
+                <div className="img-box-mask">
+                <Avatar size={38} style={{backgroundColor:"rgb(245, 106, 0)"}}>桔</Avatar>
+                {/* <img
+                    src={
+                        userInfo[UserPlatformType[userInfo?.platform || ""].img] || yakitImg
+                    }
+                    style={{width: 38, height: 38, borderRadius: "50%", cursor: "pointer"}}
+                /> */}
+
+                </div>
+                <CameraOutlined className="hover-icon"/>
+            </div>   
+            </Upload.Dragger>          
+            
+            <div className="content-box">
+                <div className="user-name">桔子爱吃橘子</div>
+                <div className="permission-show">管理员</div>
+            </div>
+    </div>
+    )
+})
 
 const Main: React.FC<MainProp> = (props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
@@ -214,6 +307,9 @@ const Main: React.FC<MainProp> = (props) => {
 
     // 信任用户弹框
     const [trustShow, setTrustShow] = useState<boolean>(false)
+
+    // 修改密码弹框
+    const [passwordShow, setPasswordShow] = useState<boolean>(false)
 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
@@ -563,9 +659,18 @@ const Main: React.FC<MainProp> = (props) => {
                 {key: "trust-list", title: "用户管理"}
             ])
         } else {
+            // setUserMenu([
+            //     {key: "sign-out", title: "退出登录"},
+            //     {key: "account-bind", title: "帐号绑定(监修)", disabled: true}
+            // ])
+            // 新功能暂浏览
             setUserMenu([
+                {key: "user-info", title: "用户信息",render:()=><SetUserInfo userInfo={userInfo}/>},
+                {key: "trust-list", title: "用户管理"},
+                {key: "account-admin", title: "账号管理"},
+                {key: "set-password", title: "修改密码"},
+                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"},
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true}
             ])
         }
     }, [userInfo.role])
@@ -971,7 +1076,13 @@ const Main: React.FC<MainProp> = (props) => {
             }
         })
     })
-
+    const goRouterPage = (key:Route) => {
+        const flag =
+        pageCache.filter((item) => item.route === (key))
+            .length === 0
+        if (flag) menuAddPage(key)
+        else setCurrentTabKey(key)
+    }
     const bars = (props: any, TabBarDefault: any) => {
         return (
             <TabBarDefault
@@ -1156,6 +1267,11 @@ const Main: React.FC<MainProp> = (props) => {
                                                     setTimeout(() => success("已成功退出账号"), 500)
                                                 }
                                                 if (key === "trust-list") setTrustShow(true)
+                                                if (key === "set-password") setPasswordShow(true)
+                                                if (key === "account-admin") {
+                                                    const key = Route.AccountAdminPage
+                                                    goRouterPage(key)
+                                                }
                                             }}
                                         >
                                             <img
@@ -1525,6 +1641,18 @@ const Main: React.FC<MainProp> = (props) => {
                 footer={null}
             >
                 <TrustList></TrustList>
+            </Modal>
+            <Modal
+                visible={passwordShow}
+                title={"修改密码"}
+                destroyOnClose={true}
+                maskClosable={false}
+                bodyStyle={{padding: "10px 24px 24px 24px"}}
+                width={520}
+                onCancel={() => setPasswordShow(false)}
+                footer={null}
+            >
+                <SetPassword onCancel={() => setPasswordShow(false)}/>
             </Modal>
         </Layout>
     )

@@ -26,11 +26,12 @@ const tailLayout = {
 }
 
 interface ConfigPrivateDomainProps {
-    onClose: () => void
+    onClose: () => void,
+    enterpriseLogin?:boolean|undefined
 }
 
 export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
-    const {onClose} = props
+    const {onClose,enterpriseLogin} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
@@ -99,16 +100,17 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         defaultOpen={true}
                     />
                 </Form.Item>
-
-                {/* rules={[{required: true, message: "该项为必填"}]} */}
-                {/* <Form.Item name='Password' label='密码'>
-                <Input placeholder='请输入你的密码' allowClear />
-            </Form.Item> */}
-                <Form.Item {...tailLayout}>
-                    <Button type='primary' htmlType='submit' className='btn-sure' loading={loading}>
-                        确定
+                {enterpriseLogin&&<Form.Item name='UserName' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
+                    <Input placeholder='请输入你的用户名' allowClear />
+                </Form.Item>}
+                {enterpriseLogin&&<Form.Item name='Password' label='密码' rules={[{required: true, message: "该项为必填"}]}>
+                    <Input placeholder='请输入你的密码' allowClear />
+                </Form.Item>}
+                <div className="form-item-submit">
+                    <Button type='primary' htmlType='submit' loading={loading}>
+                        {enterpriseLogin?"登录":"确定"}
                     </Button>
-                </Form.Item>
+                </div>
             </Form>
         </div>
     )

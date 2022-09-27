@@ -7,6 +7,9 @@ import "./Login.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {randomString} from "@/utils/randomUtil"
+import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
+import {showModal} from "../utils/showModal"
+import yakitImg from "../assets/yakit.jpg"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -27,7 +30,16 @@ const Login: React.FC<LoginProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const fetchLogin = (type: string) => {
         setLoading(true)
-        NetWorkApi<LoginParamsProp, string>({
+        if(type==="login"){
+            props.onCancel()
+            const m = showModal({
+                title: "企业登录",
+                content: <ConfigPrivateDomain onClose={() => m.destroy()} enterpriseLogin={true}/>
+            })
+            return m
+        }
+        else{
+           NetWorkApi<LoginParamsProp, string>({
             method: "get",
             url: "auth/from",
             params: {
@@ -42,7 +54,8 @@ const Login: React.FC<LoginProp> = (props) => {
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 200)
-            })
+            }) 
+        }
     }
     const [taskToken, setTaskToken] = useState(randomString(40))
     // 全局监听登录状态
@@ -107,6 +120,13 @@ const Login: React.FC<LoginProp> = (props) => {
                             <div className='login-icon-text'>
                                 <WechatOutlined className='type-icon icon-wx' />
                                 使用微信账号登录
+                            </div>
+                            <RightOutlined className='icon-right' />
+                        </div>
+                        <div className='login-icon' onClick={() => fetchLogin("login")}>
+                            <div className='login-icon-text'>
+                                <img src={yakitImg} className="type-icon type-icon-img"/>
+                                企业登录
                             </div>
                             <RightOutlined className='icon-right' />
                         </div>
