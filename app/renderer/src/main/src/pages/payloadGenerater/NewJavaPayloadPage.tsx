@@ -1,6 +1,20 @@
 import React, {useRef, useEffect, useState, useMemo} from "react"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {InputNumber, Button, Form, Cascader, Switch, Input, Select, Tooltip, Radio, Alert, Space} from "antd"
+import {
+    InputNumber,
+    Button,
+    Form,
+    Cascader,
+    Switch,
+    Input,
+    Select,
+    Tooltip,
+    Radio,
+    Alert,
+    Space,
+    Typography,
+    Divider
+} from "antd"
 import {
     QuestionOutlined,
     ExclamationCircleOutlined,
@@ -30,7 +44,7 @@ import {ExtractExecResultMessage} from "@/components/yakitLogSchema"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import HexEditor from "react-hex-editor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
-import {saveAs} from "file-saver"
+import ReactResizeDetector from "react-resize-detector"
 
 import "./javaPayloadPage.scss"
 
@@ -236,6 +250,12 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             ipcRenderer.removeAllListeners(`${token}-data`)
         }
     }, [token])
+    // 关闭页面时关闭Facades反连服务
+    useEffect(() => {
+        return () => {
+            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+        }
+    }, [])
 
     // 关闭接收反连数据监听
     const stopReverse = (isCancel?: boolean) => {
@@ -266,7 +286,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
         }
         if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remote
 
-        setLoading(false)
+        setLoading(true)
         ipcRenderer
             .invoke("StartFacadesWithYsoObject", startFacadeParams, token)
             .then(() => {
@@ -310,11 +330,12 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                 if (reverseAddr.IsRemote) {
                     if (!reverseAddr.BridgeParam.Addr) hint += "请填写公网IP,"
                 } else {
-                    if (!reverseAddr.BridgeParam.Addr) hint += "请填写反连IP,"
+                    if (!reverseAddr.ReverseHost) hint += "请填写反连IP,"
                 }
                 if (!reverseAddr.ReversePort && reverseAddr.ReversePort !== 0) hint += "请填写端口号"
                 if (hint !== "开启高级配置后,") {
                     failed(hint)
+                    setTimeout(() => setLoading(false), 300)
                     return
                 }
             }
@@ -374,7 +395,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                 isStart ? (
                                     <></>
                                 ) : !params.useGadget ? (
-                                    <Form size='small' labelCol={{span: 8}} wrapperCol={{span: 16}}>
+                                    <Form size='small' labelCol={{span: 8}} wrapperCol={{span: 16}} colon={false}>
                                         <Form.Item
                                             label={
                                                 <div className='form-item-label-title'>
@@ -400,7 +421,38 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
 
                                                 {addrParams.IsRemote && (
                                                     <>
-                                                        <Form.Item label='公网Bridge地址'>
+                                                        <Form.Item
+                                                            label={
+                                                                <div className='form-item-label-title'>
+                                                                    <div className='form-required'>*</div>
+                                                                    公网Bridge地址
+                                                                    <Tooltip
+                                                                        placement='bottom'
+                                                                        title={
+                                                                            <div style={{color: "#fff"}}>
+                                                                                在自己的服务器安装 yak 核心引擎，执行{" "}
+                                                                                <Typography.Text
+                                                                                    code={true}
+                                                                                    copyable={true}
+                                                                                    style={{color: "#fff"}}
+                                                                                >
+                                                                                    yak bridge --secret [your-pass]
+                                                                                </Typography.Text>{" "}
+                                                                                启动 Yak Bridge 公网服务{" "}
+                                                                                <Divider type={"vertical"} />
+                                                                                <Typography.Text
+                                                                                    style={{color: "#fff"}}
+                                                                                >
+                                                                                    yak version {`>=`} v1.0.11-sp9
+                                                                                </Typography.Text>
+                                                                            </div>
+                                                                        }
+                                                                    >
+                                                                        <ExclamationCircleOutlined className='question-icon' />
+                                                                    </Tooltip>
+                                                                </div>
+                                                            }
+                                                        >
                                                             <Input
                                                                 allowClear={true}
                                                                 value={addrParams.BridgeParam.Addr}
@@ -423,7 +475,14 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                     </>
                                                 )}
                                                 {!addrParams.IsRemote && (
-                                                    <Form.Item label='反连地址'>
+                                                    <Form.Item
+                                                        label={
+                                                            <>
+                                                                <div className='form-required'>*</div>
+                                                                {"反连地址"}
+                                                            </>
+                                                        }
+                                                    >
                                                         <Input
                                                             allowClear={true}
                                                             value={addrParams.ReverseHost}
@@ -436,7 +495,14 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                         />
                                                     </Form.Item>
                                                 )}
-                                                <Form.Item label='反连端口'>
+                                                <Form.Item
+                                                    label={
+                                                        <>
+                                                            <div className='form-required'>*</div>
+                                                            {"反连端口"}
+                                                        </>
+                                                    }
+                                                >
                                                     <InputNumber
                                                         width='100%'
                                                         min={0}
@@ -472,7 +538,12 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             <div className={`reverse-${isStart && !codeExtra ? "info" : "hidden"}-wrapper`}>
                 <div className='wrapper-body'>
                     <div className='body-left'>
-                        <AutoCard title='反连地址' className='info-addr-card' size='small' bodyStyle={{padding: 16}}>
+                        <AutoCard
+                            title='反连地址'
+                            className='info-addr-card'
+                            size='small'
+                            bodyStyle={{padding: "0 16px 16px 16px"}}
+                        >
                             <Alert
                                 type={"info"}
                                 className='addr-alert'
@@ -511,6 +582,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
 
                     <div className='body-right'>
                         <ReverseTable
+                            isPayload={true}
                             isShowExtra={true}
                             isExtra={tableExtra}
                             onExtra={() => setTableExtra(!tableExtra)}
@@ -603,10 +675,12 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
 
     const [btnLoading, setBtnLoading] = useState<boolean>(false)
     const [options, setOptions] = useState<OptionInfo[]>([])
+    const [selectOptions, setSelectOptions] = useState<OptionInfo[]>([])
     const [formList, setFormList] = useState<FormList[]>([])
     const formBindRef = useRef<FormBindInfo>({})
 
     const formStart = useMemoizedFn(() => {
+        if (btnLoading) return
         if (!onStart) return
         if (isStart) {
             onStart({...paramsRef.current})
@@ -618,6 +692,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
         }
     })
     const formApply = useMemoizedFn(() => {
+        if (btnLoading) return
         formInstance.validateFields().then(() => {
             setLoading(true)
             onApply({...paramsRef.current})
@@ -661,7 +736,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                     }
                     return info
                 })
-                setOptions(optionArr)
+                useGadget ? setOptions(optionArr) : setSelectOptions(optionArr)
             })
             .catch((e: any) => failed(`${isGadget ? "获取利用链失败: " : "获取恶意类失败: "} ${e}`))
     }
@@ -787,7 +862,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                 <div>
                     {!isReverse && !useGadget && (
                         <Button
-                            loading={btnLoading || loading}
+                            loading={loading}
                             className='setting-payload-btn'
                             type='primary'
                             ghost={true}
@@ -811,7 +886,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                         </Button>
                     )}
                     <Button
-                        loading={btnLoading || loading}
+                        loading={loading}
                         className='setting-payload-btn'
                         size='small'
                         type='primary'
@@ -894,6 +969,10 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                     }
                                 }}
                                 displayRender={(label, selectedOptions) => {
+                                    if (
+                                        (selectedOptions || []).filter((item: any) => !!item && item.Label).length !== 2
+                                    )
+                                        return ""
                                     const diplay = (selectedOptions || []).map((item: any) => item.Label).join(" / ")
                                     return <>{diplay}</>
                                 }}
@@ -915,7 +994,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                     } else cleatParams()
                                 }}
                             >
-                                {options.map((item) => {
+                                {selectOptions.map((item) => {
                                     return (
                                         <Select.Option key={item.Name} value={item.Name}>
                                             <div className='form-item-options-title'>
@@ -936,12 +1015,6 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                     {formList.map((item) => {
                         const flag = judgeBindValue(item.Key)
                         if (!flag) return <div key={item.Key}></div>
-
-                        let hint = ""
-                        // if (item.Type === FormParamsType.String || item.Type === FormParamsType.Base64Bytes)
-                        //     hint = `请填写${item.KeyVerbose}`
-                        // if (item.Type === FormParamsType.StringPort) hint = `请输入${item.KeyVerbose}`
-                        // if (item.Type === FormParamsType.StringBool) hint = `请开关${item.KeyVerbose}`
 
                         return (
                             <Form.Item
@@ -967,7 +1040,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                             )
                                                 return Promise.resolve()
                                             if (value) return Promise.resolve()
-                                            return Promise.reject(new Error(hint))
+                                            return Promise.reject(new Error(""))
                                         }
                                     })
                                 ]}
@@ -1049,6 +1122,7 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
     const [type, setType] = useState<string>("base64")
     const [code, setCode] = useState<string>("")
     const [hex, setHex] = useState<Uint8Array>(new Uint8Array())
+    const [width, setWidth] = useState<number>(600)
 
     useEffect(() => convertCode(type), [RefreshTrigger])
 
@@ -1172,13 +1246,17 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 </div>
             }
             extra={
-                isMin && !codeExtra ? (
+                width < 510 || (isMin && !codeExtra) ? (
                     <div>
                         <Button
                             loading={loading}
                             type='link'
                             size='small'
-                            icon={<ThunderboltOutlined />}
+                            icon={
+                                <Tooltip title='Yak Runner'>
+                                    <ThunderboltOutlined />
+                                </Tooltip>
+                            }
                             disabled={type === "hex"}
                             onClick={() => codeOperate("yakRunning")}
                         />
@@ -1186,14 +1264,22 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                             loading={loading}
                             type='link'
                             size='small'
-                            icon={<DownloadOutlined />}
+                            icon={
+                                <Tooltip title='下载文件'>
+                                    <DownloadOutlined />
+                                </Tooltip>
+                            }
                             onClick={() => codeOperate("download")}
                         />
                         <Button
                             loading={loading}
                             type='link'
                             size='small'
-                            icon={<CopyOutlined />}
+                            icon={
+                                <Tooltip title='复制代码'>
+                                    <CopyOutlined />
+                                </Tooltip>
+                            }
                             disabled={type === "hex"}
                             onClick={() => codeOperate("copy")}
                         />
@@ -1245,9 +1331,25 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 )
             }
         >
+            <ReactResizeDetector
+                onResize={(width) => {
+                    if (!width) return
+                    setWidth(width)
+                }}
+                handleWidth={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
             <AutoSpin spinning={loading}>
                 {type === "hex" ? (
-                    <HexEditor showAscii={true} data={hex} showRowLabels={true} showColumnLabels={false} nonce={0} />
+                    <HexEditor
+                        showAscii={true}
+                        data={hex}
+                        showRowLabels={true}
+                        showColumnLabels={false}
+                        nonce={0}
+                        onSetValue={undefined}
+                    />
                 ) : (
                     <YakCodeEditor readOnly={true} originValue={Buffer.from(code, "utf8")} />
                 )}

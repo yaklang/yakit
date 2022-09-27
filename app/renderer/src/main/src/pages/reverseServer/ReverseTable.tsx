@@ -3,6 +3,7 @@ import {Table, Button, Switch, Select, Spin} from "antd"
 import {FullscreenOutlined, FullscreenExitOutlined, SearchOutlined} from "@ant-design/icons"
 import {CopyableField} from "../../utils/inputUtil"
 import {useDebounce, useGetState} from "ahooks"
+import ReactResizeDetector from "react-resize-detector"
 
 import "./reverseTable.scss"
 
@@ -36,6 +37,7 @@ export interface ReverseNotification {
     timestamp?: number
 }
 export interface ReverseTableProps {
+    isPayload?: boolean
     total?: number
     data: ReverseNotification[]
     isShowExtra?: boolean
@@ -45,11 +47,13 @@ export interface ReverseTableProps {
 }
 
 export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
-    const {total, data, isShowExtra = false, isExtra, onExtra, clearData} = props
-
+    const {isPayload = false, total, data, isShowExtra = false, isExtra, onExtra, clearData} = props
+    const maxWidth = isPayload ? 580 : 545
     const [loading, setLoading] = useState<boolean>(false)
     const [hasToken, setHasToken] = useState<boolean>(false)
     const [types, setTypes, getTypes] = useGetState<string>("")
+
+    const [width, setWidth] = useState<number>(1000)
 
     let newData: ReverseNotification[] = useMemo(() => {
         // setLoading(true)
@@ -65,9 +69,18 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
     }, [data, hasToken, useDebounce(types, {wait: 1000})])
 
     return (
-        <div className='reverse-table-wrapper'>
-            <div className='reverse-table-header'>
-                <div className='header-title'>
+        <div className={`reverse-table-wrapper ${isPayload ? "payload-table-padding" : "reverse-table-padding"}`}>
+            <ReactResizeDetector
+                onResize={(width) => {
+                    if (!width) return
+                    setWidth(width)
+                }}
+                handleWidth={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+            <div className={`reverse-table-header ${width >= maxWidth ? "header-style" : "header-extra-style"}`}>
+                <div className='header-title title-style'>
                     返回结果
                     {total !== undefined && <div className='header-title-total'>Total {total}</div>}
                 </div>
@@ -90,7 +103,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                             <Select
                                 size='small'
                                 mode='multiple'
-                                style={{width: 200}}
+                                style={{width: 180}}
                                 value={!types ? [] : types.split(",")}
                                 allowClear={true}
                                 options={DefaultType}
