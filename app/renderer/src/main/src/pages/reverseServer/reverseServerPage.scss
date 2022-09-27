@@ -85,7 +85,22 @@
             .reverse-server-pagehead {
                 width: 100%;
                 padding: 16px 24px 0 24px;
+
+                .pagehead-extra-body {
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    .body-btn {
+                        margin-left: 16px;
+                    }
+                }
+
+                .ant-space {
+                    width: 100%;
+                }
+
                 .addr-body {
+                    width: 100%;
                     display: flex;
                     align-items: center;
                 }

@@ -34,6 +34,10 @@
             .info-addr-card {
                 .ant-card-head {
                     border-bottom: 0px;
+                    height: 48px;
+                    .ant-card-head-wrapper {
+                        height: 48px;
+                    }
                 }
                 .addr-alert {
                     padding: 16px;
@@ -69,6 +73,15 @@
     .form-common-style {
         .ant-form-item {
             margin-bottom: 16px;
+        }
+
+        .form-required {
+            display: inline-block;
+            margin-right: 4px;
+            color: #ff4d4f;
+            font-size: 14px;
+            font-family: SimSun, sans-serif;
+            line-height: 1;
         }
 
         .form-item-label-title {

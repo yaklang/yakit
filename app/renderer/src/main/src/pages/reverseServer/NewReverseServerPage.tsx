@@ -65,6 +65,12 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
             })
     })
 
+    useEffect(() => {
+        return () => {
+            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+        }
+    }, [])
+
     return (
         <div className='reverse-server-page-wrapper'>
             {status === "setting" && (
@@ -400,10 +406,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                     <PayloadForm
                         isReverse={true}
                         isShowCode={isShowCode}
-                        showCode={() => {
-                            setIsShowCode(!isShowCode)
-                            setCodeRefresh(!codeRefresh)
-                        }}
+                        showCode={() => setIsShowCode(!isShowCode)}
                         paramsData={{useGadget: false, Gadget: "", Class: ""}}
                         setParamsData={() => {}}
                         loading={loading}
@@ -429,15 +432,27 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                         backIcon={false}
                         title='反连服务器'
                         subTitle='使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连'
-                        extra={[
-                            <div key='isExtra'>
-                                Payload 配置:{" "}
-                                <Switch size='small' checked={isExtra} onChange={(checked) => setIsExtra(checked)} />
-                            </div>,
-                            <Button key='close' type='primary' danger={true} size='small' onClick={() => stop()}>
-                                关闭反连
-                            </Button>
-                        ]}
+                        extra={
+                            <div className='pagehead-extra-body'>
+                                <div>
+                                    Payload 配置:{" "}
+                                    <Switch
+                                        size='small'
+                                        checked={isExtra}
+                                        onChange={(checked) => setIsExtra(checked)}
+                                    />
+                                </div>
+                                <Button
+                                    className='body-btn'
+                                    type='primary'
+                                    danger={true}
+                                    size='small'
+                                    onClick={() => stop()}
+                                >
+                                    关闭反连
+                                </Button>
+                            </div>
+                        }
                     >
                         <Alert
                             type={"info"}
@@ -446,6 +461,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                     <div className='addr-body'>
                                         HTTP反连地址&nbsp;&nbsp;
                                         <CopyableField
+                                            width={"80%"}
                                             text={`http://${reverseAddr}/${classRequest?.ClassName || ""}`}
                                             style={{color: "blue"}}
                                         />
@@ -453,6 +469,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                     <div className='addr-body'>
                                         RMI反连地址&nbsp;&nbsp;
                                         <CopyableField
+                                            width={"80%"}
                                             text={`rmi://${reverseAddr}/${classRequest?.ClassName || ""}`}
                                             style={{color: "blue"}}
                                         />
@@ -460,6 +477,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                     <div className='addr-body'>
                                         LDAP反连地址&nbsp;&nbsp;
                                         <CopyableField
+                                            width={"80%"}
                                             text={`ldap://${reverseAddr}/${classRequest?.ClassName || ""}`}
                                             style={{color: "blue"}}
                                         />
