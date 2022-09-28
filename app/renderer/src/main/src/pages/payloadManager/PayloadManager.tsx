@@ -697,10 +697,11 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
             failed(`字典上传失败:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
-            info("字典上传完毕")
+            // info("字典上传完毕")
             setTimeout(() => {
                 setUploadLoading(false)
-            }, 200)
+                props.onFinished && props.onFinished(params.Group)
+            }, 200) 
         })
         setToken(token)
         return () => {

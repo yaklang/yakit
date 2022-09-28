@@ -226,9 +226,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const delRisk = useMemoizedFn((hash: string) => {
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteRisk", {
-                Hash: hash
-            })
+            .invoke("DeleteRisk", {Hash:hash})
             .then(() => {
                 update(1)
             })
@@ -613,7 +611,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                                 DeleteRepetition: true,
                                                 Id: record.Id,
                                                 Filter: {
-                                                    Search: record?.TitleVerbose || record.Title
+                                                    Search: record?.TitleVerbose || record.Title,
+                                                    Network: record?.IP,
                                                 }
                                             }
                                             ipcRenderer

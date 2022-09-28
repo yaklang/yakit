@@ -35,9 +35,9 @@ import {
     generateYakCodeByRequest,
     RequestToYakCodeTemplate
 } from "../pages/invoker/fromPacketToYakCode"
-import {execPacketScan} from "@/pages/packetScanner/PacketScanner";
-import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup";
-
+import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
+import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv";
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPHeaderItem {
@@ -348,7 +348,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail id={flow.Id} onClose={onClosed}/>
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
         </div>
     )
 }
@@ -563,6 +563,10 @@ const OFFSET_STEP = 20
 const ROW_HEIGHT = 42
 const MAX_ROW_COUNT = Math.abs(OFFSET_LIMIT * 2)
 
+interface shieldData {
+    data:(string|number)[],
+}
+
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>(props.params || {SourceType: "mitm"})
@@ -575,6 +579,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     // const [autoReload, setAutoReload, getAutoReload] = useGetState(false);
     const autoReloadRef = useRef<boolean>(false)
+    const isOneceLoading = useRef<boolean>(true)
     const autoReload = autoReloadRef.current
     const setAutoReload = (b: boolean) => {
         autoReloadRef.current = b
@@ -593,15 +598,20 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // 用于记录适合
     const [_scrollY, setScrollYRaw, getScrollY] = useGetState(0)
     const setScrollY = useThrottleFn(setScrollYRaw, {wait: 300}).run
-
     // 如果这个大于等于 0 ，就 Lock 住，否则忽略
     const [_trigger, setLockedScroll, getLockedScroll] = useGetState(-1)
     const lockScrollTimeout = (size: number, timeout: number) => {
         setLockedScroll(size)
         setTimeout(() => setLockedScroll(-1), timeout)
     }
-
+    // 屏蔽数据
+    const [shieldData,setShieldData,getShieldData] = useGetState<shieldData>({
+        data:[]
+    })
+    
     const tableRef = useRef(null)
+
+    const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
     const ref = useHotkeys("ctrl+r, enter", (e) => {
         const selected = getSelected()
@@ -705,6 +715,45 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [compareRight])
 
+    useEffect(()=>{
+        // 判断是否第一次加载页面
+        if(isOneceLoading.current){
+            getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA).then(data => {
+                try {
+                    const cacheData = JSON.parse(data)
+                    setShieldData({
+                        data:cacheData?.data||[],
+                    })
+                } catch (e) {
+                    update(1)
+                    failed("加载屏蔽参数失败")
+                }
+            }).finally(() => {
+                isOneceLoading.current = false
+            })
+        }
+        else{
+            // 持久化存储
+            setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(getShieldData())) 
+            // setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify({
+            //     data:[],
+            // }))
+            // console.log("清空缓存")
+            let idArr:number[] = []
+            let urlArr:string[] = []
+            shieldData.data.map((item)=>{
+                if (typeof item === "string"){
+                    urlArr = [...urlArr,item]
+                }
+                else{
+                    idArr = [...idArr,item]
+                }
+            })
+            setParams({...params,ExcludeId:idArr,ExcludeInUrl:urlArr})
+        }
+        
+    },[shieldData])
+
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, sourceType?: string, noLoading?: boolean) => {
             const paginationProps = {
@@ -721,7 +770,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             //     SourceType: sourceType, ...params,
             //     Pagination: {...paginationProps},
             // })
-            ipcRenderer
+                ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: sourceType,
                     ...params,
@@ -736,6 +785,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     failed(`query HTTP Flow failed: ${e}`)
                 })
                 .finally(() => setTimeout(() => setLoading(false), 300))
+            
         }
     )
 
@@ -764,14 +814,19 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         return min
     })
 
-    // 第一次启动的时候加载一下
+    // 第一次启动的时候等待缓存条件加载
     // OnlyWebsocket 变的时候加载一下
     useEffect(() => {
-        update(1)
-    }, [
-        params.OnlyWebsocket
-    ])
+        if(!isOneceLoading.current){
+            update(1)
+        }
+    }, [params.OnlyWebsocket])
 
+    useEffect(()=>{
+        if(!isOneceLoading.current){
+            update()
+        }
+    },[params.ExcludeId,params.ExcludeInUrl])
     const scrollTableTo = useMemoizedFn((size: number) => {
         if (!tableRef || !tableRef.current) return
         const table = tableRef.current as unknown as {
@@ -789,7 +844,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Order: "desc",
                 OrderBy: "id"
             }
-
             const offsetId = getNewestId()
             // 查询数据
             ipcRenderer
@@ -866,7 +920,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             const a = originOffsetLength - offsetDeltaData.length
                             scrollTableTo(
                                 (originDataLength + 1 + MAX_ROW_COUNT - originOffsetLength) * ROW_HEIGHT -
-                                tableClientHeight
+                                    tableClientHeight
                             )
                         }
                     }, 50)
@@ -989,54 +1043,70 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     }, [props.inViewport])
 
     const clearHistoryAction = useMemoizedFn((e: MouseEvent) => {
-        showByCursorMenu({
-            content: [
-                {
-                    title: "重置请求 ID", onClick: () => {
-                        ipcRenderer
-                            .invoke("DeleteHTTPFlows", {DeleteAll: true})
-                            .then(() => {
-
-                            })
-                            .catch((e: any) => {
-                                failed(`历史记录删除失败: ${e}`)
-                            }).finally(() => update(1))
-                    }
-                },
-                {
-                    title: "不重置请求 ID", onClick: () => {
-                        const newParams = {
-                            Filter: {
-                                ...params
-                            },
-                            DeleteAll: false
+        showByCursorMenu(
+            {
+                content: [
+                    {
+                        title: "重置请求 ID",
+                        onClick: () => {
+                            ipcRenderer
+                                .invoke("DeleteHTTPFlows", {DeleteAll: true})
+                                .then(() => {})
+                                .catch((e: any) => {
+                                    failed(`历史记录删除失败: ${e}`)
+                                })
+                                .finally(() => update(1))
                         }
-                        ipcRenderer
-                            .invoke("DeleteHTTPFlows", newParams)
-                            .then((i: HTTPFlow) => {
-                                setParams(props.params || {SourceType: "mitm"})
-                            })
-                            .catch((e: any) => {
-                                failed(`历史记录删除失败: ${e}`)
-                            })
-                        setLoading(true)
-                        info("正在删除...如自动刷新失败请手动刷新")
-                        setCompareLeft({content: "", language: "http"})
-                        setCompareRight({content: "", language: "http"})
-                        setCompareState(0)
-                        setTimeout(() => {
-                            update(1)
-                            if (props.onSelected) props.onSelected(undefined)
-                        }, 400)
+                    },
+                    {
+                        title: "不重置请求 ID",
+                        onClick: () => {
+                            const newParams = {
+                                Filter: {
+                                    ...params
+                                },
+                                DeleteAll: false
+                            }
+                            ipcRenderer
+                                .invoke("DeleteHTTPFlows", newParams)
+                                .then((i: HTTPFlow) => {
+                                    setParams(props.params || {SourceType: "mitm"})
+                                })
+                                .catch((e: any) => {
+                                    failed(`历史记录删除失败: ${e}`)
+                                })
+                            setLoading(true)
+                            info("正在删除...如自动刷新失败请手动刷新")
+                            setCompareLeft({content: "", language: "http"})
+                            setCompareRight({content: "", language: "http"})
+                            setCompareState(0)
+                            setTimeout(() => {
+                                update(1)
+                                if (props.onSelected) props.onSelected(undefined)
+                            }, 400)
+                        }
                     }
-                }
-            ]
-        }, e.clientX, e.clientY)
+                ]
+            },
+            e.clientX,
+            e.clientY
+        )
     })
 
+    // 保留数组中非重复数据
+    const filterNonUnique = arr => arr.filter(i => arr.indexOf(i) === arr.lastIndexOf(i))
+    // 数组去重
+    const filterItem = arr => arr.filter((item,index) => arr.indexOf(item) === index)
+
+    // 取消屏蔽筛选
+    const cancleFilter = (value) => {
+        const newArr = filterNonUnique([...getShieldData().data,value])
+        const newObj = {...shieldData,data:newArr}
+        setShieldData(newObj)
+    }
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
-        <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
+        <div className="http-flow-table" ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
@@ -1056,7 +1126,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         <Space>
                             {"所有相关请求都在这里"}
                             <Button
-                                icon={<ReloadOutlined/>}
+                                icon={<ReloadOutlined />}
                                 type={"link"}
                                 onClick={(e) => {
                                     update(1)
@@ -1101,12 +1171,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     ]}
                 />
             )}
-            <Row style={{margin: "5px 0 5px 5px"}}>
-                <Col span={12}>
-                    <Space>
+            <div className="filter-box">
+                  <div className="filter-box-item filter-box-item-left">
+                  <Space>
                         <span>{props?.title ? props.title : "HTTP History"}</span>
                         <Button
-                            icon={<ReloadOutlined/>}
+                            icon={<ReloadOutlined />}
                             type={"link"}
                             size={"small"}
                             onClick={(e) => {
@@ -1139,23 +1209,50 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 update(1)
                             }}
                         />
-                        {props.noHeader && <Button danger={true} size={"small"}
-                                                   onClick={e => clearHistoryAction(e as any)}
-                                                   onContextMenu={e => clearHistoryAction(e as any)}
-                        >清空 HTTP History</Button>}
+                        {props.noHeader && (
+                            <Button
+                                danger={true}
+                                size={"small"}
+                                onClick={(e) => clearHistoryAction(e as any)}
+                                onContextMenu={(e) => clearHistoryAction(e as any)}
+                            >
+                                清空 HTTP History
+                            </Button>
+                        )}
                         <Checkbox
                             checked={params.OnlyWebsocket}
                             onChange={() => {
                                 setParams({...params, OnlyWebsocket: !params.OnlyWebsocket})
                             }}
-                        >只看 Websocket</Checkbox>
+                        >
+                            只看 Websocket
+                        </Checkbox>
+                        
                         {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
-                </Col>
-                <Col span={12} style={{textAlign: "right"}}>
+                  </div>
+                  <div className="filter-box-item">
                     <Tag>{total} Records</Tag>
-                </Col>
-            </Row>
+                 </div>          
+            </div>
+            <div className='title-header'>
+                        {shieldData?.data.map((item:(number|string))=>
+                            (<div className='title-selected-tag' key={item}>
+                            <Tooltip title={item}>
+                            <div className='tag-name-style'>
+                                {typeof item === "string"&&item.length>=20?`${item.slice(0,20)}...`:
+                                item}
+                            </div>
+                            </Tooltip>
+                            <div
+                                className='tag-del-style'
+                                onClick={() => cancleFilter(item)}
+                            >
+                                x
+                            </div>
+                        </div>)
+                        )
+            }</div>
             <TableResizableColumn
                 tableRef={tableRef}
                 virtualized={true}
@@ -1203,7 +1300,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.Methods ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1260,7 +1357,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.StatusCode ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1307,7 +1404,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.SearchURL ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1348,9 +1445,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return rowData[dataKey]
                                 ? `${rowData[dataKey]}`
-                                    .split("|")
-                                    .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                                    .join(", ")
+                                      .split("|")
+                                      .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                                      .join(", ")
                                 : ""
                         }
                     },
@@ -1399,7 +1496,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.HaveBody ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1465,7 +1562,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }}
                                             type={!!params.HaveCommonParams ? "primary" : "link"}
                                             size={"small"}
-                                            icon={<SearchOutlined/>}
+                                            icon={<SearchOutlined />}
                                         />
                                     </Popover>
                                 </div>
@@ -1474,7 +1571,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         cellRender: ({rowData, dataKey, ...props}: any) => {
                             return (
                                 <Space>
-                                    {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && <CheckOutlined/>}
+                                    {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && <CheckOutlined />}
                                 </Space>
                             )
                         }
@@ -1523,9 +1620,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             return "请求大小"
                         },
                         cellRender: ({rowData, dataKey, ...props}: any) => {
-                            return (
-                                <div>{rowData?.RequestSizeVerbose || "-"}</div>
-                            )
+                            return <div>{rowData?.RequestSizeVerbose || "-"}</div>
                         }
                     },
                     {
@@ -1567,10 +1662,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         rowData.Hash === selected?.Hash
                                             ? "rgba(78, 164, 255, 0.4)"
                                             : rowData.Tags.indexOf("YAKIT_COLOR") > -1
-                                                ? TableRowColor(
-                                                    rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
-                                                )
-                                                : "#ffffff"
+                                            ? TableRowColor(
+                                                  rowData.Tags.split("|").pop().split("_").pop().toUpperCase()
+                                              )
+                                            : "#ffffff"
                                     if (node) {
                                         if (color) node.style.setProperty("background-color", color, "important")
                                         else node.style.setProperty("background-color", "#ffffff")
@@ -1631,15 +1726,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     onClick: () => {
                                         const flow = rowData as HTTPFlow
                                         if (!flow) return
-                                        generateCSRFPocByRequest(flow.Request, e => {
+                                        generateCSRFPocByRequest(flow.Request, (e) => {
                                             callCopyToClipboard(e)
                                         })
                                     }
                                 },
                                 {
                                     title: "复制为 Yak PoC 模版",
-                                    onClick: () => {
-                                    },
+                                    onClick: () => {},
                                     subMenuItems: [
                                         {
                                             title: "数据包 PoC 模版",
@@ -1687,8 +1781,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
                                                 const existedTags = flow.Tags
                                                     ? flow.Tags.split("|").filter(
-                                                        (i) => !!i && !i.startsWith("YAKIT_COLOR_")
-                                                    )
+                                                          (i) => !!i && !i.startsWith("YAKIT_COLOR_")
+                                                      )
                                                     : []
                                                 existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
                                                 ipcRenderer
@@ -1714,8 +1808,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                             }
                                         }
                                     }),
-                                    onClick: () => {
-                                    }
+                                    onClick: () => {}
                                 },
                                 {
                                     title: "移除颜色",
@@ -1752,8 +1845,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 },
                                 {
                                     title: "发送到对比器",
-                                    onClick: () => {
-                                    },
+                                    onClick: () => {},
                                     subMenuItems: [
                                         {
                                             title: "发送到对比器左侧",
@@ -1778,20 +1870,97 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     ]
                                 },
                                 {
-                                    title: "删除该记录",
-                                    onClick: () => {
-                                        setLoading(true)
-                                        ipcRenderer
-                                            .invoke("DeleteHTTPFlows", {
-                                                Id: [rowData.Id]
-                                            })
-                                            .then(() => {
-                                                info("删除成功")
-                                                update()
-                                            })
-                                            .finally(() => setTimeout(() => setLoading(false), 100))
-                                    },
-                                    danger: true
+                                    title:"屏蔽",
+                                    onClick: () => {},
+                                    subMenuItems: [
+                                        {
+                                            title:"屏蔽该记录",
+                                            onClick: () => {
+                                                const id = parseInt(rowData?.Id)
+                                                const newArr = filterItem([...shieldData.data,id])
+                                                const newObj = {...shieldData,data:newArr}
+                                                setShieldData(newObj)
+                                            }
+                                        },
+                                        {
+                                            title:"屏蔽URL",
+                                            onClick: () => {
+                                                let Url = rowData?.Url
+                                                // 根据URL拿到ID数组
+                                                const newArr = filterItem([...shieldData.data,Url])
+                                                const newObj = {...shieldData,data:newArr}
+                                                setShieldData(newObj)
+                                                   
+                                            }
+                                        },
+                                        {
+                                            title:"屏蔽域名",
+                                            onClick: () => {
+                                                const host = rowData?.HostPort?.split(":")[0]||""
+                                               
+                                                // 根据host拿到对应ID数组
+                                                const newArr = filterItem([...shieldData.data,host])
+                                                const newObj = {...shieldData,data:newArr}
+                                                setShieldData(newObj)
+                                                   
+                                            }
+                                        },
+                                    ]
+                                },
+                                {
+                                    title: "删除",
+                                    onClick: () => {},
+                                    subMenuItems: [
+                                        {
+                                            title: "删除该记录",
+                                            onClick: () => {
+                                                setLoading(true)
+                                                ipcRenderer
+                                                    .invoke("DeleteHTTPFlows", {
+                                                        Id: [rowData.Id]
+                                                    })
+                                                    .then(() => {
+                                                        info("删除成功")
+                                                        update()
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            },
+                                            danger: true
+                                        },
+                                        {
+                                            title: "删除URL",
+                                            onClick: () => {
+                                                setLoading(true)
+                                                const flow = rowData as HTTPFlow
+                                                ipcRenderer
+                                                    .invoke("DeleteHTTPFlows", {
+                                                        URLPrefix: flow?.Url
+                                                    })
+                                                    .then(() => {
+                                                        info("删除成功")
+                                                        update()
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            }
+                                        },
+                                        {
+                                            title: "删除域名",
+                                            onClick: () => {
+                                                setLoading(true)
+                                                const flow = rowData as HTTPFlow
+                                                const host = flow?.HostPort?.split(":")[0]
+                                                ipcRenderer
+                                                    .invoke("DeleteHTTPFlows", {
+                                                        URLPrefix: host
+                                                    })
+                                                    .then(() => {
+                                                        info("删除成功")
+                                                        update()
+                                                    })
+                                                    .finally(() => setTimeout(() => setLoading(false), 100))
+                                            }
+                                        }
+                                    ]
                                 }
                             ]
                         },

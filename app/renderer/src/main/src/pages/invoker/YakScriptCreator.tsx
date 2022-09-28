@@ -841,7 +841,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 setExtraSetting({})
                 break
         }
-        setParams({ ...params, TypeVerbose: type })
+        setParams({ ...params, TypeVerbose: type,DefaultValue:"" })
     })
     // 提交参数信息的验证
     const verify = useMemoizedFn(() => {
@@ -1030,7 +1030,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                     setValue={(TypeVerbose) => typeChange(TypeVerbose)}
                     value={params.TypeVerbose}
                 />
-                {!["upload-path"].includes(params.TypeVerbose) && (
+                {!["upload-path","boolean"].includes(params.TypeVerbose) && (
                     <InputItem
                         label={"默认值"}
                         placeholder={"该参数的默认值"}
@@ -1039,7 +1039,23 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                         help={params.TypeVerbose === "select" ? "使用 逗号(,) 作为选项分隔符 " : undefined}
                     />
                 )}
-
+                {
+                  ["boolean"].includes(params.TypeVerbose)&&(
+                    <ManySelectOne
+                    label={"默认值"}
+                    placeholder={"该参数的默认值"}
+                    data={[
+                        { text: "布尔值 / true", value: "true" },
+                        { text: "布尔值 / false", value: "false" },
+                    ]}
+                    setValue={(value) => {
+                        console.log("value",value,params.TypeVerbose)
+                        setParams({ ...params, DefaultValue:value })
+                    }}
+                    value={params.DefaultValue}
+                />
+                  )
+                }
                 {extraSettingComponent(params.TypeVerbose)}
 
                 <InputItem
