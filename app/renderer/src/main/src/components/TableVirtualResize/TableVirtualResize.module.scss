@@ -1,23 +1,25 @@
-.table-virtual-resize-container {
-    height: 100%;
-    overflow-anchor: none;
-    overflow-y: auto;
-}
-
 .virtual-table {
     display: flex;
+    flex-direction: column;
+    width: 100%;
     height: 100%;
-    overflow-y: hidden;
     overflow-x: auto;
-    width: max-content;
+    overflow-y: hidden;
+    position: relative;
 
-
+    .virtual-table-container-none-select {
+        user-select: none !important;
+    }
 
     .virtual-table-col {
-        position: relative;
-        // width: 100%;
+        position: sticky;
+        display: flex;
+        top: 0;
+        width: 100%;
+        z-index: 1;
 
         .virtual-table-title {
+            position: relative;
             display: flex;
             flex-direction: row;
             align-items: center;
@@ -26,54 +28,133 @@
             height: 28px;
             border: 1px solid #EAECF3;
             border-right: 0;
-            // position: absolute;
             width: 100%;
             min-width: max-content;
-        }
+            color: #31343F;
+            font-weight: 500;
+            font-size: 12px;
+            font-family: 'PingFang HK';
+            font-style: normal;
 
-        .virtual-table-row-list {
-            // padding-top: 28px;
-            // height: calc(100% - 28px);
-
-            .virtual-table-row {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                width: fit-content;
-                max-width: 500px;
-                word-break: break-all;
-                padding: 6px 12px;
-                height: 28px;
-                background: #FFFFFF;
-                border: 1px solid #EAECF3;
-                border-top: 0;
-                border-right: 0;
-            }
-
-            .virtual-table-row-ellipsis {
-                width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                display: -webkit-box;
-                -webkit-line-clamp: 1;
-                -webkit-box-orient: vertical;
-
-            }
-        }
-
-        &:first-child {
-            .virtual-table-title {
+            &:first-child {
                 border-radius: 4px 0px 0px 0px;
             }
-        }
 
-        &:last-child {
-            .virtual-table-title {
+            &:last-child {
                 border-right: 1px solid #EAECF3;
                 border-radius: 0px 4px 0px 0px;
             }
         }
+
     }
 
+    .virtual-table-list-container {
+        height: 100%;
+        width: 100%;
+        overflow-y: auto;
+        overflow-anchor: none;
+        position: relative;
 
+        .virtual-table-list {
+            display: flex;
+
+            .virtual-table-list-item {
+                &:last-child {
+                    border-right: 1px solid #EAECF3;
+                }
+
+                .virtual-table-row {
+                    display: flex;
+                    align-items: center;
+                    width: 100%;
+                    word-break: break-all;
+                    // padding: 6px 12px;
+                    padding: 6px 8px 6px 12px;
+                    height: 28px;
+                    background: #FFFFFF;
+                    border: 1px solid #EAECF3;
+                    border-top: 0;
+                    border-right: 0;
+                    color: #31343F;
+                    font-family: 'PingFang HK';
+                    font-style: normal;
+                    font-weight: 400;
+                    font-size: 12px;
+                }
+
+                .virtual-table-row-ellipsis {
+                    // width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 1;
+                    -webkit-box-orient: vertical;
+                }
+            }
+        }
+    }
+
+    .drag-line {
+        width: 1px;
+        border-left: 1px dashed #1890ff;
+        position: absolute;
+        z-index: 2;
+
+        &:hover {
+            cursor: col-resize;
+        }
+    }
+
+    .check {
+        padding-right: 4px;
+
+        :global {
+            .ant-checkbox-inner {
+                border-radius: 4px;
+            }
+
+            .ant-checkbox-checked::after {
+                border-radius: 4px;
+            }
+        }
+    }
+
+    .virtual-table-show-drag-line {
+        display: none;
+    }
+
+    .virtual-table-title-drag {
+        position: absolute;
+        top: 0;
+        right: -2px;
+        width: 5px;
+        height: 100%;
+        background-color: transparent;
+        border: 1px solid transparent;
+        cursor: col-resize;
+        z-index: 2;
+
+        &:hover {
+            border-right: 1px solid #1890ff;
+
+            .virtual-table {
+                -webkit-user-select: none;
+            }
+        }
+    }
+
+    .virtual-table-row-left {
+        text-align: left;
+        justify-content: flex-start;
+    }
+
+    .virtual-table-row-center {
+        text-align: center;
+        justify-content: center;
+    }
+
+    .virtual-table-row-right {
+        text-align: right;
+        justify-content: flex-end;
+    }
 }

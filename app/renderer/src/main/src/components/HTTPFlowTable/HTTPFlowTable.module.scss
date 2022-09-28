@@ -1,0 +1,28 @@
+.table-virtual-resize {
+    height: calc(100% - 35px);
+
+    .status-code {
+        color: #56C991;
+    }
+
+    .check-circle-icon {
+        color: #56C991;
+    }
+
+    .action {
+        color: #1890ff;
+    }
+}
+
+/* history表格右键菜单颜色功能样式 */
+.history-color-tag {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-color-tag .tag-color-display {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+}

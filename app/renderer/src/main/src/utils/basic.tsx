@@ -3,7 +3,7 @@ import {Alert, Badge, Button, Card, Divider, Form, Popover, Space, Spin, Tag, Ti
 import {ExecResult} from "../pages/invoker/schema";
 import {showDrawer, showModal} from "./showModal";
 import {ExecResultLog, ExecResultMessage} from "../pages/invoker/batch/ExecMessageViewer";
-import {LogLevelToCode} from "../components/HTTPFlowTable";
+import {LogLevelToCode} from "../components/HTTPFlowTable/HTTPFlowTable";
 import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter";
 import {InputItem, SwitchItem} from "./inputUtil";
 import {useGetState, useMemoizedFn} from "ahooks";

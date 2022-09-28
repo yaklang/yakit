@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
-import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable"
+import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
 import {ResizeBox} from "./ResizeBox"
 import {AutoCard} from "./AutoCard"

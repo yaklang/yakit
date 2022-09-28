@@ -10,7 +10,7 @@ import {genDefaultPagination, QueryGeneralResponse} from "../../invoker/schema"
 import {ReloadOutlined, SearchOutlined, DeleteOutlined} from "@ant-design/icons"
 import {InputItem, SwitchItem} from "../../../utils/inputUtil"
 import { showByContextMenu } from "../../../components/functionTemplate/showByContext"
-import { HTTPFlow } from "../../../components/HTTPFlowTable"
+import { HTTPFlow } from "../../../components/HTTPFlowTable/HTTPFlowTable"
 import { failed } from "../../../utils/notification"
 
 import "./WebsiteTreeStyle.css"

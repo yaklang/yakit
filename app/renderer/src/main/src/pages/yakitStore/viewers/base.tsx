@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {YakScript} from "../../invoker/schema"
 import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip} from "antd"
-import {LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPFlowTable"
+import {LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPFlowTable/HTTPFlowTable"
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
 import {randomString} from "../../../utils/randomUtil"

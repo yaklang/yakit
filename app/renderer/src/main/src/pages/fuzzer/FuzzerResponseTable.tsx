@@ -4,7 +4,7 @@ import {analyzeFuzzerResponse, FuzzerResponse} from "./HTTPFuzzerPage";
 import {Button, Space, Table, Tag, Tooltip, Typography} from "antd";
 import {formatTimestamp} from "../../utils/timeUtil";
 import * as  antd from "antd";
-import {DurationMsToColor, StatusCodeToColor} from "../../components/HTTPFlowTable";
+import {DurationMsToColor, StatusCodeToColor} from "../../components/HTTPFlowTable/HTTPFlowTable";
 import {divider} from "@uiw/react-md-editor";
 import {CopyableField} from "../../utils/inputUtil";
 import ReactResizeDetector from "react-resize-detector";

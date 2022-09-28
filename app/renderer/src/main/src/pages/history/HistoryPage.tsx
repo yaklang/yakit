@@ -1,5 +1,5 @@
 import React from "react";
-import {HTTPFlowTable} from "../../components/HTTPFlowTable";
+import {HTTPFlowTable} from "../../components/HTTPFlowTable/HTTPFlowTable";
 
 export interface HistoryPageProp {
 

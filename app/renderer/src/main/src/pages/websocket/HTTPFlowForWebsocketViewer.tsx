@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
 import {Button, Space, Tag} from "antd";
-import {HTTPFlow} from "@/components/HTTPFlowTable";
+import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable";
 import {SelectOne} from "@/utils/inputUtil";
 import {YakEditor} from "@/utils/editors";
 import {Uint8ArrayToString} from "@/utils/str";

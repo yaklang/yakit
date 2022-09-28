@@ -1,4 +1,4 @@
-import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactNode, Ref, Suspense, useEffect, useMemo, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -15,30 +15,29 @@ import {
     Tag,
     Tooltip
 } from "antd"
-import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow"
-import {showByCursorMenu} from "../utils/showByCursor"
-import {showDrawer} from "../utils/showModal"
-import {PaginationSchema} from "../pages/invoker/schema"
+import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
+import {showByCursorMenu} from "../../utils/showByCursor"
+import {showDrawer} from "../../utils/showModal"
+import {PaginationSchema} from "../../pages/invoker/schema"
 import {CheckOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons"
-import {InputItem, ManyMultiSelectForString, SwitchItem} from "../utils/inputUtil"
-import {HTTPFlowDetail} from "./HTTPFlowDetail"
-import {failed, info, success} from "../utils/notification"
-import "./style.css"
-import {TableResizableColumn} from "./TableResizableColumn"
-import {formatTime, formatTimestamp} from "../utils/timeUtil"
+import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
+import {HTTPFlowDetail} from "../HTTPFlowDetail"
+import {failed, info, success} from "../../utils/notification"
+// import "./style.css"
+import {TableResizableColumn} from "../TableResizableColumn"
+import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
-import {callCopyToClipboard} from "../utils/basic"
+import {callCopyToClipboard} from "../../utils/basic"
 import {
     generateCSRFPocByRequest,
     generateYakCodeByRequest,
     RequestToYakCodeTemplate
-} from "../pages/invoker/fromPacketToYakCode"
+} from "../../pages/invoker/fromPacketToYakCode"
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
-import {TableVirtualResize} from "./TableVirtualResize/TableVirtualResize"
 
 const {ipcRenderer} = window.require("electron")
 
