@@ -1,5 +1,13 @@
 import React, {ReactNode, Suspense, useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useDebounceFn, useMemoizedFn, useMouse, useSize, useVirtualList} from "ahooks"
+import {
+    useCreation,
+    useDebounceFn,
+    useDeepCompareEffect,
+    useMemoizedFn,
+    useMouse,
+    useSize,
+    useVirtualList
+} from "ahooks"
 import classNames from "classnames"
 import {ColumnsTypeProps, TableVirtualResizeProps} from "./TableVirtualResizeType"
 import ReactResizeDetector from "react-resize-detector"
@@ -37,9 +45,21 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         },
         overscan: 5
     })
+    // useDeepCompareEffect(() => {
+    //     // getColumnsMinWidthList()
+    //     // initialTableWidthAndColWidth()
+    //     // setColumns(props.columns)
+    // }, [props.rowSelection, props.columns])
+
     useEffect(() => {
+        getColumnsMinWidthList()
+    }, [columnsRef.current])
+    useEffect(() => {
+        initialTableWidthAndColWidth()
+    }, [width])
+    // 获取每列的拖拽最小宽度
+    const getColumnsMinWidthList = useMemoizedFn(() => {
         // 可以拖拽的最小宽度
-        if (columnsMinWidthList.current.length > 0) return
         const dom = document.querySelectorAll(".virtual-col-title")
         if (!dom) return
         const minWidths: number[] = []
@@ -47,13 +67,21 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
             minWidths.push(item.clientWidth + 21) // 21:padding+border
         })
         columnsMinWidthList.current = minWidths
-    }, [columnsRef.current])
-    useEffect(() => {
+    })
+    // 初始化表格宽度和列宽度
+    const initialTableWidthAndColWidth = useMemoizedFn(() => {
         if (!width || columns.length <= 0) return
-        const w = Math.ceil(width / columns.length)
+        const haveWidthList: number[] = columns
+            .filter((ele) => ele.width || ele.minWidth)
+            .map((w) => w.width || w.minWidth || 0)
+        let w = width / columns.length
+        if (haveWidthList.length > 0) {
+            const initWidth = haveWidthList.reduce((p, c) => p + c)
+            w = (width - initWidth) / columns.length
+        }
         setColWidth(w)
         recalculatedTableWidth(w)
-    }, [width])
+    })
     // 推拽后重新计算表格宽度
     const recalculatedTableWidth = useMemoizedFn((w) => {
         if (!colWidth || columns.length <= 0) return
@@ -153,7 +181,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                 />
                 {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
                     <>
-                        {lineIndex > -1 && (
+                        {enableDrag && lineIndex > -1 && (
                             <div
                                 className={classNames(style["drag-line"])}
                                 style={{height, left: lineLeft}}
@@ -202,7 +230,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                             )}
                                             {columnsItem.title}
                                         </div>
-                                        {cIndex < columns.length - 1 && (
+                                        {enableDrag && cIndex < columns.length - 1 && (
                                             <div
                                                 className={classNames(style["virtual-table-title-drag"], {
                                                     [style["virtual-table-show-drag-line"]]: lineIndex > 0
