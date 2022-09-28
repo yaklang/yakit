@@ -203,7 +203,7 @@ export const RouteMenuData: MenuDataProps[] = [
         icon: <AppstoreOutlined />,
         subMenuData: [
             {key: Route.ReverseServer_New, label: "反连服务器", icon: <OneToOneOutlined />},
-            {key: Route.PayloadGenerater_New, label: "JavaPayload", icon: <OneToOneOutlined />},
+            {key: Route.PayloadGenerater_New, label: "Java BigBang", icon: <OneToOneOutlined />},
             // {key: Route.PayloadGenerater, label: "JavaPayload", icon: <OneToOneOutlined />},
             // {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined />},
             {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined />},
