@@ -164,7 +164,8 @@ export const RouteMenuData: MenuDataProps[] = [
         subMenuData: [
             { key: Route.HTTPHacker, label: "MITM", icon: <FireOutlined /> },
             { key: Route.HTTPFuzzer, label: "Web Fuzzer", icon: <AimOutlined /> },
-            { key: Route.WebsocketFuzzer, label: "Websocket Fuzzer", icon: <AimOutlined /> }
+            { key: Route.WebsocketFuzzer, label: "Websocket Fuzzer", icon: <AimOutlined /> },
+            {key: Route.PayloadGenerater_New, label: "Yso-Java Hack", icon: <OneToOneOutlined />},
         ]
     },
     {
@@ -203,7 +204,7 @@ export const RouteMenuData: MenuDataProps[] = [
         icon: <AppstoreOutlined />,
         subMenuData: [
             {key: Route.ReverseServer_New, label: "反连服务器", icon: <OneToOneOutlined />},
-            {key: Route.PayloadGenerater_New, label: "Java BigBang", icon: <OneToOneOutlined />},
+            {key: Route.PayloadGenerater_New, label: "Yso-Java Hack", icon: <OneToOneOutlined />},
             // {key: Route.PayloadGenerater, label: "JavaPayload", icon: <OneToOneOutlined />},
             // {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined />},
             {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined />},
