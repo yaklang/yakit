@@ -1,0 +1,142 @@
+.java-payload-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .payload-info-wrapper {
+        flex: 1;
+        overflow: hidden;
+    }
+    .payload-hidden-wrapper {
+        flex: 0;
+        overflow: hidden;
+    }
+
+    .reverse-info-wrapper {
+        flex: 1;
+        overflow: hidden;
+    }
+    .reverse-hidden-wrapper {
+        flex: 0;
+        overflow: hidden;
+    }
+
+    .wrapper-body {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        .body-left {
+            width: 416px;
+            height: 100%;
+            overflow: hidden;
+            .info-addr-card {
+                .ant-card-head {
+                    border-bottom: 0px;
+                    height: 48px;
+                    .ant-card-head-wrapper {
+                        height: 48px;
+                    }
+                }
+                .addr-alert {
+                    padding: 16px;
+                    height: 100%;
+                    align-items: baseline;
+                    .addr-body + .addr-body {
+                        margin-top: 12px;
+                    }
+                }
+            }
+        }
+        .body-hidden-left {
+            flex: 0;
+            overflow: hidden;
+        }
+        .body-right {
+            flex: 1;
+            overflow: hidden;
+        }
+    }
+}
+
+.setting-payload-wrapper {
+    .setting-payload-icon {
+        font-size: 12px;
+        color: gray;
+        margin-left: 5px;
+    }
+    .setting-payload-btn + .setting-payload-btn {
+        margin-left: 8px;
+    }
+
+    .form-common-style {
+        .ant-form-item {
+            margin-bottom: 16px;
+        }
+
+        .form-required {
+            display: inline-block;
+            margin-right: 4px;
+            color: #ff4d4f;
+            font-size: 14px;
+            font-family: SimSun, sans-serif;
+            line-height: 1;
+        }
+
+        .form-item-label-title {
+            position: relative;
+            padding-right: 20px;
+            .question-icon {
+                position: absolute;
+                font-size: 12px;
+                color: gray;
+                right: 4px;
+                top: 6px;
+            }
+        }
+
+        .form-item-options-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .question-icon {
+                color: gray;
+                right: 6px;
+            }
+        }
+        .form-type-btn {
+            margin-bottom: 0;
+            .ant-btn {
+                padding: 4px 6px;
+            }
+            .primary-btn {
+                color: #fff;
+                border-color: #40a9ff;
+                background: #40a9ff;
+            }
+            .other-btn {
+                color: #40a9ff;
+                border-color: #40a9ff;
+                background: #fff;
+            }
+            .ant-btn + .ant-btn {
+                margin-left: 8px;
+            }
+        }
+    }
+}
+
+.code-payload-wrapper {
+    .code-type-radio {
+        margin-left: 8px;
+        .ant-radio-button-wrapper {
+            padding: 0 6px;
+        }
+    }
+    .extra-btns {
+        .ant-btn + .ant-btn {
+            margin-left: 8px;
+        }
+    }
+}

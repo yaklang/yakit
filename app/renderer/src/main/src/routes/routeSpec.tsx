@@ -28,7 +28,6 @@ import { HTTPHistory } from "../components/HTTPHistory"
 import { PortAssetTable } from "../pages/assetViewer/PortAssetPage"
 import { YakScriptExecResultTable } from "../components/YakScriptExecResultTable"
 import { DomainAssetPage } from "../pages/assetViewer/DomainAssetPage"
-import { ReverseServerPage } from "../pages/reverse/ReverseServerPage"
 import { RiskPage } from "../pages/risks/RiskPage"
 import { DNSLogPage } from "../pages/dnslog/DNSLogPage"
 import { HTTPFuzzerPage } from "../pages/fuzzer/HTTPFuzzerPage"
@@ -37,6 +36,11 @@ import { ICMPSizeLoggerPage } from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import { RandomPortLogPage } from "../pages/randomPortLog/RandomPortLogPage"
 import { ReportViewerPage } from "../pages/assetViewer/ReportViewerPage"
 import { BatchExecutorPageEx } from "../pages/invoker/batch/BatchExecutorPageEx"
+// import {ReverseServerPage} from "../pages/reverse/ReverseServerPage"
+// import {PayloadGeneraterPage} from "../pages/payloadGenerater/PayloadGeneraterPage"
+// import {PayloadGenerater_New} from "../pages/payloadGenerater/JavaPayloadPage"
+import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
+
 import {
     ReadOnlyBatchExecutorByMenuItem,
     ReadOnlyBatchExecutorByRecoverUid
@@ -47,6 +51,8 @@ import { WebsocketFuzzer } from "@/pages/websocket/WebsocketFuzzer";
 import { WebsocketFlowHistory } from "@/pages/websocket/WebsocketFlowHistory";
 import { YakitPluginJournalDetails } from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginJournalDetails"
 import { OnlinePluginRecycleBin } from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
+import { JavaPayloadPage } from "@/pages/payloadGenerater/NewJavaPayloadPage"
+import { NewReverseServerPage } from "@/pages/reverseServer/NewReverseServerPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -71,7 +77,7 @@ export enum Route {
     WebsocketHistory = "websocket-history",
 
     // 具体漏洞内容
-    PoC = "poc",
+    PoC= "poc",
 
     // Payload 管理
     PayloadManager = "payload-manager",
@@ -97,8 +103,11 @@ export enum Route {
     DataHandler = "data-handler", // include codec compare
 
     // 反连
+    PayloadGenerater_New = "PayloadGenerater_New",
+    ReverseServer_New = "ReverseServer_New",
+    // PayloadGenerater = "payload-generater",
     ReverseManager = `reverse`,
-    ReverseServer = "reverse-server",
+    // ReverseServer = "reverse-server",
     ShellReceiver = "shellReceiver",
     DNSLog = "dnslog",
     ICMPSizeLog = "icmp-sizelog",
@@ -193,11 +202,14 @@ export const RouteMenuData: MenuDataProps[] = [
         label: "反连管理",
         icon: <AppstoreOutlined />,
         subMenuData: [
-            { key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined /> },
-            { key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined /> },
-            { key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined /> },
-            { key: Route.ICMPSizeLog, label: "ICMP-SizeLog", icon: <OneToOneOutlined /> },
-            { key: Route.TCPPortLog, label: "TCP-PortLog", icon: <OneToOneOutlined /> }
+            {key: Route.ReverseServer_New, label: "反连服务器", icon: <OneToOneOutlined />},
+            {key: Route.PayloadGenerater_New, label: "JavaPayload", icon: <OneToOneOutlined />},
+            // {key: Route.PayloadGenerater, label: "JavaPayload", icon: <OneToOneOutlined />},
+            // {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined />},
+            {key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined />},
+            {key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined />},
+            {key: Route.ICMPSizeLog, label: "ICMP-SizeLog", icon: <OneToOneOutlined />},
+            {key: Route.TCPPortLog, label: "TCP-PortLog", icon: <OneToOneOutlined />}
         ]
     },
     {
@@ -265,6 +277,10 @@ interface ComponentParams {
 
     // yakit 插件日志详情参数
     YakScriptJournalDetailsId?: number
+    // facade server参数
+    facadeServerParams?: StartFacadeServerParams
+    classGeneraterParams?: {[key: string]: any}
+    classType?: string
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -294,7 +310,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         }
         return <ReadOnlyBatchExecutorByMenuItem MenuItemId={batchMenuItemId} />
     }
-
     switch (r) {
         case Route.ShellReceiver:
             return <ShellReceiverPage />
@@ -343,8 +358,14 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <DomainAssetPage />
         case Route.DB_ExecResults:
             return <YakScriptExecResultTable />
-        case Route.ReverseServer:
-            return <ReverseServerPage />
+        // case Route.ReverseServer:
+        //     return <ReverseServerPage />
+        // case Route.PayloadGenerater:
+        //     return <PayloadGeneraterPage />
+        case Route.PayloadGenerater_New:
+            return <JavaPayloadPage />
+        case Route.ReverseServer_New:
+            return <NewReverseServerPage />
         case Route.DB_Risk:
             return <RiskPage />
         case Route.DNSLog:

@@ -175,8 +175,8 @@ module.exports = {
 
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
-        api.forEach(item=>{
-            require(path.join(__dirname, `./api/${item}`))(win, getClient);
+        api.forEach((item) => {
+            require(path.join(__dirname, `./api/${item}`))(win, getClient)
         })
 
         // start chrome manager

@@ -89,7 +89,7 @@ const WindowsCloseFlag = "windows-close-flag"
 const singletonRoute: Route[] = [
     Route.HTTPHacker,
     Route.ShellReceiver,
-    Route.ReverseServer,
+    // Route.ReverseServer,
     Route.PayloadManager,
     Route.ModManager,
     Route.ModManagerLegacy,
@@ -810,6 +810,18 @@ const Main: React.FC<MainProp> = (props) => {
             node: ContentByRoute(Route.OnlinePluginRecycleBin, undefined)
         })
     })
+    const addFacadeServer = useMemoizedFn((res: any) => {
+        const {facadeParams, classParam, classType} = res || {}
+        if (facadeParams && classParam && classType) {
+            addTabPage(Route.ReverseServer_New, {
+                node: ContentByRoute(Route.ReverseServer_New, undefined, {
+                    facadeServerParams: facadeParams,
+                    classGeneraterParams: classParam,
+                    classType: classType
+                })
+            })
+        }
+    })
     const addScanPort = useMemoizedFn((res: any) => {
         const {URL = ""} = res || {}
         if (URL) {
@@ -916,6 +928,9 @@ const Main: React.FC<MainProp> = (props) => {
             if (type === "add-yakit-script") addYakScript(data)
             if (type === "yakit-plugin-journal-details") addYakPluginJournalDetails(data)
             if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
+            if (type === "facade-server") addFacadeServer(data)
+            if (type === "add-yak-running") addYakRunning(data)
+            console.info("send to tab: ", type)
         })
 
         return () => {

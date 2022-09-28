@@ -1,6 +1,113 @@
-const {ipcMain} = require("electron");
+const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
+    // asyncApplyClassToFacades wrapper
+    const asyncApplyClassToFacades = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ApplyClassToFacades(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ApplyClassToFacades", async (e, params) => {
+        return await asyncApplyClassToFacades(params)
+    })
+    // asyncBytesToBase64 wrapper
+    const asyncBytesToBase64 = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().BytesToBase64(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("BytesToBase64", async (e, params) => {
+        return await asyncBytesToBase64(params)
+    })
+
+    // asyncGetAllYsoGadgetOptions wrapper
+    const asyncGetAllYsoGadgetOptions = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllYsoGadgetOptions(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllYsoGadgetOptions", async (e, params) => {
+        return await asyncGetAllYsoGadgetOptions(params)
+    })
+    // asyncGetAllYsoClassOptions wrapper
+    const asyncGetAllYsoClassOptions = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllYsoClassOptions(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllYsoClassOptions", async (e, params) => {
+        return await asyncGetAllYsoClassOptions(params)
+    })
+    // asyncGetAllYsoClassGeneraterOptions wrapper
+    const asyncGetAllYsoClassGeneraterOptions = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllYsoClassGeneraterOptions(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllYsoClassGeneraterOptions", async (e, params) => {
+        return await asyncGetAllYsoClassGeneraterOptions(params)
+    })
+    // asyncGenerateYsoCode wrapper
+    const asyncGenerateYsoCode = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateYsoCode(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateYsoCode", async (e, params) => {
+        return await asyncGenerateYsoCode(params)
+    })
+    // asyncGenerateYsoBytes wrapper
+    const asyncGenerateYsoBytes = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateYsoBytes(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateYsoBytes", async (e, params) => {
+        return await asyncGenerateYsoBytes(params)
+    })
+
     // asyncGetAvailableBruteTypes wrapper
     const asyncGetAvailableBruteTypes = (params) => {
         return new Promise((resolve, reject) => {

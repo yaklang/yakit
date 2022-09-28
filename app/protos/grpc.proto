@@ -801,7 +801,7 @@ message YsoClassGeneraterOptions{
 }
 //已弃用
 message YsoClassOptionsResponse{
-  repeated YsoClassGeneraterOptions Options = 1;
+  repeated YsoClassGeneraterOptions Options= 1;
 }
 //生成代码和字节码
 message YsoOptionsRequerstWithVerbose{

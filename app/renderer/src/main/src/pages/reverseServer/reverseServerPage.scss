@@ -1,0 +1,173 @@
+.reverse-server-page-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    .reverse-server-page-head {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        .ant-page-header-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            .setting-reverse-server-wrapper {
+                margin-top: 40px;
+            }
+        }
+    }
+}
+
+.setting-reverse-server-wrapper {
+    max-width: 678px;
+    width: 100%;
+    padding: 0 24px;
+    .setting-isremote-hint {
+        margin: 10px 0 24px 0;
+    }
+}
+
+.start-reverse-server-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+
+    .payload-wrapper {
+        width: 416px;
+        height: 100%;
+    }
+    .payload-hidden-wrapper {
+        flex: 0;
+        overflow: hidden;
+    }
+    .payload-extra-wrapper {
+        width: 100%;
+        height: 100%;
+        .payload-hidden-setting {
+            flex: 0;
+            overflow: hidden;
+        }
+    }
+    .payload-container {
+        display: flex;
+        flex-direction: column;
+        .payload-setting {
+            flex: 1;
+            overflow: hidden;
+        }
+        .payload-code-setting {
+            flex: 3;
+            overflow: hidden;
+        }
+
+        .payload-code {
+            flex: 5;
+            overflow: hidden;
+        }
+        .payload-hidden-code {
+            flex: 0;
+            overflow: hidden;
+        }
+    }
+
+    .reverse-wrapper {
+        flex: 1;
+        overflow: hidden;
+        .reverse-body {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            .reverse-server-pagehead {
+                width: 100%;
+                padding: 16px 24px 0 24px;
+
+                .pagehead-extra-body {
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    .body-btn {
+                        margin-left: 16px;
+                    }
+                }
+
+                .ant-space {
+                    width: 100%;
+                }
+
+                .addr-body {
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                }
+            }
+
+            .reverse-server-data {
+                flex: 1;
+                overflow: hidden;
+            }
+        }
+    }
+    .reverse-hidden-wrapper {
+        flex: 0;
+        overflow: hidden;
+    }
+
+    .setting-wrapper {
+        width: 416px;
+        padding: 19px 24px 0 24px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden auto;
+
+        .setting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 44px;
+            .header-title {
+                font-weight: 500;
+                font-size: 16px;
+            }
+            .icon-style {
+                color: red;
+                font-size: 18px;
+                cursor: pointer;
+            }
+        }
+
+        .payload-small-form-body {
+            padding: 0;
+        }
+
+        .setting-display {
+            .setting-display-opt {
+                height: 44;
+                line-height: 22px;
+            }
+            .setting-display-opt + .setting-display-opt {
+                margin-top: 20px;
+            }
+        }
+    }
+    .setting-hidden-wrapper {
+        flex: 0;
+        overflow: hidden;
+    }
+    .ver-divider {
+        height: auto;
+        margin: 0;
+    }
+    .ver-hidden-divider {
+        width: 0;
+        height: 0;
+    }
+    .table-wrapper {
+        flex: 1;
+        overflow: hidden;
+    }
+}

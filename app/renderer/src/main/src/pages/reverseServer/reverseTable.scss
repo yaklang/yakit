@@ -1,0 +1,134 @@
+.reverse-table-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    .reverse-table-header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+
+        .header-title {
+            height: 32px;
+            line-height: 32px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            .header-title-total {
+                margin-left: 4px;
+                height: 20px;
+                box-sizing: border-box;
+                display: inline-flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 1px 8px;
+                border: 1px solid #d9d9d9;
+                border-radius: 2px;
+                font-size: 12px;
+            }
+        }
+        .header-extra {
+            display: flex;
+            align-items: center;
+            .extra-opt {
+                display: flex;
+                align-items: center;
+                .opt-title {
+                    margin-right: 8px;
+                }
+            }
+            .extra-opt + .extra-opt {
+                margin-left: 16px;
+            }
+        }
+    }
+
+    .reverse-table-body {
+        flex: 1;
+        overflow: auto;
+    }
+
+    .tag-wrapper {
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 8px;
+        height: 22px;
+        border-radius: 2px;
+        font-size: 12px;
+    }
+    .tag-red {
+        color: #f5222d;
+        background: #fff1f0;
+        border: 1px solid #ffa39e;
+    }
+    .tag-blue {
+        color: #2f54eb;
+        background: #f0f5ff;
+        border: 1px solid #adc6ff;
+    }
+    .tag-orange {
+        color: #fa8c16;
+        background: #fff7e6;
+        border: 1px solid #ffd591;
+    }
+    .tag-primary {
+        color: #1890ff;
+        background: #e6f7ff;
+        border: 1px solid #91d5ff;
+    }
+    .tag-magenta {
+        color: #eb2f96;
+        background: #fff0f6;
+        border: 1px solid #ffadd2;
+    }
+    .tag-purple {
+        color: #722ed1;
+        background: #f9f0ff;
+        border: 1px solid #d3adf7;
+    }
+    .tag-volcano {
+        color: #fa541c;
+        background: #fff2e8;
+        border: 1px solid #ffbb96;
+    }
+}
+
+.reverse-table-padding {
+    padding: 0 24px;
+    .header-style {
+        height: 64px;
+        padding: 16px 8px;
+        .title-style {
+            font-size: 16px;
+        }
+    }
+    .header-extra-style {
+        height: 96px;
+        padding: 16px 8px;
+        .title-style {
+            font-size: 16px;
+        }
+    }
+}
+.payload-table-padding {
+    padding: 0 0 0 16px;
+    .header-style {
+        height: 48px;
+        padding: 8px 0px;
+        .title-style {
+            font-size: 14px;
+        }
+    }
+    .header-extra-style {
+        height: 80px;
+        padding: 8px 0px;
+        .title-style {
+            font-size: 14px;
+        }
+    }
+}

@@ -1,25 +1,25 @@
 module.exports = {
-    cancelHandler: (streamMap)=>{
+    cancelHandler: (streamMap) => {
         return async (e, token) => {
-            const stream = streamMap.get(token);
+            const stream = streamMap.get(token)
             stream && stream.cancel()
             streamMap.delete(token)
         }
     },
-    registerHandler: (windows, stream, streamMap, token)=>{
-        const currentStream = streamMap.get(token);
+    registerHandler: (windows, stream, streamMap, token) => {
+        const currentStream = streamMap.get(token)
         if (!!currentStream) {
             return
         }
 
-        streamMap.set(token, stream);
-        stream.on("data", data => {
+        streamMap.set(token, stream)
+        stream.on("data", (data) => {
             if (!windows) {
                 return
             }
             windows.webContents.send(`${token}-data`, data)
         })
-        stream.on("error", error => {
+        stream.on("error", (error) => {
             if (!windows) {
                 return
             }
