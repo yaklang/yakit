@@ -81,7 +81,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
             const initWidth = haveWidthList.reduce((p, c) => p + c)
             w = (width - initWidth) / cLength
         }
-        setColWidth(w - 8 / cLength)
+        setColWidth(w - 8 / cLength)// 8滚动条宽度
         recalculatedTableWidth(w - 8 / cLength)
     })
     // 推拽后重新计算表格宽度
@@ -99,7 +99,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         if (tWidth < width - 8) {
             columns[columns.length - 1].width =
                 (columns[columns.length - 1].width || columns[columns.length - 1].minWidth || w) + width - tWidth
-            setTableWidth(width)
+            setTableWidth(width - 8)
         } else {
             setTableWidth(tWidth)
         }
@@ -169,12 +169,12 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         <>
             <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
                 <ReactResizeDetector
-                    onResize={(width, height) => {
-                        if (!width || !height) {
+                    onResize={(w, h) => {
+                        if (!w || !h) {
                             return
                         }
-                        setWidth(width)
-                        setHeight(height)
+                        setWidth(w)
+                        setHeight(h)
                     }}
                     handleWidth={true}
                     handleHeight={true}
@@ -256,10 +256,6 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                         key={`${columnsItem.dataKey}-row`}
                                         className={classNames(style["virtual-table-list-item"])}
                                         style={{
-                                            // width:
-                                            //     index === 0
-                                            //         ? (columnsItem.width || colWidth) + 1
-                                            //         : columnsItem.width || colWidth,
                                             width: columnsItem.width || colWidth,
                                             minWidth: columnsItem.minWidth || columnsMinWidthList.current[index]
                                         }}
