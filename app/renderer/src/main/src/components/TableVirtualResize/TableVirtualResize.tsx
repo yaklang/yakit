@@ -81,7 +81,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
             const initWidth = haveWidthList.reduce((p, c) => p + c)
             w = (width - initWidth) / cLength
         }
-        setColWidth(w - 8 / cLength)// 8滚动条宽度
+        setColWidth(w - 8 / cLength) // 8滚动条宽度
         recalculatedTableWidth(w - 8 / cLength)
     })
     // 推拽后重新计算表格宽度
@@ -238,7 +238,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                 className={classNames(style["virtual-table-title-drag"], {
                                                     [style["virtual-table-show-drag-line"]]: lineIndex > 0
                                                 })}
-                                                // style={{height}}
+                                                style={{height}}
                                                 onMouseDown={(e) => onMouseDown(e, cIndex)}
                                             />
                                         )}
