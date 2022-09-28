@@ -223,7 +223,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         }
     )
 
-    const delRisk = useMemoizedFn((hash: String) => {
+    const delRisk = useMemoizedFn((hash: string) => {
         setLoading(true)
         ipcRenderer
             .invoke("DeleteRisk", {Hash:hash})
