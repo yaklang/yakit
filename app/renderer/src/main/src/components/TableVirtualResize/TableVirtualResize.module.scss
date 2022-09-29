@@ -33,8 +33,7 @@
             color: #31343F;
             font-weight: 500;
             font-size: 12px;
-            font-family: 'PingFang HK';
-            font-style: normal;
+            box-sizing: border-box;
 
             &:first-child {
                 border-left: 1px solid #EAECF3;
@@ -43,6 +42,10 @@
 
             &:last-child {
                 // border-radius: 0px 4px 0px 0px;
+            }
+
+            .virtual-col-title-content {
+                // padding: 6px 8px 6px 12px;
             }
         }
 
@@ -56,7 +59,12 @@
         position: relative;
         border-top: 1px solid #EAECF3;
         border-bottom: 1px solid #EAECF3;
+
         // border-radius: 4px 4px 0px 0px;
+        .virtual-table-fixed-left {
+            position: sticky;
+            z-index: 2;
+        }
 
         .virtual-table-list {
             display: flex;
@@ -78,10 +86,13 @@
                     background: #FFFFFF;
                     border-bottom: 1px solid #EAECF3;
                     color: #31343F;
-                    font-family: 'PingFang HK';
-                    font-style: normal;
                     font-weight: 400;
                     font-size: 12px;
+                    box-sizing: border-box;
+
+                    .virtual-table-row-content {
+                        // padding: 6px 8px 6px 12px;
+                    }
                 }
 
                 .virtual-table-row-ellipsis {
@@ -140,6 +151,8 @@
             border-right: 1px solid #1890ff;
         }
 
+
+
     }
 
     .virtual-table-row-left {
@@ -157,7 +170,14 @@
         justify-content: flex-end;
     }
 
+    .virtual-table-flex-center {
+        display: flex;
+        align-items: center;
+    }
+
     .scroll-y {
         overflow-y: hidden;
     }
+
+
 }

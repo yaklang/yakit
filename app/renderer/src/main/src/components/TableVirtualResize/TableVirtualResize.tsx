@@ -39,19 +39,35 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const lineStartX = useRef<number>(0) // 拖拽线开始位置
     const lineEndX = useRef<number>(0) // 拖拽线结束位置
     const widthScrollY = useRef<number>(8) // 拖拽线结束位置
-    const tableMouse = useMouse(tableRef.current) // 鼠标坐标
+    const tableToLeft = useRef<number>(0) // 表格距离左边的距离
     const [list] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: (index: number, data: T) => {
-            return 28
+            return 29
         },
         overscan: 5
     })
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
+        const index = props.columns.findIndex((w) => w.width || w.minWidth)
+        if (index !== -1) {
+            widthScrollY.current = 10
+        }
+        setColumns(columns)
         getColumnsMinWidthList()
-    }, [columnsRef.current])
+        getTableWidthAndColWidth(showScrollY ? widthScrollY.current : 0)
+    }, [props.columns])
+
+    useEffect(() => {
+        if (tableRef.current.getBoundingClientRect()) {
+            tableToLeft.current = tableRef.current.getBoundingClientRect().left
+        }
+    }, [tableRef.current])
+
+    // useEffect(() => {
+    //     getColumnsMinWidthList()
+    // }, [columnsRef.current])
     useEffect(() => {
         if (!width) return
         getTableWidthAndColWidth(showScrollY ? widthScrollY.current : 0)
@@ -64,7 +80,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
             // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
             const containerHeight = containerRef.current?.clientHeight
             const wrapperHeight = wrapperRef.current?.clientHeight
-            if (containerHeight > wrapperHeight + 28) {
+            if (containerHeight > wrapperHeight + 29) {
                 // 不计算滚动条宽度
                 getTableWidthAndColWidth(0)
             } else {
@@ -80,11 +96,15 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const getColumnsMinWidthList = useMemoizedFn(() => {
         if (columnsMinWidthList.current.length > 0) return
         // 可以拖拽的最小宽度
-        const dom = document.querySelectorAll(".virtual-col-title")
+        const dom: NodeListOf<Element> = document.querySelectorAll(".virtual-col-title")
         if (!dom) return
         const minWidths: number[] = []
-        dom.forEach((item) => {
-            minWidths.push(item.clientWidth + 21) // 21:padding+border
+        dom.forEach((item: Element, index) => {
+            if (index === 0) {
+                minWidths.push(item.clientWidth + 22) // 22:padding+border*2
+            } else {
+                minWidths.push(item.clientWidth + 21) // 21:padding+border
+            }
         })
         columnsMinWidthList.current = minWidths
     })
@@ -92,22 +112,24 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const getTableWidthAndColWidth = useMemoizedFn((scrollBarWidth: number) => {
         const cLength = props.columns.length
         if (!width || cLength <= 0) return
-        const haveWidthList: number[] = props.columns
-            .filter((ele) => ele.width || ele.minWidth)
-            .map((w) => w.width || w.minWidth || 0)
+        // const haveWidthList: number[] = props.columns
+        //     .filter((ele) => ele.width || ele.minWidth)
+        //     .map((w) => w.width || w.minWidth || 0)
 
         let w = width / cLength
-        if (haveWidthList.length > 0) {
-            const initWidth = haveWidthList.reduce((p, c) => p + c)
-            w = (width - initWidth) / cLength
-        }
-        setColWidth(w - scrollBarWidth / cLength) // 8滚动条宽度
-        recalculatedTableWidth(w - scrollBarWidth / cLength, scrollBarWidth)
+        // if (haveWidthList.length > 0) {
+        //     const initWidth = haveWidthList.reduce((p, c) => p + c)
+        //     w = (width - initWidth) / cLength
+        // }
+        const cw = w - scrollBarWidth / cLength
+        setColWidth(cw) // 8滚动条宽度
+        recalculatedTableWidth(cw, scrollBarWidth)
     })
     // 推拽后重新计算表格宽度
     const recalculatedTableWidth = useMemoizedFn((w: number, scrollBarWidth: number) => {
         const cLength = columns.length
         if (!colWidth || cLength <= 0) return
+
         const tWidth: number = columns
             .map((ele) => {
                 if (ele.width || ele.minWidth) {
@@ -147,10 +169,10 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     })
 
     const onMouseMoveLine = useMemoizedFn((e) => {
-        if (!tableMouse) return
+        if (!tableToLeft.current) return
         if (lineIndex < 0) return
         if (!lineLeft) return
-        const left = e.clientX - tableMouse.elementPosX
+        const left = e.clientX - tableToLeft.current
         const moveLeftX = lineStartX.current - e.clientX
         const changeWidth = (columns[lineIndex].width || colWidth) - moveLeftX
         if (changeWidth < (columns[lineIndex].minWidth || columnsMinWidthList.current[lineIndex])) {
@@ -160,8 +182,8 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         setLineLeft(left)
     })
     const onMouseDown = useMemoizedFn((e, index: number) => {
-        if (!tableMouse) return
-        const left = e.clientX - tableMouse.elementPosX
+        if (!tableToLeft.current) return
+        const left = e.clientX - tableToLeft.current
         lineStartX.current = e.clientX
         setLineLeft(left)
         setLineIndex(index)
@@ -170,23 +192,30 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const onMouseUp = useMemoizedFn((e) => {
         lineEndX.current = e.clientX
         if (!columns[lineIndex]) return
+        const minWidth = columns[lineIndex].minWidth || columnsMinWidthList.current[lineIndex]
+        const width = columns[lineIndex].width || colWidth
         if (lineStartX.current > lineEndX.current) {
             // 向左移动
             const moveLeftX = lineStartX.current - lineEndX.current
-            const changeWidth = (columns[lineIndex].width || colWidth) - moveLeftX
-            if (changeWidth < (columns[lineIndex].minWidth || columnsMinWidthList.current[lineIndex])) {
-                columns[lineIndex].width = columns[lineIndex].minWidth || columnsMinWidthList.current[lineIndex]
+            const changeWidth = (minWidth > width ? minWidth : width) - moveLeftX
+            if (changeWidth < minWidth) {
+                columns[lineIndex].width = minWidth
             } else {
                 columns[lineIndex].width = changeWidth
             }
         } else {
             // 向右移动
             const moveRightX = lineEndX.current - lineStartX.current
-            columns[lineIndex].width = (columns[lineIndex].width || colWidth) + moveRightX
+            if (minWidth > width) {
+                columns[lineIndex].width = minWidth + moveRightX
+            } else {
+                columns[lineIndex].width = width + moveRightX
+            }
         }
         recalculatedTableWidth(colWidth, widthScrollY.current)
         setLineIndex(-1)
     })
+    // console.log("columns", columns)
 
     return (
         <>
@@ -233,7 +262,8 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                         className={classNames(style["virtual-table-title"], {
                                             [style["virtual-table-row-left"]]: columnsItem.align === "left",
                                             [style["virtual-table-row-center"]]: columnsItem.align === "center",
-                                            [style["virtual-table-row-right"]]: columnsItem.align === "right"
+                                            [style["virtual-table-row-right"]]: columnsItem.align === "right",
+                                            [style["virtual-table-fixed-left"]]: columnsItem.fixed === "left"
                                         })}
                                         style={{
                                             width: columnsItem.width || colWidth,
@@ -241,7 +271,12 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                         }}
                                     >
                                         {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                                        <div className='virtual-col-title'>
+                                        <div
+                                            className={classNames(
+                                                "virtual-col-title",
+                                                style["virtual-col-title-content"]
+                                            )}
+                                        >
                                             {cIndex === 0 && rowSelection && (
                                                 <span className={style["check"]}>
                                                     {rowSelection.type !== "radio" && (
@@ -296,40 +331,42 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                 key={randomString(8)}
                                                 title={item.data[columnsItem.dataKey]}
                                             >
-                                                {columns.length > 0 &&
-                                                    columnsItem.dataKey === columns[0].dataKey &&
-                                                    rowSelection && (
-                                                        <span className={style["check"]}>
-                                                            {rowSelection.type === "radio" ? (
-                                                                <Radio />
-                                                            ) : (
-                                                                <Checkbox
-                                                                    onChange={(e) =>
-                                                                        onChangeCheckboxSingle(
-                                                                            e,
-                                                                            renderKey ? item.data[renderKey] : index
-                                                                        )
-                                                                    }
-                                                                    checked={
-                                                                        rowSelection?.selectedRowKeys?.findIndex(
-                                                                            (ele) =>
-                                                                                ele ===
-                                                                                (renderKey
-                                                                                    ? item.data[renderKey]
-                                                                                    : index)
-                                                                        ) !== -1
-                                                                    }
-                                                                />
-                                                            )}
-                                                        </span>
-                                                    )}
-                                                {columnsItem.render
-                                                    ? columnsItem.render(
-                                                          item.data[columnsItem.dataKey],
-                                                          item.data,
-                                                          number
-                                                      )
-                                                    : item.data[columnsItem.dataKey] || "-"}
+                                                <div className={style["virtual-table-row-content"]}>
+                                                    {columns.length > 0 &&
+                                                        columnsItem.dataKey === columns[0].dataKey &&
+                                                        rowSelection && (
+                                                            <span className={style["check"]}>
+                                                                {rowSelection.type === "radio" ? (
+                                                                    <Radio />
+                                                                ) : (
+                                                                    <Checkbox
+                                                                        onChange={(e) =>
+                                                                            onChangeCheckboxSingle(
+                                                                                e,
+                                                                                renderKey ? item.data[renderKey] : index
+                                                                            )
+                                                                        }
+                                                                        checked={
+                                                                            rowSelection?.selectedRowKeys?.findIndex(
+                                                                                (ele) =>
+                                                                                    ele ===
+                                                                                    (renderKey
+                                                                                        ? item.data[renderKey]
+                                                                                        : index)
+                                                                            ) !== -1
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            </span>
+                                                        )}
+                                                    {columnsItem.render
+                                                        ? columnsItem.render(
+                                                              item.data[columnsItem.dataKey],
+                                                              item.data,
+                                                              number
+                                                          )
+                                                        : item.data[columnsItem.dataKey] || "-"}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>

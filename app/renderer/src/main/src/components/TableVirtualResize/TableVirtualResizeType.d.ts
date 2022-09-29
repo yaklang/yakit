@@ -7,7 +7,7 @@ export interface TableVirtualResizeProps<T> {
     columns: ColumnsTypeProps[]
     rowSelection?: RowSelectionProps<T>
     colWidth?: number
-    enableDrag?:boolean
+    enableDrag?: boolean
 }
 
 export interface ColumnsTypeProps {
@@ -18,6 +18,7 @@ export interface ColumnsTypeProps {
     minWidth?: number
     ellipsis?: boolean
     align?: "left" | "right" | "center" //默认 left
+    fixed?: "left" | "right"
     render?: (text, record, index) => ReactNode
 }
 
