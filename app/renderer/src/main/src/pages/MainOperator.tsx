@@ -80,6 +80,8 @@ import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
 import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
 
 const {ipcRenderer} = window.require("electron")
@@ -129,6 +131,8 @@ const defaultUserInfo: UserInfoProps = {
     wechatHeadImg: null,
     qqName: null,
     qqHeadImg: null,
+    companyName:null,
+    companyHeadImg:null,
     role: null,
     user_id: null,
     token: ""
@@ -199,6 +203,15 @@ export interface MenuItemType {
 
 export interface SetUserInfoProp  {
     userInfo:UserInfoProps
+    setStoreUserInfo:(info: any)=>void
+}
+
+
+const judgeAvatar = (userInfo) => {
+    const {companyHeadImg,companyName} = userInfo
+    return companyHeadImg&&!!companyHeadImg.length?
+    <Avatar size={38} style={{cursor: "pointer"}} src={companyHeadImg}/>
+    :<Avatar size={38} style={{backgroundColor:"rgb(245, 106, 0)", cursor: "pointer"}}>{companyName.slice(0, 1)}</Avatar>
 }
 
 // 可上传文件类型
@@ -206,36 +219,63 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-    const [token, setToken] = useState<string>()
-    const {userInfo} = props
+    const {userInfo,setStoreUserInfo} = props
     console.log("userInfo",userInfo)
 
-    useEffect(() => {
-        const token = randomString(40)
-        ipcRenderer.on(`${token}-data`, async (e, data: any) => {})
-        ipcRenderer.on(`${token}-error`, (e, error) => {
-            failed(`头像上传失败:  ${error}`)
-        })
-        ipcRenderer.on(`${token}-end`, (e, data) => {
-            info("头像上传完毕")
-        })
-        setToken(token)
-        return () => {
-            ipcRenderer.invoke("cancel-SavePayloadStream", token)
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-        }
-    }, [])
+    // OSS远程头像删除
+    const deleteAvatar = useMemoizedFn((imgName)=>{
+        NetWorkApi<API.DeleteResource, API.ActionSucceeded>({
+            method: "post",
+            url: "delete/resource",
+            data: {
+                file_type:"img",
+                file_name:[imgName],
+            }
+            })
+            .then((result) => {
+                // if(result.ok){
+                //     success("原有头像删除成功")
+                // }
+            })
+            .catch((err) => {
+                failed("头像更换失败：" + err)
+            })
+            .finally(() => {})
+    })
 
+    // 修改头像
     const setAvatar = useMemoizedFn(async(file) => {
         await ipcRenderer
             .invoke("upload-img", { path: file.path, type: file.type })
             .then((res) => {
-                console.log("图片地址：",res.data)
+                let imgUrl:string= res.data
+                NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
+                    method: "post",
+                    url: "urm/up/userinfo",
+                    data: {
+                        head_img:imgUrl
+                    }
+                    })
+                    .then((result) => {
+                        if(result.ok){
+                            success("头像更换成功")
+                            setStoreUserInfo({
+                                ...userInfo,
+                                companyHeadImg:imgUrl
+                            })
+                            let imgName = imgUrl.split("/").reverse()[0]
+                            deleteAvatar(imgName)
+                        }
+                    })
+                    .catch((err) => {
+                        failed("头像更换失败：" + err)
+                    })
+                    .finally(() => {
+                    })
+
             })
             .catch((err) => {
-                fail("头像上传失败")
+                failed("头像上传失败")
             })
             .finally(() => {
                 
@@ -255,29 +295,23 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                                 failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
                                 return false
                             }
-                            console.log(f)
                             setAvatar(f)
                             return false
                         }}
                         >
             <div className="img-box">
                 <div className="img-box-mask">
-                <Avatar size={38} style={{backgroundColor:"rgb(245, 106, 0)"}}>桔</Avatar>
-                {/* <img
-                    src={
-                        userInfo[UserPlatformType[userInfo?.platform || ""].img] || yakitImg
-                    }
-                    style={{width: 38, height: 38, borderRadius: "50%", cursor: "pointer"}}
-                /> */}
-
+                {
+                    judgeAvatar(userInfo) 
+                }
                 </div>
                 <CameraOutlined className="hover-icon"/>
             </div>   
             </Upload.Dragger>          
             
             <div className="content-box">
-                <div className="user-name">桔子爱吃橘子</div>
-                <div className="permission-show">管理员</div>
+                <div className="user-name">{userInfo.companyName}</div>
+                {userInfo.role==="admin"&&<div className="permission-show">管理员</div>}
             </div>
     </div>
     )
@@ -652,28 +686,41 @@ const Main: React.FC<MainProp> = (props) => {
     ])
 
     useEffect(() => {
-        if (userInfo.role === "admin") {
+        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo}/>
+        // 非企业管理员登录
+        if (userInfo.role === "admin"&&userInfo.platform !== "company") {
             setUserMenu([
-                {key: "sign-out", title: "退出登录"},
+                {key: "trust-list", title: "用户管理"},  
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "trust-list", title: "用户管理"}
+                {key: "sign-out", title: "退出登录"},
             ])
-        } else {
-            // setUserMenu([
-            //     {key: "sign-out", title: "退出登录"},
-            //     {key: "account-bind", title: "帐号绑定(监修)", disabled: true}
-            // ])
-            // 新功能暂浏览
+        } 
+        // 企业用户管理员登录
+        else if(userInfo.role === "admin"&&userInfo.platform === "company"){
             setUserMenu([
-                {key: "user-info", title: "用户信息",render:()=><SetUserInfo userInfo={userInfo}/>},
-                {key: "trust-list", title: "用户管理"},
+                {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
+                {key: "trust-list", title: "用户管理"},  
                 {key: "account-admin", title: "账号管理"},
                 {key: "set-password", title: "修改密码"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"},
             ])
         }
-    }, [userInfo.role])
+        // 企业用户非管理员登录
+        else if(userInfo.role !== "admin"&&userInfo.platform === "company"){
+            setUserMenu([
+                {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
+                {key: "set-password", title: "修改密码"},
+                {key: "sign-out", title: "退出登录"},
+            ])
+        }
+        else {
+            setUserMenu([
+                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "sign-out", title: "退出登录"},
+            ])
+        }
+    }, [userInfo.role,userInfo.companyHeadImg])
 
     // 全局注册快捷键功能
     const documentKeyDown = useMemoizedFn((e: any) => {
@@ -1274,12 +1321,14 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                             }}
                                         >
-                                            <img
+                                            {userInfo.platform==="company"?
+                                            judgeAvatar(userInfo) 
+                                            :<img
                                                 src={
                                                     userInfo[UserPlatformType[userInfo.platform || ""].img] || yakitImg
                                                 }
                                                 style={{width: 32, height: 32, borderRadius: "50%", cursor: "pointer"}}
-                                            />
+                                            />}
                                         </DropdownMenu>
                                     </div>
                                 ) : (
@@ -1652,7 +1701,7 @@ const Main: React.FC<MainProp> = (props) => {
                 onCancel={() => setPasswordShow(false)}
                 footer={null}
             >
-                <SetPassword onCancel={() => setPasswordShow(false)}/>
+                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo}/>
             </Modal>
         </Layout>
     )

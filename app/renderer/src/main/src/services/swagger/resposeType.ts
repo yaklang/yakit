@@ -118,6 +118,7 @@
     user_name: string;
     head_img: string;
     from_platform: string;
+    uid: string;
   }
   export interface UrmLoginRequest {
     user_name: string;
@@ -356,7 +357,7 @@
     module: string;
   }
   export interface DeleteUrm {
-    uid: number[];
+    uid: string[];
   }
   export interface DeleteResource {
     csrf_token?: string;

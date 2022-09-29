@@ -1,18 +1,46 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag} from "antd"
+import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn} from "ahooks"
+import moment from "moment"
 import "./AccountAdminPage.scss"
 import {failed, success, warn} from "@/utils/notification"
 import {PaginationSchema} from "../../pages/invoker/schema"
+import {showModal} from "@/utils/showModal"
+import {callCopyToClipboard} from "@/utils/basic"
 
 const {ipcRenderer} = window.require("electron")
 
-export interface CreateUserFormProp {
-    onCancel: () => void,
-    refresh: () => void,
+export interface ShowUserInfoProps extends API.NewUrmResponse {
+    onClose: () => void
+}
+const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
+    const {user_name, password, onClose} = props
+    const copyUserInfo = () => {
+        callCopyToClipboard(`用户名：${user_name}\n密码：${password}`)
+    }
+    return (
+        <div style={{padding: "0 10px"}}>
+            <div>
+                用户名：<span>{user_name}</span>
+            </div>
+            <div>
+                密码：<span>{password}</span>
+            </div>
+            <div style={{textAlign: "center", paddingTop: 10}}>
+                <Button type='primary' onClick={() => copyUserInfo()}>
+                    复制
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+export interface CreateUserFormProps {
+    onCancel: () => void
+    refresh: () => void
 }
 
 const layout = {
@@ -21,11 +49,11 @@ const layout = {
 }
 
 export interface CreateProps {
-    user_name:string
+    user_name: string
 }
 
-const CreateUserForm: React.FC<CreateUserFormProp> = (props) => {
-    const { onCancel,refresh } = props
+const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
+    const {onCancel, refresh} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const onFinish = useMemoizedFn((values) => {
@@ -34,14 +62,20 @@ const CreateUserForm: React.FC<CreateUserFormProp> = (props) => {
         NetWorkApi<CreateProps, API.NewUrmResponse>({
             method: "post",
             url: "urm",
-            data: {
+            params: {
                 user_name
             }
         })
-            .then((res) => {
+            .then((res: API.NewUrmResponse) => {
                 console.log("返回结果：", res)
+                const {user_name, password} = res
                 onCancel()
                 refresh()
+                const m = showModal({
+                    title: "账号信息",
+                    content: <ShowUserInfo user_name={user_name} password={password} onClose={() => m.destroy()} />
+                })
+                return m
             })
             .catch((err) => {
                 failed("创建账号失败：" + err)
@@ -50,7 +84,7 @@ const CreateUserForm: React.FC<CreateUserFormProp> = (props) => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
-        })
+            })
     })
     return (
         <div style={{marginTop: 24}}>
@@ -73,20 +107,14 @@ export interface AccountAdminPageProp {}
 export interface QueryExecResultsParams {
     keywords: string
 }
-interface DataType {
-    key: React.Key
-    name: string
-    age: number
-    address: string
-}
 
 interface QueryProps {}
 interface RemoveProps {
-    uid:string[]
+    uid: string[]
 }
 interface ResetProps {
-    user_name:string,
-    uid:number
+    user_name: string
+    uid: string
 }
 const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
@@ -101,30 +129,17 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
         OrderBy: "updated_at",
         Page: 1
     })
-    const [data, setData] = useState<DataType[]>([
-        {
-            key: "1",
-            name: "John Brown",
-            age: 32,
-            address: "New York No. 1 Lake Park"
-        },
-        {
-            key: "2",
-            name: "Jim Green",
-            age: 42,
-            address: "London No. 1 Lake Park"
-        }
-    ])
-    const [total, setTotal] = useState<number>(2)
+    const [data, setData] = useState<API.UrmUserList[]>([])
+    const [total, setTotal] = useState<number>(0)
 
     const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
         setLoading(true)
         const paginationProps = {
-            Page: page || 1,
-            Limit: limit || pagination.Limit
+            page: page || 1,
+            limit: limit || pagination.Limit
         }
 
-        NetWorkApi<QueryProps, API.UrmUserList>({
+        NetWorkApi<QueryProps, API.UrmUserListResponse>({
             method: "get",
             url: "urm",
             params: {
@@ -133,9 +148,11 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("返回结果：", res)
-                // setData()
-                // setTotal()
+                const newData = res.data.map((item)=>({...item}))
+                console.log("数据源：",newData)
+                setData(newData)
+                setPagination({...pagination, Limit: res.pagemeta.limit})
+                setTotal(res.pagemeta.total)
             })
             .catch((err) => {
                 failed("获取账号列表失败：" + err)
@@ -144,7 +161,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
-        })
+            })
     }
 
     useEffect(() => {
@@ -152,15 +169,16 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
     }, [])
 
     const rowSelection = {
-        onChange: (selectedRowKeys: React.Key[], selectedRows: DataType[]) => {
-            console.log(`selectedRowKeys: ${selectedRowKeys}`, "selectedRows: ", selectedRows)
-            setSelectedRowKeys(selectedRowKeys as string[])
+        onChange: (selectedRowKeys, selectedRows: API.UrmUserList[]) => {
+            // let newArr = selectedRowKeys.map((item)=>parseInt(item))
+            setSelectedRowKeys(selectedRowKeys)
         }
     }
-    
-    const onRemove = (uid:string[]) => {
+
+    const onRemove = (uid: string[]) => {
+        console.log(uid,"uid")
         NetWorkApi<RemoveProps, API.NewUrmResponse>({
-            method: "post",
+            method: "delete",
             url: "urm",
             data: {
                 uid
@@ -168,53 +186,78 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
         })
             .then((res) => {
                 console.log("返回结果：", res)
+                success("删除用户成功")
                 update()
             })
             .catch((err) => {
                 failed("删除账号失败：" + err)
             })
-            .finally(() => {
-            })
+            .finally(() => {})
     }
 
-    const onReset = (uid,user_name) => {
+    const onReset = (uid, user_name) => {
         NetWorkApi<ResetProps, API.NewUrmResponse>({
             method: "post",
             url: "urm/reset/pwd",
-            data: {
+            params: {
                 user_name,
-                uid,
+                uid
             }
         })
             .then((res) => {
-                console.log("返回结果：", res)
                 update()
+                const {user_name, password} = res
+                const m = showModal({
+                    title: "账号信息",
+                    content: <ShowUserInfo user_name={user_name} password={password} onClose={() => m.destroy()} />
+                })
+                return m
             })
             .catch((err) => {
                 failed("重置账号失败：" + err)
             })
-            .finally(() => {
-            })
+            .finally(() => {})
     }
 
-    const columns: ColumnsType<DataType> = [
+    const judgeAvatar = (record) => {
+        const {head_img, user_name} = record
+        return head_img && !!head_img.length ? (
+            <Avatar size={32} src={head_img} />
+        ) : (
+            <Avatar size={32} style={{backgroundColor: "rgb(245, 106, 0)"}}>
+                {user_name.slice(0, 1)}
+            </Avatar>
+        )
+    }
+
+    const columns: ColumnsType<API.UrmUserList> = [
         {
             title: "用户名",
-            dataIndex: "name",
-            render: (text: string) => <a>{text}</a>
+            dataIndex: "user_name",
+            render: (text: string, record) => (
+                <div>
+                    {judgeAvatar(record)}
+                    <span style={{marginLeft: 10}}>{text}</span>
+                </div>
+            )
         },
         {
             title: "创建时间",
-            dataIndex: "age"
+            dataIndex: "created_at",
+            render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
         {
             title: "操作",
             render: (i) => (
                 <Space>
-                    <Button size='small' type='primary' onClick={()=>onReset(i.key,i.key)}>
-                        重置密码
-                    </Button>
-                    <Popconfirm title={"确定删除该用户吗？不可恢复"} onConfirm={()=>onRemove([i.key])}>
+                    <Popconfirm title={"确定要重置该用户密码吗？"} onConfirm={() => onReset(i.uid, i.user_name)}>
+                        <Button size='small' type='primary'>
+                            重置密码
+                        </Button>
+                    </Popconfirm>
+                    <Popconfirm title={"确定删除该用户吗？"} onConfirm={() =>{ 
+                        onRemove([i.uid])
+                        }}>
                         <Button size={"small"} danger={true}>
                             删除
                         </Button>
@@ -238,6 +281,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                         update(page, limit)
                     }
                 }}
+                rowKey={(row) => row.uid}
                 title={(e) => {
                     return (
                         <div className='table-title'>
@@ -247,7 +291,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                                     enterButton={true}
                                     size={"small"}
                                     style={{width: 200}}
-                                    value={""}
+                                    value={params.keywords}
                                     onChange={(e) => {
                                         setParams({...getParams(), keywords: e.target.value})
                                     }}
@@ -259,10 +303,12 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                             <div className='operation'>
                                 <Space>
                                     {!!selectedRowKeys.length ? (
-                                        <Popconfirm title={"确定删除选择的用户吗？不可恢复"} onConfirm={()=>{
-                                            console.log("selectedRowKeys",selectedRowKeys)
-                                            onRemove(selectedRowKeys)
-                                        }}>
+                                        <Popconfirm
+                                            title={"确定删除选择的用户吗？不可恢复"}
+                                            onConfirm={() => {
+                                                onRemove(selectedRowKeys)
+                                            }}
+                                        >
                                             <Button type='primary' htmlType='submit' size='small'>
                                                 批量删除
                                             </Button>
@@ -304,7 +350,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                 onCancel={() => setCreateUserShow(false)}
                 footer={null}
             >
-                <CreateUserForm onCancel={() => setCreateUserShow(false)} refresh={()=>update()}/>
+                <CreateUserForm onCancel={() => setCreateUserShow(false)} refresh={() => update()} />
             </Modal>
         </div>
     )

@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from "react"
+import React, {useEffect, useState, useRef, useLayoutEffect} from "react"
 import {Modal} from "antd"
 import {ExclamationCircleOutlined, GithubOutlined, QqOutlined, RightOutlined, WechatOutlined} from "@ant-design/icons"
 import {AutoSpin} from "@/components/AutoSpin"
@@ -28,15 +28,24 @@ interface DownloadOnlinePluginAllRequestProps {
 
 const Login: React.FC<LoginProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
+    // 打开企业登录面板
+    const openEnterpriseModal = () => {
+        props.onCancel()
+        const m = showModal({
+            title: "",
+            centered:true,
+            content: <ConfigPrivateDomain onClose={() => m.destroy()} enterpriseLogin={true}/>
+        })
+        return m
+    }
+    {/* 屏蔽企业登录选择 将登录直接替换为企业登录 */}
+    useLayoutEffect(()=>{
+        openEnterpriseModal()
+    },[])
     const fetchLogin = (type: string) => {
         setLoading(true)
         if(type==="login"){
-            props.onCancel()
-            const m = showModal({
-                title: "企业登录",
-                content: <ConfigPrivateDomain onClose={() => m.destroy()} enterpriseLogin={true}/>
-            })
-            return m
+            openEnterpriseModal()
         }
         else{
            NetWorkApi<LoginParamsProp, string>({

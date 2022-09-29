@@ -3,6 +3,19 @@
 }
 
 .private-domain {
+    .login-title-show{
+        .icon-box{
+            text-align: center;
+            .type-icon-img{
+            width: 120px;
+        }
+        }
+        .title-box{
+            text-align: center;
+            font-size: 30px;
+            padding-bottom: 22px;
+        }
+    }
     .ant-select-single .ant-select-selector .ant-select-selection-item {
         visibility: hidden;
     }
