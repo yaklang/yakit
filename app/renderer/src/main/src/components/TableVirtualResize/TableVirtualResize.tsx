@@ -206,11 +206,15 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         } else {
             // 向右移动
             const moveRightX = lineEndX.current - lineStartX.current
-            if (minWidth > width) {
-                columns[lineIndex].width = minWidth + moveRightX
-            } else {
-                columns[lineIndex].width = width + moveRightX
+            if (lineIndex === columns.length - 2) {
+                // 最后一条拖拽线,最后一个单元格
+                const lastColumnsWidth = columns[columns.length - 1].width || colWidth
+                const lastColumnsMinWidth =
+                    columns[columns.length - 1].minWidth || columnsMinWidthList.current[columns.length - 1]
+                columns[columns.length - 1].width =
+                    lastColumnsMinWidth > lastColumnsWidth ? lastColumnsMinWidth : lastColumnsWidth - moveRightX
             }
+            columns[lineIndex].width = minWidth > width ? minWidth : width + moveRightX
         }
         recalculatedTableWidth(colWidth, widthScrollY.current)
         setLineIndex(-1)
