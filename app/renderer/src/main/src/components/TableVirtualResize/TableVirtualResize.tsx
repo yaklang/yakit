@@ -1,6 +1,7 @@
 import React, {ReactNode, Suspense, useEffect, useMemo, useRef, useState} from "react"
 import {
     useCreation,
+    useDebounceEffect,
     useDebounceFn,
     useDeepCompareEffect,
     useMemoizedFn,
@@ -29,13 +30,15 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const [colWidth, setColWidth] = useState<number>(props.colWidth || 120) // 表头默认宽度
     const [tableWidth, setTableWidth] = useState<number>(0) // 表格所在div宽度  真实宽度
     const [lineIndex, setLineIndex] = useState<number>(-1) // 拖拽的columns index
-    const containerRef = useRef(null)
-    const wrapperRef = useRef(null)
+    const [showScrollY, setShowScrollY] = useState<boolean>(false) // 拖拽的columns index
+    const containerRef = useRef<any>(null)
+    const wrapperRef = useRef<any>(null)
     const columnsRef = useRef(null)
     const tableRef = useRef<any>(null)
     const columnsMinWidthList = useRef<number[]>([]) // 默认表头最小宽度
     const lineStartX = useRef<number>(0) // 拖拽线开始位置
     const lineEndX = useRef<number>(0) // 拖拽线结束位置
+    const widthScrollY = useRef<number>(8) // 拖拽线结束位置
     const tableMouse = useMouse(tableRef.current) // 鼠标坐标
     const [list] = useVirtualList(data, {
         containerTarget: containerRef,
@@ -45,18 +48,34 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         },
         overscan: 5
     })
-    // useDeepCompareEffect(() => {
-    //     // getColumnsMinWidthList()
-    //     // initialTableWidthAndColWidth()
-    //     // setColumns(props.columns)
-    // }, [props.rowSelection, props.columns])
 
     useEffect(() => {
         getColumnsMinWidthList()
     }, [columnsRef.current])
     useEffect(() => {
-        initialTableWidthAndColWidth()
+        if (!width) return
+        getTableWidthAndColWidth(showScrollY ? widthScrollY.current : 0)
     }, [width])
+    useDebounceEffect(
+        () => {
+            if (!width) return
+            if (!containerRef || !wrapperRef) return
+            if (showScrollY) return // 显示滚动条了就不计算了
+            // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
+            const containerHeight = containerRef.current?.clientHeight
+            const wrapperHeight = wrapperRef.current?.clientHeight
+            if (containerHeight > wrapperHeight + 28) {
+                // 不计算滚动条宽度
+                getTableWidthAndColWidth(0)
+            } else {
+                // 计算滚动条
+                getTableWidthAndColWidth(widthScrollY.current)
+                setShowScrollY(true)
+            }
+        },
+        [wrapperRef.current?.clientHeight],
+        {wait: 200}
+    )
     // 获取每列的拖拽最小宽度
     const getColumnsMinWidthList = useMemoizedFn(() => {
         if (columnsMinWidthList.current.length > 0) return
@@ -70,36 +89,39 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         columnsMinWidthList.current = minWidths
     })
     // 初始化表格宽度和列宽度
-    const initialTableWidthAndColWidth = useMemoizedFn(() => {
+    const getTableWidthAndColWidth = useMemoizedFn((scrollBarWidth: number) => {
         const cLength = props.columns.length
         if (!width || cLength <= 0) return
         const haveWidthList: number[] = props.columns
             .filter((ele) => ele.width || ele.minWidth)
             .map((w) => w.width || w.minWidth || 0)
+
         let w = width / cLength
         if (haveWidthList.length > 0) {
             const initWidth = haveWidthList.reduce((p, c) => p + c)
             w = (width - initWidth) / cLength
         }
-        setColWidth(w - 8 / cLength) // 8滚动条宽度
-        recalculatedTableWidth(w - 8 / cLength)
+        setColWidth(w - scrollBarWidth / cLength) // 8滚动条宽度
+        recalculatedTableWidth(w - scrollBarWidth / cLength, scrollBarWidth)
     })
     // 推拽后重新计算表格宽度
-    const recalculatedTableWidth = useMemoizedFn((w) => {
-        if (!colWidth || columns.length <= 0) return
-        const tWidth = columns
+    const recalculatedTableWidth = useMemoizedFn((w: number, scrollBarWidth: number) => {
+        const cLength = columns.length
+        if (!colWidth || cLength <= 0) return
+        const tWidth: number = columns
             .map((ele) => {
                 if (ele.width || ele.minWidth) {
-                    return ele.width || ele.minWidth
+                    return ele.width || ele.minWidth || 0
                 } else {
                     return w
                 }
             })
             .reduce((p, c) => p + c)
-        if (tWidth < width - 8) {
-            columns[columns.length - 1].width =
-                (columns[columns.length - 1].width || columns[columns.length - 1].minWidth || w) + width - tWidth
-            setTableWidth(width - 8)
+
+        if (tWidth < width - scrollBarWidth) {
+            columns[cLength - 1].width =
+                (columns[cLength - 1].width || columns[cLength - 1].minWidth || w) + width - tWidth
+            setTableWidth(width - scrollBarWidth)
         } else {
             setTableWidth(tWidth)
         }
@@ -162,9 +184,10 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
             const moveRightX = lineEndX.current - lineStartX.current
             columns[lineIndex].width = (columns[lineIndex].width || colWidth) + moveRightX
         }
-        recalculatedTableWidth(colWidth)
+        recalculatedTableWidth(colWidth, widthScrollY.current)
         setLineIndex(-1)
     })
+
     return (
         <>
             <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
@@ -194,9 +217,10 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                             ref={containerRef}
                             id='containerRef'
                             className={classNames(style["virtual-table-list-container"], {
-                                [style["virtual-table-container-none-select"]]: lineIndex > -1
+                                [style["virtual-table-container-none-select"]]: lineIndex > -1,
+                                [style["scroll-y"]]: !showScrollY
                             })}
-                            style={{height}}
+                            style={{minHeight: height + 2}}
                         >
                             <div
                                 ref={columnsRef}
