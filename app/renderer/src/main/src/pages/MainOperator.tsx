@@ -309,7 +309,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
             </div>   
             </Upload.Dragger>          
             
-            <div className="content-box">
+            <div className="content-box" style={userInfo.role!=="admin"?{display:"flex",justifyContent:"center",alignItems:"center",fontSize:16}:{}}>
                 <div className="user-name">{userInfo.companyName}</div>
                 {userInfo.role==="admin"&&<div className="permission-show">管理员</div>}
             </div>
@@ -699,7 +699,6 @@ const Main: React.FC<MainProp> = (props) => {
         else if(userInfo.role === "admin"&&userInfo.platform === "company"){
             setUserMenu([
                 {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
-                {key: "trust-list", title: "用户管理"},  
                 {key: "account-admin", title: "账号管理"},
                 {key: "set-password", title: "修改密码"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
