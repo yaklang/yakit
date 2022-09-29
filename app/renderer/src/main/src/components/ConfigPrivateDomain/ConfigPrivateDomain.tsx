@@ -160,7 +160,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     <AutoComplete
                         options={httpHistoryList.map((item) => ({value: item}))}
                         placeholder='请输入你的私有域地址'
-                        defaultOpen={true}
+                        defaultOpen={!!!enterpriseLogin}
                     />
                 </Form.Item>
                 {enterpriseLogin&&<Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
