@@ -75,6 +75,10 @@
             margin-bottom: 16px;
         }
 
+        .ant-form-item-explain.ant-form-item-explain-connected {
+            display: none !important;
+        }
+
         .form-required {
             display: inline-block;
             margin-right: 4px;
