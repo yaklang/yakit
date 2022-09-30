@@ -34,7 +34,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const [leftFixedWidth, setLeftFixedWidth] = useState<number>(0) // 固定左侧的宽度
     const [rightFixedWidth, setRightFixedWidth] = useState<number>(0) // 固定右侧的宽度
     const [scrollLeft, setScrollLeft] = useState<number>(0) // 横向滚动条，滚动条距离左边的距离
-    const [scrollRight, setScrollRight] = useState<number>(1) // 横向滚动条，滚动条距离左边的距离 
+    const [scrollRight, setScrollRight] = useState<number>(1) // 横向滚动条，滚动条距离左边的距离
     const [boxShowHeight, setBoxShowHeight] = useState<number>(0) // 阴影高度
     const [showScrollY, setShowScrollY] = useState<boolean>(false) // 拖拽的columns index
     const containerRef = useRef<any>(null)
@@ -257,7 +257,6 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         },
         {wait: 200}
     ).run
-    // console.log("columns", columns)
 
     return (
         <>
@@ -287,13 +286,18 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                         {scrollLeft > 0 && (
                             <div
                                 className={classNames(style["virtual-table-fixed-left"])}
-                                style={{width: leftFixedWidth, height: boxShowHeight, maxHeight: height - 9}}
+                                style={{
+                                    left: leftFixedWidth - 5,
+                                    width: 5,
+                                    height: boxShowHeight,
+                                    maxHeight: height - 9
+                                }}
                             ></div>
                         )}
                         {scrollRight > 0 && (
                             <div
                                 className={classNames(style["virtual-table-fixed-right"])}
-                                style={{width: rightFixedWidth, height: boxShowHeight, maxHeight: height - 9}}
+                                style={{right: rightFixedWidth, width: 5, height: boxShowHeight, maxHeight: height - 9}}
                             ></div>
                         )}
                         <div
