@@ -7,6 +7,7 @@ import {
     useMemoizedFn,
     useMouse,
     useSize,
+    useThrottleFn,
     useVirtualList
 } from "ahooks"
 import classNames from "classnames"
@@ -30,6 +31,11 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const [colWidth, setColWidth] = useState<number>(props.colWidth || 120) // 表头默认宽度
     const [tableWidth, setTableWidth] = useState<number>(0) // 表格所在div宽度  真实宽度
     const [lineIndex, setLineIndex] = useState<number>(-1) // 拖拽的columns index
+    const [leftFixedWidth, setLeftFixedWidth] = useState<number>(0) // 固定左侧的宽度
+    const [rightFixedWidth, setRightFixedWidth] = useState<number>(0) // 固定右侧的宽度
+    const [scrollLeft, setScrollLeft] = useState<number>(0) // 横向滚动条，滚动条距离左边的距离
+    const [scrollRight, setScrollRight] = useState<number>(1) // 横向滚动条，滚动条距离左边的距离 
+    const [boxShowHeight, setBoxShowHeight] = useState<number>(0) // 阴影高度
     const [showScrollY, setShowScrollY] = useState<boolean>(false) // 拖拽的columns index
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
@@ -38,7 +44,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const columnsMinWidthList = useRef<number[]>([]) // 默认表头最小宽度
     const lineStartX = useRef<number>(0) // 拖拽线开始位置
     const lineEndX = useRef<number>(0) // 拖拽线结束位置
-    const widthScrollY = useRef<number>(8) // 拖拽线结束位置
+    const widthScrollY = useRef<number>(0) // 拖拽线结束位置
     const tableToLeft = useRef<number>(0) // 表格距离左边的距离
     const [list] = useVirtualList(data, {
         containerTarget: containerRef,
@@ -50,36 +56,41 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     })
 
     useDeepCompareEffect(() => {
-        const index = props.columns.findIndex((w) => w.width || w.minWidth)
-        if (index !== -1) {
-            widthScrollY.current = 10
-        }
-        setColumns(columns)
+        // const index = props.columns.findIndex((w) => w.width || w.minWidth)
+        // if (index !== -1) {
+        //     widthScrollY.current = 10
+        // }
         getColumnsMinWidthList()
         getTableWidthAndColWidth(showScrollY ? widthScrollY.current : 0)
+        setColumns(props.columns)
     }, [props.columns])
-
+    useDeepCompareEffect(() => {
+        getLeftOrRightFixedWidth()
+    }, [columns])
     useEffect(() => {
         if (tableRef.current.getBoundingClientRect()) {
             tableToLeft.current = tableRef.current.getBoundingClientRect().left
         }
     }, [tableRef.current])
 
-    // useEffect(() => {
-    //     getColumnsMinWidthList()
-    // }, [columnsRef.current])
+    useEffect(() => {
+        getColumnsMinWidthList()
+    }, [columnsRef.current])
     useEffect(() => {
         if (!width) return
         getTableWidthAndColWidth(showScrollY ? widthScrollY.current : 0)
+        getLeftOrRightFixedWidth()
     }, [width])
     useDebounceEffect(
         () => {
             if (!width) return
             if (!containerRef || !wrapperRef) return
-            if (showScrollY) return // 显示滚动条了就不计算了
             // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
             const containerHeight = containerRef.current?.clientHeight
             const wrapperHeight = wrapperRef.current?.clientHeight
+            // 阴影高度
+            setBoxShowHeight(wrapperHeight + 29)
+            if (showScrollY) return // 显示滚动条了就不计算了
             if (containerHeight > wrapperHeight + 29) {
                 // 不计算滚动条宽度
                 getTableWidthAndColWidth(0)
@@ -89,10 +100,42 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                 setShowScrollY(true)
             }
         },
-        [wrapperRef.current?.clientHeight],
-        {wait: 200}
+        [wrapperRef.current?.clientHeight, containerRef.current?.clientHeight],
+        {wait: 200, leading: true}
     )
-    // 获取每列的拖拽最小宽度
+    // 计算左右宽度以及固定列
+    const getLeftOrRightFixedWidth = useMemoizedFn(() => {
+        let leftWidth = 0
+        let rightWidth = 0
+        const newColumns: ColumnsTypeProps[] = []
+        columns.forEach((ele, index) => {
+            if (ele.fixed === "left") {
+                leftWidth += ele.width || ele.minWidth || colWidth
+                if (index > 0) {
+                    const leftList = columns
+                        .filter((e, i) => i < index && e.fixed === "left")
+                        .map((ele) => ele.width || ele.minWidth || colWidth)
+                    const left: number = leftList.length > 1 ? leftList.reduce((p, c) => p + c) : leftList[0] || 0
+                    ele.left = left
+                }
+            }
+            if (ele.fixed === "right") {
+                rightWidth += ele.width || ele.minWidth || colWidth
+                if (index > 0) {
+                    const rightList = columns
+                        .filter((e, i) => i < index && e.fixed === "right")
+                        .map((ele) => ele.width || ele.minWidth || colWidth)
+                    const right: number = rightList.length > 1 ? rightList.reduce((p, c) => p + c) : rightList[0] || 0
+                    ele.right = right
+                }
+            }
+            newColumns.push(ele)
+        })
+        setColumns(newColumns)
+        setLeftFixedWidth(leftWidth)
+        setRightFixedWidth(rightWidth)
+    })
+    // 初始获取每列的拖拽最小宽度
     const getColumnsMinWidthList = useMemoizedFn(() => {
         if (columnsMinWidthList.current.length > 0) return
         // 可以拖拽的最小宽度
@@ -112,15 +155,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const getTableWidthAndColWidth = useMemoizedFn((scrollBarWidth: number) => {
         const cLength = props.columns.length
         if (!width || cLength <= 0) return
-        // const haveWidthList: number[] = props.columns
-        //     .filter((ele) => ele.width || ele.minWidth)
-        //     .map((w) => w.width || w.minWidth || 0)
-
         let w = width / cLength
-        // if (haveWidthList.length > 0) {
-        //     const initWidth = haveWidthList.reduce((p, c) => p + c)
-        //     w = (width - initWidth) / cLength
-        // }
         const cw = w - scrollBarWidth / cLength
         setColWidth(cw) // 8滚动条宽度
         recalculatedTableWidth(cw, scrollBarWidth)
@@ -130,15 +165,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         const cLength = columns.length
         if (!colWidth || cLength <= 0) return
 
-        const tWidth: number = columns
-            .map((ele) => {
-                if (ele.width || ele.minWidth) {
-                    return ele.width || ele.minWidth || 0
-                } else {
-                    return w
-                }
-            })
-            .reduce((p, c) => p + c)
+        const tWidth: number = columns.map((ele) => ele.width || ele.minWidth || colWidth).reduce((p, c) => p + c)
 
         if (tWidth < width - scrollBarWidth) {
             columns[cLength - 1].width =
@@ -147,6 +174,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         } else {
             setTableWidth(tWidth)
         }
+        getLeftOrRightFixedWidth()
     })
     const onChangeRadio = useMemoizedFn((e: RadioChangeEvent) => {})
     const onChangeCheckbox = useMemoizedFn((e: RadioChangeEvent) => {
@@ -219,6 +247,16 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         recalculatedTableWidth(colWidth, widthScrollY.current)
         setLineIndex(-1)
     })
+
+    const onScrollContainerRef = useThrottleFn(
+        (e) => {
+            const dom = e?.target
+            const scrollRight = dom.scrollWidth - dom.scrollLeft - dom.clientWidth
+            setScrollLeft(dom.scrollLeft || 0)
+            setScrollRight(scrollRight || 0)
+        },
+        {wait: 200}
+    ).run
     // console.log("columns", columns)
 
     return (
@@ -246,6 +284,18 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                 onMouseUp={(e) => onMouseUp(e)}
                             />
                         )}
+                        {scrollLeft > 0 && (
+                            <div
+                                className={classNames(style["virtual-table-fixed-left"])}
+                                style={{width: leftFixedWidth, height: boxShowHeight, maxHeight: height - 9}}
+                            ></div>
+                        )}
+                        {scrollRight > 0 && (
+                            <div
+                                className={classNames(style["virtual-table-fixed-right"])}
+                                style={{width: rightFixedWidth, height: boxShowHeight, maxHeight: height - 9}}
+                            ></div>
+                        )}
                         <div
                             ref={containerRef}
                             id='containerRef'
@@ -253,7 +303,9 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                 [style["virtual-table-container-none-select"]]: lineIndex > -1,
                                 [style["scroll-y"]]: !showScrollY
                             })}
-                            style={{minHeight: height + 2}}
+                            // style={{minHeight: height + 2}}
+                            style={{minHeight: !showScrollY ? height + 2 : height}}
+                            onScroll={onScrollContainerRef}
                         >
                             <div
                                 ref={columnsRef}
@@ -267,11 +319,17 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                             [style["virtual-table-row-left"]]: columnsItem.align === "left",
                                             [style["virtual-table-row-center"]]: columnsItem.align === "center",
                                             [style["virtual-table-row-right"]]: columnsItem.align === "right",
-                                            [style["virtual-table-fixed-left"]]: columnsItem.fixed === "left"
+                                            [style["virtual-table-title-fixed-left"]]:
+                                                columnsItem.fixed === "left" && scrollLeft > 0,
+                                            [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right"
                                         })}
                                         style={{
                                             width: columnsItem.width || colWidth,
-                                            minWidth: columnsItem.minWidth || columnsMinWidthList.current[cIndex]
+                                            minWidth: columnsItem.minWidth || columnsMinWidthList.current[cIndex],
+                                            ...(columnsItem.fixed === "left" &&
+                                                scrollLeft > 0 && {
+                                                    left: columnsItem.left
+                                                })
                                         }}
                                     >
                                         {/* 这个不要用 module ，用来拖拽最小宽度*/}
@@ -317,10 +375,21 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                 {columns.map((columnsItem, index) => (
                                     <div
                                         key={`${columnsItem.dataKey}-row`}
-                                        className={classNames(style["virtual-table-list-item"])}
+                                        className={classNames(style["virtual-table-list-item"], {
+                                            [style["virtual-table-row-fixed-left"]]:
+                                                columnsItem.fixed === "left" && scrollLeft > 0,
+                                            [style["virtual-table-row-fixed-right"]]: columnsItem.fixed === "right"
+                                        })}
                                         style={{
                                             width: columnsItem.width || colWidth,
-                                            minWidth: columnsItem.minWidth || columnsMinWidthList.current[index]
+                                            minWidth: columnsItem.minWidth || columnsMinWidthList.current[index],
+                                            ...(columnsItem.fixed === "left" &&
+                                                scrollLeft > 0 && {
+                                                    left: columnsItem.left
+                                                }),
+                                            ...(columnsItem.fixed === "right" && {
+                                                right: columnsItem.right
+                                            })
                                         }}
                                     >
                                         {list.map((item, number) => (

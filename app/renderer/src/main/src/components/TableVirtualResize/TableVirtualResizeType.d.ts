@@ -19,6 +19,8 @@ export interface ColumnsTypeProps {
     ellipsis?: boolean
     align?: "left" | "right" | "center" //默认 left
     fixed?: "left" | "right"
+    left?: number // 外面不需要传，不接收，紧作为固定列使用
+    right?: number // 外面不需要传，不接收，紧作为固定列使用
     render?: (text, record, index) => ReactNode
 }
 

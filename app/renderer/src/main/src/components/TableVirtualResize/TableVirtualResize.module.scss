@@ -7,6 +7,26 @@
     overflow-y: hidden;
     position: relative;
 
+    .virtual-table-fixed-left {
+        position: absolute;
+        top: 0;
+        left: 0;
+        overflow-x: hidden;
+        overflow-y: hidden;
+        box-shadow: 4px 0px 8px rgba(133, 137, 158, 0.12);
+        z-index: 1;
+    }
+
+    .virtual-table-fixed-right {
+        position: absolute;
+        top: 0;
+        right: 8px;
+        overflow-x: hidden;
+        overflow-y: hidden;
+        box-shadow: -4px 0px 8px rgba(133, 137, 158, 0.12);
+        z-index: 1;
+    }
+
     .virtual-table-container-none-select {
         user-select: none !important;
     }
@@ -37,18 +57,26 @@
 
             &:first-child {
                 border-left: 1px solid #EAECF3;
-                // border-radius: 4px 0px 0px 0px;
             }
 
-            &:last-child {
-                // border-radius: 0px 4px 0px 0px;
-            }
-
-            .virtual-col-title-content {
-                // padding: 6px 8px 6px 12px;
+            .virtual-table-title-left {
+                box-shadow: 4px 0px 8px rgba(133, 137, 158, 0.12);
             }
         }
 
+        .virtual-table-title-fixed-left {
+            position: sticky;
+            z-index: 2;
+            left: 0;
+            top: 0;
+        }
+
+        .virtual-table-title-fixed-right {
+            position: sticky;
+            z-index: 2;
+            right: 0;
+            top: 0;
+        }
     }
 
     .virtual-table-list-container {
@@ -60,14 +88,19 @@
         border-top: 1px solid #EAECF3;
         border-bottom: 1px solid #EAECF3;
 
-        // border-radius: 4px 4px 0px 0px;
-        .virtual-table-fixed-left {
-            position: sticky;
-            z-index: 2;
-        }
-
         .virtual-table-list {
             display: flex;
+
+            .virtual-table-row-fixed-left {
+                position: sticky;
+                left: 0;
+                // z-index: 1;
+            }
+
+            .virtual-table-row-fixed-right {
+                position: sticky;
+                right: 0;
+            }
 
             .virtual-table-list-item {
                 border-right: 1px solid #EAECF3;
@@ -75,6 +108,7 @@
                 &:first-child {
                     border-left: 1px solid #EAECF3;
                 }
+
 
                 .virtual-table-row {
                     display: flex;
@@ -91,7 +125,7 @@
                     box-sizing: border-box;
 
                     .virtual-table-row-content {
-                        // padding: 6px 8px 6px 12px;
+                        z-index: 2;
                     }
                 }
 
@@ -168,6 +202,7 @@
     .virtual-table-row-right {
         text-align: right;
         justify-content: flex-end;
+
     }
 
     .virtual-table-flex-center {
