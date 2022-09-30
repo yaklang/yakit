@@ -136,6 +136,21 @@
                     -webkit-line-clamp: 1;
                     -webkit-box-orient: vertical;
                 }
+
+                .virtual-table-active-row {
+                    background-color: #fdf7f2;
+                    border: 1px solid #FBC6A1;
+                    border-left-width: 0 !important;
+                    border-right-width: 0;
+
+                    &:first-child {
+                        border-left-width: 1px;
+                    }
+
+                    &:last-child {
+                        border-right-width: 1px;
+                    }
+                }
             }
         }
     }

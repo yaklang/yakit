@@ -256,6 +256,15 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         },
         {wait: 200}
     ).run
+    const [currentRow, setCurrentRow] = useState<T>()
+    const [currentIndex, setCurrentIndex] = useState<number>()
+    const onRowClick = useMemoizedFn((record: T, index: number) => {
+        console.log("index", index)
+
+        setCurrentRow(record)
+        setCurrentIndex(index)
+        if (props.onRowClick) props.onRowClick(record)
+    })
 
     return (
         <>
@@ -306,7 +315,6 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                 [style["virtual-table-container-none-select"]]: lineIndex > -1,
                                 [style["scroll-y"]]: !showScrollY
                             })}
-                            // style={{minHeight: height + 2}}
                             style={{minHeight: !showScrollY ? height + 2 : height}}
                             onScroll={onScrollContainerRef}
                         >
@@ -402,12 +410,17 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                         columnsItem.ellipsis === false ? false : true,
                                                     [style["virtual-table-row-left"]]: columnsItem.align === "left",
                                                     [style["virtual-table-row-center"]]: columnsItem.align === "center",
-                                                    [style["virtual-table-row-right"]]: columnsItem.align === "right"
+                                                    [style["virtual-table-row-right"]]: columnsItem.align === "right",
+                                                    [style["virtual-table-active-row"]]:
+                                                        currentRow && currentRow[renderKey] === item.data[renderKey]
                                                 })}
                                                 key={randomString(8)}
                                                 title={item.data[columnsItem.dataKey]}
                                             >
-                                                <div className={style["virtual-table-row-content"]}>
+                                                <div
+                                                    className={style["virtual-table-row-content"]}
+                                                    onClick={() => onRowClick(item.data, number)}
+                                                >
                                                     {index === 0 && rowSelection && (
                                                         <span className={style["check"]}>
                                                             {rowSelection.type !== "radio" && (

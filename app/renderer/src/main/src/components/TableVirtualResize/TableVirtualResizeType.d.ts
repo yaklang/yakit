@@ -8,6 +8,7 @@ export interface TableVirtualResizeProps<T> {
     rowSelection?: RowSelectionProps<T>
     colWidth?: number
     enableDrag?: boolean
+    onRowClick?: (record: T) => void
 }
 
 export interface ColumnsTypeProps {
