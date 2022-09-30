@@ -718,15 +718,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     useEffect(()=>{
         // 判断是否第一次加载页面
         if(isOneceLoading.current){
-            getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA).then(data => {
-                try {
+            getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA).then((data:string) => {
+                if(!!data){
                     const cacheData = JSON.parse(data)
                     setShieldData({
                         data:cacheData?.data||[],
                     })
-                } catch (e) {
+                }
+                else{
                     update(1)
-                    failed("加载屏蔽参数失败")
                 }
             }).finally(() => {
                 isOneceLoading.current = false
@@ -1235,7 +1235,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     <Tag>{total} Records</Tag>
                  </div>          
             </div>
-            <div className='title-header'>
+            {!!shieldData?.data.length&&<div className='title-header'>
                         {shieldData?.data.map((item:(number|string))=>
                             (<div className='title-selected-tag' key={item}>
                             <Tooltip title={item}>
@@ -1252,7 +1252,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             </div>
                         </div>)
                         )
-            }</div>
+            }</div>}
             <TableResizableColumn
                 tableRef={tableRef}
                 virtualized={true}
