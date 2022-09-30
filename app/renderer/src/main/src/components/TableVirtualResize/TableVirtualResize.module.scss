@@ -144,7 +144,7 @@
         width: 1px;
         border-left: 1px dashed #1890ff;
         position: absolute;
-        z-index: 2;
+        z-index: 5;
         height: 100%;
 
         &:hover {
@@ -173,20 +173,17 @@
     .virtual-table-title-drag {
         position: absolute;
         top: 0;
-        right: -2px;
+        right: -1px;
         width: 5px;
         height: 100%;
         background-color: transparent;
         border: 1px solid transparent;
         cursor: col-resize;
-        z-index: 2;
+        z-index: 4;
 
         &:hover {
             border-right: 1px solid #1890ff;
         }
-
-
-
     }
 
     .virtual-table-row-left {

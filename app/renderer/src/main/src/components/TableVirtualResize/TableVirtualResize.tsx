@@ -188,12 +188,11 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
             rowSelection.onSelectAll([], [])
         }
     })
-    const onChangeCheckboxSingle = useMemoizedFn((e: RadioChangeEvent, key: string) => {
+    const onChangeCheckboxSingle = useMemoizedFn((e: RadioChangeEvent, key: string, row: T) => {
         if (!rowSelection) return
-        if (!rowSelection.onChange) return
+        if (!rowSelection.onChangeCheckboxSingle) return
         const {checked} = e.target
-        const rows = data.find((ele, index) => (renderKey ? ele[renderKey] !== key : `${index}` !== key))
-        rowSelection.onChange(checked, key, rows)
+        rowSelection.onChangeCheckboxSingle(checked, key, row)
     })
 
     const onMouseMoveLine = useMemoizedFn((e) => {
@@ -409,33 +408,30 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                 title={item.data[columnsItem.dataKey]}
                                             >
                                                 <div className={style["virtual-table-row-content"]}>
-                                                    {columns.length > 0 &&
-                                                        columnsItem.dataKey === columns[0].dataKey &&
-                                                        rowSelection && (
-                                                            <span className={style["check"]}>
-                                                                {rowSelection.type === "radio" ? (
-                                                                    <Radio />
-                                                                ) : (
-                                                                    <Checkbox
-                                                                        onChange={(e) =>
-                                                                            onChangeCheckboxSingle(
-                                                                                e,
-                                                                                renderKey ? item.data[renderKey] : index
-                                                                            )
-                                                                        }
-                                                                        checked={
-                                                                            rowSelection?.selectedRowKeys?.findIndex(
-                                                                                (ele) =>
-                                                                                    ele ===
-                                                                                    (renderKey
-                                                                                        ? item.data[renderKey]
-                                                                                        : index)
-                                                                            ) !== -1
-                                                                        }
-                                                                    />
-                                                                )}
-                                                            </span>
-                                                        )}
+                                                    {index === 0 && rowSelection && (
+                                                        <span className={style["check"]}>
+                                                            {rowSelection.type !== "radio" && (
+                                                                <Checkbox
+                                                                    onChange={(e) =>
+                                                                        onChangeCheckboxSingle(
+                                                                            e,
+                                                                            renderKey ? item.data[renderKey] : index,
+                                                                            item.data
+                                                                        )
+                                                                    }
+                                                                    checked={
+                                                                        rowSelection?.selectedRowKeys?.findIndex(
+                                                                            (ele) =>
+                                                                                ele ===
+                                                                                (renderKey
+                                                                                    ? item.data[renderKey]
+                                                                                    : index)
+                                                                        ) !== -1
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </span>
+                                                    )}
                                                     {columnsItem.render
                                                         ? columnsItem.render(
                                                               item.data[columnsItem.dataKey],

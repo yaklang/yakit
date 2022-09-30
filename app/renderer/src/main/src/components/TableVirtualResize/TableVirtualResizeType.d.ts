@@ -28,7 +28,6 @@ export interface RowSelectionProps<T> {
     type?: "checkbox" | "radio" //默认 checkbox
     hideSelectAll?: boolean
     selectedRowKeys?: string[]
-    onChange?: (c: boolean, selectedRowsKey: string, selectedRows?: T) => void
-    onSelect?: (changeRows: T, selectedRowsKey: string) => void
+    onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows?: T) => void
     onSelectAll?: (selectedRows: string[], selected: T[]) => void
 }
