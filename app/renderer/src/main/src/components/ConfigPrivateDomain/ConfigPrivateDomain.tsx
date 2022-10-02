@@ -9,7 +9,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useStore} from "@/store"
 import yakitImg from "@/assets/yakit.jpg"
 import {API} from "@/services/swagger/resposeType"
-
+import { Route } from "@/routes/routeSpec"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -30,7 +30,7 @@ interface ConfigPrivateDomainProps {
 }
 
 export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
-    const {onClose,enterpriseLogin} = props
+    const {onClose,enterpriseLogin = false} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
@@ -63,6 +63,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 .then((res) => {
                     console.log("返回结果：", res)
                     success("企业登录成功")
+                    onCloseTab()
                     onClose()
                     if (res) ipcRenderer.send("company-sign-in", {...res})
                 })
@@ -72,6 +73,16 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
 
                 })
                 .finally(() => {})
+    })
+    // 关闭 tab
+    const onCloseTab = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.YakitPluginJournalDetails,
+                singleNode: true
+            })
+            .then(() => {
+            })
     })
     const onFinish = useMemoizedFn((values: OnlineProfileProps) => {
         setLoading(true)
@@ -85,13 +96,14 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             setRemoteValue("httpSetting", JSON.stringify(values))
             addHttpHistoryList(values.BaseUrl)
             setFormValue(values)
-            if(!!!enterpriseLogin){
+            if(!enterpriseLogin){
                 success("私有域设置成功")
+                onCloseTab()
                 onClose()
             }
         })
         .catch((e: any) => {
-            !!!enterpriseLogin&&setTimeout(() => setLoading(false), 300)
+            !enterpriseLogin&&setTimeout(() => setLoading(false), 300)
             failed("设置私有域失败:" + e)
         })
         .finally(() => {})
@@ -160,7 +172,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     <AutoComplete
                         options={httpHistoryList.map((item) => ({value: item}))}
                         placeholder='请输入你的私有域地址'
-                        defaultOpen={!!!enterpriseLogin}
+                        defaultOpen={!enterpriseLogin}
                     />
                 </Form.Item>
                 {enterpriseLogin&&<Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
