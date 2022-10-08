@@ -1585,7 +1585,7 @@ message YakScript {
   string UUID = 23;
   bool OnlineIsPrivate = 24;
   string HeadImg = 25;
-  string OnlineUrl = 26;
+  string OnlineBaseUrl = 26;
 }
 
 message GetYakScriptTagsAndTypeResponse {
