@@ -14,7 +14,7 @@
         overflow-x: hidden;
         overflow-y: hidden;
         box-shadow: 4px 0px 8px rgba(133, 137, 158, 0.12);
-        z-index: 5;
+        z-index: 1;
     }
 
     .virtual-table-fixed-right {
@@ -24,7 +24,7 @@
         overflow-x: hidden;
         overflow-y: hidden;
         box-shadow: -4px 0px 8px rgba(133, 137, 158, 0.12);
-        z-index: 5;
+        z-index: 1;
     }
 
     .virtual-table-container-none-select {
@@ -35,9 +35,8 @@
         position: sticky;
         display: flex;
         top: 0;
-        left: 0;
         width: 100%;
-        z-index: 4;
+        z-index: 1;
         border-bottom: 1px solid #EAECF3;
 
         .virtual-table-title {
@@ -46,7 +45,7 @@
             flex-direction: row;
             align-items: center;
             background-color: #F9FBFF;
-            padding: 6px 12px;
+            padding: 6px 8px 6px 12px;
             height: 28px;
             border-right: 1px solid #EAECF3;
             width: 100%;
@@ -67,21 +66,16 @@
 
         .virtual-table-title-fixed-left {
             position: sticky;
-            z-index: 5;
+            z-index: 2;
             left: 0;
             top: 0;
         }
 
         .virtual-table-title-fixed-right {
             position: sticky;
-            z-index: 5;
+            z-index: 2;
             right: 0;
             top: 0;
-
-            &:last-child {
-                border-left: 1px solid #EAECF3;
-                border-right: 1px solid #EAECF3;
-            }
         }
     }
 
@@ -96,38 +90,43 @@
 
         .virtual-table-list {
             display: flex;
-            flex-direction: column;
 
-            .virtual-table-row {
-                display: flex;
-                align-items: center;
-                width: 100%;
-                word-break: break-all;
-                height: 28px;
-                background: #FFFFFF;
-                border: 1px solid #EAECF3;
-                color: #31343F;
-                font-weight: 400;
-                font-size: 12px;
-                box-sizing: border-box;
-                border-bottom-width: 0;
+            .virtual-table-row-fixed-left {
+                position: sticky;
+                left: 0;
+                // z-index: 1;
+            }
+
+            .virtual-table-row-fixed-right {
+                position: sticky;
+                right: 0;
+            }
+
+            .virtual-table-list-item {
+                border-right: 1px solid #EAECF3;
 
                 &:first-child {
-                    border-top-width: 0;
-                }
-
-                &:last-child {
-                    border-bottom-width: 1px;
+                    border-left: 1px solid #EAECF3;
                 }
 
 
-                .virtual-table-row-content {
-                    z-index: 2;
-                    padding: 6px 12px;
-                    height: 100%;
+                .virtual-table-row {
                     display: flex;
                     align-items: center;
-                    background: #fff
+                    width: 100%;
+                    word-break: break-all;
+                    padding: 6px 8px 6px 12px;
+                    height: 28px;
+                    background: #FFFFFF;
+                    border-bottom: 1px solid #EAECF3;
+                    color: #31343F;
+                    font-weight: 400;
+                    font-size: 12px;
+                    box-sizing: border-box;
+
+                    .virtual-table-row-content {
+                        z-index: 2;
+                    }
                 }
 
                 .virtual-table-row-ellipsis {
@@ -138,64 +137,21 @@
                     -webkit-box-orient: vertical;
                 }
 
-                .virtual-table-row-fixed-left {
-                    position: sticky;
-                    left: 0;
-                    z-index: 5;
-                    border-right: 1px solid #EAECF3;
-
-                    &:first-child {
-                        border-left: 1px solid #EAECF3;
-                    }
-                }
-
-                .virtual-table-row-fixed-right {
-                    position: sticky;
-                    right: 0;
-                    z-index: 5;
-                    border-left: 1px solid #EAECF3;
-
-                    &:first-child {
-                        border-left: 1px solid #EAECF3;
-                        border-right: 1px solid #EAECF3;
-                    }
-                }
-
-            }
-
-            .virtual-table-active-row {
-                border: 1px solid #FBC6A1;
-                border-top-width: 1px !important;
-
-                .virtual-table-row-content {
+                .virtual-table-active-row {
                     background-color: #fdf7f2;
-                }
+                    border: 1px solid #FBC6A1;
+                    border-left-width: 0 !important;
+                    border-right-width: 0;
 
-                .virtual-table-row-fixed-left:first-child {
-                    border-left: 1px solid #FBC6A1;
-                }
+                    &:first-child {
+                        border-left-width: 1px;
+                    }
 
-                .virtual-table-row-fixed-right:last-child {
-                    border-right: 1px solid #FBC6A1;
+                    &:last-child {
+                        border-right-width: 1px;
+                    }
                 }
             }
-        }
-    }
-
-    .virtual-table-title-drag {
-        position: absolute;
-        top: 0;
-        right: -5px;
-        width: 5px;
-        height: 100%;
-        background-color: transparent;
-        border: 1px solid transparent;
-        border-left: 1px solid #EAECF3;
-        cursor: col-resize;
-        z-index: 4;
-
-        &:hover {
-            border-left: 1px solid #1890ff;
         }
     }
 
@@ -203,7 +159,7 @@
         width: 1px;
         border-left: 1px dashed #1890ff;
         position: absolute;
-        z-index: 9;
+        z-index: 5;
         height: 100%;
 
         &:hover {
@@ -212,9 +168,7 @@
     }
 
     .check {
-        margin-right: 4px;
-        height: 16px;
-        width: 16px;
+        padding-right: 4px;
 
         :global {
             .ant-checkbox-inner {
@@ -224,22 +178,28 @@
             .ant-checkbox-checked::after {
                 border-radius: 4px;
             }
-
-            .ant-checkbox-wrapper {
-                height: 16px;
-            }
         }
     }
 
-    .check-row {
-        :global {
-            .ant-checkbox {
-                top: 0;
-            }
-        }
+    .virtual-table-show-drag-line {
+        display: none;
     }
 
+    .virtual-table-title-drag {
+        position: absolute;
+        top: 0;
+        right: -1px;
+        width: 5px;
+        height: 100%;
+        background-color: transparent;
+        border: 1px solid transparent;
+        cursor: col-resize;
+        z-index: 4;
 
+        &:hover {
+            border-right: 1px solid #1890ff;
+        }
+    }
 
     .virtual-table-row-left {
         text-align: left;
