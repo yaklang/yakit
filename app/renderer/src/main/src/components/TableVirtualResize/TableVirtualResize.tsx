@@ -383,13 +383,13 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                             )}
                                             <span>{columnsItem.title}</span>
                                         </div>
-                                        {/* {enableDrag && cIndex < columns.length - 1 && (
+                                        {enableDrag && cIndex < columns.length - 1 && (
                                             <div
                                                 className={classNames(style["virtual-table-title-drag"])}
                                                 style={{height}}
                                                 onMouseDown={(e) => onMouseDown(e, cIndex)}
                                             />
-                                        )} */}
+                                        )}
                                     </div>
                                 ))}
                             </div>
