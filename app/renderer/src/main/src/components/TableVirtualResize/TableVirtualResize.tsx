@@ -278,6 +278,8 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         setCurrentIndex(index)
         if (props.onRowClick) props.onRowClick(record)
     })
+    console.log("columns", columns)
+
     return (
         <>
             <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
@@ -325,7 +327,6 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                 }}
                             ></div>
                         )}
-                        <div style={{position: "absolute", top: 0, left: 0}}>fsd</div>
                         <div
                             ref={containerRef}
                             id='containerRef'
@@ -348,7 +349,8 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                             [style["virtual-table-row-left"]]: columnsItem.align === "left",
                                             [style["virtual-table-row-center"]]: columnsItem.align === "center",
                                             [style["virtual-table-row-right"]]: columnsItem.align === "right",
-                                            [style["virtual-table-title-fixed-left"]]:
+                                            [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left",
+                                            [style["virtual-table-title-fixed-left-border"]]:
                                                 columnsItem.fixed === "left" && scrollLeft > 0,
                                             [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right"
                                         })}
@@ -365,12 +367,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                         }}
                                     >
                                         {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                                        <div
-                                            className={classNames(
-                                                "virtual-col-title",
-                                                style["virtual-col-title-content"]
-                                            )}
-                                        >
+                                        <div className={classNames("virtual-col-title")}>
                                             {cIndex === 0 && rowSelection && (
                                                 <span className={style["check"]}>
                                                     {rowSelection.type !== "radio" && (
@@ -386,13 +383,13 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                             )}
                                             <span>{columnsItem.title}</span>
                                         </div>
-                                        {enableDrag && cIndex < columns.length - 1 && (
+                                        {/* {enableDrag && cIndex < columns.length - 1 && (
                                             <div
                                                 className={classNames(style["virtual-table-title-drag"])}
                                                 style={{height}}
                                                 onMouseDown={(e) => onMouseDown(e, cIndex)}
                                             />
-                                        )}
+                                        )} */}
                                     </div>
                                 ))}
                             </div>

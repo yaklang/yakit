@@ -38,7 +38,8 @@
         left: 0;
         width: 100%;
         z-index: 4;
-        border-bottom: 1px solid #EAECF3;
+        border: 1px solid #EAECF3;
+        border-top: 0;
 
         .virtual-table-title {
             position: relative;
@@ -56,9 +57,9 @@
             font-size: 12px;
             box-sizing: border-box;
 
-            &:first-child {
-                border-left: 1px solid #EAECF3;
-            }
+            // &:first-child {
+            //     border-left: 1px solid #EAECF3;
+            // }
 
             .virtual-table-title-left {
                 box-shadow: 4px 0px 8px rgba(133, 137, 158, 0.12);
@@ -72,16 +73,18 @@
             top: 0;
         }
 
+        .virtual-table-title-fixed-left-border {
+
+            &:first-child {
+                border-left: 1px solid #EAECF3;
+            }
+        }
+
         .virtual-table-title-fixed-right {
             position: sticky;
             z-index: 5;
             right: 0;
             top: 0;
-
-            &:last-child {
-                border-left: 1px solid #EAECF3;
-                border-right: 1px solid #EAECF3;
-            }
         }
     }
 
@@ -122,12 +125,14 @@
 
 
                 .virtual-table-row-content {
-                    z-index: 2;
+                    // z-index: 2;
                     padding: 6px 12px;
                     height: 100%;
                     display: flex;
                     align-items: center;
-                    background: #fff
+                    background: #fff;
+                    position: relative;
+                    border-right: 1px solid #EAECF3;
                 }
 
                 .virtual-table-row-ellipsis {
@@ -141,8 +146,8 @@
                 .virtual-table-row-fixed-left {
                     position: sticky;
                     left: 0;
-                    z-index: 5;
-                    border-right: 1px solid #EAECF3;
+                    z-index: 1;
+                    // border-right: 1px solid #EAECF3;
 
                     &:first-child {
                         border-left: 1px solid #EAECF3;
@@ -152,8 +157,8 @@
                 .virtual-table-row-fixed-right {
                     position: sticky;
                     right: 0;
-                    z-index: 5;
-                    border-left: 1px solid #EAECF3;
+                    z-index: 1;
+                    // border-left: 1px solid #EAECF3;
 
                     &:first-child {
                         border-left: 1px solid #EAECF3;
@@ -189,7 +194,6 @@
         width: 5px;
         height: 100%;
         background-color: transparent;
-        border: 1px solid transparent;
         border-left: 1px solid #EAECF3;
         cursor: col-resize;
         z-index: 4;
@@ -210,6 +214,14 @@
             cursor: col-resize;
         }
     }
+
+    // .virtual-table-row--right-line {
+    //     position: absolute;
+    //     right: 1px;
+    //     width: 1px;
+    //     height: 100%;
+    //     background-color: #EAECF3;
+    // }
 
     .check {
         margin-right: 4px;
