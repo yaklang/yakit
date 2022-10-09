@@ -10,7 +10,7 @@ import {randomString} from "@/utils/randomUtil"
 import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
 import {showModal} from "../utils/showModal"
 import yakitImg from "../assets/yakit.jpg"
-
+import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
 const {ipcRenderer} = window.require("electron")
 
 export interface LoginProp {
@@ -40,7 +40,9 @@ const Login: React.FC<LoginProp> = (props) => {
     }
     {/* 屏蔽企业登录选择 将登录直接替换为企业登录 */}
     useLayoutEffect(()=>{
-        openEnterpriseModal()
+        if(ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()){
+            openEnterpriseModal()
+        }
     },[])
     const fetchLogin = (type: string) => {
         setLoading(true)
@@ -132,13 +134,13 @@ const Login: React.FC<LoginProp> = (props) => {
                             </div>
                             <RightOutlined className='icon-right' />
                         </div>
-                        <div className='login-icon' onClick={() => fetchLogin("login")}>
+                        {/* <div className='login-icon' onClick={() => fetchLogin("login")}>
                             <div className='login-icon-text'>
                                 <img src={yakitImg} className="type-icon type-icon-img"/>
                                 企业登录
                             </div>
                             <RightOutlined className='icon-right' />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </AutoSpin>
