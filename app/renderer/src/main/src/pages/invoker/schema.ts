@@ -117,6 +117,7 @@ export interface YakScript {
     UUID: string
     OnlineIsPrivate?: boolean
     HeadImg?: string
+    OnlineBaseUrl?: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

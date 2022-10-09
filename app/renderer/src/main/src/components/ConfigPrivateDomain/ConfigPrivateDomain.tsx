@@ -159,6 +159,19 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             }
         }
     ]
+    // 判断是否为网址
+    const judgeUrl = () =>[ 
+        {
+            validator: (_, value) => {
+                let re = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
+                if (re.test(value)) {
+                    return Promise.resolve()
+                } else {
+                    return Promise.reject("请输入符合要求的私有域地址")
+                }
+            }
+        }
+    ]
     return (
         <div className='private-domain'>
             {enterpriseLogin&&<div className="login-title-show">
@@ -168,7 +181,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 <div className="title-box">企业登录</div>
             </div>}
             <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
-                <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"},...judgeUrl()]}>
                     <AutoComplete
                         options={httpHistoryList.map((item) => ({value: item}))}
                         placeholder='请输入你的私有域地址'

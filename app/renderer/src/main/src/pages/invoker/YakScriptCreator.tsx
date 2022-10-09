@@ -33,6 +33,7 @@ export interface YakScriptCreatorFormProp {
     onChanged?: (i: YakScript) => any
     fromLayout?: FromLayoutProps
     noClose?: boolean
+    showButton?: boolean
     setScript?: (i: YakScript) => any
 }
 
@@ -157,6 +158,7 @@ const defParams = {
 }
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
+    const {showButton=true} = props
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
             labelCol: { span: 5 },
@@ -270,7 +272,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             setParams({
                 ...props.modified
             })
-            getPluginDetail(props.modified?.OnlineId)
+            showButton&&getPluginDetail(props.modified?.OnlineId)
         }
     }, [props.modified])
     const getPluginDetail = useMemoizedFn((pluginId) => {
@@ -512,6 +514,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         <Button type='primary' onClick={onSaveLocal} loading={saveLoading}>
                             保存
                         </Button>
+                        {showButton&&<>
                         {
                             isByMeCreatOnlienPlugin &&
                             <SyncCloudButton
@@ -529,6 +532,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 <Button onClick={() => onSubmitEditContent()} loading={updateLoading}>提交修改内容</Button>
                             </>
                         }
+                        </>}
 
                         <Button
                             // type={primary ? "primary" : undefined}
