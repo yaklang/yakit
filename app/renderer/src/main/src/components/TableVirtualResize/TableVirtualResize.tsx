@@ -33,7 +33,9 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     // const defColWidth = useCreation(() => {
     //     return 120
     // }, [])
-    const {data, renderRow, rowSelection, renderKey, enableDrag, loading, hasMore, pagination, title, extra} = props
+    const {data, renderRow, rowSelection, renderKey, enableDrag, pagination, title, extra} = props
+    const [loading, setLoading] = useState<boolean>(false)
+    const [hasMore, setHasMore] = useState<boolean>(false)
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [columns, setColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
@@ -272,15 +274,15 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         {wait: 200}
     ).run
     const [currentRow, setCurrentRow] = useState<T>()
-    const [currentIndex, setCurrentIndex] = useState<number>()
-    const onRowClick = useMemoizedFn((record: T, index: number) => {
-        console.log("index", index)
-        console.log("record", record)
+    const onRowClick = useMemoizedFn((record: T,e: React.MouseEvent) => {
         setCurrentRow(record)
-        setCurrentIndex(index)
-        if (props.onRowClick) props.onRowClick(record)
+        if (props.onRowClick) props.onRowClick(record,e)
     })
-    console.log("columns", columns)
+
+    const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent) => {
+        setCurrentRow(record)
+        if (props.onRowContextMenu) props.onRowContextMenu(record,e)
+    })
 
     return (
         <>
@@ -298,17 +300,26 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                     refreshMode={"debounce"}
                     refreshRate={50}
                 />
-                <div className={classNames(style["virtual-table-heard"])}>
-                    <div>
-                        {title && typeof title === "string" && (
-                            <div className={classNames(style["virtual-table-heard-title"])}>{title}</div>
-                        )}
-                        {title && React.isValidElement(title) && title}
-                    </div>
-                    <div>{extra && React.isValidElement(extra) && extra}</div>
-                </div>
+                {(title || extra) && (
+                    <>
+                        <div className={classNames(style["virtual-table-heard"])}>
+                            <div className={classNames(style["virtual-table-heard-left"])}>
+                                {title && typeof title === "string" && (
+                                    <div className={classNames(style["virtual-table-heard-title"])}>{title}</div>
+                                )}
+                                {title && React.isValidElement(title) && title}
+                            </div>
+                            <div className={classNames(style["virtual-table-heard-right"])}>
+                                {extra && React.isValidElement(extra) && extra}
+                            </div>
+                        </div>
+                    </>
+                )}
                 {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
-                    <div className={classNames(style["virtual-table-body"])}>
+                    <div
+                        className={classNames(style["virtual-table-body"])}
+                        style={{height: ((title || extra) && "calc(100% - 40px)") || "100%"}}
+                    >
                         {enableDrag && lineIndex > -1 && (
                             <div
                                 className={classNames(style["drag-line"])}
@@ -415,11 +426,14 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                         return (
                                             <div
                                                 className={classNames(style["virtual-table-row"], {
-                                                    [style["virtual-table-active-row"]]: number === currentIndex
+                                                    [style["virtual-table-active-row"]]:
+                                                        currentRow && currentRow[renderKey] === item.data[renderKey]
                                                 })}
                                                 onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    onRowClick(item.data, number)
+                                                    onRowClick(item.data, item.data[renderKey])
+                                                }}
+                                                onContextMenu={(e) => {
+                                                    onRowContextMenu(item.data, item.data[renderKey])
                                                 }}
                                             >
                                                 {columns.map((columnsItem, index) => (

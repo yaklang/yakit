@@ -1,6 +1,5 @@
 import {ReactNode} from "react"
 
-
 // 包裹虚拟表格的父元素需要设置高度
 export interface TableVirtualResizeProps<T> {
     title?: string | ReactNode
@@ -12,10 +11,9 @@ export interface TableVirtualResizeProps<T> {
     rowSelection?: RowSelectionProps<T>
     colWidth?: number
     enableDrag?: boolean
-    onRowClick?: (record: T) => void
+    onRowClick?: (record: T,e: React.MouseEvent) => void
+    onRowContextMenu?: (record: T, e: React.MouseEvent) => void
     colWidth?: number
-    loading?: boolean
-    hasMore?: boolean
     pagination?: PaginationProps
 }
 
@@ -45,5 +43,5 @@ export interface PaginationProps {
     page: number
     limit: number
     total: number
-    getMore?: (page: number, limit: number) => void
+    onChange: (page: number, limit: number) => void
 }

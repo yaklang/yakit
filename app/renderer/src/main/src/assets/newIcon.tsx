@@ -34,3 +34,34 @@ const Refresh = () => (
 export const RefreshIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={Refresh} {...props} />
 }
+
+// 筛选
+const Filter = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M2.66675 3C2.66675 2.44772 3.11446 2 3.66675 2H12.3334C12.8857 2 13.3334 2.44772 13.3334 3V4.25245C13.3334 4.51767 13.2281 4.77202 13.0405 4.95956L9.62631 8.37377C9.43877 8.56131 9.33341 8.81566 9.33341 9.08088V12L6.66675 14V9.08088C6.66675 8.81566 6.56139 8.56131 6.37385 8.37377L2.95964 4.95956C2.7721 4.77202 2.66675 4.51767 2.66675 4.25245V3Z'
+            stroke='#85899E'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const FilterIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={Filter} {...props} />
+}
+
+const Search = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M14 14L10 10M11.3333 6.66667C11.3333 9.244 9.244 11.3333 6.66667 11.3333C4.08934 11.3333 2 9.244 2 6.66667C2 4.08934 4.08934 2 6.66667 2C9.244 2 11.3333 4.08934 11.3333 6.66667Z'
+            stroke='#85899E'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const SearchIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={Search} {...props} />
+}

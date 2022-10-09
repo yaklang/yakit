@@ -52,4 +52,72 @@
             }
         }
     }
+
+    .extra-right {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+
+        :global {
+            .ant-divider-vertical {
+                margin: 0 16px;
+            }
+        }
+
+        .extra-right-label {
+            padding-right: 4px;
+        }
+
+        .extra-right-item {
+            padding-right: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .extra-right-filter-small {
+            display: none;
+            padding-right: 16px;
+        }
+
+        .extra-right-filter-large {
+            display: flex;
+
+            .extra-right-filter-item {
+                display: flex;
+                padding-right: 16px;
+
+                .extra-right-filter-select {
+                    width: 140px;
+                }
+            }
+        }
+
+        @media screen and (max-width: 1460px) {
+            .extra-right-filter-small {
+                display: flex;
+            }
+
+            .extra-right-filter-large {
+                display: none;
+            }
+        }
+
+        .extra-right-search {
+            width: 216px;
+            border-radius: 4px;
+        }
+
+        .extra-right-button {
+            button {
+                margin-right: 8px;
+            }
+
+            button:last-child {
+                margin-right: 16px;
+            }
+        }
+
+
+    }
 }
