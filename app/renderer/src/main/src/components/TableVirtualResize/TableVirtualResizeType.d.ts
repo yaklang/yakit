@@ -1,6 +1,10 @@
 import {ReactNode} from "react"
 
+
+// 包裹虚拟表格的父元素需要设置高度
 export interface TableVirtualResizeProps<T> {
+    title?: string | ReactNode
+    extra?: ReactNode
     data: T[]
     renderKey: string
     renderRow?: (data: T, i: number) => ReactNode
@@ -9,6 +13,10 @@ export interface TableVirtualResizeProps<T> {
     colWidth?: number
     enableDrag?: boolean
     onRowClick?: (record: T) => void
+    colWidth?: number
+    loading?: boolean
+    hasMore?: boolean
+    pagination?: PaginationProps
 }
 
 export interface ColumnsTypeProps {
@@ -31,4 +39,11 @@ export interface RowSelectionProps<T> {
     selectedRowKeys?: string[]
     onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows?: T) => void
     onSelectAll?: (selectedRows: string[], selected: T[]) => void
+}
+
+export interface PaginationProps {
+    page: number
+    limit: number
+    total: number
+    getMore?: (page: number, limit: number) => void
 }

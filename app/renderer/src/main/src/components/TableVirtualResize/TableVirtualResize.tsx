@@ -15,6 +15,8 @@ import {ColumnsTypeProps, TableVirtualResizeProps} from "./TableVirtualResizeTyp
 import ReactResizeDetector from "react-resize-detector"
 import style from "./TableVirtualResize.module.scss"
 import {Button, Checkbox, Radio, RadioChangeEvent, Spin} from "antd"
+import {c} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
+import {LoadingOutlined} from "@ant-design/icons"
 
 interface tablePosition {
     bottom?: number
@@ -31,7 +33,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     // const defColWidth = useCreation(() => {
     //     return 120
     // }, [])
-    const {data, renderRow, rowSelection, renderKey, enableDrag} = props
+    const {data, renderRow, rowSelection, renderKey, enableDrag, loading, hasMore, pagination, title, extra} = props
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [columns, setColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
@@ -61,7 +63,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: (index: number, data: T) => {
-            return 29
+            return 28
         },
         overscan: 5
     })
@@ -296,8 +298,17 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                     refreshMode={"debounce"}
                     refreshRate={50}
                 />
+                <div className={classNames(style["virtual-table-heard"])}>
+                    <div>
+                        {title && typeof title === "string" && (
+                            <div className={classNames(style["virtual-table-heard-title"])}>{title}</div>
+                        )}
+                        {title && React.isValidElement(title) && title}
+                    </div>
+                    <div>{extra && React.isValidElement(extra) && extra}</div>
+                </div>
                 {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
-                    <>
+                    <div className={classNames(style["virtual-table-body"])}>
                         {enableDrag && lineIndex > -1 && (
                             <div
                                 className={classNames(style["drag-line"])}
@@ -334,7 +345,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                 [style["virtual-table-container-none-select"]]: lineIndex > -1,
                                 [style["scroll-y"]]: !showScrollY
                             })}
-                            style={{minHeight: !showScrollY ? height + 2 : height}}
+                            style={{minHeight: !showScrollY ? height - 38 : height - 40}}
                             onScroll={onScrollContainerRef}
                         >
                             <div
@@ -484,9 +495,19 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                     }
                                     return <></>
                                 })}
+                                {/* <div className={classNames(style["virtual-table-list-pagination"])}>
+                                    {loading && hasMore && (
+                                        <div className='grid-block text-center'>
+                                            <LoadingOutlined />
+                                        </div>
+                                    )}
+                                    {!loading && !hasMore && (pagination?.page || 0) > 0 && (
+                                        <div className='grid-block text-center'>暂无更多数据</div>
+                                    )}
+                                </div> */}
                             </div>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
         </>

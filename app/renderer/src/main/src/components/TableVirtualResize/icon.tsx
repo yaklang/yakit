@@ -17,3 +17,20 @@ const CheckCircle = () => (
 export const CheckCircleIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={CheckCircle} {...props} />
 }
+
+// 刷新 两个圆弧的箭头
+const Refresh = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
+        <path
+            d='M3.33325 3.33337V7.50004H3.81785M16.615 9.16671C16.2049 5.87811 13.3996 3.33337 9.99992 3.33337C7.2021 3.33337 4.80683 5.05685 3.81785 7.50004M3.81785 7.50004H7.49992M16.6666 16.6667V12.5H16.182M16.182 12.5C15.193 14.9432 12.7977 16.6667 9.99992 16.6667C6.60024 16.6667 3.79491 14.122 3.38483 10.8334M16.182 12.5H12.4999'
+            stroke='#85899E'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const RefreshIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={Refresh} {...props} />
+}

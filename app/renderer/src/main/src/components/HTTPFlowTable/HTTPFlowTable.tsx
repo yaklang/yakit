@@ -3,6 +3,7 @@ import {
     Button,
     Checkbox,
     Col,
+    Divider,
     Empty,
     Form,
     Input,
@@ -12,6 +13,7 @@ import {
     Row,
     Select,
     Space,
+    Switch,
     Tag,
     Tooltip
 } from "antd"
@@ -1177,10 +1179,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 update(1, undefined, "desc")
                             }}
                         />
-                        {/* <Space>
-                            自动刷新:
-                            <Switch size={"small"} checked={autoReload} onChange={setAutoReload}/>
-                        </Space> */}
                         <Input.Search
                             placeholder={"全局搜索"}
                             enterButton={true}
@@ -1221,7 +1219,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         >
                             只看 Websocket
                         </Checkbox>
-                        {/*{autoReload && <Tag color={"green"}>自动刷新中...</Tag>}*/}
                     </Space>
                   </div>
                   <div className="filter-box-item">

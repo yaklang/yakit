@@ -1,5 +1,5 @@
 .table-virtual-resize {
-    height: calc(100% - 35px);
+    height: 100%;
 
     .status-code {
         color: #56C991;
@@ -25,4 +25,31 @@
     width: 16px;
     height: 16px;
     border-radius: 2px;
+}
+
+.http-history-table-extra {
+    padding-left: 8px;
+    width: 100%;
+    display: flex;
+
+    .extra-left {
+        display: flex;
+        align-items: center;
+
+        .extra-left-item {
+            display: flex;
+            align-items: center;
+
+            .extra-left-text {
+                color: #B4BBCA;
+                font-size: 12px;
+                margin-right: 4px;
+            }
+
+            .extra-left-number {
+                color: #F28B44;
+                font-size: 12px;
+            }
+        }
+    }
 }
