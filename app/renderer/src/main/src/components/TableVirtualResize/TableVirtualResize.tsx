@@ -193,10 +193,9 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         getLeftOrRightFixedWidth()
     })
     const onChangeRadio = useMemoizedFn((e: RadioChangeEvent) => {})
-    const onChangeCheckbox = useMemoizedFn((e: RadioChangeEvent) => {
+    const onChangeCheckbox = useMemoizedFn((checked: boolean) => {
         if (!rowSelection) return
         if (!rowSelection.onSelectAll) return
-        const {checked} = e.target
         if (checked) {
             const keys = data.map((ele, index) => (renderKey ? ele[renderKey] : index))
             rowSelection.onSelectAll(keys, data)
@@ -204,11 +203,9 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
             rowSelection.onSelectAll([], [])
         }
     })
-    const onChangeCheckboxSingle = useMemoizedFn((e: RadioChangeEvent, key: string, row: T) => {
-        e.stopPropagation()
+    const onChangeCheckboxSingle = useMemoizedFn((checked: boolean, key: string, row: T) => {
         if (!rowSelection) return
         if (!rowSelection.onChangeCheckboxSingle) return
-        const {checked} = e.target
         rowSelection.onChangeCheckboxSingle(checked, key, row)
     })
 
@@ -274,14 +271,14 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         {wait: 200}
     ).run
     const [currentRow, setCurrentRow] = useState<T>()
-    const onRowClick = useMemoizedFn((record: T,e: React.MouseEvent) => {
+    const onRowClick = useMemoizedFn((record: T) => {
         setCurrentRow(record)
-        if (props.onRowClick) props.onRowClick(record,e)
+        if (props.onRowClick) props.onRowClick(record)
     })
 
     const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent) => {
-        setCurrentRow(record)
-        if (props.onRowContextMenu) props.onRowContextMenu(record,e)
+        onChangeCheckboxSingle(true, record[renderKey], record)
+        if (props.onRowContextMenu) props.onRowContextMenu(record, e)
     })
 
     return (
@@ -394,7 +391,9 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                 <span className={style["check"]}>
                                                     {rowSelection.type !== "radio" && (
                                                         <Checkbox
-                                                            onChange={onChangeCheckbox}
+                                                            onChange={(e) => {
+                                                                onChangeCheckbox(e.target.checked)
+                                                            }}
                                                             checked={
                                                                 data.length > 0 &&
                                                                 rowSelection?.selectedRowKeys?.length === data.length
@@ -430,10 +429,10 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                         currentRow && currentRow[renderKey] === item.data[renderKey]
                                                 })}
                                                 onClick={(e) => {
-                                                    onRowClick(item.data, item.data[renderKey])
+                                                    onRowClick(item.data)
                                                 }}
                                                 onContextMenu={(e) => {
-                                                    onRowContextMenu(item.data, item.data[renderKey])
+                                                    onRowContextMenu(item.data, e)
                                                 }}
                                             >
                                                 {columns.map((columnsItem, index) => (
@@ -475,7 +474,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                                     <Checkbox
                                                                         onChange={(e) =>
                                                                             onChangeCheckboxSingle(
-                                                                                e,
+                                                                                e.target.checked,
                                                                                 renderKey
                                                                                     ? item.data[renderKey]
                                                                                     : index,

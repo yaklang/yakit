@@ -11,7 +11,7 @@ export interface TableVirtualResizeProps<T> {
     rowSelection?: RowSelectionProps<T>
     colWidth?: number
     enableDrag?: boolean
-    onRowClick?: (record: T,e: React.MouseEvent) => void
+    onRowClick?: (record: T) => void
     onRowContextMenu?: (record: T, e: React.MouseEvent) => void
     colWidth?: number
     pagination?: PaginationProps

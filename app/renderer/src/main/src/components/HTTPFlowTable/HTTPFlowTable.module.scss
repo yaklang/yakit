@@ -47,8 +47,47 @@
             }
 
             .extra-left-number {
-                color: #F28B44;
+                color: #1890ff;
                 font-size: 12px;
+            }
+        }
+
+        .extra-left-shield {
+            width: 110px;
+            margin-left: 16px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 4px 8px;
+            background: #F9FBFF;
+            border: 1px solid #EAECF3;
+            border-radius: 4px;
+            color: #31343F;
+            font-weight: 400;
+            font-size: 12px;
+            height: 24px;
+            cursor: pointer;
+
+            .extra-left-number {
+                margin-left: 4px;
+                margin-right: 8px;
+                color: #1890ff;
+            }
+
+            &:hover {
+                background: #e6f7ff;
+                border: 1px solid #91d5ff;
+                // color: #1890ff;
+            }
+
+            .extra-left-shield-icon {
+                font-size: 12px;
+
+                svg {
+                    width: 12px;
+                    height: 12px;
+                    color: #85899E;
+                }
             }
         }
     }
@@ -93,6 +132,15 @@
             }
         }
 
+        .extra-right-search {
+            width: 216px;
+            border-radius: 4px;
+        }
+
+        .extra-right-search-icon {
+            display: none;
+        }
+
         @media screen and (max-width: 1460px) {
             .extra-right-filter-small {
                 display: flex;
@@ -101,23 +149,32 @@
             .extra-right-filter-large {
                 display: none;
             }
+
         }
 
-        .extra-right-search {
-            width: 216px;
-            border-radius: 4px;
+        @media screen and (max-width: 1140px) {
+
+            .extra-right-search {
+                width: 100px;
+            }
+
+        }
+
+        @media screen and (max-width: 1020px) {
+
+            .extra-right-search {
+                display: none;
+            }
+
+            .extra-right-search-icon {
+                display: flex;
+            }
         }
 
         .extra-right-button {
             button {
                 margin-right: 8px;
             }
-
-            button:last-child {
-                margin-right: 16px;
-            }
         }
-
-
     }
 }

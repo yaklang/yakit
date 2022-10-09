@@ -174,19 +174,19 @@
                 }
 
                 .virtual-table-active-row {
-                    border: 1px solid #FBC6A1;
+                    border: 1px solid #91d5ff;
                     border-top-width: 1px !important;
 
                     .virtual-table-row-content {
-                        background-color: #fdf7f2;
+                        background-color: #e6f7ff;
                     }
 
                     .virtual-table-row-fixed-left:first-child {
-                        border-left: 1px solid #FBC6A1;
+                        border-left: 1px solid #91d5ff;
                     }
 
                     .virtual-table-row-fixed-right:last-child {
-                        border-right: 1px solid #FBC6A1;
+                        border-right: 1px solid #91d5ff;
                     }
                 }
 
@@ -292,6 +292,7 @@
                 color: #31343F;
             }
         }
+
         .virtual-table-heard-right {
             flex: 1;
         }
