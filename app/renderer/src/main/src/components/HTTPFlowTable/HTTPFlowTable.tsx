@@ -30,7 +30,7 @@ import style from "./HTTPFlowTable.module.scss"
 import {TableResizableColumn} from "../TableResizableColumn"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../../utils/basic"
 import {
@@ -43,6 +43,9 @@ import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacket
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {CheckCircleIcon, FilterIcon, RefreshIcon, SearchIcon, StatusOfflineIcon} from "@/assets/newIcon"
+import classNames from "classnames"
+import {ColumnsTypeProps} from "../TableVirtualResize/TableVirtualResizeType"
+
 const {ipcRenderer} = window.require("electron")
 
 const {Option} = Select
@@ -89,6 +92,9 @@ export interface HTTPFlow {
 
     IsWebsocket?: boolean
     WebsocketHash?: string
+
+    // 仅仅是前端 表格单元格样式
+    cellClassName?: string
 }
 
 export interface FuzzableParams {
@@ -418,113 +424,122 @@ export const LogLevelToCode = (level: string) => {
     }
 }
 
+
+// 通过关键词输出渲染颜色
+const TableRowColor = (key: string) => {
+    switch (key) {
+        case "RED":
+            return classNames(style["row-bg-color-red"])
+        case "GREEN":
+            return classNames(style["row-bg-color-green"])
+        case "BLUE":
+            return classNames(style["row-bg-color-blue"])
+        case "YELLOW":
+            return classNames(style["row-bg-color-yellow"])
+        case "ORANGE":
+            return classNames(style["row-bg-color-orange"])
+        case "PURPLE":
+            return classNames(style["row-bg-color-purple"])
+        case "CYAN":
+            return classNames(style["row-bg-color-cyan"])
+        case "GREY":
+            return classNames(style["row-bg-color-grey"])
+        default:
+            return ""
+    }
+}
+
 const availableColors = [
     {
         color: "RED",
         title: "红色[#FFCCC7]",
+        className: TableRowColor('RED'),
         render: (
-            <div className='history-color-tag'>
+            <div className={classNames(style["history-color-tag"])}>
                 红色
-                <div style={{backgroundColor: "#FFCCC7"}} className='tag-color-display'></div>
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-red"])}></div>
             </div>
         )
     },
-    // {color: "", title: "移除颜色", render: <div>移除颜色</div>},
     {
         color: "GREEN",
         title: "绿色[#D9F7BE]",
+        className: TableRowColor('GREEN'),
         render: (
-            <div className='history-color-tag'>
+            <div className={classNames(style["history-color-tag"])}>
                 绿色
-                <div style={{backgroundColor: "#D9F7BE"}} className='tag-color-display'></div>
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-green"])}></div>
             </div>
         )
     },
     {
         color: "BLUE",
         title: "蓝色[#D6E4FF]",
+        className: TableRowColor('BLUE'),
         render: (
-            <div className='history-color-tag'>
+            <div className={classNames(style["history-color-tag"])}>
                 蓝色
-                <div style={{backgroundColor: "#D6E4FF"}} className='tag-color-display'></div>
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-blue"])}></div>
             </div>
         )
     },
     {
         color: "YELLOW",
         title: "黄色[#FFFFB8]",
+        className: TableRowColor('YELLOW'),
         render: (
-            <div className='history-color-tag'>
+            <div className={classNames(style["history-color-tag"])}>
                 黄色
-                <div style={{backgroundColor: "#FFFFB8"}} className='tag-color-display'></div>
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-yellow"])}></div>
             </div>
         )
     },
     {
         color: "ORANGE",
         title: "橙色[#FFE7BA]",
+        className: TableRowColor('ORANGE'),
         render: (
-            <div className='history-color-tag'>
+            <div className={classNames(style["history-color-tag"])}>
                 橙色
-                <div style={{backgroundColor: "#FFE7BA"}} className='tag-color-display'></div>
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-orange"])}></div>
             </div>
         )
     },
     {
         color: "PURPLE",
         title: "紫色[#EfDBFF]",
+        className: TableRowColor('PURPLE'),
         render: (
-            <div className='history-color-tag'>
+            <div className={classNames(style["history-color-tag"])}>
                 紫色
-                <div style={{backgroundColor: "#EfDBFF"}} className='tag-color-display'></div>
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-purple"])}></div>
             </div>
         )
     },
     {
         color: "CYAN",
         title: "天蓝色[#B5F5EC]",
+        className: TableRowColor('CYAN'),
         render: (
-            <div className='history-color-tag'>
+            <div className={classNames(style["history-color-tag"])}>
                 天蓝色
-                <div style={{backgroundColor: "#B5F5EC"}} className='tag-color-display'></div>
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-cyan"])}></div>
             </div>
         )
     },
     {
         color: "GREY",
         title: "灰色[#D9D9D9]",
+        className: TableRowColor('GREY'),
         render: (
-            <div className='history-color-tag'>
+            <div className={classNames(style["history-color-tag"])}>
                 灰色
-                <div style={{backgroundColor: "#D9D9D9"}} className='tag-color-display'></div>
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-grey"])}></div>
             </div>
         )
     }
 ]
 
-// 通过关键词输出渲染颜色
-const TableRowColor = (key: string) => {
-    switch (key) {
-        case "RED":
-            return "#ffccc7"
-        case "GREEN":
-            return "#d9f7be"
-        case "BLUE":
-            return "#d6e4ff"
-        case "YELLOW":
-            return "#ffffb8"
-        case "ORANGE":
-            return "#ffe7ba"
-        case "PURPLE":
-            return "#efdbff"
-        case "CYAN":
-            return "#b5f5ec"
-        case "GREY":
-            return "#d9d9d9"
-        default:
-            return "#ffffff"
-    }
-}
 
 export interface YakQueryHTTPFlowResponse {
     Data: HTTPFlow[]
@@ -782,7 +797,26 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     Pagination: {...paginationProps}
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
-                    setData(rsp?.Data || [])
+                    let newData = rsp?.Data || []
+                    if (newData.length > 0) {
+                        newData = newData.map((item) => {
+                            let className = ""
+                            if (item.Tags && item.Tags.indexOf("YAKIT_COLOR") > -1) {
+                                const colors = item.Tags.split("|")
+                                className =
+                                    (colors.length > 0 &&
+                                        TableRowColor(colors?.pop()?.split("_")?.pop()?.toUpperCase() || "")) ||
+                                    ""
+                            }
+                            const newItem = {
+                                ...item,
+                                cellClassName: className
+                            }
+                            return newItem
+                        })
+                    }
+                    console.log("QueryHTTPFlows", newData)
+                    setData(newData)
                     setPagination(rsp.Pagination)
                     setTotal(rsp.Total)
                 })
@@ -1108,6 +1142,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
     }
+
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const onSelectAll = (newSelectedRowKeys: string[]) => {
         setSelectedRowKeys(newSelectedRowKeys)
@@ -1128,6 +1163,96 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             // setSelected(undefined)
         }
     })
+
+    const columns: ColumnsTypeProps[] = useMemo(() => {
+        return [
+            {
+                title: "序号",
+                dataKey: "Id",
+                fixed: "left",
+                ellipsis: false
+            },
+            {
+                title: "方法",
+                fixed: "left",
+                dataKey: "Method"
+            },
+            {
+                title: "状态码",
+                dataKey: "StatusCode",
+                fixed: "left",
+                render: (text) => <div className={style["status-code"]}>{text}</div>
+            },
+            {
+                title: "URL",
+                dataKey: "Url",
+                width: 400
+            },
+            {
+                title: "Title",
+                dataKey: "HtmlTitle"
+            },
+            {
+                title: "Tags",
+                dataKey: "Tags",
+                width: 150
+            },
+            {
+                title: "IP",
+                dataKey: "IPAddress",
+                width: 200
+            },
+            {
+                title: "响应长度",
+                dataKey: "BodyLength",
+                width: 200,
+                render: (_, rowData) => {
+                    return (
+                        <>
+                            {/* 1M 以上的话，是红色*/}
+                            {rowData.BodyLength !== -1 && (
+                                <div
+                                    className={classNames({
+                                        [style["body-length-text-red"]]: rowData.BodyLength > 1000000
+                                    })}
+                                >
+                                    {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
+                                </div>
+                            )}
+                        </>
+                    )
+                }
+            },
+            {
+                title: "参数",
+                dataKey: "GetParamsTotal",
+                render: (text) => (
+                    <div>{text > 0 ? <CheckCircleIcon className={style["check-circle-icon"]} /> : ""}</div>
+                )
+            },
+            {
+                title: "响应类型",
+                dataKey: "ContentType"
+            },
+            {
+                title: "请求时间",
+                dataKey: "UpdatedAt"
+            },
+            {
+                title: "请求大小",
+                dataKey: "RequestSizeVerbose"
+                // fixed: "right"
+            },
+            {
+                title: "操作",
+                dataKey: "action",
+                // width: 68,
+                align: "center",
+                fixed: "right",
+                render: () => <div className={style["action"]}>详情</div>
+            }
+        ]
+    }, [])
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div
@@ -1317,76 +1442,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         onChangeCheckboxSingle: onSelectChange
                     }}
                     enableDrag={true}
-                    columns={[
-                        {
-                            title: "序号",
-                            dataKey: "Id",
-                            fixed: "left",
-                            ellipsis: false
-                        },
-                        {
-                            title: "方法",
-                            fixed: "left",
-                            dataKey: "Method"
-                        },
-                        {
-                            title: "状态码",
-                            dataKey: "StatusCode",
-                            render: (text) => <div className={style["status-code"]}>{text}</div>
-                        },
-                        {
-                            title: "URL",
-                            dataKey: "Url",
-                            width: 400
-                        },
-                        {
-                            title: "Title",
-                            dataKey: "HtmlTitle"
-                        },
-                        {
-                            title: "Tags",
-                            dataKey: "Tags",
-                            width: 150
-                        },
-                        {
-                            title: "IP",
-                            dataKey: "IPAddress",
-                            width: 200
-                        },
-                        {
-                            title: "响应长度",
-                            dataKey: "BodyLength",
-                            width: 200
-                        },
-                        {
-                            title: "参数",
-                            dataKey: "GetParamsTotal",
-                            render: (text) => (
-                                <div>{text > 0 ? <CheckCircleIcon className={style["check-circle-icon"]} /> : ""}</div>
-                            )
-                        },
-                        {
-                            title: "响应类型",
-                            dataKey: "ContentType"
-                        },
-                        {
-                            title: "请求时间",
-                            dataKey: "UpdatedAt"
-                        },
-                        {
-                            title: "请求大小",
-                            dataKey: "RequestSizeVerbose"
-                            // fixed: "right"
-                        },
-                        {
-                            title: "操作",
-                            dataKey: "action",
-                            // width: 68,
-                            align: "center",
-                            fixed: "right",
-                            render: () => <div className={style["action"]}>详情</div>
-                        }
-                    ]}
+                    columns={columns}
                     onRowClick={onRowClick}
                     onRowContextMenu={(rowData: HTTPFlow | any, event: React.MouseEvent) => {
                         if (rowData) {
@@ -1488,7 +1544,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                     if (!flow) {
                                                         return
                                                     }
-    
                                                     const existedTags = flow.Tags
                                                         ? flow.Tags.split("|").filter(
                                                               (i) => !!i && !i.startsWith("YAKIT_COLOR_")
@@ -1507,6 +1562,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                                 setData(
                                                                     data.map((item) => {
                                                                         if (item.Hash === flow.Hash) {
+                                                                            item.cellClassName = i.className
                                                                             item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
                                                                             return item
                                                                         }
@@ -1525,9 +1581,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         onClick: () => {
                                             const flow = rowData as HTTPFlow
                                             if (!flow) return
-    
+
                                             const existedTags = flow.Tags
-                                                ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
+                                                ? flow.Tags.split("|").filter(
+                                                      (i) => !!i && !i.startsWith("YAKIT_COLOR_")
+                                                  )
                                                 : []
                                             existedTags.pop()
                                             ipcRenderer
@@ -1542,6 +1600,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                         setData(
                                                             data.map((item) => {
                                                                 if (item.Hash === flow.Hash) {
+                                                                    item.cellClassName = ""
                                                                     item.Tags = ""
                                                                     return item
                                                                 }
@@ -1580,41 +1639,39 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         ]
                                     },
                                     {
-                                        title:"屏蔽",
+                                        title: "屏蔽",
                                         onClick: () => {},
                                         subMenuItems: [
                                             {
-                                                title:"屏蔽该记录",
+                                                title: "屏蔽该记录",
                                                 onClick: () => {
                                                     const id = parseInt(rowData?.Id)
-                                                    const newArr = filterItem([...shieldData.data,id])
-                                                    const newObj = {...shieldData,data:newArr}
+                                                    const newArr = filterItem([...shieldData.data, id])
+                                                    const newObj = {...shieldData, data: newArr}
                                                     setShieldData(newObj)
                                                 }
                                             },
                                             {
-                                                title:"屏蔽URL",
+                                                title: "屏蔽URL",
                                                 onClick: () => {
                                                     let Url = rowData?.Url
                                                     // 根据URL拿到ID数组
-                                                    const newArr = filterItem([...shieldData.data,Url])
-                                                    const newObj = {...shieldData,data:newArr}
+                                                    const newArr = filterItem([...shieldData.data, Url])
+                                                    const newObj = {...shieldData, data: newArr}
                                                     setShieldData(newObj)
-                                                       
                                                 }
                                             },
                                             {
-                                                title:"屏蔽域名",
+                                                title: "屏蔽域名",
                                                 onClick: () => {
-                                                    const host = rowData?.HostPort?.split(":")[0]||""
-                                                   
+                                                    const host = rowData?.HostPort?.split(":")[0] || ""
+
                                                     // 根据host拿到对应ID数组
-                                                    const newArr = filterItem([...shieldData.data,host])
-                                                    const newObj = {...shieldData,data:newArr}
+                                                    const newArr = filterItem([...shieldData.data, host])
+                                                    const newObj = {...shieldData, data: newArr}
                                                     setShieldData(newObj)
-                                                       
                                                 }
-                                            },
+                                            }
                                         ]
                                     },
                                     {

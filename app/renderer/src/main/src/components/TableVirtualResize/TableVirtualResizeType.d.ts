@@ -4,7 +4,7 @@ import {ReactNode} from "react"
 export interface TableVirtualResizeProps<T> {
     title?: string | ReactNode
     extra?: ReactNode
-    data: T[]
+    data: T[] //可以传cellClassName用来控制单元格样式，不要传height
     renderKey: string
     renderRow?: (data: T, i: number) => ReactNode
     columns: ColumnsTypeProps[]

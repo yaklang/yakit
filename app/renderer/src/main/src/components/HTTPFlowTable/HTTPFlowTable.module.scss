@@ -12,6 +12,10 @@
     .action {
         color: #1890ff;
     }
+
+    .body-length-text-red {
+        background: #F6544A;
+    }
 }
 
 /* history表格右键菜单颜色功能样式 */
@@ -19,13 +23,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    .tag-color-display {
+        width: 16px;
+        height: 16px;
+        border-radius: 2px;
+    }
 }
 
-.history-color-tag .tag-color-display {
-    width: 16px;
-    height: 16px;
-    border-radius: 2px;
-}
 
 .http-history-table-extra {
     padding-left: 8px;
@@ -177,4 +182,36 @@
             }
         }
     }
+}
+
+.row-bg-color-red {
+    background-color: rgba(244, 115, 107, 0.1) !important;
+}
+
+.row-bg-color-blue {
+    background-color: rgba(74, 148, 248, 0.1) !important;
+}
+
+.row-bg-color-yellow {
+    background-color: rgba(255, 213, 131, 0.1) !important;
+}
+
+.row-bg-color-green {
+    background-color: rgba(86, 201, 145, 0.1) !important;
+}
+
+.row-bg-color-orange {
+    background-color: rgba(255, 182, 96, 0.1) !important;
+}
+
+.row-bg-color-purple {
+    background-color: rgba(136, 99, 247, 0.1) !important;
+}
+
+.row-bg-color-cyan {
+    background-color: rgba(53, 216, 238, 0.1) !important;
+}
+
+.row-bg-color-grey {
+    background-color: rgba(180, 187, 202, 0.1) !important;
 }

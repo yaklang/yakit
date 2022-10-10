@@ -17,6 +17,8 @@ import style from "./TableVirtualResize.module.scss"
 import {Button, Checkbox, Radio, RadioChangeEvent, Spin} from "antd"
 import {c} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 import {LoadingOutlined} from "@ant-design/icons"
+import {isArrEqual, isEqual} from "@/utils/objUtils"
+import '../style.css'
 
 interface tablePosition {
     bottom?: number
@@ -30,9 +32,6 @@ interface tablePosition {
 }
 
 export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps<T>) => {
-    // const defColWidth = useCreation(() => {
-    //     return 120
-    // }, [])
     const {data, renderRow, rowSelection, renderKey, enableDrag, pagination, title, extra} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
@@ -70,14 +69,14 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         overscan: 5
     })
 
-    useDeepCompareEffect(() => {
-        // const index = props.columns.findIndex((w) => w.width || w.minWidth)
-        // if (index !== -1) {
-        //     widthScrollY.current = 10
+    useEffect(() => {
+        // if (prePropsColumns.length > 0 && isArrEqual(props.columns, prePropsColumns)) {
+        //     return
         // }
+
         getColumnsMinWidthList()
         getTableWidthAndColWidth(showScrollY ? widthScrollY.current : 0)
-        setColumns(props.columns)
+        setColumns([...props.columns])
     }, [props.columns])
     useDeepCompareEffect(() => {
         getLeftOrRightFixedWidth()
@@ -85,7 +84,6 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     useEffect(() => {
         if (tableRef.current.getBoundingClientRect()) {
             tablePosition.current = tableRef.current.getBoundingClientRect()
-            console.log(" tablePosition.current ", tablePosition.current)
         }
     }, [tableRef.current])
 
@@ -280,6 +278,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         onChangeCheckboxSingle(true, record[renderKey], record)
         if (props.onRowContextMenu) props.onRowContextMenu(record, e)
     })
+    console.log("list", list)
 
     return (
         <>
@@ -427,6 +426,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                 className={classNames(style["virtual-table-row"], {
                                                     [style["virtual-table-active-row"]]:
                                                         currentRow && currentRow[renderKey] === item.data[renderKey]
+                                                    // ...classNameRow
                                                 })}
                                                 onClick={(e) => {
                                                     onRowClick(item.data)
@@ -434,21 +434,26 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                 onContextMenu={(e) => {
                                                     onRowContextMenu(item.data, e)
                                                 }}
+                                                key={item.data[renderKey] || number}
                                             >
                                                 {columns.map((columnsItem, index) => (
                                                     <div
-                                                        className={classNames(style["virtual-table-row-content"], {
-                                                            [style["virtual-table-row-ellipsis"]]:
-                                                                columnsItem.ellipsis === false ? false : true,
-                                                            [style["virtual-table-row-fixed-left"]]:
-                                                                columnsItem.fixed === "left" && scrollLeft > 0,
-                                                            [style["virtual-table-row-fixed-right"]]:
-                                                                columnsItem.fixed === "right",
-                                                            [style["virtual-table-row-center"]]:
-                                                                columnsItem.align === "center",
-                                                            [style["virtual-table-row-right"]]:
-                                                                columnsItem.align === "right"
-                                                        })}
+                                                        className={classNames(
+                                                            style["virtual-table-row-content"],
+                                                            item.data["cellClassName"],
+                                                            {
+                                                                [style["virtual-table-row-ellipsis"]]:
+                                                                    columnsItem.ellipsis === false ? false : true,
+                                                                [style["virtual-table-row-fixed-left"]]:
+                                                                    columnsItem.fixed === "left" && scrollLeft > 0,
+                                                                [style["virtual-table-row-fixed-right"]]:
+                                                                    columnsItem.fixed === "right",
+                                                                [style["virtual-table-row-center"]]:
+                                                                    columnsItem.align === "center",
+                                                                [style["virtual-table-row-right"]]:
+                                                                    columnsItem.align === "right"
+                                                            }
+                                                        )}
                                                         style={{
                                                             width: columnsItem.width || colWidth,
                                                             minWidth:

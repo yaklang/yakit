@@ -112,7 +112,7 @@
                     width: 100%;
                     word-break: break-all;
                     height: 28px;
-                    background: #FFFFFF;
+                    background-color: #FFFFFF;
                     border: 1px solid #EAECF3;
                     color: #31343F;
                     font-weight: 400;
@@ -135,7 +135,7 @@
                         height: 100%;
                         display: flex;
                         align-items: center;
-                        background: #fff;
+                        background-color: #fff;
                         position: relative;
                         border-right: 1px solid #EAECF3;
                     }
@@ -178,7 +178,7 @@
                     border-top-width: 1px !important;
 
                     .virtual-table-row-content {
-                        background-color: #e6f7ff;
+                        background-color: #e6f7ff !important;
                     }
 
                     .virtual-table-row-fixed-left:first-child {
