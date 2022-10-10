@@ -174,6 +174,10 @@ service Yak {
   rpc FixUploadPacket(FixUploadPacketRequest) returns (FixUploadPacketResponse);
   rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
 
+  // HTTPFuzzerResponse
+  // 这个挺特殊的，因为数据包太多了，会卡，所以后端会保存一份，通过这个接口做缓存查询
+  rpc QueryHTTPFuzzerResponseByTaskId(QueryHTTPFuzzerResponseByTaskIdRequest) returns (QueryHTTPFuzzerResponseByTaskIdResponse) ;
+
   // WebSocket
   rpc CreateWebsocketFuzzer(stream ClientWebsocketRequest) returns (stream ClientWebsocketResponse);
   rpc QueryWebsocketFlowByHTTPFlowWebsocketHash(QueryWebsocketFlowByHTTPFlowWebsocketHashRequest) returns (WebsocketFlows);
@@ -347,6 +351,24 @@ service Yak {
 
   rpc GetEngineDefaultProxy(Empty) returns (DefaultProxyResult);
   rpc SetEngineDefaultProxy(DefaultProxyResult) returns (Empty);
+}
+
+message QueryHTTPFuzzerResponseByTaskIdRequest {
+  // 用来索引对应的请求
+  int64 TaskId = 1;
+  string FuzzRequestToken = 2;
+
+  // 上一个请求的时间戳
+  int64 LastResponseTimestamp = 3;
+
+  Paging Pagination = 4;
+}
+
+message QueryHTTPFuzzerResponseByTaskIdResponse {
+  Paging Pagination = 1;
+  repeated FuzzerResponse Data = 2;
+  int64 Total = 3;
+  int64 TotalPage = 4;
 }
 
 message QueryWebsocketFlowByHTTPFlowWebsocketHashRequest {
@@ -1801,6 +1823,8 @@ message FuzzerResponse {
   bool MatchedByFilter = 37;
 
   string Url = 38;
+
+  int64 TaskId = 39;
 }
 
 message Paging {
