@@ -237,6 +237,28 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
 
 const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
 
+const emptyFuzzer = {
+    BodyLength: 0,
+    BodySimilarity: 0,
+    ContentType: "",
+    Count: 0,
+    DurationMs: 0,
+    HeaderSimilarity: 0,
+    Headers: [],
+    Host: "",
+    IsHTTPS: false,
+    MatchedByFilter: false,
+    Method: "",
+    Ok: false,
+    Payloads: [],
+    Reason: "",
+    RequestRaw: new Uint8Array,
+    ResponseRaw: new Uint8Array,
+    StatusCode: 0,
+    Timestamp: 0,
+    UUID: ""
+};
+
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
     const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(
@@ -272,7 +294,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // state
     const [loading, setLoading] = useState(false)
-    const [content, setContent] = useState<FuzzerResponse[]>([])
+
+    /*
+    * 内容
+    * */
+    // const [content, setContent] = useState<FuzzerResponse[]>([])
+    const [_firstResponse, setFirstResponse, getFirstResponse] = useGetState<FuzzerResponse>(emptyFuzzer);
+    const [successFuzzer, setSuccessFuzzer] = useState<FuzzerResponse[]>([]);
+    const [failedFuzzer, setFailedFuzzer] = useState<FuzzerResponse[]>([]);
+    const [_successCount, setSuccessCount, getSuccessCount] = useGetState(0);
+    const [_failedCount, setFailedCount, getFailedCount] = useGetState(0);
+
+    /**/
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [fuzzToken, setFuzzToken] = useState("")
     const [search, setSearch] = useState("")
@@ -318,6 +351,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 定时器
     const sendTimer = useRef<any>(null)
+    const resetResponse = useMemoizedFn(() => {
+        setFirstResponse({...emptyFuzzer})
+        setSuccessFuzzer([])
+        setFailedFuzzer([])
+    })
 
     const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
         ipcRenderer.invoke("send-to-tab", {
@@ -362,7 +400,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setIsHttps(!!props.isHttps)
         if (props.request) {
             setRequest(props.request)
-            setContent([])
+            resetResponse()
         }
     }, [props.isHttps, props.request])
 
@@ -398,10 +436,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 ActualAddr: actualHost,
                 HotPatchCode: hotPatchCode,
                 HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
-                Filter: {...getFilter(),
-                    StatusCode:getFilter().StatusCode.filter((i) => !!i),
-                    Keywords:getFilter().Keywords.filter((i) => !!i),
-                    Regexps:getFilter().Regexps.filter((i) => !!i),
+                Filter: {
+                    ...getFilter(),
+                    StatusCode: getFilter().StatusCode.filter((i) => !!i),
+                    Keywords: getFilter().Keywords.filter((i) => !!i),
+                    Regexps: getFilter().Regexps.filter((i) => !!i),
                 },
                 DelayMinSeconds: minDelaySeconds,
                 DelayMaxSeconds: maxDelaySeconds
@@ -422,23 +461,50 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const errToken = `${token}-error`
         const endToken = `${token}-end`
 
+        /*
+        * successCount
+        * failedCount
+        * */
+        let successCount = 0;
+        let failedCount = 0;
+
         ipcRenderer.on(errToken, (e, details) => {
             notification["error"]({
                 message: `提交模糊测试请求失败 ${details}`,
                 placement: "bottomRight"
             })
         })
-        let buffer: FuzzerResponse[] = []
+        let successBuffer: FuzzerResponse[] = []
+        let failedBuffer: FuzzerResponse[] = []
         let droppedCount = 0
         let count: number = 0
+        let lastUpdateCount: number = 0
         const updateData = () => {
-            if (buffer.length <= 0) {
+            if (count <= 0) {
                 return
             }
-            if (JSON.stringify(buffer) !== JSON.stringify(content)) setContent([...buffer])
+
+            if (failedBuffer.length + successBuffer.length === 0) {
+                return
+            }
+
+            if (lastUpdateCount <= 0 || lastUpdateCount != count || count === 1) {
+                // setContent([...buffer])
+                setSuccessFuzzer([...successBuffer])
+                setFailedFuzzer([...failedBuffer])
+                setFailedCount(failedCount)
+                setSuccessCount(successCount)
+                lastUpdateCount = count
+            }
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
+            if (data.Ok) {
+                successCount++
+            } else {
+                failedCount++
+            }
+
             if (!filterIsEmpty(getFilter())) {
                 // 设置了 Filter
                 const hit = data["MatchedByFilter"] === true
@@ -452,7 +518,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     return
                 }
             }
-            buffer.push({
+
+            const r = {
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
                 Reason: data.Reason,
@@ -473,13 +540,25 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Count: count,
                 BodySimilarity: data.BodySimilarity,
                 HeaderSimilarity: data.HeaderSimilarity
-            } as FuzzerResponse)
+            } as FuzzerResponse;
+
+            // 设置第一个 response
+            if (getFirstResponse().RequestRaw.length === 0) {
+                setFirstResponse(r)
+            }
+
+            if (data.Ok) {
+                successBuffer.push(r)
+            } else {
+                failedBuffer.push(r)
+            }
             count++
             // setContent([...buffer])
         })
         ipcRenderer.on(endToken, () => {
             updateData()
-            buffer = []
+            successBuffer = []
+            failedBuffer = []
             count = 0
             droppedCount = 0
             setLoading(false)
@@ -507,7 +586,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setTimer(
             setTimeout(() => {
                 try {
-                    const filters = content.filter((item) => {
+                    const filters = successFuzzer.filter((item) => {
                         return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
@@ -526,24 +605,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [keyword])
 
     useEffect(() => {
-        if (keyword && content.length !== 0) {
-            const filters = content.filter((item) => {
+        if (keyword && successFuzzer.length !== 0) {
+            const filters = successFuzzer.filter((item) => {
                 return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
             })
             setFilterContent(filters)
         }
-    }, [content])
+    }, [successFuzzer])
 
-    const onlyOneResponse = !loading && (content || []).length === 1
-
-    const filtredResponses =
-        search === ""
-            ? content || []
-            : (content || []).filter((i) => {
-                return Buffer.from(i.ResponseRaw).toString().includes(search)
-            })
-    const successResults = filtredResponses.filter((i) => i.Ok)
-    const failedResults = filtredResponses.filter((i) => !i.Ok)
+    const onlyOneResponse = !loading && (failedFuzzer.length + successFuzzer.length) === 1
 
     const sendFuzzerSettingInfo = useMemoizedFn(() => {
         const info: fuzzerInfoProp = {
@@ -571,7 +641,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const responseViewer = useMemoizedFn((rsp: FuzzerResponse) => {
         let reason = "未知原因"
         try {
-            reason = content[0]!.Reason
+            reason = rsp!.Reason
         } catch (e) {
         }
         return (
@@ -596,7 +666,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             title={"请求失败或服务端（代理）异常"}
                             // no such host
                             subTitle={(() => {
-                                const reason = content[0]!.Reason
+                                const reason = rsp?.Reason || "unknown"
                                 if (reason.includes("tcp: i/o timeout")) {
                                     return `网络超时（请检查目标主机是否在线？）`
                                 }
@@ -622,9 +692,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {loading && <Spin size={"small"} spinning={loading}/>}
                         {onlyOneResponse ? (
                             <Space>
-                                {content[0].IsHTTPS && <Tag>{content[0].IsHTTPS ? "https" : ""}</Tag>}
-                                <Tag>{content[0].DurationMs}ms</Tag>
-                                <Tag>{content[0].BodyLength}字节</Tag>
+                                {rsp.IsHTTPS && <Tag>{rsp.IsHTTPS ? "https" : ""}</Tag>}
+                                <Tag>{rsp.DurationMs}ms</Tag>
+                                <Tag>{rsp.BodyLength}字节</Tag>
                                 <Space key='single'>
                                     <Button
                                         size={"small"}
@@ -643,7 +713,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         type={"primary"}
                                         size={"small"}
                                         onClick={() => {
-                                            setContent([])
+                                            // setContent([])
+                                            setSuccessFuzzer([]);
+                                            setFailedFuzzer([]);
                                         }}
                                         danger={true}
                                         icon={<DeleteOutlined/>}
@@ -652,7 +724,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             </Space>
                         ) : (
                             <Space key='list'>
-                                <Tag color={"green"}>成功:{successResults.length}</Tag>
+                                <Tag color={"green"}>成功:{getSuccessCount()}</Tag>
                                 <Input
                                     size={"small"}
                                     value={search}
@@ -664,7 +736,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <Button
                                     size={"small"}
                                     onClick={() => {
-                                        setContent([])
+                                        // setContent([])
+                                        setSuccessFuzzer([]);
+                                        setFailedFuzzer([]);
                                     }}
                                 >
                                     清除数据
@@ -820,6 +894,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFilter(shareContent.advancedConfiguration.getFilter)
     })
 
+    const cachedTotal = successFuzzer.length + failedFuzzer.length;
+
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8} style={{marginBottom: 8}}>
@@ -841,7 +917,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <Button
                                 style={{width: 150}}
                                 onClick={() => {
-                                    setContent([])
+                                    resetResponse()
+
                                     setRedirectedResponse(undefined)
                                     sendFuzzerSettingInfo()
                                     submitToHTTPFuzzer()
@@ -884,7 +961,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
 
                         {droppedCount > 0 && <Tag color={"red"}>已丢弃[{droppedCount}]个响应</Tag>}
-                        {onlyOneResponse && content[0].Ok && (
+                        {onlyOneResponse && getFirstResponse().Ok && (
                             <Form.Item style={{marginBottom: 0}}>
                                 <Button
                                     onClick={() => {
@@ -892,7 +969,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         ipcRenderer
                                             .invoke("RedirectRequest", {
                                                 Request: request,
-                                                Response: new Buffer(content[0].ResponseRaw).toString("utf8"),
+                                                Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
                                                 IsHttps: isHttps,
                                                 PerRequestTimeoutSeconds: timeout,
                                                 NoFixContentLength: noFixContentLength,
@@ -1357,10 +1434,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 secondNode={() => (
                     <AutoSpin spinning={false}>
                         {onlyOneResponse ? (
-                            <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(content[0])}</>
+                            <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(getFirstResponse())}</>
                         ) : (
                             <>
-                                {(content || []).length > 0 ? (
+                                {cachedTotal > 0 ? (
                                     <HTTPFuzzerResultsCard
                                         onSendToWebFuzzer={sendToFuzzer}
                                         sendToPlugin={sendToPlugin}
@@ -1380,7 +1457,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                     size={"small"}
                                                                     type={"primary"}
                                                                     onClick={() => {
-                                                                        exportHTTPFuzzerResponse(successResults)
+                                                                        exportHTTPFuzzerResponse(successFuzzer)
                                                                     }}
                                                                 >
                                                                     导出所有请求
@@ -1389,7 +1466,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                     size={"small"}
                                                                     type={"primary"}
                                                                     onClick={() => {
-                                                                        exportPayloadResponse(successResults)
+                                                                        exportPayloadResponse(successFuzzer)
                                                                     }}
                                                                 >
                                                                     仅导出 Payload
@@ -1414,9 +1491,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 {/*    }></Input>*/}
                                             </div>
                                         }
-                                        failedResponses={failedResults}
+                                        failedResponses={failedFuzzer}
                                         successResponses={
-                                            filterContent.length !== 0 ? filterContent : keyword ? [] : successResults
+                                            filterContent.length !== 0 ? filterContent : keyword ? [] : successFuzzer
                                         }
                                     />
                                 ) : (
