@@ -1,6 +1,21 @@
 const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
+    // asyncYsoDump wrapper
+    const asyncYsoDump = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().YsoDump(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("YsoDump", async (e, params) => {
+        return await asyncYsoDump(params)
+    })
     // asyncApplyClassToFacades wrapper
     const asyncApplyClassToFacades = (params) => {
         return new Promise((resolve, reject) => {
