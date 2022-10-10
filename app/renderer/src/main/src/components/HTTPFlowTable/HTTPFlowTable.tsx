@@ -451,7 +451,7 @@ const TableRowColor = (key: string) => {
 const availableColors = [
     {
         color: "RED",
-        title: "红色[#FFCCC7]",
+        title: "红色[#fcf1f0]",
         className: TableRowColor("RED"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -462,7 +462,7 @@ const availableColors = [
     },
     {
         color: "GREEN",
-        title: "绿色[#D9F7BE]",
+        title: "绿色[#f0f9f4]",
         className: TableRowColor("GREEN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -473,7 +473,7 @@ const availableColors = [
     },
     {
         color: "BLUE",
-        title: "蓝色[#D6E4FF]",
+        title: "蓝色[#eff4fe]",
         className: TableRowColor("BLUE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -484,7 +484,7 @@ const availableColors = [
     },
     {
         color: "YELLOW",
-        title: "黄色[#FFFFB8]",
+        title: "黄色[#fef8ef]",
         className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -495,7 +495,7 @@ const availableColors = [
     },
     {
         color: "ORANGE",
-        title: "橙色[#FFE7BA]",
+        title: "橙色[#f7f8fa]",
         className: TableRowColor("ORANGE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -506,7 +506,7 @@ const availableColors = [
     },
     {
         color: "PURPLE",
-        title: "紫色[#EfDBFF]",
+        title: "紫色[#f3effe]",
         className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -1178,13 +1178,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             },
             {
                 title: "方法",
-                fixed: "left",
                 dataKey: "Method"
             },
             {
                 title: "状态码",
                 dataKey: "StatusCode",
-                fixed: "left",
                 sorter: true,
                 render: (text) => <div className={style["status-code"]}>{text}</div>
             },
