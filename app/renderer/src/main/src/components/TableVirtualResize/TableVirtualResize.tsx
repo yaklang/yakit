@@ -11,14 +11,15 @@ import {
     useVirtualList
 } from "ahooks"
 import classNames from "classnames"
-import {ColumnsTypeProps, TableVirtualResizeProps} from "./TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps, TableVirtualResizeProps} from "./TableVirtualResizeType"
 import ReactResizeDetector from "react-resize-detector"
 import style from "./TableVirtualResize.module.scss"
 import {Button, Checkbox, Radio, RadioChangeEvent, Spin} from "antd"
 import {c} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 import {LoadingOutlined} from "@ant-design/icons"
-import {isArrEqual, isEqual} from "@/utils/objUtils"
-import '../style.css'
+import {isEqual} from "@/utils/objUtils"
+import "../style.css"
+import {SorterDownIcon, SorterUpIcon} from "@/assets/newIcon"
 
 interface tablePosition {
     bottom?: number
@@ -48,6 +49,10 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const [scrollRight, setScrollRight] = useState<number>(1) // 横向滚动条，滚动条距离左边的距离
     const [boxShowHeight, setBoxShowHeight] = useState<number>(0) // 阴影高度
     const [showScrollY, setShowScrollY] = useState<boolean>(false) // 拖拽的columns index
+    const [sort, setSort] = useState<SortProps>({
+        order: "none",
+        orderBy: ""
+    }) // 拖拽的columns index
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
     const columnsRef = useRef(null)
@@ -278,7 +283,23 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         onChangeCheckboxSingle(true, record[renderKey], record)
         if (props.onRowContextMenu) props.onRowContextMenu(record, e)
     })
-    console.log("list", list)
+
+    const onSorter = useMemoizedFn((s: SortProps) => {
+        let newOrder: "none" | "asc" | "desc" = s.order
+        if (sort.orderBy !== s.orderBy) {
+            newOrder = "asc"
+        } else if (s.order === "asc") {
+            newOrder = "desc"
+        } else if (s.order === "desc") {
+            newOrder = "none"
+        } else {
+            newOrder = "asc"
+        }
+        sort.order = newOrder
+        sort.orderBy = s.orderBy
+        setSort({...sort})
+        if (props.onChange) props.onChange(pagination?.page, pagination?.limit, sort)
+    })
 
     return (
         <>
@@ -385,7 +406,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                         }}
                                     >
                                         {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                                        <div className={classNames("virtual-col-title")}>
+                                        <div className='virtual-col-title'>
                                             {cIndex === 0 && rowSelection && (
                                                 <span className={style["check"]}>
                                                     {rowSelection.type !== "radio" && (
@@ -403,6 +424,25 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                             )}
                                             <span>{columnsItem.title}</span>
                                         </div>
+                                        {columnsItem.sorter && (
+                                            <>
+                                                <div
+                                                    className={classNames(style["virtual-table-sorter"], {
+                                                        [style["virtual-table-sorter-active"]]:
+                                                            sort.orderBy === columnsItem.dataKey &&
+                                                            (sort.order === "desc" || sort.order === "asc")
+                                                    })}
+                                                    onClick={() =>
+                                                        onSorter({
+                                                            orderBy: columnsItem.dataKey,
+                                                            order: sort.order
+                                                        })
+                                                    }
+                                                >
+                                                    {sort.order === "desc" ? <SorterDownIcon /> : <SorterUpIcon />}
+                                                </div>
+                                            </>
+                                        )}
                                         {enableDrag && cIndex < columns.length - 1 && (
                                             <div
                                                 className={classNames(style["virtual-table-title-drag"])}
@@ -426,7 +466,6 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                 className={classNames(style["virtual-table-row"], {
                                                     [style["virtual-table-active-row"]]:
                                                         currentRow && currentRow[renderKey] === item.data[renderKey]
-                                                    // ...classNameRow
                                                 })}
                                                 onClick={(e) => {
                                                     onRowClick(item.data)
@@ -438,6 +477,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                             >
                                                 {columns.map((columnsItem, index) => (
                                                     <div
+                                                        key={`${columnsItem.dataKey}-row`}
                                                         className={classNames(
                                                             style["virtual-table-row-content"],
                                                             item.data["cellClassName"],

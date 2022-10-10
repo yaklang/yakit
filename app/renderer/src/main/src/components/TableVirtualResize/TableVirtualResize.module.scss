@@ -49,6 +49,7 @@
                 position: relative;
                 display: flex;
                 flex-direction: row;
+                justify-content: space-between;
                 align-items: center;
                 background-color: #F9FBFF;
                 padding: 6px 12px;
@@ -67,6 +68,15 @@
 
                 .virtual-table-title-left {
                     box-shadow: 4px 0px 8px rgba(133, 137, 158, 0.12);
+                }
+
+                .virtual-table-sorter {
+                    display: flex;
+                    color: #B4BBCA;
+                }
+
+                .virtual-table-sorter-active {
+                    color: #1890ff;
                 }
             }
 

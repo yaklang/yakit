@@ -15,6 +15,12 @@ export interface TableVirtualResizeProps<T> {
     onRowContextMenu?: (record: T, e: React.MouseEvent) => void
     colWidth?: number
     pagination?: PaginationProps
+    onChange?: (page?: number, limit?: number, filters?: SortProps, sorter?: any, extra?: any) => void // 查询条件变化
+}
+
+export interface SortProps {
+    order: "none" | "asc" | "desc"
+    orderBy: string
 }
 
 export interface ColumnsTypeProps {
@@ -29,6 +35,8 @@ export interface ColumnsTypeProps {
     left?: number // 外面不需要传，不接收，紧作为固定列使用
     right?: number // 外面不需要传，不接收，紧作为固定列使用
     render?: (text, record, index) => ReactNode
+    sorter?: string | boolean // boolean是否开启排序，string自定义
+    order?: string // none 无状态； asc 升序  desc 降序
 }
 
 export interface RowSelectionProps<T> {

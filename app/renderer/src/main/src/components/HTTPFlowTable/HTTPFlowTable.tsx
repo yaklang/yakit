@@ -44,7 +44,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {CheckCircleIcon, FilterIcon, RefreshIcon, SearchIcon, StatusOfflineIcon} from "@/assets/newIcon"
 import classNames from "classnames"
-import {ColumnsTypeProps} from "../TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -424,7 +424,6 @@ export const LogLevelToCode = (level: string) => {
     }
 }
 
-
 // 通过关键词输出渲染颜色
 const TableRowColor = (key: string) => {
     switch (key) {
@@ -453,7 +452,7 @@ const availableColors = [
     {
         color: "RED",
         title: "红色[#FFCCC7]",
-        className: TableRowColor('RED'),
+        className: TableRowColor("RED"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 红色
@@ -464,7 +463,7 @@ const availableColors = [
     {
         color: "GREEN",
         title: "绿色[#D9F7BE]",
-        className: TableRowColor('GREEN'),
+        className: TableRowColor("GREEN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 绿色
@@ -475,7 +474,7 @@ const availableColors = [
     {
         color: "BLUE",
         title: "蓝色[#D6E4FF]",
-        className: TableRowColor('BLUE'),
+        className: TableRowColor("BLUE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 蓝色
@@ -486,7 +485,7 @@ const availableColors = [
     {
         color: "YELLOW",
         title: "黄色[#FFFFB8]",
-        className: TableRowColor('YELLOW'),
+        className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 黄色
@@ -497,7 +496,7 @@ const availableColors = [
     {
         color: "ORANGE",
         title: "橙色[#FFE7BA]",
-        className: TableRowColor('ORANGE'),
+        className: TableRowColor("ORANGE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 橙色
@@ -508,7 +507,7 @@ const availableColors = [
     {
         color: "PURPLE",
         title: "紫色[#EfDBFF]",
-        className: TableRowColor('PURPLE'),
+        className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 紫色
@@ -519,7 +518,7 @@ const availableColors = [
     {
         color: "CYAN",
         title: "天蓝色[#B5F5EC]",
-        className: TableRowColor('CYAN'),
+        className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 天蓝色
@@ -530,7 +529,7 @@ const availableColors = [
     {
         color: "GREY",
         title: "灰色[#D9D9D9]",
-        className: TableRowColor('GREY'),
+        className: TableRowColor("GREY"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 灰色
@@ -539,7 +538,6 @@ const availableColors = [
         )
     }
 ]
-
 
 export interface YakQueryHTTPFlowResponse {
     Data: HTTPFlow[]
@@ -774,6 +772,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [shieldData])
 
+    const onTableChange = useMemoizedFn((page?: number, limit?: number, filters?: SortProps) => {
+        update(page, limit, filters && filters.order, filters && filters.orderBy)
+    })
+
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, sourceType?: string, noLoading?: boolean) => {
             const paginationProps = {
@@ -790,6 +792,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             //     SourceType: sourceType, ...params,
             //     Pagination: {...paginationProps},
             // })
+            console.log("paginationProps", paginationProps)
+
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: sourceType,
@@ -815,7 +819,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             return newItem
                         })
                     }
-                    console.log("QueryHTTPFlows", newData)
                     setData(newData)
                     setPagination(rsp.Pagination)
                     setTotal(rsp.Total)
@@ -1170,7 +1173,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 title: "序号",
                 dataKey: "Id",
                 fixed: "left",
-                ellipsis: false
+                ellipsis: false,
+                sorter: true
             },
             {
                 title: "方法",
@@ -1181,6 +1185,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 title: "状态码",
                 dataKey: "StatusCode",
                 fixed: "left",
+                sorter: true,
                 render: (text) => <div className={style["status-code"]}>{text}</div>
             },
             {
@@ -1206,6 +1211,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 title: "响应长度",
                 dataKey: "BodyLength",
                 width: 200,
+                sorter: true,
                 render: (_, rowData) => {
                     return (
                         <>
@@ -1236,12 +1242,13 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             },
             {
                 title: "请求时间",
-                dataKey: "UpdatedAt"
+                dataKey: "UpdatedAt",
+                sorter: true
             },
             {
                 title: "请求大小",
-                dataKey: "RequestSizeVerbose"
-                // fixed: "right"
+                dataKey: "RequestSizeVerbose",
+                sorter: true
             },
             {
                 title: "操作",
@@ -1741,6 +1748,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         total,
                         onChange: update
                     }}
+                    onChange={onTableChange}
                 />
             </div>
         </div>
