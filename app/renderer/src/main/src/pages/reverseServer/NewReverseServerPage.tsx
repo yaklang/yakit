@@ -67,7 +67,7 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
 
     useEffect(() => {
         return () => {
-            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", getToken())
         }
     }, [])
 

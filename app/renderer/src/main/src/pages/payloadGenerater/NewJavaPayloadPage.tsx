@@ -253,7 +253,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
     // 关闭页面时关闭Facades反连服务
     useEffect(() => {
         return () => {
-            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", token)
+            ipcRenderer.invoke("cancel-StartFacadesWithYsoObject", getToken())
         }
     }, [])
 
