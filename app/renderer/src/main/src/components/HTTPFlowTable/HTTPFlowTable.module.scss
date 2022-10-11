@@ -33,66 +33,44 @@
 
 
 .http-history-table-extra {
-    padding-left: 8px;
+    padding-left: 16px;
     width: 100%;
     display: flex;
 
-    .extra-left {
+    .extra-left-shield {
+        width: 110px;
         display: flex;
+        flex-direction: row;
         align-items: center;
+        padding: 4px 8px;
+        background: #F9FBFF;
+        border: 1px solid #EAECF3;
+        border-radius: 4px;
+        color: #31343F;
+        font-weight: 400;
+        font-size: 12px;
+        height: 24px;
+        cursor: pointer;
 
-        .extra-left-item {
-            display: flex;
-            align-items: center;
-
-            .extra-left-text {
-                color: #B4BBCA;
-                font-size: 12px;
-                margin-right: 4px;
-            }
-
-            .extra-left-number {
-                color: #1890ff;
-                font-size: 12px;
-            }
+        .extra-left-number {
+            margin-left: 4px;
+            margin-right: 8px;
+            color: #1890ff;
         }
 
-        .extra-left-shield {
-            width: 110px;
-            margin-left: 16px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            padding: 4px 8px;
-            background: #F9FBFF;
-            border: 1px solid #EAECF3;
-            border-radius: 4px;
-            color: #31343F;
-            font-weight: 400;
+        &:hover {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            // color: #1890ff;
+        }
+
+        .extra-left-shield-icon {
             font-size: 12px;
-            height: 24px;
-            cursor: pointer;
 
-            .extra-left-number {
-                margin-left: 4px;
-                margin-right: 8px;
-                color: #1890ff;
-            }
-
-            &:hover {
-                background: #e6f7ff;
-                border: 1px solid #91d5ff;
-                // color: #1890ff;
-            }
-
-            .extra-left-shield-icon {
-                font-size: 12px;
-
-                svg {
-                    width: 12px;
-                    height: 12px;
-                    color: #85899E;
-                }
+            svg {
+                width: 12px;
+                height: 12px;
+                color: #85899E;
             }
         }
     }
@@ -102,6 +80,7 @@
         display: flex;
         justify-content: flex-end;
         align-items: center;
+        flex: 1;
 
         :global {
             .ant-divider-vertical {

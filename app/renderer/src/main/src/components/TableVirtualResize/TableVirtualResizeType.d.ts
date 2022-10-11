@@ -16,6 +16,8 @@ export interface TableVirtualResizeProps<T> {
     colWidth?: number
     pagination?: PaginationProps
     onChange?: (page?: number, limit?: number, filters?: SortProps, sorter?: any, extra?: any) => void // 查询条件变化
+    loading?: boolean
+    scrollBotton?: number // 默认300
 }
 
 export interface SortProps {
@@ -40,11 +42,12 @@ export interface ColumnsTypeProps {
 }
 
 export interface RowSelectionProps<T> {
+    isAll?: boolean
     type?: "checkbox" | "radio" //默认 checkbox
     hideSelectAll?: boolean
     selectedRowKeys?: string[]
     onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows?: T) => void
-    onSelectAll?: (selectedRows: string[], selected: T[]) => void
+    onSelectAll?: (selectedRows: string[], selected: T[], checked: boolean) => void
 }
 
 export interface PaginationProps {
@@ -52,4 +55,9 @@ export interface PaginationProps {
     limit: number
     total: number
     onChange: (page: number, limit: number) => void
+}
+
+export interface ShowFixedShadowProps {
+    isShowLeftFixedShadow: boolean
+    isShowRightFixedShadow: boolean
 }

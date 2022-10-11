@@ -1,15 +1,48 @@
 .virtual-table {
     height: 100%;
 
+    :global {
+        .ant-spin-nested-loading {
+            height: 100%;
+        }
+    }
+
+    .virtual-table-heard-right {
+        display: flex;
+        align-items: center;
+        padding-left: 8px;
+
+        .virtual-table-heard-right-item {
+            display: flex;
+            align-items: center;
+
+            .virtual-table-heard-right-text {
+                color: #B4BBCA;
+                font-size: 12px;
+                margin-right: 4px;
+            }
+
+            .virtual-table-heard-right-number {
+                color: #1890ff;
+                font-size: 12px;
+            }
+        }
+    }
+
+
+
+
+
     .virtual-table-body {
         display: flex;
         flex-direction: column;
         width: 100%;
-        height: 100%;
+        height: auto;
         overflow-x: auto;
         overflow-y: hidden;
         position: relative;
-
+        border-bottom: 1px solid #EAECF3;
+        border-top: 1px solid #EAECF3;
 
         .virtual-table-fixed-left {
             position: absolute;
@@ -105,16 +138,18 @@
         .virtual-table-list-container {
             // height: 100%;
             width: 100%;
-            overflow-y: auto;
+            overflow-y: overlay;
+            overflow-x: overlay;
             overflow-anchor: none;
             position: relative;
-            border-top: 1px solid #EAECF3;
-            border-bottom: 1px solid #EAECF3;
+            // border-top: 1px solid #EAECF3;
+            // border-bottom: 1px solid #EAECF3;
+            padding-bottom: 34px;
 
             .virtual-table-list {
                 display: flex;
                 flex-direction: column;
-                margin-bottom: 28px;
+                position: relative;
 
                 .virtual-table-row {
                     display: flex;
@@ -129,6 +164,7 @@
                     font-size: 12px;
                     box-sizing: border-box;
                     border-bottom-width: 0;
+                    z-index: 2;
 
                     &:first-child {
                         border-top-width: 0;
@@ -200,8 +236,39 @@
                     }
                 }
 
-                .virtual-table-list-pagination {}
+
             }
+
+        }
+
+        .virtual-table-list-pagination {
+            height: 28px;
+            position: absolute;
+            bottom: 6px;
+            width: 100%;
+            border-left: 1px solid #EAECF3;
+
+            .pagination-loading {
+                height: 28px;
+                line-height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .pagination-text {
+                height: 28px;
+                line-height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #B4BBCA;
+                font-size: 12px;
+            }
+        }
+
+        .virtual-table-list-pagination-border-left {
+            border-left: 0;
         }
 
         .virtual-table-title-drag {
@@ -287,6 +354,18 @@
 
     }
 
+    .virtual-table-border-left {
+        border-left: 1px solid #EAECF3;
+    }
+
+    .virtual-table-border-right {
+        border-right: 1px solid #EAECF3;
+    }
+
+    .virtual-table-border-bottom {
+        border-bottom: 0;
+    }
+
     .virtual-table-heard {
         display: flex;
         align-items: center;
@@ -295,6 +374,9 @@
         padding: 8px 0;
 
         .virtual-table-heard-left {
+            display: flex;
+            align-items: center;
+
             .virtual-table-heard-title {
                 font-weight: 600;
                 font-size: 16px;

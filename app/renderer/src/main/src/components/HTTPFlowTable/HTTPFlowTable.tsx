@@ -792,8 +792,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             //     SourceType: sourceType, ...params,
             //     Pagination: {...paginationProps},
             // })
-            console.log("paginationProps", paginationProps)
-
+            // console.log("paginationProps", paginationProps)
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: sourceType,
@@ -819,7 +818,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             return newItem
                         })
                     }
-                    setData(newData)
+                    setData(paginationProps.Page === 1 ? newData : data.concat(newData))
                     setPagination(rsp.Pagination)
                     setTotal(rsp.Total)
                 })
@@ -1147,7 +1146,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     }
 
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-    const onSelectAll = (newSelectedRowKeys: string[]) => {
+
+    const [isAll, setIsAll] = useState<boolean>(false)
+    const [spinning, setSpinning] = useState<boolean>(false)
+
+    const onSelectAll = (newSelectedRowKeys: string[], _, checked: boolean) => {
+        setIsAll(checked)
         setSelectedRowKeys(newSelectedRowKeys)
     }
     const onSelectChange = useMemoizedFn((c: boolean, selectedRowsKey: string) => {
@@ -1198,7 +1202,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             {
                 title: "Tags",
                 dataKey: "Tags",
-                width: 150
+                width: 150,
+                render: (text) => {
+                    return text
+                        ? `${text}`
+                              .split("|")
+                              .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                              .join(", ")
+                        : ""
+                }
             },
             {
                 title: "IP",
@@ -1393,20 +1405,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     title='HTTP History'
                     extra={
                         <div className={style["http-history-table-extra"]}>
-                            <div className={style["extra-left"]}>
-                                <div className={style["extra-left-item"]}>
-                                    <span className={style["extra-left-text"]}>Total</span>
-                                    <span className={style["extra-left-number"]}>{total}</span>
-                                </div>
-                                <Divider type='vertical' />
-                                <div className={style["extra-left-item"]}>
-                                    <span className={style["extra-left-text"]}>Selected</span>
-                                    <span className={style["extra-left-number"]}>55</span>
-                                </div>
-                                <div className={style["extra-left-shield"]}>
-                                    已屏蔽类型<span className={style["extra-left-number"]}>3</span>
-                                    <StatusOfflineIcon className={style["extra-left-shield-icon"]} />
-                                </div>
+                            <div className={style["extra-left-shield"]}>
+                                已屏蔽类型<span className={style["extra-left-number"]}>3</span>
+                                <StatusOfflineIcon className={style["extra-left-shield-icon"]} />
                             </div>
                             <div className={style["extra-right"]}>
                                 <div className={style["extra-right-item"]}>
@@ -1438,14 +1439,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     }
                     // data={autoReload ? data : [TableFirstLinePlaceholder].concat(data)}
                     renderKey='Id'
-                    // data={data.filter((_, index) => index < 5)}
+                    // data={data.filter((_,index)=>index<5)}
                     data={data}
                     rowSelection={{
+                        isAll,
                         type: "checkbox",
                         selectedRowKeys,
                         onSelectAll: onSelectAll,
                         onChangeCheckboxSingle: onSelectChange
                     }}
+                    loading={loading}
                     enableDrag={true}
                     columns={columns}
                     onRowClick={onRowClick}
