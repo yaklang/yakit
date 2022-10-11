@@ -290,6 +290,7 @@ service Yak {
   rpc GetAllYsoClassGeneraterOptions(YsoOptionsRequerstWithVerbose) returns (YsoClassOptionsResponseWithVerbose);
   rpc GenerateYsoCode(YsoOptionsRequerstWithVerbose) returns (YsoCodeResponse);
   rpc GenerateYsoBytes(YsoOptionsRequerstWithVerbose) returns (YsoBytesResponse);
+  rpc YsoDump(YsoBytesObject)returns(YsoDumpResponse);
 
   // DNSLog / ICMP / RandomTrigger
   rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
@@ -836,6 +837,12 @@ message YsoOptionsRequerst{
   string Gadget = 1;
   string Class = 2;
   repeated YsoClassGeneraterOptions Options = 3;
+}
+message YsoBytesObject{
+  bytes Data = 1;
+}
+message YsoDumpResponse{
+  string Data = 1;
 }
 
 message YsoCodeResponse{

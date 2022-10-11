@@ -1112,7 +1112,8 @@ const CodeType: {value: string; label: string}[] = [
     {value: "base64", label: "BASE64"},
     {value: "hex", label: "HEX"},
     // {value: "javadump", label: "JavaDump"},
-    {value: "yak", label: "YAK"}
+    {value: "yak", label: "YAK"},
+    {value: "dump", label: "DUMP"}
 ]
 
 export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
@@ -1145,6 +1146,9 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 return
             case "yak":
                 convertYak()
+                return
+            case "dump":
+                convertDump()
                 return
         }
     })
@@ -1218,6 +1222,29 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
             })
             .catch((e: any) => {
                 failed("生成代码失败: " + `${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const convertDump = useMemoizedFn(() => {
+        setLoading(true)
+        const request = convertRequest(data)
+        ipcRenderer
+            .invoke("GenerateYsoBytes", request)
+            .then((d: {Bytes: Uint8Array; FileName: string}) => {
+                ipcRenderer
+                    .invoke("YsoDump", {
+                        Data: d.Bytes
+                    })
+                    .then((res: {Data: string}) => {
+                        success("Dump成功")
+                        setCode(res.Data)
+                    })
+                    .catch((err) => {
+                        failed(`${err}`)
+                    })
+            })
+            .catch((e: any) => {
+                failed("Dump失败: " + `${e}`)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
