@@ -250,6 +250,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                         onSearch={() => {
                                             setRefresh(!refresh)
                                         }}
+                                        value={searchKeyword}
                                         onChange={(e) => setSearchKeyword(e.target.value)}
                                         size='small'
                                         style={{width: "73%"}}
