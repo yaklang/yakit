@@ -42,7 +42,7 @@ import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
-import {CheckCircleIcon, FilterIcon, RefreshIcon, SearchIcon, StatusOfflineIcon} from "@/assets/newIcon"
+import {CheckCircleIcon, FilterIcon, RefreshIcon, RemoveIcon, SearchIcon, StatusOfflineIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
 
@@ -1266,7 +1266,21 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 // width: 68,
                 align: "center",
                 fixed: "right",
-                render: () => <div className={style["action"]}>详情</div>
+                render: (_, rowData) => {
+                    if (!rowData.Hash) return <></>
+                    return (
+                        <a
+                            onClick={(e) => {
+                                let m = showDrawer({
+                                    width: "80%",
+                                    content: onExpandHTTPFlow(rowData, () => m.destroy())
+                                })
+                            }}
+                        >
+                            详情
+                        </a>
+                    )
+                }
             }
         ]
     }, [])
@@ -1405,10 +1419,38 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     title='HTTP History'
                     extra={
                         <div className={style["http-history-table-extra"]}>
-                            <div className={style["extra-left-shield"]}>
-                                已屏蔽类型<span className={style["extra-left-number"]}>3</span>
-                                <StatusOfflineIcon className={style["extra-left-shield-icon"]} />
-                            </div>
+                            {shieldData?.data.length > 0 && (
+                                <Popover
+                                    placement='bottom'
+                                    trigger='click'
+                                    content={
+                                        <div className={style["title-header"]}>
+                                            {shieldData?.data.map((item: number | string) => (
+                                                <div className={style["title-selected-tag"]} key={item}>
+                                                    <Tooltip title={item}>
+                                                        <div className={classNames(style["tag-name-style"])}>
+                                                            {item}
+                                                        </div>
+                                                    </Tooltip>
+                                                    <div
+                                                        className={classNames(style["tag-del-style"])}
+                                                        onClick={() => cancleFilter(item)}
+                                                    >
+                                                        <RemoveIcon />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    }
+                                    overlayClassName={style["shield-popover"]}
+                                >
+                                    <div className={style["extra-left-shield"]}>
+                                        已屏蔽类型<span className={style["extra-left-number"]}>{shieldData?.data.length}</span>
+                                        <StatusOfflineIcon className={style["extra-left-shield-icon"]} />
+                                    </div>
+                                </Popover>
+                            )}
+
                             <div className={style["extra-right"]}>
                                 <div className={style["extra-right-item"]}>
                                     <div className={style["extra-right-label"]}>只看 Websocket</div>

@@ -123,3 +123,13 @@ const SorterDown = () => (
 export const SorterDownIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={SorterDown} {...props} />
 }
+
+const Remove = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'>
+        <path d='M3 9L9 3M3 3L9 9' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+
+export const RemoveIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={Remove} {...props} />
+}
