@@ -1445,7 +1445,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     overlayClassName={style["shield-popover"]}
                                 >
                                     <div className={style["extra-left-shield"]}>
-                                        已屏蔽类型<span className={style["extra-left-number"]}>{shieldData?.data.length}</span>
+                                        <span>已屏蔽条件</span><span className={style["extra-left-number"]}>{shieldData?.data.length}</span>
                                         <StatusOfflineIcon className={style["extra-left-shield-icon"]} />
                                     </div>
                                 </Popover>

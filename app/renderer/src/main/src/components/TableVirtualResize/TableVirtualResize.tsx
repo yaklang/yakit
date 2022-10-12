@@ -11,7 +11,13 @@ import {
     useVirtualList
 } from "ahooks"
 import classNames from "classnames"
-import {ColumnsTypeProps, ShowFixedShadowProps, SortProps, TableVirtualResizeProps} from "./TableVirtualResizeType"
+import {
+    ColumnsTypeProps,
+    scrollProps,
+    ShowFixedShadowProps,
+    SortProps,
+    TableVirtualResizeProps
+} from "./TableVirtualResizeType"
 import ReactResizeDetector from "react-resize-detector"
 import style from "./TableVirtualResize.module.scss"
 import {Button, Checkbox, Divider, Radio, RadioChangeEvent, Spin} from "antd"
@@ -33,7 +39,7 @@ interface tablePosition {
 }
 
 export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps<T>) => {
-    const {data, renderRow, rowSelection, renderKey, enableDrag, pagination, title, extra, loading, scrollBotton} =
+    const {data, renderRow, rowSelection, renderKey, enableDrag, pagination, title, extra, loading, scrollToBottom} =
         props
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
@@ -44,8 +50,11 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
     const [lineIndex, setLineIndex] = useState<number>(-1) // 拖拽的columns index
     const [leftFixedWidth, setLeftFixedWidth] = useState<number>(0) // 固定左侧的宽度
     const [rightFixedWidth, setRightFixedWidth] = useState<number>(0) // 固定右侧的宽度
-    const [scrollLeft, setScrollLeft] = useState<number>(0) // 横向滚动条，滚动条距离左边的距离
-    const [scrollRight, setScrollRight] = useState<number>(1) // 横向滚动条，滚动条距离左边的距离
+    const [scroll, setScroll] = useState<scrollProps>({
+        scrollLeft: 0,
+        scrollBottom: 0,
+        scrollRight: 1
+    }) // 滚动条距离边的距离
     const [boxShowHeight, setBoxShowHeight] = useState<number>(0) // 阴影高度
     const [showScrollY, setShowScrollY] = useState<boolean>(false) // 拖拽的columns index
     const [sort, setSort] = useState<SortProps>({
@@ -273,16 +282,18 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         (e) => {
             const dom = e?.target
             const scrollRight = dom.scrollWidth - dom.scrollLeft - dom.clientWidth
-            setScrollLeft(dom.scrollLeft)
-            setScrollRight(scrollRight)
-
+            const contentScrollTop = dom.scrollTop // 滚动条距离顶部
+            const clientHeight = dom.clientHeight // 可视区域
+            const scrollHeight = dom.scrollHeight // 滚动条内容的总高度
+            const scrollBottom = scrollHeight - contentScrollTop - clientHeight
+            setScroll({
+                scrollBottom: scrollBottom,
+                scrollLeft: dom.scrollLeft,
+                scrollRight: scrollRight
+            })
             if (wrapperRef && containerRef && pagination) {
-                const contentScrollTop = dom.scrollTop // 滚动条距离顶部
-                const clientHeight = dom.clientHeight // 可视区域
-                const scrollHeight = dom.scrollHeight // 滚动条内容的总高度
-                const scrollBottom = scrollHeight - contentScrollTop - clientHeight
                 const hasMore = pagination.total == data.length
-                if (scrollBottom <= (scrollBotton || 300) && !hasMore) {
+                if (scrollBottom <= (scrollToBottom || 300) && !hasMore) {
                     pagination.onChange(Number(pagination.page) + 1, pagination.limit)
                 }
             }
@@ -363,9 +374,9 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                     className={classNames(style["virtual-table-body"], {
                         [style["virtual-table-border-bottom"]]: !showScrollY,
                         [style["virtual-table-border-left"]]:
-                            scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow,
+                            scroll.scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow,
                         [style["virtual-table-border-right"]]:
-                            scrollRight > 0 && !isShowFixedShadow.isShowLeftFixedShadow
+                            scroll.scrollRight > 0 && !isShowFixedShadow.isShowRightFixedShadow
                     })}
                     style={{maxHeight: ((title || extra) && "calc(100% - 42px)") || "100%"}}
                 >
@@ -376,25 +387,25 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                             onMouseUp={(e) => onMouseUp(e)}
                         />
                     )}
-                    {isShowFixedShadow.isShowLeftFixedShadow && scrollLeft > 0 && (
+                    {isShowFixedShadow.isShowLeftFixedShadow && scroll.scrollLeft > 0 && (
                         <div
                             className={classNames(style["virtual-table-fixed-left"])}
                             style={{
                                 left: leftFixedWidth - 5,
                                 width: 5,
                                 height: boxShowHeight,
-                                maxHeight: height - 9
+                                maxHeight: scroll.scrollBottom < 25 ? height - 49 - 28 : height - 49
                             }}
                         ></div>
                     )}
-                    {isShowFixedShadow.isShowRightFixedShadow && scrollRight > 0 && (
+                    {isShowFixedShadow.isShowRightFixedShadow && scroll.scrollRight > 0 && (
                         <div
                             className={classNames(style["virtual-table-fixed-right"])}
                             style={{
                                 right: rightFixedWidth + 5,
                                 width: 5,
                                 height: boxShowHeight,
-                                maxHeight: height - 9
+                                maxHeight: scroll.scrollBottom < 25 ? height - 49 - 28 : height - 49
                             }}
                         ></div>
                     )}
@@ -422,14 +433,14 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                         [style["virtual-table-row-right"]]: columnsItem.align === "right",
                                         [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left",
                                         [style["virtual-table-title-fixed-left-border"]]:
-                                            columnsItem.fixed === "left" && scrollLeft > 0,
+                                            columnsItem.fixed === "left" && scroll.scrollLeft > 0,
                                         [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right"
                                     })}
                                     style={{
                                         width: columnsItem.width || colWidth,
                                         minWidth: columnsItem.minWidth || columnsMinWidthList.current[cIndex],
                                         ...(columnsItem.fixed === "left" &&
-                                            scrollLeft > 0 && {
+                                            scroll.scrollLeft > 0 && {
                                                 left: columnsItem.left
                                             }),
                                         ...(columnsItem.fixed === "right" && {
@@ -519,9 +530,9 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                             [style["virtual-table-row-ellipsis"]]:
                                                                 columnsItem.ellipsis === false ? false : true,
                                                             [style["virtual-table-row-fixed-left"]]:
-                                                                columnsItem.fixed === "left" && scrollLeft > 0,
+                                                                columnsItem.fixed === "left" && scroll.scrollLeft > 0,
                                                             [style["virtual-table-row-fixed-right"]]:
-                                                                columnsItem.fixed === "right",
+                                                                columnsItem.fixed === "right" && scroll.scrollRight > 0,
                                                             [style["virtual-table-row-center"]]:
                                                                 columnsItem.align === "center",
                                                             [style["virtual-table-row-right"]]:
@@ -533,7 +544,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                                                         minWidth:
                                                             columnsItem.minWidth || columnsMinWidthList.current[index],
                                                         ...(columnsItem.fixed === "left" &&
-                                                            scrollLeft > 0 && {
+                                                            scroll.scrollLeft > 0 && {
                                                                 left: columnsItem.left
                                                             }),
                                                         ...(columnsItem.fixed === "right" && {
@@ -586,7 +597,7 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                     <div
                         className={classNames(style["virtual-table-list-pagination"], {
                             [style["virtual-table-list-pagination-border-left"]]:
-                                (scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow) || !showScrollY
+                                (scroll.scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow) || !showScrollY
                         })}
                     >
                         {loading && !(pagination?.total == data.length) && (
@@ -595,7 +606,13 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                             </div>
                         )}
                         {!loading && pagination?.total == data.length && (pagination?.page || 0) > 0 && (
-                            <div className={classNames(style["pagination-text"])}>暂无更多数据</div>
+                            <div
+                                className={classNames(style["pagination-text"], {
+                                    [style["pagination-text-show"]]: scroll.scrollBottom < 32
+                                })}
+                            >
+                                暂无更多数据
+                            </div>
                         )}
                     </div>
                 </div>

@@ -17,7 +17,7 @@ export interface TableVirtualResizeProps<T> {
     pagination?: PaginationProps
     onChange?: (page?: number, limit?: number, filters?: SortProps, sorter?: any, extra?: any) => void // 查询条件变化
     loading?: boolean
-    scrollBotton?: number // 默认300
+    scrollToBottom?: number // 默认300
 }
 
 export interface SortProps {
@@ -60,4 +60,10 @@ export interface PaginationProps {
 export interface ShowFixedShadowProps {
     isShowLeftFixedShadow: boolean
     isShowRightFixedShadow: boolean
+}
+
+export interface scrollProps{
+    scrollLeft:number
+    scrollRight:number
+    scrollBottom:number
 }
