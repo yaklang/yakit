@@ -177,25 +177,29 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [fullScreen, setFullScreen] = useState<boolean>(false)
     const [isRefList, setIsRefList] = useState(false)
 
-    // 全局登录状态
-    const {userInfo} = useStore()
-    useEffect(() => {
-        ipcRenderer
-            .invoke("get-value", userInitUse)
-            .then((value: boolean) => {
-                if (value) {
-                    setPlugSource("local")
-                } else {
-                    setPlugSource("online")
-                    ipcRenderer.invoke("set-value", userInitUse, true)
-                }
-            })
-            .catch(() => {})
-            .finally(() => {})
-    }, [])
-    useEffect(() => {
-        onRefList()
-    }, [userInfo.isLogin])
+   // 监听是否点击编辑插件 用于控制插件仓库是否刷新
+   const [isEdit, setMonitorEdit] = useState<boolean>(false)
+   // 全局登录状态
+   const {userInfo} = useStore()
+   useEffect(() => {
+       ipcRenderer
+           .invoke("get-value", userInitUse)
+           .then((value: boolean) => {
+               if (value) {
+                   setPlugSource("local")
+               } else {
+                   setPlugSource("online")
+                   ipcRenderer.invoke("set-value", userInitUse, true)
+               }
+           })
+           .catch(() => {})
+           .finally(() => {})
+   }, [])
+   useEffect(() => {
+       if(!isEdit){
+           onRefList()
+       }
+   }, [userInfo.isLogin])
     const onRefList = useMemoizedFn(() => {
         setPublicKeyword("")
         onResetPluginDetails()
@@ -684,6 +688,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 bodyStyle={{height: "calc(100% - 69px)"}}
                             >
                                 <PluginOperator
+                                    setMonitorEdit={setMonitorEdit}
                                     userInfo={userInfo}
                                     yakScriptId={(script && script.Id) || 0}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
