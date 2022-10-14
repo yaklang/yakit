@@ -5,7 +5,7 @@ import {SelectOne} from "../../utils/inputUtil"
 import {PoweroffOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
 import {EditorProps, YakCodeEditor} from "../../utils/editors"
-import {YakModuleList} from "../yakitStore/YakitStorePage"
+import {YakModuleList,YakFilterModuleList} from "../yakitStore/YakitStorePage"
 import {genDefaultPagination, YakScript, YakScriptHooks} from "../invoker/schema"
 import {useDebounceFn, useMap, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
@@ -102,6 +102,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                     tmp.set(hook.YakScriptName, true)
                 })
             })
+            // console.log("默认数据",tmp)
             handlers.setAll(tmp)
         })
         updateHooks()
@@ -126,6 +127,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         const {checked} = e.target
         if (checked) {
             enableMITMPluginMode(listNames).then(() => {
+                // console.log("全选",listNames)
                 info("启动 MITM 插件成功")
             })
         } else {
@@ -135,6 +137,12 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             } as any)
         }
         setCheckAll(checked)
+    }
+    // 多选插件
+    const multipleMitm = (checkList:string[]) => {
+        enableMITMPluginMode(checkList).then(() => {
+            info("启动 MITM 插件成功")
+        })
     }
     useEffect(() => {
         getYakScriptTags()
@@ -207,74 +215,28 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                     <Button type={"link"} icon={<ReloadOutlined />} size={"small"} />
                                 </Popconfirm>
                             )}
-                            {mode === "all" && (
-                                <Checkbox onChange={onCheckAllChange} checked={checkAll}>
-                                    全选
-                                </Checkbox>
-                            )}
                         </div>
                     </div>
                     <div className='mitm-card-search'>
-                        {mode === "all" && (
-                            <Input.Group compact>
-                                <Select style={{width: "27%"}} value={searchType} size='small' onSelect={setSearchType}>
-                                    <Select.Option value='Tags'>Tag</Select.Option>
-                                    <Select.Option value='Keyword'>关键字</Select.Option>
-                                </Select>
-                                {(searchType === "Tags" && (
-                                    <Select
-                                        mode='tags'
-                                        size='small'
-                                        onChange={(e) => setTag(e as string[])}
-                                        style={{width: "73%"}}
-                                        loading={tagsLoading}
-                                        onBlur={() => {
-                                            setRefresh(!refresh)
-                                        }}
-                                        onDeselect={onDeselect}
-                                        maxTagCount='responsive'
-                                        value={tag}
-                                        allowClear={true}
-                                    >
-                                        {tagsList.map((item) => (
-                                            <Select.Option value={item.Value}>
-                                                <div className='mitm-card-select-option'>
-                                                    <span>{item.Value}</span>
-                                                    <span>{item.Total}</span>
-                                                </div>
-                                            </Select.Option>
-                                        ))}
-                                    </Select>
-                                )) || (
-                                    <Input.Search
-                                        onSearch={() => {
-                                            setRefresh(!refresh)
-                                        }}
-                                        value={searchKeyword}
-                                        onChange={(e) => setSearchKeyword(e.target.value)}
-                                        size='small'
-                                        style={{width: "73%"}}
-                                    />
-                                )}
-                            </Input.Group>
-                        )}
-                        <div className={`${tag.length > 0 && "mitm-card-tag"}`}>
-                            {tag.map((i) => {
-                                return (
-                                    <Tag
-                                        key={i}
-                                        style={{marginBottom: 2}}
-                                        color={"blue"}
-                                        onClose={() => {
-                                            setTag(tag.filter((element) => i !== element))
-                                        }}
-                                        closable={true}
-                                    >
-                                        {i}
-                                    </Tag>
-                                )
-                            })}
-                        </div>
+                        {mode === "all"&& 
+                        <YakFilterModuleList
+                        TYPE="MITM"
+                        refresh={refresh}
+                        tagsLoading={tagsLoading}
+                        searchType={searchType} 
+                        setTag={setTag}
+                        setRefresh={setRefresh}
+                        onDeselect={onDeselect}
+                        tag={tag}
+                        tagsList={tagsList}
+                        setSearchType={setSearchType}
+                        setSearchKeyword={setSearchKeyword}
+                        checkAll={checkAll}
+                        checkList={Array.from(hooks).map((item)=>item[0])}
+                        multipleCallBack={multipleMitm}
+                        onCheckAllChange={onCheckAllChange}
+                        setCheckAll={setCheckAll} 
+                        />}
                     </div>
                 </div>
             }
@@ -326,7 +288,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                             Tag: tag,
                             Type: "mitm,port-scan",
                             Keyword: searchKeyword,
-                            Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+                            Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
                         }}
                         refresh={refresh}
                         itemHeight={43}
