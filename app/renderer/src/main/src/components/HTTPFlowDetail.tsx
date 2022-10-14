@@ -1,44 +1,42 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react"
 import {
     Button,
     Card,
     Col,
     Collapse,
-    Descriptions, Empty,
+    Descriptions,
+    Empty,
     PageHeader,
-    Row, Skeleton,
+    Row,
+    Skeleton,
     Space,
     Spin,
     Tabs,
     Tag,
     Tooltip,
     Typography
-} from "antd";
-import {
-    LeftOutlined,
-    RightOutlined,
-    PlusCircleOutlined,
-} from "@ant-design/icons"
-import {HTTPFlow} from "./HTTPFlowTable";
-import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors";
-import {failed} from "../utils/notification";
-import {FuzzableParamList} from "./FuzzableParamList";
-import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
-import {randomString} from "../utils/randomUtil";
-import {HTTPPacketFuzzable} from "./HTTPHistory";
-import {AutoSpin} from "./AutoSpin";
-import {ResizeBox} from "./ResizeBox";
-import ReactResizeDetector from "react-resize-detector";
-import {Buffer} from "buffer";
-import {Uint8ArrayToString} from "@/utils/str";
-import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer";
-import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory";
+} from "antd"
+import {LeftOutlined, RightOutlined, PlusCircleOutlined} from "@ant-design/icons"
+import {HTTPFlow} from "./HTTPFlowTable"
+import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors"
+import {failed} from "../utils/notification"
+import {FuzzableParamList} from "./FuzzableParamList"
+import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
+import {randomString} from "../utils/randomUtil"
+import {HTTPPacketFuzzable} from "./HTTPHistory"
+import {AutoSpin} from "./AutoSpin"
+import {ResizeBox} from "./ResizeBox"
+import ReactResizeDetector from "react-resize-detector"
+import {Buffer} from "buffer"
+import {Uint8ArrayToString} from "@/utils/str"
+import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer"
+import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
 
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
-export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any;
+export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any
 
 export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     id: number
@@ -53,7 +51,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     search?: string
 }
 
-const {Text} = Typography;
+const {Text} = Typography
 
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
     response: FuzzerResponse
@@ -65,9 +63,9 @@ export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
 export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDetail) => {
     const [response, setResponse] = useState<FuzzerResponse>()
     const [index, setIndex] = useState<number>()
-    const [id, setId] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string>();
+    const [id, setId] = useState(0)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string>()
 
     useEffect(() => {
         setResponse(rsp.response)
@@ -79,14 +77,18 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
             return
         }
         setLoading(true)
-        ipcRenderer.invoke("ConvertFuzzerResponseToHTTPFlow", {...response}).then((d: HTTPFlow) => {
-            if (d.Id <= 0) {
-                return
-            }
-            setId(d.Id)
-        }).catch(e => {
-            failed(`分析参数失败: ${e}`)
-        }).finally(() => setTimeout(() => setLoading(false), 300))
+        ipcRenderer
+            .invoke("ConvertFuzzerResponseToHTTPFlow", {...response})
+            .then((d: HTTPFlow) => {
+                if (d.Id <= 0) {
+                    return
+                }
+                setId(d.Id)
+            })
+            .catch((e) => {
+                failed(`分析参数失败: ${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
     }, [response])
 
     const fetchInfo = (kind: number) => {
@@ -103,37 +105,40 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     }
 
     if (loading) {
-        return <Spin tip={"正在分析详细参数"}/>
+        return <Spin tip={"正在分析详细参数"} />
     }
 
-    return <HTTPFlowDetail
-        onClose={rsp.onClosed} id={id}
-        isFront={index === undefined ? undefined : index === 0}
-        isBehind={index === undefined ? undefined : index === (rsp?.data || []).length - 1}
-        fetchRequest={fetchInfo}
-    />
+    return (
+        <HTTPFlowDetail
+            onClose={rsp.onClosed}
+            id={id}
+            isFront={index === undefined ? undefined : index === 0}
+            isBehind={index === undefined ? undefined : index === (rsp?.data || []).length - 1}
+            fetchRequest={fetchInfo}
+        />
+    )
 }
 
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
-    const [flow, setFlow] = useState<HTTPFlow>();
-    const [loading, setLoading] = useState(false);
+    const [flow, setFlow] = useState<HTTPFlow>()
+    const [loading, setLoading] = useState(false)
 
     const actionFuzzer = [
         {
-            id: 'send-fuzzer-info',
-            label: '发送到Fuzzer',
-            contextMenuGroupId: 'send-fuzzer-info',
+            id: "send-fuzzer-info",
+            label: "发送到Fuzzer",
+            contextMenuGroupId: "send-fuzzer-info",
             run: () => {
                 ipcRenderer.invoke("send-to-tab", {
                     type: "fuzzer",
                     data: {
                         isHttps: flow?.IsHTTPS,
-                        request: Uint8ArrayToString(flow?.Request || new Uint8Array, "utf8")
+                        request: Uint8ArrayToString(flow?.Request || new Uint8Array(), "utf8")
                     }
                 })
                 if (props.onClose) props.onClose()
             }
-        },
+        }
         // {
         //     id: 'send-to-plugin',
         //     label: '发送到数据包扫描',
@@ -159,11 +164,15 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         // })
 
         setLoading(true)
-        ipcRenderer.invoke("GetHTTPFlowById", {Id: props.id}).then((data: HTTPFlow) => {
-            setFlow(data)
-        }).catch(e => {
-            failed(`GetHTTPFlowById[${props.id}] failed`)
-        }).finally(() => setTimeout(() => setLoading(false), 300))
+        ipcRenderer
+            .invoke("GetHTTPFlowById", {Id: props.id})
+            .then((data: HTTPFlow) => {
+                setFlow(data)
+            })
+            .catch((e) => {
+                failed(`GetHTTPFlowById[${props.id}] failed`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
         // ipcRenderer.invoke("get-http-flow", props.hash)
 
         return () => {
@@ -172,149 +181,252 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }, [props.id])
 
-    return <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
-        {flow ? <>
-            {props.noHeader ? undefined : <PageHeader
-                title={`请求详情`} subTitle={props.id}
-                extra={
-                    props.fetchRequest ?
-                        <Space>
-                            <Tooltip title={"上一个请求"}>
-                                <Button type="link" disabled={!!props.isFront}
-                                        icon={<LeftOutlined/>} onClick={() => {
-                                    props?.fetchRequest!(1)
-                                }}></Button>
-                            </Tooltip>
-                            <Tooltip title={"下一个请求"}>
-                                <Button type="link" disabled={!!props.isBehind}
-                                        icon={<RightOutlined/>} onClick={() => {
-                                    props?.fetchRequest!(2)
-                                }}></Button>
-                            </Tooltip>
-                        </Space>
-                        :
-                        <></>
-                }/>
-            }
-            <Space direction={"vertical"} style={{width: "100%"}}>
-                <Descriptions column={4} bordered={true} size={"small"}>
-                    <Descriptions.Item key={"method"} span={1} label={"HTTP 方法"}><Tag color={"geekblue"}><Text
-                        style={{maxWidth: 500}}>{flow.Method}</Text></Tag></Descriptions.Item>
-                    <Descriptions.Item key={"url"} span={3} label={"请求 URL"}>
-                        <Text style={{maxWidth: 500}} copyable={true}>{flow.Url}</Text>
-                    </Descriptions.Item>
-                    <Descriptions.Item key={"https"} span={1} label={"HTTPS"}><Tag color={"geekblue"}>
-                        <div
-                            style={{maxWidth: 500}}>{flow.IsHTTPS ? "True" : "False"}</div>
-                    </Tag></Descriptions.Item>
-                    <Descriptions.Item key={"status"} span={1} label={"StatusCode"}><Tag
-                        color={"geekblue"}>{flow.StatusCode}</Tag></Descriptions.Item>
-                    <Descriptions.Item key={"size"} span={1} label={"Body大小"}><Tag color={"geekblue"}>
-                        <div style={{maxWidth: 500}}>{flow.BodySizeVerbose}</div>
-                    </Tag></Descriptions.Item>
-                    <Descriptions.Item key={"type"} span={1} label={"Content-Type"}><Tag color={"geekblue"}>
-                        <div style={{maxWidth: 500}}>{flow.ContentType}</div>
-                    </Tag></Descriptions.Item>
-                </Descriptions>
-                <div style={{width: "100%", overflow: "auto"}}>
-                    {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? <Tabs>
-                        {flow.GetParams.length > 0 && <Tabs.TabPane key={"get"} tab={"GET 参数"}>
-                            <FuzzableParamList data={flow.GetParams} sendToWebFuzzer={() => {
-                                if (props.onClose) props.onClose()
-                            }}/>
-                        </Tabs.TabPane>}
-                        {flow.PostParams.length > 0 && <Tabs.TabPane key={"post"} tab={"POST 参数"}>
-                            <FuzzableParamList data={flow.PostParams} sendToWebFuzzer={() => {
-                                if (props.onClose) props.onClose()
-                            }}/>
-                        </Tabs.TabPane>}
-                        {flow.CookieParams.length > 0 && <Tabs.TabPane key={"cookie"} tab={"Cookie 参数"}>
-                            <FuzzableParamList data={flow.CookieParams} sendToWebFuzzer={() => {
-                                if (props.onClose) props.onClose()
-                            }}/>
-                        </Tabs.TabPane>}
-                    </Tabs> : ""}
-                </div>
+    return (
+        <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
+            {flow ? (
+                <>
+                    {props.noHeader ? undefined : (
+                        <PageHeader
+                            title={`请求详情`}
+                            subTitle={props.id}
+                            extra={
+                                props.fetchRequest ? (
+                                    <Space>
+                                        <Tooltip title={"上一个请求"}>
+                                            <Button
+                                                type='link'
+                                                disabled={!!props.isFront}
+                                                icon={<LeftOutlined />}
+                                                onClick={() => {
+                                                    props?.fetchRequest!(1)
+                                                }}
+                                            ></Button>
+                                        </Tooltip>
+                                        <Tooltip title={"下一个请求"}>
+                                            <Button
+                                                type='link'
+                                                disabled={!!props.isBehind}
+                                                icon={<RightOutlined />}
+                                                onClick={() => {
+                                                    props?.fetchRequest!(2)
+                                                }}
+                                            ></Button>
+                                        </Tooltip>
+                                    </Space>
+                                ) : (
+                                    <></>
+                                )
+                            }
+                        />
+                    )}
+                    <Space direction={"vertical"} style={{width: "100%"}}>
+                        <Descriptions column={4} bordered={true} size={"small"}>
+                            <Descriptions.Item key={"method"} span={1} label={"HTTP 方法"}>
+                                <Tag color={"geekblue"}>
+                                    <Text style={{maxWidth: 500}}>{flow.Method}</Text>
+                                </Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item key={"url"} span={3} label={"请求 URL"}>
+                                <Text style={{maxWidth: 500}} copyable={true}>
+                                    {flow.Url}
+                                </Text>
+                            </Descriptions.Item>
+                            <Descriptions.Item key={"https"} span={1} label={"HTTPS"}>
+                                <Tag color={"geekblue"}>
+                                    <div style={{maxWidth: 500}}>{flow.IsHTTPS ? "True" : "False"}</div>
+                                </Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item key={"status"} span={1} label={"StatusCode"}>
+                                <Tag color={"geekblue"}>{flow.StatusCode}</Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item key={"size"} span={1} label={"Body大小"}>
+                                <Tag color={"geekblue"}>
+                                    <div style={{maxWidth: 500}}>{flow.BodySizeVerbose}</div>
+                                </Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item key={"type"} span={1} label={"Content-Type"}>
+                                <Tag color={"geekblue"}>
+                                    <div style={{maxWidth: 500}}>{flow.ContentType}</div>
+                                </Tag>
+                            </Descriptions.Item>
+                        </Descriptions>
+                        <div style={{width: "100%", overflow: "auto"}}>
+                            {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? (
+                                <Tabs>
+                                    {flow.GetParams.length > 0 && (
+                                        <Tabs.TabPane key={"get"} tab={"GET 参数"}>
+                                            <FuzzableParamList
+                                                data={flow.GetParams}
+                                                sendToWebFuzzer={() => {
+                                                    if (props.onClose) props.onClose()
+                                                }}
+                                            />
+                                        </Tabs.TabPane>
+                                    )}
+                                    {flow.PostParams.length > 0 && (
+                                        <Tabs.TabPane key={"post"} tab={"POST 参数"}>
+                                            <FuzzableParamList
+                                                data={flow.PostParams}
+                                                sendToWebFuzzer={() => {
+                                                    if (props.onClose) props.onClose()
+                                                }}
+                                            />
+                                        </Tabs.TabPane>
+                                    )}
+                                    {flow.CookieParams.length > 0 && (
+                                        <Tabs.TabPane key={"cookie"} tab={"Cookie 参数"}>
+                                            <FuzzableParamList
+                                                data={flow.CookieParams}
+                                                sendToWebFuzzer={() => {
+                                                    if (props.onClose) props.onClose()
+                                                }}
+                                            />
+                                        </Tabs.TabPane>
+                                    )}
+                                </Tabs>
+                            ) : (
+                                ""
+                            )}
+                        </div>
 
-                <Row gutter={8}>
-                    <Col span={12}>
-                        <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
-                            <div style={{height: 350}}>
-                                <YakEditor readOnly={true} type={"http"}//theme={"fuzz-http-theme"}
-                                           value={new Buffer(flow.Request).toString("utf8")}
-                                           actions={[...actionFuzzer]}/>
-                            </div>
-                        </Card>
-                    </Col>
-                    <Col span={12}>
-                        <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
-                            <div style={{height: 350}}>
-                                <YakEditor readOnly={true} type={"http"}// theme={"fuzz-http-theme"}
-                                           value={new Buffer(flow.Response).toString("utf8")}
-                                />
-                            </div>
-                        </Card>
-                    </Col>
-                </Row>
+                        <Row gutter={8}>
+                            <Col span={12}>
+                                <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
+                                    <div style={{height: 350}}>
+                                        <YakEditor
+                                            readOnly={true}
+                                            type={"http"} //theme={"fuzz-http-theme"}
+                                            value={new Buffer(flow.Request).toString("utf8")}
+                                            actions={[...actionFuzzer]}
+                                        />
+                                    </div>
+                                </Card>
+                            </Col>
+                            <Col span={12}>
+                                <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
+                                    <div style={{height: 350}}>
+                                        <YakEditor
+                                            readOnly={true}
+                                            type={"http"} // theme={"fuzz-http-theme"}
+                                            value={new Buffer(flow.Response).toString("utf8")}
+                                        />
+                                    </div>
+                                </Card>
+                            </Col>
+                        </Row>
 
-                {/*<Collapse>*/}
-                {/*    <Collapse.Panel key={"request-raw"} header={"原始 HTTP 请求数据包内容"}>*/}
+                        {/*<Collapse>*/}
+                        {/*    <Collapse.Panel key={"request-raw"} header={"原始 HTTP 请求数据包内容"}>*/}
 
-                {/*    </Collapse.Panel>*/}
-                {/*    <Collapse.Panel key={"response-raw"} header={"原始 HTTP 响应数据包内容"}>*/}
+                        {/*    </Collapse.Panel>*/}
+                        {/*    <Collapse.Panel key={"response-raw"} header={"原始 HTTP 响应数据包内容"}>*/}
 
-                {/*    </Collapse.Panel>*/}
-                {/*</Collapse>*/}
-                <Row gutter={8}>
-                    <Col span={12}>
-                        <Collapse defaultActiveKey={"request"}>
-                            <Collapse.Panel key={"request"} header={"Request Headers"}>
-                                <Descriptions className={styles["http-flow-detail-descriptions"]} bordered={true} column={2} size={"small"}>
-                                    {(flow?.RequestHeader || []).sort((i, e) => {
-                                        return i.Header.localeCompare(e.Header)
-                                    }).map(i => {
-                                        return <Descriptions.Item key={i.Header} span={2} label={<Text style={{width: 240}}>
-                                            <Tag>{i.Header}</Tag>
-                                        </Text>}>
-                                            <Text
-                                                copyable={true}
-                                                style={{width: "100%", maxWidth: "100%"}}
-                                                ellipsis={{tooltip: true}}>{i.Value}</Text>
-                                        </Descriptions.Item>
-                                    })}
-                                </Descriptions>
-                            </Collapse.Panel>
-                        </Collapse>
-                    </Col>
-                    <Col span={12}>
-                        <Collapse defaultActiveKey={"response"}>
-                            <Collapse.Panel key={"response"} header={"Response Headers"}>
-                                <Descriptions className={styles["http-flow-detail-descriptions"]} bordered={true} column={2} size={"small"}>
-                                    {(flow?.ResponseHeader || []).sort((i, e) => {
-                                        return i.Header.localeCompare(e.Header)
-                                    }).map(i => {
-                                        return <Descriptions.Item key={i.Header} span={2} label={<Text style={{width: 240}}>
-                                            <Tag>{i.Header}</Tag>
-                                        </Text>}>
-                                            <Text
-                                                copyable={true}
-                                                style={{width:"100%", maxWidth: "100%"}}
-                                                ellipsis={{tooltip: true}}>{i.Value}</Text>
-                                        </Descriptions.Item>
-                                    })}
-                                </Descriptions>
-                            </Collapse.Panel>
-                        </Collapse>
-                    </Col>
-                </Row>
-            </Space>
-        </> : ""}
-    </Spin>
-};
+                        {/*    </Collapse.Panel>*/}
+                        {/*</Collapse>*/}
+                        <Row gutter={8}>
+                            <Col span={12}>
+                                <Collapse defaultActiveKey={"request"}>
+                                    <Collapse.Panel key={"request"} header={"Request Headers"}>
+                                        <Descriptions
+                                            className={styles["http-flow-detail-descriptions"]}
+                                            bordered={true}
+                                            column={2}
+                                            size={"small"}
+                                        >
+                                            {(flow?.RequestHeader || [])
+                                                .sort((i, e) => {
+                                                    return i.Header.localeCompare(e.Header)
+                                                })
+                                                .map((i) => {
+                                                    return (
+                                                        <Descriptions.Item
+                                                            key={i.Header}
+                                                            span={2}
+                                                            label={
+                                                                <Text style={{width: 240}}>
+                                                                    <Tooltip title={i.Header}>
+                                                                        <Tag
+                                                                            className='content-ellipsis'
+                                                                            style={{maxWidth: "100%"}}
+                                                                        >
+                                                                            {i.Header}
+                                                                        </Tag>
+                                                                    </Tooltip>
+                                                                </Text>
+                                                            }
+                                                        >
+                                                            <Text
+                                                                copyable={true}
+                                                                style={{width: "100%", maxWidth: "100%"}}
+                                                                ellipsis={{tooltip: true}}
+                                                            >
+                                                                {i.Value}
+                                                            </Text>
+                                                        </Descriptions.Item>
+                                                    )
+                                                })}
+                                        </Descriptions>
+                                    </Collapse.Panel>
+                                </Collapse>
+                            </Col>
+                            <Col span={12}>
+                                <Collapse defaultActiveKey={"response"}>
+                                    <Collapse.Panel key={"response"} header={"Response Headers"}>
+                                        <Descriptions
+                                            className={styles["http-flow-detail-descriptions"]}
+                                            bordered={true}
+                                            column={2}
+                                            size={"small"}
+                                        >
+                                            {(flow?.ResponseHeader || [])
+                                                .sort((i, e) => {
+                                                    return i.Header.localeCompare(e.Header)
+                                                })
+                                                .map((i) => {
+                                                    return (
+                                                        <Descriptions.Item
+                                                            key={i.Header}
+                                                            span={2}
+                                                            label={
+                                                                <Text style={{width: 240}}>
+                                                                    <Tooltip title={i.Header}>
+                                                                        <Tag
+                                                                            className='content-ellipsis'
+                                                                            style={{maxWidth: "100%"}}
+                                                                        >
+                                                                            {i.Header}
+                                                                        </Tag>
+                                                                    </Tooltip>
+                                                                </Text>
+                                                            }
+                                                        >
+                                                            <Text
+                                                                copyable={true}
+                                                                style={{width: "100%", maxWidth: "100%"}}
+                                                                ellipsis={{tooltip: true}}
+                                                            >
+                                                                {i.Value}
+                                                            </Text>
+                                                        </Descriptions.Item>
+                                                    )
+                                                })}
+                                        </Descriptions>
+                                    </Collapse.Panel>
+                                </Collapse>
+                            </Col>
+                        </Row>
+                    </Space>
+                </>
+            ) : (
+                ""
+            )}
+        </Spin>
+    )
+}
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const [flow, setFlow] = useState<HTTPFlow>();
-    const [loading, setLoading] = useState(false);
+    const [flow, setFlow] = useState<HTTPFlow>()
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         if (!props.id) {
@@ -324,13 +436,17 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
         setFlow(undefined)
         setLoading(true)
-        ipcRenderer.invoke("GetHTTPFlowById", {Id: props.id}).then((i: HTTPFlow) => {
-            setFlow(i)
-        }).catch((e: any) => {
-            failed(`Query HTTPFlow failed: ${e}`)
-        }).finally(() => {
-            setTimeout(() => setLoading(false), 300)
-        })
+        ipcRenderer
+            .invoke("GetHTTPFlowById", {Id: props.id})
+            .then((i: HTTPFlow) => {
+                setFlow(i)
+            })
+            .catch((e: any) => {
+                failed(`Query HTTPFlow failed: ${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
     }, [props.id])
 
     // if (!flow) {
@@ -342,47 +458,55 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     //         </AutoSpin>
     //     </>
     // }
-    const spinning = (!flow || loading);
+    const spinning = !flow || loading
 
-    return <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
-        <ResizeBox
-            firstNode={() => {
-                if (flow === undefined) {
-                    return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
-                }
-                if (flow?.IsWebsocket) {
-                    return <HTTPFlowForWebsocketViewer flow={flow}/>
-                }
-                return <HTTPPacketEditor
-                    originValue={(flow?.Request) || new Uint8Array} readOnly={true}
-                    sendToWebFuzzer={!!props.sendToWebFuzzer}
-                    defaultHeight={props.defaultHeight}
-                    loading={loading}
-                    defaultHttps={props.defaultHttps}
-                    hideSearch={true}
-                    noHex={true}
-                    defaultSearchKeyword={props.search}
-                />
-            }}
-            firstMinSize={300}
-            secondNode={() => {
-                if (flow === undefined) {
-                    return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
-                }
-                if (flow?.IsWebsocket) {
-                    return <WebsocketFrameHistory websocketHash={flow.WebsocketHash||""}/>
-                }
-                return <HTTPPacketEditor
-                    isResponse={true}
-                    noHex={true}
-                    loading={loading}
-                    originValue={(flow?.Response) || new Uint8Array}
-                    readOnly={true} defaultHeight={props.defaultHeight}
-                    hideSearch={true}
-                    defaultSearchKeyword={props.search}
-                />
-            }}
-            secondMinSize={300}
-        />
-    </AutoSpin>
+    return (
+        <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
+            <ResizeBox
+                firstNode={() => {
+                    if (flow === undefined) {
+                        return <Empty description={"选择想要查看的 HTTP 记录请求"} />
+                    }
+                    if (flow?.IsWebsocket) {
+                        return <HTTPFlowForWebsocketViewer flow={flow} />
+                    }
+                    return (
+                        <HTTPPacketEditor
+                            originValue={flow?.Request || new Uint8Array()}
+                            readOnly={true}
+                            sendToWebFuzzer={!!props.sendToWebFuzzer}
+                            defaultHeight={props.defaultHeight}
+                            loading={loading}
+                            defaultHttps={props.defaultHttps}
+                            hideSearch={true}
+                            noHex={true}
+                            defaultSearchKeyword={props.search}
+                        />
+                    )
+                }}
+                firstMinSize={300}
+                secondNode={() => {
+                    if (flow === undefined) {
+                        return <Empty description={"选择想要查看的 HTTP 记录响应"} />
+                    }
+                    if (flow?.IsWebsocket) {
+                        return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
+                    }
+                    return (
+                        <HTTPPacketEditor
+                            isResponse={true}
+                            noHex={true}
+                            loading={loading}
+                            originValue={flow?.Response || new Uint8Array()}
+                            readOnly={true}
+                            defaultHeight={props.defaultHeight}
+                            hideSearch={true}
+                            defaultSearchKeyword={props.search}
+                        />
+                    )
+                }}
+                secondMinSize={300}
+            />
+        </AutoSpin>
+    )
 }
