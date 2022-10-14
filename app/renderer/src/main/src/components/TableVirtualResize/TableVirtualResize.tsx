@@ -72,7 +72,8 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
         extra,
         loading,
         scrollToBottom,
-        currentRowData
+        currentRowData,
+        query
     } = props
     const [currentRow, setCurrentRow] = useState<T>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
@@ -383,9 +384,11 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
         if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, filters)
     })
 
-    const onSelectSearch = useMemoizedFn((valueSearch: string | string[], colKey: string) => {
-        console.log("valueSearch", {[colKey]: valueSearch})
+    useEffect(() => {
+        setFilters({...query})
+    }, [query])
 
+    const onSelectSearch = useMemoizedFn((valueSearch: string | string[], colKey: string) => {
         const newFilters = {
             ...filters,
             [colKey]: valueSearch
@@ -438,6 +441,7 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
             {sort.order === "desc" ? <SorterDownIcon /> : <SorterUpIcon />}
         </div>
     ))
+
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -535,7 +539,7 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                             style={{width: tableWidth || width}}
                         >
                             {columns.map((columnsItem, cIndex) => {
-                                const filterKey = columnsItem?.filterProps?.filterKey || filters[columnsItem.dataKey]
+                                const filterKey = columnsItem?.filterProps?.filterKey || columnsItem.dataKey
                                 const sorterKey = columnsItem?.sorterProps?.sorterKey || columnsItem.dataKey
                                 return (
                                     <div
@@ -583,7 +587,7 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                                         <div className={style["virtual-table-title-icon"]}>
                                             {columnsItem.sorterProps?.sorter && (
                                                 <>
-                                                    {sort.order === "none" ? (
+                                                    {!sort.orderBy ? (
                                                         <Popconfirm
                                                             title='选择排序后,不会自动刷新最新数据,需自动刷新数据'
                                                             onConfirm={() =>

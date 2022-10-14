@@ -781,14 +781,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         if (sort.order === "none") {
             sort.order = "desc"
         }
-        if (filter.StatusCode) {
-            filter.StatusCode = filter.StatusCode.join(",")
-        }
         setParams({
             ...params,
             ...filter
         })
-        console.log("sort", sort)
 
         sortRef.current = sort
         setTimeout(() => {
@@ -814,6 +810,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             //     SourceType: sourceType, ...params,
             //     Pagination: {...paginationProps},
             // })
+
             console.log("paginationProps", {
                 SourceType: sourceType,
                 ...params,
@@ -1412,7 +1409,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     //     "data",
     //     data.map((ele) => ele.Id)
     // )
-    console.log("tableRef", tableRef)
 
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
@@ -1549,6 +1545,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}
                     title='HTTP History'
+                    query={params}
                     extra={
                         <div className={style["http-history-table-extra"]}>
                             {shieldData?.data.length > 0 && (
@@ -1608,8 +1605,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         删除
                                     </Button>
                                 </div>
-                                <div onClick={() => update(1)}>
-                                    <RefreshIcon style={{color: "#85899E"}} />
+                                <div
+                                    onClick={() => {
+                                        setParams(props.params || {SourceType: "mitm"})
+                                        setTimeout(() => {
+                                            update(1)
+                                        }, 100)
+                                    }}
+                                >
+                                    <RefreshIcon style={{color: "#85899E", cursor: "pointer"}} />
                                 </div>
                             </div>
                         </div>

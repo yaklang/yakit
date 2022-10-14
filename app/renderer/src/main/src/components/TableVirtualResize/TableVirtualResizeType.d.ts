@@ -4,7 +4,7 @@ import {SelectProps} from "antd"
 
 // 包裹虚拟表格的父元素需要设置高度
 export interface TableVirtualResizeProps<T> {
-    ref?:any
+    ref?: any
     title?: string | ReactNode
     extra?: ReactNode
     data: T[] //可以传cellClassName用来控制单元格样式，不要传height
@@ -22,6 +22,7 @@ export interface TableVirtualResizeProps<T> {
     onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void // 查询条件变化
     loading?: boolean
     scrollToBottom?: number // 默认300
+    query?: any
 }
 
 export interface SortProps {
