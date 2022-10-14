@@ -1,12 +1,16 @@
 import {ReactNode} from "react"
+import {SearchProps} from "antd/lib/input"
+import {SelectProps} from "antd"
 
 // 包裹虚拟表格的父元素需要设置高度
 export interface TableVirtualResizeProps<T> {
+    ref?:any
     title?: string | ReactNode
     extra?: ReactNode
     data: T[] //可以传cellClassName用来控制单元格样式，不要传height
     renderKey: string
     renderRow?: (data: T, i: number) => ReactNode
+    currentRowData?: T
     columns: ColumnsTypeProps[]
     rowSelection?: RowSelectionProps<T>
     colWidth?: number
@@ -15,7 +19,7 @@ export interface TableVirtualResizeProps<T> {
     onRowContextMenu?: (record: T, e: React.MouseEvent) => void
     colWidth?: number
     pagination?: PaginationProps
-    onChange?: (page?: number, limit?: number, filters?: SortProps, sorter?: any, extra?: any) => void // 查询条件变化
+    onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void // 查询条件变化
     loading?: boolean
     scrollToBottom?: number // 默认300
 }
@@ -37,8 +41,38 @@ export interface ColumnsTypeProps {
     left?: number // 外面不需要传，不接收，紧作为固定列使用
     right?: number // 外面不需要传，不接收，紧作为固定列使用
     render?: (text, record, index) => ReactNode
+    // 搜索/筛选
+    filterProps?: FilterProps
+    sorterProps?: SorterProps
+}
+
+interface FilterSearchInputProps extends SearchProps {
+    isShowIcon?: boolean
+}
+
+interface FilterSearchMultipleProps extends SelectProps {}
+
+export interface SorterProps {
+    sorterKey?: string
     sorter?: string | boolean // boolean是否开启排序，string自定义
     order?: string // none 无状态； asc 升序  desc 降序
+}
+export interface FilterProps {
+    filterKey?: string
+    filtersType?: "select" | "input"
+    filtersSelectAll?: FiltersSelectAllProps //是否显示所有
+    filters?: FiltersItemProps[] // 	表头的筛选菜单项c
+    filterSearch?: boolean // 筛选菜单项是否可搜索
+    filterSearchInputProps?: FilterSearchInputProps // input的props属性
+    filterMultipleProps?: FilterSearchMultipleProps // input的props属性
+    filterMultiple?: boolean // 是否多选 filtersType 为select才有效
+    onFilter?: () => void // 本地模式下，确定筛选的运行函数
+    filterIcon?: ReactNode // 自定义 filter 图标
+}
+export interface FiltersSelectAllProps {
+    isAll: boolean
+    textAll?: string
+    valueAll?: string
 }
 
 export interface RowSelectionProps<T> {
@@ -62,8 +96,21 @@ export interface ShowFixedShadowProps {
     isShowRightFixedShadow: boolean
 }
 
-export interface scrollProps{
-    scrollLeft:number
-    scrollRight:number
-    scrollBottom:number
+export interface scrollProps {
+    scrollLeft: number
+    scrollRight: number
+    scrollBottom: number
+}
+
+export interface FiltersItemProps {
+    value: string
+    label: string
+}
+
+export interface SelectSearchProps {
+    loading?: boolean
+    originalList: FiltersItemProps[]
+    onSelect: (f: string | string[], record: FiltersItemProps | FiltersItemProps[]) => void
+    value: string | string[]
+    filterProps?: FilterProps
 }

@@ -130,14 +130,34 @@
                     box-shadow: 4px 0px 8px rgba(133, 137, 158, 0.12);
                 }
 
-                .virtual-table-sorter {
+                .virtual-table-title-icon {
+                    margin-left: 4px;
                     display: flex;
-                    color: #B4BBCA;
+                    align-items: center;
+                    justify-content: flex-end;
+
+                    .virtual-table-sorter {
+                        display: flex;
+                        color: #B4BBCA;
+
+                    }
+
+                    .virtual-table-sorter-active {
+                        color: #1890ff;
+                    }
+
+                    .virtual-table-filter {
+                        color: #B4BBCA;
+                        display: flex;
+                        align-items: center;
+                    }
+
+                    .virtual-table-filter-value {
+                        color: #1890ff;
+                    }
                 }
 
-                .virtual-table-sorter-active {
-                    color: #1890ff;
-                }
+
             }
 
             .virtual-table-title-fixed-left {
@@ -430,4 +450,132 @@
             flex: 1;
         }
     }
+}
+
+.search-popover {
+
+    min-width: 88px;
+
+    :global {
+        .ant-popover-inner-content {
+            padding: 8px 0px;
+        }
+
+        .ant-popover-inner {
+            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border-radius: 4px;
+            border: 1px solid #F0F2F5;
+        }
+
+        .ant-popover-arrow {
+            top: 2.514719px;
+        }
+
+        .ant-select {
+            margin: 0 6px;
+        }
+
+        .ant-select-selector {
+            border-radius: 4px !important;
+        }
+
+        .ant-checkbox-inner {
+            border-radius: 4px;
+        }
+
+        .ant-checkbox-checked::after {
+            border-radius: 4px;
+        }
+
+        .ant-checkbox-wrapper {
+            height: 16px;
+        }
+    }
+
+    .select-search {
+        max-height: 60vh;
+        overflow-y: auto;
+
+        .select-item {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            padding: 6px 12px;
+            cursor: pointer;
+
+            &:active {
+                background: #F9FBFF;
+                color: #1890ff;
+            }
+
+            .select-item-text {
+                margin-left: 8px;
+            }
+        }
+
+        .select-item-active {
+            background: #F9FBFF;
+            color: #1890ff;
+        }
+
+        .select-search-single {
+
+            .select-search-input {
+                padding: 0 6px;
+                position: sticky;
+                top: 0;
+                background-color: #fff;
+
+                :global {
+                    .ant-input {
+                        border-radius: 4px;
+                    }
+
+                    .ant-input-group-addon {
+                        display: none;
+                        border-radius: 4px;
+                    }
+                }
+            }
+
+            .select-search-input-icon {
+                :global {
+                    .ant-input {
+                        border-top-right-radius: 0;
+                        border-bottom-right-radius: 0;
+                    }
+
+                    .ant-input-group-addon {
+                        display: table-cell;
+                        top: -0.5px;
+                    }
+                }
+            }
+        }
+
+        .select-search-multiple {
+            .select-heard {
+                :global {
+                    .ant-select-selection-overflow {
+                        flex-wrap: nowrap;
+                        overflow-x: overlay;
+                    }
+
+                    ::-webkit-scrollbar {
+                        height: 0;
+                        width: 0;
+                        color: transparent;
+                    }
+                }
+            }
+
+        }
+    }
+
+    @media screen and (max-height:600px) {
+        .select-search {
+            max-height: 180px;
+        }
+    }
+
 }

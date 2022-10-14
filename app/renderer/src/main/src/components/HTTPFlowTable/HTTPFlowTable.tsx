@@ -628,7 +628,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         data: []
     })
 
-    const tableRef = useRef(null)
+    const tableRef = useRef<any>(null)
 
     const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
@@ -772,8 +772,28 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [shieldData])
 
-    const onTableChange = useMemoizedFn((page?: number, limit?: number, filters?: SortProps) => {
-        update(page, limit, filters && filters.order, filters && filters.orderBy)
+    const sortRef = useRef<SortProps>({
+        order: "desc",
+        orderBy: "id"
+    })
+
+    const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
+        if (sort.order === "none") {
+            sort.order = "desc"
+        }
+        if (filter.StatusCode) {
+            filter.StatusCode = filter.StatusCode.join(",")
+        }
+        setParams({
+            ...params,
+            ...filter
+        })
+        console.log("sort", sort)
+
+        sortRef.current = sort
+        setTimeout(() => {
+            update(page, limit, sort.order, sort.orderBy)
+        }, 100)
     })
 
     const update = useMemoizedFn(
@@ -781,8 +801,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             const paginationProps = {
                 Page: page || 1,
                 Limit: limit || pagination.Limit,
-                Order: order || "desc",
-                OrderBy: orderBy || "id"
+                // Order: order || "desc",
+                // OrderBy: orderBy || "id"
+                Order: sortRef.current.order,
+                OrderBy: sortRef.current.orderBy
             }
             if (!noLoading) {
                 setLoading(true)
@@ -792,7 +814,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             //     SourceType: sourceType, ...params,
             //     Pagination: {...paginationProps},
             // })
-            // console.log("paginationProps", paginationProps)
+            console.log("paginationProps", {
+                SourceType: sourceType,
+                ...params,
+                Pagination: {...paginationProps}
+            })
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: sourceType,
@@ -818,7 +844,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             return newItem
                         })
                     }
-                    setData(paginationProps.Page === 1 ? newData : data.concat(newData))
+                    // console.log(
+                    //     "rsp?.Data",
+                    //     rsp?.Data.map((ele) => ele.Id)
+                    // )
+
+                    setData(paginationProps.Page == 1 ? newData : data.concat(newData))
                     setPagination(rsp.Pagination)
                     setTotal(rsp.Total)
                 })
@@ -867,13 +898,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             update()
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
-    const scrollTableTo = useMemoizedFn((size: number) => {
+    const scrollTableTo = useMemoizedFn((index: number) => {
         if (!tableRef || !tableRef.current) return
-        const table = tableRef.current as unknown as {
-            scrollTop: (number) => any
-            scrollLeft: (number) => any
-        }
-        table.scrollTop(size)
+        // const table = tableRef.current as unknown as {
+        //     scrollTop: (number) => any
+        //     scrollLeft: (number) => any
+        // }
+        // table.scrollTop(size)
+        tableRef.current.scrollTo(index)
     })
 
     const scrollUpdateTop = useDebounceFn(
@@ -881,10 +913,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             const paginationProps = {
                 Page: 1,
                 Limit: OFFSET_STEP,
-                Order: "desc",
-                OrderBy: "id"
+                // Order: "asc",
+                // OrderBy: "id"
+                Order: sortRef.current.order,
+                OrderBy: sortRef.current.orderBy
             }
-            const offsetId = getNewestId()
+            let offsetId = getNewestId()
+            // console.log("offsetId", offsetId)
+
             // 查询数据
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
@@ -905,7 +941,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         offsetData = offsetData.splice(0, MAX_ROW_COUNT)
                     }
                     setData(offsetData)
-                    scrollTableTo((offsetDeltaData.length + 1) * ROW_HEIGHT)
+                    // scrollTableTo(0)
                 })
                 .catch((e: any) => {
                     failed(`query HTTP Flow failed: ${e}`)
@@ -954,14 +990,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     setTimeout(() => {
                         if (!metMax) {
                             // 没有丢结果的裁剪问题
-                            scrollTableTo((originDataLength + 1) * ROW_HEIGHT - tableClientHeight)
+                            // scrollTableTo((originDataLength + 1) * ROW_HEIGHT - tableClientHeight)
                         } else {
                             // 丢了结果之后的裁剪计算
                             const a = originOffsetLength - offsetDeltaData.length
-                            scrollTableTo(
-                                (originDataLength + 1 + MAX_ROW_COUNT - originOffsetLength) * ROW_HEIGHT -
-                                    tableClientHeight
-                            )
+                            // scrollTableTo(
+                            //     (originDataLength + 1 + MAX_ROW_COUNT - originOffsetLength) * ROW_HEIGHT -
+                            //         tableClientHeight
+                            // )
                         }
                     }, 50)
                 })
@@ -1025,7 +1061,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             const maxHeightBottom = minHeight + tableContentHeight + 3 * ROW_HEIGHT
             if (maxHeight < viewHeightMin) {
                 // 往下滚动
-                scrollTableTo(minHeight)
+                // scrollTableTo(minHeight)
                 return
             }
             if (maxHeightBottom > viewHeightMax) {
@@ -1033,7 +1069,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 const offset = minHeight - (screenRowCount - 2) * ROW_HEIGHT
                 // console.info(screenRowCount, minHeight, minHeight - (screenRowCount - 1) * ROW_HEIGHT)
                 if (offset > 0) {
-                    scrollTableTo(offset)
+                    // scrollTableTo(offset)
                 }
                 return
             }
@@ -1056,9 +1092,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             return
         }
         if (autoUpdateTop) {
-            scrollUpdateTop()
-            let id = setInterval(scrollUpdateTop, 1000)
-            return () => clearInterval(id)
+            // scrollUpdateTop()
+            // let id = setInterval(scrollUpdateTop, 1000)
+            // return () => clearInterval(id)
         }
     }, [autoUpdateTop, autoReload])
 
@@ -1078,7 +1114,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     useEffect(() => {
         if (props.inViewport) {
-            scrollTableTo(getScrollY())
+            // scrollTableTo(getScrollY())
         }
     }, [props.inViewport])
 
@@ -1178,16 +1214,78 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 dataKey: "Id",
                 fixed: "left",
                 ellipsis: false,
-                sorter: true
+                sorterProps: {
+                    sorter: true
+                }
             },
             {
                 title: "方法",
-                dataKey: "Method"
+                dataKey: "Method",
+                filterProps: {
+                    filtersType: "select",
+                    filtersSelectAll: {
+                        isAll: true
+                    },
+                    filters: [
+                        {
+                            label: "GET",
+                            value: "GET"
+                        },
+                        {
+                            label: "POST",
+                            value: "POST"
+                        },
+                        {
+                            label: "HEAD",
+                            value: "HEAD"
+                        }
+                    ]
+                }
             },
             {
                 title: "状态码",
                 dataKey: "StatusCode",
-                sorter: true,
+                sorterProps: {
+                    sorterKey: "status_code",
+                    sorter: true
+                },
+                filterProps: {
+                    filtersType: "select",
+                    filterMultiple: true,
+                    filterSearchInputProps: {
+                        size: "small"
+                    },
+                    filters: [
+                        {
+                            label: "200",
+                            value: "200"
+                        },
+                        {
+                            label: "204",
+                            value: "204"
+                        },
+                        {
+                            label: "401",
+                            value: "401"
+                        },
+                        {
+                            label: "404",
+                            value: "404"
+                        },
+                        {
+                            label: "502",
+                            value: "502"
+                        },
+                        {
+                            label: "302",
+                            value: "302"
+                        },
+                        {
+                            label: "500",
+                            value: "500"
+                        }
+                    ]
+                },
                 render: (text) => <div className={style["status-code"]}>{text}</div>
             },
             {
@@ -1221,7 +1319,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 title: "响应长度",
                 dataKey: "BodyLength",
                 width: 200,
-                sorter: true,
+                sorterProps: {
+                    sorterKey: "body_length",
+                    sorter: true
+                },
                 render: (_, rowData) => {
                     return (
                         <>
@@ -1242,6 +1343,23 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             {
                 title: "参数",
                 dataKey: "GetParamsTotal",
+                filterProps: {
+                    filterKey: "HaveCommonParams",
+                    filtersType: "select",
+                    filtersSelectAll: {
+                        isAll: true
+                    },
+                    filters: [
+                        {
+                            label: "有",
+                            value: "true"
+                        },
+                        {
+                            label: "无",
+                            value: "false"
+                        }
+                    ]
+                },
                 render: (text) => (
                     <div>{text > 0 ? <CheckCircleIcon className={style["check-circle-icon"]} /> : ""}</div>
                 )
@@ -1253,12 +1371,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             {
                 title: "请求时间",
                 dataKey: "UpdatedAt",
-                sorter: true
+                sorterProps: {
+                    sorterKey: "updated_at",
+                    sorter: true
+                },
+                render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
             },
             {
                 title: "请求大小",
                 dataKey: "RequestSizeVerbose",
-                sorter: true
+                sorterProps: {
+                    sorter: true
+                }
             },
             {
                 title: "操作",
@@ -1284,6 +1408,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             }
         ]
     }, [])
+    // console.log(
+    //     "data",
+    //     data.map((ele) => ele.Id)
+    // )
+    console.log("tableRef", tableRef)
+
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div
@@ -1415,7 +1545,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                  </div>          
             </div>
             <div className={style["table-virtual-resize"]}>
+                {/* @ts-ignore */}
                 <TableVirtualResize<HTTPFlow>
+                    ref={tableRef}
                     title='HTTP History'
                     extra={
                         <div className={style["http-history-table-extra"]}>
@@ -1445,7 +1577,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     overlayClassName={style["shield-popover"]}
                                 >
                                     <div className={style["extra-left-shield"]}>
-                                        <span>已屏蔽条件</span><span className={style["extra-left-number"]}>{shieldData?.data.length}</span>
+                                        <span>已屏蔽条件</span>
+                                        <span className={style["extra-left-number"]}>{shieldData?.data.length}</span>
                                         <StatusOfflineIcon className={style["extra-left-shield-icon"]} />
                                     </div>
                                 </Popover>
@@ -1459,7 +1592,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 <div className={style["extra-right-filter-small"]}>
                                     <Button size='small' icon={<FilterIcon />}></Button>
                                 </div>
-                                <TableFilter />
+                                <TableFilter style={{color: "#85899E"}} />
                                 <Input
                                     size='small'
                                     className={style["extra-right-search"]}
@@ -1475,7 +1608,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         删除
                                     </Button>
                                 </div>
-                                <RefreshIcon />
+                                <div onClick={() => update(1)}>
+                                    <RefreshIcon style={{color: "#85899E"}} />
+                                </div>
                             </div>
                         </div>
                     }
@@ -1493,8 +1628,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     loading={loading}
                     enableDrag={true}
                     columns={columns}
+                    currentRowData={getSelected()}
                     onRowClick={onRowClick}
-                    onRowContextMenu={(rowData: HTTPFlow | any, event: React.MouseEvent) => {
+                    onRowContextMenu={(rowData: HTTPFlow, event: React.MouseEvent) => {
                         if (rowData) {
                             setSelected(rowData)
                         }

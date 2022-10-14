@@ -1,4 +1,4 @@
-import React, {ReactNode, Suspense, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactNode, Suspense, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     useCreation,
     useDebounceEffect,
@@ -13,20 +13,24 @@ import {
 import classNames from "classnames"
 import {
     ColumnsTypeProps,
+    FiltersItemProps,
     scrollProps,
+    SelectSearchProps,
     ShowFixedShadowProps,
     SortProps,
     TableVirtualResizeProps
 } from "./TableVirtualResizeType"
 import ReactResizeDetector from "react-resize-detector"
 import style from "./TableVirtualResize.module.scss"
-import {Button, Checkbox, Divider, Radio, RadioChangeEvent, Spin} from "antd"
+import {Button, Checkbox, Divider, Input, Popconfirm, Popover, Radio, RadioChangeEvent, Select, Spin} from "antd"
 import {c} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 import {LoadingOutlined} from "@ant-design/icons"
 import {isEqual} from "@/utils/objUtils"
 import "../style.css"
-import {SorterDownIcon, SorterUpIcon, StatusOfflineIcon} from "@/assets/newIcon"
+import {FilterIcon, SorterDownIcon, SorterUpIcon, StatusOfflineIcon} from "@/assets/newIcon"
+import {RollingLoadList} from "../RollingLoadList/RollingLoadList"
 
+const {Search} = Input
 interface tablePosition {
     bottom?: number
     height?: number
@@ -38,9 +42,39 @@ interface tablePosition {
     y?: number
 }
 
-export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps<T>) => {
-    const {data, renderRow, rowSelection, renderKey, enableDrag, pagination, title, extra, loading, scrollToBottom} =
-        props
+interface ChildRef {
+    tableRef: any
+}
+
+// export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps<T>) => {
+//     return React.forwardRef<ChildRef, TableVirtualResizeProps<T>>((props, ref) => {
+//         return <Table<T> {...props} />
+//     })
+// }
+
+export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableVirtualResizeProps<T>, ref) => {
+    const defPagination = useCreation(
+        () => ({
+            page: 1,
+            limit: 20,
+            total: 0,
+            onChange: () => {}
+        }),
+        []
+    )
+    const {
+        data,
+        rowSelection,
+        renderKey,
+        enableDrag,
+        pagination = defPagination,
+        title,
+        extra,
+        loading,
+        scrollToBottom,
+        currentRowData
+    } = props
+    const [currentRow, setCurrentRow] = useState<T>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [columns, setColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
@@ -76,14 +110,24 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         left: 0,
         top: 0
     }) // 表格距离左边的距离
-    const [list] = useVirtualList(data, {
+    const [list, scrollTo] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight: (index: number, data: T) => {
-            return 28
-        },
+        itemHeight: 28,
         overscan: 5
     })
+
+    useImperativeHandle(ref, () => ({
+        ...(wrapperRef.current || {}),
+        scrollTo
+    }))
+    // console.log("list", list)
+
+    useEffect(() => {
+        if (pagination.page == 1) {
+            scrollTo(0)
+        }
+    }, [pagination])
 
     useEffect(() => {
         getColumnsMinWidthList()
@@ -300,18 +344,28 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
         },
         {wait: 200}
     ).run
-    const [currentRow, setCurrentRow] = useState<T>()
+
+    useEffect(() => {
+        if (currentRowData) {
+            setCurrentRow(currentRowData)
+        }
+    }, [currentRowData])
     const onRowClick = useMemoizedFn((record: T) => {
-        setCurrentRow(record)
+        if (!currentRowData) {
+            setCurrentRow(record)
+        }
         if (props.onRowClick) props.onRowClick(record)
     })
 
     const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent) => {
-        setCurrentRow(record)
+        if (!currentRowData) {
+            setCurrentRow(record)
+        }
         onChangeCheckboxSingle(true, record[renderKey], record)
         if (props.onRowContextMenu) props.onRowContextMenu(record, e)
     })
-
+    const [filters, setFilters] = useState<any>({})
+    const [opensPopover, setOpensPopover] = useState<any>({})
     const onSorter = useMemoizedFn((s: SortProps) => {
         let newOrder: "none" | "asc" | "desc" = s.order
         if (sort.orderBy !== s.orderBy) {
@@ -324,10 +378,66 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
             newOrder = "asc"
         }
         sort.order = newOrder
-        sort.orderBy = s.orderBy
+        sort.orderBy = newOrder === "none" ? "" : s.orderBy
         setSort({...sort})
-        if (props.onChange) props.onChange(pagination?.page, pagination?.limit, sort)
+        if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, filters)
     })
+
+    const onSelectSearch = useMemoizedFn((valueSearch: string | string[], colKey: string) => {
+        console.log("valueSearch", {[colKey]: valueSearch})
+
+        const newFilters = {
+            ...filters,
+            [colKey]: valueSearch
+        }
+        setFilters({...newFilters})
+        if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, newFilters)
+    })
+
+    const renderFilterPopover = (
+        columnsItem: ColumnsTypeProps,
+        filterKey: string,
+        filtersType?: "select" | "input"
+    ) => {
+        switch (filtersType) {
+            case "select":
+                return renderSelect(columnsItem, filterKey)
+            default:
+                break
+        }
+    }
+
+    // 选择搜索
+    const renderSelect = (columnsItem: ColumnsTypeProps, filterKey: string) => {
+        return (
+            <div
+                onMouseLeave={(e) => {
+                    setOpensPopover({
+                        ...opensPopover,
+                        [columnsItem.dataKey]: false
+                    })
+                }}
+            >
+                <SelectSearch
+                    filterProps={columnsItem?.filterProps}
+                    originalList={columnsItem?.filterProps?.filters || []}
+                    onSelect={(v) => onSelectSearch(v, filterKey)}
+                    value={filters[filterKey]}
+                />
+            </div>
+        )
+    }
+
+    const renderSort = useMemoizedFn((sorterKey: string) => (
+        <div
+            className={classNames(style["virtual-table-sorter"], {
+                [style["virtual-table-sorter-active"]]:
+                    sort.orderBy === sorterKey && (sort.order === "desc" || sort.order === "asc")
+            })}
+        >
+            {sort.order === "desc" ? <SorterDownIcon /> : <SorterUpIcon />}
+        </div>
+    ))
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -424,77 +534,131 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                             className={classNames(style["virtual-table-col"])}
                             style={{width: tableWidth || width}}
                         >
-                            {columns.map((columnsItem, cIndex) => (
-                                <div
-                                    key={`${columnsItem.dataKey}-title`}
-                                    className={classNames(style["virtual-table-title"], {
-                                        [style["virtual-table-row-left"]]: columnsItem.align === "left",
-                                        [style["virtual-table-row-center"]]: columnsItem.align === "center",
-                                        [style["virtual-table-row-right"]]: columnsItem.align === "right",
-                                        [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left",
-                                        [style["virtual-table-title-fixed-left-border"]]:
-                                            columnsItem.fixed === "left" && scroll.scrollLeft > 0,
-                                        [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right"
-                                    })}
-                                    style={{
-                                        width: columnsItem.width || colWidth,
-                                        minWidth: columnsItem.minWidth || columnsMinWidthList.current[cIndex],
-                                        ...(columnsItem.fixed === "left" &&
-                                            scroll.scrollLeft > 0 && {
-                                                left: columnsItem.left
-                                            }),
-                                        ...(columnsItem.fixed === "right" && {
-                                            right: columnsItem.right
-                                        })
-                                    }}
-                                >
-                                    {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                                    <div className='virtual-col-title'>
-                                        {cIndex === 0 && rowSelection && (
-                                            <span className={style["check"]}>
-                                                {rowSelection.type !== "radio" && (
-                                                    <Checkbox
-                                                        onChange={(e) => {
-                                                            onChangeCheckbox(e.target.checked)
-                                                        }}
-                                                        checked={
-                                                            data.length > 0 &&
-                                                            rowSelection?.selectedRowKeys?.length === data.length
-                                                        }
-                                                    />
-                                                )}
-                                            </span>
-                                        )}
-                                        <span>{columnsItem.title}</span>
-                                    </div>
-                                    {columnsItem.sorter && (
-                                        <>
+                            {columns.map((columnsItem, cIndex) => {
+                                const filterKey = columnsItem?.filterProps?.filterKey || filters[columnsItem.dataKey]
+                                const sorterKey = columnsItem?.sorterProps?.sorterKey || columnsItem.dataKey
+                                return (
+                                    <div
+                                        key={`${columnsItem.dataKey}-title`}
+                                        className={classNames(style["virtual-table-title"], {
+                                            [style["virtual-table-row-left"]]: columnsItem.align === "left",
+                                            [style["virtual-table-row-center"]]: columnsItem.align === "center",
+                                            [style["virtual-table-row-right"]]: columnsItem.align === "right",
+                                            [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left",
+                                            [style["virtual-table-title-fixed-left-border"]]:
+                                                columnsItem.fixed === "left" && scroll.scrollLeft > 0,
+                                            [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right"
+                                        })}
+                                        style={{
+                                            width: columnsItem.width || colWidth,
+                                            minWidth: columnsItem.minWidth || columnsMinWidthList.current[cIndex],
+                                            ...(columnsItem.fixed === "left" &&
+                                                scroll.scrollLeft > 0 && {
+                                                    left: columnsItem.left
+                                                }),
+                                            ...(columnsItem.fixed === "right" && {
+                                                right: columnsItem.right
+                                            })
+                                        }}
+                                    >
+                                        {/* 这个不要用 module ，用来拖拽最小宽度*/}
+                                        <div className='virtual-col-title'>
+                                            {cIndex === 0 && rowSelection && (
+                                                <span className={style["check"]}>
+                                                    {rowSelection.type !== "radio" && (
+                                                        <Checkbox
+                                                            onChange={(e) => {
+                                                                onChangeCheckbox(e.target.checked)
+                                                            }}
+                                                            checked={
+                                                                data.length > 0 &&
+                                                                rowSelection?.selectedRowKeys?.length === data.length
+                                                            }
+                                                        />
+                                                    )}
+                                                </span>
+                                            )}
+                                            <span>{columnsItem.title}</span>
+                                        </div>
+                                        <div className={style["virtual-table-title-icon"]}>
+                                            {columnsItem.sorterProps?.sorter && (
+                                                <>
+                                                    {sort.order === "none" ? (
+                                                        <Popconfirm
+                                                            title='选择排序后,不会自动刷新最新数据,需自动刷新数据'
+                                                            onConfirm={() =>
+                                                                onSorter({
+                                                                    orderBy: sorterKey,
+                                                                    order: sort.order
+                                                                })
+                                                            }
+                                                            okText='Yes'
+                                                            cancelText='No'
+                                                        >
+                                                            {renderSort(sorterKey)}
+                                                        </Popconfirm>
+                                                    ) : (
+                                                        <div
+                                                            onClick={() =>
+                                                                onSorter({
+                                                                    orderBy: sorterKey,
+                                                                    order: sort.order
+                                                                })
+                                                            }
+                                                        >
+                                                            {renderSort(sorterKey)}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                            {columnsItem?.filterProps && (
+                                                <>
+                                                    <Popover
+                                                        placement='bottom'
+                                                        trigger='click'
+                                                        content={renderFilterPopover(
+                                                            columnsItem,
+                                                            filterKey,
+                                                            columnsItem?.filterProps?.filtersType
+                                                        )}
+                                                        overlayClassName={style["search-popover"]}
+                                                        visible={opensPopover[columnsItem.dataKey]}
+                                                    >
+                                                        <div
+                                                            className={classNames(style["virtual-table-filter"], {
+                                                                [style["virtual-table-filter-value"]]: columnsItem
+                                                                    .filterProps.filterMultiple
+                                                                    ? filters[filterKey] &&
+                                                                      filters[filterKey].length > 0
+                                                                    : filters[filterKey] &&
+                                                                      filters[filterKey] !==
+                                                                          (columnsItem.filterProps.filtersSelectAll
+                                                                              ?.textAll || "all")
+                                                            })}
+                                                            onClick={() => {
+                                                                setOpensPopover({
+                                                                    ...opensPopover,
+                                                                    [columnsItem.dataKey]:
+                                                                        !opensPopover[columnsItem.dataKey]
+                                                                })
+                                                            }}
+                                                        >
+                                                            <FilterIcon />
+                                                        </div>
+                                                    </Popover>
+                                                </>
+                                            )}
+                                        </div>
+                                        {enableDrag && cIndex < columns.length - 1 && (
                                             <div
-                                                className={classNames(style["virtual-table-sorter"], {
-                                                    [style["virtual-table-sorter-active"]]:
-                                                        sort.orderBy === columnsItem.dataKey &&
-                                                        (sort.order === "desc" || sort.order === "asc")
-                                                })}
-                                                onClick={() =>
-                                                    onSorter({
-                                                        orderBy: columnsItem.dataKey,
-                                                        order: sort.order
-                                                    })
-                                                }
-                                            >
-                                                {sort.order === "desc" ? <SorterDownIcon /> : <SorterUpIcon />}
-                                            </div>
-                                        </>
-                                    )}
-                                    {enableDrag && cIndex < columns.length - 1 && (
-                                        <div
-                                            className={classNames(style["virtual-table-title-drag"])}
-                                            style={{height}}
-                                            onMouseDown={(e) => onMouseDown(e, cIndex)}
-                                        />
-                                    )}
-                                </div>
-                            ))}
+                                                className={classNames(style["virtual-table-title-drag"])}
+                                                style={{height}}
+                                                onMouseDown={(e) => onMouseDown(e, cIndex)}
+                                            />
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </div>
                         <div
                             ref={wrapperRef}
@@ -617,6 +781,174 @@ export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps
                     </div>
                 </div>
             )}
+        </div>
+    )
+})
+
+const SelectSearch: React.FC<SelectSearchProps> = (props) => {
+    const {originalList, onSelect, value, filterProps} = props
+    const {
+        filtersSelectAll,
+        filterMultiple,
+        filterSearch,
+        filterSearchInputProps = {},
+        filterMultipleProps = {}
+    } = filterProps || {}
+    const containerRef = useRef(null)
+    const wrapperRef = useRef(null)
+    const scrollDomRef = useRef<any>(null)
+    const [data, setData] = useState<FiltersItemProps[]>(originalList)
+    useEffect(() => {
+        setData(originalList)
+    }, [originalList])
+    useEffect(() => {
+        // 新版UI组件之前的过度写法
+        const selectDom = document.getElementsByClassName("select-small")[0]
+        const scrollDom = selectDom?.firstChild?.firstChild
+        if (!scrollDom) return
+        scrollDomRef.current = scrollDom
+    }, [])
+
+    const [list] = useVirtualList(data, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 34,
+        overscan: 10
+    })
+
+    const onSearch = useDebounceFn(
+        useMemoizedFn((label: string) => {
+            if (label) {
+                const newData = originalList.filter((ele) => ele.label.includes(label))
+                setData(newData)
+            } else {
+                setData(originalList)
+            }
+        }),
+        {wait: 200}
+    ).run
+
+    const renderSingle = useMemoizedFn(() => {
+        return (
+            <div className={style["select-search-single"]}>
+                {filterSearch && (
+                    <div
+                        className={classNames(style["select-search-input"], {
+                            [style["select-search-input-icon"]]: filterSearchInputProps.isShowIcon === true
+                        })}
+                    >
+                        <Search
+                            onSearch={onSearch}
+                            onChange={(e) => onSearch(e.target.value)}
+                            {...filterSearchInputProps}
+                        />
+                    </div>
+                )}
+                {filtersSelectAll?.isAll && (
+                    <div
+                        className={classNames(style["select-item"], {})}
+                        onClick={() =>
+                            onSelect(filtersSelectAll.valueAll || "all", {
+                                value: filtersSelectAll.valueAll || "all",
+                                label: filtersSelectAll.textAll || "all"
+                            })
+                        }
+                    >
+                        {filtersSelectAll.textAll || "all"}
+                    </div>
+                )}
+                <div ref={wrapperRef} id='wrapperRef'>
+                    {list.map((item) => (
+                        <div
+                            key={item.data.value}
+                            className={classNames(style["select-item"], {
+                                [style["select-item-active"]]: value === item.data.value
+                            })}
+                            onClick={() => onSelect(item.data.value, item.data)}
+                        >
+                            {item.data.label}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    })
+
+    const onHandleScroll = useMemoizedFn(() => {
+        scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
+    })
+
+    const onChangeSelect = useDebounceFn(
+        useMemoizedFn((values: string[], option: FiltersItemProps[]) => {
+            onSelect(values, option)
+            // 滑动至最右边
+            onHandleScroll()
+        }),
+        {wait: 200}
+    ).run
+    const onSelectMultiple = useMemoizedFn((selectItem: FiltersItemProps) => {
+        console.log("value", value)
+        if (value) {
+            if (!Array.isArray(value)) return
+            const index = value.findIndex((ele) => ele === selectItem.value)
+            if (index === -1) {
+                onSelect([...value, selectItem.value], selectItem)
+            } else {
+                value.splice(index, 1)
+                onSelect(value, selectItem)
+            }
+        } else {
+            onSelect([selectItem.value], selectItem)
+        }
+        setTimeout(() => {
+            onHandleScroll()
+        }, 100)
+    })
+
+    const renderMultiple = useMemoizedFn(() => {
+        return (
+            <div className={style["select-search-multiple"]}>
+                <div className={style["select-heard"]}>
+                    <Select
+                        size='small'
+                        mode='tags'
+                        style={{width: 150}}
+                        onChange={onChangeSelect}
+                        allowClear
+                        value={Array.isArray(value) ? [...value] : []}
+                        {...filterMultipleProps}
+                        dropdownStyle={{height: 0, padding: 0}}
+                        options={data}
+                        className='select-small'
+                        onFocus={() => onHandleScroll()}
+                    />
+                </div>
+                <div ref={wrapperRef} id='wrapperRef'>
+                    {list.map((item) => {
+                        const checked = Array.isArray(value)
+                            ? value?.findIndex((ele) => ele === item.data.value) !== -1
+                            : false
+                        return (
+                            <div
+                                key={item.data.value}
+                                className={classNames(style["select-item"], {
+                                    [style["select-item-active"]]: checked
+                                })}
+                                onClick={() => onSelectMultiple(item.data)}
+                            >
+                                <Checkbox checked={checked} />
+                                <span className={style["select-item-text"]}>{item.data.label}</span>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        )
+    })
+
+    return (
+        <div className={style["select-search"]} ref={containerRef}>
+            {(filterMultiple && renderMultiple()) || renderSingle()}
         </div>
     )
 }
