@@ -15,7 +15,8 @@ import {
     Space,
     Switch,
     Tag,
-    Tooltip
+    Tooltip,
+    Badge
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
@@ -774,7 +775,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     const sortRef = useRef<SortProps>({
         order: "desc",
-        orderBy: "id"
+        orderBy: "Id"
     })
 
     const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
@@ -905,6 +906,28 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         tableRef.current.scrollTo(index)
     })
 
+    const [isHaveIncrement, setIsHaveIncrement] = useState<boolean>(false)
+    const [maxId, setMaxId] = useState<number>(0)
+    useEffect(() => {
+        getNewData()
+    }, [])
+    const getNewData = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("QueryHTTPFlows", {
+                SourceType: "mitm",
+                ...params,
+                Pagination: {Page: 1, Limit: 1, Order: "desc", OrderBy: "id"}
+            })
+            .then((rsp: YakQueryHTTPFlowResponse) => {
+                console.log("rsp", rsp)
+                if (rsp.Data.length > 0) {
+                    setMaxId(rsp.Data[0].Id)
+                }
+            })
+            .catch((e: any) => {
+                failed(`query HTTP Flow failed: ${e}`)
+            })
+    })
     const scrollUpdateTop = useDebounceFn(
         useMemoizedFn(() => {
             const paginationProps = {
@@ -915,30 +938,37 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Order: sortRef.current.order,
                 OrderBy: sortRef.current.orderBy
             }
-            let offsetId = getNewestId()
-            // console.log("offsetId", offsetId)
+            // let offsetId = getNewestId()
 
             // 查询数据
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: "mitm",
                     ...params,
-                    AfterId: offsetId, // 用于计算增量的
+                    AfterId: maxId, // 用于计算增量的
                     Pagination: {...paginationProps}
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
                     const offsetDeltaData = rsp?.Data || []
+                    // console.log('offsetDeltaData',offsetDeltaData);
                     if (offsetDeltaData.length <= 0) {
+                        setIsHaveIncrement(false)
                         // 没有增量数据
                         return
                     }
-                    setLoading(true)
-                    let offsetData = offsetDeltaData.concat(data)
-                    if (offsetData.length > MAX_ROW_COUNT) {
-                        offsetData = offsetData.splice(0, MAX_ROW_COUNT)
+
+                    if (sortRef.current.order === "desc" && sortRef.current.orderBy === "Id") {
+                        setMaxId(offsetDeltaData[0].Id)
+                        setLoading(true)
+                        let offsetData = offsetDeltaData.concat(data)
+                        if (offsetData.length > MAX_ROW_COUNT) {
+                            offsetData = offsetData.splice(0, MAX_ROW_COUNT)
+                        }
+                        setData(offsetData)
+                        // scrollTableTo(0)
+                    } else {
+                        setIsHaveIncrement(true)
                     }
-                    setData(offsetData)
-                    // scrollTableTo(0)
                 })
                 .catch((e: any) => {
                     failed(`query HTTP Flow failed: ${e}`)
@@ -947,78 +977,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }),
         {wait: 600, leading: true, trailing: false}
     ).run
-    const scrollUpdateButt = useDebounceFn(
-        useMemoizedFn((tableClientHeight: number) => {
-            const paginationProps = {
-                Page: 1,
-                Limit: OFFSET_STEP,
-                Order: "desc",
-                OrderBy: "id"
-            }
-
-            const offsetId = getOldestId()
-            console.info("触底：", offsetId)
-
-            // 查询数据
-            ipcRenderer
-                .invoke("QueryHTTPFlows", {
-                    SourceType: "mitm",
-                    ...params,
-                    BeforeId: offsetId, // 用于计算增量的
-                    Pagination: {...paginationProps}
-                })
-                .then((rsp: YakQueryHTTPFlowResponse) => {
-                    const offsetDeltaData = rsp?.Data || []
-                    if (offsetDeltaData.length <= 0) {
-                        // 没有增量数据
-                        return
-                    }
-                    setLoading(true)
-                    const originDataLength = data.length
-                    let offsetData = data.concat(offsetDeltaData)
-                    let metMax = false
-                    const originOffsetLength = offsetData.length
-
-                    if (originOffsetLength > MAX_ROW_COUNT) {
-                        metMax = true
-                        offsetData = offsetData.splice(originOffsetLength - MAX_ROW_COUNT, MAX_ROW_COUNT)
-                    }
-                    setData(offsetData)
-                    setTimeout(() => {
-                        if (!metMax) {
-                            // 没有丢结果的裁剪问题
-                            // scrollTableTo((originDataLength + 1) * ROW_HEIGHT - tableClientHeight)
-                        } else {
-                            // 丢了结果之后的裁剪计算
-                            const a = originOffsetLength - offsetDeltaData.length
-                            // scrollTableTo(
-                            //     (originDataLength + 1 + MAX_ROW_COUNT - originOffsetLength) * ROW_HEIGHT -
-                            //         tableClientHeight
-                            // )
-                        }
-                    }, 50)
-                })
-                .catch((e: any) => {
-                    failed(`query HTTP Flow failed: ${e}`)
-                })
-                .finally(() => setTimeout(() => setLoading(false), 60))
-        }),
-        {wait: 600, leading: true, trailing: false}
-    ).run
-
-    const sortFilter = useMemoizedFn((column: string, type: any) => {
-        const keyRelation: any = {
-            UpdatedAt: "updated_at",
-            BodyLength: "body_length",
-            StatusCode: "status_code"
-        }
-
-        if (column && type) {
-            update(1, OFFSET_LIMIT, type, keyRelation[column])
-        } else {
-            update(1, OFFSET_LIMIT)
-        }
-    })
 
     // 这是用来设置选中坐标的，不需要做防抖
     useEffect(() => {
@@ -1089,9 +1047,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             return
         }
         if (autoUpdateTop) {
-            // scrollUpdateTop()
-            // let id = setInterval(scrollUpdateTop, 1000)
-            // return () => clearInterval(id)
+            scrollUpdateTop()
+            let id = setInterval(scrollUpdateTop, 1000)
+            return () => clearInterval(id)
         }
     }, [autoUpdateTop, autoReload])
 
@@ -1219,6 +1177,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 title: "方法",
                 dataKey: "Method",
                 filterProps: {
+                    filterKey: "Methods",
                     filtersType: "select",
                     filtersSelectAll: {
                         isAll: true
@@ -1410,6 +1369,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     //     data.map((ele) => ele.Id)
     // )
 
+    const [isReset, setIsReset] = useState<boolean>(false)
+
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div
@@ -1545,7 +1506,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}
                     title='HTTP History'
-                    query={params}
+                    isReset={isReset}
                     extra={
                         <div className={style["http-history-table-extra"]}>
                             {shieldData?.data.length > 0 && (
@@ -1605,16 +1566,23 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         删除
                                     </Button>
                                 </div>
-                                <div
-                                    onClick={() => {
-                                        setParams(props.params || {SourceType: "mitm"})
-                                        setTimeout(() => {
-                                            update(1)
-                                        }, 100)
-                                    }}
-                                >
-                                    <RefreshIcon style={{color: "#85899E", cursor: "pointer"}} />
-                                </div>
+                                <Badge dot={isHaveIncrement} offset={[-5, 0]}>
+                                    <div
+                                        onClick={() => {
+                                            sortRef.current = {
+                                                order: "desc",
+                                                orderBy: "Id"
+                                            }
+                                            setParams(props.params || {SourceType: "mitm"})
+                                            setIsReset(!isReset)
+                                            setTimeout(() => {
+                                                update(1)
+                                            }, 100)
+                                        }}
+                                    >
+                                        <RefreshIcon style={{color: "#85899E", cursor: "pointer"}} />
+                                    </div>
+                                </Badge>
                             </div>
                         </div>
                     }

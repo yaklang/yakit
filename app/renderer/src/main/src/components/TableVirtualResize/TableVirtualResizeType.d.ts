@@ -22,7 +22,7 @@ export interface TableVirtualResizeProps<T> {
     onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void // 查询条件变化
     loading?: boolean
     scrollToBottom?: number // 默认300
-    query?: any
+    isReset?:boolean
 }
 
 export interface SortProps {

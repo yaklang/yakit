@@ -73,7 +73,7 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
         loading,
         scrollToBottom,
         currentRowData,
-        query
+        isReset
     } = props
     const [currentRow, setCurrentRow] = useState<T>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
@@ -367,6 +367,15 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
     })
     const [filters, setFilters] = useState<any>({})
     const [opensPopover, setOpensPopover] = useState<any>({})
+
+    useEffect(() => {
+        setFilters({})
+        setSort({
+            order: "none",
+            orderBy: ""
+        })
+        scrollTo(0)
+    }, [isReset])
     const onSorter = useMemoizedFn((s: SortProps) => {
         let newOrder: "none" | "asc" | "desc" = s.order
         if (sort.orderBy !== s.orderBy) {
@@ -383,10 +392,6 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
         setSort({...sort})
         if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, filters)
     })
-
-    useEffect(() => {
-        setFilters({...query})
-    }, [query])
 
     const onSelectSearch = useMemoizedFn((valueSearch: string | string[], colKey: string) => {
         const newFilters = {
