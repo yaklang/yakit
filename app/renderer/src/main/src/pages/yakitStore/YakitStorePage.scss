@@ -520,3 +520,15 @@
         }
     }
 }
+
+.plug-in-menu-box{
+    display: flex;
+    .check-box{
+        flex: 1;
+    }
+    .add-icon{
+        color: #1890ff;
+        margin-left: 12px;
+        cursor: pointer;
+    }
+}
