@@ -903,8 +903,9 @@ const Main: React.FC<MainProp> = (props) => {
 
     // Global Sending Function(全局发送功能|通过发送新增功能页面)
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, request} = res || {}
+        const {isHttps, request,list} = res || {}
         const time = new Date().getTime().toString()
+        console.log('list',list);
         if (request) {
             addTabPage(Route.HTTPFuzzer, {
                 time: time,
