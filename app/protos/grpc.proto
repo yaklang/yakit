@@ -422,6 +422,24 @@ message QueryHTTPFuzzerResponseByTaskIdResponse {
   int64 TotalPage = 4;
 }
 
+message QueryHTTPFuzzerResponseByTaskIdRequest {
+  // 用来索引对应的请求
+  int64 TaskId = 1;
+  string FuzzRequestToken = 2;
+
+  // 上一个请求的时间戳
+  int64 LastResponseTimestamp = 3;
+
+  Paging Pagination = 4;
+}
+
+message QueryHTTPFuzzerResponseByTaskIdResponse {
+  Paging Pagination = 1;
+  repeated FuzzerResponse Data = 2;
+  int64 Total = 3;
+  int64 TotalPage = 4;
+}
+
 message QueryWebsocketFlowByHTTPFlowWebsocketHashRequest {
   string WebsocketRequestHash = 1;
   Paging Pagination = 2;
