@@ -1,13 +1,13 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState, ReactNode} from "react"
 import {Button, Checkbox, Divider, Form, Input, List, Popconfirm, Space, Spin, Tag} from "antd"
 import {SearchOutlined} from "@ant-design/icons"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema"
 import {FieldName} from "../../risks/RiskTable"
-import {useDebounce, useMemoizedFn} from "ahooks"
+import {useDebounce, useMemoizedFn, useDebounceFn} from "ahooks"
 import {AutoCard} from "../../../components/AutoCard"
 import {ItemSelects} from "../../../components/baseTemplate/FormItemUtil"
 import {PluginListOptInfo} from "../../../components/businessTemplate/yakitPlugin"
-
+import {YakFilterModuleList} from "@/pages/yakitStore/YakitStorePage"
 import "./QueryYakScriptParam.css"
 import {useHotkeys} from "react-hotkeys-hook"
 import {showDrawer, showModal} from "../../../utils/showModal"
@@ -16,6 +16,7 @@ import {info} from "../../../utils/notification"
 import {startExecYakCode} from "../../../utils/basic"
 import {ImportMenuConfig} from "./consts_importConfigYakCode"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import {CheckboxChangeEvent} from "antd/lib/checkbox"
 
 export interface QueryYakScriptParamProp {
     params: SimpleQueryYakScriptSchema
@@ -58,6 +59,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
     const [params, setParams] = useState<SimpleQueryYakScriptSchema>(props.params)
 
     useEffect(() => {
+        // console.log("params1",params)
         props.onParams(params)
     }, [params])
 
@@ -120,24 +122,32 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         setTopN(10)
     }, [searchTag])
 
-    const selectedAll = useMemoizedFn(() => {
-        if (!selectRef || !selectRef.current) return
-        const ref = selectRef.current as unknown as HTMLDivElement
-        ref.blur()
-        setTimeout(() => {
-            onIsAll(true)
-            setItemSelects([])
-            setSearchTag("")
+    const selectedAll = useMemoizedFn((value: boolean) => {
+        if (value) {
+            // if (!selectRef || !selectRef.current) return
+            // console.log("ppx")
+            // const ref = selectRef.current as unknown as HTMLDivElement
+            // ref.blur()
+            setTimeout(() => {
+                onIsAll(true)
+                setItemSelects([])
+                setSearchTag("")
+                setParams({type: params.type, tags: "", include: [], exclude: []})
+            }, 200)
+        } else {
+            onIsAll(false)
+            setSelectedTags([])
             setParams({type: params.type, tags: "", include: [], exclude: []})
-        }, 200)
+            updateTagsSelector()
+        }
     })
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
                 <Spin spinning={selectLoading}>
-                    <div className='select-render-all' onClick={selectedAll}>
+                    {/* <div className='select-render-all' onClick={() => selectedAll(true)}>
                         全选
-                    </div>
+                    </div> */}
                     {originNode}
                 </Spin>
             </div>
@@ -174,7 +184,56 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         })
     })
     useHotkeys("alt+u", importConfigTemplate)
-
+    const TagsSelectRender = () => (
+        <ItemSelects
+            item={{}}
+            select={{
+                ref: selectRef,
+                className: "div-width-100",
+                allowClear: true,
+                autoClearSearchValue: false,
+                maxTagCount: "responsive",
+                mode: "multiple",
+                size: "small",
+                data: topTags,
+                optValue: "Name",
+                optionLabelProp: "Name",
+                renderOpt: (info: FieldName) => {
+                    return (
+                        <div style={{display: "flex", justifyContent: "space-between"}}>
+                            <span>{info.Name}</span>
+                            <span>{info.Total}</span>
+                        </div>
+                    )
+                },
+                value: itemSelects, // selectedTags
+                onSearch: (keyword: string) => setSearchTag(keyword),
+                setValue: (value) => {
+                    setItemSelects(value)
+                },
+                onDropdownVisibleChange: (open) => {
+                    if (open) {
+                        setItemSelects([])
+                        setSearchTag("")
+                    } else {
+                        const filters = itemSelects.filter((item) => !selectedTags.includes(item))
+                        setSelectedTags(selectedTags.concat(filters))
+                        setItemSelects([])
+                        setSearchTag("")
+                    }
+                },
+                onPopupScroll: (e) => {
+                    const {target} = e
+                    const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                    if (ref.scrollTop + ref.offsetHeight === ref.scrollHeight) {
+                        setSelectLoading(true)
+                        setTopN(topN + 10)
+                    }
+                },
+                dropdownRender: (originNode: React.ReactNode) => selectDropdown(originNode)
+            }}
+        />
+    )
     return (
         <AutoCard
             size={"small"}
@@ -203,103 +262,18 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             loading={loading}
             bodyStyle={{display: "flex", flexDirection: "column", overflow: "hidden"}}
         >
-            <div className='div-width-100' style={{maxHeight: 237}}>
-                <div className='div-width-100'>
-                    <Form size='small'>
-                        <ItemSelects
-                            item={{
-                                style: {marginBottom: 0},
-                                label: "设置Tag"
-                            }}
-                            select={{
-                                ref: selectRef,
-                                className: "div-width-100",
-                                allowClear: true,
-                                autoClearSearchValue: false,
-                                maxTagCount: "responsive",
-                                mode: "multiple",
-                                data: topTags,
-                                optValue: "Name",
-                                optionLabelProp: "Name",
-                                renderOpt: (info: FieldName) => {
-                                    return (
-                                        <div style={{display: "flex", justifyContent: "space-between"}}>
-                                            <span>{info.Name}</span>
-                                            <span>{info.Total}</span>
-                                        </div>
-                                    )
-                                },
-                                value: itemSelects,
-                                onSearch: (keyword: string) => setSearchTag(keyword),
-                                setValue: (value) => setItemSelects(value),
-                                onDropdownVisibleChange: (open) => {
-                                    if (open) {
-                                        setItemSelects([])
-                                        setSearchTag("")
-                                    } else {
-                                        const filters = itemSelects.filter((item) => !selectedTags.includes(item))
-                                        setSelectedTags(selectedTags.concat(filters))
-                                        setItemSelects([])
-                                        setSearchTag("")
-                                    }
-                                },
-                                onPopupScroll: (e) => {
-                                    const {target} = e
-                                    const ref: HTMLDivElement = target as unknown as HTMLDivElement
-                                    if (ref.scrollTop + ref.offsetHeight === ref.scrollHeight) {
-                                        setSelectLoading(true)
-                                        setTopN(topN + 10)
-                                    }
-                                },
-                                dropdownRender: (originNode: React.ReactNode) => selectDropdown(originNode)
-                            }}
-                        ></ItemSelects>
-                    </Form>
-                </div>
-
-                <Divider style={{margin: "6px 0"}} />
-
-                {(isAll || selectedTags.length !== 0) && (
-                    <div className='div-width-100 div-height-100' style={{maxHeight: 200}}>
-                        <AutoCard size='small' bordered={false} bodyStyle={{overflow: "hidden auto", padding: 2}}>
-                            {isAll ? (
-                                <Tag
-                                    style={{marginBottom: 2}}
-                                    color={"blue"}
-                                    onClose={() => {
-                                        onIsAll(false)
-                                        setSelectedTags([])
-                                        setParams({type: params.type, tags: "", include: [], exclude: []})
-                                        updateTagsSelector()
-                                    }}
-                                    closable={true}
-                                >
-                                    全选
-                                </Tag>
-                            ) : (
-                                selectedTags.map((i) => {
-                                    return (
-                                        <Tag
-                                            key={i}
-                                            style={{marginBottom: 2}}
-                                            color={"blue"}
-                                            onClose={() => {
-                                                setSelectedTags(selectedTags.filter((element) => i !== element))
-                                            }}
-                                            closable={true}
-                                        >
-                                            {i}
-                                        </Tag>
-                                    )
-                                })
-                            )}
-                        </AutoCard>
-                    </div>
-                )}
-            </div>
-
             <div style={{flex: 1, overflow: "hidden", paddingTop: 0, marginTop: 2}}>
                 <SearchYakScriptForFilter
+                    TagsSelectRender={TagsSelectRender}
+                    searchFilter={{
+                        selectedTags,
+                        setSelectedTags,
+                        selectedAll,
+                        
+                    }}
+                    setIncludeFun={(v:string[])=>{
+                        setParams({...params,include:v})
+                    }}
                     simpleFilter={params}
                     isAll={isAll}
                     onInclude={(i) => {
@@ -335,15 +309,22 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         </AutoCard>
     )
 })
-
+interface searchFilterProps {
+    selectedTags: string[]
+    setSelectedTags: (v: string[]) => void
+    selectedAll: (v: boolean) => void
+}
 interface SearchYakScriptForFilterProp {
     simpleFilter: SimpleQueryYakScriptSchema
     isAll: boolean
+    TagsSelectRender: () => any
+    searchFilter: searchFilterProps
+    setIncludeFun:(v:string[])=>void
     onExclude: (i: YakScript) => any
     onInclude: (i: YakScript) => any
 }
-
 const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.memo((props) => {
+    const {selectedTags, setSelectedTags, selectedAll} = props.searchFilter
     const [params, setParams] = useState<QueryYakScriptRequest>({
         ExcludeNucleiWorkflow: true,
         ExcludeScriptNames: [],
@@ -360,6 +341,58 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
     const [hasMore, setHasMore] = useState(false)
     const [isRef, setIsRef] = useState(false)
 
+    const [refresh, setRefresh] = useState(true)
+    const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Tags")
+    const [total, setTotal] = useState<number>()
+    const [allResponse, setAllResponse] = useState<YakScript[]>([])
+    // 单选或全选中的插件组
+    const [cachePlugInList, setCachePlugInList] = useState<string[]>([])
+    // Tag标签对应的插件组
+    const [tagsPlugInList,setTagsPlugInList] = useState<string[]>([])
+    // 获取全部插件数据 用于插件组本地缓存
+    useEffect(() => {
+        const payload = {
+            ExcludeNucleiWorkflow: true,
+            Type: "mitm,port-scan,nuclei",
+            Pagination: {
+                Limit: 10000,
+                Page: 1
+            }
+        }
+        ipcRenderer.invoke("QueryYakScript", payload).then((item: QueryYakScriptsResponse) => {
+            // console.log("获取所有数据", item.Data)
+            setAllResponse(item.Data)
+        })
+    }, [])
+    useEffect(() => {
+        if (selectedTags.length) {
+            const payload = {
+                ExcludeNucleiWorkflow: true,
+                Tag: selectedTags,
+                Type: "mitm,port-scan,nuclei",
+                Pagination: {
+                    Limit: 10000,
+                    Page: 1
+                }
+            }
+            ipcRenderer.invoke("QueryYakScript", payload).then((item: QueryYakScriptsResponse) => {
+                let arr:string[] =  item.Data.map((i)=>i.ScriptName)
+                // console.log("获取所有TAG数据", arr,cachePlugInList)
+                setTagsPlugInList(arr)
+            })
+        }
+    }, [selectedTags])
+    // 全选
+    const onCheckAllChange = (value) => {
+        if (value) {
+            let arr = allResponse.map((item) => item.ScriptName)
+            setCachePlugInList(arr)
+        } else {
+            setCachePlugInList([])
+            setTagsPlugInList([])
+        }
+        selectedAll(value)
+    }
     const update = useMemoizedFn((page: number) => {
         const payload = {
             ...params,
@@ -373,6 +406,7 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
         ipcRenderer
             .invoke("QueryYakScript", payload)
             .then((item: QueryYakScriptsResponse) => {
+                setTotal(item.Total)
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit
                 setHasMore(!isMore)
@@ -389,31 +423,57 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
-
+    // 保留数组中非重复数据
+    const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
     const onSelect = useMemoizedFn((selected: boolean, item: YakScript) => {
         if (selected) {
+            // 选中则去重
+            if(cachePlugInList.indexOf(item.ScriptName)>=0){
+                let arr = filterNonUnique([...cachePlugInList, item.ScriptName])
+                setCachePlugInList(arr)
+            }
+            if(tagsPlugInList.indexOf(item.ScriptName)>=0){
+                let arr = filterNonUnique([...tagsPlugInList, item.ScriptName])
+                setCachePlugInList(arr)
+            }
             props.onExclude(item)
         } else {
+            setCachePlugInList([...cachePlugInList, item.ScriptName])
             props.onInclude(item)
         }
     })
 
     useEffect(() => {
         update(1)
-    }, [useDebounce(params.Keyword, {wait: 500}), props.simpleFilter])
+    }, [useDebounce(params.Keyword, {wait: 500}), props.simpleFilter, refresh])
     const loadMoreData = useMemoizedFn(() => {
         update(Number(response.Pagination.Page) + 1)
     })
-
+    // console.log("选中项",cachePlugInList,tagsPlugInList,Array.from(new Set([...cachePlugInList,...tagsPlugInList])))
     return (
         <AutoCard
             title={
-                <Input
-                    allowClear={true}
-                    prefix={<SearchOutlined />}
-                    placeholder='搜索插件'
-                    value={params.Keyword}
-                    onChange={(e) => setParams({...params, Keyword: e.target.value})}
+                <YakFilterModuleList
+                    TYPE='BATCH-EXECUTOR-PAGE-EX'
+                    tag={selectedTags}
+                    setTag={(v:string[])=>{
+                        if(v.length===0){
+                            setTagsPlugInList([])
+                        }
+                        setSelectedTags(v)
+                    }}
+                    checkAll={props.isAll}
+                    onCheckAllChange={onCheckAllChange}
+                    setSearchKeyword={(value) => setParams({...params, Keyword: value})}
+                    checkList={Array.from(new Set([...cachePlugInList,...tagsPlugInList]))} // props.simpleFilter.include
+                    searchType={searchType}
+                    setSearchType={setSearchType}
+                    // 动态加载tags列表
+                    TagsSelectRender={props.TagsSelectRender}
+                    refresh={refresh}
+                    setRefresh={setRefresh}
+                    onDeselect={() => {}}
+                    multipleCallBack={(value) => {props.setIncludeFun(value)}}
                 />
             }
             size={"small"}
@@ -456,7 +516,9 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
                             <PluginListOptInfo
                                 info={item}
                                 selected={selected}
-                                onSelect={() => onSelect(selected, item)}
+                                onSelect={() => {
+                                    onSelect(selected, item)
+                                }}
                             />
                         </AutoCard>
                     )
