@@ -89,7 +89,8 @@ import {
     SyncCloudButton
 } from "@/components/SyncCloudButton/SyncCloudButton"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {fullscreen} from "@uiw/react-md-editor"
+import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
+import {FieldName} from "@/pages/risks/RiskTable"
 
 const {Search} = Input
 const {Option} = Select
@@ -1526,23 +1527,25 @@ interface TagsProps {
     Value: string
     Total: number
 }
+
 export interface YakFilterModuleList {
     TYPE: string
     tag: string[]
     searchType: string
     setTag: (v: string[]) => void
-    tagsLoading: boolean
+    tagsLoading?: boolean
     refresh: boolean
     setRefresh: (v: boolean) => void
     onDeselect: () => void
-    tagsList: TagsProps[]
+    tagsList?: TagsProps[]
     setSearchType: (v: any) => void
     setSearchKeyword: (v: string) => void
     checkAll: boolean
     checkList: string[]
     multipleCallBack: (v: string[]) => void
     onCheckAllChange: (v: any) => void
-    setCheckAll:(v:boolean)=>void
+    setCheckAll?: (v: boolean) => void
+    TagsSelectRender?: () => any
 }
 interface YakFilterRemoteObj {
     name: string
@@ -1550,22 +1553,40 @@ interface YakFilterRemoteObj {
 }
 export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
     const {
+        // 控件来源
         TYPE,
+        // 当前为tags或者input
         searchType,
-        setTag,
-        tagsLoading,
-        setRefresh,
-        refresh,
-        onDeselect,
-        tag,
-        tagsList,
+        // 更改tags或者input回调
         setSearchType,
+        // tags更改回调函数
+        setTag,
+        // tags控件加载控件
+        tagsLoading = false,
+        // 获取boolean用于更新列表
+        refresh,
+        // 更新函数
+        setRefresh,
+        // tags清空的回调函数
+        onDeselect,
+        // tag 选中的value值
+        tag,
+        // 展示的tag list
+        tagsList = [],
+        // input输入框回调
         setSearchKeyword,
+        // 是否全选
         checkAll,
-        checkList,
-        multipleCallBack,
-        onCheckAllChange,
+        // 全选回调
         setCheckAll,
+        // 全选回调MITM
+        onCheckAllChange,
+        // 当前选中的check list
+        checkList,
+        // 插件组选中项回调
+        multipleCallBack,
+        // 动态加载TAGS控件
+        TagsSelectRender
     } = props
     const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_DATA_${TYPE}`
     const [form] = Form.useForm()
@@ -1589,29 +1610,37 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         })
     }, [reload])
 
-    const menuClick = (value:string[]) => {
-        // 移除插件组 关闭全选
-        ipcRenderer.invoke("mitm-remove-hook", {
-            HookName: [],
-            RemoveHookID: checkList
-        } as any)
-        setCheckAll(false)
+    const menuClick = (value: string[]) => {
+        if (TYPE === "MITM") {
+            // 移除插件组 关闭全选
+            ipcRenderer.invoke("mitm-remove-hook", {
+                HookName: [],
+                RemoveHookID: checkList
+            } as any)
+            
+        }
+        // setCheckAll && setCheckAll(false)
         multipleCallBack(value)
     }
 
-    const deletePlugIn = (e,name:string) => {
-        e.stopPropagation();
-        const newArr: YakFilterRemoteObj[] = menuList.filter((item)=>item.name!==name)
+    const deletePlugIn = (e, name: string) => {
+        e.stopPropagation()
+        const newArr: YakFilterRemoteObj[] = menuList.filter((item) => item.name !== name)
         setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
         setReload(!reload)
     }
 
     const plugInMenu = () => {
         return menuList.map((item: YakFilterRemoteObj) => (
-            <div key={item.name} style={{display:"flex"}} onClick={()=>menuClick(item.value)}>
-                <div className="content-ellipsis" style={{width: 100}}>{item.name}</div>
+            <div key={item.name} style={{display: "flex"}} onClick={() => menuClick(item.value)}>
+                <div className='content-ellipsis' style={{width: 100}}>
+                    {item.name}
+                </div>
                 <div style={{width: 10, margin: "0px 10px"}}>{item.value.length}</div>
-                <DeleteOutlined style={{position:"relative",top:5,marginLeft:4}} onClick={(e)=>deletePlugIn(e,item.name)}/>
+                <DeleteOutlined
+                    style={{position: "relative", top: 5, marginLeft: 4}}
+                    onClick={(e) => deletePlugIn(e, item.name)}
+                />
             </div>
         ))
     }
@@ -1642,7 +1671,7 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                 .finally(() => {
                     setReload(!reload)
                     info("添加插件组成功")
-                    onClose() 
+                    onClose()
                 })
         })
         return (
@@ -1678,41 +1707,60 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         )
     }
     return (
-        <div>
+        <div style={{minHeight: 47}}>
             <Input.Group compact>
                 <Select style={{width: "27%"}} value={searchType} size='small' onSelect={setSearchType}>
                     <Select.Option value='Tags'>Tag</Select.Option>
                     <Select.Option value='Keyword'>关键字</Select.Option>
                 </Select>
                 {(searchType === "Tags" && (
-                    <Select
-                        mode='tags'
-                        size='small'
-                        onChange={(e) => setTag(e as string[])}
-                        style={{width: "73%"}}
-                        loading={tagsLoading}
-                        onBlur={() => {
-                            setRefresh(!refresh)
-                        }}
-                        onDeselect={onDeselect}
-                        maxTagCount='responsive'
-                        value={tag}
-                        allowClear={true}
-                    >
-                        {tagsList.map((item) => (
-                            <Select.Option key={item.Value} value={item.Value} >
-                                <div className='mitm-card-select-option'>
-                                    <span>{item.Value}</span>
-                                    <span>{item.Total}</span>
-                                </div>
-                            </Select.Option>
-                        ))}
-                    </Select>
+                    <>
+                        {TYPE === "MITM" && (
+                            <Select
+                                mode='tags'
+                                size='small'
+                                onChange={(e) => setTag(e as string[])}
+                                style={{width: "73%"}}
+                                loading={tagsLoading}
+                                onBlur={() => {
+                                    setRefresh(!refresh)
+                                }}
+                                onDeselect={onDeselect}
+                                maxTagCount='responsive'
+                                value={tag}
+                                allowClear={true}
+                            >
+                                {tagsList.map((item) => (
+                                    <Select.Option key={item.Value} value={item.Value}>
+                                        <div className='mitm-card-select-option'>
+                                            <span>{item.Value}</span>
+                                            <span>{item.Total}</span>
+                                        </div>
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        )}
+                        {TYPE === "BATCH-EXECUTOR-PAGE-EX" && TagsSelectRender && (
+                            <div
+                                style={{
+                                    display: "inline-block",
+                                    width: "73%",
+                                    minHeight: "auto",
+                                    height: 24,
+                                    position: "relative",
+                                    top: -4
+                                }}
+                            >
+                                {TagsSelectRender()}
+                            </div>
+                        )}
+                    </>
                 )) || (
                     <Input.Search
                         onSearch={() => {
                             setRefresh(!refresh)
                         }}
+                        placeholder='搜索插件'
                         onChange={(e) => setSearchKeyword(e.target.value)}
                         size='small'
                         style={{width: "73%"}}
@@ -1721,13 +1769,20 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
             </Input.Group>
             <div className='plug-in-menu-box'>
                 <div className='check-box'>
-                    <Checkbox onChange={onCheckAllChange} checked={checkAll}>
+                    <Checkbox onChange={(e) => onCheckAllChange(e.target.checked)} checked={checkAll}>
                         全选
                     </Checkbox>
                 </div>
                 <div>
-                    <Dropdown overlay={<Space direction={"vertical"}>{plugInMenu()}</Space>}>
-                        <a onClick={(e) => e.preventDefault()}>
+                    <Dropdown overlay={<Space direction={"vertical"}>{plugInMenu()}</Space>} disabled={checkAll}>
+                        <a
+                            onClick={(e) => {
+                                e.preventDefault()
+                                if (menuList.length === 0) {
+                                    info("请先新建插件组")
+                                }
+                            }}
+                        >
                             <Space>
                                 插件组
                                 <DownOutlined />
@@ -1735,25 +1790,25 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                         </a>
                     </Dropdown>
                 </div>
-                    <div
-                        className='add-icon'
-                        onClick={() => {
-                            if(checkList.length === 0){
-                                info("选中数据未获取")
-                                return
-                            }
-                            let m = showModal({
-                                title: "添加插件组",
-                                width: 520,
-                                content: <AddPlugIn onClose={() => m.destroy()} />
-                            })
-                            return m
-                        }}
-                    >
-                        <PlusOutlined />
-                    </div>
+                <div
+                    className='add-icon'
+                    onClick={() => {
+                        if (checkList.length === 0) {
+                            info("选中数据未获取")
+                            return
+                        }
+                        let m = showModal({
+                            title: "添加插件组",
+                            width: 520,
+                            content: <AddPlugIn onClose={() => m.destroy()} />
+                        })
+                        return m
+                    }}
+                >
+                    <PlusOutlined />
+                </div>
             </div>
-            <div className={`${tag.length > 0 && "mitm-card-tag"}`}>
+            <div style={{whiteSpace: "initial"}}>
                 {tag.map((i) => {
                     return (
                         <Tag
