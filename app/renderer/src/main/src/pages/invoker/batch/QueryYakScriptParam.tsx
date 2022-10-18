@@ -445,7 +445,7 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
 
     useEffect(() => {
         update(1)
-    }, [useDebounce(params.Keyword, {wait: 500}), props.simpleFilter, refresh])
+    }, [props.simpleFilter, refresh])
     const loadMoreData = useMemoizedFn(() => {
         update(Number(response.Pagination.Page) + 1)
     })
