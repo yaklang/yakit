@@ -1566,6 +1566,7 @@ export interface YakFilterModuleList {
     onCheckAllChange: (v: any) => void
     setCheckAll?: (v: boolean) => void
     TagsSelectRender?: () => any
+    settingRender?:() => any
 }
 interface YakFilterRemoteObj {
     name: string
@@ -1597,8 +1598,6 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         setSearchKeyword,
         // 是否全选
         checkAll,
-        // 全选回调
-        setCheckAll,
         // 全选回调MITM
         onCheckAllChange,
         // 当前选中的check list
@@ -1606,7 +1605,9 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         // 插件组选中项回调
         multipleCallBack,
         // 动态加载TAGS控件
-        TagsSelectRender
+        TagsSelectRender,
+        // 动态加载设置项
+        settingRender,
     } = props
     const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_DATA_${TYPE}`
     const [form] = Form.useForm()
@@ -1729,17 +1730,23 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
     return (
         <div style={{minHeight: 47}}>
             <Input.Group compact>
-                <Select style={{width: "27%"}} value={searchType} size='small' onSelect={setSearchType}>
+                <Select style={{width: "27%"}} value={searchType} size='small' onSelect={(v)=>{
+                    console.log("v",v)
+                    v==="Keyword"&&setTag([])
+                    v==="Tags"&&setSearchKeyword("")
+                    setSearchType(v)
+                    }}>
                     <Select.Option value='Tags'>Tag</Select.Option>
                     <Select.Option value='Keyword'>关键字</Select.Option>
                 </Select>
                 {(searchType === "Tags" && (
                     <>
-                        {TYPE === "MITM" && (
+                        {["MITM","SCAN-PORT"].includes(TYPE) && (
                             <Select
                                 mode='tags'
                                 size='small'
                                 onChange={(e) => setTag(e as string[])}
+                                placeholder='选择Tag'
                                 style={{width: "73%"}}
                                 loading={tagsLoading}
                                 onBlur={() => {
@@ -1794,6 +1801,9 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                     </Checkbox>
                 </div>
                 <div>
+                   {settingRender&&settingRender()} 
+                </div>
+                <div style={{marginLeft:12}}>
                     <Dropdown overlay={<Space direction={"vertical"}>{plugInMenu()}</Space>} disabled={checkAll}>
                         <a
                             onClick={(e) => {
