@@ -63,6 +63,7 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
                                 setPresetPacketScanPlugin(names)
                             }}
                             initialSelected={presetPacketScanPlugin}
+                            sourceType="PACKET_SCANNER"
                         />
                     </>
                 )}

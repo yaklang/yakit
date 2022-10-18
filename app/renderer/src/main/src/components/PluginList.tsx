@@ -27,6 +27,7 @@ export interface PluginListProp extends AutoCardProps {
     extra?: React.ReactNode
     disabled?: boolean
     readOnly?: boolean
+    sourceType?: string
 }
 
 interface YakScriptCheckboxProp {
@@ -127,6 +128,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
         disabled,
         search,
         extra,
+        sourceType,
         ...restCard
     } = props
 
@@ -210,7 +212,30 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                 title={
                     !props.readOnly && (
                         <>
-                            {/* <Space>
+                            {sourceType?
+                            <YakFilterModuleList
+                            TYPE={sourceType}
+                            tag={tag}
+                            setTag={(v) => {
+                                setTag(v)
+                                search({limit: limit, keyword: keyword}, v)
+                            }}
+                            checkAll={checked}
+                            onCheckAllChange={allSelectScript}
+                            setSearchKeyword={(value) => {
+                                setSearchKeyword(value)
+                            }}
+                            checkList={selected}
+                            searchType={searchType}
+                            setSearchType={setSearchType}
+                            refresh={refresh}
+                            setRefresh={setRefresh}
+                            onDeselect={() => {}}
+                            multipleCallBack={(value) => {
+                                manySelectScript(value)
+                            }}
+                            settingRender={settingRender}
+                        />:<Space>
                                 <Input.Search
                                     onSearch={(value) => {
                                         search({limit: limit, keyword: value.trim()}, tag)
@@ -255,30 +280,8 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                                 >
                                     全选
                                 </Checkbox>
-                            </Space> */}
-                            <YakFilterModuleList
-                                TYPE='SCAN-PORT'
-                                tag={tag}
-                                setTag={(v) => {
-                                    setTag(v)
-                                    search({limit: limit, keyword: keyword}, v)
-                                }}
-                                checkAll={checked}
-                                onCheckAllChange={allSelectScript}
-                                setSearchKeyword={(value) => {
-                                    setSearchKeyword(value)
-                                }}
-                                checkList={selected}
-                                searchType={searchType}
-                                setSearchType={setSearchType}
-                                refresh={refresh}
-                                setRefresh={setRefresh}
-                                onDeselect={() => {}}
-                                multipleCallBack={(value) => {
-                                    manySelectScript(value)
-                                }}
-                                settingRender={settingRender}
-                            />
+                            </Space>
+                }
                             {extra || <></>}
                         </>
                     )
