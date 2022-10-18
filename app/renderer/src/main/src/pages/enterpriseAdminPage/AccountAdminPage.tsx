@@ -7,7 +7,7 @@ import {useGetState, useMemoizedFn} from "ahooks"
 import moment from "moment"
 import "./AccountAdminPage.scss"
 import {failed, success, warn} from "@/utils/notification"
-import {PaginationSchema} from "../../pages/invoker/schema"
+import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 

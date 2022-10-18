@@ -119,8 +119,10 @@ const singletonRoute: Route[] = [
     // 插件
     Route.AddYakitScript,
     Route.OnlinePluginRecycleBin,
-    // 管理
-    Route.AccountAdminPage
+    // 账号管理
+    Route.AccountAdminPage,
+    // 角色管理
+    Route.RoleAdminPage
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -698,7 +700,8 @@ const Main: React.FC<MainProp> = (props) => {
         // 企业用户管理员登录
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
             setUserMenu([
-                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
+                {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
+                {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "账号管理"},
                 {key: "set-password", title: "修改密码"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
@@ -1310,6 +1313,10 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                                 if (key === "trust-list") setTrustShow(true)
                                                 if (key === "set-password") setPasswordShow(true)
+                                                if (key === "role-admin") {
+                                                    const key = Route.RoleAdminPage
+                                                    goRouterPage(key)
+                                                }
                                                 if (key === "account-admin") {
                                                     const key = Route.AccountAdminPage
                                                     goRouterPage(key)
