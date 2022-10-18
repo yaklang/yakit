@@ -13,6 +13,7 @@ export const queryYakScriptList = (
     keyword?: string,
     extraParam?: QueryYakScriptRequest,
     onFailed?: (e: any) => any,
+    tag?:string[],
 ) => {
     if (limit !== undefined && limit <= 0) {
         limit = 200
@@ -20,6 +21,7 @@ export const queryYakScriptList = (
     ipcRenderer.invoke("QueryYakScript", {
         Type: pluginType,
         ...(extraParam || {}),
+        Tag:tag,
         Keyword: keyword,
         Pagination: genDefaultPagination(limit, page),
     } as QueryYakScriptRequest).then((rsp: QueryYakScriptsResponse) => {
