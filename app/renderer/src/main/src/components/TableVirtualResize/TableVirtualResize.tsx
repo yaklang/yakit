@@ -396,7 +396,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const onSelectSearch = useMemoizedFn((valueSearch: string | string[], colKey: string) => {
         const newFilters = {
             ...filters,
-            [colKey]: valueSearch
+            [colKey]: valueSearch === "all" ? "" : valueSearch
         }
         setFilters({...newFilters})
         if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, newFilters)
@@ -646,7 +646,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                             columnsItem?.filterProps?.filtersType
                                                         )}
                                                         overlayClassName={style["search-popover"]}
-                                                        visible={opensPopover[columnsItem.dataKey]}
+                                                        visible={opensPopover[filterKey]}
                                                     >
                                                         <div
                                                             className={classNames(style["virtual-table-filter"], {
@@ -662,8 +662,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                             onClick={() => {
                                                                 setOpensPopover({
                                                                     ...opensPopover,
-                                                                    [columnsItem.dataKey]:
-                                                                        !opensPopover[columnsItem.dataKey]
+                                                                    [filterKey]: !opensPopover[filterKey]
                                                                 })
                                                             }}
                                                         >
@@ -859,6 +858,10 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         {wait: 200}
     ).run
 
+    const onSelectSingle = useMemoizedFn((f: string, record?: FiltersItemProps) => {
+        onSelect(f, record)
+    })
+
     const renderSingle = useMemoizedFn(() => {
         return (
             <div className={style["select-search-single"]}>
@@ -869,6 +872,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                         })}
                     >
                         <Search
+                            size='small'
                             onSearch={onSearch}
                             onChange={(e) => onSearch(e.target.value)}
                             {...filterSearchInputProps}
@@ -888,19 +892,20 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                         {filtersSelectAll.textAll || "all"}
                     </div>
                 )}
-                <div ref={containerRef}>
+                <div ref={containerRef} className={style["select-container"]}>
                     <div ref={wrapperRef}>
-                        {list.map((item) => (
-                            <div
-                                key={item.data.value}
-                                className={classNames(style["select-item"], {
-                                    [style["select-item-active"]]: value === item.data.value
-                                })}
-                                onClick={() => onSelect(item.data.value, item.data)}
-                            >
-                                {filterRender ? filterRender(item.data) : item.data.label || item.data.value}
-                            </div>
-                        ))}
+                        {(list.length > 0 &&
+                            list.map((item) => (
+                                <div
+                                    key={item.data.value}
+                                    className={classNames(style["select-item"], {
+                                        [style["select-item-active"]]: value === item.data.value
+                                    })}
+                                    onClick={() => onSelectSingle(item.data.value, item.data)}
+                                >
+                                    {filterRender ? filterRender(item.data) : item.data.label || item.data.value}
+                                </div>
+                            ))) || <div className={classNames(style["select-item"])}>暂无数据</div>}
                     </div>
                 </div>
             </div>
@@ -920,7 +925,6 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         {wait: 200}
     ).run
     const onSelectMultiple = useMemoizedFn((selectItem: FiltersItemProps) => {
-        console.log("value", value)
         if (value) {
             if (!Array.isArray(value)) return
             const index = value.findIndex((ele) => ele === selectItem.value)
@@ -966,23 +970,24 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                 </div>
                 <div ref={containerRef} className={style["select-container"]}>
                     <div ref={wrapperRef}>
-                        {list.map((item) => {
-                            const checked = Array.isArray(value)
-                                ? value?.findIndex((ele) => ele === item.data.value) !== -1
-                                : false
-                            return (
-                                <div
-                                    key={item.data.value}
-                                    className={classNames(style["select-item"], {
-                                        [style["select-item-active"]]: checked
-                                    })}
-                                    onClick={() => onSelectMultiple(item.data)}
-                                >
-                                    <Checkbox checked={checked} />
-                                    <span className={style["select-item-text"]}>{item.data.label}</span>
-                                </div>
-                            )
-                        })}
+                        {(list.length > 0 &&
+                            list.map((item) => {
+                                const checked = Array.isArray(value)
+                                    ? value?.findIndex((ele) => ele === item.data.value) !== -1
+                                    : false
+                                return (
+                                    <div
+                                        key={item.data.value}
+                                        className={classNames(style["select-item"], {
+                                            [style["select-item-active"]]: checked
+                                        })}
+                                        onClick={() => onSelectMultiple(item.data)}
+                                    >
+                                        <Checkbox checked={checked} />
+                                        <span className={style["select-item-text"]}>{item.data.label}</span>
+                                    </div>
+                                )
+                            })) || <div className={classNames(style["select-item"])}>暂无数据</div>}
                     </div>
                 </div>
                 <div className={style["select-footer"]}>
