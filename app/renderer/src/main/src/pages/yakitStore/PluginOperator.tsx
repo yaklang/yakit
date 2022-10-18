@@ -371,6 +371,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                             { Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: names.join("|") }
                                         ])
                                     }}
+                                    sourceType="PLUGIN_OPERATOR"
                                 />
                             }
                             firstMinSize={"300px"}

@@ -22,6 +22,7 @@ export interface SimplePluginListProp {
     verbose?: string | any
     bordered?: boolean
     disabled?: boolean
+    sourceType?: string
 }
 
 export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((props: SimplePluginListProp) => {
@@ -112,11 +113,12 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
             selectScript={selectYakScript}
             unSelectScript={unselectYakScript}
             search={search}
-            // title={props?.verbose || "插件"}
+            title={props?.verbose || "插件"}
             bodyStyle={{
                 padding: "0 4px",
                 overflow: "hidden"
             }}
+            sourceType={props.sourceType}
         />
     )
 })

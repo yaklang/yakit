@@ -189,6 +189,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                 onSelected={(l) => {
                                     setParams({...params, ScriptNames: [...l]})
                                 }}
+                                sourceType="PORT_SCAN_PAGE"
                             />
                         </div>
 
