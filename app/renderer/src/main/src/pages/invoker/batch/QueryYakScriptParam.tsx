@@ -454,7 +454,7 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
         <AutoCard
             title={
                 <YakFilterModuleList
-                    TYPE='BATCH-EXECUTOR-PAGE-EX'
+                    TYPE='BATCH_EXECUTOR_PAGE_EX'
                     tag={selectedTags}
                     setTag={(v:string[])=>{
                         if(v.length===0){

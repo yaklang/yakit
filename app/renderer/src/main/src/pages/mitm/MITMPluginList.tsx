@@ -15,7 +15,6 @@ import {clearMITMPluginCache, MITMYakScriptLoader} from "./MITMYakScriptLoader"
 import {failed, info} from "../../utils/notification"
 import {StringToUint8Array} from "../../utils/str"
 import "./MITMPluginList.scss"
-import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {queryYakScriptList} from "../yakitStore/network"
 import {enableMITMPluginMode} from "./MITMServerHijacking"
 
@@ -123,8 +122,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     const [tag, setTag] = useState<string[]>([])
     const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Tags")
     const [listNames, setListNames] = useState<string[]>([])
-    const onCheckAllChange = (e: CheckboxChangeEvent) => {
-        const {checked} = e.target
+    const onCheckAllChange = (checked:boolean) => {
         if (checked) {
             enableMITMPluginMode(listNames).then(() => {
                 // console.log("全选",listNames)
