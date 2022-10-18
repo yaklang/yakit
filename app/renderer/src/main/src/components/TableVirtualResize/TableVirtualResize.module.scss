@@ -458,7 +458,7 @@
 
     :global {
         .ant-popover-inner-content {
-            padding: 8px 0px;
+            padding: 8px 0 0 0;
         }
 
         .ant-popover-inner {
@@ -493,8 +493,13 @@
     }
 
     .select-search {
-        max-height: 60vh;
-        overflow-y: auto;
+        position: relative;
+
+        .select-container {
+            max-height: 40vh;
+            min-height: 34px;
+            overflow-y: auto;
+        }
 
         .select-item {
             display: flex;
@@ -554,21 +559,60 @@
         }
 
         .select-search-multiple {
+            padding: 24px 0;
+            width: 138px;
+
+            :global {
+                ::-webkit-scrollbar {
+                    height: 0;
+                    width: 0;
+                    color: transparent;
+                }
+            }
+
             .select-heard {
+                position: absolute;
+                top: 0;
+
                 :global {
                     .ant-select-selection-overflow {
                         flex-wrap: nowrap;
                         overflow-x: overlay;
                     }
-
-                    ::-webkit-scrollbar {
-                        height: 0;
-                        width: 0;
-                        color: transparent;
-                    }
                 }
             }
 
+            .select-footer {
+                border-top: 1px solid #EAECF3;
+                border-radius: 0px 0px 4px 4px;
+                width: calc(100% - 2px);
+                display: flex;
+                background: #F9FBFF;
+                height: 24px;
+                position: absolute;
+                bottom: 0;
+
+                .footer-bottom {
+                    flex: 1;
+                    font-weight: 500;
+                    font-size: 12px;
+                    height: 24px;
+                    padding: 4px 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                }
+
+                .select-reset {
+                    color: #85899E;
+                    border-right: 1px solid #EAECF3;
+                }
+
+                .select-sure {
+                    color: #F28B44;
+                }
+            }
         }
     }
 

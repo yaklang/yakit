@@ -1,7 +1,7 @@
-import React from "react";
+import React from "react"
 
 // @ts-ignore
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export interface YakQueryHTTPFlowRequest {
     SourceType?: string
@@ -13,9 +13,11 @@ export interface YakQueryHTTPFlowRequest {
     HaveBody?: boolean
     SearchContentType?: string
     Keyword?: string
-    OnlyWebsocket?: boolean,
-    ExcludeInUrl?: string[],
-    ExcludeId?: number[],
+    OnlyWebsocket?: boolean
+    ExcludeInUrl?: string[]
+    ExcludeId?: number[]
+    Tags?: string[]
+    HaveParamsTotal?: string
 }
 
 export interface Paging {
@@ -29,7 +31,7 @@ export const yakQueryHTTPFlow = (
     params: YakQueryHTTPFlowRequest,
     onOk?: (rsp: any) => any,
     onFailed?: (e: any) => any,
-    onFinally?: () => any,
+    onFinally?: () => any
 ) => {
-    ipcRenderer.invoke("query-http-flows", params).then(onOk).catch(onFailed).finally(onFinally);
+    ipcRenderer.invoke("query-http-flows", params).then(onOk).catch(onFailed).finally(onFinally)
 }

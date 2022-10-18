@@ -6,6 +6,8 @@ import {SelectProps} from "antd"
 export interface TableVirtualResizeProps<T> {
     ref?: any
     title?: string | ReactNode
+    renderTitle?: ReactNode
+    titleHeight?: number
     extra?: ReactNode
     data: T[] //可以传cellClassName用来控制单元格样式，不要传height
     renderKey: string
@@ -22,7 +24,8 @@ export interface TableVirtualResizeProps<T> {
     onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void // 查询条件变化
     loading?: boolean
     scrollToBottom?: number // 默认300
-    isReset?:boolean
+    isReset?: boolean
+    isShowTotal?: boolean
 }
 
 export interface SortProps {
@@ -59,6 +62,7 @@ export interface SorterProps {
     order?: string // none 无状态； asc 升序  desc 降序
 }
 export interface FilterProps {
+    filterRender?: (d: any) => ReactNode
     filterKey?: string
     filtersType?: "select" | "input"
     filtersSelectAll?: FiltersSelectAllProps //是否显示所有
@@ -73,7 +77,7 @@ export interface FilterProps {
 export interface FiltersSelectAllProps {
     isAll: boolean
     textAll?: string
-    valueAll?: string
+    valueAll?: strings
 }
 
 export interface RowSelectionProps<T> {
@@ -81,7 +85,7 @@ export interface RowSelectionProps<T> {
     type?: "checkbox" | "radio" //默认 checkbox
     hideSelectAll?: boolean
     selectedRowKeys?: string[]
-    onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows?: T) => void
+    onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows: T) => void
     onSelectAll?: (selectedRows: string[], selected: T[], checked: boolean) => void
 }
 
@@ -106,12 +110,14 @@ export interface scrollProps {
 export interface FiltersItemProps {
     value: string
     label: string
+    total?: string | number
 }
 
 export interface SelectSearchProps {
     loading?: boolean
     originalList: FiltersItemProps[]
-    onSelect: (f: string | string[], record: FiltersItemProps | FiltersItemProps[]) => void
+    onSelect: (f: string | string[], record?: FiltersItemProps | FiltersItemProps[]) => void
     value: string | string[]
     filterProps?: FilterProps
+    onClose:()=>void
 }

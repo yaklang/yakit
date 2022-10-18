@@ -398,7 +398,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptTagsAndType", {})
             .then((res: GetYakScriptTagsAndTypeResponse) => {
-                console.log("GetYakScriptTagsAndType", res)
                 if (res.Type) {
                     setTypeStatistics(res.Type.map((ele) => ele.Value))
                 }

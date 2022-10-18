@@ -46,13 +46,11 @@ interface ChildRef {
     tableRef: any
 }
 
-// export const TableVirtualResize = <T extends any>(props: TableVirtualResizeProps<T>) => {
-//     return React.forwardRef<ChildRef, TableVirtualResizeProps<T>>((props, ref) => {
-//         return <Table<T> {...props} />
-//     })
-// }
+function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: React.ForwardedRef<HTMLUListElement>) {
+    return <Table<T> {...props} ref={ref} />
+}
 
-export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableVirtualResizeProps<T>, ref) => {
+const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const defPagination = useCreation(
         () => ({
             page: 1,
@@ -73,7 +71,10 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
         loading,
         scrollToBottom,
         currentRowData,
-        isReset
+        isReset,
+        titleHeight,
+        renderTitle,
+        ref
     } = props
     const [currentRow, setCurrentRow] = useState<T>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
@@ -129,8 +130,7 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
             scrollTo(0)
         }
     }, [pagination])
-
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         getColumnsMinWidthList()
         getTableWidthAndColWidth(0)
         setColumns([...props.columns])
@@ -422,7 +422,7 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                 onMouseLeave={(e) => {
                     setOpensPopover({
                         ...opensPopover,
-                        [columnsItem.dataKey]: false
+                        [filterKey]: false
                     })
                 }}
             >
@@ -431,6 +431,12 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                     originalList={columnsItem?.filterProps?.filters || []}
                     onSelect={(v) => onSelectSearch(v, filterKey)}
                     value={filters[filterKey]}
+                    onClose={() =>
+                        setOpensPopover({
+                            ...opensPopover,
+                            [filterKey]: false
+                        })
+                    }
                 />
             </div>
         )
@@ -462,32 +468,38 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <div className={classNames(style["virtual-table-heard"])}>
-                <div className={classNames(style["virtual-table-heard-left"])}>
-                    {title && typeof title === "string" && (
-                        <div className={classNames(style["virtual-table-heard-title"])}>{title}</div>
-                    )}
-                    {title && React.isValidElement(title) && title}
-                    {pagination?.total && (
-                        <div className={style["virtual-table-heard-right"]}>
-                            <div className={style["virtual-table-heard-right-item"]}>
-                                <span className={style["virtual-table-heard-right-text"]}>Total</span>
-                                <span className={style["virtual-table-heard-right-number"]}>{pagination?.total}</span>
+            {renderTitle ? (
+                renderTitle
+            ) : (
+                <div className={classNames(style["virtual-table-heard"])}>
+                    <div className={classNames(style["virtual-table-heard-left"])}>
+                        {title && typeof title === "string" && (
+                            <div className={classNames(style["virtual-table-heard-title"])}>{title}</div>
+                        )}
+                        {title && React.isValidElement(title) && title}
+                        {props.isShowTotal && pagination?.total && (
+                            <div className={style["virtual-table-heard-right"]}>
+                                <div className={style["virtual-table-heard-right-item"]}>
+                                    <span className={style["virtual-table-heard-right-text"]}>Total</span>
+                                    <span className={style["virtual-table-heard-right-number"]}>
+                                        {pagination?.total}
+                                    </span>
+                                </div>
+                                <Divider type='vertical' />
+                                <div className={style["virtual-table-heard-right-item"]}>
+                                    <span className={style["virtual-table-heard-right-text"]}>Selected</span>
+                                    <span className={style["virtual-table-heard-right-number"]}>
+                                        {rowSelection?.selectedRowKeys?.length}
+                                    </span>
+                                </div>
                             </div>
-                            <Divider type='vertical' />
-                            <div className={style["virtual-table-heard-right-item"]}>
-                                <span className={style["virtual-table-heard-right-text"]}>Selected</span>
-                                <span className={style["virtual-table-heard-right-number"]}>
-                                    {rowSelection?.selectedRowKeys?.length}
-                                </span>
-                            </div>
-                        </div>
+                        )}
+                    </div>
+                    {extra && React.isValidElement(extra) && (
+                        <div className={classNames(style["virtual-table-heard-right"])}>{extra}</div>
                     )}
                 </div>
-                {extra && React.isValidElement(extra) && (
-                    <div className={classNames(style["virtual-table-heard-right"])}>{extra}</div>
-                )}
-            </div>
+            )}
             {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
                 <div
                     className={classNames(style["virtual-table-body"], {
@@ -497,7 +509,11 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                         [style["virtual-table-border-right"]]:
                             scroll.scrollRight > 0 && !isShowFixedShadow.isShowRightFixedShadow
                     })}
-                    style={{maxHeight: ((title || extra) && "calc(100% - 42px)") || "100%"}}
+                    style={{
+                        maxHeight:
+                            ((renderTitle || title || extra) && `calc(100% - ${titleHeight ? titleHeight : 42}px)`) ||
+                            "100%"
+                    }}
                 >
                     {enableDrag && lineIndex > -1 && (
                         <div
@@ -521,7 +537,7 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                         <div
                             className={classNames(style["virtual-table-fixed-right"])}
                             style={{
-                                right: rightFixedWidth + 5,
+                                right: rightFixedWidth - 5,
                                 width: 5,
                                 height: boxShowHeight,
                                 maxHeight: scroll.scrollBottom < 25 ? height - 49 - 28 : height - 49
@@ -530,7 +546,6 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                     )}
                     <div
                         ref={containerRef}
-                        id='containerRef'
                         className={classNames(style["virtual-table-list-container"], {
                             [style["virtual-table-container-none-select"]]: lineIndex > -1,
                             [style["scroll-y"]]: !showScrollY
@@ -671,7 +686,6 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
                         </div>
                         <div
                             ref={wrapperRef}
-                            id='wrapperRef'
                             className={classNames(style["virtual-table-list"])}
                             style={{width: tableWidth || width}}
                         >
@@ -792,11 +806,17 @@ export const TableVirtualResize = React.forwardRef(<T extends any>(props: TableV
             )}
         </div>
     )
-})
+}
 
-const SelectSearch: React.FC<SelectSearchProps> = (props) => {
-    const {originalList, onSelect, value, filterProps} = props
+// As an argument in `React.forwardRef`
+export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) as <T>(
+    props: TableVirtualResizeProps<T> & {ref?: React.ForwardedRef<HTMLUListElement>}
+) => ReturnType<typeof TableVirtualResizeFunction>
+
+export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
+    const {originalList, onSelect, value, filterProps, onClose} = props
     const {
+        filterRender,
         filtersSelectAll,
         filterMultiple,
         filterSearch,
@@ -806,18 +826,20 @@ const SelectSearch: React.FC<SelectSearchProps> = (props) => {
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
     const scrollDomRef = useRef<any>(null)
+    const selectRef = useRef<any>(null)
+
     const [data, setData] = useState<FiltersItemProps[]>(originalList)
     useEffect(() => {
         setData(originalList)
     }, [originalList])
     useEffect(() => {
         // 新版UI组件之前的过度写法
-        const selectDom = document.getElementsByClassName("select-small")[0]
-        const scrollDom = selectDom?.firstChild?.firstChild
+        const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
         if (!scrollDom) return
         scrollDomRef.current = scrollDom
     }, [])
 
+    // const oo = useMemo(() => Array.from(Array(99999).keys()), []);
     const [list] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
@@ -866,18 +888,20 @@ const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                         {filtersSelectAll.textAll || "all"}
                     </div>
                 )}
-                <div ref={wrapperRef} id='wrapperRef'>
-                    {list.map((item) => (
-                        <div
-                            key={item.data.value}
-                            className={classNames(style["select-item"], {
-                                [style["select-item-active"]]: value === item.data.value
-                            })}
-                            onClick={() => onSelect(item.data.value, item.data)}
-                        >
-                            {item.data.label}
-                        </div>
-                    ))}
+                <div ref={containerRef}>
+                    <div ref={wrapperRef}>
+                        {list.map((item) => (
+                            <div
+                                key={item.data.value}
+                                className={classNames(style["select-item"], {
+                                    [style["select-item-active"]]: value === item.data.value
+                                })}
+                                onClick={() => onSelect(item.data.value, item.data)}
+                            >
+                                {filterRender ? filterRender(item.data) : item.data.label || item.data.value}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         )
@@ -914,14 +938,22 @@ const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         }, 100)
     })
 
+    const onReset = useMemoizedFn(() => {
+        onSelect([])
+    })
+
+    const onSure = useMemoizedFn(() => {
+        onClose()
+    })
+
     const renderMultiple = useMemoizedFn(() => {
         return (
             <div className={style["select-search-multiple"]}>
-                <div className={style["select-heard"]}>
+                <div className={style["select-heard"]} ref={selectRef}>
                     <Select
                         size='small'
                         mode='tags'
-                        style={{width: 150}}
+                        style={{width: 124}}
                         onChange={onChangeSelect}
                         allowClear
                         value={Array.isArray(value) ? [...value] : []}
@@ -932,32 +964,41 @@ const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                         onFocus={() => onHandleScroll()}
                     />
                 </div>
-                <div ref={wrapperRef} id='wrapperRef'>
-                    {list.map((item) => {
-                        const checked = Array.isArray(value)
-                            ? value?.findIndex((ele) => ele === item.data.value) !== -1
-                            : false
-                        return (
-                            <div
-                                key={item.data.value}
-                                className={classNames(style["select-item"], {
-                                    [style["select-item-active"]]: checked
-                                })}
-                                onClick={() => onSelectMultiple(item.data)}
-                            >
-                                <Checkbox checked={checked} />
-                                <span className={style["select-item-text"]}>{item.data.label}</span>
-                            </div>
-                        )
-                    })}
+                <div ref={containerRef} className={style["select-container"]}>
+                    <div ref={wrapperRef}>
+                        {list.map((item) => {
+                            const checked = Array.isArray(value)
+                                ? value?.findIndex((ele) => ele === item.data.value) !== -1
+                                : false
+                            return (
+                                <div
+                                    key={item.data.value}
+                                    className={classNames(style["select-item"], {
+                                        [style["select-item-active"]]: checked
+                                    })}
+                                    onClick={() => onSelectMultiple(item.data)}
+                                >
+                                    <Checkbox checked={checked} />
+                                    <span className={style["select-item-text"]}>{item.data.label}</span>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+                <div className={style["select-footer"]}>
+                    <div
+                        className={classNames(style["footer-bottom"], style["select-reset"])}
+                        onClick={() => onReset()}
+                    >
+                        重置
+                    </div>
+                    <div className={classNames(style["footer-bottom"], style["select-sure"])} onClick={() => onSure()}>
+                        确定
+                    </div>
                 </div>
             </div>
         )
     })
 
-    return (
-        <div className={style["select-search"]} ref={containerRef}>
-            {(filterMultiple && renderMultiple()) || renderSingle()}
-        </div>
-    )
+    return <div className={style["select-search"]}>{(filterMultiple && renderMultiple()) || renderSingle()}</div>
 }

@@ -33,7 +33,15 @@ import style from "./HTTPFlowTable.module.scss"
 import {TableResizableColumn} from "../TableResizableColumn"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {useCreation, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
+import {
+    useCreation,
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useMemoizedFn,
+    useThrottleFn,
+    useVirtualList
+} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../../utils/basic"
 import {
@@ -44,14 +52,24 @@ import {
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
-import {CheckCircleIcon, FilterIcon, RefreshIcon, RemoveIcon, SearchIcon, StatusOfflineIcon} from "@/assets/newIcon"
+import {SelectSearch, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
+import {
+    CheckCircleIcon,
+    FilterIcon,
+    RefreshIcon,
+    RemoveIcon,
+    SearchIcon,
+    StatusOfflineIcon,
+    ColorSwatchIcon,
+    ChevronDownIcon
+} from "@/assets/newIcon"
 import classNames from "classnames"
-import {ColumnsTypeProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
 
 const {ipcRenderer} = window.require("electron")
 
 const {Option} = Select
+const {Search} = Input
 export interface HTTPHeaderItem {
     Header: string
     Value: string
@@ -456,10 +474,11 @@ const availableColors = [
         color: "RED",
         title: "红色[#fcf1f0]",
         className: TableRowColor("RED"),
+        searchWord: "YAKIT_COLOR_RED",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                红色
                 <div className={classNames(style["tag-color-display"], style["row-bg-color-red"])}></div>
+                红色
             </div>
         )
     },
@@ -467,10 +486,11 @@ const availableColors = [
         color: "GREEN",
         title: "绿色[#f0f9f4]",
         className: TableRowColor("GREEN"),
+        searchWord: "YAKIT_COLOR_GREEN",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                绿色
                 <div className={classNames(style["tag-color-display"], style["row-bg-color-green"])}></div>
+                绿色
             </div>
         )
     },
@@ -478,65 +498,71 @@ const availableColors = [
         color: "BLUE",
         title: "蓝色[#eff4fe]",
         className: TableRowColor("BLUE"),
+        searchWord: "YAKIT_COLOR_BLUE",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                蓝色
                 <div className={classNames(style["tag-color-display"], style["row-bg-color-blue"])}></div>
+                蓝色
             </div>
         )
     },
     {
         color: "YELLOW",
         title: "黄色[#fef8ef]",
+        searchWord: "YAKIT_COLOR_YELLOW",
         className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                黄色
                 <div className={classNames(style["tag-color-display"], style["row-bg-color-yellow"])}></div>
+                黄色
             </div>
         )
     },
     {
         color: "ORANGE",
         title: "橙色[#f7f8fa]",
+        searchWord: "YAKIT_COLOR_ORANGE",
         className: TableRowColor("ORANGE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                橙色
                 <div className={classNames(style["tag-color-display"], style["row-bg-color-orange"])}></div>
+                橙色
             </div>
         )
     },
     {
         color: "PURPLE",
         title: "紫色[#f3effe]",
+        searchWord: "YAKIT_COLOR_PURPLE",
         className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                紫色
                 <div className={classNames(style["tag-color-display"], style["row-bg-color-purple"])}></div>
+                紫色
             </div>
         )
     },
     {
         color: "CYAN",
         title: "天蓝色[#B5F5EC]",
+        searchWord: "YAKIT_COLOR_CYAN",
         className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                天蓝色
                 <div className={classNames(style["tag-color-display"], style["row-bg-color-cyan"])}></div>
+                天蓝色
             </div>
         )
     },
     {
         color: "GREY",
         title: "灰色[#D9D9D9]",
+        searchWord: "YAKIT_COLOR_GREY",
         className: TableRowColor("GREY"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                灰色
                 <div className={classNames(style["tag-color-display"], style["row-bg-color-grey"])}></div>
+                灰色
             </div>
         )
     }
@@ -546,6 +572,16 @@ export interface YakQueryHTTPFlowResponse {
     Data: HTTPFlow[]
     Total: number
     Pagination: PaginationSchema
+}
+
+export interface HTTPFlowsFieldGroupResponse {
+    Tags: TagsCode[]
+    StatusCode: TagsCode[]
+}
+
+interface TagsCode {
+    Value: string
+    Total: number
 }
 
 interface CompateData {
@@ -591,7 +627,8 @@ interface shieldData {
 
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
-    const [params, setParams] = useState<YakQueryHTTPFlowRequest>(props.params || {SourceType: "mitm"})
+    const [color, setColor] = useState<string>("")
+    const [params, setParams] = useState<YakQueryHTTPFlowRequest>(props.params || {SourceType: "mitm", Tags: []})
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: OFFSET_LIMIT,
         Order: "desc",
@@ -817,12 +854,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             console.log("paginationProps", {
                 SourceType: sourceType,
                 ...params,
+                Tags: [...(params.Tags || []), color],
                 Pagination: {...paginationProps}
             })
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: sourceType,
                     ...params,
+                    Tags: [...(params.Tags || []), color],
                     Pagination: {...paginationProps}
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -844,10 +883,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             return newItem
                         })
                     }
-                    // console.log(
-                    //     "rsp?.Data",
-                    //     rsp?.Data.map((ele) => ele.Id)
-                    // )
+                    if (paginationProps.Page == 1) {
+                        setSelectedRowKeys([])
+                        setSelectedRows([])
+                    }
+                    console.log("newData", newData)
 
                     setData(paginationProps.Page == 1 ? newData : data.concat(newData))
                     setPagination(rsp.Pagination)
@@ -898,6 +938,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             update()
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
+    useEffect(() => {
+        console.log("tableRef.current", tableRef.current)
+    }, [tableRef.current])
     const scrollTableTo = useMemoizedFn((index: number) => {
         if (!tableRef || !tableRef.current) return
         // const table = tableRef.current as unknown as {
@@ -905,14 +948,28 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         //     scrollLeft: (number) => any
         // }
         // table.scrollTop(size)
+        console.log("tableRef.current", tableRef.current)
+
         tableRef.current.scrollTo(index)
     })
 
     const [isHaveIncrement, setIsHaveIncrement] = useState<boolean>(false)
     const [maxId, setMaxId] = useState<number>(0)
+    const [newTotal, setNewTotal] = useState<number>(0) //用来刷新tags服务器缓存的
+    const [tags, setTags] = useState<FiltersItemProps[]>([])
+    const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
+
     useEffect(() => {
         getNewData()
+        getHTTPFlowsFieldGroup(false)
     }, [])
+    useEffect(() => {
+        if (newTotal > 0) {
+            // 刷新
+            getHTTPFlowsFieldGroup(true)
+        }
+    }, [newTotal])
+    // 获取最新的数据
     const getNewData = useMemoizedFn(() => {
         ipcRenderer
             .invoke("QueryHTTPFlows", {
@@ -921,13 +978,30 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {Page: 1, Limit: 1, Order: "desc", OrderBy: "id"}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                console.log("rsp", rsp)
+                // console.log("rsp", rsp)
                 if (rsp.Data.length > 0) {
                     setMaxId(rsp.Data[0].Id)
                 }
+                setNewTotal(rsp.Total)
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
+            })
+    })
+    // 获取tags等分组
+    const getHTTPFlowsFieldGroup = useMemoizedFn((RefreshRequest: boolean) => {
+        ipcRenderer
+            .invoke("HTTPFlowsFieldGroup", {
+                RefreshRequest
+            })
+            .then((rsp: HTTPFlowsFieldGroupResponse) => {
+                const statusCode = rsp.StatusCode.map((ele) => ({value: ele.Value, total: ele.Total, label: ele.Value}))
+                const tags = rsp.Tags
+                setTags(tags.map((ele) => ({label: ele.Value, value: ele.Value})))
+                setStatusCode([...statusCode])
+            })
+            .catch((e: any) => {
+                failed(`query HTTP Flows Field Group failed: ${e}`)
             })
     })
     const scrollUpdateTop = useDebounceFn(
@@ -967,7 +1041,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             offsetData = offsetData.splice(0, MAX_ROW_COUNT)
                         }
                         setData(offsetData)
-                        // scrollTableTo(0)
+                        scrollTableTo(0)
                     } else {
                         setIsHaveIncrement(true)
                     }
@@ -1103,7 +1177,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             ipcRenderer
                                 .invoke("DeleteHTTPFlows", newParams)
                                 .then((i: HTTPFlow) => {
-                                    setParams(props.params || {SourceType: "mitm"})
+                                    setParams(props.params || {SourceType: "mitm", Tags: []})
                                 })
                                 .catch((e: any) => {
                                     failed(`历史记录删除失败: ${e}`)
@@ -1218,36 +1292,13 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filters: [
-                        {
-                            label: "200",
-                            value: "200"
-                        },
-                        {
-                            label: "204",
-                            value: "204"
-                        },
-                        {
-                            label: "401",
-                            value: "401"
-                        },
-                        {
-                            label: "404",
-                            value: "404"
-                        },
-                        {
-                            label: "502",
-                            value: "502"
-                        },
-                        {
-                            label: "302",
-                            value: "302"
-                        },
-                        {
-                            label: "500",
-                            value: "500"
-                        }
-                    ]
+                    filterRender: (item: FiltersItemProps) => (
+                        <div className={style[""]}>
+                            <span>{item.value}</span>
+                            <span>{item.total}</span>
+                        </div>
+                    ),
+                    filters: statusCode
                 },
                 render: (text) => <div className={style["status-code"]}>{text}</div>
             },
@@ -1370,14 +1421,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 }
             }
         ]
-    }, [])
-    // console.log(
-    //     "data",
-    //     data.map((ele) => ele.Id)
-    // )
-
+    }, [statusCode])
     const [isReset, setIsReset] = useState<boolean>(false)
-    const [isOpenBatchMenu, setIsOpenBatchMenu] = useState<boolean>(false)
 
     const onSendToTab = (rowData) => {
         ipcRenderer.invoke("send-to-tab", {
@@ -1422,6 +1467,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             onClickBatch: (_, number) => onBatch(onSendToTab, number)
         },
         {
+            title: "数据包扫描",
+            onClickSingle: () => {}
+        },
+        {
             title: "复制 URL",
             number: 10,
             onClickSingle: (v) => callCopyToClipboard(v.Url),
@@ -1445,7 +1494,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         },
         {
             title: "复制为 Yak PoC 模版",
-            onClickSingle:()=>{},
+            onClickSingle: () => {},
             subMenuItems: [
                 {
                     title: "数据包 PoC 模版",
@@ -1464,7 +1513,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 },
                 {
                     title: "批量检测 PoC 模版",
-                    onClick: () => {
+                    onClick: (v) => {
                         const flow = v as HTTPFlow
                         if (!flow) return
                         generateYakCodeByRequest(
@@ -1478,23 +1527,223 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     }
                 }
             ]
+        },
+        {
+            title: "标注颜色",
+            number: 10,
+            onClickSingle: () => {},
+            subMenuItems: availableColors.map((i) => {
+                return {
+                    title: i.title,
+                    render: i.render,
+                    onClick: (v) => {
+                        const flow = v as HTTPFlow
+                        if (!flow) {
+                            return
+                        }
+                        const existedTags = flow.Tags
+                            ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
+                            : []
+                        existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
+                        ipcRenderer
+                            .invoke("SetTagForHTTPFlow", {
+                                Id: flow.Id,
+                                Hash: flow.Hash,
+                                Tags: existedTags
+                            })
+                            .then(() => {
+                                info(`设置 HTTPFlow 颜色成功`)
+                                if (!autoReload) {
+                                    setData(
+                                        data.map((item) => {
+                                            if (item.Hash === flow.Hash) {
+                                                item.cellClassName = i.className
+                                                item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
+                                                return item
+                                            }
+                                            return item
+                                        })
+                                    )
+                                }
+                            })
+                    }
+                }
+            })
+        },
+        {
+            title: "移除颜色",
+            onClickSingle: (v) => {
+                const flow = v as HTTPFlow
+                if (!flow) return
+                const existedTags = flow.Tags
+                    ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
+                    : []
+                existedTags.pop()
+                ipcRenderer
+                    .invoke("SetTagForHTTPFlow", {
+                        Id: flow.Id,
+                        Hash: flow.Hash,
+                        Tags: existedTags
+                    })
+                    .then(() => {
+                        info(`清除 HTTPFlow 颜色成功`)
+                        if (!autoReload) {
+                            setData(
+                                data.map((item) => {
+                                    if (item.Hash === flow.Hash) {
+                                        item.cellClassName = ""
+                                        item.Tags = ""
+                                        return item
+                                    }
+                                    return item
+                                })
+                            )
+                        }
+                    })
+            }
+        },
+        {
+            title: "发送到对比器",
+            onClickSingle: () => {},
+            subMenuItems: [
+                {
+                    title: "发送到对比器左侧",
+                    onClick: (v) => {
+                        setCompareLeft({
+                            content: new Buffer(v.Request).toString("utf8"),
+                            language: "http"
+                        })
+                    },
+                    disabled: [false, true, false][compareState]
+                },
+                {
+                    title: "发送到对比器右侧",
+                    onClick: (v) => {
+                        setCompareRight({
+                            content: new Buffer(v.Request).toString("utf8"),
+                            language: "http"
+                        })
+                    },
+                    disabled: [false, false, true][compareState]
+                }
+            ]
+        },
+        {
+            title: "屏蔽",
+            onClickSingle: () => {},
+            subMenuItems: [
+                {
+                    title: "屏蔽该记录",
+                    onClick: (v) => {
+                        const id = parseInt(`${v?.Id}`)
+                        const newArr = filterItem([...shieldData.data, id])
+                        const newObj = {...shieldData, data: newArr}
+                        setShieldData(newObj)
+                    }
+                },
+                {
+                    title: "屏蔽URL",
+                    onClick: (v) => {
+                        let Url = v?.Url
+                        // 根据URL拿到ID数组
+                        const newArr = filterItem([...shieldData.data, Url])
+                        const newObj = {...shieldData, data: newArr}
+                        setShieldData(newObj)
+                    }
+                },
+                {
+                    title: "屏蔽域名",
+                    onClick: (v) => {
+                        const host = v?.HostPort?.split(":")[0] || ""
+                        // 根据host拿到对应ID数组
+                        const newArr = filterItem([...shieldData.data, host])
+                        const newObj = {...shieldData, data: newArr}
+                        setShieldData(newObj)
+                    }
+                }
+            ]
+        },
+        {
+            title: "删除",
+            onClickSingle: () => {},
+            subMenuItems: [
+                {
+                    title: "删除该记录",
+                    onClick: (v) => {
+                        setLoading(true)
+                        ipcRenderer
+                            .invoke("DeleteHTTPFlows", {
+                                Id: [v.Id]
+                            })
+                            .then(() => {
+                                info("删除成功")
+                                update()
+                            })
+                            .finally(() => setTimeout(() => setLoading(false), 100))
+                    },
+                    danger: true
+                },
+                {
+                    title: "删除URL",
+                    onClick: (v) => {
+                        setLoading(true)
+                        const flow = v as HTTPFlow
+                        ipcRenderer
+                            .invoke("DeleteHTTPFlows", {
+                                URLPrefix: flow?.Url
+                            })
+                            .then(() => {
+                                info("删除成功")
+                                update()
+                            })
+                            .finally(() => setTimeout(() => setLoading(false), 100))
+                    }
+                },
+                {
+                    title: "删除域名",
+                    onClick: (v) => {
+                        setLoading(true)
+                        const flow = v as HTTPFlow
+                        const host = flow?.HostPort?.split(":")[0]
+                        ipcRenderer
+                            .invoke("DeleteHTTPFlows", {
+                                URLPrefix: host
+                            })
+                            .then(() => {
+                                info("删除成功")
+                                update()
+                            })
+                            .finally(() => setTimeout(() => setLoading(false), 100))
+                    }
+                }
+            ]
         }
     ]
     const onRowContextMenu = (rowData: HTTPFlow, event: React.MouseEvent) => {
         if (rowData) {
             setSelected(rowData)
         }
-        // showByCursorMenu(
-        //     {
-        //         content: menuData.map((ele) => ({
-        //             title: ele.title,
-        //             onClick: () => ele.onClickSingle(rowData),
-        //             subMenuItems:ele.subMenuItems||[]
-        //         }))
-        //     },
-        //     event.clientX,
-        //     event.clientY
-        // )
+        showByCursorMenu(
+            {
+                content: menuData.map((ele) => {
+                    if (ele.title === "数据包扫描") {
+                        return GetPacketScanByCursorMenuItem(rowData.Id)
+                    }
+                    return {
+                        title: ele.title,
+                        onClick: () => ele.onClickSingle(rowData),
+                        subMenuItems:
+                            ele.subMenuItems?.map((subItem) => ({
+                                title: subItem.title,
+                                render: subItem.render ? subItem.render : undefined,
+                                onClick: () => subItem.onClick(rowData)
+                            })) || []
+                    }
+                })
+            },
+            event.clientX,
+            event.clientY
+        )
         // showByCursorMenu(
         //     {
         //         content: [
@@ -1884,115 +2133,276 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                  </div>          
             </div>
             <div className={style["table-virtual-resize"]}>
-                {/* @ts-ignore */}
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}
-                    title='HTTP History'
-                    isReset={isReset}
-                    extra={
-                        <div className={style["http-history-table-extra"]}>
-                            {shieldData?.data.length > 0 && (
-                                <Popover
-                                    placement='bottom'
-                                    trigger='click'
-                                    content={
-                                        <div className={style["title-header"]}>
-                                            {shieldData?.data.map((item: number | string) => (
-                                                <div className={style["title-selected-tag"]} key={item}>
-                                                    <Tooltip title={item}>
-                                                        <div className={classNames(style["tag-name-style"])}>
-                                                            {item}
-                                                        </div>
-                                                    </Tooltip>
-                                                    <div
-                                                        className={classNames(style["tag-del-style"])}
-                                                        onClick={() => cancleFilter(item)}
-                                                    >
-                                                        <RemoveIcon />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    }
-                                    overlayClassName={style["shield-popover"]}
-                                >
-                                    <div className={style["extra-left-shield"]}>
-                                        <span>已屏蔽条件</span>
-                                        <span className={style["extra-left-number"]}>{shieldData?.data.length}</span>
-                                        <StatusOfflineIcon className={style["extra-left-shield-icon"]} />
+                    titleHeight={80}
+                    renderTitle={
+                        <div className={style["http-history-table-title"]}>
+                            <div className={style["http-history-table-title-space-between"]}>
+                                <div className={style["http-history-table-flex"]}>
+                                    <div className={style["http-history-table-text"]}>HTTP History</div>
+                                    <div className={style["http-history-table-tip"]}>
+                                        启用排序功能后页面无法刷新实时数据，需要手动刷新查看
                                     </div>
-                                </Popover>
-                            )}
-
-                            <div className={style["extra-right"]}>
-                                <div className={style["extra-right-item"]}>
-                                    <div className={style["extra-right-label"]}>只看 Websocket</div>
-                                    <Switch size='small' defaultChecked={true} />
                                 </div>
-                                <div className={style["extra-right-filter-small"]}>
-                                    <Button size='small' icon={<FilterIcon />}></Button>
-                                </div>
-                                <TableFilter style={{color: "#85899E"}} />
-                                <Input
-                                    size='small'
-                                    className={style["extra-right-search"]}
-                                    placeholder='请输入关键词搜索'
-                                    prefix={<SearchIcon style={{color: "#85899E"}} />}
-                                />
-                                <div className={style["extra-right-search-icon"]}>
-                                    <Button size='small' icon={<SearchIcon style={{color: "#85899E"}} />}></Button>
-                                </div>
-                                <Divider type='vertical' />
-                                <div className={style["extra-right-button"]}>
-                                    <Popover
-                                        content={
-                                            <div>
-                                                {menuData.map(
-                                                    (m) =>
-                                                        m.onClickBatch && (
-                                                            <div onClick={() => m.onClickBatch(selectedRows, m.number)}>
-                                                                {m.title}
-                                                            </div>
-                                                        )
-                                                )}
-                                            </div>
-                                        }
-                                        trigger='click'
-                                        open={isOpenBatchMenu}
-                                        placement='bottomLeft'
+                                <div className={style["http-history-table-flex"]}>
+                                    <Search
+                                        size='small'
+                                        className={style["http-history-table-right-search"]}
+                                        placeholder='请输入关键词搜索'
+                                        value={params.Keyword}
+                                        onChange={(e) => {
+                                            setParams({...params, Keyword: e.target.value})
+                                        }}
+                                        onSearch={(v) => {
+                                            update(1)
+                                        }}
+                                    />
+                                    <Divider type='vertical' />
+                                    <div className={style["empty-button"]}>
+                                        <Button danger ghost size='small'>
+                                            清空
+                                        </Button>
+                                    </div>
+                                    <Badge
+                                        dot={isHaveIncrement}
+                                        offset={[1, 2]}
+                                        className={style["http-history-table-badge"]}
                                     >
-                                        <a onClick={(e) => setIsOpenBatchMenu(true)}>批量操作</a>
-                                    </Popover>
-
-                                    {/* <Button size='small' onClick={(e) => onBatchMenu(e)}>
-                                        批量操作
-                                    </Button> */}
+                                        <div
+                                            onClick={() => {
+                                                sortRef.current = {
+                                                    order: "desc",
+                                                    orderBy: "Id"
+                                                }
+                                                setParams(props.params || {SourceType: "mitm"})
+                                                setIsReset(!isReset)
+                                                setTimeout(() => {
+                                                    update(1)
+                                                }, 100)
+                                            }}
+                                        >
+                                            <RefreshIcon style={{color: "#85899E", cursor: "pointer"}} />
+                                        </div>
+                                    </Badge>
                                 </div>
-                                <div className={style["extra-right-button"]}>
-                                    <Button danger ghost size='small'>
-                                        删除
-                                    </Button>
-                                </div>
-                                <Badge dot={isHaveIncrement} offset={[-5, 0]}>
-                                    <div
-                                        onClick={() => {
-                                            sortRef.current = {
-                                                order: "desc",
-                                                orderBy: "Id"
+                            </div>
+                            <div className={style["http-history-table-line"]} />
+                            <div
+                                className={classNames(
+                                    style["http-history-table-title-space-between"],
+                                    style["http-history-table-row"]
+                                )}
+                            >
+                                <div className={style["http-history-table-flex"]}>
+                                    {shieldData?.data.length > 0 && (
+                                        <Popover
+                                            placement='bottom'
+                                            trigger='click'
+                                            content={
+                                                <div className={style["title-header"]}>
+                                                    {shieldData?.data.map((item: number | string) => (
+                                                        <div className={style["title-selected-tag"]} key={item}>
+                                                            <Tooltip title={item}>
+                                                                <div className={classNames(style["tag-name-style"])}>
+                                                                    {item}
+                                                                </div>
+                                                            </Tooltip>
+                                                            <div
+                                                                className={classNames(style["tag-del-style"])}
+                                                                onClick={() => cancleFilter(item)}
+                                                            >
+                                                                <RemoveIcon />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             }
-                                            setParams(props.params || {SourceType: "mitm"})
-                                            setIsReset(!isReset)
+                                            overlayClassName={style["http-history-table-shield-popover"]}
+                                        >
+                                            <div className={style["http-history-table-left-shield"]}>
+                                                <span>已屏蔽条件</span>
+                                                <span className={style["http-history-table-left-number"]}>
+                                                    {shieldData?.data.length}
+                                                </span>
+                                                <StatusOfflineIcon
+                                                    className={style["http-history-table-left-shield-icon"]}
+                                                />
+                                            </div>
+                                        </Popover>
+                                    )}
+                                    <div className={style["http-history-table-total"]}>
+                                        <div className={style["http-history-table-total-item"]}>
+                                            <span className={style["http-history-table-total-item-text"]}>Total</span>
+                                            <span className={style["http-history-table-total-item-number"]}>
+                                                {total}
+                                            </span>
+                                        </div>
+                                        <Divider type='vertical' />
+                                        <div className={style["http-history-table-total-item"]}>
+                                            <span className={style["http-history-table-total-item-text"]}>
+                                                Selected
+                                            </span>
+                                            <span className={style["http-history-table-total-item-number"]}>
+                                                {selectedRowKeys?.length}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={style["http-history-table-right"]}>
+                                    <div className={style["http-history-table-right-item"]}>
+                                        <div className={style["http-history-table-right-label"]}>只看 Websocket</div>
+                                        <Switch
+                                            size='small'
+                                            checked={params.OnlyWebsocket}
+                                            onChange={() => {
+                                                setParams({...params, OnlyWebsocket: !params.OnlyWebsocket})
+                                            }}
+                                        />
+                                    </div>
+                                    <div className={style["http-history-table-right-filter-small"]}>
+                                        <Popover
+                                            overlayClassName={style["http-history-table-right-filter-popover"]}
+                                            content={
+                                                <TableFilter
+                                                    isVertical={true}
+                                                    tags={tags}
+                                                    setTags={(t) => {
+                                                        setParams({
+                                                            ...params,
+                                                            Tags: t
+                                                        })
+                                                        setTimeout(() => {
+                                                            update(1)
+                                                        }, 100)
+                                                    }}
+                                                    setContentType={(t) => {
+                                                        setParams({
+                                                            ...params,
+                                                            SearchContentType: t.join(",")
+                                                        })
+                                                        setTimeout(() => {
+                                                            update(1)
+                                                        }, 100)
+                                                    }}
+                                                    tagsValue={params.Tags || []}
+                                                    contentTypeValue={
+                                                        params.SearchContentType
+                                                            ? params.SearchContentType?.split(",")
+                                                            : []
+                                                    }
+                                                />
+                                            }
+                                            trigger='click'
+                                            placement='bottomLeft'
+                                        >
+                                            <Button size='small' icon={<FilterIcon />}></Button>
+                                        </Popover>
+                                    </div>
+                                    <TableFilter
+                                        tags={tags}
+                                        tagsValue={params.Tags || []}
+                                        contentTypeValue={
+                                            params.SearchContentType ? params.SearchContentType?.split(",") : []
+                                        }
+                                        setTags={(t) => {
+                                            setParams({
+                                                ...params,
+                                                Tags: t
+                                            })
                                             setTimeout(() => {
                                                 update(1)
                                             }, 100)
                                         }}
-                                    >
-                                        <RefreshIcon style={{color: "#85899E", cursor: "pointer"}} />
+                                        setContentType={(t) => {
+                                            setParams({
+                                                ...params,
+                                                SearchContentType: t.join(",")
+                                            })
+                                            setTimeout(() => {
+                                                update(1)
+                                            }, 100)
+                                        }}
+                                    />
+                                    <div className={style["http-history-table-color-swatch"]}>
+                                        <Popover
+                                            overlayClassName={style["http-history-table-color-popover"]}
+                                            content={
+                                                <>
+                                                    {availableColors.map((ele) => (
+                                                        <div
+                                                            className={classNames(
+                                                                style["http-history-table-color-item"],
+                                                                {
+                                                                    [style["http-history-table-color-item-active"]]:
+                                                                        ele.searchWord === color
+                                                                }
+                                                            )}
+                                                            onClick={() => {
+                                                                if (ele.searchWord === color) {
+                                                                    setColor("")
+                                                                } else {
+                                                                    setColor(ele.searchWord)
+                                                                }
+                                                                setTimeout(() => {
+                                                                    update(1)
+                                                                }, 100)
+                                                            }}
+                                                        >
+                                                            {ele.render}
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            }
+                                            trigger='click'
+                                            placement='bottomLeft'
+                                        >
+                                            <div
+                                                className={classNames(style["color-swatch-icon"], {
+                                                    [style["color-swatch-icon-active"]]: color
+                                                })}
+                                            >
+                                                <Button size='small' icon={<ColorSwatchIcon />}></Button>
+                                            </div>
+                                        </Popover>
                                     </div>
-                                </Badge>
+                                    <div className={style["right-button"]}>
+                                        <Popover
+                                            content={
+                                                <div>
+                                                    {menuData.map(
+                                                        (m) =>
+                                                            m.onClickBatch && (
+                                                                <div
+                                                                    onClick={() =>
+                                                                        m.onClickBatch(selectedRows, m.number)
+                                                                    }
+                                                                >
+                                                                    {m.title}
+                                                                </div>
+                                                            )
+                                                    )}
+                                                </div>
+                                            }
+                                            trigger='click'
+                                            placement='bottomLeft'
+                                        >
+                                            <Button size='small'>
+                                                批量操作
+                                                <ChevronDownIcon style={{color: "#85899E"}} />
+                                            </Button>
+                                        </Popover>
+                                    </div>
+                                    <div className={style["right-button"]}>
+                                        <Button danger ghost size='small'>
+                                            删除
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     }
+                    isReset={isReset}
                     // data={autoReload ? data : [TableFirstLinePlaceholder].concat(data)}
                     renderKey='Id'
                     // data={data.filter((_,index)=>index<5)}
@@ -2024,31 +2434,240 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     )
 }
 
-const TableFilter: React.FC = () => {
+const contentType: FiltersItemProps[] = [
+    {
+        value: "charset=utf-8",
+        label: "charset=utf-8"
+    },
+    {
+        value: "application/json",
+        label: "application/json"
+    },
+    {
+        value: "multipart/form-data",
+        label: "multipart/form-data"
+    },
+    {
+        value: "application/pdf",
+        label: "application/pdf"
+    },
+    {
+        value: "application/msword",
+        label: "application/msword"
+    },
+    {
+        value: "application/octet-stream",
+        label: "application/octet-stream"
+    },
+    {
+        value: "application/x-www-form-urlencoded",
+        label: "application/x-www-form-urlencoded"
+    },
+    {
+        value: "application/xhtml+xml",
+        label: "application/xhtml+xml"
+    },
+    {
+        value: "application/xml",
+        label: "application/xml"
+    },
+    {
+        value: "application/atom+xml",
+        label: "application/atom+xml"
+    },
+    {
+        value: "text/html",
+        label: "text/html"
+    },
+    {
+        value: "text/plain",
+        label: "text/plain"
+    },
+    {
+        value: "text/xml",
+        label: "text/xml"
+    },
+    {
+        value: "image/gif",
+        label: "image/gif"
+    },
+    {
+        value: "image/jpeg",
+        label: "image/jpeg"
+    },
+    {
+        value: "image/png",
+        label: "image/png"
+    }
+]
+
+interface TableFilterProps {
+    isVertical?: boolean
+    tags: FiltersItemProps[]
+    contentTypeValue: string[]
+    tagsValue: string[]
+    setTags: (v: string[]) => void
+    setContentType: (v: string[]) => void
+}
+
+const TableFilter: React.FC<TableFilterProps> = (props) => {
+    const {isVertical, tags, tagsValue, setTags, contentTypeValue, setContentType} = props
+    const onSelect = useMemoizedFn((values: string[]) => {
+        setTags([...values])
+    })
+    const onSelectType = useMemoizedFn((values: string[]) => {
+        setContentType([...values])
+    })
     return (
-        <div className={style["extra-right-filter-large"]}>
-            <div className={style["extra-right-filter-item"]}>
-                <span className={style["extra-right-label"]}>响应类型</span>
-                <Select defaultValue='all' size='small' className={style["extra-right-filter-select"]}>
-                    <Option value='all'>all</Option>
-                    <Option value='jack'>Jack</Option>
-                    <Option value='lucy'>Lucy</Option>
-                    <Option value='Yiminghe'>yiminghe</Option>
-                </Select>
+        <div className={classNames(style["http-history-table-right-filter-large"])}>
+            <div
+                className={classNames(style["http-history-table-right-filter-item"], {
+                    [style["http-history-table-filter-vertical"]]: isVertical
+                })}
+            >
+                <span className={style["http-history-table-right-label"]}>响应类型</span>
+                <MultipleSelect options={contentType} value={contentTypeValue} onSelect={onSelectType} />
             </div>
-            <div className={style["extra-right-filter-item"]}>
-                <span className={style["extra-right-label"]}>Tags</span>
+            <div
+                className={classNames(style["http-history-table-right-filter-item"], {
+                    [style["http-history-table-filter-vertical"]]: isVertical
+                })}
+            >
+                <span className={style["http-history-table-right-label"]}>Tags</span>
+                <MultipleSelect options={tags} value={tagsValue} onSelect={onSelect} />
+            </div>
+        </div>
+    )
+}
+
+interface MultipleSelectProps {
+    onSelect: (values: string[], option?: FiltersItemProps | FiltersItemProps[]) => void
+    value: string | string[]
+    options: FiltersItemProps[]
+}
+const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
+    const {onSelect, value, options} = props
+    const [showList, setShowList] = useState<boolean>(false)
+    const containerRef = useRef(null)
+    const wrapperRef = useRef(null)
+    const scrollDomRef = useRef<any>(null)
+    const selectRef = useRef<any>(null)
+    useEffect(() => {
+        // 新版UI组件之前的过度写法
+        const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
+        if (!scrollDom) return
+        scrollDomRef.current = scrollDom
+    }, [])
+    const onHandleScroll = useMemoizedFn(() => {
+        scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
+        setShowList(true)
+    })
+    const onChangeSelect = useDebounceFn(
+        useMemoizedFn((values: string[], option: FiltersItemProps[]) => {
+            onSelect(values, option)
+            // 滑动至最右边
+            onHandleScroll()
+        }),
+        {wait: 200}
+    ).run
+    // const originalList = useMemo(() => Array.from(Array(99999).keys()), [])
+    const [list] = useVirtualList(options, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 34,
+        overscan: 10
+    })
+    const onSelectMultiple = useMemoizedFn((selectItem: FiltersItemProps) => {
+        console.log("value,selectItem", value, selectItem)
+        if (value) {
+            if (!Array.isArray(value)) return
+            const index = value.findIndex((ele) => ele === selectItem.value)
+            if (index === -1) {
+                onSelect([...value, selectItem.value], selectItem)
+            } else {
+                value.splice(index, 1)
+                onSelect(value, selectItem)
+            }
+        } else {
+            onSelect([selectItem.value], selectItem)
+        }
+        setTimeout(() => {
+            onHandleScroll()
+        }, 100)
+    })
+
+    const onReset = useMemoizedFn(() => {
+        onSelect([])
+    })
+
+    const onSure = useMemoizedFn(() => {
+        setShowList(false)
+    })
+    // console.log("list", list, options)
+
+    return (
+        <div className={style["select-search-multiple"]}>
+            <div className={style["select-heard"]} ref={selectRef} onClick={() => setShowList(true)}>
                 <Select
-                    placeholder='请选择...'
                     size='small'
-                    className={style["extra-right-filter-select"]}
-                    mode='multiple'
-                    maxTagCount={1}
-                >
-                    <Option value='jack'>Jack</Option>
-                    <Option value='lucy'>Lucy</Option>
-                    <Option value='Yiminghe'>yiminghe</Option>
-                </Select>
+                    mode='tags'
+                    style={{width: 150}}
+                    onChange={onChangeSelect}
+                    allowClear
+                    value={Array.isArray(value) ? [...value] : []}
+                    dropdownStyle={{height: 0, padding: 0}}
+                    options={options}
+                    className='select-small'
+                    onFocus={() => onHandleScroll()}
+                />
+            </div>
+            <div
+                className={classNames(style["select-search"], {
+                    [style["select-search-show"]]: showList
+                })}
+                onMouseLeave={() => {
+                    setTimeout(() => {
+                        setShowList(false)
+                    }, 200)
+                }}
+            >
+                <div ref={containerRef} className={classNames(style["select-list"])}>
+                    <div ref={wrapperRef}>
+                        {(list.length > 0 &&
+                            list.map((item) => {
+                                const checked = Array.isArray(value)
+                                    ? value?.findIndex((ele) => ele === item.data.value) !== -1
+                                    : false
+                                return (
+                                    <div
+                                        key={item.data.value}
+                                        className={classNames(style["select-item"], {
+                                            [style["select-item-active"]]: checked
+                                        })}
+                                        onClick={() => onSelectMultiple(item.data)}
+                                    >
+                                        <Checkbox checked={checked} />
+                                        <span className={style["select-item-text"]}>{item.data.label}</span>
+                                    </div>
+                                )
+                            })) || (
+                            <div className={style["select-item"]}>
+                                <span className={style["select-item-text"]}>无数据</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className={style["select-footer"]}>
+                    <div
+                        className={classNames(style["footer-bottom"], style["select-reset"])}
+                        onClick={() => onReset()}
+                    >
+                        重置
+                    </div>
+                    <div className={classNames(style["footer-bottom"], style["select-sure"])} onClick={() => onSure()}>
+                        确定
+                    </div>
+                </div>
             </div>
         </div>
     )
