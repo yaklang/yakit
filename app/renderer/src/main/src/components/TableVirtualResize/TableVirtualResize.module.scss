@@ -508,6 +508,10 @@
             padding: 6px 12px;
             cursor: pointer;
 
+            &:hover{
+                background: #F9FBFF;
+            }
+
             &:active {
                 background: #F9FBFF;
                 color: #1890ff;

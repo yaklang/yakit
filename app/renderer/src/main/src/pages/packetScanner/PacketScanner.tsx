@@ -59,7 +59,6 @@ export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
                             bordered={false}
                             verbose={"插件"}
                             onSelected={(names) => {
-                                console.info("数据包扫描默认筛选出内容:", names)
                                 setPresetPacketScanPlugin(names)
                             }}
                             initialSelected={presetPacketScanPlugin}

@@ -1423,8 +1423,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         ]
     }, [statusCode])
     const [isReset, setIsReset] = useState<boolean>(false)
-
-    const onSendToTab = (rowData) => {
+    // 发送web fuzzer
+    const onSendToTab = useMemoizedFn((rowData) => {
         ipcRenderer.invoke("send-to-tab", {
             type: "fuzzer",
             data: {
@@ -1432,9 +1432,118 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 request: new Buffer(rowData.Request).toString("utf8")
             }
         })
-    }
+    })
+    // 标注颜色
+    const CalloutColor = useMemoizedFn((flow: HTTPFlow, i: any) => {
+        if (!flow) {
+            return
+        }
+        const existedTags = flow.Tags ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+        existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
+        ipcRenderer
+            .invoke("SetTagForHTTPFlow", {
+                Id: flow.Id,
+                Hash: flow.Hash,
+                Tags: existedTags
+            })
+            .then(() => {
+                // info(`设置 HTTPFlow 颜色成功`)
+                if (!autoReload) {
+                    setData(
+                        data.map((item) => {
+                            if (item.Hash === flow.Hash) {
+                                item.cellClassName = i.className
+                                item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
+                                return item
+                            }
+                            return item
+                        })
+                    )
+                }
+            })
+    })
+    // 移除颜色
+    const onRemoveCalloutColor = useMemoizedFn((flow: HTTPFlow) => {
+        if (!flow) return
+        const existedTags = flow.Tags ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+        existedTags.pop()
+        ipcRenderer
+            .invoke("SetTagForHTTPFlow", {
+                Id: flow.Id,
+                Hash: flow.Hash,
+                Tags: existedTags
+            })
+            .then(() => {
+                // info(`清除 HTTPFlow 颜色成功`)
+                if (!autoReload) {
+                    setData(
+                        data.map((item) => {
+                            if (item.Hash === flow.Hash) {
+                                item.cellClassName = ""
+                                item.Tags = ""
+                                return item
+                            }
+                            return item
+                        })
+                    )
+                }
+            })
+    })
+    //删除
+    const onRemoveHttpHistory = useMemoizedFn((query) => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("DeleteHTTPFlows", {
+                ...query
+            })
+            .then(() => {
+                info("删除成功")
+                update()
+            })
+            .finally(() => setTimeout(() => setLoading(false), 100))
+    })
+    //删除 重置请求 ID
+    const onRemoveHttpHistoryAllAndResetId = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("DeleteHTTPFlows", {DeleteAll: true})
+            .then(() => {})
+            .catch((e: any) => {
+                failed(`历史记录删除失败: ${e}`)
+            })
+            .finally(() => update(1))
+    })
+    // 不重置请求 ID
+    const onRemoveHttpHistoryAll = useMemoizedFn(() => {
+        const newParams = {
+            Filter: {
+                ...params
+            },
+            DeleteAll: false
+        }
+        ipcRenderer
+            .invoke("DeleteHTTPFlows", newParams)
+            .then((i: HTTPFlow) => {
+                setParams(props.params || {SourceType: "mitm"})
+            })
+            .catch((e: any) => {
+                failed(`历史记录删除失败: ${e}`)
+            })
+        setLoading(true)
+        info("正在删除...如自动刷新失败请手动刷新")
+        setCompareLeft({content: "", language: "http"})
+        setCompareRight({content: "", language: "http"})
+        setCompareState(0)
+        setTimeout(() => {
+            update(1)
+            if (props.onSelected) props.onSelected(undefined)
+        }, 400)
+    })
     const onBatch = useMemoizedFn((f, number) => {
         const length = selectedRows.length
+        if (length <= 0) {
+            warn(`请选择数据`)
+            return
+        }
         if (number < length) {
             warn(`最多同时只能发送${number}条数据`)
             return
@@ -1443,21 +1552,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             const element = selectedRows[i]
             f(element)
         }
-    })
-    const onSingle = useMemoizedFn((key: string, f) => {})
-    const onBatchMenu = useMemoizedFn((event) => {
-        showByCursorMenu(
-            {
-                content: [
-                    {
-                        title: "发送到 Web Fuzzer",
-                        onClick: () => onBatch(onSendToTab, 10)
-                    }
-                ]
-            },
-            event.clientX,
-            event.clientY + 20
-        )
     })
     const menuData = [
         {
@@ -1468,6 +1562,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         },
         {
             title: "数据包扫描",
+            number: 10,
             onClickSingle: () => {}
         },
         {
@@ -1532,75 +1627,19 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             title: "标注颜色",
             number: 10,
             onClickSingle: () => {},
+            onClickBatch: () => {},
             subMenuItems: availableColors.map((i) => {
                 return {
                     title: i.title,
                     render: i.render,
-                    onClick: (v) => {
-                        const flow = v as HTTPFlow
-                        if (!flow) {
-                            return
-                        }
-                        const existedTags = flow.Tags
-                            ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
-                            : []
-                        existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
-                        ipcRenderer
-                            .invoke("SetTagForHTTPFlow", {
-                                Id: flow.Id,
-                                Hash: flow.Hash,
-                                Tags: existedTags
-                            })
-                            .then(() => {
-                                info(`设置 HTTPFlow 颜色成功`)
-                                if (!autoReload) {
-                                    setData(
-                                        data.map((item) => {
-                                            if (item.Hash === flow.Hash) {
-                                                item.cellClassName = i.className
-                                                item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
-                                                return item
-                                            }
-                                            return item
-                                        })
-                                    )
-                                }
-                            })
-                    }
+                    onClick: (v) => CalloutColor(v, i)
                 }
             })
         },
         {
             title: "移除颜色",
-            onClickSingle: (v) => {
-                const flow = v as HTTPFlow
-                if (!flow) return
-                const existedTags = flow.Tags
-                    ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
-                    : []
-                existedTags.pop()
-                ipcRenderer
-                    .invoke("SetTagForHTTPFlow", {
-                        Id: flow.Id,
-                        Hash: flow.Hash,
-                        Tags: existedTags
-                    })
-                    .then(() => {
-                        info(`清除 HTTPFlow 颜色成功`)
-                        if (!autoReload) {
-                            setData(
-                                data.map((item) => {
-                                    if (item.Hash === flow.Hash) {
-                                        item.cellClassName = ""
-                                        item.Tags = ""
-                                        return item
-                                    }
-                                    return item
-                                })
-                            )
-                        }
-                    })
-            }
+            onClickSingle: () => {},
+            onClickBatch: (_, number) => onBatch(onRemoveCalloutColor, number)
         },
         {
             title: "发送到对比器",
@@ -1666,55 +1705,26 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         {
             title: "删除",
             onClickSingle: () => {},
+            onClickBatch: () => {},
             subMenuItems: [
                 {
                     title: "删除该记录",
-                    onClick: (v) => {
-                        setLoading(true)
-                        ipcRenderer
-                            .invoke("DeleteHTTPFlows", {
-                                Id: [v.Id]
-                            })
-                            .then(() => {
-                                info("删除成功")
-                                update()
-                            })
-                            .finally(() => setTimeout(() => setLoading(false), 100))
-                    },
-                    danger: true
+                    titleBatch: "删除记录",
+                    onClick: (v) => onRemoveHttpHistory({Id: [v.Id]}),
+                    onClickBatch: (list) => {
+                        onRemoveHttpHistory({Id: list.map((ele) => ele.Id)})
+                    }
                 },
                 {
                     title: "删除URL",
-                    onClick: (v) => {
-                        setLoading(true)
-                        const flow = v as HTTPFlow
-                        ipcRenderer
-                            .invoke("DeleteHTTPFlows", {
-                                URLPrefix: flow?.Url
-                            })
-                            .then(() => {
-                                info("删除成功")
-                                update()
-                            })
-                            .finally(() => setTimeout(() => setLoading(false), 100))
+                    onClick: (v) => onRemoveHttpHistory({URLPrefix: v.Url}),
+                    onClickBatch: (list) => {
+                        // onRemoveHttpHistory({URLPrefix: list.map((ele) => ele.Url)})
                     }
                 },
                 {
                     title: "删除域名",
-                    onClick: (v) => {
-                        setLoading(true)
-                        const flow = v as HTTPFlow
-                        const host = flow?.HostPort?.split(":")[0]
-                        ipcRenderer
-                            .invoke("DeleteHTTPFlows", {
-                                URLPrefix: host
-                            })
-                            .then(() => {
-                                info("删除成功")
-                                update()
-                            })
-                            .finally(() => setTimeout(() => setLoading(false), 100))
-                    }
+                    onClick: (v) => {}
                 }
             ]
         }
@@ -1744,263 +1754,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             event.clientX,
             event.clientY
         )
-        // showByCursorMenu(
-        //     {
-        //         content: [
-        //             {
-        //                 title: "发送到 Web Fuzzer",
-        //                 onClick: () => onSendToTab(rowData)
-        //             },
-        //             GetPacketScanByCursorMenuItem(rowData.Id),
-        //             {
-        //                 title: "复制 URL",
-        //                 onClick: () => {
-        //                     callCopyToClipboard(rowData.Url)
-        //                 }
-        //             },
-        //             {
-        //                 title: "复制为 CSRF Poc",
-        //                 onClick: () => {
-        //                     const flow = rowData as HTTPFlow
-        //                     if (!flow) return
-        //                     generateCSRFPocByRequest(flow.Request, (e) => {
-        //                         callCopyToClipboard(e)
-        //                     })
-        //                 }
-        //             },
-        //             {
-        //                 title: "复制为 Yak PoC 模版",
-        //                 onClick: () => {},
-        //                 subMenuItems: [
-        //                     {
-        //                         title: "数据包 PoC 模版",
-        //                         onClick: () => {
-        //                             const flow = rowData as HTTPFlow
-        //                             if (!flow) return
-        //                             generateYakCodeByRequest(
-        //                                 flow.IsHTTPS,
-        //                                 flow.Request,
-        //                                 (code) => {
-        //                                     callCopyToClipboard(code)
-        //                                 },
-        //                                 RequestToYakCodeTemplate.Ordinary
-        //                             )
-        //                         }
-        //                     },
-        //                     {
-        //                         title: "批量检测 PoC 模版",
-        //                         onClick: () => {
-        //                             const flow = rowData as HTTPFlow
-        //                             if (!flow) return
-        //                             generateYakCodeByRequest(
-        //                                 flow.IsHTTPS,
-        //                                 flow.Request,
-        //                                 (code) => {
-        //                                     callCopyToClipboard(code)
-        //                                 },
-        //                                 RequestToYakCodeTemplate.Batch
-        //                             )
-        //                         }
-        //                     }
-        //                 ]
-        //             },
-        //             {
-        //                 title: "标注颜色",
-        //                 subMenuItems: availableColors.map((i) => {
-        //                     return {
-        //                         title: i.title,
-        //                         render: i.render,
-        //                         onClick: () => {
-        //                             const flow = rowData as HTTPFlow
-        //                             if (!flow) {
-        //                                 return
-        //                             }
-        //                             const existedTags = flow.Tags
-        //                                 ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
-        //                                 : []
-        //                             existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
-        //                             ipcRenderer
-        //                                 .invoke("SetTagForHTTPFlow", {
-        //                                     Id: flow.Id,
-        //                                     Hash: flow.Hash,
-        //                                     Tags: existedTags
-        //                                 })
-        //                                 .then(() => {
-        //                                     info(`设置 HTTPFlow 颜色成功`)
-        //                                     if (!autoReload) {
-        //                                         setData(
-        //                                             data.map((item) => {
-        //                                                 if (item.Hash === flow.Hash) {
-        //                                                     item.cellClassName = i.className
-        //                                                     item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
-        //                                                     return item
-        //                                                 }
-        //                                                 return item
-        //                                             })
-        //                                         )
-        //                                     }
-        //                                 })
-        //                         }
-        //                     }
-        //                 }),
-        //                 onClick: () => {}
-        //             },
-        //             {
-        //                 title: "移除颜色",
-        //                 onClick: () => {
-        //                     const flow = rowData as HTTPFlow
-        //                     if (!flow) return
-
-        //                     const existedTags = flow.Tags
-        //                         ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
-        //                         : []
-        //                     existedTags.pop()
-        //                     ipcRenderer
-        //                         .invoke("SetTagForHTTPFlow", {
-        //                             Id: flow.Id,
-        //                             Hash: flow.Hash,
-        //                             Tags: existedTags
-        //                         })
-        //                         .then(() => {
-        //                             info(`清除 HTTPFlow 颜色成功`)
-        //                             if (!autoReload) {
-        //                                 setData(
-        //                                     data.map((item) => {
-        //                                         if (item.Hash === flow.Hash) {
-        //                                             item.cellClassName = ""
-        //                                             item.Tags = ""
-        //                                             return item
-        //                                         }
-        //                                         return item
-        //                                     })
-        //                                 )
-        //                             }
-        //                         })
-        //                     return
-        //                 }
-        //             },
-        //             {
-        //                 title: "发送到对比器",
-        //                 onClick: () => {},
-        //                 subMenuItems: [
-        //                     {
-        //                         title: "发送到对比器左侧",
-        //                         onClick: () => {
-        //                             setCompareLeft({
-        //                                 content: new Buffer(rowData.Request).toString("utf8"),
-        //                                 language: "http"
-        //                             })
-        //                         },
-        //                         disabled: [false, true, false][compareState]
-        //                     },
-        //                     {
-        //                         title: "发送到对比器右侧",
-        //                         onClick: () => {
-        //                             setCompareRight({
-        //                                 content: new Buffer(rowData.Request).toString("utf8"),
-        //                                 language: "http"
-        //                             })
-        //                         },
-        //                         disabled: [false, false, true][compareState]
-        //                     }
-        //                 ]
-        //             },
-        //             {
-        //                 title: "屏蔽",
-        //                 onClick: () => {},
-        //                 subMenuItems: [
-        //                     {
-        //                         title: "屏蔽该记录",
-        //                         onClick: () => {
-        //                             const id = parseInt(`${rowData?.Id}`)
-        //                             const newArr = filterItem([...shieldData.data, id])
-        //                             const newObj = {...shieldData, data: newArr}
-        //                             setShieldData(newObj)
-        //                         }
-        //                     },
-        //                     {
-        //                         title: "屏蔽URL",
-        //                         onClick: () => {
-        //                             let Url = rowData?.Url
-        //                             // 根据URL拿到ID数组
-        //                             const newArr = filterItem([...shieldData.data, Url])
-        //                             const newObj = {...shieldData, data: newArr}
-        //                             setShieldData(newObj)
-        //                         }
-        //                     },
-        //                     {
-        //                         title: "屏蔽域名",
-        //                         onClick: () => {
-        //                             const host = rowData?.HostPort?.split(":")[0] || ""
-
-        //                             // 根据host拿到对应ID数组
-        //                             const newArr = filterItem([...shieldData.data, host])
-        //                             const newObj = {...shieldData, data: newArr}
-        //                             setShieldData(newObj)
-        //                         }
-        //                     }
-        //                 ]
-        //             },
-        //             {
-        //                 title: "删除",
-        //                 onClick: () => {},
-        //                 subMenuItems: [
-        //                     {
-        //                         title: "删除该记录",
-        //                         onClick: () => {
-        //                             setLoading(true)
-        //                             ipcRenderer
-        //                                 .invoke("DeleteHTTPFlows", {
-        //                                     Id: [rowData.Id]
-        //                                 })
-        //                                 .then(() => {
-        //                                     info("删除成功")
-        //                                     update()
-        //                                 })
-        //                                 .finally(() => setTimeout(() => setLoading(false), 100))
-        //                         },
-        //                         danger: true
-        //                     },
-        //                     {
-        //                         title: "删除URL",
-        //                         onClick: () => {
-        //                             setLoading(true)
-        //                             const flow = rowData as HTTPFlow
-        //                             ipcRenderer
-        //                                 .invoke("DeleteHTTPFlows", {
-        //                                     URLPrefix: flow?.Url
-        //                                 })
-        //                                 .then(() => {
-        //                                     info("删除成功")
-        //                                     update()
-        //                                 })
-        //                                 .finally(() => setTimeout(() => setLoading(false), 100))
-        //                         }
-        //                     },
-        //                     {
-        //                         title: "删除域名",
-        //                         onClick: () => {
-        //                             setLoading(true)
-        //                             const flow = rowData as HTTPFlow
-        //                             const host = flow?.HostPort?.split(":")[0]
-        //                             ipcRenderer
-        //                                 .invoke("DeleteHTTPFlows", {
-        //                                     URLPrefix: host
-        //                                 })
-        //                                 .then(() => {
-        //                                     info("删除成功")
-        //                                     update()
-        //                                 })
-        //                                 .finally(() => setTimeout(() => setLoading(false), 100))
-        //                         }
-        //                     }
-        //                 ]
-        //             }
-        //         ]
-        //     },
-        //     event.clientX,
-        //     event.clientY
-        // )
     }
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
@@ -2160,9 +1913,29 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     />
                                     <Divider type='vertical' />
                                     <div className={style["empty-button"]}>
-                                        <Button danger ghost size='small'>
-                                            清空
-                                        </Button>
+                                        <Dropdown
+                                            overlay={
+                                                <Menu>
+                                                    <Menu.Item
+                                                    // onClick={() => onRemoveHttpHistoryAllAndResetId()}
+                                                    >
+                                                        重置请求 ID
+                                                    </Menu.Item>
+                                                    <Menu.Item
+                                                    // onClick={() => onRemoveHttpHistoryAll()}
+                                                    >
+                                                        不重置请求 ID
+                                                    </Menu.Item>
+                                                </Menu>
+                                            }
+                                            trigger={["click"]}
+                                            placement='bottomCenter'
+                                            overlayClassName={style["drop-down"]}
+                                        >
+                                            <Button danger ghost size='small'>
+                                                清空
+                                            </Button>
+                                        </Dropdown>
                                     </div>
                                     <Badge
                                         dot={isHaveIncrement}
@@ -2368,23 +2141,82 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     </div>
                                     <div className={style["right-button"]}>
                                         <Popover
+                                            overlayClassName={style["http-history-table-drop-down-popover"]}
                                             content={
-                                                <div>
-                                                    {menuData.map(
-                                                        (m) =>
-                                                            m.onClickBatch && (
-                                                                <div
-                                                                    onClick={() =>
-                                                                        m.onClickBatch(selectedRows, m.number)
+                                                <Menu className={style["http-history-table-drop-down-batch"]}>
+                                                    {menuData.map((m) => {
+                                                        if (m.title === "数据包扫描") {
+                                                            const dataPacket = GetPacketScanByCursorMenuItem(0)
+                                                            return (
+                                                                <Menu.SubMenu
+                                                                    popupClassName={
+                                                                        style["http-history-table-sub-menu"]
+                                                                    }
+                                                                    title={dataPacket.title}
+                                                                    key={m.title}
+                                                                >
+                                                                    {dataPacket.subMenuItems?.map((ele) => (
+                                                                        <Menu.Item
+                                                                            onClick={() =>
+                                                                                onBatch(
+                                                                                    (v) =>
+                                                                                        execPacketScan([v.Id], ele.id),
+                                                                                    m.number
+                                                                                )
+                                                                            }
+                                                                            key={ele.title}
+                                                                        >
+                                                                            {ele.title}
+                                                                        </Menu.Item>
+                                                                    ))}
+                                                                </Menu.SubMenu>
+                                                            )
+                                                        }
+                                                        if (m.subMenuItems && m.onClickBatch) {
+                                                            return (
+                                                                <Menu.SubMenu
+                                                                    title={m.title}
+                                                                    key={m.title}
+                                                                    popupClassName={
+                                                                        style["http-history-table-sub-menu"]
                                                                     }
                                                                 >
-                                                                    {m.title}
-                                                                </div>
+                                                                    {m.subMenuItems?.map((ele) => (
+                                                                        <Menu.Item
+                                                                            onClick={() => {
+                                                                                if (ele.onClickBatch) {
+                                                                                    ele.onClickBatch(selectedRows)
+                                                                                } else {
+                                                                                    onBatch(ele.onClick, m.number)
+                                                                                }
+                                                                            }}
+                                                                            key={ele.titleBatch || ele.title}
+                                                                        >
+                                                                            {ele.render
+                                                                                ? ele.render
+                                                                                : ele.titleBatch || ele.title}
+                                                                        </Menu.Item>
+                                                                    ))}
+                                                                </Menu.SubMenu>
                                                             )
-                                                    )}
-                                                </div>
+                                                        }
+                                                        return (
+                                                            m.onClickBatch && (
+                                                                <Menu.Item
+                                                                    onClick={() => {
+                                                                        if (m.onClickBatch)
+                                                                            m.onClickBatch(selectedRows, m.number)
+                                                                    }}
+                                                                    key={m.title}
+                                                                >
+                                                                    {m.title}
+                                                                </Menu.Item>
+                                                            )
+                                                        )
+                                                    })}
+                                                </Menu>
                                             }
-                                            trigger='click'
+                                            trigger={["click"]}
                                             placement='bottomLeft'
                                         >
                                             <Button size='small'>
@@ -2392,11 +2224,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                 <ChevronDownIcon style={{color: "#85899E"}} />
                                             </Button>
                                         </Popover>
-                                    </div>
-                                    <div className={style["right-button"]}>
-                                        <Button danger ghost size='small'>
-                                            删除
-                                        </Button>
                                     </div>
                                 </div>
                             </div>
