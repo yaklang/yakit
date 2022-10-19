@@ -697,15 +697,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             setSelected(data[0])
             return
         }
-        // const expected = parseInt(`${parseInt(`${getSelected()?.Id as number}`) + 1}`)
-        // // 如果上点的话，应该是选择更新的内容
-        // for (let i = 0; i < data.length; i++) {
-        //     let current = parseInt(`${data[i]?.Id}`)
-        //     if (current === expected) {
-        //         setSelected(data[i])
-        //         return
-        //     }
-        // }
         // 如果上点的话，应该是选择更新的内容
         for (let i = 0; i < dataLength; i++) {
             if (data[i]?.Id === getSelected()?.Id) {
@@ -733,13 +724,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             return
         }
         // 如果上点的话，应该是选择更新的内容
-        // for (let i = 0; i < data.length; i++) {
-        //     if (data[i]?.Id == (getSelected()?.Id as number) - 1) {
-        //         setSelected(data[i])
-        //         return
-        //     }
-        // }
-
         for (let i = 0; i < dataLength; i++) {
             if (data[i]?.Id === getSelected()?.Id) {
                 if (i === dataLength - 1) {
@@ -854,14 +838,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             console.log("paginationProps", {
                 SourceType: sourceType,
                 ...params,
-                Tags: [...(params.Tags || []), color],
+                Tags: color ? [...(params.Tags || []), color] : params.Tags,
                 Pagination: {...paginationProps}
             })
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: sourceType,
                     ...params,
-                    Tags: [...(params.Tags || []), color],
+                    Tags: color ? [...(params.Tags || []), color] : params.Tags,
                     Pagination: {...paginationProps}
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -943,13 +927,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     }, [tableRef.current])
     const scrollTableTo = useMemoizedFn((index: number) => {
         if (!tableRef || !tableRef.current) return
-        // const table = tableRef.current as unknown as {
-        //     scrollTop: (number) => any
-        //     scrollLeft: (number) => any
-        // }
-        // table.scrollTop(size)
-        console.log("tableRef.current", tableRef.current)
-
         tableRef.current.scrollTo(index)
     })
 
@@ -1041,7 +1018,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                             offsetData = offsetData.splice(0, MAX_ROW_COUNT)
                         }
                         setData(offsetData)
-                        scrollTableTo(0)
+                        // scrollTableTo(0)
                     } else {
                         setIsHaveIncrement(true)
                     }
@@ -2164,9 +2141,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         <Popover
                                             overlayClassName={style["http-history-table-drop-down-popover"]}
                                             content={
-                                                <Menu
-                                                    className={style["http-history-table-drop-down-batch"]}
-                                                >
+                                                <Menu className={style["http-history-table-drop-down-batch"]}>
                                                     {menuData.map((m) => {
                                                         if (m.title === "数据包扫描") {
                                                             const dataPacket = GetPacketScanByCursorMenuItem(0)
