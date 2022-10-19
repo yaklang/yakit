@@ -352,6 +352,13 @@ service Yak {
 
   rpc GetEngineDefaultProxy(Empty) returns (DefaultProxyResult);
   rpc SetEngineDefaultProxy(DefaultProxyResult) returns (Empty);
+
+  // machine id
+  rpc GetMachineID(Empty) returns (GetMachineIDResponse);
+}
+
+message GetMachineIDResponse {
+  string MachineID = 1;
 }
 
 message QueryHTTPFuzzerResponseByTaskIdRequest {
@@ -1757,12 +1764,22 @@ message FuzzerRequest {
   // 设置 Fuzzer
   FuzzerResponseFilter Filter = 15;
 
-  // 随时
+  // 随时 delay
   double DelayMinSeconds = 17;
   double DelayMaxSeconds = 18;
 
   // 获取模版数据
   string HotPatchCodeWithParamGetter = 19;
+
+  // retry
+  int64 MaxRetryTimes = 20; // 最大重试次数
+  string RetryInStatusCode = 21; // 命中这些状态码的时候，重试
+  string RetryNotInStatusCode = 22; // 不是这些状态的时候，重试
+
+  // Response Charset
+  // 默认或者不填为 UTF8
+  // 中国的话，用 gb18030
+  string ResponseCharset = 23;
 }
 
 message FuzzerResponseFilter {
