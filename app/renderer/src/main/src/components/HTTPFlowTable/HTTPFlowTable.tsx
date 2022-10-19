@@ -1215,11 +1215,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
 
-    const [isAll, setIsAll] = useState<boolean>(false)
+    const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [spinning, setSpinning] = useState<boolean>(false)
 
     const onSelectAll = (newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
-        setIsAll(checked)
+        setIsAllSelect(checked)
         setSelectedRowKeys(newSelectedRowKeys)
         setSelectedRows(selected)
     }
@@ -1228,6 +1228,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             setSelectedRowKeys([...selectedRowKeys, keys])
             setSelectedRows([...selectedRows, rows])
         } else {
+            setIsAllSelect(false)
             const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
             const newSelectedRows = selectedRows.filter((ele) => ele.Id !== rows.Id)
             setSelectedRowKeys(newSelectedRowKeys)
@@ -1380,7 +1381,22 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             },
             {
                 title: "响应类型",
-                dataKey: "ContentType"
+                dataKey: "ContentType",
+                render: (text) => {
+                    let contentTypeFixed =
+                        text
+                            .split(";")
+                            .map((el: any) => el.trim())
+                            .filter((i: any) => !i.startsWith("charset"))
+                            .join(",") || "-"
+                    if (contentTypeFixed.includes("/")) {
+                        const contentTypeFixedNew = contentTypeFixed.split("/").pop()
+                        if (!!contentTypeFixedNew) {
+                            contentTypeFixed = contentTypeFixedNew
+                        }
+                    }
+                    return <div>{contentTypeFixed === "null" ? "" : contentTypeFixed}</div>
+                }
             },
             {
                 title: "请求时间",
@@ -1538,8 +1554,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             if (props.onSelected) props.onSelected(undefined)
         }, 400)
     })
-    const onBatch = useMemoizedFn((f, number) => {
+    const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
         const length = selectedRows.length
+        if (isAllSelect && !all) {
+            warn("该批量操作不支持全选")
+            return
+        }
         if (length <= 0) {
             warn(`请选择数据`)
             return
@@ -1558,7 +1578,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             title: "发送到 Web Fuzzer",
             number: 10,
             onClickSingle: (v) => onSendToTab(v),
-            onClickBatch: (_, number) => onBatch(onSendToTab, number)
+            onClickBatch: (_, number) => onBatch(onSendToTab, number, selectedRowKeys.length === total)
         },
         {
             title: "数据包扫描",
@@ -1567,7 +1587,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         },
         {
             title: "复制 URL",
-            number: 10,
+            number: 30,
             onClickSingle: (v) => callCopyToClipboard(v.Url),
             onClickBatch: (v, number) => {
                 if (v.length < number) {
@@ -1625,7 +1645,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         },
         {
             title: "标注颜色",
-            number: 10,
+            number: 20,
             onClickSingle: () => {},
             onClickBatch: () => {},
             subMenuItems: availableColors.map((i) => {
@@ -1639,7 +1659,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         {
             title: "移除颜色",
             onClickSingle: () => {},
-            onClickBatch: (_, number) => onBatch(onRemoveCalloutColor, number)
+            onClickBatch: (_, number) => onBatch(onRemoveCalloutColor, number, selectedRowKeys.length === total)
         },
         {
             title: "发送到对比器",
@@ -1706,13 +1726,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             title: "删除",
             onClickSingle: () => {},
             onClickBatch: () => {},
+            all: true,
             subMenuItems: [
                 {
                     title: "删除该记录",
                     titleBatch: "删除记录",
                     onClick: (v) => onRemoveHttpHistory({Id: [v.Id]}),
                     onClickBatch: (list) => {
-                        onRemoveHttpHistory({Id: list.map((ele) => ele.Id)})
+                        // onRemoveHttpHistory({Id: list.map((ele) => ele.Id)})
                     }
                 },
                 {
@@ -2017,7 +2038,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                 Selected
                                             </span>
                                             <span className={style["http-history-table-total-item-number"]}>
-                                                {selectedRowKeys?.length}
+                                                {isAllSelect ? total : selectedRowKeys?.length}
                                             </span>
                                         </div>
                                     </div>
@@ -2143,7 +2164,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         <Popover
                                             overlayClassName={style["http-history-table-drop-down-popover"]}
                                             content={
-                                                <Menu className={style["http-history-table-drop-down-batch"]}>
+                                                <Menu
+                                                    className={style["http-history-table-drop-down-batch"]}
+                                                >
                                                     {menuData.map((m) => {
                                                         if (m.title === "数据包扫描") {
                                                             const dataPacket = GetPacketScanByCursorMenuItem(0)
@@ -2161,7 +2184,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                                                 onBatch(
                                                                                     (v) =>
                                                                                         execPacketScan([v.Id], ele.id),
-                                                                                    m.number
+                                                                                    m.number || 0,
+                                                                                    selectedRowKeys.length === total
                                                                                 )
                                                                             }
                                                                             key={ele.title}
@@ -2187,7 +2211,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                                                 if (ele.onClickBatch) {
                                                                                     ele.onClickBatch(selectedRows)
                                                                                 } else {
-                                                                                    onBatch(ele.onClick, m.number)
+                                                                                    onBatch(
+                                                                                        ele.onClick,
+                                                                                        m.number || 0,
+                                                                                        selectedRowKeys.length === total
+                                                                                    )
                                                                                 }
                                                                             }}
                                                                             key={ele.titleBatch || ele.title}
@@ -2235,7 +2263,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     // data={data.filter((_,index)=>index<5)}
                     data={data}
                     rowSelection={{
-                        isAll,
+                        isAll: isAllSelect,
                         type: "checkbox",
                         selectedRowKeys,
                         onSelectAll: onSelectAll,
@@ -2263,68 +2291,69 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
 const contentType: FiltersItemProps[] = [
     {
-        value: "charset=utf-8",
-        label: "charset=utf-8"
+        value: "javascript",
+        label: "javascript"
     },
     {
-        value: "application/json",
-        label: "application/json"
+        value: "x-javascript",
+        label: "x-javascript"
     },
     {
-        value: "multipart/form-data",
-        label: "multipart/form-data"
+        value: "html",
+        label: "html"
     },
     {
-        value: "application/pdf",
-        label: "application/pdf"
+        value: "plain",
+        label: "plain"
     },
     {
-        value: "application/msword",
-        label: "application/msword"
+        value: "xml",
+        label: "xml"
     },
     {
-        value: "application/octet-stream",
-        label: "application/octet-stream"
+        value: "json",
+        label: "json"
     },
     {
-        value: "application/x-www-form-urlencoded",
-        label: "application/x-www-form-urlencoded"
+        value: "form-data",
+        label: "form-data"
+    },
+
+    {
+        value: "octet-stream",
+        label: "octet-stream"
     },
     {
-        value: "application/xhtml+xml",
-        label: "application/xhtml+xml"
+        value: "x-www-form-urlencoded",
+        label: "x-www-form-urlencoded"
     },
     {
-        value: "application/xml",
-        label: "application/xml"
+        value: "xhtml+xml",
+        label: "xhtml+xml"
     },
     {
-        value: "application/atom+xml",
-        label: "application/atom+xml"
+        value: "atom+xml",
+        label: "atom+xml"
     },
     {
-        value: "text/html",
-        label: "text/html"
+        value: "pdf",
+        label: "pdf"
     },
     {
-        value: "text/plain",
-        label: "text/plain"
+        value: "msword",
+        label: "msword"
     },
     {
-        value: "text/xml",
-        label: "text/xml"
+        value: "gif",
+        label: "gif"
     },
     {
-        value: "image/gif",
-        label: "image/gif"
+        value: "jpeg",
+        label: "jpeg"
     },
     {
-        value: "image/jpeg",
-        label: "image/jpeg"
-    },
-    {
-        value: "image/png",
-        label: "image/png"
+        value: "png",
+        label: "png"
     }
 ]
 

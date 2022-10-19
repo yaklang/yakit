@@ -476,7 +476,7 @@
             }
 
             .select-sure {
-                color: #F28B44;
+                color: #1890ff;
             }
         }
     }
@@ -527,6 +527,10 @@
                 line-height: 30px;
             }
 
+            .ant-menu-submenu-selected {
+                color: rgba(0, 0, 0, 0.85);
+            }
+
             .ant-menu-item:hover {
                 background-color: #1890ff;
                 color: #FFFFFF;
@@ -567,6 +571,10 @@
         .ant-dropdown-menu-item:not(:last-child) {
             margin-bottom: 0;
         }
+
+        .ant-menu-submenu-selected {
+            color: rgba(0, 0, 0, 0.85);
+        }
     }
 }
 
@@ -586,6 +594,11 @@
 
         .ant-menu-item:not(:last-child) {
             margin-bottom: 0;
+        }
+
+        .ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
+            background-color: #ffffff;
+            color: rgba(0, 0, 0, 0.85);
         }
     }
 }
