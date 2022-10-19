@@ -5,7 +5,7 @@ import {SelectOne} from "../../utils/inputUtil"
 import {PoweroffOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {getRemoteValue, getValue, saveValue, setRemoteValue} from "../../utils/kv"
 import {EditorProps, YakCodeEditor} from "../../utils/editors"
-import {YakModuleList,YakFilterModuleList} from "@/pages/yakitStore/YakitStorePage"
+import {YakModuleList, YakFilterModuleList} from "@/pages/yakitStore/YakitStorePage"
 import {genDefaultPagination, YakScript, YakScriptHooks} from "../invoker/schema"
 import {useDebounceFn, useMap, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
@@ -55,7 +55,8 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         setRefreshTrigger(!refreshTrigger)
     })
     const [loading, setLoading] = useState(false)
-
+    // 是否允许获取默认勾选值
+    const isDefaultCheck = useRef<boolean>(false)
     // 热加载模块持久化
     useEffect(() => {
         getRemoteValue(MITM_HOTPATCH_CODE).then((e) => {
@@ -92,23 +93,40 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         ipcRenderer.on("client-mitm-loading", (_, flag: boolean) => {
             setLoading(flag)
         })
-
+        const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
+        getRemoteValue(CHECK_CACHE_LIST_DATA)
+            .then((data: string) => {
+                if (!!data) {
+                    const cacheData: string[] = JSON.parse(data)
+                    multipleMitm(cacheData)
+                }
+            })
+            .finally(() => {
+                isDefaultCheck.current = true
+            })
+        const cacheTmp = new Map<string, boolean>()
         // 用于 MITM 的 查看当前 Hooks
         ipcRenderer.on("client-mitm-hooks", (e, data: YakScriptHooks[]) => {
-            const tmp = new Map<string, boolean>()
-            data.forEach((i) => {
-                i.Hooks.map((hook) => {
-                    tmp.set(hook.YakScriptName, true)
+            if (isDefaultCheck.current) {
+                const tmp = new Map<string, boolean>()
+                data.forEach((i) => {
+                    i.Hooks.map((hook) => {
+                        tmp.set(hook.YakScriptName, true)
+                        cacheTmp.set(hook.YakScriptName, true)
+                    })
                 })
-            })
-            // console.log("默认数据",tmp)
-            handlers.setAll(tmp)
+                // console.log("勾选项",tmp)
+                handlers.setAll(tmp)
+            }
         })
         updateHooks()
         setTimeout(() => {
             setInitialed(true)
         }, 500)
         return () => {
+            let arr: string[] = Array.from(cacheTmp).map((item) => item[0])
+            // 组价销毁时进行本地缓存 用于后续页面进入默认选项
+            setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(arr))
             ipcRenderer.removeAllListeners("client-mitm-hooks")
         }
     }, [])
@@ -122,10 +140,9 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     const [tag, setTag] = useState<string[]>([])
     const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Tags")
     const [listNames, setListNames] = useState<string[]>([])
-    const onCheckAllChange = (checked:boolean) => {
+    const onCheckAllChange = (checked: boolean) => {
         if (checked) {
             enableMITMPluginMode(listNames).then(() => {
-                // console.log("全选",listNames)
                 info("启动 MITM 插件成功")
             })
         } else {
@@ -137,11 +154,12 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         setCheckAll(checked)
     }
     // 多选插件
-    const multipleMitm = (checkList:string[]) => {
+    const multipleMitm = (checkList: string[]) => {
         enableMITMPluginMode(checkList).then(() => {
             info("启动 MITM 插件成功")
         })
     }
+
     useEffect(() => {
         getYakScriptTags()
     }, [searchType])
@@ -185,6 +203,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
     return (
         <AutoCard
             bordered={false}
+            headStyle={{padding: 0}}
             bodyStyle={{padding: 0, overflowY: "auto"}}
             loading={!initialed || loading}
             title={
@@ -216,25 +235,26 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                         </div>
                     </div>
                     <div className='mitm-card-search'>
-                        {mode === "all"&& 
-                        <YakFilterModuleList
-                        TYPE="MITM"
-                        refresh={refresh}
-                        tagsLoading={tagsLoading}
-                        searchType={searchType} 
-                        setTag={setTag}
-                        setRefresh={setRefresh}
-                        onDeselect={onDeselect}
-                        tag={tag}
-                        tagsList={tagsList}
-                        setSearchType={setSearchType}
-                        setSearchKeyword={setSearchKeyword}
-                        checkAll={checkAll}
-                        checkList={Array.from(hooks).map((item)=>item[0])}
-                        multipleCallBack={multipleMitm}
-                        onCheckAllChange={onCheckAllChange}
-                        setCheckAll={setCheckAll} 
-                        />}
+                        {mode === "all" && (
+                            <YakFilterModuleList
+                                TYPE='MITM'
+                                refresh={refresh}
+                                tagsLoading={tagsLoading}
+                                searchType={searchType}
+                                setTag={setTag}
+                                setRefresh={setRefresh}
+                                onDeselect={onDeselect}
+                                tag={tag}
+                                tagsList={tagsList}
+                                setSearchType={setSearchType}
+                                setSearchKeyword={setSearchKeyword}
+                                checkAll={checkAll}
+                                checkList={Array.from(hooks).map((item) => item[0])}
+                                multipleCallBack={multipleMitm}
+                                onCheckAllChange={onCheckAllChange}
+                                setCheckAll={setCheckAll}
+                            />
+                        )}
                     </div>
                 </div>
             }
@@ -286,7 +306,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                             Tag: tag,
                             Type: "mitm,port-scan",
                             Keyword: searchKeyword,
-                            Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                            Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
                         }}
                         refresh={refresh}
                         itemHeight={43}

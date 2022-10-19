@@ -1691,10 +1691,16 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                         label='名称'
                         rules={[{required: true, message: "该项为必填"}]}
                     >
-                        <AutoComplete options={[]} placeholder='请输入插件组名' defaultOpen={true} />
+                        <AutoComplete
+                            options={menuList.map((item) => ({value: item.name}))}
+                            placeholder='请输入插件组名'
+                            filterOption={(inputValue, option) =>
+                                option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                            }
+                        />
                     </Form.Item>
                     <Form.Item {...itemLayout} label='插件'>
-                        <div>
+                        <div style={{maxHeight: 460, overflowY: "scroll"}}>
                             {checkList.map((item) => (
                                 <span style={{paddingRight: 12}} key={item}>
                                     {item};
