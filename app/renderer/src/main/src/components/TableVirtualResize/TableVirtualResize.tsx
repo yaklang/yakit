@@ -4,6 +4,8 @@ import {
     useDebounceEffect,
     useDebounceFn,
     useDeepCompareEffect,
+    useGetState,
+    useInViewport,
     useMemoizedFn,
     useMouse,
     useSize,
@@ -29,6 +31,7 @@ import {isEqual} from "@/utils/objUtils"
 import "../style.css"
 import {FilterIcon, SorterDownIcon, SorterUpIcon, StatusOfflineIcon} from "@/assets/newIcon"
 import {RollingLoadList} from "../RollingLoadList/RollingLoadList"
+import {useHotkeys} from "react-hotkeys-hook"
 
 const {Search} = Input
 interface tablePosition {
@@ -42,12 +45,19 @@ interface tablePosition {
     y?: number
 }
 
-interface ChildRef {
-    tableRef: any
-}
-
-function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: React.ForwardedRef<HTMLUListElement>) {
-    return <Table<T> {...props} ref={ref} />
+function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: React.ForwardedRef<any>) {
+    const wrapperRef = useRef<any>(null)
+    useImperativeHandle(
+        ref,
+        () => ({
+            ...wrapperRef.current
+        }),
+        [wrapperRef.current]
+    )
+    const getTableRef = useMemoizedFn((wRef) => {
+        wrapperRef.current = wRef
+    })
+    return <Table<T> {...props} getTableRef={getTableRef} />
 }
 
 const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
@@ -60,6 +70,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }),
         []
     )
+    const defItemHeight = useCreation(() => 28, [])
     const {
         data,
         rowSelection,
@@ -71,11 +82,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         loading,
         scrollToBottom,
         currentRowData,
+        setCurrentRowData,
         isReset,
         titleHeight,
         renderTitle,
-        ref
+        getTableRef,
+        currentIndex
     } = props
+
     const [currentRow, setCurrentRow] = useState<T>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
@@ -112,19 +126,134 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         left: 0,
         top: 0
     }) // 表格距离左边的距离
+    const containerRefPosition = useRef<tablePosition>({
+        left: 0,
+        top: 0
+    }) // 表格距离左边的距离
+
     const [list, scrollTo] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight: 28,
-        overscan: 5
+        itemHeight: defItemHeight,
+        overscan: 10
     })
 
-    useImperativeHandle(ref, () => ({
-        ...(wrapperRef.current || {}),
-        scrollTo
-    }))
-    // console.log("list", list)
+    useEffect(() => {
+        if (!currentIndex) return
+        scrollTo(currentIndex)
+    }, [currentIndex])
+    let currentRowRef = useRef<any>()
+    const [inViewport, ratio] = useInViewport(currentRowRef, {
+        rootMargin: "-84px 0px 0px 0px",
+        root: containerRef,
+        threshold: [0, 0.25, 0.5, 0.75, 1.0]
+    })
+    useHotkeys(
+        "left",
+        () => {
+            console.log("inViewport", inViewport, currentRowRef.current)
+        },
+        {},
+        [data, currentRowData, inViewport, containerRef.current, currentRowRef.current]
+    )
 
+    // 使用上箭头
+    useHotkeys(
+        "up",
+        () => {
+            if (!setCurrentRowData) return
+            const dataLength = data.length
+            if (dataLength <= 0) {
+                return
+            }
+            if (!currentRowData) {
+                setCurrentRowData(data[0])
+                return
+            }
+            let index
+            // 如果上点的话，应该是选择更新的内容
+            for (let i = 0; i < dataLength; i++) {
+                if (data[i][renderKey] === currentRowData[renderKey]) {
+                    if (i === 0) {
+                        index = i
+                        break
+                    } else {
+                        index = i - 1
+                        break
+                    }
+                }
+            }
+
+            if (index) {
+                setCurrentRowData(data[index])
+                setTimeout(() => {
+                    if (!currentRowRef.current) {
+                        const dom = containerRef.current
+                        //  长按up
+                        // scrollTo(index) // 缓慢滑到
+                        dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
+                        return
+                    }
+                    const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
+                    const inViewport = currentPosition.top - 28 >= containerRefPosition.current.top
+                    if (!inViewport) scrollTo(index)
+                }, 0)
+            }
+        },
+        {},
+        [data, currentRowData, inViewport, containerRef.current, currentRowRef.current]
+    )
+    // 使用下箭头
+    useHotkeys(
+        "down",
+        () => {
+            if (!setCurrentRowData) return
+            const dataLength = data.length
+            if (dataLength <= 0) {
+                return
+            }
+            if (!currentRowData) {
+                setCurrentRowData(data[0])
+                return
+            }
+            let index
+            // 如果上点的话，应该是选择更新的内容
+            for (let i = 0; i < dataLength; i++) {
+                if (data[i][renderKey] === currentRowData[renderKey]) {
+                    if (i === dataLength - 1) {
+                        index = i
+                        break
+                    } else {
+                        index = i + 1
+                        break
+                    }
+                }
+            }
+
+            if (index) {
+                setCurrentRowData(data[index])
+
+                setTimeout(() => {
+                    const dom = containerRef.current
+                    if (!currentRowRef.current) {
+                        //  长按up
+                        // scrollTo(index)
+                        dom.scrollTop = index * defItemHeight
+                        return
+                    }
+                    const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
+                    const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
+                    const y = 1 - (rowNumber - Math.trunc(rowNumber))
+                    const inViewport =
+                        currentPosition.top - 28 >=
+                        containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+                    if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 // 1px border被外圈的border挡住了，所以+1
+                }, 0)
+            }
+        },
+        {},
+        [data, currentRowData, inViewport, containerRef.current, currentRowRef.current]
+    )
     useEffect(() => {
         if (pagination.page == 1) {
             scrollTo(0)
@@ -139,10 +268,18 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         getLeftOrRightFixedWidth()
     }, [columns])
     useEffect(() => {
-        if (tableRef.current.getBoundingClientRect()) {
+        getTableRef(wrapperRef.current)
+    }, [tableRef.current, wrapperRef.current])
+    useEffect(() => {
+        if (tableRef.current && tableRef.current.getBoundingClientRect()) {
             tablePosition.current = tableRef.current.getBoundingClientRect()
         }
     }, [tableRef.current])
+    useEffect(() => {
+        if (containerRef.current && containerRef.current.getBoundingClientRect()) {
+            containerRefPosition.current = containerRef.current.getBoundingClientRect()
+        }
+    }, [containerRef.current])
 
     useEffect(() => {
         getColumnsMinWidthList()
@@ -689,12 +826,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             style={{width: tableWidth || width}}
                         >
                             {list.map((item, number) => {
+                                const isSelect = currentRow && currentRow[renderKey] === item.data[renderKey]
                                 if (Object.prototype.toString.call(item.data) === "[object Object]") {
                                     return (
                                         <div
                                             className={classNames(style["virtual-table-row"], {
-                                                [style["virtual-table-active-row"]]:
-                                                    currentRow && currentRow[renderKey] === item.data[renderKey]
+                                                [style["virtual-table-active-row"]]: isSelect
                                             })}
                                             onClick={(e) => {
                                                 // @ts-ignore
@@ -703,6 +840,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                             }}
                                             onContextMenu={(e) => {
                                                 onRowContextMenu(item.data, e)
+                                            }}
+                                            // ref={isSelect ? currentRowRef : undefined}
+                                            ref={(l) => {
+                                                if (isSelect) currentRowRef.current = l
                                             }}
                                             key={item.data[renderKey] || number}
                                         >

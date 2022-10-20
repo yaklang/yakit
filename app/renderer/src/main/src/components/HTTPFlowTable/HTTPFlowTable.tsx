@@ -625,6 +625,11 @@ interface shieldData {
     data: (string | number)[]
 }
 
+const defSort: SortProps = {
+    order: "desc",
+    orderBy: "id"
+}
+
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string>("")
@@ -648,7 +653,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [total, setTotal] = useState<number>(0)
     const [loading, setLoading] = useState(false)
     const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
-    const [_lastSelected, setLastSelected, getLastSelected] = useGetState<HTTPFlow>()
 
     const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
     const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
@@ -668,6 +672,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         data: []
     })
 
+    // 表格排序
+    const sortRef = useRef<SortProps>(defSort)
+
     const tableRef = useRef<any>(null)
 
     const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
@@ -685,59 +692,61 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     })
 
-    // 使用上下箭头
-    useHotkeys("up", () => {
-        setLastSelected(getSelected())
-        const data = getData()
-        const dataLength = data.length
-        if (dataLength <= 0) {
-            return
-        }
-        if (!getSelected()) {
-            setSelected(data[0])
-            return
-        }
-        // 如果上点的话，应该是选择更新的内容
-        for (let i = 0; i < dataLength; i++) {
-            if (data[i]?.Id === getSelected()?.Id) {
-                if (i === 0) {
-                    setSelected(data[i])
-                    return
-                } else {
-                    setSelected(data[i - 1])
-                    return
-                }
-            }
-        }
-        setSelected(undefined)
-    })
-    useHotkeys("down", () => {
-        setLastSelected(getSelected())
-        const data = getData()
-        const dataLength = data.length
+    // // 使用上下箭头
+    // useHotkeys("up", () => {
+    //     const data = getData()
+    //     const dataLength = data.length
+    //     if (dataLength <= 0) {
+    //         return
+    //     }
+    //     if (!getSelected()) {
+    //         setSelected(data[0])
+    //         return
+    //     }
+    //     // 如果上点的话，应该是选择更新的内容
+    //     for (let i = 0; i < dataLength; i++) {
+    //         if (data[i]?.Id === getSelected()?.Id) {
+    //             if (i === 0) {
+    //                 setCurrentIndex(i)
+    //                 setSelected(data[i])
+    //                 return
+    //             } else {
+    //                 setCurrentIndex(i - 1)
+    //                 setSelected(data[i - 1])
+    //                 return
+    //             }
+    //         }
+    //     }
+    //     setSelected(undefined)
+    // })
+    // useHotkeys("down", () => {
+    //     const data = getData()
+    //     const dataLength = data.length
 
-        if (dataLength <= 0) {
-            return
-        }
-        if (!getSelected()) {
-            setSelected(data[0])
-            return
-        }
-        // 如果上点的话，应该是选择更新的内容
-        for (let i = 0; i < dataLength; i++) {
-            if (data[i]?.Id === getSelected()?.Id) {
-                if (i === dataLength - 1) {
-                    setSelected(data[i])
-                    return
-                } else {
-                    setSelected(data[i + 1])
-                    return
-                }
-            }
-        }
+    //     if (dataLength <= 0) {
+    //         return
+    //     }
+    //     if (!getSelected()) {
+    //         setSelected(data[0])
+    //         return
+    //     }
+    //     // 如果上点的话，应该是选择更新的内容
+    //     for (let i = 0; i < dataLength; i++) {
+    //         if (data[i]?.Id === getSelected()?.Id) {
+    //             if (i === dataLength - 1) {
+    //                 setCurrentIndex(i)
+    //                 setSelected(data[i])
+    //                 return
+    //             } else {
+    //                 setCurrentIndex(i + 1)
+    //                 setSelected(data[i + 1])
+    //                 return
+    //             }
+    //         }
+    //     }
 
-        setSelected(undefined)
-    })
+    //     setSelected(undefined)
+    // })
 
     // 向主页发送对比数据
     useEffect(() => {
@@ -796,11 +805,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [shieldData])
 
-    const sortRef = useRef<SortProps>({
-        order: "desc",
-        orderBy: "Id"
-    })
-
     const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
         if (sort.order === "none") {
             sort.order = "desc"
@@ -821,14 +825,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             const paginationProps = {
                 Page: page || 1,
                 Limit: limit || pagination.Limit,
-                // Order: order || "desc",
-                // OrderBy: orderBy || "id"
                 Order: sortRef.current.order,
                 OrderBy: sortRef.current.orderBy
             }
             if (!noLoading) {
                 setLoading(true)
-                // setAutoReload(false)
             }
             // yakQueryHTTPFlow({
             //     SourceType: sourceType, ...params,
@@ -849,6 +850,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     Pagination: {...paginationProps}
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
+                    console.log("update-newData", rsp)
                     let newData = rsp?.Data || []
                     if (newData.length > 0) {
                         newData = newData.map((item) => {
@@ -871,7 +873,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         setSelectedRowKeys([])
                         setSelectedRows([])
                     }
-                    console.log("newData", newData)
 
                     setData(paginationProps.Page == 1 ? newData : data.concat(newData))
                     setPagination(rsp.Pagination)
@@ -883,31 +884,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 .finally(() => setTimeout(() => setLoading(false), 300))
         }
     )
-
-    const getNewestId = useMemoizedFn(() => {
-        let max = 0
-        ;(getData() || []).forEach((e) => {
-            const id = parseInt(`${e.Id}`)
-            if (id >= max) {
-                max = id
-            }
-        })
-        return max
-    })
-
-    const getOldestId = useMemoizedFn(() => {
-        if (getData().length <= 0) {
-            return 0
-        }
-        let min = parseInt(`${getData()[0].Id}`)
-        ;(getData() || []).forEach((e) => {
-            const id = parseInt(`${e.Id}`)
-            if (id <= min) {
-                min = id
-            }
-        })
-        return min
-    })
 
     // 第一次启动的时候等待缓存条件加载
     // OnlyWebsocket 变的时候加载一下
@@ -922,19 +898,13 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             update()
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
-    useEffect(() => {
-        console.log("tableRef.current", tableRef.current)
-    }, [tableRef.current])
-    const scrollTableTo = useMemoizedFn((index: number) => {
-        if (!tableRef || !tableRef.current) return
-        tableRef.current.scrollTo(index)
-    })
 
     const [isHaveIncrement, setIsHaveIncrement] = useState<boolean>(false)
     const [maxId, setMaxId] = useState<number>(0)
     const [newTotal, setNewTotal] = useState<number>(0) //用来刷新tags服务器缓存的
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
+    const [currentIndex, setCurrentIndex] = useState<number>(0)
 
     useEffect(() => {
         getNewData()
@@ -986,13 +956,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             const paginationProps = {
                 Page: 1,
                 Limit: OFFSET_STEP,
-                // Order: "asc",
-                // OrderBy: "id"
-                Order: sortRef.current.order,
-                OrderBy: sortRef.current.orderBy
+                Order: "asc",
+                OrderBy: "Id"
             }
-            // let offsetId = getNewestId()
-
+            // console.log('scrollUpdateTop',paginationProps);
             // 查询数据
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
@@ -1003,22 +970,29 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
                     const offsetDeltaData = rsp?.Data || []
-                    // console.log('offsetDeltaData',offsetDeltaData);
+                    // console.log("scrollUpdateTop", rsp)
+
                     if (offsetDeltaData.length <= 0) {
                         setIsHaveIncrement(false)
                         // 没有增量数据
                         return
                     }
-
-                    if (sortRef.current.order === "desc" && sortRef.current.orderBy === "Id") {
-                        setMaxId(offsetDeltaData[0].Id)
-                        setLoading(true)
+                    // 有增量数据刷新total
+                    getNewData()
+                    if (sortRef.current.order === defSort.order && sortRef.current.orderBy === defSort.orderBy) {
                         let offsetData = offsetDeltaData.concat(data)
                         if (offsetData.length > MAX_ROW_COUNT) {
                             offsetData = offsetData.splice(0, MAX_ROW_COUNT)
                         }
+                        const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
+                        if (getSelected()) {
+                            const index = offsetData.findIndex((ele) => ele.Id === getSelected()?.Id)
+                            // if (index !== -1) setCurrentIndex(index)
+                        }
+                        setMaxId(offsetDeltaData[0].Id)
+                        setLoading(true)
+                        setTotal(newTotal)
                         setData(offsetData)
-                        // scrollTableTo(0)
                     } else {
                         setIsHaveIncrement(true)
                     }
@@ -1033,18 +1007,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
     // 这是用来设置选中坐标的，不需要做防抖
     useEffect(() => {
-        if (!getLastSelected() || !getSelected()) {
+        if (!getSelected()) {
             return
         }
-
-        const lastSelected = getLastSelected() as HTTPFlow
-        const up = parseInt(`${lastSelected?.Id}`) < parseInt(`${selected?.Id}`)
-        // if (up) {
-        //     console.info("up")
-        // } else {
-        //     console.info("down")
-        // }
-        // console.info(lastSelected.Id, selected?.Id)
         const screenRowCount = Math.floor(getTableContentHeight() / ROW_HEIGHT) - 1
 
         if (!autoReload) {
@@ -1119,12 +1084,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             }
         }
     }, [autoReload, props.inViewport])
-
-    useEffect(() => {
-        if (props.inViewport) {
-            // scrollTableTo(getScrollY())
-        }
-    }, [props.inViewport])
 
     const clearHistoryAction = useMemoizedFn((e: MouseEvent) => {
         showByCursorMenu(
@@ -1229,6 +1188,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 fixed: "left",
                 ellipsis: false,
                 sorterProps: {
+                    sorterKey: "id",
                     sorter: true
                 }
             },
@@ -1671,7 +1631,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 {
                     title: "屏蔽该记录",
                     onClick: (v) => {
-                        const id = parseInt(`${v?.Id}`)
+                        if (!(v && v.Id)) return
+                        const id = Math.ceil(v.Id)
                         const newArr = filterItem([...shieldData.data, id])
                         const newObj = {...shieldData, data: newArr}
                         setShieldData(newObj)
@@ -1886,6 +1847,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             <div className={style["table-virtual-resize"]}>
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}
+                    currentIndex={currentIndex}
                     titleHeight={80}
                     renderTitle={
                         <div className={style["http-history-table-title"]}>
@@ -1942,11 +1904,13 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     >
                                         <div
                                             onClick={() => {
-                                                sortRef.current = {
-                                                    order: "desc",
-                                                    orderBy: "Id"
+                                                sortRef.current = defSort
+                                                const newParams: YakQueryHTTPFlowRequest = {
+                                                    ...(props.params || {SourceType: "mitm"}),
+                                                    ExcludeId: params.ExcludeId,
+                                                    ExcludeInUrl: params.ExcludeInUrl
                                                 }
-                                                setParams(props.params || {SourceType: "mitm"})
+                                                setParams(newParams)
                                                 setIsReset(!isReset)
                                                 setTimeout(() => {
                                                     update(1)
@@ -2248,6 +2212,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     enableDrag={true}
                     columns={columns}
                     currentRowData={getSelected()}
+                    setCurrentRowData={setSelected}
                     onRowClick={onRowClick}
                     onRowContextMenu={onRowContextMenu}
                     pagination={{

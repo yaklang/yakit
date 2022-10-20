@@ -5,6 +5,7 @@ import {SelectProps} from "antd"
 // 包裹虚拟表格的父元素需要设置高度
 export interface TableVirtualResizeProps<T> {
     ref?: any
+    getTableRef?: any // 组件自用
     title?: string | ReactNode
     renderTitle?: ReactNode
     titleHeight?: number
@@ -13,6 +14,7 @@ export interface TableVirtualResizeProps<T> {
     renderKey: string
     renderRow?: (data: T, i: number) => ReactNode
     currentRowData?: T
+    setCurrentRowData?: (r?: T) => void
     columns: ColumnsTypeProps[]
     rowSelection?: RowSelectionProps<T>
     colWidth?: number
@@ -26,6 +28,7 @@ export interface TableVirtualResizeProps<T> {
     scrollToBottom?: number // 默认300
     isReset?: boolean
     isShowTotal?: boolean
+    currentIndex?: number
 }
 
 export interface SortProps {
@@ -119,5 +122,5 @@ export interface SelectSearchProps {
     onSelect: (f: string | string[], record?: FiltersItemProps | FiltersItemProps[]) => void
     value: string | string[]
     filterProps?: FilterProps
-    onClose:()=>void
+    onClose: () => void
 }
