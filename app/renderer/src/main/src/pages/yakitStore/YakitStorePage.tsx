@@ -65,6 +65,7 @@ import {
     useThrottleFn,
     useVirtualList,
     useDebounceEffect,
+    useDebounce,
     useSize
 } from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -90,7 +91,7 @@ import {
 } from "@/components/SyncCloudButton/SyncCloudButton"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
-import {FieldName} from "@/pages/risks/RiskTable"
+import {FieldName, Fields} from "@/pages/risks/RiskTable"
 
 const {Search} = Input
 const {Option} = Select
@@ -1523,6 +1524,134 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     )
 }
 
+export interface YakFilterModuleSelectProps {
+    selectedTags:string[]
+    setSelectedTags:(v:string[])=>void
+}
+// 封装动态select筛选组件
+export const YakFilterModuleSelect: React.FC<YakFilterModuleSelectProps> = (props) => {
+    const {selectedTags,setSelectedTags} = props
+    const [allTag, setAllTag] = useState<FieldName[]>([])
+    // 下拉框选中tag值
+    const selectRef = useRef(null)
+    // 用于存储 tag 的搜索与结果
+    const [topTags, setTopTags] = useState<FieldName[]>([])
+    const [itemSelects, setItemSelects] = useState<string[]>([])
+    // 设置本地搜索 tags 的状态
+    const [searchTag, setSearchTag] = useState("")
+    const [topN, setTopN] = useState(15)
+    // 设置最大最小值
+    const [minTagWeight, setMinTagWeight] = useState(1)
+    const [maxTagWeight, setMaxTagWeight] = useState(2000)
+    // 辅助变量
+    const [updateTagsSelectorTrigger, setUpdateTagsSelector] = useState(false)
+
+    const [selectLoading, setSelectLoading] = useState<boolean>(true)
+
+    useEffect(() => {
+        setTimeout(() => setSelectLoading(false), 300)
+    }, [selectLoading])
+
+    useEffect(() => {
+        ipcRenderer
+            .invoke("GetAvailableYakScriptTags", {})
+            .then((data: Fields) => {
+                if (data && data.Values) {
+                    console.log("data.Values", data.Values)
+                    setAllTag(data.Values)
+                }
+            })
+            .catch((e) => console.info(e))
+            .finally(() => {})
+    }, [])
+
+    useEffect(() => {
+        let count = 0
+        const showTags = allTag.filter((d) => {
+            if (
+                count <= topN && // 限制数量
+                d.Total >= minTagWeight &&
+                d.Total <= maxTagWeight &&
+                !selectedTags.includes(d.Name) &&
+                d.Name.toLowerCase().includes(searchTag.toLowerCase()) // 设置搜索结果
+            ) {
+                count++
+                return true
+            }
+            return false
+        })
+        setTopTags([...showTags])
+    }, [
+        allTag,
+        useDebounce(minTagWeight, {wait: 500}),
+        useDebounce(maxTagWeight, {wait: 500}),
+        useDebounce(searchTag, {wait: 500}),
+        useDebounce(selectedTags, {wait: 500}),
+        useDebounce(topN, {wait: 500}),
+        updateTagsSelectorTrigger
+    ])
+
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+        return (
+            <div>
+                <Spin spinning={selectLoading}>
+                    {originNode}
+                </Spin>
+            </div>
+        )
+    })
+    return (
+        <ItemSelects
+            item={{}}
+            select={{
+                ref: selectRef,
+                className: "div-width-100",
+                allowClear: true,
+                autoClearSearchValue: false,
+                maxTagCount: "responsive",
+                mode: "multiple",
+                size: "small",
+                data: topTags,
+                optValue: "Name",
+                optionLabelProp: "Name",
+                renderOpt: (info: FieldName) => {
+                    return (
+                        <div style={{display: "flex", justifyContent: "space-between"}}>
+                            <span>{info.Name}</span>
+                            <span>{info.Total}</span>
+                        </div>
+                    )
+                },
+                value: itemSelects, // selectedTags
+                onSearch: (keyword: string) => setSearchTag(keyword),
+                setValue: (value) => {
+                    setItemSelects(value)
+                },
+                onDropdownVisibleChange: (open) => {
+                    if (open) {
+                        setItemSelects([])
+                        setSearchTag("")
+                    } else {
+                        const filters = itemSelects.filter((item) => !selectedTags.includes(item))
+                        setSelectedTags(selectedTags.concat(filters))
+                        setItemSelects([])
+                        setSearchTag("")
+                    }
+                },
+                onPopupScroll: (e) => {
+                    const {target} = e
+                    const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                    if (ref.scrollTop + ref.offsetHeight === ref.scrollHeight) {
+                        setSelectLoading(true)
+                        setTopN(topN + 10)
+                    }
+                },
+                dropdownRender: (originNode: React.ReactNode) => selectDropdown(originNode)
+            }}
+        />
+    )
+}
+
 interface TagsProps {
     Value: string
     Total: number
@@ -1545,7 +1674,7 @@ export interface YakFilterModuleList {
     multipleCallBack: (v: string[]) => void
     onCheckAllChange: (v: any) => void
     setCheckAll?: (v: boolean) => void
-    TagsSelectRender?: () => any
+    commonTagsSelectRender?: boolean
     settingRender?: () => any
 }
 interface YakFilterRemoteObj {
@@ -1584,8 +1713,8 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         checkList,
         // 插件组选中项回调
         multipleCallBack,
-        // 动态加载TAGS控件
-        TagsSelectRender,
+        // 是否动态加载TAGS控件
+        commonTagsSelectRender=false,
         // 动态加载设置项
         settingRender
     } = props
@@ -1603,7 +1732,8 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
     const nowData = useRef<YakFilterRemoteObj[]>([])
     // 此处存储读取是一个异步过程 可能存在存储后读取的数据不为最新值
     // const [reload, setReload] = useState<boolean>(false)
-
+    // // 引入公共Select组件数据
+    // const [selectedTags, setSelectedTags] = useState<string[]>([])
     useEffect(() => {
         getRemoteValue(FILTER_CACHE_LIST_DATA).then((data: string) => {
             if (!!data) {
@@ -1728,7 +1858,9 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                     value={searchType}
                     size='small'
                     onSelect={(v) => {
-                        v === "Keyword" && setTag([])
+                        if(v === "Keyword"){
+                            setTag([])
+                        }
                         v === "Tags" && setSearchKeyword("")
                         setSearchType(v)
                     }}
@@ -1738,7 +1870,7 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                 </Select>
                 {(searchType === "Tags" && (
                     <>
-                        {TagsSelectRender ? (
+                        {commonTagsSelectRender ? (
                             <div
                                 style={{
                                     display: "inline-block",
@@ -1749,13 +1881,15 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                                     top: -4
                                 }}
                             >
-                                {TagsSelectRender()}
+                                <YakFilterModuleSelect selectedTags={tag} setSelectedTags={setTag}/>
                             </div>
                         ) : (
                             <Select
                                 mode='tags'
                                 size='small'
-                                onChange={(e) => setTag(e as string[])}
+                                onChange={(e) => {
+                                    setTag(e as string[])
+                                }}
                                 placeholder='选择Tag'
                                 style={{width: "73%"}}
                                 loading={tagsLoading}
@@ -1840,7 +1974,8 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                             style={{marginBottom: 2}}
                             color={"blue"}
                             onClose={() => {
-                                setTag(tag.filter((element) => i !== element))
+                                let arr = tag.filter((element) => i !== element)
+                                setTag(arr)
                             }}
                             closable={true}
                         >
