@@ -225,7 +225,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                 onPopupScroll: (e) => {
                     const {target} = e
                     const ref: HTMLDivElement = target as unknown as HTMLDivElement
-                    if (ref.scrollTop + ref.offsetHeight === ref.scrollHeight) {
+                    if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
                         setSelectLoading(true)
                         setTopN(topN + 10)
                     }
