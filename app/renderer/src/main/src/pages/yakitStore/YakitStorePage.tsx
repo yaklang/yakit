@@ -91,7 +91,6 @@ import {
 } from "@/components/SyncCloudButton/SyncCloudButton"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
-import {FieldName, Fields} from "@/pages/risks/RiskTable"
 
 const {Search} = Input
 const {Option} = Select
@@ -1545,17 +1544,21 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
 }
 
 export interface YakFilterModuleSelectProps {
-    selectedTags:string[]
-    setSelectedTags:(v:string[])=>void
+    selectedTags: string[]
+    setSelectedTags: (v: string[]) => void
+}
+interface TagValue {
+    Name: string
+    Total: number
 }
 // 封装动态select筛选组件
 export const YakFilterModuleSelect: React.FC<YakFilterModuleSelectProps> = (props) => {
-    const {selectedTags,setSelectedTags} = props
-    const [allTag, setAllTag] = useState<FieldName[]>([])
+    const {selectedTags, setSelectedTags} = props
+    const [allTag, setAllTag] = useState<TagValue[]>([])
     // 下拉框选中tag值
     const selectRef = useRef(null)
     // 用于存储 tag 的搜索与结果
-    const [topTags, setTopTags] = useState<FieldName[]>([])
+    const [topTags, setTopTags] = useState<TagValue[]>([])
     const [itemSelects, setItemSelects] = useState<string[]>([])
     // 设置本地搜索 tags 的状态
     const [searchTag, setSearchTag] = useState("")
@@ -1574,12 +1577,9 @@ export const YakFilterModuleSelect: React.FC<YakFilterModuleSelectProps> = (prop
 
     useEffect(() => {
         ipcRenderer
-            .invoke("GetAvailableYakScriptTags", {})
-            .then((data: Fields) => {
-                if (data && data.Values) {
-                    console.log("data.Values", data.Values)
-                    setAllTag(data.Values)
-                }
+            .invoke("GetYakScriptTags", {})
+            .then((res) => {
+                setAllTag(res.Tag.map((item) => ({Name: item.Value, Total: item.Total})))
             })
             .catch((e) => console.info(e))
             .finally(() => {})
@@ -1614,9 +1614,7 @@ export const YakFilterModuleSelect: React.FC<YakFilterModuleSelectProps> = (prop
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>
-                    {originNode}
-                </Spin>
+                <Spin spinning={selectLoading}>{originNode}</Spin>
             </div>
         )
     })
@@ -1634,7 +1632,7 @@ export const YakFilterModuleSelect: React.FC<YakFilterModuleSelectProps> = (prop
                 data: topTags,
                 optValue: "Name",
                 optionLabelProp: "Name",
-                renderOpt: (info: FieldName) => {
+                renderOpt: (info: TagValue) => {
                     return (
                         <div style={{display: "flex", justifyContent: "space-between"}}>
                             <span>{info.Name}</span>
@@ -1695,6 +1693,7 @@ export interface YakFilterModuleList {
     onCheckAllChange: (v: any) => void
     setCheckAll?: (v: boolean) => void
     commonTagsSelectRender?: boolean
+    TagsSelectRender?: () => any
     settingRender?: () => any
 }
 interface YakFilterRemoteObj {
@@ -1733,8 +1732,10 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         checkList,
         // 插件组选中项回调
         multipleCallBack,
-        // 是否动态加载TAGS控件
-        commonTagsSelectRender=false,
+        // 是否动态加载公共TAGS控件
+        commonTagsSelectRender = false,
+        // 外部TAGS组件渲染
+        TagsSelectRender,
         // 动态加载设置项
         settingRender
     } = props
@@ -1878,7 +1879,7 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                     value={searchType}
                     size='small'
                     onSelect={(v) => {
-                        if(v === "Keyword"){
+                        if (v === "Keyword") {
                             setTag([])
                         }
                         v === "Tags" && setSearchKeyword("")
@@ -1890,7 +1891,8 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                 </Select>
                 {(searchType === "Tags" && (
                     <>
-                        {commonTagsSelectRender ? (
+                        {/* 当有外部组件 与公共组件使用并存优先使用外部组件 */}
+                        {commonTagsSelectRender || TagsSelectRender ? (
                             <div
                                 style={{
                                     display: "inline-block",
@@ -1901,7 +1903,11 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                                     top: -4
                                 }}
                             >
-                                <YakFilterModuleSelect selectedTags={tag} setSelectedTags={setTag}/>
+                                {TagsSelectRender ? (
+                                    TagsSelectRender()
+                                ) : (
+                                    <YakFilterModuleSelect selectedTags={tag} setSelectedTags={setTag} />
+                                )}
                             </div>
                         ) : (
                             <Select
