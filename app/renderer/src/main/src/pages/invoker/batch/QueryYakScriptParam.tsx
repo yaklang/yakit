@@ -468,8 +468,8 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
                     checkList={Array.from(new Set([...cachePlugInList,...tagsPlugInList]))} // props.simpleFilter.include
                     searchType={searchType}
                     setSearchType={setSearchType}
-                    // 加载动态tags公共列表
-                    commonTagsSelectRender={true} 
+                    // 动态加载tags列表
+                    TagsSelectRender={props.TagsSelectRender}
                     refresh={refresh}
                     setRefresh={setRefresh}
                     onDeselect={() => {}}
