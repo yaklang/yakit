@@ -98,21 +98,25 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             .then((data: string) => {
                 if (!!data) {
                     const cacheData: string[] = JSON.parse(data)
-                    multipleMitm(cacheData)
+                    if(cacheData.length){
+                        // console.log("读取数据",cacheData)
+                        multipleMitm(cacheData)
+                    }
                 }
             })
             .finally(() => {
                 isDefaultCheck.current = true
             })
-        const cacheTmp = new Map<string, boolean>()
+        let cacheTmp:string[] = []
         // 用于 MITM 的 查看当前 Hooks
         ipcRenderer.on("client-mitm-hooks", (e, data: YakScriptHooks[]) => {
             if (isDefaultCheck.current) {
                 const tmp = new Map<string, boolean>()
+                cacheTmp = []
                 data.forEach((i) => {
                     i.Hooks.map((hook) => {
                         tmp.set(hook.YakScriptName, true)
-                        cacheTmp.set(hook.YakScriptName, true)
+                        cacheTmp = [...cacheTmp,hook.YakScriptName]
                     })
                 })
                 // console.log("勾选项",tmp)
@@ -124,9 +128,10 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             setInitialed(true)
         }, 500)
         return () => {
-            let arr: string[] = Array.from(cacheTmp).map((item) => item[0])
             // 组价销毁时进行本地缓存 用于后续页面进入默认选项
-            setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(arr))
+            const localSaveData = Array.from(new Set(cacheTmp))
+            // console.log("本地缓存",localSaveData)
+            setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(localSaveData))
             ipcRenderer.removeAllListeners("client-mitm-hooks")
         }
     }, [])
