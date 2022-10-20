@@ -235,6 +235,8 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                                 manySelectScript(value)
                             }}
                             settingRender={settingRender}
+                            // 加载动态tags公共列表
+                            commonTagsSelectRender={true} 
                         />:<Space>
                                 <Input.Search
                                     onSearch={(value) => {
