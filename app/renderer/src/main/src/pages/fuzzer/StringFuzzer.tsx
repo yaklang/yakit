@@ -234,6 +234,20 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                                 return {value: i.name, text: i.name}
                             })}
                         />
+                        {
+                            <div style={{display:"none"}}>
+                                {(()=>{
+                                    if(encodeTemp){
+                                        const res = encodeOperators.filter(i => i.name === encodeTemp);
+                                        // @ts-ignore
+                                        if (res.length > 0 && res[0].optionsRender) {
+                                            console.log("res",res)
+                                            return res[0].optionsRender(template, setTemplate)
+                                        }
+                                    }
+                                })()}
+                            </div>
+                        }
                         {/* {encodeTemp && <Form.Item
                             label={" "} colon={false}
                             help={"本标签一般负责对 Payload 进行编码等处理，可以嵌套在一个普通(基础)标签外部"}
