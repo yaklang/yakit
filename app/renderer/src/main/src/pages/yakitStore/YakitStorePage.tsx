@@ -780,15 +780,15 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         const queryName = item[0]
                                         const statisticsList = item[1]
                                         const title = queryTitle[queryName]
-                                        let current: string = ""
+                                        let current: string | string[] = ""
                                         if (plugSource === "local") {
-                                            current = statisticsQueryLocal[queryName]
+                                            current = statisticsQueryLocal[queryName] || ""
                                         }
                                         if (plugSource === "user") {
-                                            current = statisticsQueryUser[queryName]
+                                            current = statisticsQueryUser[queryName] || ""
                                         }
                                         if (plugSource === "online") {
-                                            current = statisticsQueryOnline[queryName]
+                                            current = statisticsQueryOnline[queryName] || ""
                                         }
                                         if (
                                             (queryName === "status" &&
@@ -800,7 +800,10 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         ) {
                                             return <></>
                                         }
-
+                                        console.log("current", current)
+                                        if (!Array.isArray(current)) {
+                                            current = current.split(",")
+                                        }
                                         return (
                                             statisticsList &&
                                             statisticsList.length > 0 && (
@@ -810,11 +813,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                                         <div
                                                             key={`${ele.value || ele.Value}-${plugSource}`}
                                                             className={`opt-list-item ${
-                                                                current
-                                                                    .split(",")
-                                                                    .findIndex(
-                                                                        (c) => c === (ele.value || ele.Value)
-                                                                    ) !== -1 && "opt-list-item-selected"
+                                                                Array.isArray(current) &&
+                                                                current.findIndex(
+                                                                    (c) => c === (ele.value || ele.Value)
+                                                                ) !== -1 &&
+                                                                "opt-list-item-selected"
                                                             }`}
                                                             onClick={() => onSearch(queryName, ele.value || ele.Value)}
                                                         >
