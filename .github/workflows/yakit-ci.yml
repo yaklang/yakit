@@ -29,6 +29,12 @@ jobs:
           source: ${{ github.ref }}
           find: 'refs/tags/v'
           replace: ''
+      # Enterprise
+      - name: Extract Version
+        id: extract_version
+        uses: Saionaro/extract-package-version@v1.1.1
+      - name: Echo Yakit Package Version
+        run: echo ${{ steps.extract_version.outputs.version }}
       - run: yarn install && yarn install-render
         working-directory: ./
         name: "Install Dependencies"
@@ -78,36 +84,30 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-windows-amd64.exe
-          path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-windows-amd64.exe
+          name: Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-arm64.dmg
-          path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-arm64.dmg
+          name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Upload Yakit Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-x64.dmg
-          path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-x64.dmg
+          name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Upload Yakit Artifacts Linux
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
-          path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
+          name: Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
-        # Enterprise
-      - name: get-npm-version
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@main
-        with:
-          path: packages/yakit
       - name: Upload Yakit Artifacts Windows
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
