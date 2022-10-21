@@ -29,9 +29,23 @@ jobs:
           source: ${{ github.ref }}
           find: 'refs/tags/v'
           replace: ''
-      - run: yarn install && yarn install-render && yarn build-render
+      - run: yarn install && yarn install-render
         working-directory: ./
         name: "Install Dependencies"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      - run: yarn build-render-enterprise
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        working-directory: ./
+        name: "Build Enterprise"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      - run: yarn build-render
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        working-directory: ./
+        name: "Build Community"
         env:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
@@ -58,48 +72,65 @@ jobs:
         #        mac
         #        mac-arm64
         #        win-unpacked
+
       - name: Upload Yakit Artifacts Windows
         uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-windows-amd64.exe
           path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-windows-amd64.exe
       - name: Upload Yakit Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-arm64.dmg
           path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-arm64.dmg
       - name: Upload Yakit Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-x64.dmg
           path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-x64.dmg
       - name: Upload Yakit Artifacts Linux
         uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
           path: ./release/Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
-      - name: Upload Yakit latest.yml
+
+        # Enterprise
+      - name: Upload Yakit Artifacts Windows
         uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: latest.yml
-          path: ./release/latest.yml
-      - name: Upload Yakit latest-mac.yml
+          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-windows-amd64.exe
+          path: ./release/Yakit-EE-${{ steps.fetchtag_yakit.outputs.value }}-windows-amd64.exe
+      - name: Upload Yakit Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: latest-mac.yml
-          path: ./release/latest-mac.yml
-      - name: Upload Yakit latest-linux.yml
+          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-arm64.dmg
+          path: ./release/Yakit-EE-${{ steps.fetchtag_yakit.outputs.value }}-darwin-arm64.dmg
+      - name: Upload Yakit Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: latest-linux.yml
-          path: ./release/latest-linux.yml
+          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-darwin-x64.dmg
+          path: ./release/Yakit-EE-${{ steps.fetchtag_yakit.outputs.value }}-darwin-x64.dmg
+      - name: Upload Yakit Artifacts Linux
+        uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        with:
+          # Yakit-1.0.3-beta24-win32-x64.exe
+          name: Yakit-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
+          path: ./release/Yakit-EE-${{ steps.fetchtag_yakit.outputs.value }}-linux-amd64.AppImage
 
   download_artifacts_and_release:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
@@ -131,18 +162,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
-#      - name: Download latest.yml
-#        uses: actions/download-artifact@v2
-#        with:
-#          name: latest.yml
-#      - name: Download latest.yml (mac)
-#        uses: actions/download-artifact@v2
-#        with:
-#          name: latest-mac.yml
-#      - name: Download latest.yml (linux)
-#        uses: actions/download-artifact@v2
-#        with:
-#          name: latest-linux.yml
 
       - run: ls
         name: Ls Published Artifacts...
