@@ -98,7 +98,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             .then((data: string) => {
                 if (!!data) {
                     const cacheData: string[] = JSON.parse(data)
-                    if(cacheData.length){
+                    if (cacheData.length) {
                         // console.log("读取数据",cacheData)
                         multipleMitm(cacheData)
                     }
@@ -107,7 +107,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
             .finally(() => {
                 isDefaultCheck.current = true
             })
-        let cacheTmp:string[] = []
+        let cacheTmp: string[] = []
         // 用于 MITM 的 查看当前 Hooks
         ipcRenderer.on("client-mitm-hooks", (e, data: YakScriptHooks[]) => {
             if (isDefaultCheck.current) {
@@ -116,7 +116,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                 data.forEach((i) => {
                     i.Hooks.map((hook) => {
                         tmp.set(hook.YakScriptName, true)
-                        cacheTmp = [...cacheTmp,hook.YakScriptName]
+                        cacheTmp = [...cacheTmp, hook.YakScriptName]
                     })
                 })
                 // console.log("勾选项",tmp)
@@ -235,6 +235,15 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                     }}
                                 >
                                     <Button type={"link"} icon={<ReloadOutlined />} size={"small"} />
+                                </Popconfirm>
+                            )}
+                            {mode === "all" && (
+                                <Popconfirm title={"清空已选 Tag？"} onConfirm={() => {
+                                    onCheckAllChange(false)
+                                }}>
+                                    <Button size={"small"} type={"link"} danger={true}>
+                                        清空
+                                    </Button>
                                 </Popconfirm>
                             )}
                         </div>

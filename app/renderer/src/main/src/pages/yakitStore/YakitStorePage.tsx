@@ -1831,7 +1831,7 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                         />
                     </Form.Item>
                     <Form.Item {...itemLayout} label='插件'>
-                        <div style={{maxHeight: 460, overflowY: "scroll"}}>
+                        <div style={{maxHeight: 460, overflow: "auto"}}>
                             {checkList.map((item) => (
                                 <span style={{paddingRight: 12}} key={item}>
                                     {item};
