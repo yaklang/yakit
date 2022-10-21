@@ -692,62 +692,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     })
 
-    // // 使用上下箭头
-    // useHotkeys("up", () => {
-    //     const data = getData()
-    //     const dataLength = data.length
-    //     if (dataLength <= 0) {
-    //         return
-    //     }
-    //     if (!getSelected()) {
-    //         setSelected(data[0])
-    //         return
-    //     }
-    //     // 如果上点的话，应该是选择更新的内容
-    //     for (let i = 0; i < dataLength; i++) {
-    //         if (data[i]?.Id === getSelected()?.Id) {
-    //             if (i === 0) {
-    //                 setCurrentIndex(i)
-    //                 setSelected(data[i])
-    //                 return
-    //             } else {
-    //                 setCurrentIndex(i - 1)
-    //                 setSelected(data[i - 1])
-    //                 return
-    //             }
-    //         }
-    //     }
-    //     setSelected(undefined)
-    // })
-    // useHotkeys("down", () => {
-    //     const data = getData()
-    //     const dataLength = data.length
-
-    //     if (dataLength <= 0) {
-    //         return
-    //     }
-    //     if (!getSelected()) {
-    //         setSelected(data[0])
-    //         return
-    //     }
-    //     // 如果上点的话，应该是选择更新的内容
-    //     for (let i = 0; i < dataLength; i++) {
-    //         if (data[i]?.Id === getSelected()?.Id) {
-    //             if (i === dataLength - 1) {
-    //                 setCurrentIndex(i)
-    //                 setSelected(data[i])
-    //                 return
-    //             } else {
-    //                 setCurrentIndex(i + 1)
-    //                 setSelected(data[i + 1])
-    //                 return
-    //             }
-    //         }
-    //     }
-
-    //     setSelected(undefined)
-    // })
-
     // 向主页发送对比数据
     useEffect(() => {
         if (compareLeft.content) {
@@ -826,7 +770,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Page: page || 1,
                 Limit: limit || pagination.Limit,
                 Order: sortRef.current.order,
-                OrderBy: sortRef.current.orderBy
+                OrderBy: sortRef.current.orderBy || "id"
             }
             if (!noLoading) {
                 setLoading(true)
@@ -839,14 +783,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             console.log("paginationProps", {
                 SourceType: sourceType,
                 ...params,
-                Tags: color ? [...(params.Tags || []), color] : params.Tags,
+                Tags: params.Tags,
+                Color: color ? [color] : undefined,
                 Pagination: {...paginationProps}
             })
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: sourceType,
                     ...params,
-                    Tags: color ? [...(params.Tags || []), color] : params.Tags,
+                    Tags: params.Tags,
+                    Color: color ? [color] : undefined,
                     Pagination: {...paginationProps}
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1296,7 +1242,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 title: "参数",
                 dataKey: "GetParamsTotal",
                 filterProps: {
-                    filterKey: "HaveCommonParams",
+                    filterKey: "HaveParamsTotal",
                     filtersType: "select",
                     filtersSelectAll: {
                         isAll: true
@@ -1312,8 +1258,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         }
                     ]
                 },
-                render: (text) => (
-                    <div>{text > 0 ? <CheckCircleIcon className={style["check-circle-icon"]} /> : ""}</div>
+                render: (_, rowData) => (
+                    <div>
+                        {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
+                            <CheckCircleIcon className={style["check-circle-icon"]} />
+                        )}
+                    </div>
                 )
             },
             {
@@ -1346,10 +1296,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             },
             {
                 title: "请求大小",
-                dataKey: "RequestSizeVerbose",
-                sorterProps: {
-                    sorter: true
-                }
+                dataKey: "RequestSizeVerbose"
             },
             {
                 title: "操作",
@@ -1445,6 +1392,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     //删除
     const onRemoveHttpHistory = useMemoizedFn((query) => {
         setLoading(true)
+        console.log("query", query)
+
         ipcRenderer
             .invoke("DeleteHTTPFlows", {
                 ...query
@@ -1671,19 +1620,32 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     titleBatch: "删除记录",
                     onClick: (v) => onRemoveHttpHistory({Id: [v.Id]}),
                     onClickBatch: (list) => {
-                        // onRemoveHttpHistory({Id: list.map((ele) => ele.Id)})
+                        onRemoveHttpHistory({Id: list.map((ele) => ele.Id)})
                     }
                 },
                 {
                     title: "删除URL",
                     onClick: (v) => onRemoveHttpHistory({URLPrefix: v.Url}),
                     onClickBatch: (list) => {
-                        // onRemoveHttpHistory({URLPrefix: list.map((ele) => ele.Url)})
+                        const urls = list.map((ele) => ele.Url)
+                        onRemoveHttpHistory({
+                            Filter: {
+                                IncludeInUrl: urls
+                            }
+                        })
                     }
                 },
                 {
                     title: "删除域名",
-                    onClick: (v) => {}
+                    onClick: (v) => onRemoveHttpHistory({URLPrefix: v?.HostPort?.split(":")[0]}),
+                    onClickBatch: (list) => {
+                        const hosts = list.map((ele) => ele.HostPort?.split(":")[0])
+                        onRemoveHttpHistory({
+                            Filter: {
+                                IncludeInUrl: hosts
+                            }
+                        })
+                    }
                 }
             ]
         }
@@ -1876,14 +1838,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         <Dropdown
                                             overlay={
                                                 <Menu>
-                                                    <Menu.Item
-                                                    // onClick={() => onRemoveHttpHistoryAllAndResetId()}
-                                                    >
+                                                    <Menu.Item onClick={() => onRemoveHttpHistoryAllAndResetId()}>
                                                         重置请求 ID
                                                     </Menu.Item>
-                                                    <Menu.Item
-                                                    // onClick={() => onRemoveHttpHistoryAll()}
-                                                    >
+                                                    <Menu.Item onClick={() => onRemoveHttpHistoryAll()}>
                                                         不重置请求 ID
                                                     </Menu.Item>
                                                 </Menu>
@@ -2105,7 +2063,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                         <Popover
                                             overlayClassName={style["http-history-table-drop-down-popover"]}
                                             content={
-                                                <Menu className={style["http-history-table-drop-down-batch"]}>
+                                                <Menu
+                                                    className={style["http-history-table-drop-down-batch"]}
+                                                    // selectedKeys={["删除"]}
+                                                    // openKeys={["删除"]}
+                                                >
                                                     {menuData.map((m) => {
                                                         if (m.title === "数据包扫描") {
                                                             const dataPacket = GetPacketScanByCursorMenuItem(0)

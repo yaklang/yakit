@@ -232,7 +232,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
             if (index) {
                 setCurrentRowData(data[index])
-
                 setTimeout(() => {
                     const dom = containerRef.current
                     if (!currentRowRef.current) {
