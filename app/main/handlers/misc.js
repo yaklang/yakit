@@ -282,4 +282,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DelKey", async (e, params) => {
         return await asyncDelKey(params)
     })
+
+    // asyncGetMachineID wrapper
+    const asyncGetMachineID = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetMachineID(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetMachineID", async (e, params) => {
+        return await asyncGetMachineID(params)
+    })
 }

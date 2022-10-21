@@ -15,7 +15,7 @@ export interface DropdownMenuProps {
     dropdown?: DropdownProps
     menu: BaseMenuProps
     onClick?: (info: string) => any
-    children?: ReactNode
+    children?: ReactNode,
 }
 export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
     // @ts-ignore

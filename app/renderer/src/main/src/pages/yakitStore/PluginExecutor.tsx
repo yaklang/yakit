@@ -8,6 +8,7 @@ import {xtermClear} from "../../utils/xtermUtils"
 import {PluginResultUI} from "./viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import {useMemoizedFn} from "ahooks"
+import "./PluginExecutor.scss"
 
 export interface PluginExecutorProp {
     script: YakScript
@@ -53,7 +54,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     })
 
     return (
-        <div style={{height: "100%", display: "flex", flexFlow: "column"}}>
+        <div className='plugin-executor'>
             <PageHeader
                 title={script.ScriptName}
                 style={{marginBottom: 0, paddingBottom: 0}}

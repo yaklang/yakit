@@ -1,0 +1,9 @@
+.plugin-executor {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .ant-page-header-heading-title {
+        white-space: pre;
+    }
+}

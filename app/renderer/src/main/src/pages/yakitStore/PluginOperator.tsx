@@ -26,6 +26,7 @@ import { GetYakScriptByOnlineIDRequest } from "./YakitStorePage"
 import { YakitPluginOnlineJournal } from "./YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import { UserInfoProps } from "@/store"
 import { NetWorkApi } from "@/services/fetch"
+import {getRemoteValue} from "@/utils/kv"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -41,6 +42,7 @@ export interface YakScriptOperatorProp {
     updatePluginOnline?: (p: API.YakitPluginDetail) => void
 
     userInfo?: UserInfoProps
+    plugSource?: string
 }
 
 interface PromptRequest {
@@ -50,7 +52,7 @@ interface PromptRequest {
 const { ipcRenderer } = window.require("electron")
 
 export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
-    const { userInfo } = props
+    const { userInfo,plugSource } = props
     const [script, setScript, getScript] = useGetState<YakScript>()
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
@@ -62,6 +64,8 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [isEdit, setIsEdit] = useState(false)
 
     const [settingShow, setSettingShow] = useState<boolean>(false)
+    // 是否展示（根据插件url与私有域比较）
+    const [isShowPrivateDom,setIsShowPrivateDom] = useState<boolean>(true)
 
     const updateGroups = () => {
         ipcRenderer
@@ -121,6 +125,21 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
 
     // 来源于菜单进入以及开启了插件选择的话，就打开
     const enablePluginSelector = !!script?.EnablePluginSelector && props.fromMenu
+    
+    // OnlineBaseUrl与私有域不匹配则屏蔽云端/修改按钮并不可点击线上与日志
+    useEffect(()=>{
+        if(getScript()?.OnlineBaseUrl&&plugSource==="local"){
+            getRemoteValue("httpSetting").then((value) => {
+                if(getScript()?.OnlineBaseUrl&&getScript()?.OnlineBaseUrl!==JSON.parse(value)?.BaseUrl){
+                    setIsShowPrivateDom(false)
+                }
+                else{
+                    setIsShowPrivateDom(true)
+                }
+            })
+        }
+    },[script])
+    
     const executor = useMemoizedFn(() => {
         return (
             script && (
@@ -143,6 +162,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                 <YakScriptCreatorForm
                                     modified={script}
                                     noClose={true}
+                                    showButton={isShowPrivateDom}
                                     setScript={setScript}
                                     onCreated={(i) => {
                                         if (props.setScript) props.setScript(i)
@@ -516,7 +536,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 <Tabs.TabPane tab={"结果"} key={"results"} disabled={isDisabledLocal}>
                     {script && <YakScriptExecResultTable YakScriptName={script.ScriptName} trigger={trigger} />}
                 </Tabs.TabPane>
-                <Tabs.TabPane tab={"线上"} key={"online"} disabled={isDisabledOnline}>
+                <Tabs.TabPane tab={"线上"} key={"online"} disabled={!isShowPrivateDom||isDisabledOnline}>
                     {pluginIdOnlineId && pluginIdOnlineId > 0 && activeKey === 'online' && (
                         <YakitPluginInfoOnline
                             pluginId={pluginIdOnlineId}
@@ -537,7 +557,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                         <Badge dot offset={[5, -5]}><span className={`${activeKey === 'journal' && 'journal-active' || ''}`}>日志</span></Badge>
                         : '日志'}
                     key={"journal"}
-                    disabled={isDisabledOnline}
+                    disabled={!isShowPrivateDom||isDisabledOnline}
                 >
                     {pluginIdOnlineId && pluginIdOnlineId > 0 && activeKey === 'journal' && (
                         <YakitPluginOnlineJournal
