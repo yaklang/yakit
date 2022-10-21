@@ -238,7 +238,7 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
                                 </Popconfirm>
                             )}
                             {mode === "all" && (
-                                <Popconfirm title={"清空已选 Tag？"} onConfirm={() => {
+                                <Popconfirm title={"清空所选插件？"} onConfirm={() => {
                                     onCheckAllChange(false)
                                 }}>
                                     <Button size={"small"} type={"link"} danger={true}>
