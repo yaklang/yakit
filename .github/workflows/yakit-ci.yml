@@ -102,7 +102,7 @@ jobs:
           path: ./release/latest-linux.yml
 
   download_artifacts_and_release:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:
       #      - build_and_release
       - build_yakit
