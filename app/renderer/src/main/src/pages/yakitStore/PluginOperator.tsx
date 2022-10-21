@@ -53,8 +53,7 @@ interface PromptRequest {
 const { ipcRenderer } = window.require("electron")
 
 export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
-    const { userInfo,plugSource } = props
-    const { userInfo,setMonitorEdit } = props
+    const { userInfo,plugSource,setMonitorEdit } = props
     const [script, setScript, getScript] = useGetState<YakScript>()
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
