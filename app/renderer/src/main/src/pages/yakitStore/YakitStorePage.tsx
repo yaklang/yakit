@@ -694,6 +694,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             >
                                 <PluginOperator
                                     userInfo={userInfo}
+                                    plugSource={plugSource}
                                     yakScriptId={(script && script.Id) || 0}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
                                     setTrigger={() => {}}

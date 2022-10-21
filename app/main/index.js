@@ -221,6 +221,39 @@ ipcMain.on("user-sign-in", (event, arg) => {
         authWindow = null
     })
 })
+
+// company login
+ipcMain.on("company-sign-in", (event, info) => {
+    const user = {
+        isLogin: true,
+        platform: info.from_platform,
+        githubName: null,
+        githubHeadImg: null,
+        wechatName: null,
+        wechatHeadImg: null,
+        qqName: null,
+        qqHeadImg: null,
+        role: info.role,
+        user_id: info.user_id,
+        token: info.token,
+        companyName: info.name,
+        companyHeadImg: info.head_img,
+    }
+    USER_INFO.isLogin = user.isLogin
+    USER_INFO.platform = user.platform
+    USER_INFO.githubName = user.githubName
+    USER_INFO.githubHeadImg = user.githubHeadImg
+    USER_INFO.wechatName = user.wechatName
+    USER_INFO.wechatHeadImg = user.wechatHeadImg
+    USER_INFO.qqName = user.qqName
+    USER_INFO.qqHeadImg = user.qqHeadImg
+    USER_INFO.role = user.role
+    USER_INFO.token = info.token
+    USER_INFO.user_id = user.user_id
+    win.webContents.send("fetch-signin-token", user)
+    win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+})
+
 ipcMain.on("user-sign-out", (event) => {
     USER_INFO.isLogin = false
     USER_INFO.platform = null
@@ -249,4 +282,9 @@ ipcMain.on("sync-update-user", (event, user) => {
     USER_INFO.token = user.token
     USER_INFO.user_id = user.user_id
     event.returnValue = user
+})
+
+ipcMain.on("edit-baseUrl", (event, arg) => {
+    HttpSetting.httpBaseURL = arg.baseUrl
+    win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
 })

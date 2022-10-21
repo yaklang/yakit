@@ -53,6 +53,7 @@ import { YakitPluginJournalDetails } from "@/pages/yakitStore/YakitPluginOnlineJ
 import { OnlinePluginRecycleBin } from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
 import { JavaPayloadPage } from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import { NewReverseServerPage } from "@/pages/reverseServer/NewReverseServerPage"
+import AccountAdminPage from "@/pages/accountAdminPage/AccountAdminPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -123,7 +124,10 @@ export enum Route {
     // 插件
     AddYakitScript = "add-yakit-script",
     YakitPluginJournalDetails = "yakit-plugin-journal-details",
-    OnlinePluginRecycleBin = 'online-plugin-recycle-bin'
+    OnlinePluginRecycleBin = 'online-plugin-recycle-bin',
+
+    // 管理
+    AccountAdminPage = "account-admin-page", // 用户管理
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -241,6 +245,13 @@ export const RouteMenuData: MenuDataProps[] = [
     {
         key: Route.BatchExecutorRecover,
         label: "继续任务：批量执行插件",
+        icon: <FireOutlined />,
+        disabled: true,
+        hidden: true
+    },
+    {
+        key: Route.AccountAdminPage,
+        label: "账号管理",
         icon: <FireOutlined />,
         disabled: true,
         hidden: true
@@ -404,6 +415,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0} />
         case Route.OnlinePluginRecycleBin:
             return <OnlinePluginRecycleBin />
+        case Route.AccountAdminPage: 
+            return <AccountAdminPage />
         default:
             return <div />
     }

@@ -3,10 +3,6 @@ const https = require('https');
 const {ipcMain, webContents} = require("electron")
 const {USER_INFO, HttpSetting} = require("./state")
 
-ipcMain.on("edit-baseUrl", (event, arg) => {
-    HttpSetting.httpBaseURL = arg.baseUrl
-})
-
 ipcMain.on("sync-edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
     event.returnValue = arg

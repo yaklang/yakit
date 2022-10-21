@@ -51,6 +51,54 @@
     height: 100vh;
 }
 
+.dropdown-menu-user-info{
+    display: flex;
+    .author-upload-dragger{
+        border: transparent;
+        background-color: transparent;
+        .ant-upload{
+            padding: 0px;
+        }
+    }
+    .img-box{
+        margin: auto;
+        position: relative;
+        .hover-icon{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%);
+            color:white;
+            z-index: 2;
+            display: none;
+        }
+    }
+    .img-box:hover{
+        .hover-icon{
+            display: inline-block;
+        }
+        .img-box-mask::before {
+         content: "";
+         position: absolute;
+         border-radius: 50%;
+         left: 0;
+         right: 0;
+         bottom: 0;
+         top: 0;
+         background-color: rgba(0, 0, 0, .3);
+         z-index: 1;
+     } 
+     }
+    .content-box{
+        min-width: 80px;
+        margin-left: 12px;
+        .permission-show{
+            font-size: 12px;
+            color: gray;
+        }
+    }
+}
+
 .main-laytou-header {
     height: 60px;
     padding: 0;
