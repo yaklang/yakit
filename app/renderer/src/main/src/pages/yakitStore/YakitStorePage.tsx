@@ -800,7 +800,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         ) {
                                             return <></>
                                         }
-                                        console.log("current", current)
                                         if (!Array.isArray(current)) {
                                             current = current.split(",")
                                         }
@@ -1300,10 +1299,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                         }
                         setScript(info)
                     }}
-                    setTotal={(t) => {
-                        setListLoading(false)
-                        setTotalLocal(t)
-                    }}
+                    setTotal={setTotalLocal}
+                    setIsRequest={setListLoading}
                     queryLocal={queryLocal}
                     refresh={refresh}
                     deletePluginRecordLocal={deletePluginRecordLocal}
@@ -1342,6 +1339,7 @@ export interface YakModuleListProp {
     // searchKeyword?: string
     tag?: string[]
     onSetUser?: (u: PluginUserInfoLocalProps) => void
+    setIsRequest?: (s: boolean) => void
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -1365,7 +1363,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         numberLocalRoll,
         isGridLayout,
         setIsSelectAll,
-        onSetUser
+        onSetUser,
+        setIsRequest
     } = props
 
     // 全局登录状态
@@ -1442,6 +1441,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                 setTimeout(() => {
                     setLoading(false)
                     setListBodyLoading(false)
+                    if (setIsRequest) setIsRequest(false)
                 }, 200)
             })
     }
@@ -2405,10 +2405,8 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     onSelectList={setSelectedRowKeysRecordUser} //选择一个
                     isSelectAll={isSelectAllUser}
                     setIsSelectAll={setIsSelectAllUser}
-                    setTotal={(t) => {
-                        setListLoading(false)
-                        setTotalUser(t)
-                    }}
+                    setTotal={setTotalUser}
+                    setIsRequest={setListLoading}
                     onClicked={(info, index) => {
                         if (size === "middle") {
                             setNumberUser(index || 0)
@@ -2645,10 +2643,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     onSelectList={setSelectedRowKeysRecordOnline}
                     isSelectAll={isSelectAllOnline}
                     setIsSelectAll={setIsSelectAllOnline}
-                    setTotal={(t) => {
-                        setListLoading(false)
-                        setTotalOnline(t)
-                    }}
+                    setTotal={setTotalOnline}
+                    setIsRequest={setListLoading}
                     onClicked={(info, index) => {
                         if (size === "middle") {
                             setNumberOnline(index || 0)
@@ -2685,6 +2681,7 @@ interface YakModuleOnlineListProps {
     number?: number
     renderRow?: (data: API.YakitPluginDetail, index: number) => ReactNode
     onSetUser?: (u: PluginUserInfoOnlineProps) => void
+    setIsRequest?: (b: boolean) => void
 }
 
 export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
@@ -2705,7 +2702,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         number,
         setIsSelectAll,
         renderRow,
-        onSetUser
+        onSetUser,
+        setIsRequest
     } = props
     const [response, setResponse] = useState<API.YakitPluginListResponse>({
         data: [],
@@ -2822,6 +2820,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
                 setTimeout(() => {
                     setLoading(false)
                     setListBodyLoading(false)
+                    if (setIsRequest) setIsRequest(false)
                 }, 200)
             })
     })
