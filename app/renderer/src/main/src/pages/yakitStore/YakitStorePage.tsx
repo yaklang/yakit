@@ -366,6 +366,12 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 } else {
                     setStatisticsIsNull(false)
                 }
+                if (res.tags) {
+                    res.tags = res.tags.map((ele) => ({
+                        ...ele,
+                        value: ele.value.replace(/^"/, "").replace(/"$/, "")
+                    }))
+                }
                 setStatisticsDataOnlineOrUser(res)
             })
             .catch((err) => {
@@ -382,6 +388,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptTagsAndType", {})
             .then((res: GetYakScriptTagsAndTypeResponse) => {
+                console.log("GetYakScriptTagsAndType", res)
                 if (res.Type) {
                     setTypeStatistics(res.Type.map((ele) => ele.Value))
                 }
@@ -407,6 +414,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setStatisticsQueryUser(defQueryOnline)
     })
     const onSearch = useMemoizedFn((queryName: string, value: string) => {
+        setListLoading(true)
         if (plugSource === "local") {
             onSearchLocal(queryName, value)
         }
@@ -604,6 +612,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 setUpdatePluginRecordLocal={setUpdatePluginRecordLocal}
                                 userInfo={userInfo}
                                 searchType={searchType}
+                                setListLoading={setListLoading}
                             />
                         )}
                         {plugSource === "user" && (
@@ -718,7 +727,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                 )}
                 {isFull && !isShowFilter && (
                     <div className='plugin-statistics'>
-                        <Spin spinning={statisticsLoading}>
+                        <Spin spinning={statisticsLoading || listLoading}>
                             {plugSource === "online" && (
                                 <div className='opt-list'>
                                     <div className='opt-header'>排序顺序</div>
@@ -781,7 +790,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         if (plugSource === "online") {
                                             current = statisticsQueryOnline[queryName]
                                         }
-                                        // if(y)
                                         if (
                                             (queryName === "status" &&
                                                 plugSource === "user" &&
@@ -802,8 +810,11 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                                         <div
                                                             key={`${ele.value || ele.Value}-${plugSource}`}
                                                             className={`opt-list-item ${
-                                                                current?.includes(ele.value || ele.Value) &&
-                                                                "opt-list-item-selected"
+                                                                current
+                                                                    .split(",")
+                                                                    .findIndex(
+                                                                        (c) => c === (ele.value || ele.Value)
+                                                                    ) !== -1 && "opt-list-item-selected"
                                                             }`}
                                                             onClick={() => onSearch(queryName, ele.value || ele.Value)}
                                                         >
@@ -844,6 +855,7 @@ interface YakModuleProp {
     getYakScriptTagsAndType: () => void
     userInfo: UserInfoProps
     searchType: "userName" | "keyword"
+    setListLoading: (b: boolean) => void
 }
 
 interface DeleteAllLocalPluginsRequest {
@@ -870,7 +882,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         isShowFilter,
         getYakScriptTagsAndType,
         userInfo,
-        searchType
+        searchType,
+        setListLoading
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
@@ -1284,7 +1297,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                         }
                         setScript(info)
                     }}
-                    setTotal={setTotalLocal}
+                    setTotal={(t) => {
+                        setListLoading(false)
+                        setTotalLocal(t)
+                    }}
                     queryLocal={queryLocal}
                     refresh={refresh}
                     deletePluginRecordLocal={deletePluginRecordLocal}
@@ -1411,8 +1427,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     ...item,
                     Data: [...data]
                 })
-                if (props.setTotal) props.setTotal(item.Total || 0)
                 if (page === 1) {
+                    if (props.setTotal) props.setTotal(item.Total || 0)
                     setIsRef(!isRef)
                 }
             })
@@ -2386,7 +2402,10 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
                     onSelectList={setSelectedRowKeysRecordUser} //选择一个
                     isSelectAll={isSelectAllUser}
                     setIsSelectAll={setIsSelectAllUser}
-                    setTotal={setTotalUser}
+                    setTotal={(t) => {
+                        setListLoading(false)
+                        setTotalUser(t)
+                    }}
                     onClicked={(info, index) => {
                         if (size === "middle") {
                             setNumberUser(index || 0)
@@ -2623,7 +2642,10 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     onSelectList={setSelectedRowKeysRecordOnline}
                     isSelectAll={isSelectAllOnline}
                     setIsSelectAll={setIsSelectAllOnline}
-                    setTotal={setTotalOnline}
+                    setTotal={(t) => {
+                        setListLoading(false)
+                        setTotalOnline(t)
+                    }}
                     onClicked={(info, index) => {
                         if (size === "middle") {
                             setNumberOnline(index || 0)
@@ -2785,8 +2807,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
                     ...res,
                     data: [...data]
                 })
-                setTotal(res.pagemeta.total)
                 if (page === 1) {
+                    setTotal(res.pagemeta.total)
                     setIsRef(!isRef)
                 }
             })
