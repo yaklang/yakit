@@ -253,7 +253,7 @@ export const RouteMenuData: MenuDataProps[] = [
     },
     {
         key: Route.AccountAdminPage,
-        label: "账号管理",
+        label: "用户管理",
         icon: <FireOutlined />,
         disabled: true,
         hidden: true

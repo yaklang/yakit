@@ -119,7 +119,7 @@ const singletonRoute: Route[] = [
     // 插件
     Route.AddYakitScript,
     Route.OnlinePluginRecycleBin,
-    // 账号管理
+    // 用户管理
     Route.AccountAdminPage,
     // 角色管理
     Route.RoleAdminPage
@@ -702,7 +702,7 @@ const Main: React.FC<MainProp> = (props) => {
             setUserMenu([
                 {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
                 {key: "role-admin", title: "角色管理"},
-                {key: "account-admin", title: "账号管理"},
+                {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}

@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar} from "antd"
+import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar, Select, Cascader} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -10,7 +10,8 @@ import {failed, success, warn} from "@/utils/notification"
 import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
-
+import {ResizeBox} from "@/components/ResizeBox"
+const {Option} = Select
 const {ipcRenderer} = window.require("electron")
 
 export interface ShowUserInfoProps extends API.NewUrmResponse {
@@ -58,6 +59,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const onFinish = useMemoizedFn((values) => {
         console.log("values", values)
+        return
         const {user_name} = values
         NetWorkApi<CreateProps, API.NewUrmResponse>({
             method: "post",
@@ -90,10 +92,42 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
                 <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入账号用户名' allowClear />
+                    <Input placeholder='请输入用户名' allowClear />
+                </Form.Item>
+                <Form.Item name='user_name1' label='组织架构' rules={[{required: true, message: "该项为必填"}]}>
+                    <Cascader
+                        options={[
+                            {
+                                value: "zhejiang",
+                                label: "Zhejiang",
+                                children: [
+                                    {
+                                        value: "hangzhou",
+                                        label: "Hanzhou",
+                                    }
+                                ]
+                            }
+                        ]}
+                        placeholder="请选择组织架构"
+                        changeOnSelect
+                    />
+                </Form.Item>
+                <Form.Item name='user_name2' label='角色' rules={[{required: true, message: "该项为必填"}]}>
+                    <Select
+                        showSearch
+                        placeholder='请选择角色'
+                        optionFilterProp='children'
+                        filterOption={(input, option) =>
+                            (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
+                        }
+                    >
+                        <Option value='jack'>Jack</Option>
+                        <Option value='lucy'>Lucy</Option>
+                        <Option value='tom'>Tom</Option>
+                    </Select>
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
-                    <Button type='primary' htmlType='submit' loading={loading}>
+                    <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
                         确认
                     </Button>
                 </div>
@@ -102,7 +136,13 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
     )
 }
 
-export interface AccountAdminPageProp {}
+export interface OrganizationAdminPageProps {}
+
+const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
+    return <div className='organization-admin-page'>OrganizationAdminPage</div>
+}
+
+export interface AccountAdminPageProps {}
 
 export interface QueryExecResultsParams {
     keywords: string
@@ -116,7 +156,7 @@ interface ResetProps {
     user_name: string
     uid: string
 }
-const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
+const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [createUserShow, setCreateUserShow] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({
@@ -148,8 +188,8 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             }
         })
             .then((res) => {
-                const newData = res.data.map((item)=>({...item}))
-                console.log("数据源：",newData)
+                const newData = res.data.map((item) => ({...item}))
+                console.log("数据源：", newData)
                 setData(newData)
                 setPagination({...pagination, Limit: res.pagemeta.limit})
                 setTotal(res.pagemeta.total)
@@ -176,7 +216,6 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
     }
 
     const onRemove = (uid: string[]) => {
-        console.log(uid,"uid")
         NetWorkApi<RemoveProps, API.NewUrmResponse>({
             method: "delete",
             url: "urm",
@@ -242,6 +281,12 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             )
         },
         {
+            title:"组织架构"
+        },
+        {
+            title:"角色"
+        },
+        {
             title: "创建时间",
             dataIndex: "created_at",
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
@@ -255,9 +300,12 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                             重置密码
                         </Button>
                     </Popconfirm>
-                    <Popconfirm title={"确定删除该用户吗？"} onConfirm={() =>{ 
-                        onRemove([i.uid])
-                        }}>
+                    <Popconfirm
+                        title={"确定删除该用户吗？"}
+                        onConfirm={() => {
+                            onRemove([i.uid])
+                        }}
+                    >
                         <Button size={"small"} danger={true}>
                             删除
                         </Button>
@@ -268,78 +316,85 @@ const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
     ]
     return (
         <div className='account-admin-page'>
-            <Table
-                loading={loading}
-                pagination={{
-                    size: "small",
-                    defaultCurrent: 1,
-                    pageSize: pagination?.Limit || 10,
-                    showSizeChanger: true,
-                    total,
-                    showTotal: (i) => <Tag>{`Total ${i}`}</Tag>,
-                    onChange: (page: number, limit?: number) => {
-                        update(page, limit)
-                    }
-                }}
-                rowKey={(row) => row.uid}
-                title={(e) => {
-                    return (
-                        <div className='table-title'>
-                            <div className='filter'>
-                                <Input.Search
-                                    placeholder={"请输入用户名进行搜索"}
-                                    enterButton={true}
-                                    size={"small"}
-                                    style={{width: 200}}
-                                    value={params.keywords}
-                                    onChange={(e) => {
-                                        setParams({...getParams(), keywords: e.target.value})
-                                    }}
-                                    onSearch={() => {
-                                        update()
-                                    }}
-                                />
-                            </div>
-                            <div className='operation'>
-                                <Space>
-                                    {!!selectedRowKeys.length ? (
-                                        <Popconfirm
-                                            title={"确定删除选择的用户吗？不可恢复"}
-                                            onConfirm={() => {
-                                                onRemove(selectedRowKeys)
-                                            }}
-                                        >
-                                            <Button type='primary' htmlType='submit' size='small'>
-                                                批量删除
-                                            </Button>
-                                        </Popconfirm>
-                                    ) : (
-                                        <Button type='primary' size='small' disabled={true}>
-                                            批量删除
-                                        </Button>
-                                    )}
-                                    <Button
-                                        type='primary'
-                                        htmlType='submit'
-                                        size='small'
-                                        onClick={() => setCreateUserShow(!createUserShow)}
-                                    >
-                                        创建账号
-                                    </Button>
-                                </Space>
-                            </div>
-                        </div>
-                    )
-                }}
-                rowSelection={{
-                    type: "checkbox",
-                    ...rowSelection
-                }}
-                columns={columns}
-                size={"small"}
-                bordered={true}
-                dataSource={data}
+            <div className='title-operation'>
+                <div className='filter'>
+                    <Input.Search
+                        placeholder={"请输入用户名进行搜索"}
+                        enterButton={true}
+                        size={"small"}
+                        style={{width: 200}}
+                        value={params.keywords}
+                        onChange={(e) => {
+                            setParams({...getParams(), keywords: e.target.value})
+                        }}
+                        onSearch={() => {
+                            update()
+                        }}
+                    />
+                </div>
+                <div className='operation'>
+                    <Space>
+                        {!!selectedRowKeys.length ? (
+                            <Popconfirm
+                                title={"确定删除选择的用户吗？不可恢复"}
+                                onConfirm={() => {
+                                    onRemove(selectedRowKeys)
+                                }}
+                            >
+                                <Button type='primary' htmlType='submit' size='small'>
+                                    批量删除
+                                </Button>
+                            </Popconfirm>
+                        ) : (
+                            <Button type='primary' size='small' disabled={true}>
+                                批量删除
+                            </Button>
+                        )}
+                        <Button
+                            type='primary'
+                            htmlType='submit'
+                            size='small'
+                            onClick={() => setCreateUserShow(!createUserShow)}
+                        >
+                            创建账号
+                        </Button>
+                    </Space>
+                </div>
+            </div>
+            <ResizeBox
+                firstNode={<OrganizationAdminPage />}
+                firstMinSize={300}
+                firstRatio={"300px"}
+                secondNode={
+                    <>
+                    <div className="block-title">全部成员</div>
+                    <Table
+                        loading={loading}
+                        pagination={{
+                            size: "small",
+                            defaultCurrent: 1,
+                            pageSize: pagination?.Limit || 10,
+                            showSizeChanger: true,
+                            total,
+                            showTotal: (i) => <Tag>{`Total ${i}`}</Tag>,
+                            onChange: (page: number, limit?: number) => {
+                                update(page, limit)
+                            }
+                        }}
+                        rowKey={(row) => row.uid}
+                        rowSelection={{
+                            type: "checkbox",
+                            ...rowSelection
+                        }}
+                        columns={columns}
+                        size={"small"}
+                        bordered={true}
+                        dataSource={data}
+                    />
+                    </>
+                }
             />
+
             <Modal
                 visible={createUserShow}
                 title={"创建账号"}

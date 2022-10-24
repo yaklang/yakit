@@ -1,0 +1,13 @@
+.role-admin-page {
+    .table-title {
+        display: flex;
+        .tab-title {
+            flex: 1;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .operation {
+            width: 152px;
+        }
+    }
+}
