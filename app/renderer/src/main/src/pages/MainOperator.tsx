@@ -80,9 +80,13 @@ import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
+<<<<<<< HEAD
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
+=======
+import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
+>>>>>>> b9d824ab (-)
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -395,7 +399,7 @@ const Main: React.FC<MainProp> = (props) => {
                         if (item.key === Route.GeneralModule) {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
-                                    icon: <EllipsisOutlined/>,
+                                    icon: <EllipsisOutlined />,
                                     key: `plugin:${i.Id}`,
                                     label: i.ScriptName
                                 } as unknown as MenuDataProps
@@ -870,7 +874,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         title: "Notification",
                                         content: (
                                             <>
-                                                <MDEditor.Markdown source={e}/>
+                                                <MDEditor.Markdown source={e} />
                                             </>
                                         )
                                     })
@@ -903,9 +907,9 @@ const Main: React.FC<MainProp> = (props) => {
 
     // Global Sending Function(全局发送功能|通过发送新增功能页面)
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, request,list} = res || {}
+        const {isHttps, request, list} = res || {}
         const time = new Date().getTime().toString()
-        console.log('list',list);
+        console.log("list", list)
         if (request) {
             addTabPage(Route.HTTPFuzzer, {
                 time: time,
@@ -1174,9 +1178,9 @@ const Main: React.FC<MainProp> = (props) => {
                                 <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
                                     <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} />
                                 </div>
-                                <Divider type={"vertical"}/>
-                                <YakVersion/>
-                                <YakitVersion/>
+                                <Divider type={"vertical"} />
+                                <YakVersion />
+                                <YakitVersion />
                                 {!hideMenu && (
                                     <Button
                                         style={{marginLeft: 4, color: "#207ee8"}}
@@ -1185,7 +1189,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         onClick={(e) => {
                                             setCollapsed(!collapsed)
                                         }}
-                                        icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                                     />
                                 )}
                                 <Button
@@ -1195,7 +1199,7 @@ const Main: React.FC<MainProp> = (props) => {
                                     onClick={(e) => {
                                         updateMenuItems()
                                     }}
-                                    icon={<ReloadOutlined/>}
+                                    icon={<ReloadOutlined />}
                                 />
                             </Space>
                         </Col>
@@ -1206,7 +1210,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                                <ReversePlatformStatus/>
+                                <ReversePlatformStatus />
                                 <Dropdown
                                     overlayClassName='setting-menu'
                                     forceRender={true}
@@ -1281,7 +1285,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                 onClick={() => {
                                                     const m = showModal({
                                                         title: "配置私有域",
-                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()}/>
+                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()} />
                                                     })
                                                     return m
                                                 }}
@@ -1295,7 +1299,7 @@ const Main: React.FC<MainProp> = (props) => {
                                     }
                                     trigger={["click"]}
                                 >
-                                    <Button icon={<SettingOutlined/>}>配置</Button>
+                                    <Button icon={<SettingOutlined />}>配置</Button>
                                 </Dropdown>
                                 {userInfo.isLogin ? (
                                     <div>
@@ -1325,7 +1329,9 @@ const Main: React.FC<MainProp> = (props) => {
                                             judgeAvatar(userInfo) 
                                             :<img
                                                 src={
-                                                    userInfo[UserPlatformType[userInfo.platform || ""].img] || yakitImg
+                                                    (userInfo &&
+                                                        userInfo[UserPlatformType[userInfo.platform || ""]?.img]) ||
+                                                    yakitImg
                                                 }
                                                 style={{width: 32, height: 32, borderRadius: "50%", cursor: "pointer"}}
                                             />}
@@ -1339,7 +1345,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 <Button
                                     type={"link"}
                                     danger={true}
-                                    icon={<PoweroffOutlined/>}
+                                    icon={<PoweroffOutlined />}
                                     onClick={() => {
                                         if (winCloseFlag) {
                                             setWinCloseShow(true)
@@ -1392,7 +1398,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                                 return (
                                                     <Menu.SubMenu
-                                                        icon={<EllipsisOutlined/>}
+                                                        icon={<EllipsisOutlined />}
                                                         key={i.Group}
                                                         title={i.Group}
                                                     >
@@ -1400,7 +1406,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             if (item.YakScriptId > 0) {
                                                                 return (
                                                                     <MenuItem
-                                                                        icon={<EllipsisOutlined/>}
+                                                                        icon={<EllipsisOutlined />}
                                                                         key={`plugin:${item.Group}:${item.YakScriptId}`}
                                                                     >
                                                                         <Text ellipsis={{tooltip: true}}>
@@ -1411,7 +1417,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             }
                                                             return (
                                                                 <MenuItem
-                                                                    icon={<EllipsisOutlined/>}
+                                                                    icon={<EllipsisOutlined />}
                                                                     key={`batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`}
                                                                 >
                                                                     <Text ellipsis={{tooltip: true}}>
@@ -1537,7 +1543,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                     </>
                                                                 }
                                                             >
-                                                                <EditOutlined className='main-container-cion'/>
+                                                                <EditOutlined className='main-container-cion' />
                                                             </Popover>
                                                             <CloseOutlined
                                                                 className='main-container-cion'

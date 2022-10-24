@@ -10,6 +10,7 @@ import {
     useMouse,
     useSize,
     useThrottleFn,
+    useUpdateEffect,
     useVirtualList
 } from "ahooks"
 import classNames from "classnames"
@@ -95,6 +96,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [columns, setColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
     const [lineLeft, setLineLeft] = useState<number>(0) // 拖拽线 left
+    const [hoverLine, setHoverLine] = useState<boolean>(false) // 拖拽线 left
     const [colWidth, setColWidth] = useState<number>(props.colWidth || 120) // 表头默认宽度
     const [tableWidth, setTableWidth] = useState<number>(0) // 表格所在div宽度  真实宽度
     const [lineIndex, setLineIndex] = useState<number>(-1) // 拖拽的columns index
@@ -129,8 +131,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const containerRefPosition = useRef<tablePosition>({
         left: 0,
         top: 0
-    }) // 表格距离左边的距离
-
+    })
+    let currentRowRef = useRef<any>()
     const [list, scrollTo] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
@@ -138,24 +140,17 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         overscan: 10
     })
 
+    useUpdateEffect(() => {
+        setTimeout(() => {
+            if (containerRef.current) {
+                containerRefPosition.current = containerRef.current.getBoundingClientRect()
+            }
+        }, 100)
+    }, [containerRef.current])
     useEffect(() => {
         if (!currentIndex) return
         scrollTo(currentIndex)
     }, [currentIndex])
-    let currentRowRef = useRef<any>()
-    const [inViewport, ratio] = useInViewport(currentRowRef, {
-        rootMargin: "-84px 0px 0px 0px",
-        root: containerRef,
-        threshold: [0, 0.25, 0.5, 0.75, 1.0]
-    })
-    useHotkeys(
-        "left",
-        () => {
-            console.log("inViewport", inViewport, currentRowRef.current)
-        },
-        {},
-        [data, currentRowData, inViewport, containerRef.current, currentRowRef.current]
-    )
 
     // 使用上箭头
     useHotkeys(
@@ -183,8 +178,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     }
                 }
             }
-
-            if (index) {
+            if (index >= 0) {
                 setCurrentRowData(data[index])
                 setTimeout(() => {
                     if (!currentRowRef.current) {
@@ -197,11 +191,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
                     const inViewport = currentPosition.top - 28 >= containerRefPosition.current.top
                     if (!inViewport) scrollTo(index)
-                }, 0)
+                }, 50)
             }
         },
         {},
-        [data, currentRowData, inViewport, containerRef.current, currentRowRef.current]
+        [data, currentRowData, containerRef.current, currentRowRef.current]
     )
     // 使用下箭头
     useHotkeys(
@@ -240,18 +234,19 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         dom.scrollTop = index * defItemHeight
                         return
                     }
+
                     const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
                     const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
                     const y = 1 - (rowNumber - Math.trunc(rowNumber))
                     const inViewport =
-                        currentPosition.top - 28 >=
+                        currentPosition.top + 28 <=
                         containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-                    if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 // 1px border被外圈的border挡住了，所以+1
-                }, 0)
+                    if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
+                }, 50)
             }
         },
         {},
-        [data, currentRowData, inViewport, containerRef.current, currentRowRef.current]
+        [data, currentRowData, containerRef.current, currentRowRef.current]
     )
     useEffect(() => {
         if (pagination.page == 1) {
@@ -274,12 +269,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             tablePosition.current = tableRef.current.getBoundingClientRect()
         }
     }, [tableRef.current])
-    useEffect(() => {
-        if (containerRef.current && containerRef.current.getBoundingClientRect()) {
-            containerRefPosition.current = containerRef.current.getBoundingClientRect()
-        }
-    }, [containerRef.current])
-
     useEffect(() => {
         getColumnsMinWidthList()
     }, [columnsRef.current])
@@ -588,7 +577,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             {sort.order === "desc" ? <SorterDownIcon /> : <SorterUpIcon />}
         </div>
     ))
-
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -639,11 +627,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
                 <div
                     className={classNames(style["virtual-table-body"], {
-                        [style["virtual-table-border-bottom"]]: !showScrollY,
                         [style["virtual-table-border-left"]]:
                             scroll.scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow,
                         [style["virtual-table-border-right"]]:
-                            scroll.scrollRight > 0 && !isShowFixedShadow.isShowRightFixedShadow
+                            scroll.scrollRight > 0 && !isShowFixedShadow.isShowRightFixedShadow,
+                        [style["virtual-table-body-scroll"]]: !showScrollY //为了最外层的边框效果
                     })}
                     style={{
                         maxHeight:
@@ -706,8 +694,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                             [style["virtual-table-row-right"]]: columnsItem.align === "right",
                                             [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left",
                                             [style["virtual-table-title-fixed-left-border"]]:
-                                                columnsItem.fixed === "left" && scroll.scrollLeft > 0,
-                                            [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right"
+                                                columnsItem.fixed === "left" && scroll.scrollLeft > 0, // 保证不产生偏移
+                                            [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right",
+                                            [style["virtual-table-title-fixed-right-border"]]:
+                                                columnsItem.fixed === "right" && scroll.scrollRight === 0
                                         })}
                                         style={{
                                             width: columnsItem.width || colWidth,
@@ -811,7 +801,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         {enableDrag && cIndex < columns.length - 1 && (
                                             <div
                                                 className={classNames(style["virtual-table-title-drag"])}
-                                                style={{height}}
+                                                style={{height: hoverLine ? height : 28}}
+                                                onMouseEnter={() => setHoverLine(true)}
+                                                onMouseLeave={() => setHoverLine(false)}
                                                 onMouseDown={(e) => onMouseDown(e, cIndex)}
                                             />
                                         )}
@@ -922,8 +914,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     </div>
                     <div
                         className={classNames(style["virtual-table-list-pagination"], {
-                            [style["virtual-table-list-pagination-border-left"]]:
-                                (scroll.scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow) || !showScrollY
+                            // [style["virtual-table-list-pagination-border-left"]]:
+                            //     (scroll.scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow) || showScrollY
                         })}
                     >
                         {loading && !(pagination?.total == data.length) && (
@@ -934,7 +926,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         {!loading && pagination?.total == data.length && (pagination?.page || 0) > 0 && (
                             <div
                                 className={classNames(style["pagination-text"], {
-                                    [style["pagination-text-show"]]: scroll.scrollBottom < 32
+                                    [style["pagination-text-show"]]: scroll.scrollBottom < 32 || list.length === 0
                                 })}
                             >
                                 暂无更多数据

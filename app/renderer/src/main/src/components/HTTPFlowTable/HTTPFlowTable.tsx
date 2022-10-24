@@ -927,18 +927,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     getNewData()
                     if (sortRef.current.order === defSort.order && sortRef.current.orderBy === defSort.orderBy) {
                         let offsetData = offsetDeltaData.concat(data)
-                        if (offsetData.length > MAX_ROW_COUNT) {
-                            offsetData = offsetData.splice(0, MAX_ROW_COUNT)
-                        }
                         const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                        if (getSelected()) {
-                            const index = offsetData.findIndex((ele) => ele.Id === getSelected()?.Id)
-                            // if (index !== -1) setCurrentIndex(index)
-                        }
                         setMaxId(offsetDeltaData[0].Id)
                         setLoading(true)
                         setTotal(newTotal)
                         setData(offsetData)
+                        if (getSelected()) {
+                            const index = offsetData.findIndex((ele) => ele.Id === getSelected()?.Id)
+                            if (index !== -1) setCurrentIndex(index)
+                        }
                     } else {
                         setIsHaveIncrement(true)
                     }
@@ -1296,7 +1293,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             },
             {
                 title: "请求大小",
-                dataKey: "RequestSizeVerbose"
+                dataKey: "RequestSizeVerbose",
+                fixed: "right"
             },
             {
                 title: "操作",

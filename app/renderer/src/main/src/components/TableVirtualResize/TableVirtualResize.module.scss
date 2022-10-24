@@ -12,7 +12,6 @@
             width: 6px;
             /*高宽分别对应横竖滚动条的尺寸*/
             height: 6px;
-            z-index: 99;
         }
 
         ::-webkit-scrollbar-thumb {
@@ -59,6 +58,13 @@
         }
     }
 
+    .virtual-table-body-scroll {
+        :global {
+            ::-webkit-scrollbar-track:horizontal {
+                border-right: 1px solid #EAECF3;
+            }
+        }
+    }
 
     .virtual-table-body {
         display: flex;
@@ -70,6 +76,8 @@
         position: relative;
         border-bottom: 1px solid #EAECF3;
         border-top: 1px solid #EAECF3;
+
+
 
         .virtual-table-fixed-left {
             position: absolute;
@@ -165,6 +173,7 @@
                 z-index: 5;
                 left: 0;
                 top: 0;
+
             }
 
             .virtual-table-title-fixed-left-border {
@@ -179,6 +188,17 @@
                 z-index: 5;
                 right: 0;
                 top: 0;
+
+                &:first-child {
+                    border-left: 1px solid #EAECF3;
+                }
+            }
+
+            .virtual-table-title-fixed-right-border {
+
+                &:last-child {
+                    border-right: 0;
+                }
             }
         }
 
@@ -229,7 +249,7 @@
                         display: flex;
                         align-items: center;
                         background-color: #fff;
-                        position: relative;
+                        // position: relative;
                         border-right: 1px solid #EAECF3;
 
                         &:last-child {
@@ -293,6 +313,10 @@
 
             }
 
+        }
+
+        .scroll-y {
+            overflow-y: hidden;
         }
 
         .virtual-table-list-pagination {
@@ -407,12 +431,6 @@
             display: flex;
             align-items: center;
         }
-
-        .scroll-y {
-            overflow-y: hidden;
-        }
-
-
     }
 
     .virtual-table-border-left {
