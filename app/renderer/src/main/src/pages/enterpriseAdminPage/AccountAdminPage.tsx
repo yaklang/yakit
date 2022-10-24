@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar, Select, Cascader} from "antd"
+import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar, Select, Cascader, Popover} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -11,6 +11,7 @@ import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {ResizeBox} from "@/components/ResizeBox"
+import {PlusOutlined, EditOutlined, DeleteOutlined} from "@ant-design/icons"
 const {Option} = Select
 const {ipcRenderer} = window.require("electron")
 
@@ -103,12 +104,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                                 children: [
                                     {
                                         value: "hangzhou",
-                                        label: "Hanzhou",
+                                        label: "Hanzhou"
                                     }
                                 ]
                             }
                         ]}
-                        placeholder="请选择组织架构"
+                        placeholder='请选择组织架构'
                         changeOnSelect
                     />
                 </Form.Item>
@@ -136,10 +137,134 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
     )
 }
 
+interface CreateOrganizationFormProps {
+    onClose: () => void
+    refresh: () => void
+}
+
+const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) => {
+    const {onClose, refresh} = props
+    const [form] = Form.useForm()
+    const [loading, setLoading] = useState<boolean>(false)
+    const onFinish = useMemoizedFn((values) => {})
+    return (
+        <div style={{marginTop: 24}}>
+            <Form {...layout} form={form} onFinish={onFinish}>
+                <Form.Item name='user_name' label='标题' rules={[{required: true, message: "该项为必填"}]}>
+                    <Input placeholder='请输入标题' allowClear />
+                </Form.Item>
+                <div style={{textAlign: "center"}}>
+                    <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
+                        确认
+                    </Button>
+                </div>
+            </Form>
+        </div>
+    )
+}
+
 export interface OrganizationAdminPageProps {}
 
 const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
-    return <div className='organization-admin-page'>OrganizationAdminPage</div>
+    // 删除
+    const onRemove = () => {}
+    // 修改名称
+    const resetName = (id, name) => {}
+    // 添加
+    const addItem = (value) => {}
+    // 选中 更新选中成员与选中样式
+    const selectItem = () => {
+        console.log("点击Item")
+    }
+    return (
+        <div className='organization-admin-page'>
+            <div className='organization-admin-page-title'>
+                <div className='title'>组织架构</div>
+                <div className='add-icon' 
+                onClick={() => {
+                    const m = showModal({
+                        title: "新建部门",
+                        width: 600,
+                        content: (
+                            <CreateOrganizationForm
+                                onClose={() => {
+                                    m.destroy()
+                                }}
+                                refresh={()=>{}}
+                            />
+                        )
+                    })
+                }}>
+                    <PlusOutlined />
+                </div>
+            </div>
+            <div className='organization-admin-page-content'>
+                <div className='department-item click-item' onClick={() => selectItem()}>
+                    <div className='department-item-info'>产品部（36）</div>
+                    <div className='department-item-operation'>
+                        <Space>
+                            <Popover
+                                trigger={"click"}
+                                title={"修改名称"}
+                                content={
+                                    <Input
+                                        size={"small"}
+                                        defaultValue={""}
+                                        onBlur={(e) => resetName(``, e.target.value)}
+                                    />
+                                }
+                            >
+                                <EditOutlined className='department-item-operation-icon' />
+                            </Popover>
+                            <Popconfirm title={"确定删除此项吗？不可恢复"} onConfirm={onRemove}>
+                                <DeleteOutlined className='department-item-operation-icon' />
+                            </Popconfirm>
+                            <PlusOutlined
+                                className='department-item-operation-add-icon'
+                                onClick={() => {
+                                    const m = showModal({
+                                        title: "新建小组",
+                                        width: 600,
+                                        content: (
+                                            <CreateOrganizationForm
+                                                onClose={() => {
+                                                    m.destroy()
+                                                }}
+                                                refresh={()=>{}}
+                                            />
+                                        )
+                                    })
+                                }}
+                            />
+                        </Space>
+                    </div>
+                </div>
+                <div className='group-item' onClick={() => selectItem()}>
+                    <div className='group-item-info'>产品小组（36）</div>
+                    <div className='group-item-operation'>
+                        <Space>
+                            <Popover
+                                trigger={"click"}
+                                title={"修改名称"}
+                                content={
+                                    <Input
+                                        size={"small"}
+                                        defaultValue={""}
+                                        onBlur={(e) => resetName(``, e.target.value)}
+                                    />
+                                }
+                            >
+                                <EditOutlined className='group-item-operation-icon' />
+                            </Popover>
+                            <Popconfirm title={"确定删除此项吗？不可恢复"} onConfirm={onRemove}>
+                                <DeleteOutlined className='group-item-operation-icon' />
+                            </Popconfirm>
+                        </Space>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export interface AccountAdminPageProps {}
@@ -281,10 +406,10 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
             )
         },
         {
-            title:"组织架构"
+            title: "组织架构"
         },
         {
-            title:"角色"
+            title: "角色"
         },
         {
             title: "创建时间",
@@ -367,30 +492,30 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 firstRatio={"300px"}
                 secondNode={
                     <>
-                    <div className="block-title">全部成员</div>
-                    <Table
-                        loading={loading}
-                        pagination={{
-                            size: "small",
-                            defaultCurrent: 1,
-                            pageSize: pagination?.Limit || 10,
-                            showSizeChanger: true,
-                            total,
-                            showTotal: (i) => <Tag>{`Total ${i}`}</Tag>,
-                            onChange: (page: number, limit?: number) => {
-                                update(page, limit)
-                            }
-                        }}
-                        rowKey={(row) => row.uid}
-                        rowSelection={{
-                            type: "checkbox",
-                            ...rowSelection
-                        }}
-                        columns={columns}
-                        size={"small"}
-                        bordered={true}
-                        dataSource={data}
-                    />
+                        <div className='block-title'>全部成员</div>
+                        <Table
+                            loading={loading}
+                            pagination={{
+                                size: "small",
+                                defaultCurrent: 1,
+                                pageSize: pagination?.Limit || 10,
+                                showSizeChanger: true,
+                                total,
+                                showTotal: (i) => <Tag>{`Total ${i}`}</Tag>,
+                                onChange: (page: number, limit?: number) => {
+                                    update(page, limit)
+                                }
+                            }}
+                            rowKey={(row) => row.uid}
+                            rowSelection={{
+                                type: "checkbox",
+                                ...rowSelection
+                            }}
+                            columns={columns}
+                            size={"small"}
+                            bordered={true}
+                            dataSource={data}
+                        />
                     </>
                 }
             />

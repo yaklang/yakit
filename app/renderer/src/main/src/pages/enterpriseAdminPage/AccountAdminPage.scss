@@ -1,18 +1,106 @@
-.account-admin-page{
-    .title-operation{
+.account-admin-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .title-operation {
         margin: 10px 0 12px;
         display: flex;
-        .filter{
+        .filter {
             flex: 1;
         }
-        .operation{
+        .operation {
             width: 152px;
         }
     }
-    .block-title{
+    .block-title {
         margin-bottom: 12px;
     }
-    .organization-admin-page{
-       
+    .organization-admin-page {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        &-title {
+            margin-bottom: 12px;
+            display: flex;
+            .title {
+                flex: 1;
+            }
+            .add-icon {
+                color: #1890ff;
+                cursor: pointer;
+                margin-right: 19px;
+            }
+        }
+        &-content {
+            height: 100%;
+            padding: 10px;
+            border: 1px solid rgb(240, 240, 240);
+            .department-item {
+                display: flex;
+                padding: 0 6px;
+                cursor: pointer;
+                margin-bottom: 4px;
+                &-info {
+                    flex: 1;
+                }
+                &-operation {
+                    display: none;
+                    width: 60px;
+                    &-icon{
+                        color: rgba(0, 0, 0, 0.45);
+                    }
+                    &-add-icon{
+                        color: #1890ff;
+                    }
+                }
+            }
+            :hover {
+                background-color: #fafafa;
+                .department-item-info{
+                   color: rgba(0, 0, 0, 0.45); 
+                }
+                .department-item-operation{
+                    display: block;
+                }
+            }
+            .group-item{
+                display: flex;
+                padding: 0 6px;
+                cursor: pointer;
+                margin-bottom: 4px;
+                margin-left: 14px;
+                &-info {
+                    flex: 1;
+                }
+                &-operation {
+                    display: none;
+                    width: 38px;
+                    &-icon{
+                        color: rgba(0, 0, 0, 0.45);
+                    }
+                    &-add-icon{
+                        color: #1890ff;
+                    }
+                }
+            }
+            :hover {
+                background-color: #fafafa;
+                .group-item-info{
+                   color: rgba(0, 0, 0, 0.45); 
+                }
+                .group-item-operation{
+                    display: block;
+                }
+            }
+            .click-item{
+                background-color: #fafafa;
+                .department-item-operation,.group-item-operation {
+                    display: block;
+                }
+                .department-item-info,.group-item-info{
+                    color: rgba(0, 0, 0, 0.45); 
+                }
+            }
+        }
     }
 }
