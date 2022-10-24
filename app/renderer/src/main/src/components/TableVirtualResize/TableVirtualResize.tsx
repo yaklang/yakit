@@ -191,13 +191,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     }
                     const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
                     const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-                    // const inViewport =
-                    // currentPosition.top + 28 <=
-                    // containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-                    // const inViewport = currentPosition.top - 28 >= containerRefPosition.current.top
                     const inViewport =
-                        currentPosition.top >= top || currentPosition.top <= containerRefPosition.current.top
-                    console.log("inViewport", currentPosition.top,top,containerRefPosition.current.top)
+                        currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
                     if (!inViewport) scrollTo(index)
                 }, 50)
             }
@@ -246,9 +241,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
                     const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
                     const y = 1 - (rowNumber - Math.trunc(rowNumber))
+                    const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
                     const inViewport =
-                        currentPosition.top + 28 <=
-                        containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+                        currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
                     if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
                 }, 50)
             }

@@ -1391,7 +1391,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const onRemoveHttpHistory = useMemoizedFn((query) => {
         setLoading(true)
         console.log("query", query)
-
+        if (isAllSelect) {
+            onRemoveHttpHistoryAllAndResetId()
+            return
+        }
         ipcRenderer
             .invoke("DeleteHTTPFlows", {
                 ...query
