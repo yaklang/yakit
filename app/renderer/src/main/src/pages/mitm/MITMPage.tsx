@@ -115,22 +115,22 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
 
     // 通过 gRPC 调用，启动 MITM 劫持
-    const startMITMServer = useMemoizedFn((targetHost, targetPort, downstreamProxy) => {
+    const startMITMServer = useMemoizedFn((targetHost, targetPort, downstreamProxy, enableHttp2) => {
         setLoading(true)
-        return ipcRenderer.invoke("mitm-start-call", targetHost, targetPort, downstreamProxy).catch((e: any) => {
+        return ipcRenderer.invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2).catch((e: any) => {
             notification["error"]({message: `启动中间人劫持失败：${e}`})
         })
     })
 
     // 设置开始服务器处理函数
-    const startMITMServerHandler = useMemoizedFn((host, port, downstreamProxy, enableInitialPlugin, plugins) => {
+    const startMITMServerHandler = useMemoizedFn((host, port, downstreamProxy, enableInitialPlugin, plugins, enableHttp2) => {
         setAddr(`https://${host}:${port}`)
         setHost(host)
         setPort(port)
         setLoading(true)
         setDefaultPlugins(plugins)
         setEnableInitialMITMPlugin(enableInitialPlugin)
-        startMITMServer(host, port, downstreamProxy)
+        startMITMServer(host, port, downstreamProxy, enableHttp2)
     })
 
     // 开始渲染组件
