@@ -21,7 +21,10 @@ import {
     Radio,
     Modal,
     Typography,
-    Divider
+    Divider,
+    Dropdown,
+    AutoComplete,
+    Menu
 } from "antd"
 import {
     ReloadOutlined,
@@ -39,12 +42,13 @@ import {
     PoweroffOutlined,
     InfoCircleOutlined,
     CloudUploadOutlined,
-    CloseOutlined
+    CloseOutlined,
+    DownOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
-import {failed, success, warn} from "../../utils/notification"
+import {failed, success, warn, info} from "../../utils/notification"
 import {CopyableField, InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
 import {PluginOperator} from "./PluginOperator"
@@ -61,6 +65,7 @@ import {
     useThrottleFn,
     useVirtualList,
     useDebounceEffect,
+    useDebounce,
     useSize
 } from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -84,7 +89,8 @@ import {
     onLocalScriptToOnlinePlugin,
     SyncCloudButton
 } from "@/components/SyncCloudButton/SyncCloudButton"
-import {fullscreen} from "@uiw/react-md-editor"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
 
 const {Search} = Input
 const {Option} = Select
@@ -177,6 +183,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [fullScreen, setFullScreen] = useState<boolean>(false)
     const [isRefList, setIsRefList] = useState(false)
 
+    // 监听是否点击编辑插件 用于控制插件仓库是否刷新
+    const [isEdit, setMonitorEdit] = useState<boolean>(false)
     // 全局登录状态
     const {userInfo} = useStore()
     useEffect(() => {
@@ -194,7 +202,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .finally(() => {})
     }, [])
     useEffect(() => {
-        onRefList()
+        if (!isEdit) {
+            onRefList()
+        }
     }, [userInfo.isLogin])
     const onRefList = useMemoizedFn(() => {
         setPublicKeyword("")
@@ -693,6 +703,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 bodyStyle={{height: "calc(100% - 69px)"}}
                             >
                                 <PluginOperator
+                                    setMonitorEdit={setMonitorEdit}
                                     userInfo={userInfo}
                                     plugSource={plugSource}
                                     yakScriptId={(script && script.Id) || 0}
@@ -1532,6 +1543,476 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     )
 }
 
+export interface YakFilterModuleSelectProps {
+    selectedTags: string[]
+    setSelectedTags: (v: string[]) => void
+}
+interface TagValue {
+    Name: string
+    Total: number
+}
+// 封装动态select筛选组件
+export const YakFilterModuleSelect: React.FC<YakFilterModuleSelectProps> = (props) => {
+    const {selectedTags, setSelectedTags} = props
+    const [allTag, setAllTag] = useState<TagValue[]>([])
+    // 下拉框选中tag值
+    const selectRef = useRef(null)
+    // 用于存储 tag 的搜索与结果
+    const [topTags, setTopTags] = useState<TagValue[]>([])
+    const [itemSelects, setItemSelects] = useState<string[]>([])
+    // 设置本地搜索 tags 的状态
+    const [searchTag, setSearchTag] = useState("")
+    const [topN, setTopN] = useState(15)
+    // 设置最大最小值
+    const [minTagWeight, setMinTagWeight] = useState(1)
+    const [maxTagWeight, setMaxTagWeight] = useState(2000)
+    // 辅助变量
+    const [updateTagsSelectorTrigger, setUpdateTagsSelector] = useState(false)
+
+    const [selectLoading, setSelectLoading] = useState<boolean>(true)
+
+    useEffect(() => {
+        setTimeout(() => setSelectLoading(false), 300)
+    }, [selectLoading])
+
+    useEffect(() => {
+        ipcRenderer
+            .invoke("GetYakScriptTags", {})
+            .then((res) => {
+                setAllTag(res.Tag.map((item) => ({Name: item.Value, Total: item.Total})))
+            })
+            .catch((e) => console.info(e))
+            .finally(() => {})
+    }, [])
+
+    useEffect(() => {
+        let count = 0
+        const showTags = allTag.filter((d) => {
+            if (
+                count <= topN && // 限制数量
+                d.Total >= minTagWeight &&
+                d.Total <= maxTagWeight &&
+                !selectedTags.includes(d.Name) &&
+                d.Name.toLowerCase().includes(searchTag.toLowerCase()) // 设置搜索结果
+            ) {
+                count++
+                return true
+            }
+            return false
+        })
+        setTopTags([...showTags])
+    }, [
+        allTag,
+        useDebounce(minTagWeight, {wait: 500}),
+        useDebounce(maxTagWeight, {wait: 500}),
+        useDebounce(searchTag, {wait: 500}),
+        useDebounce(selectedTags, {wait: 500}),
+        useDebounce(topN, {wait: 500}),
+        updateTagsSelectorTrigger
+    ])
+
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+        return (
+            <div>
+                <Spin spinning={selectLoading}>{originNode}</Spin>
+            </div>
+        )
+    })
+    return (
+        <ItemSelects
+            item={{}}
+            select={{
+                ref: selectRef,
+                className: "div-width-100",
+                allowClear: true,
+                autoClearSearchValue: false,
+                maxTagCount: "responsive",
+                mode: "multiple",
+                size: "small",
+                data: topTags,
+                optValue: "Name",
+                optionLabelProp: "Name",
+                renderOpt: (info: TagValue) => {
+                    return (
+                        <div style={{display: "flex", justifyContent: "space-between"}}>
+                            <span>{info.Name}</span>
+                            <span>{info.Total}</span>
+                        </div>
+                    )
+                },
+                value: itemSelects, // selectedTags
+                onSearch: (keyword: string) => setSearchTag(keyword),
+                setValue: (value) => {
+                    setItemSelects(value)
+                },
+                onDropdownVisibleChange: (open) => {
+                    if (open) {
+                        setItemSelects([])
+                        setSearchTag("")
+                    } else {
+                        const filters = itemSelects.filter((item) => !selectedTags.includes(item))
+                        setSelectedTags(selectedTags.concat(filters))
+                        setItemSelects([])
+                        setSearchTag("")
+                    }
+                },
+                onPopupScroll: (e) => {
+                    const {target} = e
+                    const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                    if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
+                        setSelectLoading(true)
+                        setTopN(topN + 10)
+                    }
+                },
+                dropdownRender: (originNode: React.ReactNode) => selectDropdown(originNode)
+            }}
+        />
+    )
+}
+
+interface TagsProps {
+    Value: string
+    Total: number
+}
+
+export interface YakFilterModuleList {
+    TYPE?: string
+    tag: string[]
+    searchType: string
+    setTag: (v: string[]) => void
+    tagsLoading?: boolean
+    refresh: boolean
+    setRefresh: (v: boolean) => void
+    onDeselect: () => void
+    tagsList?: TagsProps[]
+    setSearchType: (v: any) => void
+    setSearchKeyword: (v: string) => void
+    checkAll: boolean
+    checkList: string[]
+    multipleCallBack: (v: string[]) => void
+    onCheckAllChange: (v: any) => void
+    setCheckAll?: (v: boolean) => void
+    commonTagsSelectRender?: boolean
+    TagsSelectRender?: () => any
+    settingRender?: () => any
+}
+interface YakFilterRemoteObj {
+    name: string
+    value: string[]
+}
+export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
+    const {
+        // 控件来源
+        TYPE,
+        // 当前为tags或者input
+        searchType,
+        // 更改tags或者input回调
+        setSearchType,
+        // tags更改回调函数
+        setTag,
+        // tags控件加载控件
+        tagsLoading = false,
+        // 获取boolean用于更新列表
+        refresh,
+        // 更新函数
+        setRefresh,
+        // tags清空的回调函数
+        onDeselect,
+        // tag 选中的value值
+        tag,
+        // 展示的tag list
+        tagsList = [],
+        // input输入框回调
+        setSearchKeyword,
+        // 是否全选
+        checkAll,
+        // 全选回调MITM
+        onCheckAllChange,
+        // 当前选中的check list
+        checkList,
+        // 插件组选中项回调
+        multipleCallBack,
+        // 是否动态加载公共TAGS控件
+        commonTagsSelectRender = false,
+        // 外部TAGS组件渲染
+        TagsSelectRender,
+        // 动态加载设置项
+        settingRender
+    } = props
+    const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_COMMON_DATA`
+    const [form] = Form.useForm()
+    const layout = {
+        labelCol: {span: 5},
+        wrapperCol: {span: 19}
+    }
+    const itemLayout = {
+        labelCol: {span: 5},
+        wrapperCol: {span: 16}
+    }
+    const [menuList, setMenuList] = useState<YakFilterRemoteObj[]>([])
+    const nowData = useRef<YakFilterRemoteObj[]>([])
+    // 此处存储读取是一个异步过程 可能存在存储后读取的数据不为最新值
+    // const [reload, setReload] = useState<boolean>(false)
+    // // 引入公共Select组件数据
+    // const [selectedTags, setSelectedTags] = useState<string[]>([])
+    useEffect(() => {
+        getRemoteValue(FILTER_CACHE_LIST_DATA).then((data: string) => {
+            if (!!data) {
+                const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
+                setMenuList(cacheData)
+            }
+        })
+    }, [])
+
+    const menuClick = (value: string[]) => {
+        if (TYPE === "MITM") {
+            // 移除插件组 关闭全选
+            ipcRenderer.invoke("mitm-remove-hook", {
+                HookName: [],
+                RemoveHookID: checkList
+            } as any)
+        }
+        // setCheckAll && setCheckAll(false)
+        multipleCallBack(value)
+    }
+
+    const deletePlugIn = (e, name: string) => {
+        e.stopPropagation()
+        const newArr: YakFilterRemoteObj[] = menuList.filter((item) => item.name !== name)
+        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
+        nowData.current = newArr
+        setMenuList(nowData.current)
+        // setReload(!reload)
+    }
+
+    const plugInMenu = () => {
+        return menuList.map((item: YakFilterRemoteObj) => (
+            <div key={item.name} style={{display: "flex"}} onClick={() => menuClick(item.value)}>
+                <div className='content-ellipsis' style={{width: 100}}>
+                    {item.name}
+                </div>
+                <div style={{width: 10, margin: "0px 10px"}}>{item.value.length}</div>
+                <DeleteOutlined
+                    style={{position: "relative", top: 5, marginLeft: 4}}
+                    onClick={(e) => deletePlugIn(e, item.name)}
+                />
+            </div>
+        ))
+    }
+    const AddPlugIn = (props) => {
+        const {onClose} = props
+        const onFinish = useMemoizedFn((value) => {
+            getRemoteValue(FILTER_CACHE_LIST_DATA)
+                .then((data: string) => {
+                    let obj = {
+                        name: value.name,
+                        value: checkList
+                    }
+                    if (!!data) {
+                        const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
+                        const index: number = cacheData.findIndex((item) => item.name === value.name)
+                        // 本地中存在插件组名称
+                        if (index >= 0) {
+                            cacheData[index].value = Array.from(new Set([...cacheData[index].value, ...checkList]))
+                            nowData.current = cacheData
+                            setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(cacheData))
+                        } else {
+                            const newArr = [...cacheData, obj]
+                            nowData.current = newArr
+                            setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
+                        }
+                    } else {
+                        nowData.current = [obj]
+                        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify([obj]))
+                    }
+                })
+                .finally(() => {
+                    // setReload(!reload)
+                    setMenuList(nowData.current)
+                    info("添加插件组成功")
+                    onClose()
+                })
+        })
+        return (
+            <div>
+                <Form {...layout} form={form} name='add-plug-in' onFinish={onFinish}>
+                    <Form.Item
+                        {...itemLayout}
+                        name='name'
+                        label='名称'
+                        rules={[{required: true, message: "该项为必填"}]}
+                    >
+                        <AutoComplete
+                            options={menuList.map((item) => ({value: item.name}))}
+                            placeholder='请输入插件组名'
+                            filterOption={(inputValue, option) =>
+                                option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                            }
+                        />
+                    </Form.Item>
+                    <Form.Item {...itemLayout} label='插件'>
+                        <div style={{maxHeight: 460, overflow: "auto"}}>
+                            {checkList.map((item) => (
+                                <span style={{paddingRight: 12}} key={item}>
+                                    {item};
+                                </span>
+                            ))}
+                        </div>
+                    </Form.Item>
+                    <div style={{textAlign: "right"}}>
+                        <Space>
+                            <Button onClick={() => onClose()}>取消</Button>
+                            <Button type='primary' htmlType='submit'>
+                                添加
+                            </Button>
+                        </Space>
+                    </div>
+                </Form>
+            </div>
+        )
+    }
+    return (
+        <div style={{minHeight: 47}}>
+            <Input.Group compact>
+                <Select
+                    style={{width: "27%"}}
+                    value={searchType}
+                    size='small'
+                    onSelect={(v) => {
+                        if (v === "Keyword") {
+                            setTag([])
+                        }
+                        v === "Tags" && setSearchKeyword("")
+                        setSearchType(v)
+                    }}
+                >
+                    <Select.Option value='Tags'>Tag</Select.Option>
+                    <Select.Option value='Keyword'>关键字</Select.Option>
+                </Select>
+                {(searchType === "Tags" && (
+                    <>
+                        {/* 当有外部组件 与公共组件使用并存优先使用外部组件 */}
+                        {commonTagsSelectRender || TagsSelectRender ? (
+                            <div
+                                style={{
+                                    display: "inline-block",
+                                    width: "73%",
+                                    minHeight: "auto",
+                                    height: 24,
+                                    position: "relative",
+                                    top: -4
+                                }}
+                            >
+                                {TagsSelectRender ? (
+                                    TagsSelectRender()
+                                ) : (
+                                    <YakFilterModuleSelect selectedTags={tag} setSelectedTags={setTag} />
+                                )}
+                            </div>
+                        ) : (
+                            <Select
+                                mode='tags'
+                                size='small'
+                                onChange={(e) => {
+                                    setTag(e as string[])
+                                }}
+                                placeholder='选择Tag'
+                                style={{width: "73%"}}
+                                loading={tagsLoading}
+                                onBlur={() => {
+                                    setRefresh(!refresh)
+                                }}
+                                onDeselect={onDeselect}
+                                maxTagCount='responsive'
+                                value={tag}
+                                allowClear={true}
+                            >
+                                {tagsList.map((item) => (
+                                    <Select.Option key={item.Value} value={item.Value}>
+                                        <div className='mitm-card-select-option'>
+                                            <span>{item.Value}</span>
+                                            <span>{item.Total}</span>
+                                        </div>
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        )}
+                    </>
+                )) || (
+                    <Input.Search
+                        onSearch={() => {
+                            setRefresh(!refresh)
+                        }}
+                        placeholder='搜索插件'
+                        onChange={(e) => setSearchKeyword(e.target.value)}
+                        size='small'
+                        style={{width: "73%"}}
+                    />
+                )}
+            </Input.Group>
+            <div className='plug-in-menu-box'>
+                <div className='check-box'>
+                    <Checkbox onChange={(e) => onCheckAllChange(e.target.checked)} checked={checkAll}>
+                        全选
+                    </Checkbox>
+                </div>
+                <div style={{marginLeft: 12}}>
+                    <Dropdown overlay={<Space direction={"vertical"}>{plugInMenu()}</Space>} disabled={checkAll}>
+                        <a
+                            onClick={(e) => {
+                                e.preventDefault()
+                                if (menuList.length === 0) {
+                                    info("请先新建插件组")
+                                }
+                            }}
+                        >
+                            <Space>
+                                插件组
+                                <DownOutlined />
+                            </Space>
+                        </a>
+                    </Dropdown>
+                </div>
+                <div
+                    className='add-icon'
+                    onClick={() => {
+                        if (checkList.length === 0) {
+                            info("选中数据未获取")
+                            return
+                        }
+                        let m = showModal({
+                            title: "添加插件组",
+                            width: 520,
+                            content: <AddPlugIn onClose={() => m.destroy()} />
+                        })
+                        return m
+                    }}
+                >
+                    <PlusOutlined />
+                </div>
+                <div style={{marginLeft: 12}}>{settingRender && settingRender()}</div>
+            </div>
+            <div style={{whiteSpace: "initial"}}>
+                {tag.map((i) => {
+                    return (
+                        <Tag
+                            key={i}
+                            style={{marginBottom: 2}}
+                            color={"blue"}
+                            onClose={() => {
+                                let arr = tag.filter((element) => i !== element)
+                                setTag(arr)
+                            }}
+                            closable={true}
+                        >
+                            {i}
+                        </Tag>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
 interface PluginUserInfoLocalProps {
     UserId: number
     HeadImg: string

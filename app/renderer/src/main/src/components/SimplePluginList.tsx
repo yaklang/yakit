@@ -22,13 +22,13 @@ export interface SimplePluginListProp {
     verbose?: string | any
     bordered?: boolean
     disabled?: boolean
+    sourceType?: string
 }
 
 export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((props: SimplePluginListProp) => {
     const [scripts, setScripts, getScripts] = useGetState<YakScript[]>([])
     const [total, setTotal] = useState(0)
     const [listNames, setListNames] = useState<string[]>([...(props.initialSelected || [])])
-
     // const [params, setParams] = useState<{ ScriptNames: string[] }>({ScriptNames: [...props.initialSelected || []]})
     const [pluginLoading, setPluginLoading] = useState<boolean>(false)
 
@@ -39,6 +39,9 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
         } else {
             setListNames([])
         }
+    })
+    const manySelectYakScript = useMemoizedFn((value:string[])=>{
+        setListNames([...value])
     })
     const selectYakScript = useMemoizedFn((y: YakScript) => {
         listNames.push(y.ScriptName)
@@ -55,7 +58,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
         }
     }, [listNames])
 
-    const search = useMemoizedFn((searchParams?: {limit?: number; keyword?: string}, initial?: boolean) => {
+    const search = useMemoizedFn((searchParams?: {limit?: number; keyword?: string},tag?:string[]) => {
         const {limit, keyword} = searchParams || {}
         console.info("插件菜单栏搜索", keyword, limit)
         setPluginLoading(true)
@@ -74,7 +77,9 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
             limit || 200,
             undefined,
             keyword,
-            props.initialQuery
+            props.initialQuery,
+            undefined,
+            tag
         )
     })
 
@@ -84,8 +89,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
                 {
                     limit: props.initialQuery?.Pagination ? props.initialQuery.Pagination.Limit : 300,
                     keyword: props.initialQuery?.Keyword
-                },
-                true
+                }
             )
         },
         [props.initialQuery],
@@ -105,6 +109,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
             total={total}
             selected={listNames}
             allSelectScript={allSelectYakScript}
+            manySelectScript={manySelectYakScript}
             selectScript={selectYakScript}
             unSelectScript={unselectYakScript}
             search={search}
@@ -113,6 +118,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
                 padding: "0 4px",
                 overflow: "hidden"
             }}
+            sourceType={props.sourceType}
         />
     )
 })

@@ -43,6 +43,7 @@ export interface YakScriptOperatorProp {
 
     userInfo?: UserInfoProps
     plugSource?: string
+    setMonitorEdit?:(v:boolean)=>void
 }
 
 interface PromptRequest {
@@ -52,7 +53,7 @@ interface PromptRequest {
 const { ipcRenderer } = window.require("electron")
 
 export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
-    const { userInfo,plugSource } = props
+    const { userInfo,plugSource,setMonitorEdit } = props
     const [script, setScript, getScript] = useGetState<YakScript>()
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
@@ -151,6 +152,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                 <div>
                                     <CloseOutlined
                                         onClick={() => {
+                                            setMonitorEdit&&setMonitorEdit(false)
                                             setIsEdit(false)
                                             if (props.setScript) props.setScript(script)
                                             if (props.setTrigger) props.setTrigger()
@@ -226,6 +228,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                                     icon={<EditOutlined />}
                                                     style={{ color: "#a7a7a7" }}
                                                     onClick={(e) => {
+                                                        setMonitorEdit&&setMonitorEdit(true)
                                                         setIsEdit(true)
                                                     }}
                                                 />
@@ -367,6 +370,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                             { Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: names.join("|") }
                                         ])
                                     }}
+                                    sourceType="PLUGIN_OPERATOR"
                                 />
                             }
                             firstMinSize={"300px"}

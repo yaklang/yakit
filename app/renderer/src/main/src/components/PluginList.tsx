@@ -7,7 +7,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {useVirtualList} from "ahooks"
 import {showModal} from "../utils/showModal"
 import {InputInteger, OneLine} from "../utils/inputUtil"
-
+import {YakFilterModuleList} from "@/pages/yakitStore/YakitStorePage"
 import "./PluginList.css"
 import {YakEditor} from "../utils/editors"
 
@@ -20,12 +20,14 @@ export interface PluginListProp extends AutoCardProps {
     total: number
     selected: string[]
     allSelectScript: (flag: boolean) => any
+    manySelectScript: (v: string[]) => void
     selectScript: (info: YakScript) => any
     unSelectScript: (info: YakScript) => any
-    search: (params: { limit: number; keyword: string }) => any
+    search: (params: {limit: number; keyword: string}, tag: string[]) => any
     extra?: React.ReactNode
     disabled?: boolean
     readOnly?: boolean
+    sourceType?: string
 }
 
 interface YakScriptCheckboxProp {
@@ -74,13 +76,13 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
                         href={"#"}
                         style={{marginLeft: 2, marginRight: 2}}
                     >
-                        <QuestionCircleOutlined/>
+                        <QuestionCircleOutlined />
                     </a>
                 )}
                 {info.Author && (
                     <Tooltip title={info.Author}>
                         <a href={"#"} style={{marginRight: 2, marginLeft: 2}}>
-                            <UserOutlined/>
+                            <UserOutlined />
                         </a>
                     </Tooltip>
                 )}
@@ -104,7 +106,7 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
                             })
                         }}
                     >
-                        <CodeOutlined/>
+                        <CodeOutlined />
                     </a>
                 )}
             </div>
@@ -120,11 +122,13 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
         total,
         selected,
         allSelectScript,
+        manySelectScript,
         selectScript,
         unSelectScript,
         disabled,
         search,
         extra,
+        sourceType,
         ...restCard
     } = props
 
@@ -132,7 +136,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
     const [keyword, setKeyword] = useState("")
     const [indeterminate, setIndeterminate] = useState(false)
     const [checked, setChecked] = useState(false)
-
+    const [tag, setTag] = useState<string[]>([])
     const containerRef = useRef()
     const wrapperRef = useRef()
     const [list] = useVirtualList(getLists(), {
@@ -143,6 +147,17 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
     })
     const [vlistWidth, setVListWidth] = useState(260)
     const [vlistHeigth, setVListHeight] = useState(600)
+
+    const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Tags")
+    const [refresh, setRefresh] = useState<boolean>(true)
+    const [searchKeyword,setSearchKeyword] = useState<string>("")
+    let isRefresh = useRef<boolean>(false)
+    useEffect(()=>{
+        if(isRefresh.current){
+            search({limit: limit, keyword: searchKeyword.trim()}, tag)
+        }
+        isRefresh.current = true
+    },[refresh])
 
     useEffect(() => {
         const totalYakScript = lists.length
@@ -157,95 +172,120 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
         setChecked(checkedFlag)
     }, [selected, lists])
 
+    const settingRender = () => (
+        <Popover
+            title={"额外设置"}
+            trigger={["click"]}
+            content={
+                <div>
+                    <Form
+                        size={"small"}
+                        onSubmitCapture={(e) => {
+                            e.preventDefault()
+                            search({limit: limit, keyword: keyword}, tag)
+                        }}
+                    >
+                        <InputInteger
+                            label={"插件展示数量"}
+                            value={limit}
+                            setValue={setLimit}
+                            formItemStyle={{marginBottom: 4}}
+                        />
+                        <Form.Item colon={false} label={""} style={{marginBottom: 10}}>
+                            <Button type='primary' htmlType='submit'>
+                                刷新
+                            </Button>
+                        </Form.Item>
+                    </Form>
+                </div>
+            }
+        >
+            <Button size={"small"} icon={<SettingOutlined />} type={"link"} />
+        </Popover>
+    )
     return (
         <div className='plugin-list-body'>
             <AutoCard
                 size='small'
                 bordered={false}
                 {...restCard}
-                extra={
+                title={
                     !props.readOnly && (
-                        <Space>
-                            {/*{(selected || []).length > 0 ?*/}
-                            {/*    <Tag color={"green"}>已选{selected?.length}</Tag> : undefined}*/}
-                            <Input.Search onSearch={value => {
-                                search({limit: limit, keyword: value.trim()})
-                            }} size={"small"} style={{width: 140}}/>
-                            <Popover
-                                title={"额外设置"}
-                                trigger={["click"]}
-                                content={
-                                    <div>
-                                        <Form
-                                            size={"small"}
-                                            onSubmitCapture={(e) => {
-                                                e.preventDefault()
-                                                search({limit: limit, keyword: keyword})
-                                            }}
-                                        >
-                                            <InputInteger
-                                                label={"插件展示数量"}
-                                                value={limit}
-                                                setValue={setLimit}
-                                                formItemStyle={{marginBottom: 4}}
-                                            />
-                                            <Form.Item colon={false} label={""} style={{marginBottom: 10}}>
-                                                <Button type='primary' htmlType='submit'>
-                                                    刷新
-                                                </Button>
-                                            </Form.Item>
-                                        </Form>
-                                    </div>
-                                }
-                            >
-                                <Button size={"small"} icon={<SettingOutlined/>} type={"link"}/>
-                            </Popover>
-                            {/*<Popover*/}
-                            {/*    title={"搜索插件关键字"}*/}
-                            {/*    trigger={["click"]}*/}
-                            {/*    content={*/}
-                            {/*        <div>*/}
-                            {/*            <Form*/}
-                            {/*                size={"small"}*/}
-                            {/*                onSubmitCapture={(e) => {*/}
-                            {/*                    e.preventDefault()*/}
-                            {/*                    search({limit: limit, keyword: keyword})*/}
-                            {/*                }}*/}
-                            {/*            >*/}
-                            {/*                <InputItem*/}
-                            {/*                    label={""}*/}
-                            {/*                    extraFormItemProps={{*/}
-                            {/*                        style: {marginBottom: 4},*/}
-                            {/*                        colon: false*/}
-                            {/*                    }}*/}
-                            {/*                    value={keyword}*/}
-                            {/*                    setValue={setKeyword}*/}
-                            {/*                />*/}
-                            {/*                <Form.Item colon={false} label={""} style={{marginBottom: 10}}>*/}
-                            {/*                    <Button type='primary' htmlType='submit'>*/}
-                            {/*                        搜索*/}
-                            {/*                    </Button>*/}
-                            {/*                </Form.Item>*/}
-                            {/*            </Form>*/}
-                            {/*        </div>*/}
-                            {/*    }*/}
-                            {/*>*/}
-                            {/*    <Button*/}
-                            {/*        size={"small"}*/}
-                            {/*        type={!!keyword ? "primary" : "link"}*/}
-                            {/*        icon={<SearchOutlined />}*/}
-                            {/*    />*/}
-                            {/*</Popover>*/}
-                            <Checkbox
-                                disabled={props.disabled}
-                                indeterminate={indeterminate}
-                                onChange={(r) => allSelectScript(r.target.checked)}
-                                checked={checked}
-                            >
-                                全选
-                            </Checkbox>
+                        <>
+                            {sourceType?
+                            <YakFilterModuleList
+                            TYPE={sourceType}
+                            tag={tag}
+                            setTag={(v) => {
+                                setTag(v)
+                                search({limit: limit, keyword: keyword}, v)
+                            }}
+                            checkAll={checked}
+                            onCheckAllChange={allSelectScript}
+                            setSearchKeyword={(value) => {
+                                setSearchKeyword(value)
+                            }}
+                            checkList={selected}
+                            searchType={searchType}
+                            setSearchType={setSearchType}
+                            refresh={refresh}
+                            setRefresh={setRefresh}
+                            onDeselect={() => {}}
+                            multipleCallBack={(value) => {
+                                manySelectScript(value)
+                            }}
+                            settingRender={settingRender}
+                            // 加载动态tags公共列表
+                            commonTagsSelectRender={true} 
+                        />:<Space>
+                                <Input.Search
+                                    onSearch={(value) => {
+                                        search({limit: limit, keyword: value.trim()}, tag)
+                                    }}
+                                    size={"small"}
+                                    style={{width: 140}}
+                                />
+                                <Popover
+                                    title={"额外设置"}
+                                    trigger={["click"]}
+                                    content={
+                                        <div>
+                                            <Form
+                                                size={"small"}
+                                                onSubmitCapture={(e) => {
+                                                    e.preventDefault()
+                                                    search({limit: limit, keyword: keyword}, tag)
+                                                }}
+                                            >
+                                                <InputInteger
+                                                    label={"插件展示数量"}
+                                                    value={limit}
+                                                    setValue={setLimit}
+                                                    formItemStyle={{marginBottom: 4}}
+                                                />
+                                                <Form.Item colon={false} label={""} style={{marginBottom: 10}}>
+                                                    <Button type='primary' htmlType='submit'>
+                                                        刷新
+                                                    </Button>
+                                                </Form.Item>
+                                            </Form>
+                                        </div>
+                                    }
+                                >
+                                    <Button size={"small"} icon={<SettingOutlined />} type={"link"} />
+                                </Popover>
+                                <Checkbox
+                                    disabled={props.disabled}
+                                    indeterminate={indeterminate}
+                                    onChange={(r) => allSelectScript(r.target.checked)}
+                                    checked={checked}
+                                >
+                                    全选
+                                </Checkbox>
+                            </Space>
+                }
                             {extra || <></>}
-                        </Space>
+                        </>
                     )
                 }
             >
