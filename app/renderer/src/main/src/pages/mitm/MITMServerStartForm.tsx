@@ -7,6 +7,7 @@ import {MITMContentReplacerExport, MITMContentReplacerImport} from "@/pages/mitm
 import {getRemoteValue, getValue, setRemoteValue} from "@/utils/kv"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
+import {SwitchItem} from "@/utils/inputUtil";
 
 export interface MITMServerStartFormProp {
     onStartMITMServer: (
@@ -14,7 +15,8 @@ export interface MITMServerStartFormProp {
         port: number,
         downstreamProxy: string,
         enableInitialPlugin: boolean,
-        defaultPlugins: string[]
+        defaultPlugins: string[],
+        enableHttp2: boolean
     ) => any
 }
 
@@ -24,6 +26,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [host, setHost] = useState("127.0.0.1")
     const [hostHistoryList, setHostHistoryList] = useState<string[]>([])
     const [port, setPort] = useState(8083)
+    const [enableHttp2, setEnableHttp2] = useState(false)
     const [downstreamProxy, setDownstreamProxy] = useState("")
     const [enableInitialPlugin, setEnableInitialPlugin] = useState(false)
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
@@ -71,7 +74,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 style={{marginTop: 40}}
                 onSubmitCapture={(e) => {
                     e.preventDefault()
-                    props.onStartMITMServer(host, port, downstreamProxy, enableInitialPlugin, defaultPlugins)
+                    props.onStartMITMServer(host, port, downstreamProxy, enableInitialPlugin, defaultPlugins, enableHttp2)
                     const index = hostHistoryList.findIndex((ele) => ele === host)
                     if (index === -1) {
                         const newHostHistoryList = [host, ...hostHistoryList].filter((_, index) => index < 10)
@@ -96,6 +99,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 <Item label={"劫持代理监听端口"}>
                     <InputNumber value={port} onChange={(e) => setPort(e)} />
                 </Item>
+                <SwitchItem
+                    label={"HTTP/2.0 支持"} value={enableHttp2} setValue={setEnableHttp2}
+                    help={"开启该选项将支持 HTTP/2.0 劫持，关闭后自动降级为 HTTP/1.1，开启后 HTTP2 协商失败也会自动降级"}
+                />
                 <Item label={"选择插件"} colon={true}>
                     <div style={{height: 200, maxWidth: 420}}>
                         <SimplePluginList
@@ -113,7 +120,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 <Item
                     label={"下游代理"}
                     help={
-                        "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描"
+                        "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描" +
+                        "，例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890"
                     }
                 >
                     <Input value={downstreamProxy} onChange={(e) => setDownstreamProxy(e.target.value)} />
