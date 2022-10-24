@@ -10,7 +10,7 @@ import {showModal} from "../utils/showModal";
 import {YakUpgrade} from "../components/YakUpgrade";
 import {UserProtocol} from "../App";
 import {YakitUpgrade} from "../components/YakitUpgrade";
-
+import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
 const {Text, Title, Paragraph} = Typography;
 
 export interface YakEnvironmentProp {
@@ -104,6 +104,8 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
     }
 
     if (!connected) {
+        // 是否为企业版
+        const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
         return <Spin
             spinning={localLoading}
         >
@@ -116,7 +118,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                        preview={false} width={400}
                 />
                 <br/>
-                <Text style={{color: "#999"}}>社区专业版：{version}</Text>
+                <Text style={{color: "#999"}}>{isEnterprise?'企业版':'社区专业版'}：{version}</Text>
                 <SelectOne label={" "} colon={false} data={[
                     {value: "local", text: "本地模式（本地启动 Yak gRPC）"},
                     {value: "remote", text: "远程模式（TeamServer 模式）"}
