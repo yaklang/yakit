@@ -80,13 +80,9 @@ import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
-<<<<<<< HEAD
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
-=======
-import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
->>>>>>> b9d824ab (-)
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
