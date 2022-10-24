@@ -1746,64 +1746,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     ]}
                 />
             )}
-            <div className="filter-box">
-                  <div className="filter-box-item filter-box-item-left">
-                  <Space>
-                        <span>{props?.title ? props.title : "HTTP History"}</span>
-                        <Button
-                            icon={<ReloadOutlined />}
-                            type={"link"}
-                            size={"small"}
-                            onClick={(e) => {
-                                update(1, undefined, "desc")
-                            }}
-                        />
-                        <Input.Search
-                            placeholder={"全局搜索"}
-                            enterButton={true}
-                            size={"small"}
-                            style={{width: 170}}
-                            value={params.Keyword}
-                            // 这个事件很关键哈，不要用 onChange
-                            onBlur={(e) => {
-                                if (props.onSearch) {
-                                    props.onSearch(e.target.value)
-                                }
-                            }}
-                            onChange={(e) => {
-                                setParams({...params, Keyword: e.target.value})
-                            }}
-                            onSearch={(v) => {
-                                // if (props.onSearch) {
-                                //     props.onSearch(params.Keyword || "")
-                                // }
-                                update(1)
-                            }}
-                        />
-                        {props.noHeader && (
-                            <Button
-                                danger={true}
-                                size={"small"}
-                                onClick={(e) => clearHistoryAction(e as any)}
-                                onContextMenu={(e) => clearHistoryAction(e as any)}
-                            >
-                                清空 HTTP History
-                            </Button>
-                        )}
-                        <Checkbox
-                            checked={params.OnlyWebsocket}
-                            onChange={() => {
-                                setParams({...params, OnlyWebsocket: !params.OnlyWebsocket})
-                            }}
-                        >
-                            只看 Websocket
-                        </Checkbox>
-                    </Space>
-                  </div>
-                  <div className="filter-box-item">
-                    <Tag>{total} Records</Tag>
-                 </div>          
-            </div>
             <div className={style["table-virtual-resize"]}>
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}

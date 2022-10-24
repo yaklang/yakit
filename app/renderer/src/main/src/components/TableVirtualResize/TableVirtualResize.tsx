@@ -149,6 +149,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [containerRef.current])
     useEffect(() => {
         if (!currentIndex) return
+        // console.log("currentIndex", currentIndex)
         scrollTo(currentIndex)
     }, [currentIndex])
 
@@ -189,7 +190,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         return
                     }
                     const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
-                    const inViewport = currentPosition.top - 28 >= containerRefPosition.current.top
+                    const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+                    // const inViewport =
+                    // currentPosition.top + 28 <=
+                    // containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+                    // const inViewport = currentPosition.top - 28 >= containerRefPosition.current.top
+                    const inViewport =
+                        currentPosition.top >= top || currentPosition.top <= containerRefPosition.current.top
+                    console.log("inViewport", currentPosition.top,top,containerRefPosition.current.top)
                     if (!inViewport) scrollTo(index)
                 }, 50)
             }
