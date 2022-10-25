@@ -10,7 +10,7 @@
     }
 
     .body-length-text-red {
-        background: #F6544A;
+        color: #F6544A;
     }
 }
 
@@ -434,6 +434,14 @@
                 overflow: hidden;
                 word-break: break-all;
             }
+        }
+
+        .no-data {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            padding: 6px 12px;
+
         }
 
         .select-item-active {

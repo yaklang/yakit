@@ -47,16 +47,18 @@ interface tablePosition {
 }
 
 function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: React.ForwardedRef<any>) {
-    const wrapperRef = useRef<any>(null)
+    // const wrapperRef = useRef<any>(null)
+    const containerRef = useRef<any>(null)
     useImperativeHandle(
         ref,
         () => ({
-            ...wrapperRef.current
+            containerRef: containerRef.current
         }),
-        [wrapperRef.current]
+        [containerRef.current]
     )
-    const getTableRef = useMemoizedFn((wRef) => {
-        wrapperRef.current = wRef
+    const getTableRef = useMemoizedFn((cRef) => {
+        // wrapperRef.current = wRef
+        containerRef.current = cRef
     })
     return <Table<T> {...props} getTableRef={getTableRef} />
 }
@@ -149,7 +151,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [containerRef.current])
     useEffect(() => {
         if (!currentIndex) return
-        // console.log("currentIndex", currentIndex)
         scrollTo(currentIndex)
     }, [currentIndex])
 
@@ -251,7 +252,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         {},
         [data, currentRowData, containerRef.current, currentRowRef.current]
     )
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         if (pagination.page == 1) {
             scrollTo(0)
         }
@@ -265,8 +266,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         getLeftOrRightFixedWidth()
     }, [columns])
     useEffect(() => {
-        getTableRef(wrapperRef.current)
-    }, [tableRef.current, wrapperRef.current])
+        getTableRef(containerRef.current)
+    }, [containerRef.current])
     useEffect(() => {
         if (tableRef.current && tableRef.current.getBoundingClientRect()) {
             tablePosition.current = tableRef.current.getBoundingClientRect()
@@ -289,11 +290,16 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const wrapperHeight = wrapperRef.current?.clientHeight
             // 阴影高度
             setBoxShowHeight(wrapperHeight + 29)
-            if (showScrollY) return // 显示滚动条了就不计算了
-            if (containerHeight > wrapperHeight + 29) {
-            } else {
+            // console.log('wrapperHeight',wrapperHeight);
+            // console.log('containerHeight',containerHeight);
+
+            if (containerHeight <= wrapperHeight + 29) {
                 setShowScrollY(true)
+            } else {
+                setShowScrollY(false)
             }
+            if (showScrollY) return
+            // 显示滚动条了就不计算了
             getTableWidthAndColWidth(0)
         },
         [wrapperRef.current?.clientHeight, containerRef.current?.clientHeight],
@@ -804,6 +810,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         {enableDrag && cIndex < columns.length - 1 && (
                                             <div
                                                 className={classNames(style["virtual-table-title-drag"])}
+                                                // style={{height}}
                                                 style={{height: hoverLine ? height : 28}}
                                                 onMouseEnter={() => setHoverLine(true)}
                                                 onMouseLeave={() => setHoverLine(false)}

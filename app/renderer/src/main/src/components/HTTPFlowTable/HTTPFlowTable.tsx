@@ -796,6 +796,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     Pagination: {...paginationProps}
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
+                    // console.log('data.map(ele=>ele.Id)',data.map(ele=>ele.Id));
                     console.log("update-newData", rsp)
                     let newData = rsp?.Data || []
                     if (newData.length > 0) {
@@ -846,7 +847,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     }, [params.ExcludeId, params.ExcludeInUrl])
 
     const [isHaveIncrement, setIsHaveIncrement] = useState<boolean>(false)
-    const [maxId, setMaxId] = useState<number>(0)
+    const [maxId, setMaxId, getMaxId] = useGetState<number>(0)
     const [newTotal, setNewTotal] = useState<number>(0) //用来刷新tags服务器缓存的
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
@@ -897,15 +898,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 failed(`query HTTP Flows Field Group failed: ${e}`)
             })
     })
+    const [offsetData, setOffsetData, getOffsetData] = useGetState<HTTPFlow[]>([])
     const scrollUpdateTop = useDebounceFn(
         useMemoizedFn(() => {
+            if (maxId <= 0) return
             const paginationProps = {
                 Page: 1,
                 Limit: OFFSET_STEP,
                 Order: "asc",
                 OrderBy: "Id"
             }
-            // console.log('scrollUpdateTop',paginationProps);
             // 查询数据
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
@@ -915,10 +917,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     Pagination: {...paginationProps}
                 })
                 .then((rsp: YakQueryHTTPFlowResponse) => {
-                    const offsetDeltaData = rsp?.Data || []
-                    // console.log("scrollUpdateTop", rsp)
-
-                    if (offsetDeltaData.length <= 0) {
+                    const resData = rsp?.Data || []
+                    const scrollTop = tableRef.current?.containerRef?.scrollTop
+                    // const scrollTop = 0
+                    if (resData.length <= 0) {
+                        if (scrollTop <= 10 && getOffsetData().length > 0) {
+                            const newOffsetData = getOffsetData().concat(data)
+                            // console.log("111", newOffsetData)
+                            setData(newOffsetData)
+                            setOffsetData([])
+                        }
                         setIsHaveIncrement(false)
                         // 没有增量数据
                         return
@@ -926,15 +934,20 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     // 有增量数据刷新total
                     getNewData()
                     if (sortRef.current.order === defSort.order && sortRef.current.orderBy === defSort.orderBy) {
-                        let offsetData = offsetDeltaData.concat(data)
                         const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                        setMaxId(offsetDeltaData[0].Id)
                         setLoading(true)
                         setTotal(newTotal)
-                        setData(offsetData)
-                        if (getSelected()) {
-                            const index = offsetData.findIndex((ele) => ele.Id === getSelected()?.Id)
-                            if (index !== -1) setCurrentIndex(index)
+                        if (scrollTop > 10) {
+                            const newOffsetData = resData.concat(getOffsetData())
+                            // console.log("222", newOffsetData)
+                            setMaxId(newOffsetData[0].Id)
+                            setOffsetData(newOffsetData)
+                        } else {
+                            const newOffsetData =
+                                getOffsetData().length > 0 ? getOffsetData().concat(data) : resData.concat(data)
+                            // console.log("333", newOffsetData)
+                            setData(newOffsetData)
+                            setOffsetData([])
                         }
                     } else {
                         setIsHaveIncrement(true)
@@ -1028,57 +1041,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [autoReload, props.inViewport])
 
-    const clearHistoryAction = useMemoizedFn((e: MouseEvent) => {
-        showByCursorMenu(
-            {
-                content: [
-                    {
-                        title: "重置请求 ID",
-                        onClick: () => {
-                            ipcRenderer
-                                .invoke("DeleteHTTPFlows", {DeleteAll: true})
-                                .then(() => {})
-                                .catch((e: any) => {
-                                    failed(`历史记录删除失败: ${e}`)
-                                })
-                                .finally(() => update(1))
-                        }
-                    },
-                    {
-                        title: "不重置请求 ID",
-                        onClick: () => {
-                            const newParams = {
-                                Filter: {
-                                    ...params
-                                },
-                                DeleteAll: false
-                            }
-                            ipcRenderer
-                                .invoke("DeleteHTTPFlows", newParams)
-                                .then((i: HTTPFlow) => {
-                                    setParams(props.params || {SourceType: "mitm", Tags: []})
-                                })
-                                .catch((e: any) => {
-                                    failed(`历史记录删除失败: ${e}`)
-                                })
-                            setLoading(true)
-                            info("正在删除...如自动刷新失败请手动刷新")
-                            setCompareLeft({content: "", language: "http"})
-                            setCompareRight({content: "", language: "http"})
-                            setCompareState(0)
-                            setTimeout(() => {
-                                update(1)
-                                if (props.onSelected) props.onSelected(undefined)
-                            }, 400)
-                        }
-                    }
-                ]
-            },
-            e.clientX,
-            e.clientY
-        )
-    })
-
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
     // 数组去重
@@ -1122,7 +1084,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             // setSelected(undefined)
         }
     })
-
+    // console.log("data", data.map(ele=>ele.Id))
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [
             {
@@ -1293,8 +1255,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             },
             {
                 title: "请求大小",
-                dataKey: "RequestSizeVerbose",
-                fixed: "right"
+                dataKey: "RequestSizeVerbose"
             },
             {
                 title: "操作",
@@ -1390,9 +1351,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     //删除
     const onRemoveHttpHistory = useMemoizedFn((query) => {
         setLoading(true)
-        console.log("query", query)
         if (isAllSelect) {
-            onRemoveHttpHistoryAllAndResetId()
+            onRemoveHttpHistoryAll(true, query)
             return
         }
         ipcRenderer
@@ -1416,17 +1376,31 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             .finally(() => update(1))
     })
     // 不重置请求 ID
-    const onRemoveHttpHistoryAll = useMemoizedFn(() => {
-        const newParams = {
-            Filter: {
-                ...params
-            },
+    const onRemoveHttpHistoryAll = useMemoizedFn((isAddQuery?: boolean, query?: any) => {
+        let newParams = {
+            Filter: {},
             DeleteAll: false
         }
+        if (isAddQuery) {
+            newParams = {
+                Filter: {
+                    ...params,
+                    ...(query?.Filter || {})
+                },
+                DeleteAll: false
+            }
+        }
+        console.log("query", query)
+        console.log("不重置请求 ID", newParams)
         ipcRenderer
             .invoke("DeleteHTTPFlows", newParams)
             .then((i: HTTPFlow) => {
-                setParams(props.params || {SourceType: "mitm"})
+                const newParams: YakQueryHTTPFlowRequest = {
+                    ...(props.params || {SourceType: "mitm"}),
+                    ExcludeId: params.ExcludeId,
+                    ExcludeInUrl: params.ExcludeInUrl
+                }
+                setParams({...newParams})
             })
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
@@ -1984,6 +1958,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                                     update(1)
                                                                 }, 100)
                                                             }}
+                                                            key={ele.color}
                                                         >
                                                             {ele.render}
                                                         </div>
@@ -2279,7 +2254,6 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
         overscan: 10
     })
     const onSelectMultiple = useMemoizedFn((selectItem: FiltersItemProps) => {
-        console.log("value,selectItem", value, selectItem)
         if (value) {
             if (!Array.isArray(value)) return
             const index = value.findIndex((ele) => ele === selectItem.value)
@@ -2351,11 +2325,7 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
                                         <span className={style["select-item-text"]}>{item.data.label}</span>
                                     </div>
                                 )
-                            })) || (
-                            <div className={style["select-item"]}>
-                                <span className={style["select-item-text"]}>无数据</span>
-                            </div>
-                        )}
+                            })) || <div className={style["no-data"]}>无数据</div>}
                     </div>
                 </div>
                 <div className={style["select-footer"]}>
