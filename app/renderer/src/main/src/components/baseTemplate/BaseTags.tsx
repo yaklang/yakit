@@ -84,8 +84,12 @@ interface TagsFilterDataProps {
     key: string | number
     value: string
 }
+interface DataObjProps{
+    label:string
+    value:string
+}
 export interface TagsFilterProps {
-    data: string[]
+    data: string[]|DataObjProps[]
     defaultData?: string[]
     isShowAllCheck?: boolean
     selectProps?: SelectProps
@@ -95,12 +99,17 @@ const {Option} = Select
 
 export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
     const {selectProps, data, isShowAllCheck = false, defaultData = [], submitValue} = props
+    const dataSource:DataObjProps[] = data.map((item)=>{
+        if(typeof item==="string"){
+            return {label:item,value:item}
+        }
+        return item
+    })
     const [checkedList, setCheckedList,getCheckList] = useGetState<string[]>(defaultData)
     const [indeterminate, setIndeterminate] = useState<boolean>(true)
     const [checkAll, setCheckAll] = useState<boolean>(false)
     // 当前选中项
     const [checkItem, setCheckItem,getCheckItem] = useGetState<string>("")
-
     // 键盘移动
     const goAnchor = (e) => {
         const nowCheckList = getCheckList()
@@ -136,7 +145,7 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
     useEffect(() => {
         document.addEventListener("keydown",(e)=>goAnchor(e) )
         return ()=>{
-            window.removeEventListener("keydown",goAnchor)
+            document.removeEventListener("keydown",goAnchor)
         }
     }, [])
 
@@ -149,12 +158,13 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
 
     const handleCheckChange = (list) => {
         setCheckedList(list)
-        setIndeterminate(!!list.length && list.length < data.length)
-        setCheckAll(list.length === data.length)
+        setIndeterminate(!!list.length && list.length < dataSource.length)
+        setCheckAll(list.length === dataSource.length)
     }
 
     const handleCheckAllChange = (e) => {
-        setCheckedList(e.target.checked ? data : [])
+        const checkAllData:string[] = dataSource.map((item)=>item.value)
+        setCheckedList(e.target.checked ? checkAllData : [])
         setIndeterminate(false)
         setCheckAll(e.target.checked)
     }
@@ -173,13 +183,13 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
                     </Checkbox>
                 )}
                 <Checkbox.Group className='default-check-group-box' value={checkedList} onChange={handleCheckChange}>
-                    {data.map((item, idx) => (
+                    {dataSource.map((item, idx) => (
                         <Checkbox
-                            className={`default-check-box ${checkedList.includes(item) && "default-row-check-box"}`}
-                            value={item}
-                            key={`${idx}_${item}`}
+                            className={`default-check-box ${checkedList.includes(item.value) && "default-row-check-box"}`}
+                            value={item.value}
+                            key={`${idx}_${item.value}`}
                         >
-                            {item}
+                            {item.label}
                         </Checkbox>
                     ))}
                 </Checkbox.Group>
@@ -231,6 +241,7 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
 
     const submitBtn = () => {
         submitValue(checkedList)
+        
     }
     return (
         <div className='base-tags-filter'>
@@ -257,8 +268,8 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
                     )
                 }}
             >
-                {data.map((item) => (
-                    <Option key={item}>{item}</Option>
+                {dataSource.map((item) => (
+                    <Option key={item.value}>{item.label}</Option>
                 ))}
             </Select>
         </div>
@@ -272,7 +283,17 @@ export const HTTPHacker: React.FC = () => {
         <div>
             <TagsFilter
                 data={["Apple", "Pear", "Orange", "Apple1", "Pear1", "Orange1"]}
-                defaultData={["Orange"]}
+                // data={[
+                //     {
+                //         label:"ppp",
+                //         value:"999"
+                //     },
+                //     {
+                //         label:"ppx",
+                //         value:"888"
+                //     },
+                // ]}
+                defaultData={tagList}
                 submitValue={(value) => {
                     setTagList(value)
                 }}
