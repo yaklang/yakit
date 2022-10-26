@@ -241,14 +241,14 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
 
     const submitBtn = () => {
         submitValue(checkedList)
-        
     }
     return (
         <div className='base-tags-filter'>
             <Select
                 {...selectProps}
                 allowClear={true}
-                mode='tags'
+                mode='multiple'
+                showSearch={false}
                 onChange={handleChange}
                 value={checkedList}
                 tagRender={tagRender}
