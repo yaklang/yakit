@@ -290,9 +290,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const wrapperHeight = wrapperRef.current?.clientHeight
             // 阴影高度
             setBoxShowHeight(wrapperHeight + 29)
-            // console.log('wrapperHeight',wrapperHeight);
-            // console.log('containerHeight',containerHeight);
-
+            if (wrapperHeight && wrapperHeight <= containerHeight) {
+                const hasMore = pagination.total == data.length
+                if (!loading && !hasMore) pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+            }
             if (containerHeight <= wrapperHeight + 29) {
                 setShowScrollY(true)
             } else {

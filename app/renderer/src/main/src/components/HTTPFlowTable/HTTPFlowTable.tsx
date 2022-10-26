@@ -616,7 +616,7 @@ const TableFirstLinePlaceholder: HTTPFlow = {
     IsPlaceholder: true
 }
 
-const OFFSET_LIMIT = 30
+const OFFSET_LIMIT = 10
 const OFFSET_STEP = 20
 const ROW_HEIGHT = 42
 const MAX_ROW_COUNT = Math.abs(OFFSET_LIMIT * 2)
@@ -640,15 +640,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         OrderBy: "created_at",
         Page: 1
     })
-
-    // const [autoReload, setAutoReload, getAutoReload] = useGetState(false);
-    const autoReloadRef = useRef<boolean>(false)
     const isOneceLoading = useRef<boolean>(true)
-    const autoReload = autoReloadRef.current
-    const setAutoReload = (b: boolean) => {
-        autoReloadRef.current = b
-    }
-    const getAutoReload = () => autoReloadRef.current
 
     const [total, setTotal] = useState<number>(0)
     const [loading, setLoading] = useState(false)
@@ -735,7 +727,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             // setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify({
             //     data:[],
             // }))
-            // console.log("清空缓存")
             let idArr: number[] = []
             let urlArr: string[] = []
             shieldData.data.map((item) => {
@@ -760,7 +751,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
 
         sortRef.current = sort
         setTimeout(() => {
-            update(page, limit, sort.order, sort.orderBy)
+            update(page, limit)
         }, 100)
     })
 
@@ -772,9 +763,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Order: sortRef.current.order,
                 OrderBy: sortRef.current.orderBy || "id"
             }
-            if (!noLoading) {
-                setLoading(true)
-            }
+            setLoading(true)
             // yakQueryHTTPFlow({
             //     SourceType: sourceType, ...params,
             //     Pagination: {...paginationProps},
@@ -872,7 +861,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Pagination: {Page: 1, Limit: 1, Order: "desc", OrderBy: "id"}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                // console.log("rsp", rsp)
                 if (rsp.Data.length > 0) {
                     setMaxId(rsp.Data[0].Id)
                 }
@@ -919,11 +907,9 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 .then((rsp: YakQueryHTTPFlowResponse) => {
                     const resData = rsp?.Data || []
                     const scrollTop = tableRef.current?.containerRef?.scrollTop
-                    // const scrollTop = 0
                     if (resData.length <= 0) {
                         if (scrollTop <= 10 && getOffsetData().length > 0) {
                             const newOffsetData = getOffsetData().concat(data)
-                            // console.log("111", newOffsetData)
                             setData(newOffsetData)
                             setOffsetData([])
                         }
@@ -939,13 +925,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         setTotal(newTotal)
                         if (scrollTop > 10) {
                             const newOffsetData = resData.concat(getOffsetData())
-                            // console.log("222", newOffsetData)
                             setMaxId(newOffsetData[0].Id)
                             setOffsetData(newOffsetData)
                         } else {
                             const newOffsetData =
                                 getOffsetData().length > 0 ? getOffsetData().concat(data) : resData.concat(data)
-                            // console.log("333", newOffsetData)
                             setData(newOffsetData)
                             setOffsetData([])
                         }
@@ -961,50 +945,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         {wait: 600, leading: true, trailing: false}
     ).run
 
-    // 这是用来设置选中坐标的，不需要做防抖
-    useEffect(() => {
-        if (!getSelected()) {
-            return
-        }
-        const screenRowCount = Math.floor(getTableContentHeight() / ROW_HEIGHT) - 1
-
-        if (!autoReload) {
-            let count = 0
-            const data = getData()
-            for (let i = 0; i < data.length; i++) {
-                if (data[i].Id != getSelected()?.Id) {
-                    count++
-                } else {
-                    break
-                }
-            }
-
-            let minCount = count
-            if (minCount < 0) {
-                minCount = 0
-            }
-            const viewHeightMin = getScrollY() + tableContentHeight
-            const viewHeightMax = getScrollY() + tableContentHeight * 2
-            const minHeight = minCount * ROW_HEIGHT
-            const maxHeight = minHeight + tableContentHeight
-            const maxHeightBottom = minHeight + tableContentHeight + 3 * ROW_HEIGHT
-            if (maxHeight < viewHeightMin) {
-                // 往下滚动
-                // scrollTableTo(minHeight)
-                return
-            }
-            if (maxHeightBottom > viewHeightMax) {
-                // 上滚动
-                const offset = minHeight - (screenRowCount - 2) * ROW_HEIGHT
-                // console.info(screenRowCount, minHeight, minHeight - (screenRowCount - 1) * ROW_HEIGHT)
-                if (offset > 0) {
-                    // scrollTableTo(offset)
-                }
-                return
-            }
-        }
-    }, [selected])
-
     // 给设置做防抖
     useDebounceEffect(
         () => {
@@ -1017,29 +957,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // 设置是否自动刷新
     const autoUpdateTop = getScrollY() < ROW_HEIGHT
     useEffect(() => {
-        if (autoReload) {
-            return
-        }
         if (autoUpdateTop) {
             scrollUpdateTop()
             let id = setInterval(scrollUpdateTop, 1000)
             return () => clearInterval(id)
         }
-    }, [autoUpdateTop, autoReload])
-
-    useEffect(() => {
-        if (autoReload) {
-            const id = setInterval(() => {
-                if (!props.inViewport) {
-                    return
-                }
-                update(1, undefined, "desc", undefined, undefined, true)
-            }, 1000)
-            return () => {
-                clearInterval(id)
-            }
-        }
-    }, [autoReload, props.inViewport])
+    }, [autoUpdateTop])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -1084,7 +1007,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             // setSelected(undefined)
         }
     })
-    // console.log("data", data.map(ele=>ele.Id))
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [
             {
@@ -1307,18 +1229,17 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             })
             .then(() => {
                 // info(`设置 HTTPFlow 颜色成功`)
-                if (!autoReload) {
-                    setData(
-                        data.map((item) => {
-                            if (item.Hash === flow.Hash) {
-                                item.cellClassName = i.className
-                                item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
-                                return item
-                            }
-                            return item
-                        })
-                    )
+                let newData: HTTPFlow[] = []
+                const l = data.length
+                for (let index = 0; index < l; index++) {
+                    const item = data[index]
+                    if (item.Hash === flow.Hash) {
+                        item.cellClassName = i.className
+                        item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
+                    }
+                    newData.push(item)
                 }
+                setData(newData)
             })
     })
     // 移除颜色
@@ -1334,18 +1255,17 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             })
             .then(() => {
                 // info(`清除 HTTPFlow 颜色成功`)
-                if (!autoReload) {
-                    setData(
-                        data.map((item) => {
-                            if (item.Hash === flow.Hash) {
-                                item.cellClassName = ""
-                                item.Tags = ""
-                                return item
-                            }
-                            return item
-                        })
-                    )
+                let newData: HTTPFlow[] = []
+                const l = data.length
+                for (let index = 0; index < l; index++) {
+                    const item = data[index]
+                    if (item.Hash === flow.Hash) {
+                        item.cellClassName = ""
+                        item.Tags = ""
+                    }
+                    newData.push(item)
                 }
+                setData(newData)
             })
     })
     //删除
@@ -1390,8 +1310,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 DeleteAll: false
             }
         }
-        console.log("query", query)
-        console.log("不重置请求 ID", newParams)
         ipcRenderer
             .invoke("DeleteHTTPFlows", newParams)
             .then((i: HTTPFlow) => {
@@ -1651,6 +1569,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             event.clientY
         )
     }
+
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div
@@ -2077,9 +1996,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         </div>
                     }
                     isReset={isReset}
-                    // data={autoReload ? data : [TableFirstLinePlaceholder].concat(data)}
                     renderKey='Id'
-                    // data={data.filter((_,index)=>index<5)}
                     data={data}
                     rowSelection={{
                         isAll: isAllSelect,
@@ -2278,7 +2195,6 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
     const onSure = useMemoizedFn(() => {
         setShowList(false)
     })
-    // console.log("list", list, options)
 
     return (
         <div className={style["select-search-multiple"]}>

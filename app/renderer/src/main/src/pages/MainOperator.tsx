@@ -905,7 +905,6 @@ const Main: React.FC<MainProp> = (props) => {
     const addFuzzer = useMemoizedFn((res: any) => {
         const {isHttps, request, list} = res || {}
         const time = new Date().getTime().toString()
-        console.log("list", list)
         if (request) {
             addTabPage(Route.HTTPFuzzer, {
                 time: time,
