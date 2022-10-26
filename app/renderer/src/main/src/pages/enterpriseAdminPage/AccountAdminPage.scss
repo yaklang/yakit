@@ -32,6 +32,7 @@
             }
         }
         &-content {
+            overflow-y: auto;
             height: 100%;
             padding: 10px;
             border: 1px solid rgb(240, 240, 240);

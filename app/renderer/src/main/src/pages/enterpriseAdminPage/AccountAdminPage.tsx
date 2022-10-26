@@ -13,7 +13,6 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {ResizeBox} from "@/components/ResizeBox"
 import {PlusOutlined, EditOutlined, DeleteOutlined} from "@ant-design/icons"
 const {Option} = Select
-const {ipcRenderer} = window.require("electron")
 
 export interface ShowUserInfoProps extends API.NewUrmResponse {
     onClose: () => void
@@ -41,6 +40,7 @@ const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
 }
 
 export interface CreateUserFormProps {
+    editInfo:API.UrmUserList|undefined
     onCancel: () => void
     refresh: () => void
 }
@@ -50,24 +50,27 @@ const layout = {
     wrapperCol: {span: 16}
 }
 
-export interface CreateProps {
-    user_name: string
-}
-
 const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
-    const {onCancel, refresh} = props
+    const {onCancel, refresh,editInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
+
+    useEffect(()=>{
+        // 加载角色数据
+
+    },[])
+
     const onFinish = useMemoizedFn((values) => {
         console.log("values", values)
-        return
-        const {user_name} = values
-        NetWorkApi<CreateProps, API.NewUrmResponse>({
+        const {user_name,department,role} = values
+        const params:API.NewUrmRequest = {
+            user_name,department,role
+        }
+        editInfo&&(params.id=editInfo.id)
+        NetWorkApi<API.NewUrmRequest, API.NewUrmResponse>({
             method: "post",
             url: "urm",
-            params: {
-                user_name
-            }
+            params
         })
             .then((res: API.NewUrmResponse) => {
                 console.log("返回结果：", res)
@@ -95,7 +98,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                 <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
                     <Input placeholder='请输入用户名' allowClear />
                 </Form.Item>
-                <Form.Item name='user_name1' label='组织架构' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item name='department' label='组织架构' rules={[{required: true, message: "该项为必填"}]}>
                     <Cascader
                         options={[
                             {
@@ -113,7 +116,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                         changeOnSelect
                     />
                 </Form.Item>
-                <Form.Item name='user_name2' label='角色' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item name='role' label='角色' rules={[{required: true, message: "该项为必填"}]}>
                     <Select
                         showSearch
                         placeholder='请选择角色'
@@ -180,21 +183,23 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
         <div className='organization-admin-page'>
             <div className='organization-admin-page-title'>
                 <div className='title'>组织架构</div>
-                <div className='add-icon' 
-                onClick={() => {
-                    const m = showModal({
-                        title: "新建部门",
-                        width: 600,
-                        content: (
-                            <CreateOrganizationForm
-                                onClose={() => {
-                                    m.destroy()
-                                }}
-                                refresh={()=>{}}
-                            />
-                        )
-                    })
-                }}>
+                <div
+                    className='add-icon'
+                    onClick={() => {
+                        const m = showModal({
+                            title: "新建部门",
+                            width: 600,
+                            content: (
+                                <CreateOrganizationForm
+                                    onClose={() => {
+                                        m.destroy()
+                                    }}
+                                    refresh={() => {}}
+                                />
+                            )
+                        })
+                    }}
+                >
                     <PlusOutlined />
                 </div>
             </div>
@@ -230,7 +235,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                                                 onClose={() => {
                                                     m.destroy()
                                                 }}
-                                                refresh={()=>{}}
+                                                refresh={() => {}}
                                             />
                                         )
                                     })
@@ -283,7 +288,7 @@ interface ResetProps {
 }
 const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
-    const [createUserShow, setCreateUserShow] = useState<boolean>(false)
+    const [userInfoForm, setUserInfoForm] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({
         keywords: ""
     })
@@ -296,7 +301,8 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     })
     const [data, setData] = useState<API.UrmUserList[]>([])
     const [total, setTotal] = useState<number>(0)
-
+    // 编辑项信息
+    const [editInfo, setEditInfo] = useState<API.UrmUserList>()
     const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
         setLoading(true)
         const paginationProps = {
@@ -341,7 +347,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     }
 
     const onRemove = (uid: string[]) => {
-        NetWorkApi<RemoveProps, API.NewUrmResponse>({
+        NetWorkApi<API.DeleteUrm, API.NewUrmResponse>({
             method: "delete",
             url: "urm",
             data: {
@@ -420,6 +426,16 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
             title: "操作",
             render: (i) => (
                 <Space>
+                    <Button
+                        size='small'
+                        type='primary'
+                        onClick={() => {
+                            setEditInfo(i)
+                            setUserInfoForm(true)
+                        }}
+                    >
+                        编辑
+                    </Button>
                     <Popconfirm title={"确定要重置该用户密码吗？"} onConfirm={() => onReset(i.uid, i.user_name)}>
                         <Button size='small' type='primary'>
                             重置密码
@@ -479,7 +495,10 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                             type='primary'
                             htmlType='submit'
                             size='small'
-                            onClick={() => setCreateUserShow(!createUserShow)}
+                            onClick={() => {
+                                setEditInfo(undefined)
+                                setUserInfoForm(!userInfoForm)
+                            }}
                         >
                             创建账号
                         </Button>
@@ -521,16 +540,16 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
             />
 
             <Modal
-                visible={createUserShow}
-                title={"创建账号"}
+                visible={userInfoForm}
+                title={editInfo?"编辑账号":"创建账号"}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{padding: "10px 24px 24px 24px"}}
                 width={600}
-                onCancel={() => setCreateUserShow(false)}
+                onCancel={() => setUserInfoForm(false)}
                 footer={null}
             >
-                <CreateUserForm onCancel={() => setCreateUserShow(false)} refresh={() => update()} />
+                <CreateUserForm editInfo={editInfo} onCancel={() => setUserInfoForm(false)} refresh={() => update()} />
             </Modal>
         </div>
     )

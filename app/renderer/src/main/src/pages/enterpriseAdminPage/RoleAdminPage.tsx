@@ -11,9 +11,9 @@ import {PaginationSchema} from "../../pages/invoker/schema"
 import type {ColumnsType} from "antd/es/table"
 import type {TreeSelectProps} from "antd"
 import type {DefaultOptionType} from "antd/es/select"
-const {SHOW_PARENT} = TreeSelect
+
 export interface CreateUserFormProps {
-    isEdit: boolean
+    editInfo: API.RoleList | undefined
     onCancel: () => void
     refresh: () => void
 }
@@ -30,56 +30,97 @@ export interface CreateProps {
     user_name: string
 }
 
+interface LoadDataProps {
+    type: string
+}
+
 const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
-    const {onCancel, refresh, isEdit} = props
+    const {onCancel, refresh, editInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
-    const onFinish = useMemoizedFn((values) => {
-        console.log("values", values)
-        // const {user_name} = values
-        // NetWorkApi<CreateProps, API.NewUrmResponse>({
-        //     method: "post",
-        //     url: "urm",
-        //     params: {
-        //         user_name
-        //     }
-        // })
-        //     .then((res: API.NewUrmResponse) => {
-        //         console.log("返回结果：", res)
-        //         onCancel()
-        //         refresh()
-        //     })
-        //     .catch((err) => {
-        //         failed("失败：" + err)
-        //     })
-        //     .finally(() => {
-        //         setTimeout(() => {
-        //             setLoading(false)
-        //         }, 200)
-        //     })
-    })
-    const [treeData, setTreeData] = useState<Omit<DefaultOptionType, "label">[]>([
-        {id: 1, pId: 0, value: "1", title: "Expand to load"},
-        {id: 2, pId: 0, value: "2", title: "Expand to load"},
-        {id: 3, pId: 0, value: "3", title: "Tree Node", isLeaf: true}
-    ])
-    const genTreeNode = (parentId: number, isLeaf = false) => {
-        const random = Math.random().toString(36).substring(2, 6)
-        return {
-            id: random,
-            pId: parentId,
-            value: random,
-            title: isLeaf ? "Tree Node" : "Expand to load",
-            isLeaf
-        }
+
+    const PluginType = {
+        yak: "YAK 插件",
+        mitm: "MITM 插件",
+        "packet-hack": "数据包扫描",
+        "port-scan": "端口扫描插件",
+        codec: "CODEC插件",
+        nuclei: "YAML POC"
     }
-    const onLoadData: TreeSelectProps["loadData"] = ({id}) =>
-        new Promise((resolve) => {
-            setTimeout(() => {
-                setTreeData(treeData.concat([genTreeNode(id, false), genTreeNode(id, true), genTreeNode(id, true)]))
-                resolve(undefined)
-            }, 300)
+    const PluginTypeKeyArr: string[] = Object.keys(PluginType)
+    const TreePluginType = PluginTypeKeyArr.map((key) => ({
+        id: key,
+        value: key,
+        title: PluginType[key]
+    }))
+    // 保留数组中重复元素
+    const filterUnique = (arr) => arr.filter((i) => arr.indexOf(i) !== arr.lastIndexOf(i))
+    const onFinish = useMemoizedFn((values) => {
+        const {name, deletePlugin, checkPlugin, treeSelect} = values
+        let pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
+        let pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
+        const params = {
+            name,
+            deletePlugin,
+            checkPlugin,
+            pluginType: pluginTypeArr.join(","),
+            pluginIds: pluginIdsArr.join(",")
+        }
+        console.log("params", params)
+        NetWorkApi<API.NewRoleRequest, API.NewUrmResponse>({
+            method: "post",
+            url: "roles",
+            params
         })
+            .then((res: API.NewUrmResponse) => {
+                console.log("返回结果：", res)
+                onCancel()
+                refresh()
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
+    })
+    const [treeData, setTreeData] = useState<Omit<DefaultOptionType, "label">[]>(TreePluginType)
+
+    const onLoadData: TreeSelectProps["loadData"] = ({id}) => {
+        return new Promise((resolve) => {
+            console.log("id", id)
+            const pId = id
+            NetWorkApi<LoadDataProps, API.PluginTypeListResponse>({
+                method: "get",
+                url: "plugin/type",
+                params: {
+                    type: id
+                }
+            })
+                .then((res: API.PluginTypeListResponse) => {
+                    console.log("插件权限-返回结果：", res)
+                    if (Array.isArray(res.data)) {
+                        const AddTreeData = res.data.map((item) => ({
+                            id: item.id,
+                            pId,
+                            value: item.id,
+                            title: item.script_name,
+                            isLeaf: true
+                        }))
+                        setTreeData([...treeData, ...AddTreeData])
+                    }
+                })
+                .catch((err) => {
+                    failed("失败：" + err)
+                })
+                .finally(() => {
+                    resolve(undefined)
+                })
+        })
+    }
+
     const onChange = (newValue: string[]) => {
         console.log("onChange ", newValue)
     }
@@ -87,10 +128,15 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     return (
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
-                <Form.Item name='user_name' label='角色名' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item name='name' label='角色名' rules={[{required: true, message: "该项为必填"}]}>
                     <Input placeholder='请输入角色名' allowClear />
                 </Form.Item>
-                <Form.Item name='user_name1' label='插件权限' initialValue={["3"]}>
+                <Form.Item
+                    name='treeSelect'
+                    label='插件权限'
+                    rules={[{required: true, message: "该项为必填"}]}
+                    initialValue={["port-scan"]}
+                >
                     <TreeSelect
                         treeDataSimpleMode
                         style={{width: "100%"}}
@@ -109,20 +155,19 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                     <Col span={16}>
                         <div style={{display: "flex"}}>
                             <div style={{width: "50%"}}>
-                                <Form.Item {...itemLayout} name='user_name2' label='审核插件'>
+                                <Form.Item {...itemLayout} name='checkPlugin' label='审核插件' initialValue={false}>
                                     <Switch checkedChildren='开' unCheckedChildren='关' />
                                 </Form.Item>
                             </div>
 
                             <div style={{width: "50%"}}>
-                                <Form.Item {...itemLayout} name='user_name3' label='插件删除'>
+                                <Form.Item {...itemLayout} name='deletePlugin' label='插件删除' initialValue={false}>
                                     <Switch checkedChildren='开' unCheckedChildren='关' />
                                 </Form.Item>
                             </div>
                         </div>
                     </Col>
                 </Row>
-
                 <div style={{textAlign: "center"}}>
                     <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
                         确认
@@ -137,11 +182,7 @@ export interface QueryExecResultsParams {}
 
 interface QueryProps {}
 interface RemoveProps {
-    uid: string[]
-}
-interface ResetProps {
-    user_name: string
-    uid: string
+    user: string[]
 }
 export interface RoleAdminPageProps {}
 
@@ -156,11 +197,10 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
         OrderBy: "updated_at",
         Page: 1
     })
-    const [data, setData] = useState<API.UrmUserList[]>([])
+    const [data, setData] = useState<API.RoleList[]>([])
     const [total, setTotal] = useState<number>(0)
-    // 是否为编辑
-    const [isEdit, setIsEdit] = useState<boolean>(false)
-
+    // 编辑项信息
+    const [editInfo, setEditInfo] = useState<API.RoleList>()
     const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
         setLoading(true)
         const paginationProps = {
@@ -168,23 +208,25 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
             limit: limit || pagination.Limit
         }
 
-        NetWorkApi<QueryProps, API.UrmUserListResponse>({
+        NetWorkApi<QueryProps, API.RoleListResponse>({
             method: "get",
-            url: "urm",
+            url: "roles",
             params: {
                 ...params,
                 ...paginationProps
             }
         })
             .then((res) => {
-                const newData = res.data.map((item) => ({...item}))
-                console.log("数据源：", newData)
-                setData(newData)
-                setPagination({...pagination, Limit: res.pagemeta.limit})
-                setTotal(res.pagemeta.total)
+                console.log("数据源：", res)
+                if (Array.isArray(res.data)) {
+                    const newData = res.data.map((item) => ({...item}))
+                    setData(newData)
+                    setPagination({...pagination, Limit: res.pagemeta.limit})
+                    setTotal(res.pagemeta.total)
+                }
             })
             .catch((err) => {
-                failed("获取账号列表失败：" + err)
+                failed("获取角色列表失败：" + err)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -198,48 +240,54 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
     }, [])
 
     const rowSelection = {
-        onChange: (selectedRowKeys, selectedRows: API.UrmUserList[]) => {
+        onChange: (selectedRowKeys, selectedRows: API.RoleList[]) => {
             // let newArr = selectedRowKeys.map((item)=>parseInt(item))
             setSelectedRowKeys(selectedRowKeys)
         }
     }
 
-    const onRemove = (uid: string[]) => {
-        console.log(uid, "uid")
+    const onRemove = (user: string[]) => {
+        console.log(user, "user")
         NetWorkApi<RemoveProps, API.NewUrmResponse>({
             method: "delete",
-            url: "urm",
+            url: "roles",
             data: {
-                uid
+                user
             }
         })
             .then((res) => {
                 console.log("返回结果：", res)
-                success("删除用户成功")
+                success("删除角色成功")
                 update()
             })
             .catch((err) => {
-                failed("删除账号失败：" + err)
+                failed("删除角色失败：" + err)
             })
             .finally(() => {})
     }
 
-    const columns: ColumnsType<API.UrmUserList> = [
+    const columns: ColumnsType<API.RoleList> = [
         {
             title: "角色名",
-            dataIndex: "user_name",
+            dataIndex: "name",
             render: (text: string, record) => (
                 <div>
-                    <span style={{marginLeft: 10}}>{text}</span>
+                    <span style={{marginRight: 10}}>{text}</span>
                 </div>
             )
         },
         {
-            title: "操作权限"
+            title: "操作权限",
+            render: (text: string, record) => (
+                <div>
+                    {record.checkPlugin && <span style={{marginRight: 10}}>审核插件</span>}
+                    {record.deletePlugin && <span style={{marginRight: 10}}>插件删除</span>}
+                </div>
+            )
         },
         {
             title: "创建时间",
-            dataIndex: "created_at",
+            dataIndex: "createdAt",
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
         {
@@ -250,16 +298,16 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                         size='small'
                         type='primary'
                         onClick={() => {
-                            setIsEdit(true)
+                            setEditInfo(i)
                             setRoleFormShow(true)
                         }}
                     >
                         编辑
                     </Button>
                     <Popconfirm
-                        title={"确定删除该用户吗？"}
+                        title={"确定删除该角色吗？"}
                         onConfirm={() => {
-                            onRemove([i.uid])
+                            onRemove([i.id])
                         }}
                     >
                         <Button size={"small"} danger={true}>
@@ -285,7 +333,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                         update(page, limit)
                     }
                 }}
-                rowKey={(row) => row.uid}
+                rowKey={(row) => row.id}
                 title={(e) => {
                     return (
                         <div className='table-title'>
@@ -294,7 +342,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                                 <Space>
                                     {!!selectedRowKeys.length ? (
                                         <Popconfirm
-                                            title={"确定删除选择的用户吗？不可恢复"}
+                                            title={"确定删除选择的角色吗？不可恢复"}
                                             onConfirm={() => {
                                                 onRemove(selectedRowKeys)
                                             }}
@@ -313,7 +361,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                                         htmlType='submit'
                                         size='small'
                                         onClick={() => {
-                                            setIsEdit(false)
+                                            setEditInfo(undefined)
                                             setRoleFormShow(true)
                                         }}
                                     >
@@ -335,7 +383,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
             />
             <Modal
                 visible={roleFormShow}
-                title={isEdit ? "编辑角色" : "创建角色"}
+                title={editInfo ? "编辑角色" : "创建角色"}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{padding: "10px 24px 24px 24px"}}
@@ -343,7 +391,11 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                 onCancel={() => setRoleFormShow(false)}
                 footer={null}
             >
-                <RoleOperationForm isEdit={isEdit} onCancel={() => setRoleFormShow(false)} refresh={() => update()} />
+                <RoleOperationForm
+                    editInfo={editInfo}
+                    onCancel={() => setRoleFormShow(false)}
+                    refresh={() => update()}
+                />
             </Modal>
         </div>
     )
