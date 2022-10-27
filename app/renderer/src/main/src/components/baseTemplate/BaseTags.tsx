@@ -110,6 +110,8 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
     const [checkAll, setCheckAll] = useState<boolean>(false)
     // 当前选中项
     const [checkItem, setCheckItem,getCheckItem] = useGetState<string>("")
+    // 受控模式控制浮层
+    const [open, setOpen] = useState(false);
     // 键盘移动
     const goAnchor = (e) => {
         const nowCheckList = getCheckList()
@@ -241,6 +243,7 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
 
     const submitBtn = () => {
         submitValue(checkedList)
+        setOpen(false)
     }
     return (
         <div className='base-tags-filter'>
@@ -252,6 +255,8 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
                 onChange={handleChange}
                 value={checkedList}
                 tagRender={tagRender}
+                open={open}
+                onDropdownVisibleChange={(visible) => setOpen(visible)}
                 dropdownRender={(menu) => {
                     return (
                         <>
