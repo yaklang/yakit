@@ -17,18 +17,18 @@ export interface TableVirtualResizeProps<T> {
     setCurrentRowData?: (r?: T) => void
     columns: ColumnsTypeProps[]
     rowSelection?: RowSelectionProps<T>
-    colWidth?: number
     enableDrag?: boolean
     onRowClick?: (record: T) => void
     onRowContextMenu?: (record: T, e: React.MouseEvent) => void
-    colWidth?: number
     pagination?: PaginationProps
     onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void // 查询条件变化
     loading?: boolean
     scrollToBottom?: number // 默认300
-    isReset?: boolean
+    isReset?: boolean //重置表格条件 滚动至0
     isShowTotal?: boolean
-    currentIndex?: number
+    currentIndex?: number //当前row的index
+    isRefresh?: boolean //刷新表格 滚动至0
+    disableSorting?:boolean //禁用排序
 }
 
 export interface SortProps {
@@ -123,4 +123,9 @@ export interface SelectSearchProps {
     value: string | string[]
     filterProps?: FilterProps
     onClose: () => void
+}
+
+export interface FixedWidthProps {
+    leftFixedWidth: number
+    rightFixedWidth: number
 }

@@ -125,6 +125,28 @@ export const SorterDownIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={SorterDown} {...props} />
 }
 
+// 两个箭头颜色一样 排序
+const DisableSorter = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M4.66667 10.6666V2.66663M4.66667 2.66663L2 5.33329M4.66667 2.66663L7.33333 5.33329'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M11.3332 5.33337V13.3334M11.3332 13.3334L13.9998 10.6667M11.3332 13.3334L8.6665 10.6667'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const DisableSorterIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={DisableSorter} {...props} />
+}
+
 // x 删除图标
 const Remove = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'>

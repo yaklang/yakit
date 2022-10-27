@@ -340,7 +340,7 @@
 }
 
 .http-history-table-right-filter-popover {
-    width: 160px;
+    width: 180px;
 
     .http-history-table-filter-vertical {
         display: flex;
@@ -408,7 +408,7 @@
         position: absolute;
         width: 150px;
         z-index: -1;
-
+        visibility: hidden;
         padding-bottom: 24px;
 
         .select-item {
@@ -495,6 +495,7 @@
 
     .select-search-show {
         z-index: 9;
+        visibility: visible;
     }
 
     @media screen and (max-height:600px) {

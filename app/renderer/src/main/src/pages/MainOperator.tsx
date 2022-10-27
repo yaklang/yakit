@@ -1165,7 +1165,7 @@ const Main: React.FC<MainProp> = (props) => {
     }
     return (
         <Layout className='yakit-main-layout'>
-            <AutoSpin spinning={loading}>
+            <AutoSpin spinning={false}>
                 <Header className='main-laytou-header'>
                     <Row>
                         <Col span={8}>
@@ -1365,7 +1365,7 @@ const Main: React.FC<MainProp> = (props) => {
                     <Layout style={{height: "100%", overflow: "hidden"}}>
                         {!hideMenu && (
                             <Sider style={{backgroundColor: "#fff", overflow: "auto"}} collapsed={collapsed}>
-                                <Spin spinning={loading}>
+                                <Spin spinning={false}>
                                     <Space
                                         direction={"vertical"}
                                         style={{
