@@ -175,12 +175,29 @@
     download_total?: number;
     contributors?: string;
   }
+  export interface RoleListResponse extends Paging {
+    data: RoleList[];
+  }
+  export interface RoleList {
+    id: number;
+    name: string;
+    createdAt: number;
+    deletePlugin: boolean;
+    checkPlugin: boolean;
+  }
   export interface Principle {
     user: string;
     role: string;
     user_id: number;
     head_img: string;
     from_platform: string;
+  }
+  export interface PluginTypeListResponse {
+    data: PluginTypeList[];
+  }
+  export interface PluginTypeList {
+    id: number;
+    script_name: string;
   }
   export interface PluginDownloads {
     type: string;
@@ -295,6 +312,20 @@
     user_name: string;
     password: string;
   }
+  export interface NewUrmRequest {
+    id?: number;
+    user_name: string;
+    department: number;
+    role: number;
+  }
+  export interface NewRoleRequest {
+    id?: number;
+    name: string;
+    deletePlugin: boolean;
+    checkPlugin: boolean;
+    pluginType?: string;
+    pluginIds?: string;
+  }
   export interface NewOperation {
     type: string;
     trigger_user_unique_id: string;
@@ -355,6 +386,14 @@
   export interface ExtractResponse {
     extract_content: string;
     module: string;
+  }
+  export interface DepartmentListResponse extends Paging {
+    data: DepartmentList[];
+  }
+  export interface DepartmentList {
+    id: number;
+    name: string;
+    userNum: string;
   }
   export interface DeleteUrm {
     uid: string[];
