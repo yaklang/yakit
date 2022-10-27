@@ -45,16 +45,16 @@
         color: #f28b44;
     }
     // 修改antd默认样式
-    .ant-checkbox-checked .ant-checkbox-inner {
-        background-color: #f28b44;
-        border-color: #f28b44;
-    }
-    .ant-checkbox-indeterminate .ant-checkbox-inner::after {
-        background-color: #f28b44;
-    }
-    .ant-checkbox-wrapper:hover .ant-checkbox-inner {
-        border-color: #f28b44;
-    }
+    // .ant-checkbox-checked .ant-checkbox-inner {
+    //     background-color: #f28b44;
+    //     border-color: #f28b44;
+    // }
+    // .ant-checkbox-indeterminate .ant-checkbox-inner::after {
+    //     background-color: #f28b44;
+    // }
+    // .ant-checkbox-wrapper:hover .ant-checkbox-inner {
+    //     border-color: #f28b44;
+    // }
 }
 .base-tags-list {
     width: 100%;
