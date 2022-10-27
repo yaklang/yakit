@@ -1202,6 +1202,7 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
             .then((d: {Bytes: Uint8Array; FileName: string}) => {
                 success("生成字节码成功")
                 setHex(d.Bytes)
+                setCode(Buffer.from(d.Bytes).toString("hex"))
             })
             .catch((e: any) => {
                 failed("生成字节码失败: " + `${e}`)
@@ -1275,29 +1276,37 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
             extra={
                 width < 510 || (isMin && !codeExtra) ? (
                     <div>
-                        <Button
-                            loading={loading}
-                            type='link'
-                            size='small'
-                            icon={
-                                <Tooltip title='Yak Runner'>
-                                    <ThunderboltOutlined />
-                                </Tooltip>
-                            }
-                            disabled={type === "hex"}
-                            onClick={() => codeOperate("yakRunning")}
-                        />
-                        <Button
-                            loading={loading}
-                            type='link'
-                            size='small'
-                            icon={
-                                <Tooltip title='下载文件'>
-                                    <DownloadOutlined />
-                                </Tooltip>
-                            }
-                            onClick={() => codeOperate("download")}
-                        />
+                        {type === "yak" ? (
+                            <Button
+                                loading={loading}
+                                type='link'
+                                size='small'
+                                icon={
+                                    <Tooltip title='Yak Runner'>
+                                        <ThunderboltOutlined />
+                                    </Tooltip>
+                                }
+                                onClick={() => codeOperate("yakRunning")}
+                            />
+                        ) : (
+                            <></>
+                        )}
+                        {type === "hex" ? (
+                            <Button
+                                loading={loading}
+                                type='link'
+                                size='small'
+                                icon={
+                                    <Tooltip title='下载文件'>
+                                        <DownloadOutlined />
+                                    </Tooltip>
+                                }
+                                onClick={() => codeOperate("download")}
+                            />
+                        ) : (
+                            <></>
+                        )}
+
                         <Button
                             loading={loading}
                             type='link'
@@ -1307,7 +1316,6 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                                     <CopyOutlined />
                                 </Tooltip>
                             }
-                            disabled={type === "hex"}
                             onClick={() => codeOperate("copy")}
                         />
                         <Button
@@ -1319,33 +1327,35 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                     </div>
                 ) : (
                     <div className='extra-btns'>
-                        <Button
-                            loading={loading}
-                            type='primary'
-                            ghost={true}
-                            size='small'
-                            icon={<ThunderboltOutlined />}
-                            disabled={type === "hex"}
-                            onClick={() => codeOperate("yakRunning")}
-                        >
-                            Yak Runner
-                        </Button>
-                        <Button
-                            loading={loading}
-                            type='primary'
-                            size='small'
-                            ghost={true}
-                            onClick={() => codeOperate("download")}
-                        >
-                            下载文件
-                        </Button>
-                        <Button
-                            loading={loading}
-                            type='primary'
-                            size='small'
-                            disabled={type === "hex"}
-                            onClick={() => codeOperate("copy")}
-                        >
+                        {type === "yak" ? (
+                            <Button
+                                loading={loading}
+                                type='primary'
+                                ghost={true}
+                                size='small'
+                                icon={<ThunderboltOutlined />}
+                                onClick={() => codeOperate("yakRunning")}
+                            >
+                                Yak Runner
+                            </Button>
+                        ) : (
+                            <></>
+                        )}
+                        {type === "hex" ? (
+                            <Button
+                                loading={loading}
+                                type='primary'
+                                size='small'
+                                ghost={true}
+                                onClick={() => codeOperate("download")}
+                            >
+                                下载文件
+                            </Button>
+                        ) : (
+                            <></>
+                        )}
+
+                        <Button loading={loading} type='primary' size='small' onClick={() => codeOperate("copy")}>
                             复制代码
                         </Button>
                         <Button
@@ -1369,14 +1379,7 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
             />
             <AutoSpin spinning={loading}>
                 {type === "hex" ? (
-                    <HexEditor
-                        showAscii={true}
-                        data={hex}
-                        showRowLabels={true}
-                        showColumnLabels={false}
-                        nonce={0}
-                        onSetValue={undefined}
-                    />
+                    <YakCodeEditor readOnly={true} originValue={Buffer.from(code, "utf8")} />
                 ) : (
                     <YakCodeEditor readOnly={true} originValue={Buffer.from(code, "utf8")} />
                 )}
