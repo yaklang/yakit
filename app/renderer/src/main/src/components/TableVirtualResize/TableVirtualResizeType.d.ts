@@ -28,7 +28,7 @@ export interface TableVirtualResizeProps<T> {
     isShowTotal?: boolean
     currentIndex?: number //当前row的index
     isRefresh?: boolean //刷新表格 滚动至0
-    disableSorting?:boolean //禁用排序
+    disableSorting?: boolean //禁用排序
 }
 
 export interface SortProps {
@@ -65,9 +65,10 @@ export interface SorterProps {
     order?: string // none 无状态； asc 升序  desc 降序
 }
 export interface FilterProps {
-    filterRender?: (d: any) => ReactNode
+    filterRender?: () => ReactNode
+    filterOptionRender?: (d: any) => ReactNode
     filterKey?: string
-    filtersType?: "select" | "input"
+    filtersType?: "select" | "input" | "dateTime"
     filtersSelectAll?: FiltersSelectAllProps //是否显示所有
     filters?: FiltersItemProps[] // 	表头的筛选菜单项c
     filterSearch?: boolean // 筛选菜单项是否可搜索

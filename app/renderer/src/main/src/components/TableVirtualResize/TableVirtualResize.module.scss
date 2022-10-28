@@ -490,7 +490,7 @@
 
     :global {
         .ant-popover-inner-content {
-            padding: 8px 0 0 0;
+            padding: 0;
         }
 
         .ant-popover-inner {
@@ -507,8 +507,8 @@
             margin: 0 6px;
         }
 
-        .ant-select-selector {
-            border-radius: 4px !important;
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            border-radius: 4px;
         }
 
         .ant-checkbox-inner {
@@ -522,6 +522,10 @@
         .ant-checkbox-wrapper {
             height: 16px;
         }
+    }
+
+    .popover-content {
+        padding-top: 8px;
     }
 
     .select-search {
@@ -625,37 +629,17 @@
                     }
                 }
             }
+        }
+    }
 
-            .select-footer {
-                border-top: 1px solid #EAECF3;
-                border-radius: 0px 0px 4px 4px;
-                width: calc(100% - 2px);
-                display: flex;
-                background: #F9FBFF;
-                height: 24px;
-                position: absolute;
-                bottom: 0;
+    .date-time-search {
+        padding: 0 8px 8px;
 
-                .footer-bottom {
-                    flex: 1;
-                    font-weight: 500;
-                    font-size: 12px;
-                    height: 24px;
-                    padding: 4px 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                }
+        .time-rang {
+            margin-top: 8px;
 
-                .select-reset {
-                    color: #85899E;
-                    border-right: 1px solid #EAECF3;
-                }
-
-                .select-sure {
-                    color: #1890ff;
-                }
+            span {
+                cursor: pointer;
             }
         }
     }
@@ -668,6 +652,41 @@
 
 }
 
-.display-flex {
+.justify-content-between {
     display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.select-footer {
+    border-top: 1px solid #EAECF3;
+    border-radius: 0px 0px 4px 4px;
+    width: calc(100% - 2px);
+    display: flex;
+    background: #F9FBFF;
+    height: 24px;
+    position: absolute;
+    bottom: 0;
+    user-select: none;
+
+    .footer-bottom {
+        flex: 1;
+        font-weight: 500;
+        font-size: 12px;
+        height: 24px;
+        padding: 4px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .select-reset {
+        color: #85899E;
+        border-right: 1px solid #EAECF3;
+    }
+
+    .select-sure {
+        color: #1890ff;
+    }
 }

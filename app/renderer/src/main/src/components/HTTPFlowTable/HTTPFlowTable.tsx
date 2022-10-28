@@ -18,7 +18,8 @@ import {
     Tooltip,
     Badge,
     Dropdown,
-    Menu
+    Menu,
+    InputNumber
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
@@ -53,7 +54,7 @@ import {
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {SelectSearch, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
+import {FooterBottom, SelectSearch, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {
     CheckCircleIcon,
     FilterIcon,
@@ -66,6 +67,7 @@ import {
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
+import moment from "moment"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -617,7 +619,7 @@ const TableFirstLinePlaceholder: HTTPFlow = {
     IsPlaceholder: true
 }
 
-const OFFSET_LIMIT = 500
+const OFFSET_LIMIT = 50
 const OFFSET_STEP = 20
 
 interface shieldData {
@@ -632,7 +634,9 @@ const defSort: SortProps = {
 export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string>("")
-    const [params, setParams] = useState<YakQueryHTTPFlowRequest>(props.params || {SourceType: "mitm", Tags: []})
+    const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>(
+        props.params || {SourceType: "mitm", Tags: []}
+    )
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: OFFSET_LIMIT,
         Order: "desc",
@@ -654,6 +658,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         data: []
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
+    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "KB" | "M">("B")
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -734,6 +739,15 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         if (sort.order === "none") {
             sort.order = "desc"
         }
+        if (filter["UpdatedAt"]) {
+            const time = filter["UpdatedAt"]
+            filter.AfterUpdatedAt = time[0]
+            filter.BeforeUpdatedAt = time[1]
+            delete filter.UpdatedAt
+        } else {
+            filter.AfterUpdatedAt = undefined
+            filter.BeforeUpdatedAt = undefined
+        }
         setParams({
             ...params,
             ...filter
@@ -759,31 +773,27 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             //     Pagination: {...paginationProps},
             // })
             const l = data.length
-            console.log("paginationProps", {
+            const query = {
                 SourceType: sourceType,
                 ...params,
                 Tags: params.Tags,
                 Color: color ? [color] : undefined,
                 Pagination: {...paginationProps},
                 OffsetId:
-                    paginationProps.Page === 1
+                    paginationProps.Page == 1
                         ? undefined
-                        : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number)
-            })
+                        : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
+                AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
+                BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
+            }
+            console.log("paginationProps", query)
             ipcRenderer
-                .invoke("QueryHTTPFlows", {
-                    SourceType: sourceType,
-                    ...params,
-                    Tags: params.Tags,
-                    Color: color ? [color] : undefined,
-                    Pagination: {...paginationProps},
-                    OffsetId:
-                        paginationProps.Page === 1
-                            ? undefined
-                            : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number)
-                })
+                .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
-                    console.log("update-newData", rsp)
+                    console.log(
+                        "update-newData",
+                        rsp.Data.map((ele) => ele.Id)
+                    )
                     let newData = rsp?.Data || []
                     if (newData.length > 0) {
                         newData = newData.map((item) => {
@@ -946,11 +956,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     )
 
     // 设置是否自动刷新
-    useEffect(() => {
-        scrollUpdateTop()
-        let id = setInterval(scrollUpdateTop, 1000)
-        return () => clearInterval(id)
-    }, [])
+    // useEffect(() => {
+    //     scrollUpdateTop()
+    //     let id = setInterval(scrollUpdateTop, 1000)
+    //     return () => clearInterval(id)
+    // }, [])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -995,13 +1005,22 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             // setSelected(undefined)
         }
     })
+    const getLength = useMemoizedFn((length: number) => {
+        if (getBodyLengthUnit() === "KB") {
+            length = length * 1024
+        }
+        if (getBodyLengthUnit() === "M") {
+            length = length * 1024 * 1024
+        }
+        return length
+    })
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [
             {
                 title: "序号",
                 dataKey: "Id",
                 fixed: "left",
-                ellipsis: false,
+                ellipsis: false
                 // sorterProps: {
                 //     sorterKey: "id",
                 //     sorter: true
@@ -1035,18 +1054,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             {
                 title: "状态码",
                 dataKey: "StatusCode",
-                // sorterProps: {
-                //     sorterKey: "status_code",
-                //     sorter: true
-                // },
                 filterProps: {
                     filtersType: "select",
                     filterMultiple: true,
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterRender: (item: FiltersItemProps) => (
-                        <div className={style[""]}>
+                    filterOptionRender: (item: FiltersItemProps) => (
+                        <div>
                             <span>{item.value}</span>
                             <span>{item.total}</span>
                         </div>
@@ -1086,10 +1101,64 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 title: "响应长度",
                 dataKey: "BodyLength",
                 width: 200,
-                // sorterProps: {
-                //     sorterKey: "body_length",
-                //     sorter: true
-                // },
+                filterProps: {
+                    filterRender: () => (
+                        <div className={style["table-body-length-filter"]}>
+                            <Input.Group compact size='small' className={style["input-group"]}>
+                                <InputNumber
+                                    className={style["input-left"]}
+                                    placeholder='Minimum'
+                                    value={getParams().AfterBodyLength}
+                                    onChange={(v) => {
+                                        setParams({
+                                            ...getParams(),
+                                            AfterBodyLength: v
+                                        })
+                                    }}
+                                    size='small'
+                                />
+                                <Input className={style["input-split"]} placeholder='~' disabled />
+                                <InputNumber
+                                    className={style["input-right"]}
+                                    placeholder='Maximum'
+                                    value={getParams().BeforeBodyLength}
+                                    onChange={(v) => {
+                                        setParams({
+                                            ...getParams(),
+                                            BeforeBodyLength: v
+                                        })
+                                    }}
+                                    size='small'
+                                />
+                                <Select
+                                    value={getBodyLengthUnit()}
+                                    onSelect={(val) => {
+                                        setBodyLengthUnit(val)
+                                    }}
+                                >
+                                    <Option value='B'>B</Option>
+                                    <Option value='KB'>KB</Option>
+                                    <Option value='M'>M</Option>
+                                </Select>
+                            </Input.Group>
+                            <FooterBottom
+                                className={style["input-footer"]}
+                                onReset={() => {
+                                    setParams({
+                                        ...getParams(),
+                                        AfterBodyLength: undefined,
+                                        BeforeBodyLength: undefined
+                                    })
+                                    setBodyLengthUnit("B")
+                                    setTimeout(() => {
+                                        update(1)
+                                    }, 100)
+                                }}
+                                onSure={() => update(1)}
+                            />
+                        </div>
+                    )
+                },
                 render: (_, rowData) => {
                     return (
                         <>
@@ -1161,6 +1230,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 //     sorterKey: "updated_at",
                 //     sorter: true
                 // },
+                filterProps: {
+                    filterKey: "UpdatedAt",
+                    filtersType: "dateTime"
+                },
                 render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
             },
             {

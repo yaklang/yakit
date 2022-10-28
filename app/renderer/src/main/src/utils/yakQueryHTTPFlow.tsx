@@ -18,6 +18,10 @@ export interface YakQueryHTTPFlowRequest {
     ExcludeId?: number[]
     Tags?: string[]
     HaveParamsTotal?: string
+    BeforeUpdatedAt?: number
+    AfterUpdatedAt?: number
+    AfterBodyLength?: number
+    BeforeBodyLength?: number
 }
 
 export interface Paging {

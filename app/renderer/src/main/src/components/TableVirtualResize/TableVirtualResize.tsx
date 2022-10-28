@@ -23,14 +23,28 @@ import {
 } from "./TableVirtualResizeType"
 import ReactResizeDetector from "react-resize-detector"
 import style from "./TableVirtualResize.module.scss"
-import {Button, Checkbox, Divider, Input, Popconfirm, Popover, Radio, RadioChangeEvent, Select, Spin} from "antd"
+import {
+    DatePicker,
+    Checkbox,
+    Divider,
+    Input,
+    Popconfirm,
+    Popover,
+    Radio,
+    RadioChangeEvent,
+    Select,
+    Spin,
+    Tag
+} from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import "../style.css"
 import {DisableSorterIcon, FilterIcon, SorterDownIcon, SorterUpIcon, StatusOfflineIcon} from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
 import {randomString} from "@/utils/randomUtil"
+import moment, {Moment} from "moment"
 
 const {Search} = Input
+const {RangePicker} = DatePicker
 interface tablePosition {
     bottom?: number
     height?: number
@@ -261,12 +275,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [pagination.page])
 
     useDeepCompareEffect(() => {
-        console.log('props.columns');
+        console.log("props.columns")
         getTableWidthAndColWidth(0)
         setColumns([...props.columns])
     }, [props.columns])
     useDeepCompareEffect(() => {
-        console.log('columns',columns);
+        console.log("columns", columns)
         getLeftOrRightFixedWidth()
     }, [columns])
     useEffect(() => {
@@ -296,8 +310,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 setShowScrollY(false)
             }
             if (showScrollY) return
-            console.log('showScrollY');
-            
+            console.log("showScrollY")
+
             // 显示滚动条了就不计算了
             getTableWidthAndColWidth(0)
         },
@@ -371,8 +385,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const scrollFXRef = useRef(false)
     useEffect(() => {
         if (width) return
-        console.log('width');
-        
+        console.log("width")
+
         getTableWidthAndColWidth(0)
         if (!showScrollY) return
         if (scrollFXRef.current) {
@@ -572,45 +586,91 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, newFilters)
     })
 
+    const onDateTimeSearch = useMemoizedFn((dates: [Moment, Moment] | null, colKey: string) => {
+        const newFilters = {
+            ...filters,
+            [colKey]: dates ? [moment(dates[0]).unix(), moment(dates[1]).unix()] : undefined, //给出去的时间 时间戳秒  antd时间组件值要毫秒
+            [`${colKey}-time`]: dates ? [moment(dates[0]).valueOf(), moment(dates[1]).valueOf()] : undefined //antd时间组件显示的时间 时间戳秒  antd时间组件值要毫秒
+        }
+        setFilters({...newFilters})
+        if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, newFilters)
+    })
+
     const renderFilterPopover = (
         columnsItem: ColumnsTypeProps,
         filterKey: string,
-        filtersType?: "select" | "input"
+        filtersType?: "select" | "input" | "dateTime"
     ) => {
         switch (filtersType) {
             case "select":
                 return renderSelect(columnsItem, filterKey)
+            case "dateTime":
+                return renderDatePicker(columnsItem, filterKey)
             default:
                 break
         }
     }
 
     // 选择搜索
-    const renderSelect = (columnsItem: ColumnsTypeProps, filterKey: string) => {
+    const renderSelect = useMemoizedFn((columnsItem: ColumnsTypeProps, filterKey: string) => {
         return (
-            <div
-                onMouseLeave={(e) => {
+            <SelectSearch
+                filterProps={columnsItem?.filterProps}
+                originalList={columnsItem?.filterProps?.filters || []}
+                onSelect={(v) => onSelectSearch(v, filterKey)}
+                value={filters[filterKey]}
+                onClose={() =>
                     setOpensPopover({
                         ...opensPopover,
                         [filterKey]: false
                     })
-                }}
-            >
-                <SelectSearch
-                    filterProps={columnsItem?.filterProps}
-                    originalList={columnsItem?.filterProps?.filters || []}
-                    onSelect={(v) => onSelectSearch(v, filterKey)}
-                    value={filters[filterKey]}
-                    onClose={() =>
-                        setOpensPopover({
-                            ...opensPopover,
-                            [filterKey]: false
-                        })
+                }
+            />
+        )
+    })
+
+    const renderDatePicker = useMemoizedFn((columnsItem: ColumnsTypeProps, filterKey: string) => {
+        return (
+            <div className={style["date-time-search"]}>
+                <RangePicker
+                    size='small'
+                    ranges={{
+                        "1分钟": [moment().subtract(1, "minute"), moment()],
+                        "1小时": [moment().subtract(1, "hours"), moment()],
+                        "1天": [moment().subtract(1, "day"), moment()]
+                    }}
+                    onChange={(time) => {
+                        onDateTimeSearch(time as [Moment, Moment] | null, filterKey)
+                    }}
+                    value={
+                        filters[`${filterKey}-time`]
+                            ? [moment(filters[`${filterKey}-time`][0]), moment(filters[`${filterKey}-time`][1])]
+                            : undefined
                     }
                 />
+                <div className={style["time-rang"]}>
+                    <Tag
+                        color='processing'
+                        onClick={() => onDateTimeSearch([moment().subtract(1, "minute"), moment()], filterKey)}
+                    >
+                        1分钟
+                    </Tag>
+                    <Tag
+                        color='processing'
+                        onClick={() => onDateTimeSearch([moment().subtract(1, "hours"), moment()], filterKey)}
+                    >
+                        1小时
+                    </Tag>
+                    <Tag
+                        color='processing'
+                        onClick={() => onDateTimeSearch([moment().subtract(1, "day"), moment()], filterKey)}
+                    >
+                        1天
+                    </Tag>
+                </div>
             </div>
         )
-    }
+    })
 
     const renderSort = useMemoizedFn((sorterKey: string) => (
         <div
@@ -756,7 +816,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                             })
                                         }}
                                     >
-                                        <div className={style["display-flex"]}>
+                                        <div className={style["justify-content-between"]}>
                                             {/* 这个不要用 module ，用来拖拽最小宽度*/}
                                             <div className='virtual-col-title'>
                                                 {cIndex === 0 && rowSelection && (
@@ -807,11 +867,32 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                         <Popover
                                                             placement='bottom'
                                                             trigger='click'
-                                                            content={renderFilterPopover(
-                                                                columnsItem,
-                                                                filterKey,
-                                                                columnsItem?.filterProps?.filtersType
-                                                            )}
+                                                            content={
+                                                                <div
+                                                                    className={style["popover-content"]}
+                                                                    // onMouseLeave={(e) => {
+                                                                    //     setOpensPopover({
+                                                                    //         ...opensPopover,
+                                                                    //         [filterKey]: false
+                                                                    //     })
+                                                                    //     if (props.onChange)
+                                                                    //         props.onChange(
+                                                                    //             pagination.page,
+                                                                    //             pagination.limit,
+                                                                    //             sort,
+                                                                    //             filters
+                                                                    //         )
+                                                                    // }}
+                                                                >
+                                                                    {columnsItem?.filterProps?.filterRender
+                                                                        ? columnsItem?.filterProps?.filterRender()
+                                                                        : renderFilterPopover(
+                                                                              columnsItem,
+                                                                              filterKey,
+                                                                              columnsItem?.filterProps?.filtersType
+                                                                          )}
+                                                                </div>
+                                                            }
                                                             overlayClassName={style["search-popover"]}
                                                             visible={opensPopover[filterKey]}
                                                         >
@@ -908,7 +989,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                         })
                                                     }}
                                                 >
-                                                    {/* {index === 0 && rowSelection && (
+                                                    {index === 0 && rowSelection && (
                                                         <span
                                                             className={classNames(style["check"], style["check-row"])}
                                                         >
@@ -933,7 +1014,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                                 />
                                                             )}
                                                         </span>
-                                                    )} */}
+                                                    )}
                                                     {columnsItem.render
                                                         ? columnsItem.render(
                                                               item.data[columnsItem.dataKey],
@@ -979,7 +1060,7 @@ export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) a
 export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
     const {originalList, onSelect, value, filterProps, onClose} = props
     const {
-        filterRender,
+        filterOptionRender,
         filtersSelectAll,
         filterMultiple,
         filterSearch,
@@ -1009,7 +1090,6 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         itemHeight: 34,
         overscan: 15
     })
-    console.log(list)
     const onSearch = useDebounceFn(
         useMemoizedFn((label: string) => {
             if (label) {
@@ -1067,7 +1147,9 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                     })}
                                     onClick={() => onSelectSingle(item.data.value, item.data)}
                                 >
-                                    {filterRender ? filterRender(item.data) : item.data.label || item.data.value}
+                                    {filterOptionRender
+                                        ? filterOptionRender(item.data)
+                                        : item.data.label || item.data.value}
                                 </div>
                             ))) || <div className={classNames(style["no-data"])}>暂无数据</div>}
                     </div>
@@ -1153,21 +1235,30 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                 )
                             })) || <div className={classNames(style["no-data"])}>暂无数据</div>}
                     </div>
-                </div>
-                <div className={style["select-footer"]}>
-                    <div
-                        className={classNames(style["footer-bottom"], style["select-reset"])}
-                        onClick={() => onReset()}
-                    >
-                        重置
-                    </div>
-                    <div className={classNames(style["footer-bottom"], style["select-sure"])} onClick={() => onSure()}>
-                        确定
-                    </div>
+                    <FooterBottom onReset={onReset} onSure={onSure} />
                 </div>
             </div>
         )
     })
 
     return <div className={style["select-search"]}>{(filterMultiple && renderMultiple()) || renderSingle()}</div>
+}
+
+interface FooterBottomProps {
+    onReset: () => void
+    onSure: () => void
+    className?: string
+}
+export const FooterBottom: React.FC<FooterBottomProps> = (props) => {
+    const {onReset, onSure, className} = props
+    return (
+        <div className={classNames(style["select-footer"], className)}>
+            <div className={classNames(style["footer-bottom"], style["select-reset"])} onClick={() => onReset()}>
+                重置
+            </div>
+            <div className={classNames(style["footer-bottom"], style["select-sure"])} onClick={() => onSure()}>
+                确定
+            </div>
+        </div>
+    )
 }
