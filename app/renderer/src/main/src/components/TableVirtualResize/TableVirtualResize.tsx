@@ -275,12 +275,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [pagination.page])
 
     useDeepCompareEffect(() => {
-        console.log("props.columns")
         getTableWidthAndColWidth(0)
         setColumns([...props.columns])
     }, [props.columns])
     useDeepCompareEffect(() => {
-        console.log("columns", columns)
         getLeftOrRightFixedWidth()
     }, [columns])
     useEffect(() => {
@@ -310,8 +308,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 setShowScrollY(false)
             }
             if (showScrollY) return
-            console.log("showScrollY")
-
             // 显示滚动条了就不计算了
             getTableWidthAndColWidth(0)
         },
@@ -385,8 +381,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const scrollFXRef = useRef(false)
     useEffect(() => {
         if (width) return
-        console.log("width")
-
         getTableWidthAndColWidth(0)
         if (!showScrollY) return
         if (scrollFXRef.current) {
@@ -870,19 +864,19 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                             content={
                                                                 <div
                                                                     className={style["popover-content"]}
-                                                                    // onMouseLeave={(e) => {
-                                                                    //     setOpensPopover({
-                                                                    //         ...opensPopover,
-                                                                    //         [filterKey]: false
-                                                                    //     })
-                                                                    //     if (props.onChange)
-                                                                    //         props.onChange(
-                                                                    //             pagination.page,
-                                                                    //             pagination.limit,
-                                                                    //             sort,
-                                                                    //             filters
-                                                                    //         )
-                                                                    // }}
+                                                                    onMouseLeave={(e) => {
+                                                                        setOpensPopover({
+                                                                            ...opensPopover,
+                                                                            [filterKey]: false
+                                                                        })
+                                                                        if (props.onChange)
+                                                                            props.onChange(
+                                                                                pagination.page,
+                                                                                pagination.limit,
+                                                                                sort,
+                                                                                filters
+                                                                            )
+                                                                    }}
                                                                 >
                                                                     {columnsItem?.filterProps?.filterRender
                                                                         ? columnsItem?.filterProps?.filterRender()

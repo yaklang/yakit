@@ -786,14 +786,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
                 BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
             }
-            console.log("paginationProps", query)
+            // console.log("paginationProps", query)
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
-                    console.log(
-                        "update-newData",
-                        rsp.Data.map((ele) => ele.Id)
-                    )
+                    // console.log("update-newData", rsp)
                     let newData = rsp?.Data || []
                     if (newData.length > 0) {
                         newData = newData.map((item) => {
@@ -1108,6 +1105,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 <InputNumber
                                     className={style["input-left"]}
                                     placeholder='Minimum'
+                                    min={1}
                                     value={getParams().AfterBodyLength}
                                     onChange={(v) => {
                                         setParams({
@@ -1121,6 +1119,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 <InputNumber
                                     className={style["input-right"]}
                                     placeholder='Maximum'
+                                    min={getParams().AfterBodyLength}
                                     value={getParams().BeforeBodyLength}
                                     onChange={(v) => {
                                         setParams({
@@ -1833,7 +1832,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                 Selected
                                             </span>
                                             <span className={style["http-history-table-total-item-number"]}>
-                                                {isAllSelect ? total : selectedRowKeys?.length}-{data.length}
+                                                {isAllSelect ? total : selectedRowKeys?.length}
                                             </span>
                                         </div>
                                     </div>
