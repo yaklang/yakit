@@ -1302,6 +1302,80 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 setData(newData)
             })
     })
+    // 标注颜色批量
+    const CalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, i: any) => {
+        if (flowList.length === 0) {
+            return
+        }
+        if (flowList.length > number) {
+            warn(`最多同时只能操作${number}条数据`)
+            return
+        }
+        const newList = flowList.map((flow) => {
+            const existedTags = flow.Tags
+                ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
+                : []
+            existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
+            return {Id: flow.Id, Hash: flow.Hash, Tags: existedTags}
+        })
+        ipcRenderer
+            .invoke("SetTagForHTTPFlow", {
+                CheckTags: newList
+            })
+            .then(() => {
+                // info(`设置 HTTPFlow 颜色成功`)
+                let newData: HTTPFlow[] = []
+                const l = data.length
+                for (let index = 0; index < l; index++) {
+                    const item = data[index]
+                    if (newList.findIndex((ele) => ele.Hash === item.Hash) !== -1) {
+                        item.cellClassName = i.className
+                        item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
+                    }
+                    newData.push(item)
+                }
+                setData(newData)
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            })
+    })
+    // 移除颜色  批量
+    const onRemoveCalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number) => {
+        if (flowList.length === 0) {
+            return
+        }
+        if (flowList.length > number) {
+            warn(`最多同时只能操作${number}条数据`)
+            return
+        }
+        const newList = flowList.map((flow) => {
+            const existedTags = flow.Tags
+                ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
+                : []
+            existedTags.pop()
+            return {Id: flow.Id, Hash: flow.Hash, Tags: existedTags}
+        })
+        ipcRenderer
+            .invoke("SetTagForHTTPFlow", {
+                CheckTags: newList
+            })
+            .then(() => {
+                // info(`清除 HTTPFlow 颜色成功`)
+                let newData: HTTPFlow[] = []
+                const l = data.length
+                for (let index = 0; index < l; index++) {
+                    const item = data[index]
+                    if (newList.findIndex((ele) => ele.Hash === item.Hash) !== -1) {
+                        item.cellClassName = ""
+                        item.Tags = ""
+                    }
+                    newData.push(item)
+                }
+                setData(newData)
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            })
+    })
     // 移除颜色
     const onRemoveCalloutColor = useMemoizedFn((flow: HTTPFlow) => {
         if (!flow) return
@@ -1410,6 +1484,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         for (let i = 0; i < length; i++) {
             const element = selectedRows[i]
             f(element)
+            if (i === length - 1) {
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            }
         }
     })
     const menuData = [
@@ -1431,6 +1509,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             onClickBatch: (v, number) => {
                 if (v.length < number) {
                     callCopyToClipboard(v.map((ele) => `${ele.Url}`).join("\r\n"))
+                    setSelectedRowKeys([])
+                    setSelectedRows([])
                 } else {
                     warn(`最多同时只能复制${number}条数据`)
                 }
@@ -1491,14 +1571,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 return {
                     title: i.title,
                     render: i.render,
-                    onClick: (v) => CalloutColor(v, i)
+                    onClick: (v) => CalloutColor(v, i),
+                    onClickBatch: (list, n) => CalloutColorBatch(list, n, i)
                 }
             })
         },
         {
             title: "移除颜色",
-            onClickSingle: () => {},
-            onClickBatch: (_, number) => onBatch(onRemoveCalloutColor, number, selectedRowKeys.length === total)
+            number: 20,
+            onClickSingle: (v) => onRemoveCalloutColor(v),
+            onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
         },
         {
             title: "发送到对比器",
@@ -2006,7 +2088,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                                         <Menu.Item
                                                                             onClick={() => {
                                                                                 if (ele.onClickBatch) {
-                                                                                    ele.onClickBatch(selectedRows)
+                                                                                    ele.onClickBatch(
+                                                                                        selectedRows,
+                                                                                        m.number || 0
+                                                                                    )
                                                                                 } else {
                                                                                     onBatch(
                                                                                         ele.onClick,
