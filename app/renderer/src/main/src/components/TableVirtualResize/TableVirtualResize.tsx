@@ -465,7 +465,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         lineEndX.current = e.clientX
         if (!columns[lineIndex]) return
         const minWidth = columns[lineIndex].minWidth || defMinWidth
-        const width = columns[lineIndex].width || 0
+        const width = columns[lineIndex].width || colWidth
         if (lineStartX.current > lineEndX.current) {
             // 向左移动
             const moveLeftX = lineStartX.current - lineEndX.current
