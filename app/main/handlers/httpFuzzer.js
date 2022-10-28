@@ -290,4 +290,32 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteWebsocketFlowAll", async (e, params) => {
         return await asyncDeleteWebsocketFlowAll(params)
     })
+
+    // asyncGenerateExtractRule wrapper
+    const asyncGenerateExtractRule = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateExtractRule(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateExtractRule", async (e, params) => {
+        return await asyncGenerateExtractRule(params)
+    })
+
+    const streamExtractDataMap = new Map();
+    ipcMain.handle("cancel-ExtractData", handlerHelper.cancelHandler(streamExtractDataMap));
+    ipcMain.handle("ExtractData", (e, params, token) => {
+        let existedStream = streamExtractDataMap.get(token)
+        if (existedStream) {
+            existedStream.write(params)
+            return
+        }
+        let stream = getClient().ExtractData(params);
+        handlerHelper.registerHandler(win, stream, streamExtractDataMap, token)
+    })
 }
