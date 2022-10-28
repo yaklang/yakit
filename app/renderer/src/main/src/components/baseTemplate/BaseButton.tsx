@@ -40,7 +40,7 @@ export const ButtonColor: React.FC<ButtonColorProps> = (props) => {
     } = props
     const buttonRef = useRef<any>(null)
     useEffect(() => {
-        const bodyStyle = buttonRef.current.style
+        const buttonStyle = buttonRef.current.style
         let defaultHoverText: string = "" // hover文本默认颜色
         let defaultHoverBg: string = "" // hover背景默认颜色
         let defaultHoverBorder: string = "" // hover边框默认颜色
@@ -94,18 +94,18 @@ export const ButtonColor: React.FC<ButtonColorProps> = (props) => {
                 defaultDisabledBorder = "#d9d9d9"
                 break
         }
-        bodyStyle.setProperty(`--btn-hoverTextColor`, hoverTextColor || defaultHoverText)
-        bodyStyle.setProperty(`--btn-hoverBgColor`, hoverBgColor || defaultHoverBg)
-        bodyStyle.setProperty(`--btn-hoverBorderColor`, hoverBorderColor || defaultHoverBorder)
-        bodyStyle.setProperty(`--btn-activeTextColor`, activeTextColor || defaultActiveText)
-        bodyStyle.setProperty(`--btn-activeBgColor`, activeBgColor || defaultActiveBg)
-        bodyStyle.setProperty(`--btn-activeBorderColor`, activeBorderColor || defaultActiveBorder)
-        bodyStyle.setProperty(`--btn-focusTextColor`, focusTextColor || defaultFocusText)
-        bodyStyle.setProperty(`--btn-focusBgColor`, focusBgColor || defaultFocusBg)
-        bodyStyle.setProperty(`--btn-focusBorderColor`, focusBorderColor || defaultFocusBorder)
-        bodyStyle.setProperty(`--btn-disabledTextColor`, disabledTextColor || "rgba(0, 0, 0, 0.25)")
-        bodyStyle.setProperty(`--btn-disabledBgColor`, disabledBgColor || defaultDisabledBg)
-        bodyStyle.setProperty(`--btn-disabledBorderColor`, disabledBorderColor || defaultDisabledBorder)
+        buttonStyle.setProperty(`--btn-hoverTextColor`, hoverTextColor || defaultHoverText)
+        buttonStyle.setProperty(`--btn-hoverBgColor`, hoverBgColor || defaultHoverBg)
+        buttonStyle.setProperty(`--btn-hoverBorderColor`, hoverBorderColor || defaultHoverBorder)
+        buttonStyle.setProperty(`--btn-activeTextColor`, activeTextColor || defaultActiveText)
+        buttonStyle.setProperty(`--btn-activeBgColor`, activeBgColor || defaultActiveBg)
+        buttonStyle.setProperty(`--btn-activeBorderColor`, activeBorderColor || defaultActiveBorder)
+        buttonStyle.setProperty(`--btn-focusTextColor`, focusTextColor || defaultFocusText)
+        buttonStyle.setProperty(`--btn-focusBgColor`, focusBgColor || defaultFocusBg)
+        buttonStyle.setProperty(`--btn-focusBorderColor`, focusBorderColor || defaultFocusBorder)
+        buttonStyle.setProperty(`--btn-disabledTextColor`, disabledTextColor || "rgba(0, 0, 0, 0.25)")
+        buttonStyle.setProperty(`--btn-disabledBgColor`, disabledBgColor || defaultDisabledBg)
+        buttonStyle.setProperty(`--btn-disabledBorderColor`, disabledBorderColor || defaultDisabledBorder)
     }, [])
 
     return (
