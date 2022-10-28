@@ -5,16 +5,15 @@ import {useHotkeys} from "react-hotkeys-hook"
 import {} from "@ant-design/icons"
 
 import "./BaseTags.scss"
-export interface TagsListProps {
+export interface TagsListProps extends TagProps{
     data: string[]
     ellipsis?: boolean
-    tag?: TagProps
     tagClassName?: string
 }
 
 // Tags展示组件
 export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
-    const {data, ellipsis, tag, tagClassName = ""} = props
+    const {data, ellipsis, tagClassName = "",...otherProps} = props
     const tagListRef = useRef<any>(null)
     // 展示数据源
     const [dataSource, setDataSource] = useState<string[]>([])
@@ -58,19 +57,19 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
             {/* 隐藏DOM元素 用于实时计算 */}
             <div style={{overflow: "hidden", height: 0}} ref={tagListRef}>
                 {data.map((item) => (
-                    <Tag className={`base-tags-list-tag ${tagClassName}`} key={item} {...tag}>
+                    <Tag className={`base-tags-list-tag ${tagClassName}`} key={item} {...otherProps}>
                         {item}
                     </Tag>
                 ))}
             </div>
             {dataSource.map((item) => (
-                <Tag className={`base-tags-list-tag ${tagClassName}`} key={item} {...tag}>
+                <Tag className={`base-tags-list-tag ${tagClassName}`} key={item} {...otherProps}>
                     {item}
                 </Tag>
             ))}
             {ellipsis && ellipsisTags.length > 0 && (
                 <Tooltip title={tooltipStr}>
-                    <Tag className={`base-tags-list-tag ${tagClassName}`} {...tag}>
+                    <Tag className={`base-tags-list-tag ${tagClassName}`} {...otherProps}>
                         ...
                     </Tag>
                 </Tooltip>
@@ -88,17 +87,16 @@ interface DataObjProps{
     label:string
     value:string
 }
-export interface TagsFilterProps {
+export interface TagsFilterProps extends SelectProps{
     data: string[]|DataObjProps[]
     defaultData?: string[]
     isShowAllCheck?: boolean
-    selectProps?: SelectProps
     submitValue: (v: string[]) => void
 }
 const {Option} = Select
 
 export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
-    const {selectProps, data, isShowAllCheck = false, defaultData = [], submitValue} = props
+    const {data, isShowAllCheck = false, defaultData = [], submitValue,...otherProps} = props
     const dataSource:DataObjProps[] = data.map((item)=>{
         if(typeof item==="string"){
             return {label:item,value:item}
@@ -248,7 +246,7 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
     return (
         <div className='base-tags-filter'>
             <Select
-                {...selectProps}
+                {...otherProps}
                 allowClear={true}
                 mode='multiple'
                 showSearch={false}
@@ -282,7 +280,7 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
 }
 
 // UI组件测试用例
-export const HTTPHacker: React.FC = () => {
+export const TestTags: React.FC = () => {
     const [tagList, setTagList] = useState<string[]>(["Orange"])
     return (
         <div>
@@ -303,7 +301,7 @@ export const HTTPHacker: React.FC = () => {
                     setTagList(value)
                 }}
                 isShowAllCheck={true}
-                selectProps={{style: {width: "200px"}}}
+                style= {{width: "200px"}}
             />
             <div style={{width: 200}}>
                 <TagsList data={tagList} ellipsis={true} tagClassName='gg' />
