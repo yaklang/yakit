@@ -315,7 +315,8 @@ module.exports = (win, getClient) => {
             existedStream.write(params)
             return
         }
-        let stream = getClient().ExtractData(params);
+        let stream = getClient().ExtractData();
         handlerHelper.registerHandler(win, stream, streamExtractDataMap, token)
+        stream.write(params)
     })
 }
