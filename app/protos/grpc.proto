@@ -380,10 +380,9 @@ message ExtractDataRequest {
   // Token 用来标注这个数据是谁的，一般可以用来处理提取的数据
   string Token = 6;
 
+  // 如果不再有数据了，设置这个 flag
   bool End = 7;
 }
-
-
 
 message GenerateExtractRuleRequest {
   // 要提取规则的样例数据
