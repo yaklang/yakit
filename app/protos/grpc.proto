@@ -396,6 +396,7 @@ message GenerateExtractRuleRequest {
 message GenerateExtractRuleResponse {
   string PrefixRegexp = 1;
   string SuffixRegexp = 2;
+  string SelectedRegexp = 3;
 }
 
 message GetMachineIDResponse {

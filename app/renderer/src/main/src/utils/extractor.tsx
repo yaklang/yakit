@@ -12,6 +12,7 @@ import {randomString} from "@/utils/randomUtil";
 import {ExecResult} from "@/pages/invoker/schema";
 import {ResizeBox} from "@/components/ResizeBox";
 import {saveABSFileToOpen} from "@/utils/openWebsite";
+import {SelectOne} from "@/utils/inputUtil";
 
 const {Text} = Typography;
 
@@ -43,8 +44,16 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
     const [editor, setEditor] = useGetState<editor.IStandaloneCodeEditor>();
     const [selected, setSelected] = useGetState<string>("");
     const [_responseStr, setResponseStr, getResponseStr] = useGetState<string>("");
+    const [mode, setMode] = useState<"regexp" | "regexp-between">("regexp-between")
+
+    // 用户匹配数据前后缀提取正则
     const [prefix, setPrefix] = useState("");
     const [suffix, setSuffix] = useState("");
+
+    // 用户选择的数据转换成的正则
+    const [matchedRegexp, setMatchedRegexp] = useState<string>("");
+
+    // 存放提取出来的数据
     const [extracted, setExtracted] = useState<string[]>([]);
 
     // stream token
@@ -93,9 +102,11 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
             Selected: StringToUint8Array(selected),
         }).then((e: {
             PrefixRegexp: string, SuffixRegexp: string,
+            SelectedRegexp: string,
         }) => {
             setPrefix(e.PrefixRegexp)
             setSuffix(e.SuffixRegexp)
+            setMatchedRegexp(e.SelectedRegexp)
         }).catch(e => {
             failed(`无法生成数据提取规则: ${e}`)
         })
@@ -147,27 +158,35 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                     <div>
                         自动生成提取规则
                     </div>
-                    <Tag>共{responses.length}个响应</Tag>
+                    <SelectOne size={"small"} data={[
+                        {value: "regexp-between", text: "前后缀正则提取"},
+                        {value: "regexp", text: "单正则提取"}
+                    ]} value={mode} setValue={setMode} formItemStyle={{marginBottom: 0}}/>
                 </Space>
             )}
             extra={(
-                <Button type={"primary"} size={"small"} onClick={() => {
-                    responses.forEach(i => {
-                        ipcRenderer.invoke("ExtractData", {
-                            Mode: `regexp-between`,
-                            PrefixRegexp: prefix,
-                            SuffixRegexp: suffix,
-                            Data: i.ResponseRaw,
-                            Token: i.UUID,
-                        }, getToken()).then(() => {
+                <Space>
+                    <Tag>共{responses.length}个响应</Tag>
+                    <Button type={"primary"} size={"small"} onClick={() => {
+                        responses.forEach(i => {
+                            console.info(matchedRegexp)
+                            ipcRenderer.invoke("ExtractData", {
+                                Mode: mode,
+                                PrefixRegexp: prefix,
+                                SuffixRegexp: suffix,
+                                MatchRegexp: matchedRegexp,
+                                Data: i.ResponseRaw,
+                                Token: i.UUID,
+                            }, getToken()).then(() => {
+                            })
                         })
-                    })
-                }}>
-                    提取数据
-                </Button>
+                    }}>
+                        提取数据
+                    </Button>
+                </Space>
             )}
         >
-            <Space direction={"vertical"}>
+            {mode === "regexp-between" && <Space direction={"vertical"} style={{width: "100%"}}>
                 <Space>
                     <div>
                         前缀(正则)：
@@ -187,7 +206,18 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                 <Space>
                     {selected ? <Text code={true} copyable={true}>{selected}</Text> : <Tag>未选中提取规则</Tag>}
                 </Space>
-            </Space>
+            </Space>}
+            {mode === "regexp" && <Space direction={"vertical"} style={{width: "100%"}}>
+                <Space>
+                    <div>
+                        自动提取正则：
+                    </div>
+                    <Text
+                        editable={{onChange: setMatchedRegexp}}
+                        code={true}
+                    >{matchedRegexp}</Text>
+                </Space>
+            </Space>}
         </AutoCard>
         <div style={{height: 400}}>
             <ResizeBox
@@ -219,11 +249,11 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                     setExtracted([])
                                 }}
                             >
-                                <Button size={"small"}>清空</Button>
+                                <Button size={"small"} danger={true}>清空</Button>
                             </Popconfirm>
                             <Button
                                 size={"small"} type={"link"}
-                                onClick={()=>{
+                                onClick={() => {
                                     saveABSFileToOpen("webfuzzer-extract-data.txt", extracted.join("\n"))
                                 }}
                             >下载文件</Button>
