@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - "luoluo/feature/https-history"
-    tags:
-      - "v*"
+    # tags:
+    #   - "v*"
 
 jobs:
   build_yakit:
@@ -23,12 +23,12 @@ jobs:
         with:
           node-version: 16.10.0
       - run: echo ${{ github.ref }}
-      - uses: mad9000/actions-find-and-replace-string@1
-        id: fetchtag_yakit
-        with:
-          source: ${{ github.ref }}
-          find: 'refs/tags/v'
-          replace: ''
+      # - uses: mad9000/actions-find-and-replace-string@1
+      #   id: fetchtag_yakit
+      #   with:
+      #     source: ${{ github.ref }}
+      #     find: 'refs/tags/v'
+      #     replace: ''
       # Enterprise
       - name: Extract Version
         id: extract_version
@@ -41,15 +41,15 @@ jobs:
         env:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
-      - run: yarn build-render-enterprise
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
-        working-directory: ./
-        name: "Build Enterprise"
-        env:
-          CI: ""
-          NODE_OPTIONS: --max_old_space_size=4096
+      # - run: yarn build-render-enterprise
+      #   if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
+      #   working-directory: ./
+      #   name: "Build Enterprise"
+      #   env:
+      #     CI: ""
+      #     NODE_OPTIONS: --max_old_space_size=4096
       - run: yarn build-render
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        # if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         working-directory: ./
         name: "Build Community"
         env:
@@ -59,8 +59,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         working-directory: ./
-        run: |
-          yarn add -D dmg-license && yarn electron-publish
+        # run: |
+        #   yarn add -D dmg-license && yarn electron-publish
+        run: yarn pack-mac
       - name: View Published Content
         run: ls ./release
         #        Yakit-1.0.9-darwin-arm64.dmg
@@ -79,13 +80,13 @@ jobs:
         #        mac-arm64
         #        win-unpacked
 
-      - name: Upload Yakit Artifacts Windows
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+      # - name: Upload Yakit Artifacts Windows
+      #   uses: actions/upload-artifact@v2
+      #   if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      #   with:
+      #     # Yakit-1.0.3-beta24-win32-x64.exe
+      #     name: Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+      #     path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
@@ -100,45 +101,45 @@ jobs:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-      - name: Upload Yakit Artifacts Linux
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      # - name: Upload Yakit Artifacts Linux
+      #   uses: actions/upload-artifact@v2
+      #   if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      #   with:
+      #     # Yakit-1.0.3-beta24-win32-x64.exe
+      #     name: Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      #     path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
-      - name: Upload Yakit Artifacts Windows
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-      - name: Upload Yakit Artifacts Mac(m1)
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-      - name: Upload Yakit Artifacts Mac(intel)
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-      - name: Upload Yakit Artifacts Linux
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      # - name: Upload Yakit Artifacts Windows
+      #   uses: actions/upload-artifact@v2
+      #   if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
+      #   with:
+      #     # Yakit-1.0.3-beta24-win32-x64.exe
+      #     name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+      #     path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+      # - name: Upload Yakit Artifacts Mac(m1)
+      #   uses: actions/upload-artifact@v2
+      #   if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
+      #   with:
+      #     # Yakit-1.0.3-beta24-win32-x64.exe
+      #     name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+      #     path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+      # - name: Upload Yakit Artifacts Mac(intel)
+      #   uses: actions/upload-artifact@v2
+      #   if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
+      #   with:
+      #     # Yakit-1.0.3-beta24-win32-x64.exe
+      #     name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+      #     path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+      # - name: Upload Yakit Artifacts Linux
+      #   uses: actions/upload-artifact@v2
+      #   if: ${{ startsWith(github.ref, 'refs/heads/luoluo/feature/https-history/yakit-') }}
+      #   with:
+      #     # Yakit-1.0.3-beta24-win32-x64.exe
+      #     name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      #     path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
   download_artifacts_and_release:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    # if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:
       #      - build_and_release
       - build_yakit
@@ -155,18 +156,18 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
-      - name: Download Yakit (Windows amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
+      # - name: Download Yakit (Windows amd64)
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
       - name: Download Yakit (Darwin arm64)
         uses: actions/download-artifact@v2
         with:
           name: Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
-      - name: Download Yakit (Linux amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+      # - name: Download Yakit (Linux amd64)
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
 
       - run: ls
         name: Ls Published Artifacts...
@@ -184,15 +185,15 @@ jobs:
           prerelease: false
 
       # 上传 release asset
-      - name: Upload Release Asset (Windows)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
-          asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
-          asset_content_type: application/octet-stream
+      # - name: Upload Release Asset (Windows)
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+      #     asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
+      #     asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
+      #     asset_content_type: application/octet-stream
 
       - name: Upload Release Asset (MacOS)
         uses: actions/upload-release-asset@v1
@@ -214,18 +215,18 @@ jobs:
           asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
           asset_content_type: application/octet-stream
 
-      - name: Upload Release Asset (Linux)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
-          asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
-          asset_content_type: application/octet-stream
+      # - name: Upload Release Asset (Linux)
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+      #     asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+      #     asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+      #     asset_content_type: application/octet-stream
 
-      - name: Run
-        run: ls
+      # - name: Run
+      #   run: ls
       #      - name: Upload yak to oss Latest
       #        uses: tvrcgo/upload-to-oss@master
       #        with:
@@ -250,18 +251,3 @@ jobs:
       #          assets: |
       #            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
       #            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
-      - name: Update OSS latest file
-        run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt
-      - name: Upload Yakit to oss(windows)
-        uses: tvrcgo/upload-to-oss@master
-        with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
-          region: oss-accelerate
-          bucket: yaklang
-          assets: |
-            ./yakit-version.txt:/yak/latest/yakit-version.txt
-            Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
-            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
-            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
-            Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
