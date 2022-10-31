@@ -19,7 +19,19 @@ const HttpSetting = {
     httpBaseURL: "https://www.yaklang.com"
 }
 
+/**
+ * yak引擎状态和配置参数
+ */
+const Global_YAK_SETTING = {
+    status: false,
+    defaultYakGRPCAddr: "127.0.0.1:8087",
+    password: "",
+    caPem: "",
+    isExist: false
+}
+
 module.exports = {
     USER_INFO,
-    HttpSetting
+    HttpSetting,
+    Global_YAK_SETTING
 }

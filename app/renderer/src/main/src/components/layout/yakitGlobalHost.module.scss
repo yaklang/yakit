@@ -1,0 +1,16 @@
+.yakit-global-host-wrapper {
+    height: 36px;
+    .yakit-global-host-body {
+        padding: 8px 12px;
+        height: 100%;
+        font-size: 12px;
+        line-height: 20px;
+        text-transform: capitalize;
+        .addr-ip {
+            color: #b4bbca;
+        }
+        .addr-port {
+            color: var(--base-font-color);
+        }
+    }
+}

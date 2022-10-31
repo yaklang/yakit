@@ -201,7 +201,8 @@ module.exports = {
             return new Promise((resolve, reject) => {
                 const {sudo} = params;
 
-                let randPort = 40000 + getRandomInt(9999);
+                // let randPort = 40000 + getRandomInt(9999);
+                let randPort = 44224
                 try {
                     if (sudo) {
                         if (isWindows) {
@@ -222,7 +223,8 @@ module.exports = {
                             sudoExec(cmd, {
                                     name: `yak grpc port ${randPort}`,
                                 },
-                                function (error) {
+                                function (error,stdout,stderr) {
+                                    console.log('error123',error,123,stdout,123,stderr)
                                     if (error) {
                                         reject(error)
                                     } else {
@@ -232,16 +234,19 @@ module.exports = {
                             )
                         }
                     } else {
-                        childProcess.spawn(
+                        const subprocess=childProcess.spawn(
                             getLatestYakLocalEngine(),
                             ["grpc", "--port", `${randPort}`],
                             {stdio: ["ignore", "ignore", "ignore"], env: {"YAK_DEFAULT_DATABASE_NAME": dbFile}},
-                        ).on("error", err => {
+                        )
+                        subprocess.on("error", err => {
                             if (err) {
                                 fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
                                 reject(err)
                             }
-                        }).on("spawn", () => resolve())
+                        })
+                        subprocess.on("close", e => {console.log('close',e)})
+                        subprocess.stdout.on("data",e=>console.log('stdout',`${e}`))
                     }
                 } catch (e) {
                     reject(e)

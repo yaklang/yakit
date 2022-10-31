@@ -1,0 +1,65 @@
+.mac-ui-op-wrapper {
+    height: 100%;
+    padding: 10px;
+    .mac-ui-op-body {
+        height: 100%;
+        display: flex;
+
+        .op-hidn-btn {
+            padding: 2px;
+            .btn-icon {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+            }
+
+            .close-bg-color {
+                background-color: #f7544a;
+            }
+            .min-bg-color {
+                background-color: #ffb660;
+            }
+            .max-bg-color {
+                background-color: #56c991;
+            }
+        }
+
+        .op-btn {
+            display: inline-flex;
+        }
+
+        .op-btn + .op-btn {
+            margin-left: 4px;
+        }
+    }
+}
+
+.win-ui-op-wrapper {
+    height: 100%;
+    .win-ui-op-body {
+        height: 100%;
+        display: flex;
+
+        .short-divider-wrapper {
+            width: 1px;
+            height: 100%;
+            padding: 10px 0;
+            .divider-style {
+                height: 100%;
+                border-left: 1px solid #eaecf3;
+            }
+        }
+
+        .op-btn {
+            padding: 8px 12px;
+            .icon-style {
+                color: #85899e;
+            }
+        }
+        .op-btn:hover {
+            .icon-style {
+                color: #f28b44;
+            }
+        }
+    }
+}

@@ -1,0 +1,217 @@
+.ui-layout-wrapper {
+    width: 100%;
+    height: 100vh;
+    min-height: 100%;
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    .ui-layout-header {
+        width: 100%;
+        height: 36px;
+        background-color: white; //var(--base-background-color);
+        -webkit-app-region: drag;
+        -webkit-user-select: none;
+        user-select: none;
+
+        .short-divider-wrapper {
+            width: 1px;
+            height: 100%;
+            padding: 10px 0;
+            .divider-style {
+                height: 100%;
+                border-left: 1px solid #eaecf3;
+            }
+        }
+        .divider-wrapper {
+            width: 1px;
+            height: 100%;
+            border-left: 1px solid #eaecf3;
+        }
+
+        .header-body {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            // -webkit-app-region: no-drag;
+            .header-left {
+                height: 100%;
+                display: flex;
+            }
+            .header-title {
+                height: 100%;
+                line-height: 36px;
+                font-weight: 600;
+                color: var(--base-font-color);
+            }
+            .header-right {
+                height: 100%;
+                display: flex;
+            }
+            .yakit-icon {
+                box-sizing: border-box;
+                padding: 8px 12px;
+            }
+            .yakit-store-icon {
+                box-sizing: border-box;
+                padding: 8px 12px;
+            }
+        }
+    }
+
+    .ui-layout-body {
+        width: 100%;
+        flex: 1;
+        overflow: hidden;
+    }
+    .ui-layout-mask {
+        width: 100%;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+.yaklang-engine-hint-wrapper {
+    width: 100%;
+    height: 100vh;
+    min-height: 100%;
+    margin: 0;
+    padding: 24px;
+    background: #f8f8f8;
+    border: 1px solid #eaecf3;
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    -webkit-app-region: drag;
+    .yaklang-engine-hint-body {
+        -webkit-app-region: no-drag;
+        width: 100%;
+        display: flex;
+        gap: 16px;
+
+        .hint-left-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hint-right-wrapper {
+            flex: 1;
+            .hint-right-title {
+                height: 24px;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: #31343f;
+            }
+            .hint-right-content {
+                margin-top: 8px;
+                height: 20px;
+                font-size: 14px;
+                line-height: 20px;
+                color: #85899e;
+            }
+            .hint-right-macarm {
+                margin-top: 24px;
+                box-sizing: border-box;
+                padding: 12px;
+                background: #ffffff;
+                border: 1px solid #eaecf3;
+                border-radius: 4px;
+                .mac-arm-hint {
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: #31343f;
+                }
+                .mac-arm-command {
+                    margin-top: 8px;
+                    display: flex;
+                    align-items: center;
+                    height: 20px;
+                    padding: 4px 6px;
+                    background: rgba(242, 139, 68, 0.06);
+                    border: 1px solid #fbc6a1;
+                    border-radius: 4px;
+
+                    font-size: 12px;
+                    color: #f28b44;
+                    .copy-icon {
+                        width: 12px;
+                        height: 12px;
+                        display: flex;
+                        margin-left: 8px;
+                        cursor: pointer;
+                    }
+                }
+            }
+            .hint-right-btn {
+                margin-top: 24px;
+                display: flex;
+                justify-content: space-between;
+
+                .btn-group-wrapper {
+                    display: flex;
+                    gap: 8px;
+                }
+
+                .btn-wrapper {
+                    height: 34px;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-weight: 500;
+                    font-size: 14px;
+                    line-height: normal;
+                    :global {
+                        span {
+                            line-height: 20px;
+                        }
+                    }
+                }
+                .btn-default-wrapper {
+                    color: #31343f;
+                    background: #ffffff;
+                    border: 1px solid #eaecf3;
+                }
+                .btn-theme-wrapper {
+                    color: #ffffff;
+                    background: #f28b44;
+                    border: 1px solid #f28b44;
+                }
+            }
+
+            .hint-right-download {
+                .download-progress {
+                    :global {
+                        .ant-progress-text {
+                            display: block;
+                            margin-left: 0;
+                            margin-top: 2px;
+                        }
+                    }
+                }
+                .download-info-wrapper {
+                    margin-top: 16px;
+                    display: flex;
+                    height: 16px;
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: #b4bbca;
+                    .divider-wrapper {
+                        margin: 0 8px;
+                        width: 1px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        .divider-style {
+                            width: 100%;
+                            height: 12px;
+                            border: 1px solid #eaecf3;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

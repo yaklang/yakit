@@ -4,9 +4,29 @@ const path = require("path")
 const {extrakvpairs, getExtraKVPair, setExtraKVPair} = require("./handlers/upgradeUtil")
 const {registerIPC, clearing} = require("./ipc")
 const {service, httpApi} = require("./httpServer")
-const {USER_INFO, HttpSetting} = require("./state")
+const {USER_INFO, HttpSetting, Global_YAK_SETTING} = require("./state")
 
+
+const fs = require("fs")
+const os = require("os")
 const process = require("process")
+const homeDir = path.join(os.homedir(), "yakit-projects")
+const yakEngineDir = path.join(homeDir, "yak-engine")
+const isMacArm = `${process.platform}-${process.arch}` === "darwin-arm64"
+
+/**
+ * 生成Yaklang引擎在本地的绝对地址
+ * @returns {String} 本地绝对地址
+ */
+const getLocalYaklangEngine = () => {
+    switch (process.platform) {
+        case "darwin":
+        case "linux":
+            return path.join(yakEngineDir, "yak")
+        case "win32":
+            return path.join(yakEngineDir, "yak.exe")
+    }
+}
 
 process.on("uncaughtException", (error) => {
     console.info(error)
@@ -16,11 +36,16 @@ process.on("uncaughtException", (error) => {
 
 let flag = true // 是否展示关闭二次确认弹窗的标志位
 let win
+let subwin
 const createWindow = () => {
     getExtraKVPair((err) => {
         if (!err)
             flag = extrakvpairs.get("windows-close-flag") === undefined ? true : extrakvpairs.get("windows-close-flag")
     })
+
+    const isYaklangExist = fs.existsSync(getLocalYaklangEngine())
+    Global_YAK_SETTING.isExist = isYaklangExist
+    console.log(111, isYaklangExist)
 
     win = new BrowserWindow({
         width: 1600,
@@ -33,8 +58,36 @@ const createWindow = () => {
             nodeIntegration: true,
             contextIsolation: false,
             sandbox: true
-        }
+        },
+        frame: false,
+        titleBarStyle: "hidden"
     })
+
+    if (!isYaklangExist) {
+        subwin = new BrowserWindow({
+            width: 448,
+            height: isMacArm ? 280 : 156,
+            autoHideMenuBar: true,
+            webPreferences: {
+                preload: path.join(__dirname, "preload.js"),
+                nodeIntegration: true,
+                contextIsolation: false,
+                sandbox: true
+            },
+            frame: false,
+            titleBarStyle: "hidden"
+        })
+        win.hide()
+        subwin.setMenu(null)
+        subwin.setMenuBarVisibility(false)
+        subwin.setWindowButtonVisibility(false)
+
+        if (isDev) {
+            subwin.loadURL("http://127.0.0.1:3000")
+        } else {
+            subwin.loadFile(path.resolve(__dirname, "../renderer/pages/main/index.html"))
+        }
+    }
 
     // win.loadFile(path.resolve(__dirname, "../renderer/pages/main/index.html"))
     if (isDev) {
@@ -47,6 +100,10 @@ const createWindow = () => {
     if (isDev) {
         win.webContents.openDevTools({mode: "detach"})
     }
+
+    win.setMenu(null)
+    win.setMenuBarVisibility(false)
+    win.setWindowButtonVisibility(false)
 
     win.on("close", (e) => {
         e.preventDefault()
@@ -94,6 +151,10 @@ const createWindow = () => {
     // 阻止内部react页面的链接点击跳转
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
+    })
+
+    ipcMain.handle("is-show-installed", () => {
+        return Global_YAK_SETTING.isExist
     })
 }
 

@@ -66,11 +66,38 @@ function getClient(createNew) {
     return getClient()
 }
 
+/**
+ * @name 测试本地缓存端口是否已启动yaklang引擎
+ * @param win electron主进程对象
+ * @param {String} port 端口号
+ */
+function testClient(win, port) {
+    const yak = new Yak(`127.0.0.1:${port}`, grpc.credentials.createInsecure(), options)
+
+    yak.Echo({text: "hello yak? are u ok?"}, (err, result) => {
+        if (!!err) win.webContents.send("callback-test-engine-started", false)
+        else {
+            win.webContents.send("callback-test-engine-started", true)
+            // 清空旧缓存数据
+            if (_client) _client.close()
+            _client = null
+            global.password = ""
+            global.caPem = ""
+            global.defaultYakGRPCAddr = `127.0.0.1:${port}`
+            newClient()
+        }
+    })
+}
+
 module.exports = {
     clearing: () => {
         require("./handlers/yakLocal").clearing()
     },
     registerIPC: (win) => {
+        // 测试本地缓存端口是否有已启动引擎进程
+        ipcMain.handle("test-engine-started", (e, port) => {
+            testClient(win, port)
+        })
         ipcMain.handle("yakit-connect-status", () => {
             return {
                 addr: global.defaultYakGRPCAddr,
@@ -177,6 +204,12 @@ module.exports = {
         const api = fs.readdirSync(path.join(__dirname, "./api"))
         api.forEach((item) => {
             require(path.join(__dirname, `./api/${item}`))(win, getClient)
+        })
+
+        // 各类UI层面用户操作
+        const uiOp = fs.readdirSync(path.join(__dirname, "./uiOperate"))
+        uiOp.forEach((item) => {
+            require(path.join(__dirname, `./uiOperate/${item}`))(win, getClient)
         })
 
         // start chrome manager
