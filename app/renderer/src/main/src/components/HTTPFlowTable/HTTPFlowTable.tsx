@@ -886,7 +886,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 setStatusCode([...statusCode])
             })
             .catch((e: any) => {
-                // failed(`query HTTP Flows Field Group failed: ${e}`)
+                failed(`query HTTP Flows Field Group failed: ${e}`)
             })
     })
     const [offsetData, setOffsetData, getOffsetData] = useGetState<HTTPFlow[]>([])
@@ -953,11 +953,11 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     )
 
     // 设置是否自动刷新
-    // useEffect(() => {
-    //     scrollUpdateTop()
-    //     let id = setInterval(scrollUpdateTop, 1000)
-    //     return () => clearInterval(id)
-    // }, [])
+    useEffect(() => {
+        scrollUpdateTop()
+        let id = setInterval(scrollUpdateTop, 1000)
+        return () => clearInterval(id)
+    }, [])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -1017,7 +1017,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 title: "序号",
                 dataKey: "Id",
                 fixed: "left",
-                ellipsis: false
+                ellipsis: false,
+                width: 80
                 // sorterProps: {
                 //     sorterKey: "id",
                 //     sorter: true
@@ -1051,6 +1052,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             {
                 title: "状态码",
                 dataKey: "StatusCode",
+                width: 100,
                 filterProps: {
                     filtersType: "select",
                     filterMultiple: true,

@@ -327,7 +327,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 if ((ele.minWidth || 0) > (ele.width || 0)) {
                     leftWidth += ele.minWidth || 0
                 } else {
-                    leftWidth += ele.width || colWidth
+                    leftWidth += ele.width || getColWidth()
                 }
                 if (index > 0) {
                     const leftList = columns
@@ -336,7 +336,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             if ((c.minWidth || 0) > (c.width || 0)) {
                                 return c.minWidth || 0
                             } else {
-                                return c.width || colWidth
+                                return c.width || getColWidth()
                             }
                         })
                     const left: number = leftList.length > 1 ? leftList.reduce((p, c) => p + c) : leftList[0] || 0
@@ -348,7 +348,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 if ((ele.minWidth || 0) > (ele.width || 0)) {
                     rightWidth += ele.minWidth || 0
                 } else {
-                    rightWidth += ele.width || colWidth
+                    rightWidth += ele.width || getColWidth()
                 }
                 if (index > 0) {
                     const rightList = columns
@@ -357,7 +357,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             if ((c.minWidth || 0) > (c.width || 0)) {
                                 return c.minWidth || 0
                             } else {
-                                return c.width || colWidth
+                                return c.width || getColWidth()
                             }
                         })
                     const right: number = rightList.length > 1 ? rightList.reduce((p, c) => p + c) : rightList[0] || 0
@@ -391,13 +391,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             containerRef.current.scrollLeft = containerRef.current.scrollLeft + 1
         }
     }, [width])
-    const [colWidth, setColWidth] = useState<number>(0)
+    const [colWidth, setColWidth, getColWidth] = useGetState<number>(0)
     // 初始化表格宽度和列宽度
     const getTableWidthAndColWidth = useMemoizedFn((scrollBarWidth: number) => {
         const cLength = props.columns.length
         if (!width || cLength <= 0) return
         let w = width / cLength
-        const cw = w - scrollBarWidth / cLength
+        const cw = w - scrollBarWidth / cLength + 32
         const newColumns = getColumns().map((ele) => ({
             ...ele,
             width: ele.width || cw
@@ -421,7 +421,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         } else {
             setTableWidth(tWidth)
         }
-        getLeftOrRightFixedWidth()
+        setTimeout(() => {
+            getLeftOrRightFixedWidth()
+        }, 50)
     })
     const onChangeRadio = useMemoizedFn((e: RadioChangeEvent) => {})
     const onChangeCheckbox = useMemoizedFn((checked: boolean) => {
