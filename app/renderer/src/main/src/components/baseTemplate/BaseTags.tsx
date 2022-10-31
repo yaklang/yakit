@@ -5,7 +5,7 @@ import {useHotkeys} from "react-hotkeys-hook"
 import {} from "@ant-design/icons"
 
 import "./BaseTags.scss"
-export interface TagsListProps extends TagProps{
+export interface TagsListProps extends TagProps {
     data: string[]
     ellipsis?: boolean
     tagClassName?: string
@@ -13,7 +13,7 @@ export interface TagsListProps extends TagProps{
 
 // Tags展示组件
 export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
-    const {data, ellipsis, tagClassName = "",...otherProps} = props
+    const {data, ellipsis, tagClassName = "", ...otherProps} = props
     const tagListRef = useRef<any>(null)
     // 展示数据源
     const [dataSource, setDataSource] = useState<string[]>([])
@@ -77,18 +77,85 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
         </div>
     )
 })
+interface HighPowerListProps {
+    dataSource: DataObjProps[]
+    checkedList: string[]
+    cacheScrollTop: number
+    handleCheckChange: (e: any, v: any) => void
+    virtualListHeight?: number
+}
+
+// 虚拟列表
+export const HighPowerList: React.FC<HighPowerListProps> = (props) => {
+    const {dataSource, checkedList, handleCheckChange, virtualListHeight = 200, cacheScrollTop} = props
+    /*
+     * 每项数据的dom元素高度为30px
+     * 实际项目可能每项高度不一样
+     * */
+    const itemH = 30
+    // 计算总高度
+    const totalH = dataSource.length * itemH + "px"
+    const [data, setData] = useState<DataObjProps[]>([]) // 可视区域数据
+    const [totalHeight, setTotalHeight] = useState(totalH) // 长列表总高度 列表中每一项数据高度总和
+    const [transform, setTransform] = useState("")
+    const cacheScroll = useRef<number>(0)
+    const listRef = useRef<any>(null)
+    useEffect(() => {
+        updateViewContent(cacheScrollTop)
+    }, [])
+
+    const handleScroll = (e) => {
+        /*
+         * 获取scrollTop
+         * 此属性可以获取或者设置对象的最顶部到对象在当前窗口显示的范围内的顶边的距离
+         * 也就是元素滚动条被向下拉动的距离
+         * */
+        updateViewContent(e.target.scrollTop)
+    }
+
+    const updateViewContent = (scrollTop = 0) => {
+        cacheScroll.current = scrollTop
+        // 计算可视区域里能放几个元素
+        const viewCount = Math.ceil(virtualListHeight / itemH)
+        // 计算可视区域开始的索引
+        const start = Math.floor(scrollTop / itemH)
+        // 计算可视区域结束索引
+        const end = start + viewCount
+        // 截取可视区域数据
+        const viewData = dataSource.slice(start, end)
+        // 控制滚动条滑动位置
+        listRef.current.scrollTop = scrollTop
+        setData(viewData)
+        setTransform(`translate3d(0, ${start * itemH}px, 0)`)
+    }
+
+    return (
+        <div className='virtual-list' style={{height: virtualListHeight}} onScroll={handleScroll} ref={listRef}>
+            <div className='virtual-list-height' style={{height: totalHeight}} />
+            <div className='view-content' style={{transform: transform}}>
+                {data.map((item, idx) => (
+                    <Checkbox
+                        className={`default-check-box ${checkedList.includes(item.value) && "default-row-check-box"}`}
+                        value={item.value}
+                        key={`${idx}_${item.value}`}
+                        onChange={(e) => handleCheckChange(e, cacheScroll.current)}
+                        checked={checkedList.includes(item.value)}
+                    >
+                        {item.label}
+                    </Checkbox>
+                ))}
+            </div>
+        </div>
+    )
+}
 
 // Tags下拉框组件
-interface TagsFilterDataProps {
-    key: string | number
+interface DataObjProps {
+    label: string
     value: string
 }
-interface DataObjProps{
-    label:string
-    value:string
-}
-export interface TagsFilterProps extends SelectProps{
-    data: string[]|DataObjProps[]
+export interface TagsFilterProps extends SelectProps {
+    data: string[] | DataObjProps[]
     defaultData?: string[]
     isShowAllCheck?: boolean
     submitValue: (v: string[]) => void
@@ -96,36 +163,43 @@ export interface TagsFilterProps extends SelectProps{
 const {Option} = Select
 
 export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
-    const {data, isShowAllCheck = false, defaultData = [], submitValue,...otherProps} = props
-    const dataSource:DataObjProps[] = data.map((item)=>{
-        if(typeof item==="string"){
-            return {label:item,value:item}
+    const {data, isShowAllCheck = false, defaultData = [], submitValue, ...otherProps} = props
+    const dataSource: DataObjProps[] = data.map((item) => {
+        if (typeof item === "string") {
+            return {label: item, value: item}
         }
         return item
     })
-    const [checkedList, setCheckedList,getCheckList] = useGetState<string[]>(defaultData)
+    const [checkedList, setCheckedList, getCheckList] = useGetState<string[]>(defaultData)
     const [indeterminate, setIndeterminate] = useState<boolean>(true)
     const [checkAll, setCheckAll] = useState<boolean>(false)
     // 当前选中项
-    const [checkItem, setCheckItem,getCheckItem] = useGetState<string>("")
+    const [checkItem, setCheckItem, getCheckItem] = useGetState<string>("")
     // 受控模式控制浮层
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(false)
+    // 缓存滚轮定位
+    const [cacheScrollTop, setCacheScrollTop] = useState(0)
+    useEffect(() => {
+        if (!open) {
+            setCacheScrollTop(0)
+        }
+    }, [open])
     // 键盘移动
     const goAnchor = (e) => {
         const nowCheckList = getCheckList()
         const nowCheckItem = getCheckItem()
         const {code} = e
-            const isLeft = code === "ArrowLeft"
-            const isRight = code === "ArrowRight"
-            // 业务代码
-            let index = nowCheckList.indexOf(nowCheckItem)
-            let newIndex
-            if (isLeft) {
-                newIndex = index - 1 < 0 ? 0 : index - 1
-            }
-            if (isRight) {
-                newIndex = index + 1 === nowCheckList.length ? nowCheckList.length - 1 : index + 1 
-            }
+        const isLeft = code === "ArrowLeft"
+        const isRight = code === "ArrowRight"
+        // 业务代码
+        let index = nowCheckList.indexOf(nowCheckItem)
+        let newIndex
+        if (isLeft) {
+            newIndex = index - 1 < 0 ? 0 : index - 1
+        }
+        if (isRight) {
+            newIndex = index + 1 === nowCheckList.length ? nowCheckList.length - 1 : index + 1
+        }
         // js锚点跳转
         let element = document.getElementById(nowCheckList[newIndex])
         setCheckItem(nowCheckList[newIndex])
@@ -143,27 +217,42 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
     // })
 
     useEffect(() => {
-        document.addEventListener("keydown",(e)=>goAnchor(e) )
-        return ()=>{
-            document.removeEventListener("keydown",goAnchor)
+        document.addEventListener("keydown", (e) => goAnchor(e))
+        return () => {
+            document.removeEventListener("keydown", goAnchor)
         }
     }, [])
 
     const handleChange = (value: string[]) => {
         // console.log(`selected ${value}`)
+        setCheckItem("")
         setCheckedList([])
         setCheckAll(false)
         setIndeterminate(false)
     }
-
-    const handleCheckChange = (list) => {
+    // 保留数组中非重复数据
+    const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
+    const handleCheckChange = (e, value) => {
+        let list = [...getCheckList(), e.target.value]
+        // 定位选中项
+        if (e.target.checked) {
+            setCheckItem(e.target.value)
+        }
+        // 取消选中则去除重复项
+        if (!e.target.checked) {
+            if (e.target.value === checkItem) {
+                setCheckItem("")
+            }
+            list = filterNonUnique(list)
+        }
+        setCacheScrollTop(value)
         setCheckedList(list)
         setIndeterminate(!!list.length && list.length < dataSource.length)
         setCheckAll(list.length === dataSource.length)
     }
 
     const handleCheckAllChange = (e) => {
-        const checkAllData:string[] = dataSource.map((item)=>item.value)
+        const checkAllData: string[] = dataSource.map((item) => item.value)
         setCheckedList(e.target.checked ? checkAllData : [])
         setIndeterminate(false)
         setCheckAll(e.target.checked)
@@ -182,17 +271,12 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
                         全选
                     </Checkbox>
                 )}
-                <Checkbox.Group className='default-check-group-box' value={checkedList} onChange={handleCheckChange}>
-                    {dataSource.map((item, idx) => (
-                        <Checkbox
-                            className={`default-check-box ${checkedList.includes(item.value) && "default-row-check-box"}`}
-                            value={item.value}
-                            key={`${idx}_${item.value}`}
-                        >
-                            {item.label}
-                        </Checkbox>
-                    ))}
-                </Checkbox.Group>
+                <HighPowerList
+                    dataSource={dataSource}
+                    checkedList={checkedList}
+                    cacheScrollTop={cacheScrollTop}
+                    handleCheckChange={handleCheckChange}
+                />
             </div>
         )
     }
@@ -211,7 +295,12 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
             }
         }
         const onClose = () => {
+            // console.log("checkItem",checkItem,value)
             let newArr = checkedList.filter((item) => item !== value)
+            // 删除选中项
+            if (checkItem === value) {
+                setCheckItem("")
+            }
             if (newArr.length) {
                 setIndeterminate(true)
             } else {
@@ -236,7 +325,8 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
 
     const resetBtn = () => {
         setCheckedList(defaultData)
-        handleCheckChange(defaultData)
+        setIndeterminate(!!defaultData.length && defaultData.length < dataSource.length)
+        setCheckAll(defaultData.length === dataSource.length)
     }
 
     const submitBtn = () => {
@@ -270,6 +360,7 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
                         </>
                     )
                 }}
+                dropdownStyle={{padding: 0, borderRadius: 6}}
             >
                 {dataSource.map((item) => (
                     <Option key={item.value}>{item.label}</Option>
@@ -280,12 +371,19 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
 }
 
 // UI组件测试用例
-export const TestTags: React.FC = () => {
-    const [tagList, setTagList] = useState<string[]>(["Orange"])
+export const Test: React.FC = () => {
+    const [tagList, setTagList] = useState<string[]>([])
+    const data = ["Apple", "Pear", "Orange"]
+    let newData: string[] = []
+    for (let i = 0; i < 10; i++) {
+        data.map((item) => {
+            newData.push(`${item}${i}`)
+        })
+    }
     return (
         <div>
             <TagsFilter
-                data={["Apple", "Pear", "Orange", "Apple1", "Pear1", "Orange1"]}
+                data={newData}
                 // data={[
                 //     {
                 //         label:"ppp",
@@ -300,10 +398,10 @@ export const TestTags: React.FC = () => {
                 submitValue={(value) => {
                     setTagList(value)
                 }}
-                isShowAllCheck={true}
-                style= {{width: "200px"}}
+                // isShowAllCheck={true}
+                style={{width: "200px"}}
             />
-            <div style={{width: 200}}>
+            <div style={{width: "20%"}}>
                 <TagsList data={tagList} ellipsis={true} tagClassName='gg' />
             </div>
         </div>

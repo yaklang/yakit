@@ -9,6 +9,10 @@
         display: none;
     }
     }
+    // 默认select长度
+    .ant-select{
+        min-width: 160px;
+    }
 }
 .base-tags-filter-select {
     display: flex;
@@ -37,13 +41,33 @@
         background-color: rgba(242, 139, 68, 0.06);
         color: #f28b44;
     }
-    .default-check-group-box {
-        width: 100%;
-    }
+    // .default-check-group-box {
+    //     width: 100%;
+    // }
     .default-row-check-box {
         background-color: rgba(242, 139, 68, 0.06);
         color: #f28b44;
     }
+    // 虚拟列表样式
+    .virtual-list {
+        position: relative;
+        overflow: auto;
+        border: 1px solid #ddd;
+      }
+      .virtual-list-height {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        z-index: -1;
+      }
+      
+      .view-content {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+      }
     // 修改antd默认样式
     // .ant-checkbox-checked .ant-checkbox-inner {
     //     background-color: #f28b44;
