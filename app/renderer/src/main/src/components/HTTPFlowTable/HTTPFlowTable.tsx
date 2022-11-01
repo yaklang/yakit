@@ -658,7 +658,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         data: []
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
-    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "KB" | "M">("B")
+    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "k" | "M">("B")
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -735,29 +735,32 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     }, [shieldData])
 
-    const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
-        if (sort.order === "none") {
-            sort.order = "desc"
-        }
-        if (filter["UpdatedAt"]) {
-            const time = filter["UpdatedAt"]
-            filter.AfterUpdatedAt = time[0]
-            filter.BeforeUpdatedAt = time[1]
-            delete filter.UpdatedAt
-        } else {
-            filter.AfterUpdatedAt = undefined
-            filter.BeforeUpdatedAt = undefined
-        }
-        setParams({
-            ...params,
-            ...filter
-        })
+    const onTableChange = useDebounceFn(
+        (page: number, limit: number, sort: SortProps, filter: any) => {
+            if (sort.order === "none") {
+                sort.order = "desc"
+            }
+            if (filter["UpdatedAt"]) {
+                const time = filter["UpdatedAt"]
+                filter.AfterUpdatedAt = time[0]
+                filter.BeforeUpdatedAt = time[1]
+                delete filter.UpdatedAt
+            } else {
+                filter.AfterUpdatedAt = undefined
+                filter.BeforeUpdatedAt = undefined
+            }
+            setParams({
+                ...params,
+                ...filter
+            })
 
-        sortRef.current = sort
-        setTimeout(() => {
-            update(page, limit)
-        }, 100)
-    })
+            sortRef.current = sort
+            setTimeout(() => {
+                update(page, limit)
+            }, 100)
+        },
+        {wait: 500}
+    ).run
 
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, sourceType?: string, noLoading?: boolean) => {
@@ -768,10 +771,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 OrderBy: sortRef.current.orderBy || "id"
             }
             setLoading(true)
-            // yakQueryHTTPFlow({
-            //     SourceType: sourceType, ...params,
-            //     Pagination: {...paginationProps},
-            // })
             const l = data.length
             const query = {
                 SourceType: sourceType,
@@ -791,38 +790,21 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
                     // console.log("update-newData", rsp)
-                    let newData = rsp?.Data || []
-                    if (newData.length > 0) {
-                        newData = newData.map((item) => {
-                            let className = ""
-                            if (item.Tags && item.Tags.indexOf("YAKIT_COLOR") > -1) {
-                                const colors = item.Tags.split("|")
-                                className =
-                                    (colors.length > 0 &&
-                                        TableRowColor(colors?.pop()?.split("_")?.pop()?.toUpperCase() || "")) ||
-                                    ""
-                            }
-                            const newItem = {
-                                ...item,
-                                cellClassName: className
-                            }
-                            return newItem
-                        })
-                    }
+                    const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
                     if (paginationProps.Page == 1) {
                         setSelectedRowKeys([])
                         setSelectedRows([])
                         setIsRefresh(!isRefresh)
+                        setPagination(rsp.Pagination)
+                        setTotal(rsp.Total)
                     }
-                    const d = paginationProps.Page == 1 ? [...newData] : data.concat(newData)
+                    const d = paginationProps.Page == 1 ? newData : data.concat(newData)
                     setData(d)
-                    setPagination(rsp.Pagination)
-                    setTotal(rsp.Total)
                 })
                 .catch((e: any) => {
                     failed(`query HTTP Flow failed: ${e}`)
                 })
-                .finally(() => setTimeout(() => setLoading(false), 300))
+                .finally(() => setTimeout(() => setLoading(false), 100))
         }
     )
 
@@ -890,6 +872,27 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             })
     })
     const [offsetData, setOffsetData, getOffsetData] = useGetState<HTTPFlow[]>([])
+    const getClassNameData = (resData: HTTPFlow[]) => {
+        let newData: HTTPFlow[] = []
+        const length = resData.length
+        if (length > 0) {
+        }
+        for (let index = 0; index < length; index++) {
+            const item: HTTPFlow = resData[index]
+            let className = ""
+            if (item.Tags && item.Tags.indexOf("YAKIT_COLOR") > -1) {
+                const colors = item.Tags.split("|")
+                className =
+                    (colors.length > 0 && TableRowColor(colors?.pop()?.split("_")?.pop()?.toUpperCase() || "")) || ""
+            }
+            const newItem = {
+                ...item,
+                cellClassName: className
+            }
+            newData.push(newItem)
+        }
+        return newData
+    }
     const scrollUpdateTop = useDebounceFn(
         useMemoizedFn(() => {
             if (maxId <= 0) return
@@ -899,11 +902,18 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Order: "asc",
                 OrderBy: "Id"
             }
+            const query = {
+                ...params,
+                Tags: params.Tags,
+                Color: color ? [color] : undefined,
+                AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
+                BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
+            }
             // 查询数据
             ipcRenderer
                 .invoke("QueryHTTPFlows", {
                     SourceType: "mitm",
-                    ...params,
+                    ...query,
                     AfterId: maxId, // 用于计算增量的
                     Pagination: {...paginationProps}
                 })
@@ -924,13 +934,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
                     setLoading(true)
                     setTotal(newTotal)
+                    const newData = getClassNameData(resData)
                     if (scrollTop > 10) {
-                        const newOffsetData = resData.concat(getOffsetData())
+                        const newOffsetData = newData.concat(getOffsetData())
                         setMaxId(newOffsetData[0].Id)
                         setOffsetData(newOffsetData)
                     } else {
                         const newOffsetData =
-                            getOffsetData().length > 0 ? getOffsetData().concat(data) : resData.concat(data)
+                            getOffsetData().length > 0 ? getOffsetData().concat(data) : newData.concat(data)
                         setData(newOffsetData)
                         setOffsetData([])
                     }
@@ -1003,7 +1014,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
     })
     const getLength = useMemoizedFn((length: number) => {
-        if (getBodyLengthUnit() === "KB") {
+        if (getBodyLengthUnit() === "k") {
             length = length * 1024
         }
         if (getBodyLengthUnit() === "M") {
@@ -1011,6 +1022,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
         return length
     })
+    console.log('data',data);
+    
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [
             {
@@ -1101,8 +1114,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 dataKey: "BodyLength",
                 width: 200,
                 filterProps: {
+                    filterKey: "BeforeBodyLength",
                     filterRender: () => (
                         <div className={style["table-body-length-filter"]}>
+                            {!!(getParams().BeforeBodyLength && getParams().AfterBodyLength)}
                             <Input.Group compact size='small' className={style["input-group"]}>
                                 <InputNumber
                                     className={style["input-left"]}
@@ -1138,7 +1153,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     }}
                                 >
                                     <Option value='B'>B</Option>
-                                    <Option value='KB'>KB</Option>
+                                    <Option value='k'>k</Option>
                                     <Option value='M'>M</Option>
                                 </Select>
                             </Input.Group>
@@ -1244,7 +1259,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             {
                 title: "操作",
                 dataKey: "action",
-                // width: 68,
+                width: 120,
                 align: "center",
                 fixed: "right",
                 render: (_, rowData) => {
@@ -1713,7 +1728,22 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             event.clientY
         )
     }
-
+    const setTagsQuery = useDebounceFn(
+        () => {
+            setTimeout(() => {
+                update(1)
+            }, 50)
+        },
+        {wait: 500}
+    ).run
+    const setContentTypeQuery = useDebounceFn(
+        () => {
+            setTimeout(() => {
+                update(1)
+            }, 50)
+        },
+        {wait: 500}
+    ).run
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div
@@ -1789,15 +1819,16 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}
                     currentIndex={currentIndex}
+                    query={params}
                     titleHeight={80}
                     renderTitle={
                         <div className={style["http-history-table-title"]}>
                             <div className={style["http-history-table-title-space-between"]}>
                                 <div className={style["http-history-table-flex"]}>
                                     <div className={style["http-history-table-text"]}>HTTP History</div>
-                                    <div className={style["http-history-table-tip"]}>
+                                    {/* <div className={style["http-history-table-tip"]}>
                                         有实时数据刷新时，排序功能无法正常使用
-                                    </div>
+                                    </div> */}
                                 </div>
                                 <div className={style["http-history-table-flex"]}>
                                     <Search
@@ -1944,18 +1975,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                             ...params,
                                                             Tags: t
                                                         })
-                                                        setTimeout(() => {
-                                                            update(1)
-                                                        }, 100)
+                                                        setTagsQuery()
                                                     }}
                                                     setContentType={(t) => {
                                                         setParams({
                                                             ...params,
                                                             SearchContentType: t.join(",")
                                                         })
-                                                        setTimeout(() => {
-                                                            update(1)
-                                                        }, 100)
+                                                        setContentTypeQuery()
                                                     }}
                                                     tagsValue={params.Tags || []}
                                                     contentTypeValue={
@@ -1982,18 +2009,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                 ...params,
                                                 Tags: t
                                             })
-                                            setTimeout(() => {
-                                                update(1)
-                                            }, 100)
+                                            setTagsQuery()
                                         }}
                                         setContentType={(t) => {
                                             setParams({
                                                 ...params,
                                                 SearchContentType: t.join(",")
                                             })
-                                            setTimeout(() => {
-                                                update(1)
-                                            }, 100)
+                                            setContentTypeQuery()
                                         }}
                                     />
                                     <div className={style["http-history-table-color-swatch"]}>
@@ -2166,7 +2189,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                         onChange: update
                     }}
                     onChange={onTableChange}
-                    disableSorting={offsetData.length > 0}
                 />
             </div>
         </div>

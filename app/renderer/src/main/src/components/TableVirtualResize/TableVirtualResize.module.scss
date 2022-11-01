@@ -417,14 +417,6 @@
             }
         }
 
-        .check-row {
-            :global {
-                .ant-checkbox {
-                    top: 0;
-                }
-            }
-        }
-
         .virtual-table-row-left {
             text-align: left;
             justify-content: flex-start;

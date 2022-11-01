@@ -1,5 +1,6 @@
 import React, {ReactNode, Suspense, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
+    useClickAway,
     useCreation,
     useDebounceEffect,
     useDebounceFn,
@@ -38,7 +39,7 @@ import {
 } from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import "../style.css"
-import {DisableSorterIcon, FilterIcon, SorterDownIcon, SorterUpIcon, StatusOfflineIcon} from "@/assets/newIcon"
+import {FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon} from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
 import {randomString} from "@/utils/randomUtil"
 import moment, {Moment} from "moment"
@@ -102,7 +103,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         getTableRef,
         currentIndex,
         isRefresh,
-        disableSorting
+        disableSorting,
+        query
     } = props
 
     const [currentRow, setCurrentRow] = useState<T>()
@@ -164,7 +166,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 containerRefPosition.current = containerRef.current.getBoundingClientRect()
             }
         }, 100)
-    }, [containerRef.current])
+    }, [containerRef.current, height])
     useEffect(() => {
         if (!currentIndex) return
         scrollTo(currentIndex)
@@ -199,24 +201,30 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             if (index >= 0) {
                 setCurrentRowData(data[index])
                 setTimeout(() => {
-                    if (!currentRowRef.current) {
-                        const dom = containerRef.current
-                        //  长按up
-                        // scrollTo(index) // 缓慢滑到
-                        dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
-                        return
-                    }
-                    const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
-                    const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-                    const inViewport =
-                        currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
-                    if (!inViewport) scrollTo(index)
+                    upKey(index)
                 }, 50)
             }
         },
         {},
         [data, currentRowData, containerRef.current, currentRowRef.current]
     )
+    const upKey = useDebounceFn(
+        (index: number) => {
+            if (!currentRowRef.current) {
+                const dom = containerRef.current
+                //  长按up
+                // scrollTo(index) // 缓慢滑到
+                dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
+                return
+            }
+            const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
+            const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+            const inViewport =
+                currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
+            if (!inViewport) scrollTo(index)
+        },
+        {wait: 100}
+    ).run
     // 使用下箭头
     useHotkeys(
         "down",
@@ -247,27 +255,33 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             if (index) {
                 setCurrentRowData(data[index])
                 setTimeout(() => {
-                    const dom = containerRef.current
-                    if (!currentRowRef.current) {
-                        //  长按up
-                        // scrollTo(index)
-                        dom.scrollTop = index * defItemHeight
-                        return
-                    }
-
-                    const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
-                    const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
-                    const y = 1 - (rowNumber - Math.trunc(rowNumber))
-                    const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-                    const inViewport =
-                        currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
-                    if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
+                    downKey(index)
                 }, 50)
             }
         },
         {},
         [data, currentRowData, containerRef.current, currentRowRef.current]
     )
+    const downKey = useDebounceFn(
+        (index: number) => {
+            const dom = containerRef.current
+            if (!currentRowRef.current) {
+                //  长按up
+                // scrollTo(index)
+                dom.scrollTop = index * defItemHeight
+                return
+            }
+
+            const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
+            const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
+            const y = 1 - (rowNumber - Math.trunc(rowNumber))
+            const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+            const inViewport =
+                currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
+            if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
+        },
+        {wait: 100}
+    ).run
     useDeepCompareEffect(() => {
         if (pagination.page == 1) {
             scrollTo(0)
@@ -298,10 +312,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const wrapperHeight = wrapperRef.current?.clientHeight
             // 阴影高度
             setBoxShowHeight(containerHeight - 6)
-            if (wrapperHeight && wrapperHeight <= containerHeight) {
-                const hasMore = pagination.total == data.length
-                if (!loading && !hasMore) pagination.onChange(Number(pagination.page) + 1, pagination.limit)
-            }
+            // 加loading 这个会性能不好
+            // if (wrapperHeight && wrapperHeight <= containerHeight) {
+            //     const hasMore = pagination.total == data.length
+            //     if (!loading && !hasMore) pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+            // }
             if (containerHeight <= wrapperHeight + 29) {
                 setShowScrollY(true)
             } else {
@@ -311,7 +326,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             // 显示滚动条了就不计算了
             getTableWidthAndColWidth(0)
         },
-        [wrapperRef.current?.clientHeight, containerRef.current?.clientHeight, loading],
+        [wrapperRef.current?.clientHeight, containerRef.current?.clientHeight], // loading
         {wait: 200, leading: true}
     )
     // 计算左右宽度以及固定列
@@ -496,13 +511,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const onScrollContainerRef = useThrottleFn(
         (e) => {
             const dom = e?.target
-            const scrollRight = dom.scrollWidth - dom.scrollLeft - dom.clientWidth
+
             const contentScrollTop = dom.scrollTop // 滚动条距离顶部
             const clientHeight = dom.clientHeight // 可视区域
             const scrollHeight = dom.scrollHeight // 滚动条内容的总高度
             const scrollBottom = scrollHeight - contentScrollTop - clientHeight
+            const scrollRight = dom.scrollWidth - dom.scrollLeft - dom.clientWidth
             // 性能优化
-            if (scroll.scrollLeft !== dom.scrollLeft) {
+            if (scroll.scrollLeft !== dom.scrollLeft && (dom.scrollLeft < 50 || scrollRight < 50)) {
                 setScroll({
                     ...scroll,
                     scrollLeft: dom.scrollLeft,
@@ -545,9 +561,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         onChangeCheckboxSingle(true, record[renderKey], record)
         if (props.onRowContextMenu) props.onRowContextMenu(record, e)
     })
-    const [filters, setFilters] = useState<any>({})
+    const [filters, setFilters] = useState<any>(query || {})
     const [opensPopover, setOpensPopover] = useState<any>({})
+    useEffect(() => {
+        console.log("query", query)
 
+        setFilters(query)
+    }, [query])
     useEffect(() => {
         setFilters({})
         setSort({
@@ -579,7 +599,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             [colKey]: valueSearch === "all" ? "" : valueSearch
         }
         setFilters({...newFilters})
-        if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, newFilters)
+        if (props.onChange) props.onChange(1, pagination.limit, sort, newFilters)
     })
 
     const onDateTimeSearch = useMemoizedFn((dates: [Moment, Moment] | null, colKey: string) => {
@@ -589,7 +609,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             [`${colKey}-time`]: dates ? [moment(dates[0]).valueOf(), moment(dates[1]).valueOf()] : undefined //antd时间组件显示的时间 时间戳秒  antd时间组件值要毫秒
         }
         setFilters({...newFilters})
-        if (props.onChange) props.onChange(pagination.page, pagination.limit, sort, newFilters)
+        if (props.onChange) props.onChange(1, pagination.limit, sort, newFilters)
     })
 
     const renderFilterPopover = (
@@ -679,6 +699,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         </div>
     ))
 
+    const filterRef = useRef<any>()
+    useClickAway(() => {
+        setOpensPopover({})
+    }, [filterRef])
+
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -755,7 +780,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                 left: fixedWidth.leftFixedWidth - 11,
                                 width: 10,
                                 height: boxShowHeight
-                                // maxHeight: scroll.scrollBottom < 25 ? height - 49 - 28 : height - 49
+                                // maxHeight: scroll.scrollBottom <div 25 ? height - 49 - 28 : height - 49
                             }}
                         ></div>
                     )}
@@ -766,7 +791,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                 right: fixedWidth.rightFixedWidth - 10,
                                 width: 10,
                                 height: boxShowHeight
-                                // maxHeight: scroll.scrollBottom < 25 ? height - 49 - 28 : height - 49
+                                // maxHeight: scroll.scrollBottom <div 25 ? height - 49 - 28 : height - 49
                             }}
                         ></div>
                     )}
@@ -814,7 +839,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     >
                                         <div className={style["justify-content-between"]}>
                                             {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                                            <div className='virtual-col-title'>
+                                            <div className='virtual-col-title' style={{width: "100%"}}>
                                                 {cIndex === 0 && rowSelection && (
                                                     <span className={style["check"]}>
                                                         {rowSelection.type !== "radio" && (
@@ -831,7 +856,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                         )}
                                                     </span>
                                                 )}
-                                                <span>{columnsItem.title}</span>
+                                                {columnsItem.title}
                                             </div>
                                             <div className={style["virtual-table-title-icon"]}>
                                                 {columnsItem.sorterProps?.sorter && (
@@ -873,12 +898,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                                         })
                                                                         if (props.onChange)
                                                                             props.onChange(
-                                                                                pagination.page,
+                                                                                1,
                                                                                 pagination.limit,
                                                                                 sort,
                                                                                 filters
                                                                             )
                                                                     }}
+                                                                    ref={filterRef}
                                                                 >
                                                                     {columnsItem?.filterProps?.filterRender
                                                                         ? columnsItem?.filterProps?.filterRender()
@@ -894,14 +920,16 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                         >
                                                             <div
                                                                 className={classNames(style["virtual-table-filter"], {
-                                                                    [style["virtual-table-filter-value"]]: columnsItem
-                                                                        .filterProps.filterMultiple
-                                                                        ? filters[filterKey] &&
-                                                                          filters[filterKey].length > 0
-                                                                        : filters[filterKey] &&
-                                                                          filters[filterKey] !==
-                                                                              (columnsItem.filterProps.filtersSelectAll
-                                                                                  ?.textAll || "all")
+                                                                    [style["virtual-table-filter-value"]]:
+                                                                        // columnsItem.filterProps.isFilters ||
+                                                                        columnsItem.filterProps.filterMultiple
+                                                                            ? filters[filterKey] &&
+                                                                              filters[filterKey].length > 0
+                                                                            : filters[filterKey] &&
+                                                                              filters[filterKey] !==
+                                                                                  (columnsItem.filterProps
+                                                                                      .filtersSelectAll?.textAll ||
+                                                                                      "all")
                                                                 })}
                                                                 onClick={() => {
                                                                     setOpensPopover({
@@ -961,8 +989,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                         style["virtual-table-row-content"],
                                                         item.data["cellClassName"],
                                                         {
-                                                            [style["virtual-table-row-ellipsis"]]:
-                                                                columnsItem.ellipsis === false ? false : true,
                                                             [style["virtual-table-row-fixed-left"]]:
                                                                 columnsItem.fixed === "left" && scroll.scrollLeft > 0,
                                                             [style["virtual-table-row-fixed-right"]]:
@@ -985,39 +1011,51 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                         })
                                                     }}
                                                 >
-                                                    {index === 0 && rowSelection && (
-                                                        <span
-                                                            className={classNames(style["check"], style["check-row"])}
-                                                        >
-                                                            {rowSelection.type !== "radio" && (
-                                                                <Checkbox
-                                                                    onChange={(e) => {
-                                                                        onChangeCheckboxSingle(
-                                                                            e.target.checked,
-                                                                            renderKey ? item.data[renderKey] : number,
-                                                                            item.data
-                                                                        )
-                                                                    }}
-                                                                    checked={
-                                                                        rowSelection?.selectedRowKeys?.findIndex(
-                                                                            (ele) =>
-                                                                                ele ===
-                                                                                (renderKey
+                                                    <div
+                                                        className={classNames({
+                                                            [style["virtual-table-row-ellipsis"]]:
+                                                                columnsItem.ellipsis === false ? false : true
+                                                        })}
+                                                    >
+                                                        {index === 0 && rowSelection && (
+                                                            <span
+                                                                className={classNames(
+                                                                    style["check"],
+                                                                    style["check-row"]
+                                                                )}
+                                                            >
+                                                                {rowSelection.type !== "radio" && (
+                                                                    <Checkbox
+                                                                        onChange={(e) => {
+                                                                            onChangeCheckboxSingle(
+                                                                                e.target.checked,
+                                                                                renderKey
                                                                                     ? item.data[renderKey]
-                                                                                    : number)
-                                                                        ) !== -1
-                                                                    }
-                                                                />
-                                                            )}
-                                                        </span>
-                                                    )}
-                                                    {columnsItem.render
-                                                        ? columnsItem.render(
-                                                              item.data[columnsItem.dataKey],
-                                                              item.data,
-                                                              number
-                                                          )
-                                                        : item.data[columnsItem.dataKey] || "-"}
+                                                                                    : number,
+                                                                                item.data
+                                                                            )
+                                                                        }}
+                                                                        checked={
+                                                                            rowSelection?.selectedRowKeys?.findIndex(
+                                                                                (ele) =>
+                                                                                    ele ===
+                                                                                    (renderKey
+                                                                                        ? item.data[renderKey]
+                                                                                        : number)
+                                                                            ) !== -1
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            </span>
+                                                        )}
+                                                        {columnsItem.render
+                                                            ? columnsItem.render(
+                                                                  item.data[columnsItem.dataKey],
+                                                                  item.data,
+                                                                  number
+                                                              )
+                                                            : item.data[columnsItem.dataKey] || "-"}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -1063,6 +1101,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         filterSearchInputProps = {},
         filterMultipleProps = {}
     } = filterProps || {}
+
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
     const scrollDomRef = useRef<any>(null)
@@ -1078,7 +1117,6 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         if (!scrollDom) return
         scrollDomRef.current = scrollDom
     }, [])
-
     // const oo = useMemo(() => Array.from(Array(99999).keys()), []);
     const [list] = useVirtualList(data, {
         containerTarget: containerRef,
@@ -1154,9 +1192,12 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         )
     })
 
-    const onHandleScroll = useMemoizedFn(() => {
-        scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
-    })
+    const onHandleScroll = useDebounceFn(
+        useMemoizedFn(() => {
+            scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
+        }),
+        {wait: 500}
+    ).run
 
     const onChangeSelect = useDebounceFn(
         useMemoizedFn((values: string[], option: FiltersItemProps[]) => {
@@ -1181,7 +1222,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         }
         setTimeout(() => {
             onHandleScroll()
-        }, 100)
+        }, 50)
     })
 
     const onReset = useMemoizedFn(() => {
@@ -1200,6 +1241,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                         size='small'
                         mode='tags'
                         style={{width: 124}}
+                        // onChange={(values, option) => onChangeSelect(values, option as FiltersItemProps[])}
                         onChange={onChangeSelect}
                         allowClear
                         value={Array.isArray(value) ? [...value] : []}

@@ -29,6 +29,7 @@ export interface TableVirtualResizeProps<T> {
     currentIndex?: number //当前row的index
     isRefresh?: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
+    query?:any
 }
 
 export interface SortProps {
@@ -77,6 +78,7 @@ export interface FilterProps {
     filterMultiple?: boolean // 是否多选 filtersType 为select才有效
     onFilter?: () => void // 本地模式下，确定筛选的运行函数
     filterIcon?: ReactNode // 自定义 filter 图标
+    // isFilters?:boolean
 }
 export interface FiltersSelectAllProps {
     isAll: boolean
