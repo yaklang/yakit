@@ -1,13 +1,13 @@
 {
   "name": "yakit",
-  "version": "1.1.3-sp1",
+  "version": "1.1.3-sp3",
   "description": "Yakit is for yaklang.io Electron GUI Entry",
   "main": "app/main/index.js",
   "scripts": {
     "start-electron": "electron .",
     "install-render": "cd app/renderer/src/main && yarn install",
     "start-render": "cd app/renderer/src/main && yarn electron-render",
-    "start-render-enterprise":"cd app/renderer/src/main && yarn electron-render-enterprise",
+    "start-render-enterprise": "cd app/renderer/src/main && yarn electron-render-enterprise",
     "build-render": "cd app/renderer/src/main && yarn build",
     "build-render-enterprise": "cd app/renderer/src/main && yarn build-enterprise",
     "dev": "concurrently -k \"yarn start-render\" \"wait-on tcp:3000 && yarn start-electron \" ",

@@ -173,6 +173,8 @@ service Yak {
   rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
   rpc FixUploadPacket(FixUploadPacketRequest) returns (FixUploadPacketResponse);
   rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
+  rpc GenerateExtractRule(GenerateExtractRuleRequest) returns (GenerateExtractRuleResponse);
+  rpc ExtractData(stream ExtractDataRequest) returns (stream ExtractDataResponse);
 
   // HTTPFuzzerResponse
   // 这个挺特殊的，因为数据包太多了，会卡，所以后端会保存一份，通过这个接口做缓存查询
@@ -355,6 +357,46 @@ service Yak {
 
   // machine id
   rpc GetMachineID(Empty) returns (GetMachineIDResponse);
+}
+
+message ExtractDataResponse {
+  string Token = 1;
+  bytes Extracted = 2;
+}
+
+message ExtractDataRequest {
+  bytes Data = 1;
+
+  // regexp mode -> regexp between 模式
+  string Mode = 2;
+
+  // 根据前后缀提取
+  string PrefixRegexp = 3;
+  string SuffixRegexp = 4;
+
+  // 根据一个正则提取
+  string MatchRegexp = 5;
+
+  // Token 用来标注这个数据是谁的，一般可以用来处理提取的数据
+  string Token = 6;
+
+  // 如果不再有数据了，设置这个 flag
+  bool End = 7;
+}
+
+message GenerateExtractRuleRequest {
+  // 要提取规则的样例数据
+  bytes Data = 1 ;
+  // 选择的文本
+  bytes Selected = 2;
+  // 选择前后缀的偏移量
+  int64 OffsetSize = 3;
+}
+
+message GenerateExtractRuleResponse {
+  string PrefixRegexp = 1;
+  string SuffixRegexp = 2;
+  string SelectedRegexp = 3;
 }
 
 message GetMachineIDResponse {

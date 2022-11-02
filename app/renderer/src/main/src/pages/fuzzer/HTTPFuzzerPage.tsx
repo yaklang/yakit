@@ -70,6 +70,7 @@ import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import "./HTTPFuzzerPage.scss"
 import {ShareIcon} from "@/assets/icons"
 import {ShareData} from "./components/ShareData"
+import {showExtractFuzzerResponseOperator} from "@/utils/extractor";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1397,7 +1398,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     value={targetUrl}
                                                     setValue={setTargetUrl}
                                                     extraFormItemProps={{style: {marginBottom: 8}}}
-                                                ></InputItem>
+                                                />
                                                 <Form.Item style={{marginBottom: 8}}>
                                                     <Button type={"primary"} htmlType={"submit"}>
                                                         构造请求
@@ -1446,7 +1447,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             refreshRequest()
                                         }}
                                         extra={
-                                            <div>
+                                            <Space>
+                                                <Button size={"small"} onClick={() => {
+                                                    showExtractFuzzerResponseOperator(successFuzzer)
+                                                }}>提取响应数据</Button>
                                                 <Popover
                                                     title={"导出数据"}
                                                     trigger={["click"]}
@@ -1475,7 +1479,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         </>
                                                     }
                                                 >
-                                                    <Button size={"small"} type={"link"}>
+                                                    <Button size={"small"}>
                                                         导出数据
                                                     </Button>
                                                 </Popover>
@@ -1489,7 +1493,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 {/*        <DownloadOutlined style={{cursor: "pointer"}}*/}
                                                 {/*                          onClick={downloadContent}/>*/}
                                                 {/*    }></Input>*/}
-                                            </div>
+                                            </Space>
                                         }
                                         failedResponses={failedFuzzer}
                                         successResponses={
