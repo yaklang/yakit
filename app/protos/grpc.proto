@@ -159,6 +159,7 @@ service Yak {
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
   rpc QueryHTTPFlowsIds(QueryHTTPFlowsIdsRequest) returns (QueryHTTPFlowsIdsResponse);
+  rpc HTTPFlowsFieldGroup(HTTPFlowsFieldGroupRequest) returns (HTTPFlowsFieldGroupResponse);
 
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
@@ -779,6 +780,13 @@ message Report {
 }
 
 message SetTagForHTTPFlowRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  repeated string Tags = 3;
+  repeated CheckSetTagsHTTPFlow CheckTags = 4;
+}
+
+message CheckSetTagsHTTPFlow {
   int64 Id = 1;
   string Hash = 2;
   repeated string Tags = 3;
@@ -1945,6 +1953,15 @@ message QueryHTTPFlowRequest {
 
   repeated string IncludeInWhere = 21;
   repeated int64 IncludeId = 22;
+
+  repeated string Tags = 23;
+  string HaveParamsTotal = 24;
+  repeated string Color = 25;
+  int64 OffsetId = 26;
+
+  int64 AfterBodyLength = 27;
+  int64 BeforeBodyLength = 28;
+
 }
 
 message DeleteHTTPFlowRequest {
@@ -2028,6 +2045,20 @@ message QueryHTTPFlowResponse {
   Paging Pagination = 1;
   repeated HTTPFlow Data = 2;
   int64 Total = 3;
+}
+
+message HTTPFlowsFieldGroupRequest {
+  bool RefreshRequest = 1;
+}
+
+message HTTPFlowsFieldGroupResponse {
+  repeated TagsCode Tags = 1;
+  repeated TagsCode StatusCode = 2;
+}
+
+message TagsCode {
+  string Value = 1;
+  int32 Total = 2;
 }
 
 message WebsocketFlows {
