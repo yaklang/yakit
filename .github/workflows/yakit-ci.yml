@@ -155,7 +155,7 @@ jobs:
       - name: Download Yakit (Darwin Amd64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-darwin-x64.dmg
+          name: Yakit-darwin-amd64.dmg
       # - name: Download Yakit (Windows amd64)
       #   uses: actions/download-artifact@v2
       #   with:
