@@ -757,11 +757,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
             setParams({
                 ...params,
-                ...filter
+                ...filter,
+                bodyLength: !!(afterBodyLength || beforeBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
+                AfterBodyLength: afterBodyLength,
+                BeforeBodyLength: beforeBodyLength
             })
             sortRef.current = sort
             setTimeout(() => {
-                update(page, limit)
+                console.log("params", getParams())
+                update(1, limit)
             }, 10)
         },
         {wait: 500}
@@ -1041,6 +1045,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         return length
     })
+    const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetState<number>()
+    const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [
             {
@@ -1131,36 +1137,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 dataKey: "BodyLength",
                 width: 200,
                 filterProps: {
-                    filterKey: "BeforeBodyLength",
+                    filterKey: "bodyLength",
                     filterRender: () => (
                         <div className={style["table-body-length-filter"]}>
-                            {!!(getParams().BeforeBodyLength && getParams().AfterBodyLength)}
                             <Input.Group compact size='small' className={style["input-group"]}>
                                 <InputNumber
                                     className={style["input-left"]}
                                     placeholder='Minimum'
-                                    min={1}
-                                    value={getParams().AfterBodyLength}
-                                    onChange={(v) => {
-                                        setParams({
-                                            ...getParams(),
-                                            AfterBodyLength: v
-                                        })
-                                    }}
+                                    min={0}
+                                    value={getAfterBodyLength()}
+                                    onChange={setAfterBodyLength}
                                     size='small'
                                 />
                                 <Input className={style["input-split"]} placeholder='~' disabled />
                                 <InputNumber
                                     className={style["input-right"]}
                                     placeholder='Maximum'
-                                    min={getParams().AfterBodyLength}
-                                    value={getParams().BeforeBodyLength}
-                                    onChange={(v) => {
-                                        setParams({
-                                            ...getParams(),
-                                            BeforeBodyLength: v
-                                        })
-                                    }}
+                                    min={getAfterBodyLength()}
+                                    value={getBeforeBodyLength()}
+                                    onChange={setBeforeBodyLength}
                                     size='small'
                                 />
                                 <Select
@@ -1179,9 +1174,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 onReset={() => {
                                     setParams({
                                         ...getParams(),
-                                        AfterBodyLength: undefined,
-                                        BeforeBodyLength: undefined
+                                        AfterBodyLength: afterBodyLength,
+                                        BeforeBodyLength: beforeBodyLength
                                     })
+                                    setBeforeBodyLength(undefined)
+                                    setAfterBodyLength(undefined)
                                     setBodyLengthUnit("B")
                                     setTimeout(() => {
                                         update(1)
