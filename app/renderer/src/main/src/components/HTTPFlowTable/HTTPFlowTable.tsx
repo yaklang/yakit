@@ -2335,20 +2335,23 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
     useClickAway(() => {
         if (showList) setShowList(false)
     }, listRef)
-    // useEffect(() => {
-    //     // 新版UI组件之前的过度写法
-    //     const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
-    //     if (!scrollDom) return
-    //     scrollDomRef.current = scrollDom
-    // }, [])
-    // const onHandleScroll = useMemoizedFn(() => {
-    //     scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
-    //     setShowList(true)
-    // })
+    useEffect(() => {
+        // 新版UI组件之前的过度写法
+        const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
+        if (!scrollDom) return
+        scrollDomRef.current = scrollDom
+    }, [])
+    const onHandleScroll = useMemoizedFn(() => {
+        scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
+        // setShowList(true)
+    })
     const onChangeSelect = useMemoizedFn((values: string[], option: FiltersItemProps[]) => {
         onSelect(values, option)
         // 滑动至最右边
-        // onHandleScroll()
+        onHandleScroll()
+        setTimeout(() => {
+            onSure()
+        }, 100)
     })
     // const originalList = useMemo(() => Array.from(Array(99999).keys()), [])
     const [list] = useVirtualList(options, {
@@ -2370,9 +2373,9 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
         } else {
             onSelect([selectItem.value], selectItem)
         }
-        // setTimeout(() => {
-        //     onHandleScroll()
-        // }, 100)
+        setTimeout(() => {
+            onHandleScroll()
+        }, 100)
     })
 
     const onReset = useMemoizedFn(() => {
@@ -2396,18 +2399,18 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
                     dropdownStyle={{height: 0, padding: 0}}
                     options={options}
                     className='select-small'
-                    // onFocus={() => onHandleScroll()}
+                    onFocus={() => onHandleScroll()}
                 />
             </div>
             <div
                 className={classNames(style["select-search"], {
                     [style["select-search-show"]]: showList
                 })}
-                // onMouseLeave={() => {
-                //     setTimeout(() => {
-                //         onSure()
-                //     }, 200)
-                // }}
+                onMouseLeave={() => {
+                    setTimeout(() => {
+                        onSure()
+                    }, 200)
+                }}
             >
                 <div ref={containerRef} className={classNames(style["select-list"])}>
                     <div ref={wrapperRef}>
