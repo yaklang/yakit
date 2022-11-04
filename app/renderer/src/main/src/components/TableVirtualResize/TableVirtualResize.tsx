@@ -7,6 +7,7 @@ import {
     useDeepCompareEffect,
     useGetState,
     useMemoizedFn,
+    useThrottleEffect,
     useThrottleFn,
     useUpdateEffect,
     useVirtualList
@@ -16,7 +17,8 @@ import {
     ColumnsTypeProps,
     FiltersItemProps,
     FixedWidthProps,
-    scrollProps,
+    RowSelectionProps,
+    ScrollProps,
     SelectSearchProps,
     ShowFixedShadowProps,
     SortProps,
@@ -95,8 +97,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         extra,
         loading,
         scrollToBottom,
-        currentRowData,
-        setCurrentRowData,
         isReset,
         titleHeight,
         renderTitle,
@@ -119,13 +119,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         leftFixedWidth: 0, // 固定左侧的宽度
         rightFixedWidth: 0 // 固定右侧的宽度
     })
-    const [scroll, setScroll] = useState<scrollProps>({
+    const [scroll, setScroll] = useState<ScrollProps>({
         scrollLeft: 0,
         scrollBottom: 0,
         scrollRight: 1
     }) // 滚动条距离边的距离
     const [boxShowHeight, setBoxShowHeight] = useState<number>(0) // 阴影高度
-    const [showScrollY, setShowScrollY] = useState<boolean>(false) // 拖拽的columns index
+    const [showScrollY, setShowScrollY, getShowScrollY] = useGetState<boolean>(true) // 拖拽的columns index
     const [sort, setSort] = useState<SortProps>({
         order: "none",
         orderBy: ""
@@ -173,128 +173,138 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [currentIndex])
 
     // 使用上箭头
-    useHotkeys(
-        "up",
-        () => {
-            if (!setCurrentRowData) return
-            const dataLength = data.length
-            if (dataLength <= 0) {
-                return
-            }
-            if (!currentRowData) {
-                setCurrentRowData(data[0])
-                return
-            }
-            let index
-            // 如果上点的话，应该是选择更新的内容
-            for (let i = 0; i < dataLength; i++) {
-                if (data[i][renderKey] === currentRowData[renderKey]) {
-                    if (i === 0) {
-                        index = i
-                        break
-                    } else {
-                        index = i - 1
-                        break
-                    }
-                }
-            }
-            if (index >= 0) {
-                setCurrentRowData(data[index])
-                setTimeout(() => {
-                    upKey(index)
-                }, 50)
-            }
-        },
-        {},
-        [data, currentRowData, containerRef.current, currentRowRef.current]
-    )
-    const upKey = useDebounceFn(
-        (index: number) => {
-            if (!currentRowRef.current) {
-                const dom = containerRef.current
-                //  长按up
-                // scrollTo(index) // 缓慢滑到
-                dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
-                return
-            }
-            const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
-            const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-            const inViewport =
-                currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
-            if (!inViewport) scrollTo(index)
-        },
-        {wait: 100}
-    ).run
-    // 使用下箭头
-    useHotkeys(
-        "down",
-        () => {
-            if (!setCurrentRowData) return
-            const dataLength = data.length
-            if (dataLength <= 0) {
-                return
-            }
-            if (!currentRowData) {
-                setCurrentRowData(data[0])
-                return
-            }
-            let index
-            // 如果上点的话，应该是选择更新的内容
-            for (let i = 0; i < dataLength; i++) {
-                if (data[i][renderKey] === currentRowData[renderKey]) {
-                    if (i === dataLength - 1) {
-                        index = i
-                        break
-                    } else {
-                        index = i + 1
-                        break
-                    }
-                }
-            }
+    // useHotkeys(
+    //     "up",
+    //     () => {
+    //         if (!setCurrentRow) return
+    //         const dataLength = data.length
+    //         if (dataLength <= 0) {
+    //             return
+    //         }
+    //         if (!currentRow) {
+    //             setCurrentRow(data[0])
+    //             return
+    //         }
+    //         let index
+    //         // 如果上点的话，应该是选择更新的内容
+    //         for (let i = 0; i < dataLength; i++) {
+    //             if (data[i][renderKey] === currentRow[renderKey]) {
+    //                 if (i === 0) {
+    //                     index = i
+    //                     break
+    //                 } else {
+    //                     index = i - 1
+    //                     break
+    //                 }
+    //             }
+    //         }
+    //         if (index >= 0) {
+    //             setCurrentRow(data[index])
+    //             setTimeout(() => {
+    //                 upKey(index)
+    //             }, 50)
+    //         }
+    //     },
+    //     {},
+    //     [data, currentRow, containerRef.current, currentRowRef.current]
+    // )
+    // const upKey = useDebounceFn(
+    //     (index: number) => {
+    //         if (!currentRowRef.current) {
+    //             const dom = containerRef.current
+    //             //  长按up
+    //             // scrollTo(index) // 缓慢滑到
+    //             dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
+    //             return
+    //         }
+    //         const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
+    //         const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+    //         const inViewport =
+    //             currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
+    //         // console.log("currentPosition.top", currentPosition, containerRefPosition.current)
 
-            if (index) {
-                setCurrentRowData(data[index])
-                setTimeout(() => {
-                    downKey(index)
-                }, 50)
-            }
-        },
-        {},
-        [data, currentRowData, containerRef.current, currentRowRef.current]
-    )
-    const downKey = useDebounceFn(
-        (index: number) => {
-            const dom = containerRef.current
-            if (!currentRowRef.current) {
-                //  长按up
-                // scrollTo(index)
-                dom.scrollTop = index * defItemHeight
-                return
-            }
+    //         if (!inViewport) scrollTo(index)
+    //     },
+    //     {wait: 100}
+    // ).run
+    // // 使用下箭头
+    // useHotkeys(
+    //     "down",
+    //     () => {
+    //         if (!setCurrentRow) return
+    //         const dataLength = data.length
+    //         if (dataLength <= 0) {
+    //             return
+    //         }
+    //         if (!currentRow) {
+    //             setCurrentRow(data[0])
+    //             return
+    //         }
+    //         let index
+    //         // 如果上点的话，应该是选择更新的内容
+    //         for (let i = 0; i < dataLength; i++) {
+    //             if (data[i][renderKey] === currentRow[renderKey]) {
+    //                 if (i === dataLength - 1) {
+    //                     index = i
+    //                     break
+    //                 } else {
+    //                     index = i + 1
+    //                     break
+    //                 }
+    //             }
+    //         }
 
-            const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
-            const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
-            const y = 1 - (rowNumber - Math.trunc(rowNumber))
-            const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-            const inViewport =
-                currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
-            if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
-        },
-        {wait: 100}
-    ).run
+    //         if (index) {
+    //             setCurrentRow(data[index])
+    //             setTimeout(() => {
+    //                 downKey(index)
+    //             }, 50)
+    //         }
+    //     },
+    //     {},
+    //     [data, currentRow, containerRef.current, currentRowRef.current]
+    // )
+    // const downKey = useDebounceFn(
+    //     (index: number) => {
+    //         const dom = containerRef.current
+    //         if (!currentRowRef.current) {
+    //             //  长按up
+    //             // scrollTo(index)
+    //             dom.scrollTop = index * defItemHeight
+    //             return
+    //         }
+
+    //         const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
+    //         const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
+    //         const y = 1 - (rowNumber - Math.trunc(rowNumber))
+    //         const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+    //         const inViewport =
+    //             currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
+    //         if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
+    //     },
+    //     {wait: 100}
+    // ).run
     useDeepCompareEffect(() => {
         if (pagination.page == 1) {
             scrollTo(0)
+            setScroll({
+                ...scroll,
+                scrollBottom: 0
+            })
         }
     }, [pagination.page])
 
     useDeepCompareEffect(() => {
-        getTableWidthAndColWidth(0)
+        // getTableWidthAndColWidth(0)
         setColumns([...props.columns])
     }, [props.columns])
     useDeepCompareEffect(() => {
         getLeftOrRightFixedWidth()
     }, [columns])
+    useEffect(() => {
+        if (!width) return
+        getTableWidthAndColWidth(0)
+    }, [width])
     useEffect(() => {
         getTableRef(containerRef.current)
     }, [containerRef.current])
@@ -303,32 +313,34 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             tablePosition.current = tableRef.current.getBoundingClientRect()
         }
     }, [tableRef.current])
-    useDebounceEffect(
-        () => {
-            if (!width) return
-            if (!containerRef || !wrapperRef) return
-            // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
-            const containerHeight = containerRef.current?.clientHeight
-            const wrapperHeight = wrapperRef.current?.clientHeight
-            // 阴影高度
-            setBoxShowHeight(containerHeight - 6)
-            // 加loading 这个会性能不好
-            // if (wrapperHeight && wrapperHeight <= containerHeight) {
-            //     const hasMore = pagination.total == data.length
-            //     if (!loading && !hasMore) pagination.onChange(Number(pagination.page) + 1, pagination.limit)
-            // }
-            if (containerHeight <= wrapperHeight + 29) {
-                setShowScrollY(true)
-            } else {
-                setShowScrollY(false)
-            }
-            if (showScrollY) return
-            // 显示滚动条了就不计算了
-            getTableWidthAndColWidth(0)
-        },
-        [wrapperRef.current?.clientHeight, containerRef.current?.clientHeight], // loading
-        {wait: 200, leading: true}
-    )
+
+    // useDebounceEffect(
+    //     () => {
+    //         if (!width) return
+    //         if (!containerRef || !wrapperRef) return
+    //         // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
+    //         const containerHeight = containerRef.current?.clientHeight
+    //         const wrapperHeight = wrapperRef.current?.clientHeight
+    //         // 阴影高度
+    //         setBoxShowHeight(containerHeight - 6)
+    //         // 加loading 这个会性能不好
+    //         // if (wrapperHeight && wrapperHeight <= containerHeight) {
+    //         //     const hasMore = pagination.total == data.length
+    //         //     if (!loading && !hasMore) pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+    //         // }
+    //         setShowScrollY(true)
+    //         if (containerHeight <= wrapperHeight + 29) {
+    //             setShowScrollY(true)
+    //         } else {
+    //             setShowScrollY(false)
+    //         }
+    //         if (showScrollY) return
+    //         // 显示滚动条了就不计算了
+    //         getTableWidthAndColWidth(0)
+    //     },
+    //     [containerRef.current?.clientHeight],
+    //     {wait: 200, leading: true}
+    // )
     // 计算左右宽度以及固定列
     const getLeftOrRightFixedWidth = useMemoizedFn(() => {
         let leftWidth = 0
@@ -392,20 +404,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             rightFixedWidth: rightWidth
         })
     })
-
-    const scrollFXRef = useRef(false)
-    useEffect(() => {
-        if (width) return
-        getTableWidthAndColWidth(0)
-        if (!showScrollY) return
-        if (scrollFXRef.current) {
-            scrollFXRef.current = false
-            containerRef.current.scrollLeft = containerRef.current.scrollLeft - 1
-        } else {
-            scrollFXRef.current = true
-            containerRef.current.scrollLeft = containerRef.current.scrollLeft + 1
-        }
-    }, [width])
     const [colWidth, setColWidth, getColWidth] = useGetState<number>(0)
     // 初始化表格宽度和列宽度
     const getTableWidthAndColWidth = useMemoizedFn((scrollBarWidth: number) => {
@@ -507,6 +505,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         recalculatedTableWidth(0, true)
         setLineIndex(-1)
     })
+    const preScrollLeft = useRef<number>(0)
+    const preScrollBottom = useRef<number>(0)
 
     const onScrollContainerRef = useThrottleFn(
         (e) => {
@@ -518,54 +518,60 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const scrollBottom = scrollHeight - contentScrollTop - clientHeight
             const scrollRight = dom.scrollWidth - dom.scrollLeft - dom.clientWidth
             // 性能优化
-            if (scroll.scrollLeft !== dom.scrollLeft && (dom.scrollLeft < 50 || scrollRight < 50)) {
-                setScroll({
-                    ...scroll,
-                    scrollLeft: dom.scrollLeft,
-                    scrollRight: scrollRight
-                })
+            if (preScrollLeft.current !== dom.scrollLeft) {
+                preScrollLeft.current = dom.scrollLeft
+                if (dom.scrollLeft < 50 || scrollRight < 50) {
+                    setScroll({
+                        ...scroll,
+                        scrollLeft: dom.scrollLeft,
+                        scrollRight: scrollRight
+                    })
+                }
                 return
             }
-            if (wrapperRef && containerRef && pagination) {
-                const hasMore = pagination.total == data.length
-                if (scrollBottom <= (scrollToBottom || 300) && !hasMore) {
-                    if (scrollBottom < 50) {
+            if (preScrollBottom.current !== scrollBottom) {
+                preScrollBottom.current = scrollBottom
+                if (wrapperRef && containerRef && pagination) {
+                    const hasMore = pagination.total == data.length
+                    //避免频繁set
+                    if (scroll.scrollBottom < 50 && scrollBottom > 50) {
+                        // 不显示暂无数据
                         setScroll({
                             ...scroll,
                             scrollBottom: scrollBottom
                         })
                     }
-                    pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+                    if (scrollBottom < 50) {
+                        //显示暂无数据
+                        setScroll({
+                            ...scroll,
+                            scrollBottom: scrollBottom
+                        })
+                    }
+                    if (scrollBottom <= (scrollToBottom || 300) && !hasMore) {
+                        pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+                    }
                 }
             }
         },
         {wait: 200}
     ).run
 
-    useEffect(() => {
-        if (currentRowData) {
-            setCurrentRow(currentRowData)
-        }
-    }, [currentRowData])
     const onRowClick = useMemoizedFn((record: T) => {
-        if (!currentRowData) {
-            setCurrentRow(record)
+        setCurrentRow(record)
+        if (props.onRowClick) {
+            props.onRowClick(record)
         }
-        if (props.onRowClick) props.onRowClick(record)
     })
 
     const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent) => {
-        if (!currentRowData) {
-            setCurrentRow(record)
-        }
+        setCurrentRow(record)
         onChangeCheckboxSingle(true, record[renderKey], record)
         if (props.onRowContextMenu) props.onRowContextMenu(record, e)
     })
     const [filters, setFilters] = useState<any>(query || {})
     const [opensPopover, setOpensPopover] = useState<any>({})
     useEffect(() => {
-        console.log("query", query)
-
         setFilters(query)
     }, [query])
     useEffect(() => {
@@ -576,6 +582,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         })
         scrollTo(0)
     }, [isReset])
+    const onChangTable = useMemoizedFn(() => {
+        if (props.onChange) props.onChange(1, pagination.limit, sort, filters)
+    })
     const onSorter = useMemoizedFn((s: SortProps) => {
         let newOrder: "none" | "asc" | "desc" = s.order
         if (sort.orderBy !== s.orderBy) {
@@ -599,7 +608,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             [colKey]: valueSearch === "all" ? "" : valueSearch
         }
         setFilters({...newFilters})
-        if (props.onChange) props.onChange(1, pagination.limit, sort, newFilters)
+        // if (props.onChange) props.onChange(1, pagination.limit, sort, newFilters)
     })
 
     const onDateTimeSearch = useMemoizedFn((dates: [Moment, Moment] | null, colKey: string) => {
@@ -609,7 +618,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             [`${colKey}-time`]: dates ? [moment(dates[0]).valueOf(), moment(dates[1]).valueOf()] : undefined //antd时间组件显示的时间 时间戳秒  antd时间组件值要毫秒
         }
         setFilters({...newFilters})
-        if (props.onChange) props.onChange(1, pagination.limit, sort, newFilters)
+        // if (props.onChange) props.onChange(1, pagination.limit, sort, newFilters)
     })
 
     const renderFilterPopover = (
@@ -752,340 +761,482 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 </div>
             )}
             {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
-                <div
-                    className={classNames(style["virtual-table-body"], {
-                        [style["virtual-table-border-left"]]:
-                            scroll.scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow,
-                        [style["virtual-table-border-right"]]:
-                            scroll.scrollRight > 0 && !isShowFixedShadow.isShowRightFixedShadow,
-                        [style["virtual-table-body-scroll"]]: !showScrollY //为了最外层的边框效果
-                    })}
-                    style={{
-                        maxHeight:
-                            ((renderTitle || title || extra) && `calc(100% - ${titleHeight ? titleHeight : 42}px)`) ||
-                            "100%"
-                    }}
-                >
-                    {enableDrag && lineIndex > -1 && (
-                        <div
-                            className={classNames(style["drag-line"])}
-                            style={{left: lineLeft}}
-                            onMouseUp={(e) => onMouseUp(e)}
-                        />
-                    )}
-                    {isShowFixedShadow.isShowLeftFixedShadow && scroll.scrollLeft > 0 && (
-                        <div
-                            className={classNames(style["virtual-table-fixed-left"])}
-                            style={{
-                                left: fixedWidth.leftFixedWidth - 11,
-                                width: 10,
-                                height: boxShowHeight
-                                // maxHeight: scroll.scrollBottom <div 25 ? height - 49 - 28 : height - 49
-                            }}
-                        ></div>
-                    )}
-                    {isShowFixedShadow.isShowRightFixedShadow && scroll.scrollRight > 0 && (
-                        <div
-                            className={classNames(style["virtual-table-fixed-right"])}
-                            style={{
-                                right: fixedWidth.rightFixedWidth - 10,
-                                width: 10,
-                                height: boxShowHeight
-                                // maxHeight: scroll.scrollBottom <div 25 ? height - 49 - 28 : height - 49
-                            }}
-                        ></div>
-                    )}
+                <Spin spinning={loading && pagination.page == 0}>
                     <div
-                        ref={containerRef}
-                        className={classNames(style["virtual-table-list-container"], {
-                            [style["virtual-table-container-none-select"]]: lineIndex > -1,
-                            [style["scroll-y"]]: !showScrollY
+                        className={classNames(style["virtual-table-body"], {
+                            [style["virtual-table-border-left"]]:
+                                scroll.scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow,
+                            [style["virtual-table-border-right"]]:
+                                scroll.scrollRight > 0 && !isShowFixedShadow.isShowRightFixedShadow
                         })}
-                        onScroll={onScrollContainerRef}
+                        style={{
+                            maxHeight:
+                                ((renderTitle || title || extra) &&
+                                    `calc(100% - ${titleHeight ? titleHeight : 42}px)`) ||
+                                "100%"
+                        }}
                     >
-                        <div
-                            ref={columnsRef}
-                            className={classNames(style["virtual-table-col"])}
-                            // style={{width: tableWidth || width}}
-                        >
-                            {columns.map((columnsItem, cIndex) => {
-                                const filterKey = columnsItem?.filterProps?.filterKey || columnsItem.dataKey
-                                const sorterKey = columnsItem?.sorterProps?.sorterKey || columnsItem.dataKey
-                                return (
-                                    <div
-                                        key={`${columnsItem.dataKey}-title`}
-                                        className={classNames(style["virtual-table-title"], {
-                                            [style["virtual-table-row-left"]]: columnsItem.align === "left",
-                                            [style["virtual-table-row-center"]]: columnsItem.align === "center",
-                                            [style["virtual-table-row-right"]]: columnsItem.align === "right",
-                                            [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left",
-                                            [style["virtual-table-title-fixed-left-border"]]:
-                                                columnsItem.fixed === "left" && scroll.scrollLeft > 0, // 保证不产生偏移
-                                            [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right",
-                                            [style["virtual-table-title-fixed-right-border"]]:
-                                                columnsItem.fixed === "right" && scroll.scrollRight === 0
-                                        })}
-                                        style={{
-                                            width: columnsItem.width || colWidth,
-                                            // minWidth: columnsItem.minWidth || defMinWidth,
-                                            ...(columnsItem.fixed === "left" &&
-                                                scroll.scrollLeft > 0 && {
-                                                    left: columnsItem.left
-                                                }),
-                                            ...(columnsItem.fixed === "right" && {
-                                                right: columnsItem.right
-                                            })
-                                        }}
-                                    >
-                                        <div className={style["justify-content-between"]}>
-                                            {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                                            <div className='virtual-col-title' style={{width: "100%"}}>
-                                                {cIndex === 0 && rowSelection && (
-                                                    <span className={style["check"]}>
-                                                        {rowSelection.type !== "radio" && (
-                                                            <Checkbox
-                                                                onChange={(e) => {
-                                                                    onChangeCheckbox(e.target.checked)
-                                                                }}
-                                                                checked={
-                                                                    data.length > 0 &&
-                                                                    rowSelection?.selectedRowKeys?.length ===
-                                                                        data.length
-                                                                }
-                                                            />
-                                                        )}
-                                                    </span>
-                                                )}
-                                                {columnsItem.title}
-                                            </div>
-                                            <div className={style["virtual-table-title-icon"]}>
-                                                {columnsItem.sorterProps?.sorter && (
-                                                    <>
-                                                        {disableSorting ? (
-                                                            <div
-                                                                className={classNames(
-                                                                    style["virtual-table-sorter-disable"]
-                                                                )}
-                                                            >
-                                                                <DisableSorterIcon />
-                                                            </div>
-                                                        ) : (
-                                                            <div
-                                                                onClick={() =>
-                                                                    onSorter({
-                                                                        orderBy: sorterKey,
-                                                                        order: sort.order
-                                                                    })
-                                                                }
-                                                            >
-                                                                {renderSort(sorterKey)}
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                )}
-                                                {columnsItem?.filterProps && (
-                                                    <>
-                                                        <Popover
-                                                            placement='bottom'
-                                                            trigger='click'
-                                                            content={
-                                                                <div
-                                                                    className={style["popover-content"]}
-                                                                    onMouseLeave={(e) => {
-                                                                        setOpensPopover({
-                                                                            ...opensPopover,
-                                                                            [filterKey]: false
-                                                                        })
-                                                                        if (props.onChange)
-                                                                            props.onChange(
-                                                                                1,
-                                                                                pagination.limit,
-                                                                                sort,
-                                                                                filters
-                                                                            )
-                                                                    }}
-                                                                    ref={filterRef}
-                                                                >
-                                                                    {columnsItem?.filterProps?.filterRender
-                                                                        ? columnsItem?.filterProps?.filterRender()
-                                                                        : renderFilterPopover(
-                                                                              columnsItem,
-                                                                              filterKey,
-                                                                              columnsItem?.filterProps?.filtersType
-                                                                          )}
-                                                                </div>
-                                                            }
-                                                            overlayClassName={style["search-popover"]}
-                                                            visible={opensPopover[filterKey]}
-                                                        >
-                                                            <div
-                                                                className={classNames(style["virtual-table-filter"], {
-                                                                    [style["virtual-table-filter-value"]]:
-                                                                        // columnsItem.filterProps.isFilters ||
-                                                                        columnsItem.filterProps.filterMultiple
-                                                                            ? filters[filterKey] &&
-                                                                              filters[filterKey].length > 0
-                                                                            : filters[filterKey] &&
-                                                                              filters[filterKey] !==
-                                                                                  (columnsItem.filterProps
-                                                                                      .filtersSelectAll?.textAll ||
-                                                                                      "all")
-                                                                })}
-                                                                onClick={() => {
-                                                                    setOpensPopover({
-                                                                        ...opensPopover,
-                                                                        [filterKey]: !opensPopover[filterKey]
-                                                                    })
-                                                                }}
-                                                            >
-                                                                <FilterIcon />
-                                                            </div>
-                                                        </Popover>
-                                                    </>
-                                                )}
-                                            </div>
-                                            {enableDrag && cIndex < columns.length - 1 && (
-                                                <div
-                                                    className={classNames(style["virtual-table-title-drag"])}
-                                                    style={{height: hoverLine ? height : 28}}
-                                                    onMouseEnter={() => setHoverLine(true)}
-                                                    onMouseLeave={() => setHoverLine(false)}
-                                                    onMouseDown={(e) => onMouseDown(e, cIndex)}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        <div
-                            ref={wrapperRef}
-                            className={classNames(style["virtual-table-list"])}
-                            // style={{width: tableWidth || width}}
-                        >
-                            {list.map((item, number) => {
-                                const isSelect = currentRow && currentRow[renderKey] === item.data[renderKey]
-                                if (Object.prototype.toString.call(item.data) === "[object Object]") {
-                                    return (
-                                        <div
-                                            className={classNames(style["virtual-table-row"], {
-                                                [style["virtual-table-active-row"]]: isSelect
-                                            })}
-                                            onClick={(e) => {
-                                                // @ts-ignore
-                                                if (e.target.nodeName === "INPUT") return
-                                                onRowClick(item.data)
-                                            }}
-                                            onContextMenu={(e) => {
-                                                onRowContextMenu(item.data, e)
-                                            }}
-                                            ref={isSelect ? currentRowRef : undefined}
-                                            key={`${item.data[renderKey]}-${randomString(4)}` || number}
-                                        >
-                                            {columns.map((columnsItem, index) => (
-                                                <div
-                                                    key={`${columnsItem.dataKey}-row`}
-                                                    className={classNames(
-                                                        style["virtual-table-row-content"],
-                                                        item.data["cellClassName"],
-                                                        {
-                                                            [style["virtual-table-row-fixed-left"]]:
-                                                                columnsItem.fixed === "left" && scroll.scrollLeft > 0,
-                                                            [style["virtual-table-row-fixed-right"]]:
-                                                                columnsItem.fixed === "right" && scroll.scrollRight > 0,
-                                                            [style["virtual-table-row-center"]]:
-                                                                columnsItem.align === "center",
-                                                            [style["virtual-table-row-right"]]:
-                                                                columnsItem.align === "right"
-                                                        }
-                                                    )}
-                                                    style={{
-                                                        width: columnsItem.width || colWidth,
-                                                        // minWidth: columnsItem.minWidth || defMinWidth,
-                                                        ...(columnsItem.fixed === "left" &&
-                                                            scroll.scrollLeft > 0 && {
-                                                                left: columnsItem.left
-                                                            }),
-                                                        ...(columnsItem.fixed === "right" && {
-                                                            right: columnsItem.right
-                                                        })
-                                                    }}
-                                                >
-                                                    <div
-                                                        className={classNames({
-                                                            [style["virtual-table-row-ellipsis"]]:
-                                                                columnsItem.ellipsis === false ? false : true
-                                                        })}
-                                                    >
-                                                        {index === 0 && rowSelection && (
-                                                            <span
-                                                                className={classNames(
-                                                                    style["check"],
-                                                                    style["check-row"]
-                                                                )}
-                                                            >
-                                                                {rowSelection.type !== "radio" && (
-                                                                    <Checkbox
-                                                                        onChange={(e) => {
-                                                                            onChangeCheckboxSingle(
-                                                                                e.target.checked,
-                                                                                renderKey
-                                                                                    ? item.data[renderKey]
-                                                                                    : number,
-                                                                                item.data
-                                                                            )
-                                                                        }}
-                                                                        checked={
-                                                                            rowSelection?.selectedRowKeys?.findIndex(
-                                                                                (ele) =>
-                                                                                    ele ===
-                                                                                    (renderKey
-                                                                                        ? item.data[renderKey]
-                                                                                        : number)
-                                                                            ) !== -1
-                                                                        }
-                                                                    />
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {columnsItem.render
-                                                            ? columnsItem.render(
-                                                                  item.data[columnsItem.dataKey],
-                                                                  item.data,
-                                                                  number
-                                                              )
-                                                            : item.data[columnsItem.dataKey] || "-"}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )
-                                }
-                                return <></>
-                            })}
-                        </div>
-                    </div>
-                    <div className={classNames(style["virtual-table-list-pagination"])}>
-                        {loading && !(pagination?.total == data.length) && (
-                            <div className={classNames(style["pagination-loading"])}>
-                                <LoadingOutlined />
-                            </div>
-                        )}
-                        {!loading && pagination?.total == data.length && (pagination?.page || 0) > 0 && (
+                        {enableDrag && lineIndex > -1 && (
                             <div
-                                className={classNames(style["pagination-text"], {
-                                    [style["pagination-text-show"]]: scroll.scrollBottom < 32 || list.length === 0
-                                })}
-                            >
-                                暂无更多数据
-                            </div>
+                                className={classNames(style["drag-line"])}
+                                style={{left: lineLeft}}
+                                onMouseUp={(e) => onMouseUp(e)}
+                            />
                         )}
+                        {isShowFixedShadow.isShowLeftFixedShadow && scroll.scrollLeft > 0 && (
+                            <div
+                                className={classNames(style["virtual-table-fixed-left"])}
+                                style={{
+                                    left: fixedWidth.leftFixedWidth - 10,
+                                    height
+                                    // height: boxShowHeight
+                                }}
+                            ></div>
+                        )}
+                        {isShowFixedShadow.isShowRightFixedShadow && scroll.scrollRight > 0 && (
+                            <div
+                                className={classNames(style["virtual-table-fixed-right"])}
+                                style={{
+                                    right: fixedWidth.rightFixedWidth - 10,
+                                    height: height - 6
+                                    // height: boxShowHeight
+                                }}
+                            ></div>
+                        )}
+                        <div
+                            ref={containerRef}
+                            className={classNames(style["virtual-table-list-container"], {
+                                [style["virtual-table-container-none-select"]]: lineIndex > -1,
+                                [style["scroll-y"]]: !showScrollY
+                            })}
+                            onScroll={onScrollContainerRef}
+                        >
+                            <div ref={columnsRef} className={classNames(style["virtual-table-col"])}>
+                                {columns.map((columnsItem, cIndex) => (
+                                    <ColumnsItemRender
+                                        columnsItem={columnsItem}
+                                        colWidth={colWidth}
+                                        scroll={scroll}
+                                        rowSelection={rowSelection as RowSelectionProps<any>}
+                                        cIndex={cIndex}
+                                        onChangeCheckbox={onChangeCheckbox}
+                                        isAll={list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length}
+                                        disableSorting={disableSorting}
+                                        sort={sort}
+                                        onSorter={onSorter}
+                                        renderSort={renderSort}
+                                        setOpensPopover={setOpensPopover}
+                                        opensPopover={opensPopover}
+                                        onChangTable={onChangTable}
+                                        filterRef={filterRef}
+                                        renderFilterPopover={renderFilterPopover}
+                                        filters={filters}
+                                        enableDrag={enableDrag}
+                                        columns={columns}
+                                        setHoverLine={setHoverLine}
+                                        onMouseDown={onMouseDown}
+                                    />
+                                ))}
+                            </div>
+                            <div ref={wrapperRef} className={classNames(style["virtual-table-list"])}>
+                                {columns.map((columnsItem, index) => (
+                                    <ColRender
+                                        colIndex={index}
+                                        currentRow={currentRow}
+                                        key={`${columnsItem.dataKey}-col` || index}
+                                        columnsItem={columnsItem}
+                                        list={list}
+                                        colWidth={colWidth}
+                                        renderKey={renderKey}
+                                        isLastItem={index === columns.length - 1}
+                                        onRowClick={onRowClick}
+                                        onRowContextMenu={(data, e) => {
+                                            onRowContextMenu(data, e)
+                                        }}
+                                        rowSelection={rowSelection as any}
+                                        onChangeCheckboxSingle={onChangeCheckboxSingle}
+                                        scroll={scroll}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                        <div className={classNames(style["virtual-table-list-pagination"])}>
+                            {loading && !(pagination?.total == data.length) && (
+                                <div className={classNames(style["pagination-loading"])}>
+                                    <LoadingOutlined />
+                                </div>
+                            )}
+                            {!loading && pagination?.total == data.length && (pagination?.page || 0) > 0 && (
+                                <div
+                                    className={classNames(style["pagination-text"], {
+                                        [style["pagination-text-show"]]: scroll.scrollBottom < 10 || list.length === 0
+                                    })}
+                                >
+                                    暂无更多数据
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                </Spin>
             )}
         </div>
     )
 }
+
+interface ColumnsItemRenderProps {
+    columnsItem: ColumnsTypeProps
+    colWidth: number
+    scroll: ScrollProps
+    rowSelection: RowSelectionProps<any>
+    cIndex: number
+    onChangeCheckbox: (checked: boolean) => void
+    isAll: boolean
+    disableSorting?: boolean
+    sort: SortProps
+    onSorter: (s: SortProps) => void
+    renderSort: (sorterKey: string) => ReactNode
+    setOpensPopover: (a: any) => void
+    opensPopover: any
+    onChangTable: () => void
+    filterRef: any
+    renderFilterPopover: (
+        columnsItem: ColumnsTypeProps,
+        filterKey: string,
+        filtersType?: "select" | "input" | "dateTime"
+    ) => ReactNode
+    filters: any
+    enableDrag?: boolean
+    columns: ColumnsTypeProps[]
+    setHoverLine: (b: boolean) => void
+    onMouseDown: (e: any, index: number) => void
+}
+const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
+    const {
+        columnsItem,
+        colWidth,
+        scroll,
+        rowSelection,
+        cIndex,
+        isAll,
+        onChangeCheckbox,
+        disableSorting,
+        sort,
+        onSorter,
+        renderSort,
+        setOpensPopover,
+        opensPopover,
+        onChangTable,
+        filterRef,
+        renderFilterPopover,
+        filters,
+        enableDrag,
+        columns,
+        setHoverLine,
+        onMouseDown
+    } = props
+    const filterKey = columnsItem?.filterProps?.filterKey || columnsItem.dataKey
+    const sorterKey = columnsItem?.sorterProps?.sorterKey || columnsItem.dataKey
+    return (
+        <div
+            key={`${columnsItem.dataKey}-title`}
+            className={classNames(style["virtual-table-title"], {
+                [style["virtual-table-row-left"]]: columnsItem.align === "left",
+                [style["virtual-table-row-center"]]: columnsItem.align === "center",
+                [style["virtual-table-row-right"]]: columnsItem.align === "right",
+                [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right",
+                [style["virtual-table-title-fixed-right-left-0"]]:
+                    columnsItem.fixed === "right" && scroll.scrollRight <= 1,
+                [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left"
+            })}
+            style={{
+                width: columnsItem.width || colWidth,
+                ...(columnsItem.fixed === "left" &&
+                    scroll.scrollLeft > 0 && {
+                        left: columnsItem.left
+                    }),
+                ...(columnsItem.fixed === "right" && {
+                    right: columnsItem.right
+                })
+            }}
+        >
+            <div className={style["justify-content-between"]}>
+                {/* 这个不要用 module ，用来拖拽最小宽度*/}
+                <div className='virtual-col-title' style={{width: "100%"}}>
+                    {cIndex === 0 && rowSelection && (
+                        <span className={style["check"]}>
+                            {rowSelection.type !== "radio" && (
+                                <Checkbox
+                                    onChange={(e) => {
+                                        onChangeCheckbox(e.target.checked)
+                                    }}
+                                    checked={isAll}
+                                />
+                            )}
+                        </span>
+                    )}
+                    {columnsItem.title}
+                </div>
+                <div className={style["virtual-table-title-icon"]}>
+                    {columnsItem.sorterProps?.sorter && (
+                        <>
+                            {disableSorting ? (
+                                <div className={classNames(style["virtual-table-sorter-disable"])}>
+                                    <DisableSorterIcon />
+                                </div>
+                            ) : (
+                                <div
+                                    onClick={() =>
+                                        onSorter({
+                                            orderBy: sorterKey,
+                                            order: sort.order
+                                        })
+                                    }
+                                >
+                                    {renderSort(sorterKey)}
+                                </div>
+                            )}
+                        </>
+                    )}
+                    {columnsItem?.filterProps && (
+                        <>
+                            <Popover
+                                placement='bottom'
+                                trigger='click'
+                                content={
+                                    <div
+                                        className={style["popover-content"]}
+                                        onMouseLeave={(e) => {
+                                            setOpensPopover({
+                                                ...opensPopover,
+                                                [filterKey]: false
+                                            })
+                                            if (onChangTable) onChangTable()
+                                        }}
+                                        ref={filterRef}
+                                    >
+                                        {columnsItem?.filterProps?.filterRender
+                                            ? columnsItem?.filterProps?.filterRender()
+                                            : renderFilterPopover(
+                                                  columnsItem,
+                                                  filterKey,
+                                                  columnsItem?.filterProps?.filtersType
+                                              )}
+                                    </div>
+                                }
+                                overlayClassName={style["search-popover"]}
+                                visible={opensPopover[filterKey]}
+                            >
+                                <div
+                                    className={classNames(style["virtual-table-filter"], {
+                                        [style["virtual-table-filter-value"]]: columnsItem.filterProps.filterMultiple
+                                            ? filters[filterKey] && filters[filterKey].length > 0
+                                            : filters[filterKey] &&
+                                              filters[filterKey] !==
+                                                  (columnsItem.filterProps.filtersSelectAll?.textAll || "all")
+                                    })}
+                                    onClick={() => {
+                                        setOpensPopover({
+                                            ...opensPopover,
+                                            [filterKey]: !opensPopover[filterKey]
+                                        })
+                                    }}
+                                >
+                                    <FilterIcon />
+                                </div>
+                            </Popover>
+                        </>
+                    )}
+                </div>
+                {enableDrag && cIndex < columns.length - 1 && (
+                    <div
+                        className={classNames(style["virtual-table-title-drag"])}
+                        // style={{height: hoverLine ? height : 28}}
+                        onMouseEnter={() => setHoverLine(true)}
+                        onMouseLeave={() => setHoverLine(false)}
+                        onMouseDown={(e) => onMouseDown(e, cIndex)}
+                    />
+                )}
+            </div>
+        </div>
+    )
+})
+interface ColRenderProps {
+    colIndex: number
+    columnsItem: ColumnsTypeProps
+    colWidth: number
+    list: {data: any; index: number}[]
+    key: string | number
+    renderKey: string
+    isLastItem: boolean
+    onRowClick: (r: any) => void
+    onRowContextMenu: (r: any, e: any) => void
+    currentRow: any
+    rowSelection: RowSelectionProps<any>
+    onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
+    scroll: ScrollProps
+}
+const ColRender = React.memo((props: ColRenderProps) => {
+    const {
+        columnsItem,
+        colWidth,
+        list,
+        key,
+        renderKey,
+        isLastItem,
+        onRowClick,
+        onRowContextMenu,
+        currentRow,
+        colIndex,
+        rowSelection,
+        onChangeCheckboxSingle,
+        scroll
+    } = props
+    let previous = {}
+    // if (currentRow && currentRow[renderKey]) {
+    //     const currentIndex = list.findIndex((ele) => ele.data[renderKey] === currentRow[renderKey])
+    //     if (currentIndex > 0) previous = list[currentIndex - 1].data
+    // }
+    return (
+        <div
+            className={classNames(style["virtual-table-row-content"], {
+                [style["virtual-table-row-fixed-left"]]: columnsItem.fixed === "left",
+                [style["virtual-table-row-fixed-right"]]: columnsItem.fixed === "right",
+                [style["virtual-table-row-fixed-right-left-0"]]:
+                    columnsItem.fixed === "right" && scroll.scrollRight <= 1,
+                [style["virtual-table-row-center"]]: columnsItem.align === "center",
+                [style["virtual-table-row-right"]]: columnsItem.align === "right"
+            })}
+            style={{
+                width: columnsItem.width || colWidth,
+                ...(columnsItem.fixed === "left" && {
+                    left: columnsItem.left
+                }),
+                ...(columnsItem.fixed === "right" && {
+                    right: columnsItem.right
+                })
+            }}
+            key={key}
+        >
+            {list.map((item, number) => (
+                <CellRender
+                    colIndex={colIndex}
+                    key={item.data[renderKey] || number}
+                    item={item}
+                    columnsItem={columnsItem}
+                    number={number}
+                    isLastItem={isLastItem}
+                    onRowClick={() => onRowClick(item.data)}
+                    onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
+                    currentRow={currentRow}
+                    isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
+                    previous={previous}
+                    renderKey={renderKey}
+                    rowSelection={rowSelection}
+                    onChangeCheckboxSingle={onChangeCheckboxSingle}
+                />
+            ))}
+        </div>
+    )
+})
+
+interface CellRenderProps {
+    colIndex: number
+    item: {data: any; index: number}
+    columnsItem: ColumnsTypeProps
+    number: number
+    key: string | number
+    isLastItem: boolean
+    onRowClick: () => void
+    onRowContextMenu: (e: any) => void
+    currentRow: any
+    isSelect: boolean
+    previous: any
+    renderKey: string
+    rowSelection: RowSelectionProps<any>
+    onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
+}
+const CellRender = React.memo(
+    (props: CellRenderProps) => {
+        const {
+            item,
+            columnsItem,
+            number,
+            key,
+            isLastItem,
+            onRowClick,
+            onRowContextMenu,
+            isSelect,
+            colIndex,
+            previous,
+            renderKey,
+            rowSelection,
+            onChangeCheckboxSingle
+        } = props
+        return (
+            <div
+                key={key}
+                className={classNames(style["virtual-table-row-cell"], item.data["cellClassName"], {
+                    [style["virtual-table-active-row"]]: isSelect,
+                    [style["virtual-table-row-cell-border-right-0"]]: isLastItem,
+                    [style["virtual-table-row-cell-border-right-1"]]: isSelect && isLastItem,
+                    [style["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0,
+                    // [style["virtual-table-row-cell-border-bottom-1"]]: item.data[renderKey] === previous[renderKey]
+                })}
+                onClick={(e) => {
+                    // @ts-ignore
+                    if (e.target.nodeName === "INPUT") return
+                    onRowClick()
+                }}
+                onContextMenu={(e) => {
+                    onRowContextMenu(e)
+                }}
+            >
+                <div
+                    className={classNames({
+                        [style["virtual-table-row-ellipsis"]]: columnsItem.ellipsis === false ? false : true
+                    })}
+                >
+                    {colIndex === 0 && rowSelection && (
+                        <span className={classNames(style["check"])}>
+                            {rowSelection.type !== "radio" && (
+                                <Checkbox
+                                    onChange={(e) => {
+                                        onChangeCheckboxSingle(
+                                            e.target.checked,
+                                            renderKey ? item.data[renderKey] : number,
+                                            item.data
+                                        )
+                                    }}
+                                    checked={
+                                        rowSelection?.selectedRowKeys?.findIndex(
+                                            (ele) => ele === (renderKey ? item.data[renderKey] : number)
+                                        ) !== -1
+                                    }
+                                />
+                            )}
+                        </span>
+                    )}
+                    {columnsItem.render
+                        ? columnsItem.render(item.data[columnsItem.dataKey], item.data, number)
+                        : item.data[columnsItem.dataKey] || "-"}
+                </div>
+            </div>
+        )
+    },
+    (preProps, nextProps) => {
+        // return true; 	不渲染
+        // return false;	渲染
+        if (preProps.isSelect !== nextProps.isSelect) {
+            return false
+        }
+        // if (preProps.previous[preProps.renderKey] !== preProps.previous[preProps.renderKey]) {
+        //     console.log("preProps.previous[preProps.renderKey]", preProps.previous[preProps.renderKey])
+        //     console.log("preProps.previous[preProps.renderKey]", preProps.previous[preProps.renderKey])
+        //     return false
+        // }
+        return true
+    }
+)
 
 export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) as <T>(
     props: TableVirtualResizeProps<T> & {ref?: React.ForwardedRef<HTMLUListElement>}

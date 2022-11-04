@@ -29,7 +29,7 @@ export interface TableVirtualResizeProps<T> {
     currentIndex?: number //当前row的index
     isRefresh?: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
-    query?:any
+    query?: any
 }
 
 export interface SortProps {
@@ -107,7 +107,7 @@ export interface ShowFixedShadowProps {
     isShowRightFixedShadow: boolean
 }
 
-export interface scrollProps {
+export interface ScrollProps {
     scrollLeft: number
     scrollRight: number
     scrollBottom: number

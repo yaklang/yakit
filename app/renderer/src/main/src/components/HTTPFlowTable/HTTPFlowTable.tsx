@@ -19,7 +19,8 @@ import {
     Badge,
     Dropdown,
     Menu,
-    InputNumber
+    InputNumber,
+    Spin
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
@@ -40,7 +41,9 @@ import {
     useDebounceEffect,
     useDebounceFn,
     useGetState,
+    useInterval,
     useMemoizedFn,
+    useRafInterval,
     useThrottleFn,
     useVirtualList
 } from "ahooks"
@@ -631,17 +634,20 @@ const defSort: SortProps = {
     orderBy: "id"
 }
 
-export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
+export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string>("")
     const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>(
         props.params || {SourceType: "mitm", Tags: []}
     )
+    const [tagsQuery, setTagsQuery] = useState<string[]>([])
+    const [contentTypeQuery, setContentTypeQuery] = useState<string>("")
+
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: OFFSET_LIMIT,
         Order: "desc",
         OrderBy: "created_at",
-        Page: 1
+        Page: 0
     })
     const isOneceLoading = useRef<boolean>(true)
 
@@ -753,11 +759,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 ...params,
                 ...filter
             })
-
             sortRef.current = sort
             setTimeout(() => {
                 update(page, limit)
-            }, 100)
+            }, 10)
         },
         {wait: 500}
     ).run
@@ -770,7 +775,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 Order: sortRef.current.order,
                 OrderBy: sortRef.current.orderBy || "id"
             }
-            setLoading(true)
+            if (!noLoading) setLoading(true)
+
             const l = data.length
             const query = {
                 SourceType: sourceType,
@@ -785,20 +791,22 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                 AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
                 BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
             }
-            // console.log("paginationProps", query)
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
                     // console.log("update-newData", rsp)
+                    if (noLoading && rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
+                    console.log(666);
+                    
                     const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
                     if (paginationProps.Page == 1) {
                         setSelectedRowKeys([])
                         setSelectedRows([])
                         setIsRefresh(!isRefresh)
-                        setPagination(rsp.Pagination)
                         setTotal(rsp.Total)
                     }
                     const d = paginationProps.Page == 1 ? newData : data.concat(newData)
+                    setPagination(rsp.Pagination)
                     setData(d)
                 })
                 .catch((e: any) => {
@@ -893,66 +901,77 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
         return newData
     }
-    const scrollUpdateTop = useDebounceFn(
-        useMemoizedFn(() => {
-            if (maxId <= 0) return
-            const paginationProps = {
-                Page: 1,
-                Limit: OFFSET_STEP,
-                Order: "asc",
-                OrderBy: "Id"
-            }
-            const query = {
-                ...params,
-                Tags: params.Tags,
-                Color: color ? [color] : undefined,
-                AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
-                BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
-            }
-            // 查询数据
-            ipcRenderer
-                .invoke("QueryHTTPFlows", {
-                    SourceType: "mitm",
-                    ...query,
-                    AfterId: maxId, // 用于计算增量的
-                    Pagination: {...paginationProps}
-                })
-                .then((rsp: YakQueryHTTPFlowResponse) => {
-                    const resData = rsp?.Data || []
-                    const scrollTop = tableRef.current?.containerRef?.scrollTop
-                    if (resData.length <= 0) {
-                        if (scrollTop <= 10 && getOffsetData().length > 0) {
-                            const newOffsetData = getOffsetData().concat(data)
-                            setData(newOffsetData)
-                            setOffsetData([])
-                        }
-                        // 没有增量数据
-                        return
-                    }
-                    // 有增量数据刷新total
-                    getNewData()
-                    const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                    setLoading(true)
-                    setTotal(newTotal)
-                    const newData = getClassNameData(resData)
-                    if (scrollTop > 10) {
-                        const newOffsetData = newData.concat(getOffsetData())
-                        setMaxId(newOffsetData[0].Id)
-                        setOffsetData(newOffsetData)
-                    } else {
-                        const newOffsetData =
-                            getOffsetData().length > 0 ? getOffsetData().concat(data) : newData.concat(data)
-                        setData(newOffsetData)
-                        setOffsetData([])
-                    }
-                })
-                .catch((e: any) => {
-                    failed(`query HTTP Flow failed: ${e}`)
-                })
-                .finally(() => setTimeout(() => setLoading(false), 200))
-        }),
-        {wait: 600, leading: true, trailing: false}
-    ).run
+    const scrollUpdateTop = useMemoizedFn(() => {
+        if (maxId <= 0) return
+        const scrollTop = tableRef.current?.containerRef?.scrollTop
+        if (scrollTop < 10) {
+            update(1, undefined, undefined, undefined, undefined, true)
+            setOffsetData([])
+            return
+        }
+        if (getOffsetData().length > 0) return
+        const paginationProps = {
+            Page: 1,
+            Limit: OFFSET_STEP,
+            Order: "asc",
+            OrderBy: "Id"
+        }
+        const query = {
+            ...params,
+            Tags: params.Tags,
+            Color: color ? [color] : undefined,
+            AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
+            BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
+        }
+        // 查询数据
+        ipcRenderer
+            .invoke("QueryHTTPFlows", {
+                SourceType: "mitm",
+                ...query,
+                AfterId: maxId, // 用于计算增量的
+                Pagination: {...paginationProps}
+            })
+            .then((rsp: YakQueryHTTPFlowResponse) => {
+                const resData = rsp?.Data || []
+                if (resData.length <= 0) {
+                    // if (scrollTop <= 10 && getOffsetData().length > 0) {
+                    //     const newOffsetData = getOffsetData().concat(data)
+                    //     setData(newOffsetData)
+                    //     setOffsetData([])
+                    // }
+                    // 没有增量数据
+                    return
+                }
+                // 有增量数据刷新total
+                // getNewData()
+                const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
+                setLoading(true)
+                setTotal(newTotal)
+                const newData = getClassNameData(resData)
+                const newOffsetData = newData.concat(getOffsetData())
+                setMaxId(newOffsetData[0].Id)
+                setOffsetData(newOffsetData)
+                // if (scrollTop > 10) {
+                //     console.log(222)
+                //     const newOffsetData = newData.concat(getOffsetData())
+                //     setMaxId(newOffsetData[0].Id)
+                //     setOffsetData(newOffsetData)
+                // } else {
+                //     console.log(333)
+                //     // const newOffsetData =
+                //     //     getOffsetData().length > 0 ? getOffsetData().concat(data) : resData.concat(data)
+                //     // setData(newOffsetData)
+                //     if (getOffsetData().length > 0) {
+                //         setOffsetData([])
+                //     }
+                //     update(1)
+                // }
+            })
+            .catch((e: any) => {
+                failed(`query HTTP Flow failed: ${e}`)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 200))
+    })
 
     // 给设置做防抖
     useDebounceEffect(
@@ -962,13 +981,14 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         [selected],
         {wait: 400, trailing: true, leading: true}
     )
-
     // 设置是否自动刷新
     useEffect(() => {
-        scrollUpdateTop()
-        let id = setInterval(scrollUpdateTop, 1000)
-        return () => clearInterval(id)
-    }, [])
+        if (props.inViewport) {
+            scrollUpdateTop()
+            let id = setInterval(scrollUpdateTop, 1000)
+            return () => clearInterval(id)
+        }
+    }, [props.inViewport])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -1022,8 +1042,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         }
         return length
     })
-    console.log('data',data);
-    
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [
             {
@@ -1250,11 +1268,13 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     filterKey: "UpdatedAt",
                     filtersType: "dateTime"
                 },
+                // fixed: "right",
                 render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
             },
             {
                 title: "请求大小",
                 dataKey: "RequestSizeVerbose"
+                // fixed: "right",
             },
             {
                 title: "操作",
@@ -1322,6 +1342,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // 标注颜色批量
     const CalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, i: any) => {
         if (flowList.length === 0) {
+            warn("请选择数据")
             return
         }
         if (flowList.length > number) {
@@ -1359,6 +1380,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     // 移除颜色  批量
     const onRemoveCalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number) => {
         if (flowList.length === 0) {
+            warn("请选择数据")
             return
         }
         if (flowList.length > number) {
@@ -1486,12 +1508,12 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
     })
     const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
         const length = selectedRows.length
-        if (isAllSelect && !all) {
-            warn("该批量操作不支持全选")
-            return
-        }
         if (length <= 0) {
             warn(`请选择数据`)
+            return
+        }
+        if (isAllSelect && !all) {
+            warn("该批量操作不支持全选")
             return
         }
         if (number < length) {
@@ -1524,6 +1546,10 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             number: 30,
             onClickSingle: (v) => callCopyToClipboard(v.Url),
             onClickBatch: (v, number) => {
+                if (v.length === 0) {
+                    warn("请选择数据")
+                    return
+                }
                 if (v.length < number) {
                     callCopyToClipboard(v.map((ele) => `${ele.Url}`).join("\r\n"))
                     setSelectedRowKeys([])
@@ -1728,22 +1754,6 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
             event.clientY
         )
     }
-    const setTagsQuery = useDebounceFn(
-        () => {
-            setTimeout(() => {
-                update(1)
-            }, 50)
-        },
-        {wait: 500}
-    ).run
-    const setContentTypeQuery = useDebounceFn(
-        () => {
-            setTimeout(() => {
-                update(1)
-            }, 50)
-        },
-        {wait: 500}
-    ).run
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div
@@ -1827,8 +1837,8 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                 <div className={style["http-history-table-flex"]}>
                                     <div className={style["http-history-table-text"]}>HTTP History</div>
                                     {/* <div className={style["http-history-table-tip"]}>
-                                        有实时数据刷新时，排序功能无法正常使用
-                                    </div> */}
+                                            有实时数据刷新时，排序功能无法正常使用
+                                        </div> */}
                                 </div>
                                 <div className={style["http-history-table-flex"]}>
                                     <Search
@@ -1971,25 +1981,25 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                                     isVertical={true}
                                                     tags={tags}
                                                     setTags={(t) => {
-                                                        setParams({
-                                                            ...params,
-                                                            Tags: t
-                                                        })
-                                                        setTagsQuery()
+                                                        setTagsQuery(t)
                                                     }}
                                                     setContentType={(t) => {
+                                                        setContentTypeQuery(t.join(","))
+                                                    }}
+                                                    tagsValue={tagsQuery}
+                                                    contentTypeValue={
+                                                        contentTypeQuery ? contentTypeQuery?.split(",") : []
+                                                    }
+                                                    onSure={() => {
                                                         setParams({
                                                             ...params,
-                                                            SearchContentType: t.join(",")
+                                                            Tags: tagsQuery,
+                                                            SearchContentType: contentTypeQuery
                                                         })
-                                                        setContentTypeQuery()
+                                                        setTimeout(() => {
+                                                            update(1)
+                                                        }, 50)
                                                     }}
-                                                    tagsValue={params.Tags || []}
-                                                    contentTypeValue={
-                                                        params.SearchContentType
-                                                            ? params.SearchContentType?.split(",")
-                                                            : []
-                                                    }
                                                 />
                                             }
                                             trigger='click'
@@ -2000,23 +2010,23 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                                     </div>
                                     <TableFilter
                                         tags={tags}
-                                        tagsValue={params.Tags || []}
-                                        contentTypeValue={
-                                            params.SearchContentType ? params.SearchContentType?.split(",") : []
-                                        }
+                                        contentTypeValue={contentTypeQuery ? contentTypeQuery?.split(",") : []}
+                                        tagsValue={tagsQuery}
                                         setTags={(t) => {
-                                            setParams({
-                                                ...params,
-                                                Tags: t
-                                            })
-                                            setTagsQuery()
+                                            setTagsQuery(t)
                                         }}
                                         setContentType={(t) => {
+                                            setContentTypeQuery(t.join(","))
+                                        }}
+                                        onSure={() => {
                                             setParams({
                                                 ...params,
-                                                SearchContentType: t.join(",")
+                                                Tags: tagsQuery,
+                                                SearchContentType: contentTypeQuery
                                             })
-                                            setContentTypeQuery()
+                                            setTimeout(() => {
+                                                update(1)
+                                            }, 50)
                                         }}
                                     />
                                     <div className={style["http-history-table-color-swatch"]}>
@@ -2178,7 +2188,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
                     loading={loading}
                     enableDrag={true}
                     columns={columns}
-                    currentRowData={getSelected()}
+                    // currentRowData={getSelected()}
                     setCurrentRowData={setSelected}
                     onRowClick={onRowClick}
                     onRowContextMenu={onRowContextMenu}
@@ -2194,7 +2204,7 @@ export const HTTPFlowTable: React.FC<HTTPFlowTableProp> = (props) => {
         </div>
         // </AutoCard>
     )
-}
+})
 
 const contentType: FiltersItemProps[] = [
     {
@@ -2271,10 +2281,11 @@ interface TableFilterProps {
     tagsValue: string[]
     setTags: (v: string[]) => void
     setContentType: (v: string[]) => void
+    onSure: () => void
 }
 
 const TableFilter: React.FC<TableFilterProps> = (props) => {
-    const {isVertical, tags, tagsValue, setTags, contentTypeValue, setContentType} = props
+    const {isVertical, tags, tagsValue, setTags, contentTypeValue, setContentType, onSure} = props
     const onSelect = useMemoizedFn((values: string[]) => {
         setTags([...values])
     })
@@ -2289,7 +2300,12 @@ const TableFilter: React.FC<TableFilterProps> = (props) => {
                 })}
             >
                 <span className={style["http-history-table-right-label"]}>响应类型</span>
-                <MultipleSelect options={contentType} value={contentTypeValue} onSelect={onSelectType} />
+                <MultipleSelect
+                    options={contentType}
+                    value={contentTypeValue}
+                    onSelect={onSelectType}
+                    onSure={onSure}
+                />
             </div>
             <div
                 className={classNames(style["http-history-table-right-filter-item"], {
@@ -2297,7 +2313,7 @@ const TableFilter: React.FC<TableFilterProps> = (props) => {
                 })}
             >
                 <span className={style["http-history-table-right-label"]}>Tags</span>
-                <MultipleSelect options={tags} value={tagsValue} onSelect={onSelect} />
+                <MultipleSelect options={tags} value={tagsValue} onSelect={onSelect} onSure={onSure} />
             </div>
         </div>
     )
@@ -2307,6 +2323,7 @@ interface MultipleSelectProps {
     onSelect: (values: string[], option?: FiltersItemProps | FiltersItemProps[]) => void
     value: string | string[]
     options: FiltersItemProps[]
+    onSure: () => void
 }
 const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
     const {onSelect, value, options} = props
@@ -2319,24 +2336,21 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
     useClickAway(() => {
         if (showList) setShowList(false)
     }, listRef)
-    useEffect(() => {
-        // 新版UI组件之前的过度写法
-        const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
-        if (!scrollDom) return
-        scrollDomRef.current = scrollDom
-    }, [])
-    const onHandleScroll = useMemoizedFn(() => {
-        scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
-        setShowList(true)
+    // useEffect(() => {
+    //     // 新版UI组件之前的过度写法
+    //     const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
+    //     if (!scrollDom) return
+    //     scrollDomRef.current = scrollDom
+    // }, [])
+    // const onHandleScroll = useMemoizedFn(() => {
+    //     scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
+    //     setShowList(true)
+    // })
+    const onChangeSelect = useMemoizedFn((values: string[], option: FiltersItemProps[]) => {
+        onSelect(values, option)
+        // 滑动至最右边
+        // onHandleScroll()
     })
-    const onChangeSelect = useDebounceFn(
-        useMemoizedFn((values: string[], option: FiltersItemProps[]) => {
-            onSelect(values, option)
-            // 滑动至最右边
-            onHandleScroll()
-        }),
-        {wait: 200}
-    ).run
     // const originalList = useMemo(() => Array.from(Array(99999).keys()), [])
     const [list] = useVirtualList(options, {
         containerTarget: containerRef,
@@ -2357,9 +2371,9 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
         } else {
             onSelect([selectItem.value], selectItem)
         }
-        setTimeout(() => {
-            onHandleScroll()
-        }, 100)
+        // setTimeout(() => {
+        //     onHandleScroll()
+        // }, 100)
     })
 
     const onReset = useMemoizedFn(() => {
@@ -2367,6 +2381,7 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
     })
 
     const onSure = useMemoizedFn(() => {
+        if (props.onSure) props.onSure()
         setShowList(false)
     })
     return (
@@ -2376,24 +2391,24 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
                     size='small'
                     mode='tags'
                     style={{width: 150}}
-                    onChange={onChangeSelect}
+                    onChange={(values, option) => onChangeSelect(values, option as FiltersItemProps[])}
                     allowClear
                     value={Array.isArray(value) ? [...value] : []}
                     dropdownStyle={{height: 0, padding: 0}}
                     options={options}
                     className='select-small'
-                    onFocus={() => onHandleScroll()}
+                    // onFocus={() => onHandleScroll()}
                 />
             </div>
             <div
                 className={classNames(style["select-search"], {
                     [style["select-search-show"]]: showList
                 })}
-                onMouseLeave={() => {
-                    setTimeout(() => {
-                        setShowList(false)
-                    }, 200)
-                }}
+                // onMouseLeave={() => {
+                //     setTimeout(() => {
+                //         onSure()
+                //     }, 200)
+                // }}
             >
                 <div ref={containerRef} className={classNames(style["select-list"])}>
                     <div ref={wrapperRef}>

@@ -20,6 +20,14 @@
             box-shadow: none;
         }
 
+        ::-webkit-scrollbar-corner {
+            border-right: 1px solid #EAECF3;
+        }
+
+        ::-webkit-scrollbar-track:horizontal {
+            border-left: 1px solid #EAECF3;
+        }
+
         ::-webkit-scrollbar-track {
             border-radius: 0;
             box-shadow: none;
@@ -50,6 +58,13 @@
         }
     }
 
+    .virtual-table-body-scroll {
+        :global {
+            ::-webkit-scrollbar-track:horizontal {
+                border-right: 1px solid #EAECF3;
+            }
+        }
+    }
 
     .virtual-table-body {
         display: flex;
@@ -59,9 +74,12 @@
         overflow-x: hidden;
         overflow-y: hidden;
         position: relative;
+        border-bottom: 1px solid #EAECF3;
+        border-top: 1px solid #EAECF3;
+
+
 
         .virtual-table-fixed-left {
-            width: 10px;
             position: absolute;
             top: 0;
             left: 0;
@@ -72,7 +90,6 @@
         }
 
         .virtual-table-fixed-right {
-            width: 10px;
             position: absolute;
             top: 0;
             right: 8px;
@@ -80,7 +97,7 @@
             overflow-y: hidden;
             box-shadow: -4px 0px 6px rgba(133, 137, 158, 0.1);
             z-index: 5;
-            // border-left: 1px solid #EAECF3;
+            border-left: 1px solid #EAECF3;
         }
 
         .virtual-table-container-none-select {
@@ -94,7 +111,8 @@
             left: 0;
             width: 100%;
             z-index: 4;
-            border-bottom: 1px solid #EAECF3;
+            border: 1px solid #EAECF3;
+            border-top: 0;
             width: fit-content;
 
             .virtual-table-title {
@@ -113,9 +131,9 @@
                 font-size: 12px;
                 box-sizing: border-box;
 
-                &:last-child {
-                    border-right: 0;
-                }
+                // &:first-child {
+                //     border-left: 1px solid #EAECF3;
+                // }
 
                 .virtual-table-title-left {
                     box-shadow: 4px 0px 8px rgba(133, 137, 158, 0.12);
@@ -191,31 +209,25 @@
                     border-right: 0;
                 }
             }
-
-            .virtual-table-title+.virtual-table-title-fixed-right:nth-last-child(1) {
-                border-left: 1px solid #EAECF3;
-            }
-
-            .virtual-table-title-fixed-right-left-0 {
-                border-left: 0 !important;
-            }
         }
 
         .virtual-table-list-container {
+            // height: 100%;
             width: 100%;
             overflow-y: overlay;
             overflow-x: overlay;
             overflow-anchor: none;
             position: relative;
+            // border-top: 1px solid #EAECF3;
+            // border-bottom: 1px solid #EAECF3;
             padding-bottom: 34px;
-            border: 1px solid #EAECF3;
 
 
             .virtual-table-list {
                 display: flex;
+                flex-direction: column;
                 position: relative;
                 width: fit-content;
-                font-size: 12px;
 
                 .virtual-table-row {
                     display: flex;
@@ -239,79 +251,79 @@
                     &:last-child {
                         border-bottom-width: 1px;
                     }
-                }
 
 
+                    .virtual-table-row-content {
+                        // z-index: 2;
+                        padding: 6px 12px;
+                        height: 100%;
+                        display: flex;
+                        align-items: center;
+                        background-color: #fff;
+                        // position: relative;
+                        border-right: 1px solid #EAECF3;
 
-                .virtual-table-row-cell {
-                    height: 28px;
-                    padding: 6px 12px;
-                    width: 100%;
-                    border-bottom: 1px solid #EAECF3;
-                    display: flex;
-                    align-items: center;
-                }
+                        &:last-child {
+                            border-right: 0;
+                        }
+                    }
 
-                .virtual-table-row-cell-border-right-0 {
-                    border-right: 0;
-                }
+                    .virtual-table-row-ellipsis {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 1;
+                        -webkit-box-orient: vertical;
+                    }
 
-                .virtual-table-row-cell-border-right-1 {
-                    border-right: 1px solid #91d5ff;
-                }
+                    .virtual-table-row-fixed-left {
+                        position: sticky;
+                        left: 0;
+                        z-index: 1;
+                        // border-right: 1px solid #EAECF3;
 
-                .virtual-table-row-cell-border-left-1 {
-                    border-left: 1px solid #91d5ff;
-                }
+                        &:first-child {
+                            border-left: 1px solid #EAECF3;
+                        }
 
-                .virtual-table-row-cell-border-bottom-1 {
-                    border-bottom: 1px solid #91d5ff;
-                }
+                        &:last-child {
+                            border-right: 1px solid #EAECF3;
+                        }
+                    }
 
-                .virtual-table-row-ellipsis {
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
-                    word-break: break-all;
-                    width: 100%;
-                }
+                    .virtual-table-row-fixed-right {
+                        position: sticky;
+                        right: 0;
+                        z-index: 1;
 
-                .virtual-table-row-content {
-                    height: 100%;
-                    background-color: #fff;
-                    border-right: 1px solid #EAECF3;
+                        // border-left: 1px solid #EAECF3;
+                        &:first-child {
+                            border-left: 1px solid #EAECF3;
+                        }
 
-                    &:last-child {
-                        border-right: 0;
+                        &:last-child {
+                            border-right: 1px solid #EAECF3;
+                        }
                     }
                 }
 
-                .virtual-table-row-fixed-left {
-                    position: sticky;
-                    left: 0;
-                    z-index: 1;
-                }
-
-                .virtual-table-row-fixed-right {
-                    position: sticky;
-                    right: 0;
-                    top: 0;
-                    z-index: 1;
-                }
-
-                .virtual-table-row-content+.virtual-table-row-fixed-right:nth-last-child(1) {
-                    border-left: 1px solid #EAECF3;
-                }
-
-                .virtual-table-row-fixed-right-left-0 {
-                    border-left: 0 !important;
-                }
-
                 .virtual-table-active-row {
-                    border-bottom: 1px solid #91d5ff;
-                    border-top: 1px solid #91d5ff;
-                    background-color: #e6f7ff;
+                    border: 1px solid #91d5ff;
+                    border-top-width: 1px !important;
+
+                    .virtual-table-row-content {
+                        background-color: #e6f7ff !important;
+                    }
+
+                    .virtual-table-row-fixed-left:first-child {
+                        border-left: 1px solid #91d5ff;
+                    }
+
+                    .virtual-table-row-fixed-right:last-child {
+                        border-right: 1px solid #91d5ff;
+                    }
                 }
+
 
             }
 
@@ -326,6 +338,8 @@
             position: absolute;
             bottom: 6px;
             width: 100%;
+            border-left: 1px solid #EAECF3;
+            border-right: 1px solid #EAECF3;
 
             .pagination-loading {
                 height: 28px;
@@ -368,10 +382,6 @@
 
             &:hover {
                 border-left: 1px solid #1890ff;
-
-                .virtual-table-row-content {
-                    border-color: #1890ff;
-                }
             }
         }
 
