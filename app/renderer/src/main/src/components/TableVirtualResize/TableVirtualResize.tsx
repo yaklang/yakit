@@ -112,33 +112,21 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [columns, setColumns, getColumns] = useGetState<ColumnsTypeProps[]>(props.columns) // 表头
     const [lineLeft, setLineLeft] = useState<number>(0) // 拖拽线 left
-    const [hoverLine, setHoverLine] = useState<boolean>(false) // 拖拽线 left
-    const [tableWidth, setTableWidth] = useState<number>(0) // 表格所在div宽度  真实宽度
+    // const [tableWidth, setTableWidth] = useState<number>(0) // 表格所在div宽度  真实宽度
     const [lineIndex, setLineIndex] = useState<number>(-1) // 拖拽的columns index
-    const [fixedWidth, setFixedWidth] = useState<FixedWidthProps>({
-        leftFixedWidth: 0, // 固定左侧的宽度
-        rightFixedWidth: 0 // 固定右侧的宽度
-    })
     const [scroll, setScroll] = useState<ScrollProps>({
         scrollLeft: 0,
         scrollBottom: 0,
-        scrollRight: 1
+        scrollRight: 2 //初始值要大于1
     }) // 滚动条距离边的距离
-    const [boxShowHeight, setBoxShowHeight] = useState<number>(0) // 阴影高度
-    const [showScrollY, setShowScrollY, getShowScrollY] = useGetState<boolean>(true) // 拖拽的columns index
     const [sort, setSort] = useState<SortProps>({
         order: "none",
         orderBy: ""
     }) // 拖拽的columns index
-    const [isShowFixedShadow, setIsShowFixedShadow] = useState<ShowFixedShadowProps>({
-        isShowLeftFixedShadow: false,
-        isShowRightFixedShadow: false
-    }) // 是否显示固定列的阴影
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
     const columnsRef = useRef(null)
     const tableRef = useRef<any>(null)
-    // const columnsMinWidthList = useRef<number[]>([]) // 默认表头最小宽度
     const lineStartX = useRef<number>(0) // 拖拽线开始位置
     const lineEndX = useRef<number>(0) // 拖拽线结束位置
     const tablePosition = useRef<tablePosition>({
@@ -149,7 +137,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         left: 0,
         top: 0
     })
-    let currentRowRef = useRef<any>()
 
     const [list, scrollTo] = useVirtualList(data, {
         containerTarget: containerRef,
@@ -173,117 +160,126 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [currentIndex])
 
     // 使用上箭头
-    // useHotkeys(
-    //     "up",
-    //     () => {
-    //         if (!setCurrentRow) return
-    //         const dataLength = data.length
-    //         if (dataLength <= 0) {
-    //             return
-    //         }
-    //         if (!currentRow) {
-    //             setCurrentRow(data[0])
-    //             return
-    //         }
-    //         let index
-    //         // 如果上点的话，应该是选择更新的内容
-    //         for (let i = 0; i < dataLength; i++) {
-    //             if (data[i][renderKey] === currentRow[renderKey]) {
-    //                 if (i === 0) {
-    //                     index = i
-    //                     break
-    //                 } else {
-    //                     index = i - 1
-    //                     break
-    //                 }
-    //             }
-    //         }
-    //         if (index >= 0) {
-    //             setCurrentRow(data[index])
-    //             setTimeout(() => {
-    //                 upKey(index)
-    //             }, 50)
-    //         }
-    //     },
-    //     {},
-    //     [data, currentRow, containerRef.current, currentRowRef.current]
-    // )
-    // const upKey = useDebounceFn(
-    //     (index: number) => {
-    //         if (!currentRowRef.current) {
-    //             const dom = containerRef.current
-    //             //  长按up
-    //             // scrollTo(index) // 缓慢滑到
-    //             dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
-    //             return
-    //         }
-    //         const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
-    //         const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-    //         const inViewport =
-    //             currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
-    //         // console.log("currentPosition.top", currentPosition, containerRefPosition.current)
+    useHotkeys(
+        "up",
+        () => {
+            if (!setCurrentRow) return
+            const dataLength = data.length
+            if (dataLength <= 0) {
+                return
+            }
+            if (!currentRow) {
+                setCurrentRow(data[0])
+                return
+            }
+            let index
+            // 如果上点的话，应该是选择更新的内容
+            for (let i = 0; i < dataLength; i++) {
+                if (data[i][renderKey] === currentRow[renderKey]) {
+                    if (i === 0) {
+                        index = i
+                        break
+                    } else {
+                        index = i - 1
+                        break
+                    }
+                }
+            }
+            if (index >= 0) {
+                setCurrentRow(data[index])
+                setTimeout(() => {
+                    upKey(index)
+                }, 50)
+            }
+        },
+        {},
+        [data, currentRow, containerRef.current]
+    )
+    const upKey = useDebounceFn(
+        (index: number) => {
+            if (!currentRow) {
+                return
+            }
+            const currentDom = document.getElementById(currentRow[renderKey])
+            if (!currentDom) {
+                const dom = containerRef.current
+                //  长按up
+                // scrollTo(index) // 缓慢滑到
+                dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
+                return
+            }
+            const currentPosition: tablePosition = currentDom.getBoundingClientRect()
+            const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+            const inViewport =
+                currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
+            // console.log("currentPosition.top", currentPosition, containerRefPosition.current)
 
-    //         if (!inViewport) scrollTo(index)
-    //     },
-    //     {wait: 100}
-    // ).run
-    // // 使用下箭头
-    // useHotkeys(
-    //     "down",
-    //     () => {
-    //         if (!setCurrentRow) return
-    //         const dataLength = data.length
-    //         if (dataLength <= 0) {
-    //             return
-    //         }
-    //         if (!currentRow) {
-    //             setCurrentRow(data[0])
-    //             return
-    //         }
-    //         let index
-    //         // 如果上点的话，应该是选择更新的内容
-    //         for (let i = 0; i < dataLength; i++) {
-    //             if (data[i][renderKey] === currentRow[renderKey]) {
-    //                 if (i === dataLength - 1) {
-    //                     index = i
-    //                     break
-    //                 } else {
-    //                     index = i + 1
-    //                     break
-    //                 }
-    //             }
-    //         }
+            if (!inViewport) scrollTo(index)
+        },
+        {wait: 100}
+    ).run
+    // 使用下箭头
+    useHotkeys(
+        "down",
+        () => {
+            if (!setCurrentRow) return
+            const dataLength = data.length
+            if (dataLength <= 0) {
+                return
+            }
+            if (!currentRow) {
+                setCurrentRow(data[0])
+                return
+            }
 
-    //         if (index) {
-    //             setCurrentRow(data[index])
-    //             setTimeout(() => {
-    //                 downKey(index)
-    //             }, 50)
-    //         }
-    //     },
-    //     {},
-    //     [data, currentRow, containerRef.current, currentRowRef.current]
-    // )
-    // const downKey = useDebounceFn(
-    //     (index: number) => {
-    //         const dom = containerRef.current
-    //         if (!currentRowRef.current) {
-    //             //  长按up
-    //             // scrollTo(index)
-    //             dom.scrollTop = index * defItemHeight
-    //             return
-    //         }
+            let index
+            // 如果上点的话，应该是选择更新的内容
+            for (let i = 0; i < dataLength; i++) {
+                if (data[i][renderKey] === currentRow[renderKey]) {
+                    if (i === dataLength - 1) {
+                        index = i
+                        break
+                    } else {
+                        index = i + 1
+                        break
+                    }
+                }
+            }
 
-    //         const currentPosition: tablePosition = currentRowRef.current.getBoundingClientRect()
-    //         const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
-    //         const y = 1 - (rowNumber - Math.trunc(rowNumber))
-    //         const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-    //         const inViewport =
-    //             currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
-    //         if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
-    //     },
-    //     {wait: 100}
-    // ).run
+            if (index) {
+                setCurrentRow(data[index])
+                setTimeout(() => {
+                    downKey(index)
+                }, 50)
+            }
+        },
+        {},
+        [data, currentRow, containerRef.current]
+    )
+    const downKey = useDebounceFn(
+        (index: number) => {
+            if (!currentRow) {
+                return
+            }
+            const dom = containerRef.current
+            const currentDom = document.getElementById(currentRow[renderKey])
+            if (!currentDom) {
+                //  长按up
+                // scrollTo(index)
+                dom.scrollTop = index * defItemHeight
+                return
+            }
+
+            const currentPosition: tablePosition = currentDom.getBoundingClientRect()
+            const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
+            const y = 1 - (rowNumber - Math.trunc(rowNumber))
+            const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+            const inViewport =
+                currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
+            if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
+        },
+        {wait: 100}
+    ).run
     useDeepCompareEffect(() => {
         if (pagination.page == 1) {
             scrollTo(0)
@@ -314,48 +310,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }
     }, [tableRef.current])
 
-    // useDebounceEffect(
-    //     () => {
-    //         if (!width) return
-    //         if (!containerRef || !wrapperRef) return
-    //         // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
-    //         const containerHeight = containerRef.current?.clientHeight
-    //         const wrapperHeight = wrapperRef.current?.clientHeight
-    //         // 阴影高度
-    //         setBoxShowHeight(containerHeight - 6)
-    //         // 加loading 这个会性能不好
-    //         // if (wrapperHeight && wrapperHeight <= containerHeight) {
-    //         //     const hasMore = pagination.total == data.length
-    //         //     if (!loading && !hasMore) pagination.onChange(Number(pagination.page) + 1, pagination.limit)
-    //         // }
-    //         setShowScrollY(true)
-    //         if (containerHeight <= wrapperHeight + 29) {
-    //             setShowScrollY(true)
-    //         } else {
-    //             setShowScrollY(false)
-    //         }
-    //         if (showScrollY) return
-    //         // 显示滚动条了就不计算了
-    //         getTableWidthAndColWidth(0)
-    //     },
-    //     [containerRef.current?.clientHeight],
-    //     {wait: 200, leading: true}
-    // )
     // 计算左右宽度以及固定列
     const getLeftOrRightFixedWidth = useMemoizedFn(() => {
-        let leftWidth = 0
-        let rightWidth = 0
-        let isShowLeftFixedShadow = false
-        let isShowRightFixedShadow = false
         const newColumns: ColumnsTypeProps[] = []
         columns.forEach((l, index) => {
             const ele = {...l}
             if (ele.fixed === "left") {
-                if ((ele.minWidth || 0) > (ele.width || 0)) {
-                    leftWidth += ele.minWidth || 0
-                } else {
-                    leftWidth += ele.width || getColWidth()
-                }
                 if (index > 0) {
                     const leftList = columns
                         .filter((e, i) => i < index && e.fixed === "left")
@@ -369,14 +329,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     const left: number = leftList.length > 1 ? leftList.reduce((p, c) => p + c) : leftList[0] || 0
                     ele.left = left
                 }
-                isShowLeftFixedShadow = true
             }
             if (ele.fixed === "right") {
-                if ((ele.minWidth || 0) > (ele.width || 0)) {
-                    rightWidth += ele.minWidth || 0
-                } else {
-                    rightWidth += ele.width || getColWidth()
-                }
                 if (index > 0) {
                     const rightList = columns
                         .filter((e, i) => i > index && e.fixed === "right")
@@ -390,19 +344,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     const right: number = rightList.length > 1 ? rightList.reduce((p, c) => p + c) : rightList[0] || 0
                     ele.right = right
                 }
-                isShowRightFixedShadow = true
             }
             newColumns.push(ele)
         })
         setColumns([...newColumns])
-        setIsShowFixedShadow({
-            isShowLeftFixedShadow,
-            isShowRightFixedShadow
-        })
-        setFixedWidth({
-            leftFixedWidth: leftWidth,
-            rightFixedWidth: rightWidth
-        })
     })
     const [colWidth, setColWidth, getColWidth] = useGetState<number>(0)
     // 初始化表格宽度和列宽度
@@ -430,9 +375,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 columns[cLength - 1].width =
                     (columns[cLength - 1].width || columns[cLength - 1].minWidth || 0) + width - tWidth
             }
-            setTableWidth(width - scrollBarWidth)
+            // setTableWidth(width - scrollBarWidth)
         } else {
-            setTableWidth(tWidth)
+            // setTableWidth(tWidth)
         }
         setTimeout(() => {
             getLeftOrRightFixedWidth()
@@ -530,7 +475,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 return
             }
             if (preScrollBottom.current !== scrollBottom) {
-                preScrollBottom.current = scrollBottom
                 if (wrapperRef && containerRef && pagination) {
                     const hasMore = pagination.total == data.length
                     //避免频繁set
@@ -548,10 +492,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             scrollBottom: scrollBottom
                         })
                     }
-                    if (scrollBottom <= (scrollToBottom || 300) && !hasMore) {
+                    //向下滑动
+                    if (preScrollBottom.current > scrollBottom && scrollBottom <= (scrollToBottom || 300) && !hasMore) {
                         pagination.onChange(Number(pagination.page) + 1, pagination.limit)
                     }
                 }
+                preScrollBottom.current = scrollBottom
             }
         },
         {wait: 200}
@@ -712,7 +658,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useClickAway(() => {
         setOpensPopover({})
     }, [filterRef])
-
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -763,12 +708,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
                 <Spin spinning={loading && pagination.page == 0}>
                     <div
-                        className={classNames(style["virtual-table-body"], {
-                            [style["virtual-table-border-left"]]:
-                                scroll.scrollLeft > 0 && !isShowFixedShadow.isShowLeftFixedShadow,
-                            [style["virtual-table-border-right"]]:
-                                scroll.scrollRight > 0 && !isShowFixedShadow.isShowRightFixedShadow
-                        })}
+                        className={classNames(style["virtual-table-body"])}
                         style={{
                             maxHeight:
                                 ((renderTitle || title || extra) &&
@@ -783,31 +723,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                 onMouseUp={(e) => onMouseUp(e)}
                             />
                         )}
-                        {isShowFixedShadow.isShowLeftFixedShadow && scroll.scrollLeft > 0 && (
-                            <div
-                                className={classNames(style["virtual-table-fixed-left"])}
-                                style={{
-                                    left: fixedWidth.leftFixedWidth - 10,
-                                    height
-                                    // height: boxShowHeight
-                                }}
-                            ></div>
-                        )}
-                        {isShowFixedShadow.isShowRightFixedShadow && scroll.scrollRight > 0 && (
-                            <div
-                                className={classNames(style["virtual-table-fixed-right"])}
-                                style={{
-                                    right: fixedWidth.rightFixedWidth - 10,
-                                    height: height - 6
-                                    // height: boxShowHeight
-                                }}
-                            ></div>
-                        )}
                         <div
                             ref={containerRef}
                             className={classNames(style["virtual-table-list-container"], {
-                                [style["virtual-table-container-none-select"]]: lineIndex > -1,
-                                [style["scroll-y"]]: !showScrollY
+                                [style["virtual-table-container-none-select"]]: lineIndex > -1
                             })}
                             onScroll={onScrollContainerRef}
                         >
@@ -833,7 +752,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         filters={filters}
                                         enableDrag={enableDrag}
                                         columns={columns}
-                                        setHoverLine={setHoverLine}
                                         onMouseDown={onMouseDown}
                                     />
                                 ))}
@@ -907,7 +825,6 @@ interface ColumnsItemRenderProps {
     filters: any
     enableDrag?: boolean
     columns: ColumnsTypeProps[]
-    setHoverLine: (b: boolean) => void
     onMouseDown: (e: any, index: number) => void
 }
 const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
@@ -931,7 +848,6 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
         filters,
         enableDrag,
         columns,
-        setHoverLine,
         onMouseDown
     } = props
     const filterKey = columnsItem?.filterProps?.filterKey || columnsItem.dataKey
@@ -946,7 +862,9 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 [style["virtual-table-title-fixed-right"]]: columnsItem.fixed === "right",
                 [style["virtual-table-title-fixed-right-left-0"]]:
                     columnsItem.fixed === "right" && scroll.scrollRight <= 1,
-                [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left"
+                [style["virtual-table-title-fixed-left"]]: columnsItem.fixed === "left",
+                [style["virtual-table-title-fixed-left-box-show-none"]]:
+                    columnsItem.fixed === "left" && scroll.scrollLeft <= 0
             })}
             style={{
                 width: columnsItem.width || colWidth,
@@ -1050,9 +968,6 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 {enableDrag && cIndex < columns.length - 1 && (
                     <div
                         className={classNames(style["virtual-table-title-drag"])}
-                        // style={{height: hoverLine ? height : 28}}
-                        onMouseEnter={() => setHoverLine(true)}
-                        onMouseLeave={() => setHoverLine(false)}
                         onMouseDown={(e) => onMouseDown(e, cIndex)}
                     />
                 )}
@@ -1095,6 +1010,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
         <div
             className={classNames(style["virtual-table-row-content"], {
                 [style["virtual-table-row-fixed-left"]]: columnsItem.fixed === "left",
+                [style["virtual-table-row-fixed-left-box-show-none"]]:
+                    columnsItem.fixed === "left" && scroll.scrollLeft <= 0,
                 [style["virtual-table-row-fixed-right"]]: columnsItem.fixed === "right",
                 [style["virtual-table-row-fixed-right-left-0"]]:
                     columnsItem.fixed === "right" && scroll.scrollRight <= 1,
@@ -1181,6 +1098,7 @@ const CellRender = React.memo(
                 onContextMenu={(e) => {
                     onRowContextMenu(e)
                 }}
+                id={(isSelect && colIndex === 0 && item.data[renderKey]) || ""}
             >
                 <div
                     className={classNames({
