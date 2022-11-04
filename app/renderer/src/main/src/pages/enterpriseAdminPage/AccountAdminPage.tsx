@@ -62,7 +62,7 @@ export interface AccountFormProps {
     editInfo: API.UrmUserList | undefined
     onCancel: () => void
     // 第一个参数为更新其他架构ID 第二个参数为是否更新自己
-    refresh: (v?: number,b?:boolean) => void
+    refresh: (v?: number, b?: boolean) => void
 }
 
 const layout = {
@@ -133,7 +133,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             })
     }
 
-    const getDepartmentData = (page?: number, limit?: number,id?:number) => {
+    const getDepartmentData = (page?: number, limit?: number, id?: number) => {
         const paginationProps = {
             page: page || depPagination.Page,
             limit: limit || depPagination.Limit
@@ -164,11 +164,10 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                                 label: item.name,
                                 isLeaf: item.exist_group ? false : true
                             }))
-                            if(id){
+                            if (id) {
                                 // 初始化默认数据
-                                initLoadData(data,id)
-                            }
-                            else{
+                                initLoadData(data, id)
+                            } else {
                                 setDepData(data)
                             }
                             setDepPagination({...pagination, Limit: res.pagemeta.limit, Page: res.pagemeta.page})
@@ -199,13 +198,15 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                 .then((res: API.UrmEditListResponse) => {
                     console.log("返回结果：", res)
                     if (res.data) {
-                        const {user_name,department_parent_id,department_id,role_id,role_name} = res.data
-                        const department = department_parent_id?[department_parent_id,department_id]:[department_id]
-                        getDepartmentData(undefined,undefined,department_parent_id)
+                        const {user_name, department_parent_id, department_id, role_id, role_name} = res.data
+                        const department = department_parent_id
+                            ? [department_parent_id, department_id]
+                            : [department_id]
+                        getDepartmentData(undefined, undefined, department_parent_id)
                         form.setFieldsValue({
                             user_name,
-                            department:department,
-                            role_id:{key:role_id,value:role_name}
+                            department: department,
+                            role_id: {key: role_id, value: role_name}
                         })
                     }
                 })
@@ -217,8 +218,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                         setLoading(false)
                     }, 200)
                 })
-        }
-        else{
+        } else {
             getDepartmentData()
         }
     }, [])
@@ -232,7 +232,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                 uid: editInfo.uid,
                 user_name,
                 department: departmentId,
-                role_id:role_id?.key||role_id
+                role_id: role_id?.key || role_id
             }
             console.log("params888", params)
             NetWorkApi<API.EditUrmRequest, API.ActionSucceeded>({
@@ -242,7 +242,8 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             })
                 .then((res: API.ActionSucceeded) => {
                     console.log("返回结果：", res)
-                    refresh(departmentId,true)
+                    refresh(departmentId, true)
+                    onCancel()
                 })
                 .catch((err) => {
                     failed("修改账号失败：" + err)
@@ -296,7 +297,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         )
     })
 
-    const initLoadData = (data,id) => {
+    const initLoadData = (data, id) => {
         NetWorkApi<DepartmentGetProps, API.DepartmentGroupList>({
             method: "get",
             url: "department/group",
@@ -310,11 +311,11 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                         label: item.name,
                         value: item.id
                     }))
-                    let newArr = data.map((item)=>{
-                        if(item.value===id){
+                    let newArr = data.map((item) => {
+                        if (item.value === id) {
                             return {
-                               ...item,
-                               children: dataIn
+                                ...item,
+                                children: dataIn
                             }
                         }
                         return item
@@ -329,7 +330,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
     }
 
     const loadData = (selectedOptions: DefaultOptionType[]) => {
-        console.log("selectedOptions",selectedOptions)
+        console.log("selectedOptions", selectedOptions)
         const targetOption = selectedOptions[selectedOptions.length - 1]
         targetOption.loading = true
 
@@ -516,7 +517,6 @@ interface ResetNameProps {
 }
 const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
     const {selectItemId, setSelectItemId, treeCount} = props
-    const [dataSource, setDataSource, getDataSource] = useGetState<DataSourceProps[]>([])
     const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([])
     const [loadedKeys, setLoadedKeys] = useState<(string | number)[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -526,7 +526,6 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
         OrderBy: "updated_at",
         Page: 1
     })
-    const [total, setTotal] = useState<number>()
     const [treeHeight, setTreeHeight] = useState<number>(0)
     const TreeBoxRef = useRef<any>()
     // 正常 - 组织架构
@@ -598,17 +597,18 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
             })
     }
 
-    const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
+    const update = (offsetId: number = 0) => {
         setLoading(true)
         const paginationProps = {
-            page: page || pagination.Page,
-            limit: limit || pagination.Limit
+            page: pagination.Page,
+            limit: pagination.Limit
         }
         NetWorkApi<DepartmentGetProps, API.DepartmentListResponse>({
             method: "get",
             url: "department",
             params: {
-                ...paginationProps
+                ...paginationProps,
+                offsetId
             }
         })
             .then((res: API.DepartmentListResponse) => {
@@ -628,7 +628,6 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                 }
                 setDepartment([...getDepartment(), ...newData])
                 setPagination({...pagination, Limit: res.pagemeta.limit})
-                setTotal(res.pagemeta.total)
             })
             .catch((err) => {
                 failed("失败：" + err)
@@ -640,7 +639,9 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
 
     const {run} = useThrottleFn(
         () => {
-            update(getPagination().Page + 1)
+            const lastItem = getDepartment().slice(-1)
+            const offsetId: number = lastItem.length > 0 ? lastItem[0].key : 0
+            update(offsetId)
         },
         {wait: 500}
     )
@@ -660,7 +661,8 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                         onLoadData({key: pid})
                     } else {
                         // 操作数据 仅动态删除一条
-                        const filterArr = department.filter((item)=>item.key!==id)
+                        const filterArr = department.filter((item) => item.key !== id)
+                        noUpdate()
                         setDepartment(filterArr)
                     }
                 }
@@ -1021,11 +1023,15 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 }
             })
                 .then((res) => {
-                    console.log("参数：", {
-                        ...params,
-                        ...paginationProps,
-                        departmentId: departmentId
-                    })
+                    console.log(
+                        "参数：",
+                        {
+                            ...params,
+                            ...paginationProps,
+                            departmentId: departmentId
+                        },
+                        res
+                    )
                     // 创建账号 更改组织架构count
                     if (addDepartmentId) {
                         setTreeCount({
@@ -1140,7 +1146,15 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
         },
         {
             title: "组织架构",
-            dataIndex: "department_name"
+            dataIndex: "department_name",
+            render: (text, record) => {
+                return (
+                    <div>
+                        {record?.department_parent_name && `${record.department_parent_name} / `}
+                        {text}
+                    </div>
+                )
+            }
         },
         {
             title: "角色",
@@ -1287,11 +1301,11 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 <AccountForm
                     editInfo={editInfo}
                     onCancel={() => setUserInfoForm(false)}
-                    refresh={(id,is) => {
+                    refresh={(id, is) => {
                         // 解释：此处新增的话 重新计算新增的count
                         // 编辑时如若更换组织架构则需要更新2处 自己与变动处
-                        id===selectItemId?update():update(1, undefined, id)
-                        id!==selectItemId&&is&&update()
+                        id === selectItemId ? update() : update(1, undefined, id)
+                        id !== selectItemId && is && update()
                     }}
                 />
             </Modal>
