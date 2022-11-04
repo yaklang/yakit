@@ -247,9 +247,17 @@
                     height: 28px;
                     padding: 6px 12px;
                     width: 100%;
-                    border-bottom: 1px solid #EAECF3;
+                    border-top: 1px solid #EAECF3;
                     display: flex;
                     align-items: center;
+
+                    &:first-child {
+                        border-top-width: 0;
+                    }
+
+                    &:last-child {
+                        border-bottom: 1px solid #EAECF3;
+                    }
                 }
 
                 .virtual-table-row-cell-border-right-0 {
@@ -262,10 +270,6 @@
 
                 .virtual-table-row-cell-border-left-1 {
                     border-left: 1px solid #91d5ff;
-                }
-
-                .virtual-table-row-cell-border-bottom-1 {
-                    border-bottom: 1px solid #91d5ff;
                 }
 
                 .virtual-table-row-ellipsis {
@@ -311,6 +315,10 @@
                     border-bottom: 1px solid #91d5ff;
                     border-top: 1px solid #91d5ff;
                     background-color: #e6f7ff;
+                }
+
+                .virtual-table-active-row+.virtual-table-row-cell {
+                    border-top: 0;
                 }
 
             }

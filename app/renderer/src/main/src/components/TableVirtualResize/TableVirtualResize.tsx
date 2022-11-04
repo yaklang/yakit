@@ -843,7 +843,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     <ColRender
                                         colIndex={index}
                                         currentRow={currentRow}
-                                        key={`${columnsItem.dataKey}-col` || index}
+                                        key={`${columnsItem.dataKey}-${index}` || index}
                                         columnsItem={columnsItem}
                                         list={list}
                                         colWidth={colWidth}
@@ -1091,11 +1091,6 @@ const ColRender = React.memo((props: ColRenderProps) => {
         onChangeCheckboxSingle,
         scroll
     } = props
-    let previous = {}
-    // if (currentRow && currentRow[renderKey]) {
-    //     const currentIndex = list.findIndex((ele) => ele.data[renderKey] === currentRow[renderKey])
-    //     if (currentIndex > 0) previous = list[currentIndex - 1].data
-    // }
     return (
         <div
             className={classNames(style["virtual-table-row-content"], {
@@ -1120,7 +1115,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
             {list.map((item, number) => (
                 <CellRender
                     colIndex={colIndex}
-                    key={item.data[renderKey] || number}
+                    key={`${item.data[renderKey]}-${colIndex}` || number}
                     item={item}
                     columnsItem={columnsItem}
                     number={number}
@@ -1129,7 +1124,6 @@ const ColRender = React.memo((props: ColRenderProps) => {
                     onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
                     currentRow={currentRow}
                     isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
-                    previous={previous}
                     renderKey={renderKey}
                     rowSelection={rowSelection}
                     onChangeCheckboxSingle={onChangeCheckboxSingle}
@@ -1150,7 +1144,6 @@ interface CellRenderProps {
     onRowContextMenu: (e: any) => void
     currentRow: any
     isSelect: boolean
-    previous: any
     renderKey: string
     rowSelection: RowSelectionProps<any>
     onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
@@ -1167,7 +1160,6 @@ const CellRender = React.memo(
             onRowContextMenu,
             isSelect,
             colIndex,
-            previous,
             renderKey,
             rowSelection,
             onChangeCheckboxSingle
@@ -1179,8 +1171,7 @@ const CellRender = React.memo(
                     [style["virtual-table-active-row"]]: isSelect,
                     [style["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [style["virtual-table-row-cell-border-right-1"]]: isSelect && isLastItem,
-                    [style["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0,
-                    // [style["virtual-table-row-cell-border-bottom-1"]]: item.data[renderKey] === previous[renderKey]
+                    [style["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0
                 })}
                 onClick={(e) => {
                     // @ts-ignore
@@ -1229,11 +1220,9 @@ const CellRender = React.memo(
         if (preProps.isSelect !== nextProps.isSelect) {
             return false
         }
-        // if (preProps.previous[preProps.renderKey] !== preProps.previous[preProps.renderKey]) {
-        //     console.log("preProps.previous[preProps.renderKey]", preProps.previous[preProps.renderKey])
-        //     console.log("preProps.previous[preProps.renderKey]", preProps.previous[preProps.renderKey])
-        //     return false
-        // }
+        if (preProps.rowSelection.selectedRowKeys !== nextProps.rowSelection.selectedRowKeys) {
+            return false
+        }
         return true
     }
 )

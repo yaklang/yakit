@@ -17,10 +17,10 @@ import {
     Tag,
     Tooltip,
     Badge,
-    Dropdown,
     Menu,
     InputNumber,
-    Spin
+    Spin,
+    Dropdown
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
@@ -796,8 +796,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 .then((rsp: YakQueryHTTPFlowResponse) => {
                     // console.log("update-newData", rsp)
                     if (noLoading && rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
-                    console.log(666);
-                    
+
                     const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
                     if (paginationProps.Page == 1) {
                         setSelectedRowKeys([])
