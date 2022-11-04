@@ -1,9 +1,25 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar, Select, Cascader, Popover} from "antd"
+import React, {ReactNode, useEffect, useRef, useState, useMemo} from "react"
+import {
+    Table,
+    Space,
+    Button,
+    Input,
+    Modal,
+    Form,
+    Popconfirm,
+    Tag,
+    Avatar,
+    Select,
+    Cascader,
+    Popover,
+    Spin,
+    Tree,
+    Pagination
+} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useDebounce, useThrottleFn} from "ahooks"
 import moment from "moment"
 import "./AccountAdminPage.scss"
 import {failed, success, warn} from "@/utils/notification"
@@ -12,8 +28,8 @@ import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {ResizeBox} from "@/components/ResizeBox"
 import {PlusOutlined, EditOutlined, DeleteOutlined} from "@ant-design/icons"
+import {DefaultOptionType} from "antd/lib/cascader"
 const {Option} = Select
-
 export interface ShowUserInfoProps extends API.NewUrmResponse {
     onClose: () => void
 }
@@ -39,10 +55,14 @@ const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
     )
 }
 
-export interface CreateUserFormProps {
-    editInfo:API.UrmUserList|undefined
+interface QueryAccountProps {
+    uid: string
+}
+export interface AccountFormProps {
+    editInfo: API.UrmUserList | undefined
     onCancel: () => void
-    refresh: () => void
+    // 第一个参数为更新其他架构ID 第二个参数为是否更新自己
+    refresh: (v?: number,b?:boolean) => void
 }
 
 const layout = {
@@ -50,48 +70,300 @@ const layout = {
     wrapperCol: {span: 16}
 }
 
-const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
-    const {onCancel, refresh,editInfo} = props
+interface DepData {
+    value: number
+    label: string
+    children?: DepData[]
+    isLeaf?: boolean
+    loading?: boolean
+}
+
+const AccountForm: React.FC<AccountFormProps> = (props) => {
+    const {onCancel, refresh, editInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
-
-    useEffect(()=>{
-        // 加载角色数据
-
-    },[])
-
-    const onFinish = useMemoizedFn((values) => {
-        console.log("values", values)
-        const {user_name,department,role} = values
-        const params:API.NewUrmRequest = {
-            user_name,department,role
+    // 角色分页
+    const [pagination, setPagination, getPagination] = useGetState<PaginationSchema>({
+        Limit: 20,
+        Order: "desc",
+        OrderBy: "updated_at",
+        Page: 1
+    })
+    // 组织架构分页
+    const [depPagination, setDepPagination, getDepPagination] = useGetState<PaginationSchema>({
+        Limit: 20,
+        Order: "desc",
+        OrderBy: "updated_at",
+        Page: 1
+    })
+    const [roleData, setRoleData, getRoleData] = useGetState<API.RoleList[]>([])
+    const [selectLoading, setSelectLoading] = useState<boolean>(true)
+    const isOnceLoading = useRef<boolean>(true)
+    const [depData, setDepData, getDepData] = useGetState<DepData[]>([])
+    const getRolesData = (page?: number, limit?: number) => {
+        // 加载角色列表
+        isOnceLoading.current = false
+        setSelectLoading(true)
+        const paginationProps = {
+            page: page || pagination.Page,
+            limit: limit || pagination.Limit
         }
-        editInfo&&(params.id=editInfo.id)
-        NetWorkApi<API.NewUrmRequest, API.NewUrmResponse>({
-            method: "post",
-            url: "urm",
-            params
+        NetWorkApi<QueryProps, API.RoleListResponse>({
+            method: "get",
+            url: "roles",
+            params: {
+                ...paginationProps
+            }
         })
-            .then((res: API.NewUrmResponse) => {
-                console.log("返回结果：", res)
-                const {user_name, password} = res
-                onCancel()
-                refresh()
-                const m = showModal({
-                    title: "账号信息",
-                    content: <ShowUserInfo user_name={user_name} password={password} onClose={() => m.destroy()} />
-                })
-                return m
+            .then((res) => {
+                // console.log("数据源9：", res)
+                if (Array.isArray(res.data)) {
+                    const newData = res.data.map((item) => ({...item}))
+                    setRoleData([...getRoleData(), ...newData])
+                    setPagination({...pagination, Limit: res.pagemeta.limit, Page: res.pagemeta.page})
+                }
             })
             .catch((err) => {
-                failed("创建账号失败：" + err)
+                failed("获取角色列表失败：" + err)
             })
             .finally(() => {
                 setTimeout(() => {
-                    setLoading(false)
+                    setSelectLoading(false)
                 }, 200)
             })
+    }
+
+    const getDepartmentData = (page?: number, limit?: number,id?:number) => {
+        const paginationProps = {
+            page: page || depPagination.Page,
+            limit: limit || depPagination.Limit
+        }
+        NetWorkApi<DepartmentGetProps, API.DepartmentListResponse>({
+            method: "get",
+            url: "department",
+            params: {
+                ...paginationProps
+            }
+        })
+            .then((res: API.DepartmentListResponse) => {
+                console.log("组织架构FORM-返回结果：", res)
+                if (Array.isArray(res.data)) {
+                    // 控件不支持分页-获取全部数据
+                    NetWorkApi<DepartmentGetProps, API.DepartmentListResponse>({
+                        method: "get",
+                        url: "department",
+                        params: {
+                            page: 1,
+                            limit: res.pagemeta.limit
+                        }
+                    })
+                        .then((res: API.DepartmentListResponse) => {
+                            console.log("组织架构FORM1-返回结果：", res)
+                            const data = res.data.map((item) => ({
+                                value: item.id,
+                                label: item.name,
+                                isLeaf: item.exist_group ? false : true
+                            }))
+                            if(id){
+                                // 初始化默认数据
+                                initLoadData(data,id)
+                            }
+                            else{
+                                setDepData(data)
+                            }
+                            setDepPagination({...pagination, Limit: res.pagemeta.limit, Page: res.pagemeta.page})
+                        })
+                        .catch((err) => {
+                            failed("失败：" + err)
+                        })
+                        .finally(() => {})
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {})
+    }
+
+    useEffect(() => {
+        getRolesData()
+        if (editInfo?.uid) {
+            // 加载编辑数据
+            NetWorkApi<QueryAccountProps, API.UrmEditListResponse>({
+                method: "get",
+                url: "/urm/edit",
+                params: {
+                    uid: editInfo?.uid
+                }
+            })
+                .then((res: API.UrmEditListResponse) => {
+                    console.log("返回结果：", res)
+                    if (res.data) {
+                        const {user_name,department_parent_id,department_id,role_id,role_name} = res.data
+                        const department = department_parent_id?[department_parent_id,department_id]:[department_id]
+                        getDepartmentData(undefined,undefined,department_parent_id)
+                        form.setFieldsValue({
+                            user_name,
+                            department:department,
+                            role_id:{key:role_id,value:role_name}
+                        })
+                    }
+                })
+                .catch((err) => {
+                    failed("加载数据失败：" + err)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        }
+        else{
+            getDepartmentData()
+        }
+    }, [])
+
+    const onFinish = useMemoizedFn((values) => {
+        const {user_name, department, role_id} = values
+        // 编辑
+        const departmentId = department[department.length - 1]
+        if (editInfo) {
+            const params: API.EditUrmRequest = {
+                uid: editInfo.uid,
+                user_name,
+                department: departmentId,
+                role_id:role_id?.key||role_id
+            }
+            console.log("params888", params)
+            NetWorkApi<API.EditUrmRequest, API.ActionSucceeded>({
+                method: "post",
+                url: "urm/edit",
+                data: params
+            })
+                .then((res: API.ActionSucceeded) => {
+                    console.log("返回结果：", res)
+                    refresh(departmentId,true)
+                })
+                .catch((err) => {
+                    failed("修改账号失败：" + err)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        }
+        // 新增
+        else {
+            const params: API.NewUrmRequest = {
+                user_name,
+                department: departmentId,
+                role_id
+            }
+            console.log("params", params)
+            NetWorkApi<API.NewUrmRequest, API.NewUrmResponse>({
+                method: "post",
+                url: "urm",
+                data: params
+            })
+                .then((res: API.NewUrmResponse) => {
+                    console.log("返回结果：", res)
+                    const {user_name, password} = res
+                    onCancel()
+                    refresh(departmentId)
+                    const m = showModal({
+                        title: "账号信息",
+                        content: <ShowUserInfo user_name={user_name} password={password} onClose={() => m.destroy()} />
+                    })
+                    return m
+                })
+                .catch((err) => {
+                    failed("创建账号失败：" + err)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        }
     })
+
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+        return (
+            <div>
+                <Spin spinning={selectLoading}>{originNode}</Spin>
+            </div>
+        )
+    })
+
+    const initLoadData = (data,id) => {
+        NetWorkApi<DepartmentGetProps, API.DepartmentGroupList>({
+            method: "get",
+            url: "department/group",
+            params: {
+                departmentId: id
+            }
+        })
+            .then((res: API.DepartmentGroupList) => {
+                if (Array.isArray(res.data)) {
+                    const dataIn = res.data.map((item) => ({
+                        label: item.name,
+                        value: item.id
+                    }))
+                    let newArr = data.map((item)=>{
+                        if(item.value===id){
+                            return {
+                               ...item,
+                               children: dataIn
+                            }
+                        }
+                        return item
+                    })
+                    setDepData([...newArr])
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {})
+    }
+
+    const loadData = (selectedOptions: DefaultOptionType[]) => {
+        console.log("selectedOptions",selectedOptions)
+        const targetOption = selectedOptions[selectedOptions.length - 1]
+        targetOption.loading = true
+
+        console.log("targetOption", targetOption)
+        NetWorkApi<DepartmentGetProps, API.DepartmentGroupList>({
+            method: "get",
+            url: "department/group",
+            params: {
+                departmentId: targetOption.value
+            }
+        })
+            .then((res: API.DepartmentGroupList) => {
+                if (Array.isArray(res.data)) {
+                    targetOption.loading = false
+                    const data = res.data.map((item) => ({
+                        label: item.name,
+                        value: item.id
+                    }))
+                    targetOption.children = data
+                    setDepData([...depData])
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {})
+    }
+
+    const {run} = useThrottleFn(
+        () => {
+            getRolesData(getPagination().Page + 1)
+        },
+        {wait: 500}
+    )
     return (
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
@@ -100,23 +372,21 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                 </Form.Item>
                 <Form.Item name='department' label='组织架构' rules={[{required: true, message: "该项为必填"}]}>
                     <Cascader
-                        options={[
-                            {
-                                value: "zhejiang",
-                                label: "Zhejiang",
-                                children: [
-                                    {
-                                        value: "hangzhou",
-                                        label: "Hanzhou"
-                                    }
-                                ]
-                            }
-                        ]}
+                        options={depData}
+                        loadData={loadData}
                         placeholder='请选择组织架构'
                         changeOnSelect
+                        onPopupScroll={(e) => {
+                            console.log("加载")
+                            const {target} = e
+                            const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                            if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
+                                getDepartmentData(getDepPagination().Page + 1)
+                            }
+                        }}
                     />
                 </Form.Item>
-                <Form.Item name='role' label='角色' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item name='role_id' label='角色' rules={[{required: true, message: "该项为必填"}]}>
                     <Select
                         showSearch
                         placeholder='请选择角色'
@@ -124,10 +394,20 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                         filterOption={(input, option) =>
                             (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
                         }
+                        onPopupScroll={(e) => {
+                            const {target} = e
+                            const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                            if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
+                                run()
+                            }
+                        }}
+                        dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                     >
-                        <Option value='jack'>Jack</Option>
-                        <Option value='lucy'>Lucy</Option>
-                        <Option value='tom'>Tom</Option>
+                        {roleData.map((item) => (
+                            <Option key={item.id} value={item.id}>
+                                {item.name}
+                            </Option>
+                        ))}
                     </Select>
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
@@ -141,19 +421,54 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
 }
 
 interface CreateOrganizationFormProps {
+    parentId?: number
     onClose: () => void
-    refresh: () => void
+    refresh: (v?: {name: string; key: number}) => void
+}
+
+interface DepartmentPostProps {
+    name: string
+    pid: number
 }
 
 const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) => {
-    const {onClose, refresh} = props
+    const {onClose, refresh, parentId} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
-    const onFinish = useMemoizedFn((values) => {})
+    const onFinish = useMemoizedFn((values) => {
+        setLoading(true)
+        const params = {
+            name: values.name,
+            pid: 0
+        }
+        if (parentId) {
+            params.pid = parentId
+        }
+        console.log("新建参数", params)
+        NetWorkApi<DepartmentPostProps, number>({
+            method: "post",
+            url: "department",
+            data: params
+        })
+            .then((res: number) => {
+                console.log("返回结果998：", res)
+                if (res) {
+                    success("新建成功")
+                    refresh({name: values.name, key: res})
+                    onClose()
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
     return (
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
-                <Form.Item name='user_name' label='标题' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item name='name' label='标题' rules={[{required: true, message: "该项为必填"}]}>
                     <Input placeholder='请输入标题' allowClear />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
@@ -166,19 +481,307 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) =>
     )
 }
 
-export interface OrganizationAdminPageProps {}
+interface DepartmentGetProps {}
 
+interface DepartmentRemoveProps {
+    id: number
+}
+
+interface DataSourceProps {
+    title: string
+    key: number
+    // 能否展开
+    isLeaf: boolean
+    // 数量
+    userNum?: number
+    // 是否展示添加按钮
+    isShowAddBtn?: boolean
+    // 父级ID
+    pid?: number
+    // 是否显示所有按钮
+    isShowAllBtn?: boolean
+    children?: any
+}
+
+export interface OrganizationAdminPageProps {
+    selectItemId: string | number | undefined
+    setSelectItemId: (v: string | number | undefined) => void
+    treeCount: TreeCountProps | undefined
+}
+
+interface ResetNameProps {
+    pid: number
+    name: string
+    id?: number
+}
 const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
-    // 删除
-    const onRemove = () => {}
-    // 修改名称
-    const resetName = (id, name) => {}
-    // 添加
-    const addItem = (value) => {}
-    // 选中 更新选中成员与选中样式
-    const selectItem = () => {
-        console.log("点击Item")
+    const {selectItemId, setSelectItemId, treeCount} = props
+    const [dataSource, setDataSource, getDataSource] = useGetState<DataSourceProps[]>([])
+    const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([])
+    const [loadedKeys, setLoadedKeys] = useState<(string | number)[]>([])
+    const [loading, setLoading] = useState<boolean>(false)
+    const [pagination, setPagination, getPagination] = useGetState<PaginationSchema>({
+        Limit: 20,
+        Order: "desc",
+        OrderBy: "updated_at",
+        Page: 1
+    })
+    const [total, setTotal] = useState<number>()
+    const [treeHeight, setTreeHeight] = useState<number>(0)
+    const TreeBoxRef = useRef<any>()
+    // 正常 - 组织架构
+    const [department, setDepartment, getDepartment] = useGetState<DataSourceProps[]>([])
+    // 无归属 - 组织架构数量
+    const [noDepartment, setNoDepartment] = useState<number>()
+
+    const realDataSource = useMemo(() => {
+        return [
+            {
+                title: "无归属",
+                key: -1,
+                userNum: noDepartment,
+                isLeaf: true,
+                isShowAllBtn: false
+            },
+            ...department
+        ]
+    }, [department, noDepartment])
+
+    useEffect(() => {
+        setTreeHeight(TreeBoxRef.current.offsetHeight)
+        // 获取正常组织架构
+        update()
+        // 获取无归属组织架构
+        noUpdate()
+    }, [])
+
+    const updateTreeCount = (list: DataSourceProps[], treeCount: TreeCountProps): DataSourceProps[] =>
+        list.map((node) => {
+            if (node.key === treeCount.id) {
+                return {
+                    ...node,
+                    userNum: treeCount.count
+                }
+            }
+            // 多层递归（如后续升级可用）
+            if (node.children) {
+                return {
+                    ...node,
+                    children: updateTreeCount(node.children, treeCount)
+                }
+            }
+            return node
+        })
+
+    // 更新count数量
+    useEffect(() => {
+        if (treeCount) {
+            setDepartment((origin) => updateTreeCount(origin, treeCount))
+            noUpdate()
+        }
+    }, [treeCount])
+
+    const noUpdate = () => {
+        NetWorkApi<DepartmentGetProps, API.DepartmentList>({
+            method: "get",
+            url: "noDepartment",
+            params: {}
+        })
+            .then((res: API.DepartmentList) => {
+                setNoDepartment(res.userNum)
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
     }
+
+    const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
+        setLoading(true)
+        const paginationProps = {
+            page: page || pagination.Page,
+            limit: limit || pagination.Limit
+        }
+        NetWorkApi<DepartmentGetProps, API.DepartmentListResponse>({
+            method: "get",
+            url: "department",
+            params: {
+                ...paginationProps
+            }
+        })
+            .then((res: API.DepartmentListResponse) => {
+                console.log("组织架构-返回结果：", res)
+                const newData = (res?.data || [])
+                    .filter((item) => item.name || item.userNum > 0)
+                    .map((item) => ({
+                        title: item.name,
+                        key: item.id,
+                        userNum: item.userNum,
+                        isLeaf: item.exist_group ? false : true,
+                        isShowAddBtn: true
+                    }))
+                // 若无选中 则 默认选中第一项
+                if (newData.length > 0) {
+                    setSelectItemId(selectItemId || newData[0].key)
+                }
+                setDepartment([...getDepartment(), ...newData])
+                setPagination({...pagination, Limit: res.pagemeta.limit})
+                setTotal(res.pagemeta.total)
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    }
+
+    const {run} = useThrottleFn(
+        () => {
+            update(getPagination().Page + 1)
+        },
+        {wait: 500}
+    )
+    // 删除
+    const onRemove = (id: number, pid?: number) => {
+        NetWorkApi<DepartmentRemoveProps, API.ActionSucceeded>({
+            method: "delete",
+            url: "department",
+            params: {
+                id
+            }
+        })
+            .then((res: API.ActionSucceeded) => {
+                if (res.ok) {
+                    success("删除成功")
+                    if (pid) {
+                        onLoadData({key: pid})
+                    } else {
+                        // 操作数据 仅动态删除一条
+                        const filterArr = department.filter((item)=>item.key!==id)
+                        setDepartment(filterArr)
+                    }
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {})
+    }
+    // 修改名称
+    const resetName = (name, id, pid = 0) => {
+        const params: ResetNameProps = {
+            name,
+            pid
+        }
+        if (id) {
+            params.id = id
+        }
+        NetWorkApi<ResetNameProps, API.ActionSucceeded>({
+            method: "post",
+            url: "department",
+            data: params
+        })
+            .then((res: API.ActionSucceeded) => {
+                if (res.ok) {
+                    success("修改成功")
+                    // 第一层更新
+                    if (pid === 0) {
+                        setDepartment((origin) =>
+                            origin.map((node) => {
+                                if (node.key === id) {
+                                    return {
+                                        ...node,
+                                        title: name
+                                    }
+                                }
+                                return node
+                            })
+                        )
+                    }
+                    // 内部更新
+                    else {
+                        onLoadData({key: pid})
+                    }
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {})
+    }
+
+    const updateTreeData = (list: DataSourceProps[], key: React.Key, children: DataSourceProps[]): DataSourceProps[] =>
+        list.map((node) => {
+            if (node.key === key) {
+                return {
+                    ...node,
+                    isLeaf: false,
+                    children
+                }
+            }
+            // 多层递归（如后续升级可用）
+            // if (node.children) {
+            //     return {
+            //         ...node,
+            //         children: updateTreeData(node.children, key, children)
+            //     }
+            // }
+            return node
+        })
+    const onLoadData = ({key, children}: any) => {
+        // console.log("key, children", key, children)
+        return new Promise<void>((resolve) => {
+            if (children) {
+                resolve()
+                return
+            }
+            NetWorkApi<DepartmentGetProps, API.DepartmentGroupList>({
+                method: "get",
+                url: "department/group",
+                params: {
+                    departmentId: key
+                }
+            })
+                .then((res: API.DepartmentGroupList) => {
+                    console.log("加载-返回结果：", res)
+                    if (Array.isArray(res.data)) {
+                        const newArr = res.data.map((item) => ({
+                            title: item.name,
+                            key: item.id,
+                            userNum: item.userNum,
+                            isLeaf: true,
+                            pid: key
+                        }))
+                        setDepartment((origin) => updateTreeData(origin, key, newArr))
+                    }
+                    // 当获取结果为空 则为删除的最后一个
+                    else {
+                        setDepartment((origin) =>
+                            origin.map((node) => {
+                                if (node.key === key) {
+                                    return {
+                                        ...node,
+                                        isLeaf: true,
+                                        children: null
+                                    }
+                                }
+                                return node
+                            })
+                        )
+                    }
+                })
+                .catch((err) => {
+                    failed("失败：" + err)
+                })
+                .finally(() => {
+                    resolve()
+                })
+        })
+    }
+
     return (
         <div className='organization-admin-page'>
             <div className='organization-admin-page-title'>
@@ -194,7 +797,21 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                                     onClose={() => {
                                         m.destroy()
                                     }}
-                                    refresh={() => {}}
+                                    refresh={(obj) => {
+                                        // 操作数据 仅动态添加一条
+                                        if (obj) {
+                                            setDepartment((origin) => [
+                                                {
+                                                    title: obj.name,
+                                                    key: obj?.key,
+                                                    userNum: 0,
+                                                    isLeaf: true,
+                                                    isShowAddBtn: true
+                                                },
+                                                ...origin
+                                            ])
+                                        }
+                                    }}
                                 />
                             )
                         })
@@ -203,71 +820,148 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                     <PlusOutlined />
                 </div>
             </div>
-            <div className='organization-admin-page-content'>
-                <div className='department-item click-item' onClick={() => selectItem()}>
-                    <div className='department-item-info'>产品部（36）</div>
-                    <div className='department-item-operation'>
-                        <Space>
-                            <Popover
-                                trigger={"click"}
-                                title={"修改名称"}
-                                content={
-                                    <Input
-                                        size={"small"}
-                                        defaultValue={""}
-                                        onBlur={(e) => resetName(``, e.target.value)}
-                                    />
+            <Spin spinning={loading} wrapperClassName='spin-box'>
+                <div className='organization-admin-page-content'>
+                    <div ref={TreeBoxRef} className='organization-admin-page-content-tree'>
+                        <Tree
+                            loadData={onLoadData}
+                            treeData={realDataSource}
+                            blockNode={true}
+                            onSelect={(key) => {
+                                // console.log("value",key)
+                                if (key.length <= 0) {
+                                    return
                                 }
-                            >
-                                <EditOutlined className='department-item-operation-icon' />
-                            </Popover>
-                            <Popconfirm title={"确定删除此项吗？不可恢复"} onConfirm={onRemove}>
-                                <DeleteOutlined className='department-item-operation-icon' />
-                            </Popconfirm>
-                            <PlusOutlined
-                                className='department-item-operation-add-icon'
-                                onClick={() => {
-                                    const m = showModal({
-                                        title: "新建小组",
-                                        width: 600,
-                                        content: (
-                                            <CreateOrganizationForm
-                                                onClose={() => {
-                                                    m.destroy()
-                                                }}
-                                                refresh={() => {}}
-                                            />
-                                        )
-                                    })
-                                }}
+                                setSelectItemId(key[0])
+                            }}
+                            selectedKeys={selectItemId ? [selectItemId] : []}
+                            height={treeHeight}
+                            expandedKeys={expandedKeys}
+                            loadedKeys={loadedKeys}
+                            onExpand={(expandedKeys, {expanded, node}) => {
+                                // console.log("expandedKeys",expandedKeys,expanded,node)
+                                setExpandedKeys(expandedKeys)
+                            }}
+                            onLoad={(loadedKeys, {event, node}) => {
+                                // console.log("loadedKeys",getLoadedKeys(),loadedKeys,event,node)
+                                setLoadedKeys(loadedKeys)
+                            }}
+                            titleRender={(nodeData: DataSourceProps) => {
+                                // console.log("nodeData", nodeData)
+                                const {isShowAllBtn = true} = nodeData
+                                return (
+                                    <div
+                                        className={`department-item ${
+                                            nodeData.key === selectItemId ? "click-item" : ""
+                                        }`}
+                                    >
+                                        <div className='department-item-info'>
+                                            {nodeData.title}（{nodeData.userNum}）
+                                            {/* {nodeData.userNum && `（${nodeData.userNum}）`} */}
+                                        </div>
+                                        {isShowAllBtn && (
+                                            <div className='department-item-operation'>
+                                                <Space>
+                                                    <Popover
+                                                        trigger={"click"}
+                                                        title={"修改名称"}
+                                                        content={
+                                                            <Input
+                                                                size={"small"}
+                                                                defaultValue={nodeData.title}
+                                                                onBlur={(e) => {
+                                                                    if (!!e.target.value.length) {
+                                                                        resetName(
+                                                                            e.target.value,
+                                                                            nodeData.key,
+                                                                            nodeData.pid
+                                                                        )
+                                                                    } else {
+                                                                        warn("不可为空")
+                                                                    }
+                                                                }}
+                                                            />
+                                                        }
+                                                    >
+                                                        <EditOutlined
+                                                            onClick={(e) => {
+                                                                // 阻止冒泡
+                                                                e?.stopPropagation()
+                                                                setSelectItemId(nodeData.key)
+                                                            }}
+                                                            className='department-item-operation-icon'
+                                                        />
+                                                    </Popover>
+                                                    <Popconfirm
+                                                        title={"确定删除此项吗？不可恢复"}
+                                                        onConfirm={(e) => {
+                                                            onRemove(nodeData.key, nodeData.pid)
+                                                        }}
+                                                    >
+                                                        <DeleteOutlined
+                                                            onClick={(e) => {
+                                                                // 阻止冒泡
+                                                                e?.stopPropagation()
+                                                                setSelectItemId(nodeData.key)
+                                                            }}
+                                                            className='department-item-operation-icon'
+                                                        />
+                                                    </Popconfirm>
+                                                    {nodeData.isShowAddBtn && (
+                                                        <PlusOutlined
+                                                            className='department-item-operation-add-icon'
+                                                            onClick={(e) => {
+                                                                // 阻止冒泡
+                                                                e?.stopPropagation()
+                                                                setSelectItemId(nodeData.key)
+                                                                const m = showModal({
+                                                                    title: "新建小组",
+                                                                    width: 600,
+                                                                    content: (
+                                                                        <CreateOrganizationForm
+                                                                            onClose={() => {
+                                                                                m.destroy()
+                                                                            }}
+                                                                            refresh={() => {
+                                                                                onLoadData({key: nodeData.key})
+                                                                            }}
+                                                                            parentId={nodeData.key}
+                                                                        />
+                                                                    )
+                                                                })
+                                                            }}
+                                                        />
+                                                    )}
+                                                </Space>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            }}
+                            onScroll={(e) => {
+                                const {target} = e
+                                const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                                if (ref.scrollTop + ref.offsetHeight + 10 >= ref.scrollHeight) {
+                                    run()
+                                }
+                            }}
+                        />
+                    </div>
+                    {/* {dataSource.length > 0 && (
+                        <div style={{textAlign: "center"}}>
+                            <Pagination
+                                size='small'
+                                current={pagination.Page}
+                                pageSize={pagination?.Limit || 10}
+                                showSizeChanger={true}
+                                total={total}
+                                showTotal={(i) => <Tag>{`Total ${i}`}</Tag>}
+                                onChange={(page: number, limit?: number) => update(page, limit)}
                             />
-                        </Space>
-                    </div>
+                        </div>
+                    )} */}
                 </div>
-                <div className='group-item' onClick={() => selectItem()}>
-                    <div className='group-item-info'>产品小组（36）</div>
-                    <div className='group-item-operation'>
-                        <Space>
-                            <Popover
-                                trigger={"click"}
-                                title={"修改名称"}
-                                content={
-                                    <Input
-                                        size={"small"}
-                                        defaultValue={""}
-                                        onBlur={(e) => resetName(``, e.target.value)}
-                                    />
-                                }
-                            >
-                                <EditOutlined className='group-item-operation-icon' />
-                            </Popover>
-                            <Popconfirm title={"确定删除此项吗？不可恢复"} onConfirm={onRemove}>
-                                <DeleteOutlined className='group-item-operation-icon' />
-                            </Popconfirm>
-                        </Space>
-                    </div>
-                </div>
-            </div>
+            </Spin>
         </div>
     )
 }
@@ -279,8 +973,9 @@ export interface QueryExecResultsParams {
 }
 
 interface QueryProps {}
-interface RemoveProps {
-    uid: string[]
+interface TreeCountProps {
+    id: string | number
+    count: number
 }
 interface ResetProps {
     user_name: string
@@ -299,51 +994,83 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
         OrderBy: "updated_at",
         Page: 1
     })
-    const [data, setData] = useState<API.UrmUserList[]>([])
-    const [total, setTotal] = useState<number>(0)
+    const [dataSource, setDataSource] = useState<API.UrmUserList[]>([])
+    const [total, setTotal] = useState<number>()
     // 编辑项信息
     const [editInfo, setEditInfo] = useState<API.UrmUserList>()
-    const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
+    const [selectItemId, setSelectItemId] = useState<string | number>()
+    const [treeCount, setTreeCount] = useState<TreeCountProps>()
+    const update = (page?: number, limit?: number, addDepartmentId?: number) => {
         setLoading(true)
         const paginationProps = {
             page: page || 1,
             limit: limit || pagination.Limit
         }
-
-        NetWorkApi<QueryProps, API.UrmUserListResponse>({
-            method: "get",
-            url: "urm",
-            params: {
-                ...params,
-                ...paginationProps
-            }
-        })
-            .then((res) => {
-                const newData = res.data.map((item) => ({...item}))
-                console.log("数据源：", newData)
-                setData(newData)
-                setPagination({...pagination, Limit: res.pagemeta.limit})
-                setTotal(res.pagemeta.total)
+        if (selectItemId) {
+            // 处理无归属请求
+            const id = selectItemId === -1 ? 0 : selectItemId
+            // 创建账号时用于更新组织架构数量
+            const departmentId = addDepartmentId || id
+            NetWorkApi<QueryProps, API.UrmUserListResponse>({
+                method: "get",
+                url: "urm",
+                params: {
+                    ...params,
+                    ...paginationProps,
+                    departmentId: departmentId
+                }
             })
-            .catch((err) => {
-                failed("获取账号列表失败：" + err)
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            })
+                .then((res) => {
+                    console.log("参数：", {
+                        ...params,
+                        ...paginationProps,
+                        departmentId: departmentId
+                    })
+                    // 创建账号 更改组织架构count
+                    if (addDepartmentId) {
+                        setTreeCount({
+                            id: addDepartmentId,
+                            count: res.pagemeta.total
+                        })
+                    }
+                    // 正常渲染Table
+                    else {
+                        if (Array.isArray(res.data)) {
+                            const newData = res.data.map((item) => ({...item}))
+                            setDataSource(newData)
+                        } else {
+                            setDataSource([])
+                        }
+                        setPagination({...pagination, Limit: res.pagemeta.limit})
+                        setTotal(res.pagemeta.total)
+                        setTreeCount({
+                            id: selectItemId,
+                            count: res.pagemeta.total
+                        })
+                    }
+                })
+                .catch((err) => {
+                    failed("获取账号列表失败：" + err)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        }
     }
 
     useEffect(() => {
+        setSelectedRowKeys([])
         update()
-    }, [])
+    }, [selectItemId])
 
     const rowSelection = {
         onChange: (selectedRowKeys, selectedRows: API.UrmUserList[]) => {
             // let newArr = selectedRowKeys.map((item)=>parseInt(item))
             setSelectedRowKeys(selectedRowKeys)
-        }
+        },
+        selectedRowKeys
     }
 
     const onRemove = (uid: string[]) => {
@@ -412,10 +1139,12 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
             )
         },
         {
-            title: "组织架构"
+            title: "组织架构",
+            dataIndex: "department_name"
         },
         {
-            title: "角色"
+            title: "角色",
+            dataIndex: "role_name"
         },
         {
             title: "创建时间",
@@ -506,7 +1235,13 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 </div>
             </div>
             <ResizeBox
-                firstNode={<OrganizationAdminPage />}
+                firstNode={
+                    <OrganizationAdminPage
+                        setSelectItemId={setSelectItemId}
+                        selectItemId={selectItemId}
+                        treeCount={treeCount}
+                    />
+                }
                 firstMinSize={300}
                 firstRatio={"300px"}
                 secondNode={
@@ -533,7 +1268,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                             columns={columns}
                             size={"small"}
                             bordered={true}
-                            dataSource={data}
+                            dataSource={dataSource}
                         />
                     </>
                 }
@@ -541,7 +1276,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
 
             <Modal
                 visible={userInfoForm}
-                title={editInfo?"编辑账号":"创建账号"}
+                title={editInfo ? "编辑账号" : "创建账号"}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{padding: "10px 24px 24px 24px"}}
@@ -549,7 +1284,16 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 onCancel={() => setUserInfoForm(false)}
                 footer={null}
             >
-                <CreateUserForm editInfo={editInfo} onCancel={() => setUserInfoForm(false)} refresh={() => update()} />
+                <AccountForm
+                    editInfo={editInfo}
+                    onCancel={() => setUserInfoForm(false)}
+                    refresh={(id,is) => {
+                        // 解释：此处新增的话 重新计算新增的count
+                        // 编辑时如若更换组织架构则需要更新2处 自己与变动处
+                        id===selectItemId?update():update(1, undefined, id)
+                        id!==selectItemId&&is&&update()
+                    }}
+                />
             </Modal>
         </div>
     )

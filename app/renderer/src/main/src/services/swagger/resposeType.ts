@@ -107,7 +107,7 @@
     token: string;
     role: string;
     user_id: number;
-    uid?: number;
+    uid?: string;
   }
   export interface UrmUserListResponse extends Paging {
     data: UrmUserList[];
@@ -119,10 +119,19 @@
     head_img: string;
     from_platform: string;
     uid: string;
+    department_id?: number;
+    department_name?: string;
+    role_id?: number;
+    role_name?: string;
+    department_parent_id?: number;
+    department_parent_name?: string;
   }
   export interface UrmLoginRequest {
     user_name: string;
     pwd: string;
+  }
+  export interface UrmEditListResponse {
+    data: UrmUserList;
   }
   export interface UpUserInfoRequest {
     old_pwd?: string;
@@ -313,10 +322,9 @@
     password: string;
   }
   export interface NewUrmRequest {
-    id?: number;
     user_name: string;
     department: number;
-    role: number;
+    role_id: number;
   }
   export interface NewRoleRequest {
     id?: number;
@@ -325,6 +333,7 @@
     checkPlugin: boolean;
     pluginType?: string;
     pluginIds?: string;
+    plugin?: PluginTypeList[];
   }
   export interface NewOperation {
     type: string;
@@ -387,13 +396,26 @@
     extract_content: string;
     module: string;
   }
+  export interface EditUrmRequest {
+    uid: string;
+    user_name?: string;
+    department?: number;
+    role_id?: number;
+  }
   export interface DepartmentListResponse extends Paging {
     data: DepartmentList[];
   }
   export interface DepartmentList {
     id: number;
     name: string;
-    userNum: string;
+    userNum: number;
+    /**
+     * 是否有二级分组
+     */
+    exist_group?: boolean;
+  }
+  export interface DepartmentGroupList {
+    data: DepartmentList[];
   }
   export interface DeleteUrm {
     uid: string[];

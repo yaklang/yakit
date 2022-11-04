@@ -31,76 +31,49 @@
                 margin-right: 19px;
             }
         }
+        .spin-box {
+            height: 100%;
+        }
         &-content {
-            overflow-y: auto;
+            // overflow-y: auto;
             height: 100%;
             padding: 10px;
             border: 1px solid rgb(240, 240, 240);
-            .department-item {
-                display: flex;
-                padding: 0 6px;
-                cursor: pointer;
-                margin-bottom: 4px;
-                &-info {
-                    flex: 1;
-                }
-                &-operation {
-                    display: none;
-                    width: 60px;
-                    &-icon{
-                        color: rgba(0, 0, 0, 0.45);
-                    }
-                    &-add-icon{
-                        color: #1890ff;
-                    }
-                }
-            }
-            :hover {
-                background-color: #fafafa;
-                .department-item-info{
-                   color: rgba(0, 0, 0, 0.45); 
-                }
+            display: flex;
+            flex-flow: column;
+            &-tree {
+                flex: 1;
                 .department-item-operation{
-                    display: block;
+                    display: none;
                 }
-            }
-            .group-item{
+                .ant-tree-node-content-wrapper:hover{
+                    .department-item-operation{
+                        display: block;
+                    }
+                }
+                .click-item{
+                    .department-item-operation{
+                        display: block;
+                    }
+                }
+                .department-item {
                 display: flex;
                 padding: 0 6px;
                 cursor: pointer;
                 margin-bottom: 4px;
-                margin-left: 14px;
+                min-height: 22px;
                 &-info {
                     flex: 1;
                 }
                 &-operation {
-                    display: none;
-                    width: 38px;
-                    &-icon{
+                    &-icon {
                         color: rgba(0, 0, 0, 0.45);
                     }
-                    &-add-icon{
+                    &-add-icon {
                         color: #1890ff;
                     }
                 }
             }
-            :hover {
-                background-color: #fafafa;
-                .group-item-info{
-                   color: rgba(0, 0, 0, 0.45); 
-                }
-                .group-item-operation{
-                    display: block;
-                }
-            }
-            .click-item{
-                background-color: #fafafa;
-                .department-item-operation,.group-item-operation {
-                    display: block;
-                }
-                .department-item-info,.group-item-info{
-                    color: rgba(0, 0, 0, 0.45); 
-                }
             }
         }
     }

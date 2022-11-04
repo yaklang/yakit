@@ -82,7 +82,8 @@ import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
+import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
+import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -349,6 +350,12 @@ const Main: React.FC<MainProp> = (props) => {
 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
+    // 企业版本初始显示登录弹窗
+    useEffect(()=>{
+        if(ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()){
+            !userInfo.isLogin&&setLoginShow(true)
+        }
+    },[])
 
     // 系统类型
     const [system, setSystem] = useState<string>("")
