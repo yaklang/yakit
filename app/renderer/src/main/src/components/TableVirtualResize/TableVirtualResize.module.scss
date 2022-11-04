@@ -80,7 +80,7 @@
                 flex-direction: row;
                 justify-content: space-between;
                 align-items: center;
-                background-color: #F9FBFF;
+                background-color: #F8F8F8;
                 padding: 6px 12px;
                 height: 28px;
                 border-right: 1px solid #EAECF3;
@@ -240,6 +240,10 @@
 
                     &:last-child {
                         border-bottom: 1px solid #EAECF3;
+                    }
+
+                    &:hover {
+                        background: #F8F8F8;
                     }
                 }
 
@@ -513,11 +517,11 @@
             cursor: pointer;
 
             &:hover {
-                background: #F9FBFF;
+                background: #F8F8F8;
             }
 
             &:active {
-                background: #F9FBFF;
+                background: #F8F8F8;
                 color: #1890ff;
             }
 
@@ -535,7 +539,7 @@
         }
 
         .select-item-active {
-            background: #F9FBFF;
+            background: #F8F8F8;
             color: #1890ff;
         }
 
@@ -631,7 +635,7 @@
     border-radius: 0px 0px 4px 4px;
     width: calc(100% - 2px);
     display: flex;
-    background: #F9FBFF;
+    background: #F8F8F8;
     height: 24px;
     position: absolute;
     bottom: 0;

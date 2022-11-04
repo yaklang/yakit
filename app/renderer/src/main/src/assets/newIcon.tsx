@@ -2,7 +2,6 @@ import Icon from "@ant-design/icons"
 import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 import React from "react"
 
-// 实心的选择圆形
 const CheckCircle = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
         <path
@@ -14,11 +13,13 @@ const CheckCircle = () => (
     </svg>
 )
 
+/**
+ * @description:  实心的选择圆形
+ */
 export const CheckCircleIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={CheckCircle} {...props} />
 }
 
-// 刷新 两个圆弧的箭头
 const Refresh = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
         <path
@@ -31,11 +32,14 @@ const Refresh = () => (
     </svg>
 )
 
+/**
+ * @description:  刷新 两个圆弧的箭头
+ */
 export const RefreshIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={Refresh} {...props} />
 }
+ 
 
-// 筛选
 const Filter = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
         <path
@@ -47,6 +51,9 @@ const Filter = () => (
     </svg>
 )
 
+/**
+ * @description: 筛选
+ */
 export const FilterIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={Filter} {...props} />
 }
@@ -62,12 +69,15 @@ const Search = () => (
     </svg>
 )
 
-// 圆圈搜索
+/**
+ * @description: 圆圈搜索
+ */
 export const SearchIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={Search} {...props} />
 }
 
-// 屏蔽
+
+
 const StatusOffline = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'>
         <path
@@ -77,11 +87,14 @@ const StatusOffline = () => (
     </svg>
 )
 
+/**
+ * @description: 屏蔽
+ */
 export const StatusOfflineIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={StatusOffline} {...props} />
 }
 
-// 向上的箭头 排序
+
 const SorterUp = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
         <path
@@ -99,11 +112,14 @@ const SorterUp = () => (
     </svg>
 )
 
+/**
+ * @description: 向上的箭头 排序
+ */
 export const SorterUpIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={SorterUp} {...props} />
 }
 
-// 向下的箭头 排序
+
 const SorterDown = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
         <path
@@ -121,11 +137,14 @@ const SorterDown = () => (
     </svg>
 )
 
+/**
+ * @description: 向下的箭头 排序
+ */
 export const SorterDownIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={SorterDown} {...props} />
 }
 
-// 两个箭头颜色一样 排序
+
 const DisableSorter = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
         <path
@@ -143,17 +162,23 @@ const DisableSorter = () => (
     </svg>
 )
 
+/**
+ * @description: 两个箭头颜色一样 排序
+ */
 export const DisableSorterIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={DisableSorter} {...props} />
 }
 
-// x 删除图标
+
 const Remove = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'>
         <path d='M3 9L9 3M3 3L9 9' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
     </svg>
 )
 
+/**
+ * @description: x 删除图标
+ */
 export const RemoveIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={Remove} {...props} />
 }
@@ -169,11 +194,14 @@ const ColorSwatch = () => (
     </svg>
 )
 
+/**
+ * @description:切换颜色
+ */
 export const ColorSwatchIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={ColorSwatch} {...props} />
 }
 
-// 方向性：向下
+
 const ChevronDown = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
         <path
@@ -185,6 +213,9 @@ const ChevronDown = () => (
     </svg>
 )
 
+/**
+ * @description: 方向性：向下
+ */
 export const ChevronDownIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={ChevronDown} {...props} />
 }
