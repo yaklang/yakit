@@ -71,6 +71,7 @@ import {
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
 import moment from "moment"
+import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -483,8 +484,8 @@ const availableColors = [
         searchWord: "YAKIT_COLOR_RED",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-red"])}></div>
                 红色
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-red"])}></div>
             </div>
         )
     },
@@ -495,8 +496,8 @@ const availableColors = [
         searchWord: "YAKIT_COLOR_GREEN",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-green"])}></div>
                 绿色
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-green"])}></div>
             </div>
         )
     },
@@ -507,8 +508,8 @@ const availableColors = [
         searchWord: "YAKIT_COLOR_BLUE",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-blue"])}></div>
                 蓝色
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-blue"])}></div>
             </div>
         )
     },
@@ -519,8 +520,8 @@ const availableColors = [
         className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-yellow"])}></div>
                 黄色
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-yellow"])}></div>
             </div>
         )
     },
@@ -531,8 +532,8 @@ const availableColors = [
         className: TableRowColor("ORANGE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-orange"])}></div>
                 橙色
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-orange"])}></div>
             </div>
         )
     },
@@ -543,8 +544,8 @@ const availableColors = [
         className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-purple"])}></div>
                 紫色
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-purple"])}></div>
             </div>
         )
     },
@@ -555,8 +556,8 @@ const availableColors = [
         className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-cyan"])}></div>
                 天蓝色
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-cyan"])}></div>
             </div>
         )
     },
@@ -567,8 +568,8 @@ const availableColors = [
         className: TableRowColor("GREY"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-grey"])}></div>
                 灰色
+                <div className={classNames(style["tag-color-display"], style["row-bg-color-grey"])}></div>
             </div>
         )
     }
@@ -636,7 +637,8 @@ const defSort: SortProps = {
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
-    const [color, setColor] = useState<string>("")
+    const [color, setColor] = useState<string[]>([])
+    const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>(
         props.params || {SourceType: "mitm", Tags: []}
     )
@@ -750,7 +752,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const time = filter["UpdatedAt"]
                 filter.AfterUpdatedAt = time[0]
                 filter.BeforeUpdatedAt = time[1]
-                delete filter.UpdatedAt
             } else {
                 filter.AfterUpdatedAt = undefined
                 filter.BeforeUpdatedAt = undefined
@@ -786,7 +787,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 SourceType: sourceType,
                 ...params,
                 Tags: params.Tags,
-                Color: color ? [color] : undefined,
+                // Color: color,
                 Pagination: {...paginationProps},
                 OffsetId:
                     paginationProps.Page == 1
@@ -2029,42 +2030,38 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         <Popover
                                             overlayClassName={style["http-history-table-color-popover"]}
                                             content={
-                                                <>
-                                                    {availableColors.map((ele) => (
-                                                        <div
-                                                            className={classNames(
-                                                                style["http-history-table-color-item"],
-                                                                {
-                                                                    [style["http-history-table-color-item-active"]]:
-                                                                        ele.searchWord === color
-                                                                }
-                                                            )}
-                                                            onClick={() => {
-                                                                if (ele.searchWord === color) {
-                                                                    setColor("")
-                                                                } else {
-                                                                    setColor(ele.searchWord)
-                                                                }
-                                                                setTimeout(() => {
-                                                                    update(1)
-                                                                }, 100)
-                                                            }}
-                                                            key={ele.color}
-                                                        >
-                                                            {ele.render}
-                                                        </div>
-                                                    ))}
-                                                </>
+                                                <ColorSearch
+                                                    color={color}
+                                                    setColor={setColor}
+                                                    onReset={() => setColor([])}
+                                                    onSure={() => {
+                                                        setParams({
+                                                            ...params,
+                                                            Color: color
+                                                        })
+                                                        setTimeout(() => {
+                                                            console.log("params", params)
+
+                                                            update(1)
+                                                        }, 100)
+                                                    }}
+                                                    setIsShowColor={setIsShowColor}
+                                                />
                                             }
                                             trigger='click'
                                             placement='bottomLeft'
+                                            visible={isShowColor}
                                         >
                                             <div
                                                 className={classNames(style["color-swatch-icon"], {
-                                                    [style["color-swatch-icon-active"]]: color
+                                                    [style["color-swatch-icon-active"]]: color.length > 0
                                                 })}
                                             >
-                                                <Button size='small' icon={<ColorSwatchIcon />}></Button>
+                                                <Button
+                                                    size='small'
+                                                    icon={<ColorSwatchIcon />}
+                                                    onClick={() => setIsShowColor(true)}
+                                                ></Button>
                                             </div>
                                         </Popover>
                                     </div>
@@ -2160,7 +2157,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             trigger={["click"]}
                                             placement='bottomLeft'
                                         >
-                                            <Button size='small'>
+                                            <Button size='small' disabled={selectedRowKeys.length === 0}>
                                                 批量操作
                                                 <ChevronDownIcon style={{color: "#85899E"}} />
                                             </Button>
@@ -2201,6 +2198,50 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         // </AutoCard>
     )
 })
+
+interface ColorSearchProps {
+    color: string[]
+    setColor: (s: string[]) => void
+    onReset: () => void
+    onSure: () => void
+    setIsShowColor: (b: boolean) => void
+}
+const ColorSearch: React.FC<ColorSearchProps> = (props) => {
+    const {color, setColor, onReset, onSure, setIsShowColor} = props
+    const onMouseLeave = useMemoizedFn(() => {
+        setIsShowColor(false)
+        onSure()
+    })
+    return (
+        <div onMouseLeave={() => onMouseLeave()}>
+            {availableColors.map((ele) => {
+                const checked = color.findIndex((c) => c === ele.searchWord) !== -1
+                return (
+                    <div
+                        className={classNames(style["http-history-table-color-item"], {
+                            [style["http-history-table-color-item-active"]]: checked
+                        })}
+                        onClick={() => {
+                            const index = color.findIndex((c) => c === ele.searchWord)
+                            if (index === -1) {
+                                const newColor: string[] = [...color, ele.searchWord]
+                                setColor(newColor)
+                            } else {
+                                color.splice(index, 1)
+                                setColor(color)
+                            }
+                        }}
+                        key={ele.color}
+                    >
+                        <Checkbox checked={checked} />
+                        {ele.render}
+                    </div>
+                )
+            })}
+            <FooterBottom onReset={onReset} onSure={onSure} />
+        </div>
+    )
+}
 
 const contentType: FiltersItemProps[] = [
     {
@@ -2431,17 +2472,7 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
                             })) || <div className={style["no-data"]}>暂无数据</div>}
                     </div>
                 </div>
-                <div className={style["select-footer"]}>
-                    <div
-                        className={classNames(style["footer-bottom"], style["select-reset"])}
-                        onClick={() => onReset()}
-                    >
-                        重置
-                    </div>
-                    <div className={classNames(style["footer-bottom"], style["select-sure"])} onClick={() => onSure()}>
-                        确定
-                    </div>
-                </div>
+                <FooterBottom onReset={onReset} onSure={onSure} />
             </div>
         </div>
     )

@@ -599,47 +599,67 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             />
         )
     })
-
+    const onResetDatePicker = useMemoizedFn((filterKey: string) => {
+        setFilters({
+            ...filters,
+            [filterKey]: undefined,
+            [`${filterKey}-time`]: undefined
+        })
+    })
+    const onSureDatePicker = useMemoizedFn((filterKey: string) => {
+        setOpensPopover({
+            ...opensPopover,
+            [filterKey]: false
+        })
+        if (onChangTable) onChangTable()
+    })
     const renderDatePicker = useMemoizedFn((columnsItem: ColumnsTypeProps, filterKey: string) => {
         return (
-            <div className={style["date-time-search"]}>
-                <RangePicker
-                    size='small'
-                    ranges={{
-                        "1分钟": [moment().subtract(1, "minute"), moment()],
-                        "1小时": [moment().subtract(1, "hours"), moment()],
-                        "1天": [moment().subtract(1, "day"), moment()]
-                    }}
-                    onChange={(time) => {
-                        onDateTimeSearch(time as [Moment, Moment] | null, filterKey)
-                    }}
-                    value={
-                        filters[`${filterKey}-time`]
-                            ? [moment(filters[`${filterKey}-time`][0]), moment(filters[`${filterKey}-time`][1])]
-                            : undefined
-                    }
-                />
-                <div className={style["time-rang"]}>
-                    <Tag
-                        color='processing'
-                        onClick={() => onDateTimeSearch([moment().subtract(1, "minute"), moment()], filterKey)}
-                    >
-                        1分钟
-                    </Tag>
-                    <Tag
-                        color='processing'
-                        onClick={() => onDateTimeSearch([moment().subtract(1, "hours"), moment()], filterKey)}
-                    >
-                        1小时
-                    </Tag>
-                    <Tag
-                        color='processing'
-                        onClick={() => onDateTimeSearch([moment().subtract(1, "day"), moment()], filterKey)}
-                    >
-                        1天
-                    </Tag>
+            <>
+                <div className={style["date-time-search"]}>
+                    <RangePicker
+                        size='small'
+                        ranges={{
+                            "1分钟": [moment().subtract(1, "minute"), moment()],
+                            "1小时": [moment().subtract(1, "hours"), moment()],
+                            "1天": [moment().subtract(1, "day"), moment()]
+                        }}
+                        onChange={(time) => {
+                            onDateTimeSearch(time as [Moment, Moment] | null, filterKey)
+                        }}
+                        value={
+                            filters[`${filterKey}-time`]
+                                ? [moment(filters[`${filterKey}-time`][0]), moment(filters[`${filterKey}-time`][1])]
+                                : undefined
+                        }
+                    />
+                    <div className={style["time-rang"]}>
+                        <Tag
+                            color='processing'
+                            onClick={() => onDateTimeSearch([moment().subtract(1, "minute"), moment()], filterKey)}
+                        >
+                            1分钟
+                        </Tag>
+                        <Tag
+                            color='processing'
+                            onClick={() => onDateTimeSearch([moment().subtract(1, "hours"), moment()], filterKey)}
+                        >
+                            1小时
+                        </Tag>
+                        <Tag
+                            color='processing'
+                            onClick={() => onDateTimeSearch([moment().subtract(1, "day"), moment()], filterKey)}
+                        >
+                            1天
+                        </Tag>
+                    </div>
                 </div>
-            </div>
+                <FooterBottom
+                    className={style["date-time-search-footer"]}
+                    onReset={() => onResetDatePicker(filterKey)}
+                    onSure={() => onSureDatePicker(filterKey)}
+                />
+            </>
         )
     })
 
@@ -852,6 +872,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
     } = props
     const filterKey = columnsItem?.filterProps?.filterKey || columnsItem.dataKey
     const sorterKey = columnsItem?.sorterProps?.sorterKey || columnsItem.dataKey
+
     return (
         <div
             key={`${columnsItem.dataKey}-title`}

@@ -616,6 +616,10 @@
         }
     }
 
+    .date-time-search-footer{
+        position: relative;
+    }
+
     @media screen and (max-height:600px) {
         .select-search {
             max-height: 180px;
@@ -633,7 +637,7 @@
 .select-footer {
     border-top: 1px solid #EAECF3;
     border-radius: 0px 0px 4px 4px;
-    width: calc(100% - 2px);
+    width: 100%;
     display: flex;
     background: #F8F8F8;
     height: 24px;
