@@ -52,6 +52,7 @@ export interface ColumnsTypeProps {
     // 搜索/筛选
     filterProps?: FilterProps
     sorterProps?: SorterProps
+    enableDrag?: boolean
 }
 
 interface FilterSearchInputProps extends SearchProps {

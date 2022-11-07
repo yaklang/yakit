@@ -43,8 +43,8 @@ import {LoadingOutlined} from "@ant-design/icons"
 import "../style.css"
 import {FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon} from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
-import {randomString} from "@/utils/randomUtil"
 import moment, {Moment} from "moment"
+import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 
 const {Search} = Input
 const {RangePicker} = DatePicker
@@ -74,7 +74,7 @@ function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: R
     return <Table<T> {...props} getTableRef={getTableRef} />
 }
 
-const defMinWidth = 40
+const defMinWidth = 60
 
 const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const defPagination = useCreation(
@@ -112,6 +112,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [columns, setColumns, getColumns] = useGetState<ColumnsTypeProps[]>(props.columns) // 表头
     const [lineLeft, setLineLeft] = useState<number>(0) // 拖拽线 left
+    const [hoverLine, setHoverLine] = useState<boolean>(false) // 拖拽线 鼠标移上去的状态显示
     // const [tableWidth, setTableWidth] = useState<number>(0) // 表格所在div宽度  真实宽度
     const [lineIndex, setLineIndex] = useState<number>(-1) // 拖拽的columns index
     const [scroll, setScroll] = useState<ScrollProps>({
@@ -354,31 +355,46 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const getTableWidthAndColWidth = useMemoizedFn((scrollBarWidth: number) => {
         const cLength = props.columns.length
         if (!width || cLength <= 0) return
-        let w = width / cLength
-        const cw = w - scrollBarWidth / cLength + 32
+
+        let widthAll: number = 0
+        let total: number = 0
+        // if (colWidth === 0) {
+        // getColumns().forEach((c) => {
+        //     const widthC = c.width || c.minWidth
+        //     if (widthC) {
+        //         widthAll += widthC
+        //         total += 1
+        //     }
+        // })
+        let w = (width - widthAll) / (cLength - total)
+        const cw = w - scrollBarWidth / (cLength - total) + 32
         const newColumns = getColumns().map((ele) => ({
             ...ele,
             width: ele.width || cw
         }))
         setColWidth(cw)
         setColumns([...newColumns])
+        // }
         recalculatedTableWidth(scrollBarWidth)
     })
     // 推拽后重新计算表格宽度
     const recalculatedTableWidth = useMemoizedFn((scrollBarWidth: number, lastColWidth?: boolean) => {
         const cLength = columns.length
         if (cLength <= 0) return
-
         const tWidth: number = columns.map((ele) => ele.width || ele.minWidth || 0).reduce((p, c) => p + c)
         if (tWidth < width - scrollBarWidth) {
             if (lastColWidth) {
-                columns[cLength - 1].width =
-                    (columns[cLength - 1].width || columns[cLength - 1].minWidth || 0) + width - tWidth
+                if (lineIndex > 1) {
+                    columns[lineIndex + 1].width =
+                        (columns[lineIndex + 1].width || columns[lineIndex - 1].minWidth || 0) + width - tWidth
+                } else {
+                    // 拖拽第一条导致宽度不能填满表格
+                    columns[cLength - 1].width =
+                        (columns[cLength - 1].width || columns[cLength - 1].minWidth || 0) + width - tWidth
+                }
             }
-            // setTableWidth(width - scrollBarWidth)
-        } else {
-            // setTableWidth(tWidth)
         }
+        setLineIndex(-1)
         setTimeout(() => {
             getLeftOrRightFixedWidth()
         }, 50)
@@ -435,20 +451,22 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             } else {
                 columns[lineIndex].width = changeWidth
             }
+            recalculatedTableWidth(0, true)
         } else {
             // 向右移动
             const moveRightX = lineEndX.current - lineStartX.current
             if (lineIndex === columns.length - 2) {
                 // 最后一条拖拽线,最后一个单元格
                 const lastColumnsWidth = columns[columns.length - 1].width || 0
-                const lastColumnsMinWidth = columns[columns.length - 1].minWidth || 0
+                const lastColumnsMinWidth = columns[columns.length - 1].minWidth || defMinWidth
                 columns[columns.length - 1].width =
-                    lastColumnsMinWidth > lastColumnsWidth ? lastColumnsMinWidth : lastColumnsWidth - moveRightX
+                    lastColumnsMinWidth > lastColumnsWidth - moveRightX
+                        ? lastColumnsMinWidth
+                        : lastColumnsWidth - moveRightX
             }
             columns[lineIndex].width = minWidth > width ? minWidth : width + moveRightX
+            recalculatedTableWidth(0)
         }
-        recalculatedTableWidth(0, true)
-        setLineIndex(-1)
     })
     const preScrollLeft = useRef<number>(0)
     const preScrollBottom = useRef<number>(0)
@@ -773,6 +791,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         enableDrag={enableDrag}
                                         columns={columns}
                                         onMouseDown={onMouseDown}
+                                        height={height}
+                                        setHoverLine={setHoverLine}
+                                        hoverLine={hoverLine}
                                     />
                                 ))}
                             </div>
@@ -846,6 +867,9 @@ interface ColumnsItemRenderProps {
     enableDrag?: boolean
     columns: ColumnsTypeProps[]
     onMouseDown: (e: any, index: number) => void
+    height: number
+    hoverLine: boolean
+    setHoverLine: (b: boolean) => void
 }
 const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
     const {
@@ -868,7 +892,10 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
         filters,
         enableDrag,
         columns,
-        onMouseDown
+        onMouseDown,
+        height,
+        setHoverLine,
+        hoverLine
     } = props
     const filterKey = columnsItem?.filterProps?.filterKey || columnsItem.dataKey
     const sorterKey = columnsItem?.sorterProps?.sorterKey || columnsItem.dataKey
@@ -898,22 +925,24 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 })
             }}
         >
-            <div className={style["justify-content-between"]}>
+            <div className={classNames(style["justify-content-between"])}>
                 {/* 这个不要用 module ，用来拖拽最小宽度*/}
                 <div className='virtual-col-title' style={{width: "100%"}}>
-                    {cIndex === 0 && rowSelection && (
-                        <span className={style["check"]}>
-                            {rowSelection.type !== "radio" && (
-                                <Checkbox
-                                    onChange={(e) => {
-                                        onChangeCheckbox(e.target.checked)
-                                    }}
-                                    checked={isAll}
-                                />
-                            )}
-                        </span>
-                    )}
-                    {columnsItem.title}
+                    <div className={style["ellipsis-1"]}>
+                        {cIndex === 0 && rowSelection && (
+                            <span className={style["check"]}>
+                                {rowSelection.type !== "radio" && (
+                                    <Checkbox
+                                        onChange={(e) => {
+                                            onChangeCheckbox(e.target.checked)
+                                        }}
+                                        checked={isAll}
+                                    />
+                                )}
+                            </span>
+                        )}
+                        {columnsItem.title}
+                    </div>
                 </div>
                 <div className={style["virtual-table-title-icon"]}>
                     {columnsItem.sorterProps?.sorter && (
@@ -986,9 +1015,12 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                         </>
                     )}
                 </div>
-                {enableDrag && cIndex < columns.length - 1 && (
+                {enableDrag && columnsItem.enableDrag !== false && cIndex < columns.length - 1 && (
                     <div
                         className={classNames(style["virtual-table-title-drag"])}
+                        style={{height: hoverLine ? height : 28}}
+                        onMouseEnter={() => setHoverLine(true)}
+                        onMouseLeave={() => setHoverLine(false)}
                         onMouseDown={(e) => onMouseDown(e, cIndex)}
                     />
                 )}

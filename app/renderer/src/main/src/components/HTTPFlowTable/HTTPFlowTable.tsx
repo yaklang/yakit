@@ -1055,7 +1055,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 dataKey: "Id",
                 fixed: "left",
                 ellipsis: false,
-                width: 80
+                width: 80,
+                enableDrag:false
                 // sorterProps: {
                 //     sorterKey: "id",
                 //     sorter: true
@@ -1064,6 +1065,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 title: "方法",
                 dataKey: "Method",
+                width: 80,
                 filterProps: {
                     filterKey: "Methods",
                     filtersType: "select",
@@ -1277,6 +1279,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 title: "操作",
                 dataKey: "action",
                 width: 120,
+                minWidth: 80,
                 align: "center",
                 fixed: "right",
                 render: (_, rowData) => {

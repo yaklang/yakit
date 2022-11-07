@@ -494,6 +494,7 @@
                 height: 30px;
                 line-height: 30px;
                 margin: 2px 0;
+                z-index: 99;
             }
 
             .ant-menu-item:not(:last-child) {
