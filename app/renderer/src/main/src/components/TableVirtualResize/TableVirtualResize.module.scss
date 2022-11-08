@@ -281,6 +281,10 @@
                     &:last-child {
                         border-right: 0;
                     }
+
+                    // &:hover {
+                    //     background: #F8F8F8 !important;
+                    // }
                 }
 
                 .virtual-table-row-fixed-left {
@@ -314,7 +318,11 @@
                 .virtual-table-active-row {
                     border-bottom: 1px solid #91d5ff !important;
                     border-top: 1px solid #91d5ff !important;
-                    background-color: #e6f7ff;
+                    background-color: #e6f7ff !important;
+                }
+
+                .virtual-table-hover-row {
+                    background-color: #F8F8F8;
                 }
 
                 .virtual-table-active-row+.virtual-table-row-cell {

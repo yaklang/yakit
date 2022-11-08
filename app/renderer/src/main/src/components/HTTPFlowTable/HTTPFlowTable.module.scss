@@ -38,9 +38,6 @@
     flex-direction: column;
 
     :global {
-        .ant-divider-vertical {
-            margin: 0 16px;
-        }
 
         .ant-btn-sm {
             border-radius: 4px;
@@ -79,19 +76,9 @@
         color: #B4BBCA;
     }
 
-
-    .right-button {
-        position: relative;
-
-        button {
-            margin-right: 16px;
-        }
-    }
-
     .http-history-table-total {
         display: flex;
         align-items: center;
-        padding-left: 8px;
 
         .http-history-table-total-item {
             display: flex;
@@ -635,6 +622,7 @@
             width: 100px;
             text-align: center;
             border-right-width: 0;
+            height: 24px;
 
             &:hover,
             &:focus {
@@ -648,12 +636,14 @@
             border-right: 0;
             pointer-events: none;
             background-color: #ffffff;
+            height: 24px;
         }
 
         .input-right {
             width: 100px;
             text-align: center;
             border-left-width: 0;
+            height: 24px;
 
             &:hover,
             &:focus {

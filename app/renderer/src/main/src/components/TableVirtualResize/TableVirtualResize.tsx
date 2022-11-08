@@ -530,7 +530,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
     const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent) => {
         setCurrentRow(record)
-        onChangeCheckboxSingle(true, record[renderKey], record)
+        // onChangeCheckboxSingle(true, record[renderKey], record)
         if (props.onRowContextMenu) props.onRowContextMenu(record, e)
     })
     const [filters, setFilters] = useState<any>(query || {})
@@ -696,6 +696,15 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useClickAway(() => {
         setOpensPopover({})
     }, [filterRef])
+
+    const [mouseCellId, setMouseCellId] = useState<string | number>()
+
+    const onMouseEnterCell = useMemoizedFn((id: string | number) => {
+        setMouseCellId(id)
+    })
+    const oMouseLeaveCell = useMemoizedFn(() => {
+        setMouseCellId(undefined)
+    })
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -815,6 +824,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         rowSelection={rowSelection as any}
                                         onChangeCheckboxSingle={onChangeCheckboxSingle}
                                         scroll={scroll}
+                                        setMouseEnter={onMouseEnterCell}
+                                        setMouseLeave={oMouseLeaveCell}
+                                        mouseCellId={mouseCellId}
                                     />
                                 ))}
                             </div>
@@ -1042,6 +1054,9 @@ interface ColRenderProps {
     rowSelection: RowSelectionProps<any>
     onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
     scroll: ScrollProps
+    setMouseEnter: (a: any) => void
+    setMouseLeave: () => void
+    mouseCellId?: string | number
 }
 const ColRender = React.memo((props: ColRenderProps) => {
     const {
@@ -1057,7 +1072,10 @@ const ColRender = React.memo((props: ColRenderProps) => {
         colIndex,
         rowSelection,
         onChangeCheckboxSingle,
-        scroll
+        scroll,
+        setMouseEnter,
+        setMouseLeave,
+        mouseCellId
     } = props
     return (
         <div
@@ -1097,6 +1115,9 @@ const ColRender = React.memo((props: ColRenderProps) => {
                     renderKey={renderKey}
                     rowSelection={rowSelection}
                     onChangeCheckboxSingle={onChangeCheckboxSingle}
+                    setMouseEnter={setMouseEnter}
+                    setMouseLeave={setMouseLeave}
+                    mouseCellId={mouseCellId}
                 />
             ))}
         </div>
@@ -1117,6 +1138,9 @@ interface CellRenderProps {
     renderKey: string
     rowSelection: RowSelectionProps<any>
     onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
+    setMouseEnter: (a: any) => void
+    setMouseLeave: () => void
+    mouseCellId?: string | number
 }
 const CellRender = React.memo(
     (props: CellRenderProps) => {
@@ -1132,13 +1156,17 @@ const CellRender = React.memo(
             colIndex,
             renderKey,
             rowSelection,
-            onChangeCheckboxSingle
+            onChangeCheckboxSingle,
+            setMouseEnter,
+            setMouseLeave,
+            mouseCellId
         } = props
         return (
             <div
                 key={key}
                 className={classNames(style["virtual-table-row-cell"], item.data["cellClassName"], {
                     [style["virtual-table-active-row"]]: isSelect,
+                    [style["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
                     [style["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [style["virtual-table-row-cell-border-right-1"]]: isSelect && isLastItem,
                     [style["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0
@@ -1152,6 +1180,12 @@ const CellRender = React.memo(
                     onRowContextMenu(e)
                 }}
                 id={(isSelect && colIndex === 0 && item.data[renderKey]) || ""}
+                onMouseEnter={() => {
+                    setMouseEnter(item.data[renderKey])
+                }}
+                onMouseLeave={() => {
+                    setMouseLeave()
+                }}
             >
                 <div
                     className={classNames({
@@ -1192,6 +1226,9 @@ const CellRender = React.memo(
             return false
         }
         if (preProps.rowSelection.selectedRowKeys !== nextProps.rowSelection.selectedRowKeys) {
+            return false
+        }
+        if (preProps.mouseCellId !== nextProps.mouseCellId) {
             return false
         }
         return true

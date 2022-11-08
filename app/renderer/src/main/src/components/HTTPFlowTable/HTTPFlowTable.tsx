@@ -834,7 +834,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
     const [maxId, setMaxId, getMaxId] = useGetState<number>(0)
-    const [newTotal, setNewTotal] = useState<number>(0) //用来刷新tags服务器缓存的
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
     const [currentIndex, setCurrentIndex] = useState<number>(0)
@@ -844,11 +843,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getHTTPFlowsFieldGroup(false)
     }, [])
     useEffect(() => {
-        if (newTotal > 0) {
-            // 刷新
-            getHTTPFlowsFieldGroup(true)
-        }
-    }, [newTotal])
+        // 刷新
+        getHTTPFlowsFieldGroup(true)
+    }, [total])
     // 获取最新的数据
     const getNewData = useMemoizedFn(() => {
         ipcRenderer
@@ -861,7 +858,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if (rsp.Data.length > 0) {
                     setMaxId(rsp.Data[0].Id)
                 }
-                setNewTotal(rsp.Total)
+                setTotal(rsp.Total)
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
@@ -938,16 +935,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 if (resData.length <= 0) {
-                    // if (scrollTop <= 10 && getOffsetData().length > 0) {
-                    //     const newOffsetData = getOffsetData().concat(data)
-                    //     setData(newOffsetData)
-                    //     setOffsetData([])
-                    // }
                     // 没有增量数据
                     return
                 }
                 // 有增量数据刷新total
-                // getNewData()
                 const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
                 setLoading(true)
                 setTotal(newTotal)
@@ -955,21 +946,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const newOffsetData = newData.concat(getOffsetData())
                 setMaxId(newOffsetData[0].Id)
                 setOffsetData(newOffsetData)
-                // if (scrollTop > 10) {
-                //     console.log(222)
-                //     const newOffsetData = newData.concat(getOffsetData())
-                //     setMaxId(newOffsetData[0].Id)
-                //     setOffsetData(newOffsetData)
-                // } else {
-                //     console.log(333)
-                //     // const newOffsetData =
-                //     //     getOffsetData().length > 0 ? getOffsetData().concat(data) : resData.concat(data)
-                //     // setData(newOffsetData)
-                //     if (getOffsetData().length > 0) {
-                //         setOffsetData([])
-                //     }
-                //     update(1)
-                // }
             })
             .catch((e: any) => {
                 failed(`query HTTP Flow failed: ${e}`)
@@ -1055,8 +1031,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 dataKey: "Id",
                 fixed: "left",
                 ellipsis: false,
-                width: 80,
-                enableDrag:false
+                width: 96,
+                enableDrag: false
                 // sorterProps: {
                 //     sorterKey: "id",
                 //     sorter: true
@@ -1272,8 +1248,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             },
             {
                 title: "请求大小",
-                dataKey: "RequestSizeVerbose"
+                dataKey: "RequestSizeVerbose",
                 // fixed: "right",
+                enableDrag: false
             },
             {
                 title: "操作",
@@ -1911,7 +1888,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     {shieldData?.data.length > 0 && (
                                         <Popover
                                             placement='bottom'
-                                            trigger='click'
+                                            trigger='hover'
                                             content={
                                                 <div className={style["title-header"]}>
                                                     {shieldData?.data.map((item: number | string) => (
@@ -2068,7 +2045,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             </div>
                                         </Popover>
                                     </div>
-                                    <div className={style["right-button"]}>
+                                    {(selectedRowKeys.length === 0 && (
+                                        <Button
+                                            size='small'
+                                            disabled={selectedRowKeys.length === 0}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                        >
+                                            批量操作
+                                            <ChevronDownIcon style={{color: "#85899E"}} />
+                                        </Button>
+                                    )) || (
                                         <Popover
                                             overlayClassName={style["http-history-table-drop-down-popover"]}
                                             content={
@@ -2157,15 +2145,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     })}
                                                 </Menu>
                                             }
-                                            trigger={["click"]}
+                                            trigger='click'
                                             placement='bottomLeft'
                                         >
-                                            <Button size='small' disabled={selectedRowKeys.length === 0}>
+                                            <Button
+                                                size='small'
+                                                disabled={selectedRowKeys.length === 0}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                }}
+                                            >
                                                 批量操作
                                                 <ChevronDownIcon style={{color: "#85899E"}} />
                                             </Button>
                                         </Popover>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
