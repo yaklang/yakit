@@ -35,14 +35,7 @@ import style from "./HTTPFlowTable.module.scss"
 import {TableResizableColumn} from "../TableResizableColumn"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {
-    useClickAway,
-    useDebounceEffect,
-    useDebounceFn,
-    useGetState,
-    useMemoizedFn,
-    useVirtualList
-} from "ahooks"
+import {useClickAway, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useVirtualList} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../../utils/basic"
 import {
@@ -53,7 +46,7 @@ import {
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {FooterBottom,  TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
+import {FooterBottom, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {
     CheckCircleIcon,
     FilterIcon,
@@ -795,7 +788,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
-                    // console.log("update-newData", rsp)
+                    console.log("update", query, rsp)
+                    if (paginationProps.Page == 1) {
+                        setTotal(rsp.Total)
+                    }
                     if (noLoading && rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
 
                     const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
@@ -803,7 +799,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         setSelectedRowKeys([])
                         setSelectedRows([])
                         setIsRefresh(!isRefresh)
-                        setTotal(rsp.Total)
                     }
                     const d = paginationProps.Page == 1 ? newData : data.concat(newData)
                     setPagination(rsp.Pagination)
@@ -918,17 +913,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Tags: params.Tags,
             Color: color ? [color] : undefined,
             AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
-            BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
+            BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined,
+            SourceType: "mitm",
+            AfterId: maxId, // 用于计算增量的
+            Pagination: {...paginationProps}
         }
         // 查询数据
         ipcRenderer
-            .invoke("QueryHTTPFlows", {
-                SourceType: "mitm",
-                ...query,
-                AfterId: maxId, // 用于计算增量的
-                Pagination: {...paginationProps}
-            })
+            .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
+                console.log("scrollUpdateTop", query, rsp)
                 const resData = rsp?.Data || []
                 if (resData.length <= 0) {
                     // 没有增量数据

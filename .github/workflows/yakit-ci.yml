@@ -110,28 +110,28 @@ jobs:
 
       - name: Upload Yakit Artifacts Windows
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/yakit-') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/yakit-') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Upload Yakit Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/yakit-') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Upload Yakit Artifacts Linux
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo/yakit-') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
