@@ -665,7 +665,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetState<number>()
     const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
     const [isReset, setIsReset] = useState<boolean>(false)
-    const colorSwatchRef = useRef()
+    const colorSwatchRef = useRef<any>()
     useClickAway(() => {
         onColorSure()
     }, colorSwatchRef)
