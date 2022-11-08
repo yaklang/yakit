@@ -753,7 +753,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 </div>
             )}
             {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
-                <Spin spinning={loading && pagination.page == 0}>
+                <Spin spinning={loading && pagination.page == 1}>
                     <div
                         className={classNames(style["virtual-table-body"])}
                         style={{
