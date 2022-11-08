@@ -54,8 +54,8 @@ jobs:
         with:
           name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-download_artifacts_and_release:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
+  download_artifacts_and_release:
     needs:
       #      - build_and_release
       - build_yakit
@@ -119,6 +119,7 @@ download_artifacts_and_release:
         run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt
       - name: Upload Yakit to oss(windows)
         uses: tvrcgo/upload-to-oss@master
+
         with:
           key-id: ${{ secrets.OSS_KEY_ID }}
           key-secret: ${{ secrets.OSS_KEY_SECRET }}
