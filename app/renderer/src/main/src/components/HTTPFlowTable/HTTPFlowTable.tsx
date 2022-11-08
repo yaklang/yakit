@@ -665,10 +665,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetState<number>()
     const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
     const [isReset, setIsReset] = useState<boolean>(false)
-    const colorSwatchRef = useRef<any>()
-    useClickAway(() => {
-        onColorSure()
-    }, colorSwatchRef)
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -880,7 +876,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 failed(`query HTTP Flows Field Group failed: ${e}`)
             })
     })
-  
+
     const getClassNameData = (resData: HTTPFlow[]) => {
         let newData: HTTPFlow[] = []
         const length = resData.length
@@ -991,6 +987,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setTimeout(() => {
             update(1)
         }, 100)
+    })
+
+    const onFilterSure = useMemoizedFn(() => {
+        setParams({
+            ...params,
+            Tags: tagsQuery,
+            SearchContentType: contentTypeQuery
+        })
+        setTimeout(() => {
+            update(1)
+        }, 50)
     })
     const onSelectAll = (newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
         setIsAllSelect(checked)
@@ -1978,22 +1985,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     contentTypeValue={
                                                         contentTypeQuery ? contentTypeQuery?.split(",") : []
                                                     }
-                                                    onSure={() => {
-                                                        setParams({
-                                                            ...params,
-                                                            Tags: tagsQuery,
-                                                            SearchContentType: contentTypeQuery
-                                                        })
-                                                        setTimeout(() => {
-                                                            update(1)
-                                                        }, 50)
-                                                    }}
+                                                    onSure={() => onFilterSure()}
                                                 />
                                             }
                                             trigger='click'
                                             placement='bottomLeft'
+                                            // onVisibleChange={(visible) => {
+                                            //     if (!visible) onFilterSure()
+                                            // }}
                                         >
-                                            <div className={classNames(style["filter-small-icon"])}>
+                                            <div
+                                                className={classNames(style["filter-small-icon"], {
+                                                    [style["filter-small-icon-active"]]:
+                                                        tags.length > 0 || contentTypeQuery
+                                                })}
+                                            >
                                                 <Button size='small' icon={<FilterIcon />}></Button>
                                             </div>
                                         </Popover>
@@ -2019,7 +2025,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             }, 50)
                                         }}
                                     />
-                                    <div className={style["http-history-table-color-swatch"]} ref={colorSwatchRef}>
+                                    <div className={style["http-history-table-color-swatch"]}>
                                         <Popover
                                             overlayClassName={style["http-history-table-color-popover"]}
                                             content={
@@ -2033,7 +2039,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             }
                                             trigger='click'
                                             placement='bottomLeft'
-                                            visible={isShowColor}
+                                            // onVisibleChange={(visible) => {
+                                            //     if (!visible) onColorSure()
+                                            // }}
                                         >
                                             <div
                                                 className={classNames(style["color-swatch-icon"], {

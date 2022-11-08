@@ -182,6 +182,19 @@
                     }
                 }
             }
+            .filter-small-icon-active {
+
+                svg {
+                    color: #1890ff;
+                }
+    
+                :global {
+                    .ant-btn {
+                        border-color: #1890ff;
+                    }
+                }
+    
+            }
         }
 
         .http-history-table-right-filter-large {

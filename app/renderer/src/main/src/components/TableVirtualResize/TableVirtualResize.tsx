@@ -281,7 +281,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         },
         {wait: 100}
     ).run
-    useDeepCompareEffect(() => {
+    useEffect(() => {
         if (pagination.page == 1) {
             scrollTo(0)
             setScroll({
