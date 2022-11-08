@@ -1021,7 +1021,11 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                         })
                                     }}
                                 >
-                                    <FilterIcon />
+                                    {columnsItem.filterProps.filterIcon ? (
+                                        columnsItem.filterProps.filterIcon
+                                    ) : (
+                                        <FilterIcon />
+                                    )}
                                 </div>
                             </Popover>
                         </>

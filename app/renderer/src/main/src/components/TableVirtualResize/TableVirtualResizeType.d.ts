@@ -108,6 +108,15 @@ export interface SorterProps {
 /**
  * @property {ReactNode}  filterRender 自定义渲染搜索UI和逻辑
  * @property {(d: any) => ReactNode}  filterOptionRender  单选或者多选的时候渲染option
+ * @property {string}  filterKey  查询的对对象名
+ * @property {"select" | "input" | "dateTime"}  filtersType  搜索的类型
+ * @property {FiltersSelectAllProps}  filtersSelectAll  是否显示所有
+ * @property {FiltersItemProps[]}  filters  表头的筛选菜单项c
+ * @property {boolean}  filterSearch  筛选菜单项是否可搜索
+ * @property {FilterSearchInputProps}  filterSearchInputProps  input的props属性
+ * @property {FilterSearchMultipleProps}  filterMultipleProps  继承antd的SelectProps
+ * @property {boolean}  filterMultiple  是否多选 filtersType 为select才有效
+ * @property {ReactNode}  filterIcon  自定义 filter 图标
  */
 export interface FilterProps {
     filterRender?: () => ReactNode
@@ -120,20 +129,29 @@ export interface FilterProps {
     filterSearchInputProps?: FilterSearchInputProps // input的props属性
     filterMultipleProps?: FilterSearchMultipleProps // input的props属性
     filterMultiple?: boolean // 是否多选 filtersType 为select才有效
-    onFilter?: () => void // 本地模式下，确定筛选的运行函数
     filterIcon?: ReactNode // 自定义 filter 图标
-    // isFilters?:boolean
 }
+/**
+ *  @property {boolean} isAll 是否全选
+ *  @property {string} textAll 全选文字显示
+ *  @property {string} valueAll 全选value
+ */
 export interface FiltersSelectAllProps {
     isAll: boolean
     textAll?: string
     valueAll?: strings
 }
 
+/**
+ *  @property {boolean} isAll 是否全选
+ *  @property {"checkbox" | "radio"} type //默认 checkbox
+ *  @property {string[]} selectedRowKeys 选中的key值，传入的renderKey
+ *  @property {(c: boolean, selectedRowsKey: string, selectedRows: T) => void} onChangeCheckboxSingle 多选的单个选中
+ *  @property {(selectedRows: string[], selected: T[], checked: boolean) => void} onSelectAll 全选
+ */
 export interface RowSelectionProps<T> {
     isAll?: boolean
     type?: "checkbox" | "radio" //默认 checkbox
-    hideSelectAll?: boolean
     selectedRowKeys?: string[]
     onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows: T) => void
     onSelectAll?: (selectedRows: string[], selected: T[], checked: boolean) => void

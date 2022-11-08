@@ -756,6 +756,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filter.AfterUpdatedAt = undefined
                 filter.BeforeUpdatedAt = undefined
             }
+            if (filter["Tags"]) {
+                setTagsQuery(filter["Tags"])
+            }
             setParams({
                 ...params,
                 ...filter,
@@ -765,7 +768,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             sortRef.current = sort
             setTimeout(() => {
-                console.log("params", getParams())
                 update(1, limit)
             }, 10)
         },
@@ -1104,6 +1106,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                               .filter((i) => !i.startsWith("YAKIT_COLOR_"))
                               .join(", ")
                         : ""
+                },
+                filterProps: {
+                    filtersType: "select",
+                    filterMultiple: true,
+                    filterSearchInputProps: {
+                        size: "small"
+                    },
+                    filterIcon: <SearchIcon />,
+                    filters: tags
                 }
             },
             {
@@ -1276,7 +1287,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             }
         ]
-    }, [statusCode])
+    }, [statusCode, tags])
     const [isReset, setIsReset] = useState<boolean>(false)
     // 发送web fuzzer
     const onSendToTab = useMemoizedFn((rowData) => {
