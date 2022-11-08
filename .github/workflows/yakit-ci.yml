@@ -3,7 +3,7 @@ name: Yakit-CI
 on:
   push:
     branches:
-      - "luoluo/*"
+      - "luoluo/feature/https-history"
     tags:
       - "v*"
 
