@@ -37,14 +37,10 @@ import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
 import {
     useClickAway,
-    useCreation,
     useDebounceEffect,
     useDebounceFn,
     useGetState,
-    useInterval,
     useMemoizedFn,
-    useRafInterval,
-    useThrottleFn,
     useVirtualList
 } from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
@@ -57,7 +53,7 @@ import {
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {FooterBottom, SelectSearch, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
+import {FooterBottom,  TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {
     CheckCircleIcon,
     FilterIcon,
@@ -70,8 +66,6 @@ import {
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
-import moment from "moment"
-import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 
 const {ipcRenderer} = window.require("electron")
 
