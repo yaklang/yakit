@@ -1,5 +1,6 @@
 const {ipcMain, clipboard} = require("electron")
 const OS = require("os")
+const https = require("https")
 const {execFile, exec} = require("child_process")
 const path = require("path")
 const process = require("process")
@@ -90,7 +91,6 @@ module.exports = (win, getClient) => {
              */
         }, 400)
     })
-
     // 获取CPU和内存使用率
     ipcMain.handle("fetch-compute-percent", () => {
         return cpuData
@@ -98,17 +98,6 @@ module.exports = (win, getClient) => {
     // 销毁计算CPU和内存使用率的计数器
     ipcMain.handle("clear-compute-percent", () => {
         if (time) clearInterval(time)
-    })
-
-    // 获取操作系统类型
-    ipcMain.handle("fetch-system-name", () => {
-        return OS.type()
-    })
-
-    // 获取当前是否是 arm64？
-    ipcMain.handle("fetch-system-platform-and-arch", (e) => {
-        console.log(`${process.platform}-${process.arch}`);
-        return `${process.platform}-${process.arch}`
     })
 
     // mac截图功能
@@ -141,5 +130,35 @@ module.exports = (win, getClient) => {
         } else {
             winLinuxScreenshot()
         }
+    })
+
+    /** 获取操作系统类型 */
+    ipcMain.handle("fetch-system-name", () => {
+        return OS.type()
+    })
+
+    /** 获取<操作系统-CPU架构>信息 */
+    ipcMain.handle("fetch-system-and-arch", () => {
+        /** @return {String} */
+        return `${process.platform}-${process.arch}`
+    })
+
+    /** 获取Yaklang引擎最新版本号 */
+    const asyncFetchLatestYaklangVersion = () => {
+        return new Promise((resolve, reject) => {
+            let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/version.txt")
+            rsp.on("response", (rsp) => {
+                rsp.on("data", (data) => {
+                    resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
+                }).on("error", (err) => {
+                    reject(err)
+                })
+            })
+            rsp.on("error", reject)
+        })
+    }
+    /** 获取Yaklang引擎最新版本号 */
+    ipcMain.handle("fetch-latest-yaklang-version", async (e) => {
+        return await asyncFetchLatestYaklangVersion()
     })
 }

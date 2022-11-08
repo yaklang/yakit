@@ -1,32 +1,23 @@
 const {app, BrowserWindow, dialog, nativeImage, ipcMain, session} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
-const {extrakvpairs, getExtraKVPair, setExtraKVPair} = require("./handlers/upgradeUtil")
 const {registerIPC, clearing} = require("./ipc")
 const {service, httpApi} = require("./httpServer")
-const {USER_INFO, HttpSetting, Global_YAK_SETTING} = require("./state")
-
-
-const fs = require("fs")
-const os = require("os")
+const {USER_INFO, HttpSetting, Global_YAK_SETTING, SYSTEM_INFO} = require("./state")
 const process = require("process")
-const homeDir = path.join(os.homedir(), "yakit-projects")
-const yakEngineDir = path.join(homeDir, "yak-engine")
-const isMacArm = `${process.platform}-${process.arch}` === "darwin-arm64"
+const {getExtraLocalCache, extraKVCache, setExtraLocalCache, getLocalCache} = require("./localCache")
 
-/**
- * 生成Yaklang引擎在本地的绝对地址
- * @returns {String} 本地绝对地址
- */
-const getLocalYaklangEngine = () => {
-    switch (process.platform) {
-        case "darwin":
-        case "linux":
-            return path.join(yakEngineDir, "yak")
-        case "win32":
-            return path.join(yakEngineDir, "yak.exe")
-    }
-}
+/** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
+const UICloseFlag = "windows-close-flag"
+
+/** 全局设置操作系统各项信息变量 */
+SYSTEM_INFO.system = process.platform
+SYSTEM_INFO.arch = process.arch
+
+/** 主进程窗口对象 */
+let win
+// 是否展示关闭二次确认弹窗的标志位
+let closeFlag = true
 
 process.on("uncaughtException", (error) => {
     console.info(error)
@@ -34,18 +25,13 @@ process.on("uncaughtException", (error) => {
 
 // 性能优化：https://juejin.cn/post/6844904029231775758
 
-let flag = true // 是否展示关闭二次确认弹窗的标志位
-let win
-let subwin
 const createWindow = () => {
-    getExtraKVPair((err) => {
-        if (!err)
-            flag = extrakvpairs.get("windows-close-flag") === undefined ? true : extrakvpairs.get("windows-close-flag")
+    /** 获取缓存数据并储存于软件内 */
+    getLocalCache()
+    /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
+    getExtraLocalCache((err) => {
+        if (!err) closeFlag = extraKVCache.get(UICloseFlag) === undefined ? true : extraKVCache.get(UICloseFlag)
     })
-
-    const isYaklangExist = fs.existsSync(getLocalYaklangEngine())
-    Global_YAK_SETTING.isExist = isYaklangExist
-    console.log(111, isYaklangExist)
 
     win = new BrowserWindow({
         width: 1600,
@@ -63,33 +49,6 @@ const createWindow = () => {
         titleBarStyle: "hidden"
     })
 
-    if (!isYaklangExist) {
-        subwin = new BrowserWindow({
-            width: 448,
-            height: isMacArm ? 280 : 156,
-            autoHideMenuBar: true,
-            webPreferences: {
-                preload: path.join(__dirname, "preload.js"),
-                nodeIntegration: true,
-                contextIsolation: false,
-                sandbox: true
-            },
-            frame: false,
-            titleBarStyle: "hidden"
-        })
-        win.hide()
-        subwin.setMenu(null)
-        subwin.setMenuBarVisibility(false)
-        subwin.setWindowButtonVisibility(false)
-
-        if (isDev) {
-            subwin.loadURL("http://127.0.0.1:3000")
-        } else {
-            subwin.loadFile(path.resolve(__dirname, "../renderer/pages/main/index.html"))
-        }
-    }
-
-    // win.loadFile(path.resolve(__dirname, "../renderer/pages/main/index.html"))
     if (isDev) {
         win.loadURL("http://127.0.0.1:3000")
     } else {
@@ -108,7 +67,7 @@ const createWindow = () => {
     win.on("close", (e) => {
         e.preventDefault()
 
-        if (flag) {
+        if (closeFlag) {
             dialog
                 .showMessageBox(win, {
                     icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
@@ -123,7 +82,7 @@ const createWindow = () => {
                     noLink: true
                 })
                 .then((res) => {
-                    setExtraKVPair("windows-close-flag", !res.checkboxChecked)
+                    setExtraLocalCache(UICloseFlag, !res.checkboxChecked)
                     if (res.response === 0) {
                         e.preventDefault()
                         win.minimize()
@@ -151,10 +110,6 @@ const createWindow = () => {
     // 阻止内部react页面的链接点击跳转
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
-    })
-
-    ipcMain.handle("is-show-installed", () => {
-        return Global_YAK_SETTING.isExist
     })
 }
 

@@ -36,7 +36,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     className={styles["ui-op-btn-wrapper"]}
                     onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")}
                 >
-                    <HelpSvgIcon className={styles["icon-style"]} />
+                    <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
                 </div>
                 <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
                     <ScreensHotSvgIcon className={styles["icon-style"]} />

@@ -113,6 +113,22 @@ module.exports = {
             )
             return text
         })
+        /** 启动、连接引擎 */
+        require("./handlers/engineStatus")(
+            win,
+            (addr, pem, password) => {
+                // 清空老数据
+                if (_client) _client.close()
+                _client = null
+
+                // 设置新引擎参数
+                global.defaultYakGRPCAddr = addr
+                global.caPem = pem
+                global.password = password
+            },
+            getClient
+        )
+
         require("./handlers/execYak")(win, getClient)
         require("./handlers/listenPort")(win, getClient)
         require("./handlers/mitm")(win, getClient)
@@ -135,7 +151,6 @@ module.exports = {
         require("./handlers/queryHTTPFlow")(win, getClient)
         require("./handlers/httpFuzzer")(win, getClient)
         require("./handlers/httpAnalyzer")(win, getClient)
-        require("./handlers/engineStatus")(win, getClient)
         require("./handlers/codec")(win, getClient)
         require("./handlers/yakLocal").register(win, getClient)
         require("./handlers/openWebsiteByChrome")(win, getClient)

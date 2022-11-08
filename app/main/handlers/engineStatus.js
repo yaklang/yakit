@@ -2,7 +2,11 @@ const {ipcMain} = require("electron")
 const fs = require("fs")
 const childProcess = require("child_process")
 const _sudoPrompt = require("sudo-prompt")
-const { Global_YAK_SETTING } = require("../state")
+const {Global_YAK_SETTING} = require("../state")
+const {getLocalCache, kvCache, setLocalCache} = require("../localCache")
+
+/** 获取缓存数据里本地引擎启动的端口号 */
+const YaklangEnginePort = "yaklang-engine-port"
 
 const isWindows = process.platform === "win32"
 
@@ -23,12 +27,7 @@ function sudoExec(cmd, opt, callback) {
     }
 }
 
-/**
- * 引擎当前启动状态
- */
-let IsEngineState = false
-
-module.exports = (win, getClient) => {
+module.exports = (win, callback, getClient) => {
     ipcMain.handle("yak-version", () => {
         try {
             getClient().Version({}, async (err, data) => {
@@ -62,24 +61,22 @@ module.exports = (win, getClient) => {
         }
     })
 
-    // 判断引擎是否安装
-    ipcMain.handle("is-yaklang-engine-installed", () => {
-        /**
-         * @return {Boolean}
-         */
-        return fs.existsSync(getLatestYakLocalEngine())
-    })
-
     /**
      *
      * @param {Object} params
      * @param {Boolean} params.sudo 是否使用管理员权限启动yak
      */
-    const asyncStartLocalYakEngineServer = (params) => {
+    const asyncStartLocalYakEngineServer = (win, params) => {
+        // let cachePort
+        // getLocalCache((err) => {
+        //     if (!err) cachePort = kvCache.get(YaklangEnginePort)
+        // })
+        let time = null
+
         return new Promise((resolve, reject) => {
             const {sudo} = params
 
-            let randPort = 40000 + getRandomInt(9999)
+            let randPort = 44224 || 40000 + getRandomInt(9999)
             try {
                 // 管理员权限逻辑未检查测试
                 if (sudo) {
@@ -117,8 +114,19 @@ module.exports = (win, getClient) => {
                             reject(err)
                         }
                     })
-                    subprocess.on("close", (e) => console.log("close", e))
-                    Global_YAK_SETTING.defaultYakGRPCAddr=`localhost:${randPort}`
+                    subprocess.on("close", (e) => {
+                        console.log("close", e)
+                        if (time) {
+                            clearTimeout(time)
+                            time = null
+                        }
+                        asyncStartLocalYakEngineServer({sudo})
+                    })
+                    time = setTimeout(() => {
+                        setLocalCache(YaklangEnginePort, randPort)
+                        Global_YAK_SETTING.defaultYakGRPCAddr = `localhost:${randPort}`
+                        win.webContents.send("create-yaklang-engine-success", true)
+                    }, 3000)
                 }
             } catch (e) {
                 reject(e)
@@ -126,5 +134,13 @@ module.exports = (win, getClient) => {
         })
     }
     // 本地启动yaklang引擎
-    ipcMain.handle("start-local-yaklang-engine", () => {})
+    ipcMain.handle("start-local-yaklang-engine", async (e, params) => {
+        return await asyncStartLocalYakEngineServer(win, params)
+    })
+
+    /** 连接引擎 */
+    ipcMain.handle("connect-yaklang-engine", async (e, params) => {
+        const {isLocal, addr, pem, password} = params
+        callback(Global_YAK_SETTING.defaultYakGRPCAddr, isLocal ? pem : "", isLocal ? password : "")
+    })
 }

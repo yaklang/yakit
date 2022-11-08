@@ -228,6 +228,8 @@ function NewApp() {
                             wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
                             qqName: res.from_platform === "qq" ? res.name : null,
                             qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
+                            companyName: res.from_platform === "company" ? res.name : null,
+                            companyHeadImg: res.from_platform === "company" ? res.head_img : null,
                             role: res.role,
                             user_id: res.user_id,
                             token: resToken
