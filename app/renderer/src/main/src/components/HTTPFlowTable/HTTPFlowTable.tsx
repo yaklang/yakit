@@ -515,7 +515,7 @@ const availableColors = [
     },
     {
         color: "YELLOW",
-        title: "黄色[#fef8ef]",
+        title: "黄色[#fffbf2]",
         searchWord: "YAKIT_COLOR_YELLOW",
         className: TableRowColor("YELLOW"),
         render: (
@@ -527,7 +527,7 @@ const availableColors = [
     },
     {
         color: "ORANGE",
-        title: "橙色[#f7f8fa]",
+        title: "橙色[#fff8ef]",
         searchWord: "YAKIT_COLOR_ORANGE",
         className: TableRowColor("ORANGE"),
         render: (
@@ -563,7 +563,7 @@ const availableColors = [
     },
     {
         color: "GREY",
-        title: "灰色[#D9D9D9]",
+        title: "灰色[#f7f8fa]",
         searchWord: "YAKIT_COLOR_GREY",
         className: TableRowColor("GREY"),
         render: (
@@ -1024,7 +1024,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
     const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetState<number>()
     const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
-    const columns: ColumnsTypeProps[] = useMemo(() => {
+    const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
                 title: "序号",
@@ -2020,8 +2020,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                             Color: color
                                                         })
                                                         setTimeout(() => {
-                                                            console.log("params", params)
-
                                                             update(1)
                                                         }, 100)
                                                     }}
@@ -2233,7 +2231,7 @@ const ColorSearch: React.FC<ColorSearchProps> = (props) => {
                     </div>
                 )
             })}
-            <FooterBottom onReset={onReset} onSure={onSure} />
+            <FooterBottom className={style["color-select-footer"]} onReset={onReset} onSure={onSure} />
         </div>
     )
 }

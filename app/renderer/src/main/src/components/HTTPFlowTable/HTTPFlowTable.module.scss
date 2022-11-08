@@ -111,6 +111,7 @@
         font-size: 12px;
         height: 24px;
         cursor: pointer;
+        margin-right: 16px;
 
         .http-history-table-left-number {
             margin-left: 4px;
@@ -252,7 +253,7 @@
 }
 
 .row-bg-color-yellow {
-    background-color: #fef8ef;
+    background-color: #fffbf2;
 }
 
 .row-bg-color-green {
@@ -260,7 +261,7 @@
 }
 
 .row-bg-color-orange {
-    background-color: #f7f8fa;
+    background-color: #fff8ef;
 }
 
 .row-bg-color-purple {
@@ -656,4 +657,8 @@
         position: relative;
         border-bottom: 1px solid #EAECF3;
     }
+}
+
+.color-select-footer{
+    position: relative !important;
 }
