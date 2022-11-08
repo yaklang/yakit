@@ -5,12 +5,19 @@
         color: #56C991;
     }
 
-    .check-circle-icon {
-        color: #56C991;
-    }
+
 
     .body-length-text-red {
         color: #F6544A;
+    }
+
+    .check-circle {
+        display: flex;
+        align-items: center;
+
+        .check-circle-icon {
+            color: #56C991;
+        }
     }
 }
 
@@ -103,7 +110,7 @@
         flex-direction: row;
         align-items: center;
         padding: 4px 8px;
-        background: #F9FBFF;
+        background: #F8F8F8;
         border: 1px solid #EAECF3;
         border-radius: 4px;
         color: #31343F;
@@ -165,6 +172,16 @@
         .http-history-table-right-filter-small {
             display: none;
             padding-right: 16px;
+
+            .filter-small-icon {
+                svg {
+                    color: #85899E;
+
+                    &:hover {
+                        color: #1890ff;
+                    }
+                }
+            }
         }
 
         .http-history-table-right-filter-large {
@@ -295,7 +312,7 @@
             height: 20px;
             font-size: 12px;
             border: 1px solid #EAECF3;
-            background: #F9FBFF;
+            background: #F8F8F8;
             border-radius: 4px;
             width: fit-content;
             max-width: 100%;
@@ -411,11 +428,11 @@
             cursor: pointer;
 
             &:hover {
-                background: #F9FBFF;
+                background: #F8F8F8;
             }
 
             &:active {
-                background: #F9FBFF;
+                background: #F8F8F8;
                 color: #1890ff;
             }
 
@@ -437,7 +454,7 @@
         }
 
         .select-item-active {
-            background: #F9FBFF;
+            background: #F8F8F8;
             color: #1890ff;
         }
 
@@ -659,6 +676,6 @@
     }
 }
 
-.color-select-footer{
+.color-select-footer {
     position: relative !important;
 }

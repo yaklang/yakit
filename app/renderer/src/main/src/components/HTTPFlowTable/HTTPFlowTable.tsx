@@ -636,7 +636,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         Limit: OFFSET_LIMIT,
         Order: "desc",
         OrderBy: "created_at",
-        Page: 0
+        Page: 1
     })
     const isOneceLoading = useRef<boolean>(true)
 
@@ -654,6 +654,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
     const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "k" | "M">("B")
+    const [maxId, setMaxId, getMaxId] = useGetState<number>(0)
+    const [tags, setTags] = useState<FiltersItemProps[]>([])
+    const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
+    const [currentIndex, setCurrentIndex] = useState<number>(0)
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+    const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
+    const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
+    const [offsetData, setOffsetData, getOffsetData] = useGetState<HTTPFlow[]>([])
+    const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetState<number>()
+    const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
+    const [isReset, setIsReset] = useState<boolean>(false)
+    const colorSwatchRef = useRef()
+    useClickAway(() => {
+        onColorSure()
+    }, colorSwatchRef)
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -729,7 +744,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams({...params, ExcludeId: idArr, ExcludeInUrl: urlArr})
         }
     }, [shieldData])
-
+    useEffect(() => {
+        getNewData()
+        getHTTPFlowsFieldGroup(false)
+    }, [])
+    useEffect(() => {
+        // 刷新
+        getHTTPFlowsFieldGroup(true)
+    }, [total])
     const onTableChange = useDebounceFn(
         (page: number, limit: number, sort: SortProps, filter: any) => {
             if (sort.order === "none") {
@@ -788,7 +810,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
-                    console.log("update", query, rsp)
                     if (paginationProps.Page == 1) {
                         setTotal(rsp.Total)
                     }
@@ -824,19 +845,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             update()
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
-    const [maxId, setMaxId, getMaxId] = useGetState<number>(0)
-    const [tags, setTags] = useState<FiltersItemProps[]>([])
-    const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
-    const [currentIndex, setCurrentIndex] = useState<number>(0)
 
-    useEffect(() => {
-        getNewData()
-        getHTTPFlowsFieldGroup(false)
-    }, [])
-    useEffect(() => {
-        // 刷新
-        getHTTPFlowsFieldGroup(true)
-    }, [total])
     // 获取最新的数据
     const getNewData = useMemoizedFn(() => {
         ipcRenderer
@@ -871,7 +880,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 failed(`query HTTP Flows Field Group failed: ${e}`)
             })
     })
-    const [offsetData, setOffsetData, getOffsetData] = useGetState<HTTPFlow[]>([])
+  
     const getClassNameData = (resData: HTTPFlow[]) => {
         let newData: HTTPFlow[] = []
         const length = resData.length
@@ -901,7 +910,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setOffsetData([])
             return
         }
-        if (getOffsetData().length > 0) return
+        // if (getOffsetData().length > 0) return
         const paginationProps = {
             Page: 1,
             Limit: OFFSET_STEP,
@@ -922,7 +931,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
-                console.log("scrollUpdateTop", query, rsp)
                 const resData = rsp?.Data || []
                 if (resData.length <= 0) {
                     // 没有增量数据
@@ -930,7 +938,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
                 // 有增量数据刷新total
                 const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                setLoading(true)
+                // setLoading(true)
                 setTotal(newTotal)
                 const newData = getClassNameData(resData)
                 const newOffsetData = newData.concat(getOffsetData())
@@ -972,12 +980,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setShieldData(newObj)
     }
 
-    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-    const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
-
-    const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-    const [spinning, setSpinning] = useState<boolean>(false)
-
+    const onColorSure = useMemoizedFn(() => {
+        if (isShowColor) {
+            setIsShowColor(false)
+        }
+        setParams({
+            ...params,
+            Color: color
+        })
+        setTimeout(() => {
+            update(1)
+        }, 100)
+    })
     const onSelectAll = (newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
         setIsAllSelect(checked)
         setSelectedRowKeys(newSelectedRowKeys)
@@ -1012,8 +1026,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         return length
     })
-    const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetState<number>()
-    const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
+
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
@@ -1205,7 +1218,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ]
                 },
                 render: (_, rowData) => (
-                    <div>
+                    <div className={style["check-circle"]}>
                         {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
                             <CheckCircleIcon className={style["check-circle-icon"]} />
                         )}
@@ -1254,9 +1267,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 title: "操作",
                 dataKey: "action",
-                width: 120,
-                minWidth: 80,
-                align: "center",
+                width: 64,
                 fixed: "right",
                 render: (_, rowData) => {
                     if (!rowData.Hash) return <></>
@@ -1276,7 +1287,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         ]
     }, [statusCode, tags])
-    const [isReset, setIsReset] = useState<boolean>(false)
+
     // 发送web fuzzer
     const onSendToTab = useMemoizedFn((rowData) => {
         ipcRenderer.invoke("send-to-tab", {
@@ -1730,6 +1741,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             event.clientY
         )
     }
+
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div
@@ -1981,7 +1993,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             trigger='click'
                                             placement='bottomLeft'
                                         >
-                                            <Button size='small' icon={<FilterIcon />}></Button>
+                                            <div className={classNames(style["filter-small-icon"])}>
+                                                <Button size='small' icon={<FilterIcon />}></Button>
+                                            </div>
                                         </Popover>
                                     </div>
                                     <TableFilter
@@ -2005,7 +2019,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             }, 50)
                                         }}
                                     />
-                                    <div className={style["http-history-table-color-swatch"]}>
+                                    <div className={style["http-history-table-color-swatch"]} ref={colorSwatchRef}>
                                         <Popover
                                             overlayClassName={style["http-history-table-color-popover"]}
                                             content={
@@ -2013,15 +2027,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     color={color}
                                                     setColor={setColor}
                                                     onReset={() => setColor([])}
-                                                    onSure={() => {
-                                                        setParams({
-                                                            ...params,
-                                                            Color: color
-                                                        })
-                                                        setTimeout(() => {
-                                                            update(1)
-                                                        }, 100)
-                                                    }}
+                                                    onSure={() => onColorSure()}
                                                     setIsShowColor={setIsShowColor}
                                                 />
                                             }

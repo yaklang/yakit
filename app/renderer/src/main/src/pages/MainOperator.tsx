@@ -223,8 +223,6 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 // 用户信息
 const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     const {userInfo, setStoreUserInfo} = props
-    console.log("userInfo", userInfo)
-
     // OSS远程头像删除
     const deleteAvatar = useMemoizedFn((imgName) => {
         NetWorkApi<API.DeleteResource, API.ActionSucceeded>({
