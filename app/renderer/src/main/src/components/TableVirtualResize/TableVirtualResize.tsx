@@ -1234,7 +1234,32 @@ const CellRender = React.memo(
         return true
     }
 )
-
+/**
+ * @description:表格的props描述， 包裹虚拟表格的父元素需要设置高度
+ * @ref: 返回的滚动条所在的div的元素
+ * @title: 表格顶部的title,左边，类型：string | ReactNode
+ * @extra: 表格顶部的title，右边，类型：ReactNode
+ * @renderTitle: 自定义表格顶部的title,类型:ReactNode
+ * @titleHeight: 自定义表格顶部的高度,使用renderTitle,需要传入对应的height,否则虚拟列表滚动会不正确，类型:ReactNode
+ * @data:数组 ，类型：T[]
+ * @renderKey:每行的key值，不可重复 ，类型：string
+ * @columns:每列的参数 类型：ColumnsTypeProps[]
+ * @rowSelection:多选/单选配置，目前只支持多选 类型：RowSelectionProps<T>
+ * @enableDrag:true,表格列之间可以拖动，最后一列除外。columns中也可以单独设置某一列是否可以拖动  类型：boolean
+ * @onRowClick:row鼠标左键点击事件，会返回当前选中row的数据  类型：(record: T) => void
+ * @onRowContextMenu:row鼠标右键点击事件，会返回当前选中row的数据和e 类型：(record: T, e: React.MouseEvent) => void
+ * @pagination:分页配置 类型：PaginationProps
+ * @onChange:查询条件变化 类型：(page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void
+ * @loading：是否加载中 类型：boolean
+ * @scrollToBottom：距离底部多少px开始加载下一页,默认300 类型：number
+ * @isReset：重置表格条件 滚动至0 类型：boolean
+ * @isShowTotal：内置的total是否显示；true显示，false不显示 类型：boolean
+ * @currentIndex：当前row的index 类型：number
+ * @isRefresh：boolean 刷新表格 滚动至0
+ * @disableSorting：boolean 禁用排序
+ * @query：查询条件
+ * @return {*}
+ */
 export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) as <T>(
     props: TableVirtualResizeProps<T> & {ref?: React.ForwardedRef<HTMLUListElement>}
 ) => ReturnType<typeof TableVirtualResizeFunction>

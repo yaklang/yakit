@@ -2178,8 +2178,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     loading={loading}
                     enableDrag={true}
                     columns={columns}
-                    // currentRowData={getSelected()}
-                    setCurrentRowData={setSelected}
                     onRowClick={onRowClick}
                     onRowContextMenu={onRowContextMenu}
                     pagination={{
