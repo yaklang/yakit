@@ -611,7 +611,7 @@ const TableFirstLinePlaceholder: HTTPFlow = {
 }
 
 const OFFSET_LIMIT = 50
-const OFFSET_STEP = 20
+const OFFSET_STEP = 100
 
 interface shieldData {
     data: (string | number)[]
@@ -910,8 +910,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const paginationProps = {
             Page: 1,
             Limit: OFFSET_STEP,
-            Order: "asc",
-            OrderBy: "Id"
+            Order: "desc",
+            OrderBy: "id"
         }
         const query = {
             ...params,
@@ -932,6 +932,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     // 没有增量数据
                     return
                 }
+                
                 // 有增量数据刷新total
                 const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
                 // setLoading(true)
