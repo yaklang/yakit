@@ -61,8 +61,8 @@ interface QueryAccountProps {
 export interface AccountFormProps {
     editInfo: API.UrmUserList | undefined
     onCancel: () => void
-    // 第一个参数为更新其他架构ID 第二个参数为是否更新自己
-    refresh: (v?: number, b?: boolean) => void
+    // 第一个参数为更新其他架构ID 第二个参数为自己ID
+    refresh: (v: number, b?: number) => void
 }
 
 const layout = {
@@ -203,11 +203,17 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                             ? [department_parent_id, department_id]
                             : [department_id]
                         getDepartmentData(undefined, undefined, department_parent_id)
-                        form.setFieldsValue({
+                        console.log("默认值",department_parent_id,department_id)
+                        let obj:any = {
                             user_name,
-                            department: department,
-                            role_id: {key: role_id, value: role_name}
-                        })
+                        }
+                        if(department_id){
+                            obj.department = department
+                        }
+                        if(role_id){
+                            obj.role_id = {key: role_id, value: role_name}
+                        }
+                        form.setFieldsValue(obj)
                     }
                 })
                 .catch((err) => {
@@ -226,23 +232,22 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
     const onFinish = useMemoizedFn((values) => {
         const {user_name, department, role_id} = values
         // 编辑
-        const departmentId = department[department.length - 1]
+        const departmentId: number = department[department.length - 1]
         if (editInfo) {
+            console.log("params888", editInfo)
             const params: API.EditUrmRequest = {
                 uid: editInfo.uid,
                 user_name,
                 department: departmentId,
                 role_id: role_id?.key || role_id
             }
-            console.log("params888", params)
             NetWorkApi<API.EditUrmRequest, API.ActionSucceeded>({
                 method: "post",
                 url: "urm/edit",
                 data: params
             })
                 .then((res: API.ActionSucceeded) => {
-                    console.log("返回结果：", res)
-                    refresh(departmentId, true)
+                    refresh(departmentId, editInfo?.department_id)
                     onCancel()
                 })
                 .catch((err) => {
@@ -469,8 +474,8 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) =>
     return (
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
-                <Form.Item name='name' label='标题' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入标题' allowClear />
+                <Form.Item name='name' label='部门名称' rules={[{required: true, message: "该项为必填"}]}>
+                    <Input placeholder='请输入部门名称' allowClear />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
@@ -508,6 +513,7 @@ export interface OrganizationAdminPageProps {
     selectItemId: string | number | undefined
     setSelectItemId: (v: string | number | undefined) => void
     treeCount: TreeCountProps | undefined
+    treeReduceCount: TreeReduceCountProps
 }
 
 interface ResetNameProps {
@@ -516,7 +522,7 @@ interface ResetNameProps {
     id?: number
 }
 const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
-    const {selectItemId, setSelectItemId, treeCount} = props
+    const {selectItemId, setSelectItemId, treeCount, treeReduceCount} = props
     const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([])
     const [loadedKeys, setLoadedKeys] = useState<(string | number)[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -534,16 +540,19 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
     const [noDepartment, setNoDepartment] = useState<number>()
 
     const realDataSource = useMemo(() => {
-        return [
-            {
-                title: "无归属",
-                key: -1,
-                userNum: noDepartment,
-                isLeaf: true,
-                isShowAllBtn: false
-            },
-            ...department
-        ]
+        if (noDepartment && noDepartment > 0) {
+            return [
+                {
+                    title: "无归属",
+                    key: -1,
+                    userNum: noDepartment,
+                    isLeaf: true,
+                    isShowAllBtn: false
+                },
+                ...department
+            ]
+        }
+        return [...department]
     }, [department, noDepartment])
 
     useEffect(() => {
@@ -562,7 +571,6 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                     userNum: treeCount.count
                 }
             }
-            // 多层递归（如后续升级可用）
             if (node.children) {
                 return {
                     ...node,
@@ -579,6 +587,36 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
             noUpdate()
         }
     }, [treeCount])
+
+    const updateTreeReduceCount = (list: DataSourceProps[], treeCountObj: TreeReduceCountProps): DataSourceProps[] => {
+        const {obj, reduce} = treeCountObj
+        return list.map((node) => {
+            if (obj.hasOwnProperty(node.key)) {
+                let newUserNum = reduce ? (node?.userNum || 0) - obj[node.key] : (node?.userNum || 0) + obj[node.key]
+                let userNum = newUserNum > 0 ? newUserNum : 0
+                return {
+                    ...node,
+                    userNum
+                }
+            }
+            // 多层递归（如后续升级可用）
+            if (node.children) {
+                return {
+                    ...node,
+                    children: updateTreeReduceCount(node.children, treeCountObj)
+                }
+            }
+            return node
+        })
+    }
+
+    // 动态计算更新count数量
+    useEffect(() => {
+        if (treeReduceCount) {
+            setDepartment((origin) => updateTreeReduceCount(origin, treeReduceCount))
+            noUpdate()
+        }
+    }, [treeReduceCount])
 
     const noUpdate = () => {
         NetWorkApi<DepartmentGetProps, API.DepartmentList>({
@@ -612,6 +650,10 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
             }
         })
             .then((res: API.DepartmentListResponse) => {
+                console.log("组织架构-参数：", {
+                    ...paginationProps,
+                    offsetId
+                })
                 console.log("组织架构-返回结果：", res)
                 const newData = (res?.data || [])
                     .filter((item) => item.name || item.userNum > 0)
@@ -623,9 +665,9 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                         isShowAddBtn: true
                     }))
                 // 若无选中 则 默认选中第一项
-                if (newData.length > 0) {
-                    setSelectItemId(selectItemId || newData[0].key)
-                }
+                // if (newData.length > 0) {
+                //     setSelectItemId(selectItemId || newData[0].key)
+                // }
                 setDepartment([...getDepartment(), ...newData])
                 setPagination({...pagination, Limit: res.pagemeta.limit})
             })
@@ -657,12 +699,14 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
             .then((res: API.ActionSucceeded) => {
                 if (res.ok) {
                     success("删除成功")
+                    // 重置回显示全部
+                    setSelectItemId(undefined)
+                    noUpdate()
                     if (pid) {
                         onLoadData({key: pid})
                     } else {
                         // 操作数据 仅动态删除一条
                         const filterArr = department.filter((item) => item.key !== id)
-                        noUpdate()
                         setDepartment(filterArr)
                     }
                 }
@@ -687,7 +731,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
             data: params
         })
             .then((res: API.ActionSucceeded) => {
-                if (res.ok) {
+                if (res) {
                     success("修改成功")
                     // 第一层更新
                     if (pid === 0) {
@@ -792,7 +836,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                     className='add-icon'
                     onClick={() => {
                         const m = showModal({
-                            title: "新建部门",
+                            title: "添加一级部门",
                             width: 600,
                             content: (
                                 <CreateOrganizationForm
@@ -917,7 +961,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                                                                 e?.stopPropagation()
                                                                 setSelectItemId(nodeData.key)
                                                                 const m = showModal({
-                                                                    title: "新建小组",
+                                                                    title: "添加二级部门",
                                                                     width: 600,
                                                                     content: (
                                                                         <CreateOrganizationForm
@@ -983,12 +1027,20 @@ interface ResetProps {
     user_name: string
     uid: string
 }
+
+interface TreeReduceCountProps {
+    // 是否做减法-否则做加法
+    reduce: boolean
+    // 改变对象
+    obj: any
+}
 const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [userInfoForm, setUserInfoForm] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({
         keywords: ""
     })
+    const [selectedRows, setSelectedRows] = useState<API.UrmUserList[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: 20,
@@ -1001,85 +1053,96 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     // 编辑项信息
     const [editInfo, setEditInfo] = useState<API.UrmUserList>()
     const [selectItemId, setSelectItemId] = useState<string | number>()
+    // 根据请求返回Total更改Count
     const [treeCount, setTreeCount] = useState<TreeCountProps>()
+    // 根据数据动态处理计算Count条数
+    const [treeReduceCount, setTreeReduceCount] = useState<TreeReduceCountProps>({reduce: true, obj: {}})
+
     const update = (page?: number, limit?: number, addDepartmentId?: number) => {
         setLoading(true)
         const paginationProps = {
             page: page || 1,
             limit: limit || pagination.Limit
         }
-        if (selectItemId) {
-            // 处理无归属请求
-            const id = selectItemId === -1 ? 0 : selectItemId
-            // 创建账号时用于更新组织架构数量
-            const departmentId = addDepartmentId || id
-            NetWorkApi<QueryProps, API.UrmUserListResponse>({
-                method: "get",
-                url: "urm",
-                params: {
+        // if (selectItemId) {
+        // 处理无归属请求
+        const id = selectItemId === -1 ? 0 : selectItemId
+        // 创建账号时用于更新组织架构数量
+        const departmentId = addDepartmentId || id
+        let filterObj: any = {
+            ...params,
+            ...paginationProps
+        }
+        if (departmentId) {
+            filterObj.departmentId = departmentId
+        }
+        NetWorkApi<QueryProps, API.UrmUserListResponse>({
+            method: "get",
+            url: "urm",
+            params: {
+                ...params,
+                ...paginationProps,
+                departmentId: departmentId
+            }
+        })
+            .then((res) => {
+                console.log("table表返回结果：", res, {
                     ...params,
                     ...paginationProps,
                     departmentId: departmentId
+                })
+                // 创建账号 更改组织架构count
+                if (addDepartmentId) {
+                    setTreeCount({
+                        id: addDepartmentId,
+                        count: res.pagemeta.total
+                    })
                 }
-            })
-                .then((res) => {
-                    console.log(
-                        "参数：",
-                        {
-                            ...params,
-                            ...paginationProps,
-                            departmentId: departmentId
-                        },
-                        res
-                    )
-                    // 创建账号 更改组织架构count
-                    if (addDepartmentId) {
-                        setTreeCount({
-                            id: addDepartmentId,
-                            count: res.pagemeta.total
-                        })
+                // 正常渲染Table
+                else {
+                    if (Array.isArray(res.data)) {
+                        const newData = res.data.map((item) => ({...item}))
+                        setDataSource(newData)
+                    } else {
+                        setDataSource([])
                     }
-                    // 正常渲染Table
-                    else {
-                        if (Array.isArray(res.data)) {
-                            const newData = res.data.map((item) => ({...item}))
-                            setDataSource(newData)
-                        } else {
-                            setDataSource([])
-                        }
-                        setPagination({...pagination, Limit: res.pagemeta.limit})
-                        setTotal(res.pagemeta.total)
+                    setPagination({...pagination, Limit: res.pagemeta.limit})
+                    setTotal(res.pagemeta.total)
+                    selectItemId &&
                         setTreeCount({
                             id: selectItemId,
                             count: res.pagemeta.total
                         })
-                    }
-                })
-                .catch((err) => {
-                    failed("获取账号列表失败：" + err)
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                })
-        }
+                }
+            })
+            .catch((err) => {
+                failed("获取账号列表失败：" + err)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
+        // }
     }
 
     useEffect(() => {
+        setSelectedRows([])
         setSelectedRowKeys([])
         update()
     }, [selectItemId])
 
     const rowSelection = {
         onChange: (selectedRowKeys, selectedRows: API.UrmUserList[]) => {
+            console.log("selectedRows", selectedRows)
             // let newArr = selectedRowKeys.map((item)=>parseInt(item))
+            setSelectedRows(selectedRows)
             setSelectedRowKeys(selectedRowKeys)
         },
         selectedRowKeys
     }
 
-    const onRemove = (uid: string[]) => {
+    const onRemove = (uid: string[], department_id?: number) => {
         NetWorkApi<API.DeleteUrm, API.NewUrmResponse>({
             method: "delete",
             url: "urm",
@@ -1091,6 +1154,26 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 console.log("返回结果：", res)
                 success("删除用户成功")
                 update()
+                // 如若是默认展示的所有数据进行删除处理
+                if (!selectItemId) {
+                    let removeTool = {}
+                    if (department_id) {
+                        removeTool = {[department_id]: 1}
+                    } else {
+                        removeTool = selectedRows.reduce((pre, cur) => {
+                            if (cur.department_id) {
+                                if (cur.department_id in pre) {
+                                    pre[cur.department_id]++
+                                } else {
+                                    pre[cur.department_id] = 1
+                                }
+                            }
+                            return pre
+                        }, {})
+                    }
+                    console.log("removeTool", removeTool)
+                    setTreeReduceCount({obj: removeTool, reduce: true})
+                }
             })
             .catch((err) => {
                 failed("删除账号失败：" + err)
@@ -1187,7 +1270,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                     <Popconfirm
                         title={"确定删除该用户吗？"}
                         onConfirm={() => {
-                            onRemove([i.uid])
+                            onRemove([i.uid], i.department_id)
                         }}
                     >
                         <Button size={"small"} danger={true}>
@@ -1254,12 +1337,13 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                         setSelectItemId={setSelectItemId}
                         selectItemId={selectItemId}
                         treeCount={treeCount}
+                        treeReduceCount={treeReduceCount}
                     />
                 }
                 firstMinSize={300}
                 firstRatio={"300px"}
                 secondNode={
-                    <>
+                    <div style={{overflowY: "auto", height: "100%"}}>
                         <div className='block-title'>全部成员</div>
                         <Table
                             loading={loading}
@@ -1284,7 +1368,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                             bordered={true}
                             dataSource={dataSource}
                         />
-                    </>
+                    </div>
                 }
             />
 
@@ -1301,11 +1385,24 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 <AccountForm
                     editInfo={editInfo}
                     onCancel={() => setUserInfoForm(false)}
-                    refresh={(id, is) => {
-                        // 解释：此处新增的话 重新计算新增的count
-                        // 编辑时如若更换组织架构则需要更新2处 自己与变动处
-                        id === selectItemId ? update() : update(1, undefined, id)
-                        id !== selectItemId && is && update()
+                    refresh={(id, oldId) => {
+                        // 当有 selectItemId 时count来源于表总数
+                        if (selectItemId) {
+                            // 解释：此处新增的话 重新计算新增的count
+                            // 编辑时如若更换组织架构则需要更新2处 自己与变动处
+                            id === selectItemId ? update() : update(1, undefined, id)
+                            id !== selectItemId && oldId && update()
+                        } else { // 当没有 selectItemId 时count来源于加减法
+                            update()
+                            if (oldId) {
+                                if (oldId !== id) {
+                                    oldId && setTreeReduceCount({obj: {[oldId]: 1}, reduce: true})
+                                    id && setTreeReduceCount({obj: {[id]: 1}, reduce: false})
+                                }
+                            } else {
+                                setTreeReduceCount({obj: {[id]: 1}, reduce: false})
+                            }
+                        }
                     }}
                 />
             </Modal>

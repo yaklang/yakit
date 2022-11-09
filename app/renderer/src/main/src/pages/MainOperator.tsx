@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
+import React, {forwardRef,useImperativeHandle,ReactNode, useEffect, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -83,7 +83,6 @@ import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
-import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -145,6 +144,7 @@ export interface MainProp {
     tlsGRPC?: boolean
     addr?: string
     onErrorConfirmed?: () => any
+    ref: any
 }
 
 export interface MenuItem {
@@ -320,7 +320,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     )
 })
 
-const Main: React.FC<MainProp> = (props) => {
+const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
     const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
     const [collapsed, setCollapsed] = useState(false)
@@ -350,12 +350,19 @@ const Main: React.FC<MainProp> = (props) => {
 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
-    // 企业版本初始显示登录弹窗
-    useEffect(()=>{
-        if(ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()){
-            !userInfo.isLogin&&setLoginShow(true)
-        }
-    },[])
+    
+    // 全局监听登录状态
+    const {userInfo, setStoreUserInfo} = useStore()
+    
+    // 企业版本显示登录弹窗
+    const openLoginShow =()=>{
+        setLoginShow(true)
+    }
+    // 此处注意useImperativeHandle方法的的第一个参数是目标元素的ref引用
+    useImperativeHandle(ref, () => ({
+        // openLoginShow 就是暴露给父组件的方法
+        openLoginShow
+    }))
 
     // 系统类型
     const [system, setSystem] = useState<string>("")
@@ -669,8 +676,6 @@ const Main: React.FC<MainProp> = (props) => {
             }, 50)
         }
     }, [])
-    // 全局监听登录状态
-    const {userInfo, setStoreUserInfo} = useStore()
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
             // 刷新用户信息
@@ -1723,6 +1728,6 @@ const Main: React.FC<MainProp> = (props) => {
             </Modal>
         </Layout>
     )
-}
+})
 
 export default Main

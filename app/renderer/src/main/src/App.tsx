@@ -1,4 +1,4 @@
-import React, {useEffect, useState, Suspense, lazy} from "react"
+import React, {useRef,useEffect, useState, Suspense, lazy} from "react"
 import {Form, Modal, notification, Spin, Tabs, Typography} from "antd"
 
 // by types
@@ -15,7 +15,7 @@ import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
-
+import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
 const InterceptKeyword = [
     // "KeyA",
     // "KeyB",
@@ -122,7 +122,8 @@ function App() {
     // 用户协议相关内容
     const [agreed, setAgreed] = useState(false)
     const [readingSeconds, setReadingSeconds] = useState<number>(1)
-
+    // 获取子组件方法
+    const childRef = useRef<any>();
     useEffect(() => {
         setLoading(true)
         ipcRenderer
@@ -204,7 +205,13 @@ function App() {
         // 获取引擎中的token
         getRemoteValue("token-online")
             .then((resToken) => {
+                console.log("resToken",resToken)
                 if (!resToken) {
+                    // 在第一次进入页面时，如若是企业登录则打开登录
+                    if(ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()){
+                        // openLoginShow就是Main暴露给App的方法
+                        childRef.current.openLoginShow()
+                    }
                     return
                 }
                 // 通过token获取用户信息
@@ -331,6 +338,7 @@ function App() {
                 onErrorConfirmed={() => {
                     setConnected(false)
                 }}
+                ref={childRef}
             />
         </Suspense>
     ) : (

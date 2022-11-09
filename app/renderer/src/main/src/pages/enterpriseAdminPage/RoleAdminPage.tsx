@@ -56,6 +56,17 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
         value: key,
         title: PluginType[key]
     }))
+    const [selectedAll, setSelectedAll] = useState<boolean>(false)
+    const isOnece = useRef<boolean>(true)
+    useEffect(()=>{
+        if(!isOnece.current){
+            const treeSelect = PluginTypeKeyArr.map((key) =>key)
+            form.setFieldsValue({
+                treeSelect
+            })
+        }
+        isOnece.current = false
+    },[selectedAll])
 
     useEffect(() => {
         if (editInfo) {
@@ -69,17 +80,17 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             })
                 .then((res: API.NewRoleRequest) => {
                     console.log("返回结果：", res)
-                    let {checkPlugin,deletePlugin,id,name,pluginIds="",plugin,pluginType=""} = res
-                    const pluginArr = (plugin||[]).map((item)=>({label:item.script_name,value:item.id}))
-                    const pluginTypeArr:string[] = pluginType.split(',').filter((item)=>item.length>0)
+                    let {checkPlugin, deletePlugin, id, name, pluginIds = "", plugin, pluginType = ""} = res
+                    const pluginArr = (plugin || []).map((item) => ({label: item.script_name, value: item.id}))
+                    const pluginTypeArr: string[] = pluginType.split(",").filter((item) => item.length > 0)
                     const value = {
                         name,
                         checkPlugin,
                         deletePlugin,
-                        treeSelect:[...pluginTypeArr,...pluginArr],
+                        treeSelect: [...pluginTypeArr, ...pluginArr]
                         // treeSelect:["port-scan",{value:4389,label:"1021"}]
                     }
-                    console.log("value",value)
+                    console.log("value", value)
                     form.setFieldsValue({
                         ...value
                     })
@@ -102,14 +113,14 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
         setLoading(true)
         let pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
         let pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
-        let params:API.NewRoleRequest = {
+        let params: API.NewRoleRequest = {
             name,
             deletePlugin,
             checkPlugin,
             pluginType: pluginTypeArr.join(","),
             pluginIds: pluginIdsArr.join(",")
         }
-        if(editInfo){
+        if (editInfo) {
             params.id = editInfo.id
         }
         console.log("params", params)
@@ -119,7 +130,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             data: params
         })
             .then((res: API.ActionSucceeded) => {
-                if(res.ok){
+                if (res.ok) {
                     onCancel()
                     refresh()
                 }
@@ -146,7 +157,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 }
             })
                 .then((res: API.PluginTypeListResponse) => {
-                    console.log("异步加载数据",res.data)
+                    console.log("异步加载数据", res.data)
                     if (Array.isArray(res.data)) {
                         const AddTreeData = res.data.map((item) => ({
                             id: item.id,
@@ -156,7 +167,6 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                             isLeaf: true
                         }))
                         setTreeData([...treeData, ...AddTreeData])
-
                     }
                 })
                 .catch((err) => {
@@ -171,15 +181,21 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     const onChange = (newValue: string[]) => {
         console.log("onChange ", newValue)
     }
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+        return (
+            <>
+                {originNode}
+                <div className='select-render-all' onClick={() => setSelectedAll(!selectedAll)}>
+                    全选
+                </div>
+            </>
+        )
+    })
 
     return (
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
-                <Form.Item
-                    name='name'
-                    label='角色名'
-                    rules={[{required: true, message: "该项为必填"}]}
-                >
+                <Form.Item name='name' label='角色名' rules={[{required: true, message: "该项为必填"}]}>
                     <Input placeholder='请输入角色名' allowClear />
                 </Form.Item>
                 <Form.Item
@@ -200,8 +216,9 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         loadData={onLoadData}
                         treeData={treeData}
                         allowClear
-                        showCheckedStrategy="SHOW_PARENT"
+                        showCheckedStrategy='SHOW_PARENT'
                         maxTagCount={10}
+                        dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                     />
                 </Form.Item>
                 <Row>
@@ -214,7 +231,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                                 <Form.Item
                                     {...itemLayout}
                                     name='checkPlugin'
-                                    valuePropName="checked"
+                                    valuePropName='checked'
                                     label='审核插件'
                                     initialValue={false}
                                 >
@@ -226,7 +243,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                                 <Form.Item
                                     {...itemLayout}
                                     name='deletePlugin'
-                                    valuePropName="checked"
+                                    valuePropName='checked'
                                     label='插件删除'
                                     initialValue={false}
                                 >
