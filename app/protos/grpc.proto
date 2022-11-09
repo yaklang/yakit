@@ -1962,8 +1962,6 @@ message QueryHTTPFlowRequest {
   int64 AfterBodyLength = 27;
   int64 BeforeBodyLength = 28;
 
-  int64 Offset = 29;
-  int64 Limit = 30;
 }
 
 message DeleteHTTPFlowRequest {
@@ -2033,15 +2031,6 @@ message HTTPFlow {
   // websocket 相关字段
   bool IsWebsocket = 30;
   string WebsocketHash = 33;
-
-  // 标记 UTF8 Invalid
-  /*
-    一般这不是无损的情况，会涉及到用户 Copy Paste 直接 Body 的需求
-  */
-  bool InvalidForUTF8Request = 34;
-  bool InvalidForUTF8Response = 35;
-  string RawRequestBodyBase64 = 36;
-  string RawResponseBodyBase64 = 37;
 }
 
 message FuzzableParam {
