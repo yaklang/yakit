@@ -2039,9 +2039,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             }
                                             trigger='click'
                                             placement='bottomLeft'
-                                            // onVisibleChange={(visible) => {
-                                            //     if (!visible) onColorSure()
-                                            // }}
+                                            visible={isShowColor}
+                                            onVisibleChange={(visible) => {
+                                                if (!visible) setIsShowColor(false)
+                                            }}
                                         >
                                             <div
                                                 className={classNames(style["color-swatch-icon"], {
@@ -2212,11 +2213,21 @@ interface ColorSearchProps {
     onSure: () => void
     setIsShowColor: (b: boolean) => void
 }
-const ColorSearch: React.FC<ColorSearchProps> = (props) => {
-    const {color, setColor, onReset, onSure, setIsShowColor} = props
+const ColorSearch = React.memo((props: ColorSearchProps) => {
+    const {color, setColor,onReset, onSure, setIsShowColor} = props
     const onMouseLeave = useMemoizedFn(() => {
         setIsShowColor(false)
         onSure()
+    })
+    const onSelect = useMemoizedFn((ele) => {
+        const index = color.findIndex((c) => c === ele.searchWord)
+        if (index === -1) {
+            const newColor: string[] = [...color, ele.searchWord]
+            setColor(newColor)
+        } else {
+            color.splice(index, 1)
+            setColor([...color])
+        }
     })
     return (
         <div onMouseLeave={() => onMouseLeave()}>
@@ -2227,16 +2238,7 @@ const ColorSearch: React.FC<ColorSearchProps> = (props) => {
                         className={classNames(style["http-history-table-color-item"], {
                             [style["http-history-table-color-item-active"]]: checked
                         })}
-                        onClick={() => {
-                            const index = color.findIndex((c) => c === ele.searchWord)
-                            if (index === -1) {
-                                const newColor: string[] = [...color, ele.searchWord]
-                                setColor(newColor)
-                            } else {
-                                color.splice(index, 1)
-                                setColor(color)
-                            }
-                        }}
+                        onClick={() => onSelect(ele)}
                         key={ele.color}
                     >
                         <Checkbox checked={checked} />
@@ -2247,7 +2249,7 @@ const ColorSearch: React.FC<ColorSearchProps> = (props) => {
             <FooterBottom className={style["color-select-footer"]} onReset={onReset} onSure={onSure} />
         </div>
     )
-}
+})
 
 const contentType: FiltersItemProps[] = [
     {
