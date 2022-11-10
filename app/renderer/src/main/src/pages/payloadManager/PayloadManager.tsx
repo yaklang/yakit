@@ -13,7 +13,8 @@ import {
     Typography,
     Select,
     Space,
-    Input
+    Input,
+    Tooltip
 } from "antd"
 import {DeleteOutlined, EditOutlined, LoadingOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {failed, info, success} from "../../utils/notification"
@@ -338,12 +339,13 @@ export const PayloadManagerPage: React.FC<PayloadManagerPageProp> = (props) => {
                                                     }
                                                 }}
                                             />
-
-                                            <Button
-                                                type={selected === element ? "primary" : undefined}
-                                                icon={<UploadIcon />}
-                                                onClick={() => onDownload(element)}
-                                            />
+                                            <Tooltip title='导出'>
+                                                <Button
+                                                    type={selected === element ? "primary" : undefined}
+                                                    icon={<UploadIcon />}
+                                                    onClick={() => onDownload(element)}
+                                                />
+                                            </Tooltip>
                                             {props.selectorHandle && (
                                                 <Popconfirm
                                                     title={"确定要使用该字典？"}
@@ -701,7 +703,7 @@ export const UploadPayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
             setTimeout(() => {
                 setUploadLoading(false)
                 props.onFinished && props.onFinished(params.Group)
-            }, 200) 
+            }, 200)
         })
         setToken(token)
         return () => {
