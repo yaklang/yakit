@@ -1,4 +1,4 @@
-import React, {useRef,useEffect, useState, Suspense, lazy} from "react"
+import React, {useRef, useEffect, useState, Suspense, lazy} from "react"
 import {Form, Modal, notification, Spin, Tabs, Typography} from "antd"
 
 // by types
@@ -15,7 +15,7 @@ import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
-import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 const InterceptKeyword = [
     // "KeyA",
     // "KeyB",
@@ -49,6 +49,7 @@ const InterceptKeyword = [
 const Main = lazy(() => import("./pages/MainOperator"))
 // import {YakEnvironment} from "./protected/YakEnvironment";
 const YakEnvironment = lazy(() => import("./protected/YakEnvironment"))
+const LicensePage = lazy(() => import("./pages/LicensePage"))
 
 const {ipcRenderer} = window.require("electron")
 const FormItem = Form.Item
@@ -112,6 +113,8 @@ export const UserProtocol = () => (
     </>
 )
 
+interface LicenseProps {}
+
 function App() {
     const [connected, setConnected] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -122,8 +125,13 @@ function App() {
     // 用户协议相关内容
     const [agreed, setAgreed] = useState(false)
     const [readingSeconds, setReadingSeconds] = useState<number>(1)
-    // 获取子组件方法
-    const childRef = useRef<any>();
+
+    // 获取子组件方法Ref
+    const childRef = useRef<any>()
+
+    // License
+    const [licenseVerified, setLicenseVerified] = useState<boolean>(true);
+
     useEffect(() => {
         setLoading(true)
         ipcRenderer
@@ -134,6 +142,22 @@ function App() {
             .catch(() => {})
             .finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
+
+    // 获取License
+    // useEffect(() => {
+    //     NetWorkApi<LicenseProps, API.ActionSucceeded>({
+    //         method: "get",
+    //         url: "http://192.168.101.100:8083/api/license",
+    //         params: {}
+    //     })
+    //         .then((res) => {
+    //             console.log("License数据源：", res)
+    //         })
+    //         .catch((err) => {
+    //             failed("获取License失败：" + err)
+    //         })
+    //         .finally(() => {})
+    // }, [])
 
     useHotkeys("alt+a", (e) => {
         const a = getCompletions()
@@ -205,10 +229,10 @@ function App() {
         // 获取引擎中的token
         getRemoteValue("token-online")
             .then((resToken) => {
-                console.log("resToken",resToken)
+                console.log("resToken", resToken)
                 if (!resToken) {
                     // 在第一次进入页面时，如若是企业登录则打开登录
-                    if(ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()){
+                    if (ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()) {
                         // openLoginShow就是Main暴露给App的方法
                         childRef.current.openLoginShow()
                     }
@@ -334,12 +358,16 @@ function App() {
 
     return connected ? (
         <Suspense fallback={<div>Loading Main</div>}>
-            <Main
-                onErrorConfirmed={() => {
-                    setConnected(false)
-                }}
-                ref={childRef}
-            />
+            {licenseVerified ? (
+                <Main
+                    onErrorConfirmed={() => {
+                        setConnected(false)
+                    }}
+                    ref={childRef}
+                />
+            ) : (
+                <LicensePage onLicenseVerified={() => setLicenseVerified(true)}/>
+            )}
         </Suspense>
     ) : (
         <Suspense

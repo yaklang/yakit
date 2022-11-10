@@ -3166,7 +3166,10 @@ interface YakModuleOnlineListProps {
     onSetUser?: (u: PluginUserInfoOnlineProps) => void
     setIsRequest?: (b: boolean) => void
 }
-
+interface OnlineProfileProps {
+    BaseUrl: string
+    Password?: string
+}
 export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const {
         queryOnline,
@@ -3203,8 +3206,21 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
     const [isRef, setIsRef] = useState(false)
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
+    const [baseUrl,setBaseUrl] = useState<string>("")
     const numberOnlineUser = useRef(0) // 我的插件 选择的插件index
     const numberOnline = useRef(0) // 插件商店 选择的插件index
+    // 获取私有域
+    useEffect(()=>{
+        ipcRenderer
+                    .invoke("GetOnlineProfile", {}) 
+                    .then((data: OnlineProfileProps) => {
+                        // console.log("私有域",data)
+                        setBaseUrl(data.BaseUrl)
+                    })
+                    .catch((e) => {
+                        failed(`获取失败:${e}`)
+                    })
+    },[])
     useEffect(() => {
         if (!updatePluginRecord) return
         const index = response.data.findIndex((ele) => ele.id === updatePluginRecord.id)
@@ -3386,7 +3402,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
     }
     // 是否为企业版
     const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
-    if(!userInfo.isLogin && isEnterprise){
+    if(!userInfo.isLogin && isEnterprise && baseUrl!=="https://www.yaklang.com"){
         return (
             <List
                 dataSource={[]}

@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Switch, Row, Col, TreeSelect} from "antd"
+import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Switch, Row, Col, TreeSelect, Checkbox} from "antd"
 import {} from "@ant-design/icons"
 import "./RoleAdminPage.scss"
 import {NetWorkApi} from "@/services/fetch"
@@ -51,22 +51,16 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
         nuclei: "YAML POC"
     }
     const PluginTypeKeyArr: string[] = Object.keys(PluginType)
-    const TreePluginType = PluginTypeKeyArr.map((key) => ({
-        id: key,
-        value: key,
-        title: PluginType[key]
-    }))
+    const TreePluginType = [
+        ...PluginTypeKeyArr.map((key) => {
+            return {
+                id: key,
+                value: key,
+                title: PluginType[key]
+            }
+        })
+    ]
     const [selectedAll, setSelectedAll] = useState<boolean>(false)
-    const isOnece = useRef<boolean>(true)
-    useEffect(()=>{
-        if(!isOnece.current){
-            const treeSelect = PluginTypeKeyArr.map((key) =>key)
-            form.setFieldsValue({
-                treeSelect
-            })
-        }
-        isOnece.current = false
-    },[selectedAll])
 
     useEffect(() => {
         if (editInfo) {
@@ -79,7 +73,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 }
             })
                 .then((res: API.NewRoleRequest) => {
-                    console.log("返回结果：", res)
+                    // console.log("返回结果：", res)
                     let {checkPlugin, deletePlugin, id, name, pluginIds = "", plugin, pluginType = ""} = res
                     const pluginArr = (plugin || []).map((item) => ({label: item.script_name, value: item.id}))
                     const pluginTypeArr: string[] = pluginType.split(",").filter((item) => item.length > 0)
@@ -91,6 +85,12 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         // treeSelect:["port-scan",{value:4389,label:"1021"}]
                     }
                     console.log("value", value)
+                    if (
+                        pluginTypeArr.length === PluginTypeKeyArr.length &&
+                        pluginTypeArr.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
+                    ) {
+                        setSelectedAll(true)
+                    }
                     form.setFieldsValue({
                         ...value
                     })
@@ -179,15 +179,43 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     }
 
     const onChange = (newValue: string[]) => {
-        console.log("onChange ", newValue)
+        if (
+            newValue.length === PluginTypeKeyArr.length &&
+            newValue.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
+        ) {
+            setSelectedAll(true)
+            const treeSelect = PluginTypeKeyArr.map((key) => key)
+            form.setFieldsValue({
+                treeSelect
+            })
+        } else {
+            setSelectedAll(false)
+        }
     }
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <>
+                <Checkbox
+                    checked={selectedAll}
+                    style={{padding: "0 0px 4px 24px", width: "100%"}}
+                    onChange={(e) => {
+                        const {checked} = e.target
+                        setSelectedAll(checked)
+                        if (checked) {
+                            const treeSelect = PluginTypeKeyArr.map((key) => key)
+                            form.setFieldsValue({
+                                treeSelect
+                            })
+                        } else {
+                            form.setFieldsValue({
+                                treeSelect: []
+                            })
+                        }
+                    }}
+                >
+                    全部
+                </Checkbox>
                 {originNode}
-                <div className='select-render-all' onClick={() => setSelectedAll(!selectedAll)}>
-                    全选
-                </div>
             </>
         )
     })
@@ -217,7 +245,8 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         treeData={treeData}
                         allowClear
                         showCheckedStrategy='SHOW_PARENT'
-                        maxTagCount={10}
+                        maxTagCount={selectedAll ? 0 : 10}
+                        maxTagPlaceholder={selectedAll ? "全部" : null}
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                     />
                 </Form.Item>
