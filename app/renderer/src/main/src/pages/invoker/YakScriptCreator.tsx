@@ -272,17 +272,17 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             setParams({
                 ...props.modified
             })
-            showButton&&getPluginDetail(props.modified?.OnlineId)
+            showButton&&getPluginDetail(props.modified?.OnlineId,props.modified?.UUID)
         }
     }, [props.modified])
-    const getPluginDetail = useMemoizedFn((pluginId) => {
+    const getPluginDetail = useMemoizedFn((pluginId,uuid) => {
         if (!userInfo.isLogin) return
         if (pluginId as number == 0) return
         NetWorkApi<SearchPluginDetailRequest, API.YakitPluginDetailResponse>({
             method: "get",
             url: "yakit/plugin/detail",
             params: {
-                id: pluginId
+                uuid
             }
         })
             .then((res: API.YakitPluginDetailResponse) => {

@@ -59,6 +59,7 @@ const limit = 20
 interface YakitPluginInfoOnlineProps {
     // info: API.YakitPluginDetail
     pluginId: number
+    pluginUUId?:string
     user?: boolean
     deletePlugin: (i: API.YakitPluginDetail) => void
     updatePlugin: (i: API.YakitPluginDetail) => void
@@ -67,7 +68,7 @@ interface YakitPluginInfoOnlineProps {
 }
 
 export interface SearchPluginDetailRequest {
-    id: number
+    uuid: string
 }
 
 export interface StarsOperation {
@@ -92,7 +93,7 @@ export const TagColor: { [key: string]: string } = {
 }
 
 export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (props) => {
-    const { pluginId, user, deletePlugin, updatePlugin, deletePluginLocal } = props
+    const { pluginId,pluginUUId, user, deletePlugin, updatePlugin, deletePluginLocal } = props
     // 全局登录状态
     const { userInfo } = useStore()
     const [loading, setLoading] = useState<boolean>(false)
@@ -121,7 +122,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             method: "get",
             url,
             params: {
-                id: pluginId
+                uuid:pluginUUId||""
             }
         })
             .then((res) => {

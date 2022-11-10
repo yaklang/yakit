@@ -212,6 +212,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setPublicKeyword("")
         onResetPluginDetails()
         setScriptIdOnlineId(undefined)
+        setScriptUUIdOnlineUUId(undefined)
         onResetNumber()
         getStatistics(width)
         onResetQuery()
@@ -270,6 +271,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [updatePluginRecordLocal, setUpdatePluginRecordLocal] = useState<YakScript>()
     // 线上插件id
     const [scriptIdOnlineId, setScriptIdOnlineId] = useState<number>()
+    // 线上插件UUid
+    const [scriptUUIdOnlineUUId, setScriptUUIdOnlineUUId] = useState<string>()
 
     //滚动
     const [numberLocal, setNumberLocal] = useState<number>()
@@ -296,6 +299,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .finally(() => {
                 setPlugin(p)
                 setScriptIdOnlineId(p.id)
+                setScriptUUIdOnlineUUId(p.uuid)
             })
     })
     const onSetUserPluginAndGetLocal = useMemoizedFn((p?: API.YakitPluginDetail) => {
@@ -319,6 +323,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .finally(() => {
                 setUserPlugin(p)
                 setScriptIdOnlineId(p.id)
+                setScriptUUIdOnlineUUId(p.uuid)
             })
     })
     const [isFull, setIsFull] = useState(true) //是否全屏card展示
@@ -709,6 +714,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     plugSource={plugSource}
                                     yakScriptId={(script && script.Id) || 0}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
+                                    yakScriptUUIdOnlineUUId={scriptUUIdOnlineUUId}
                                     setTrigger={() => {}}
                                     setScript={(s) => {
                                         setScript(s)
