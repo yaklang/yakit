@@ -6,7 +6,7 @@ import {GraphData} from "../graph/base";
 import {BarGraph} from "../graph/BarGraph";
 import {PieGraph} from "../graph/PieGraph";
 import {ExecResultLog} from "./batch/ExecMessageViewer";
-import {LogLevelToCode} from "../../components/HTTPFlowTable";
+import {LogLevelToCode} from "../../components/HTTPFlowTable/HTTPFlowTable";
 import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRiskViewer";
 import {CodeViewer} from "../../utils/codeViewer";
 import {YakEditor} from "../../utils/editors";

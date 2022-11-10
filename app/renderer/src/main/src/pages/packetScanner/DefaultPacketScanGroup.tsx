@@ -20,6 +20,7 @@ export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps
         },
         subMenuItems: defaultValue.map(i => {
             return {
+                id:i.Keyword,
                 title: i.Verbose, onClick: () => {
                     execPacketScan([id], i.Keyword)
                 }

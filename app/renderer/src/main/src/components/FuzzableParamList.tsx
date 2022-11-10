@@ -1,6 +1,6 @@
 import React from "react";
 import {Button, Typography, Space, Table, Tag, Popconfirm} from "antd";
-import {FuzzableParams} from "./HTTPFlowTable";
+import {FuzzableParams} from "./HTTPFlowTable/HTTPFlowTable";
 import {HTTPPacketFuzzable} from "./HTTPHistory";
 
 const {ipcRenderer} = window.require("electron")

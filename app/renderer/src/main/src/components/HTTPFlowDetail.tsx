@@ -15,22 +15,26 @@ import {
     Tag,
     Tooltip,
     Typography
-} from "antd"
-import {LeftOutlined, RightOutlined, PlusCircleOutlined} from "@ant-design/icons"
-import {HTTPFlow} from "./HTTPFlowTable"
-import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors"
-import {failed} from "../utils/notification"
-import {FuzzableParamList} from "./FuzzableParamList"
-import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
-import {randomString} from "../utils/randomUtil"
-import {HTTPPacketFuzzable} from "./HTTPHistory"
-import {AutoSpin} from "./AutoSpin"
-import {ResizeBox} from "./ResizeBox"
-import ReactResizeDetector from "react-resize-detector"
-import {Buffer} from "buffer"
-import {Uint8ArrayToString} from "@/utils/str"
-import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer"
-import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
+} from "antd";
+import {
+    LeftOutlined,
+    RightOutlined,
+    PlusCircleOutlined,
+} from "@ant-design/icons"
+import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable";
+import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors";
+import {failed} from "../utils/notification";
+import {FuzzableParamList} from "./FuzzableParamList";
+import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
+import {randomString} from "../utils/randomUtil";
+import {HTTPPacketFuzzable} from "./HTTPHistory";
+import {AutoSpin} from "./AutoSpin";
+import {ResizeBox} from "./ResizeBox";
+import ReactResizeDetector from "react-resize-detector";
+import {Buffer} from "buffer";
+import {Uint8ArrayToString} from "@/utils/str";
+import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer";
+import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory";
 
 import styles from "./hTTPFlowDetail.module.scss"
 

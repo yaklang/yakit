@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow";
 import {genDefaultPagination, QueryGeneralResponse} from "../pages/invoker/schema";
-import {HTTPFlow, onExpandHTTPFlow, StatusCodeToColor} from "./HTTPFlowTable";
+import {HTTPFlow, onExpandHTTPFlow, StatusCodeToColor} from "./HTTPFlowTable/HTTPFlowTable";
 import * as antd from "antd";
 import {Button, Space, Tag} from "antd";
 import {BaseTable, features, useTablePipeline} from "../alibaba/ali-react-table-dist";

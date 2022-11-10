@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {HTTPPacketEditor} from "@/utils/editors";
 import {List, Space} from "antd";
-import {HTTPFlow} from "@/components/HTTPFlowTable";
+import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable";
 
 const {ipcRenderer} = window.require("electron");
 

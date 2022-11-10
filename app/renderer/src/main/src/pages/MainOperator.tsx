@@ -64,7 +64,7 @@ import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
 import {MainTabs} from "./MainTabs"
 import Login from "./Login"
 import {TrustList} from "./TrustList"
-import SetPassword from "./SetPassword";
+import SetPassword from "./SetPassword"
 import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
@@ -82,7 +82,7 @@ import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
+import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -131,8 +131,8 @@ const defaultUserInfo: UserInfoProps = {
     wechatHeadImg: null,
     qqName: null,
     qqHeadImg: null,
-    companyName:null,
-    companyHeadImg:null,
+    companyName: null,
+    companyHeadImg: null,
     role: null,
     user_id: null,
     token: ""
@@ -201,17 +201,20 @@ export interface MenuItemType {
     disabled?: boolean
 }
 
-export interface SetUserInfoProp  {
-    userInfo:UserInfoProps
-    setStoreUserInfo:(info: any)=>void
+export interface SetUserInfoProp {
+    userInfo: UserInfoProps
+    setStoreUserInfo: (info: any) => void
 }
 
-
 const judgeAvatar = (userInfo) => {
-    const {companyHeadImg,companyName} = userInfo
-    return companyHeadImg&&!!companyHeadImg.length?
-    <Avatar size={38} style={{cursor: "pointer"}} src={companyHeadImg}/>
-    :<Avatar size={38} style={{backgroundColor:"rgb(245, 106, 0)", cursor: "pointer"}}>{companyName.slice(0, 1)}</Avatar>
+    const {companyHeadImg, companyName} = userInfo
+    return companyHeadImg && !!companyHeadImg.length ? (
+        <Avatar size={38} style={{cursor: "pointer"}} src={companyHeadImg} />
+    ) : (
+        <Avatar size={38} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
+            {companyName.slice(0, 1)}
+        </Avatar>
+    )
 }
 
 // 可上传文件类型
@@ -219,19 +222,17 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-    const {userInfo,setStoreUserInfo} = props
-    console.log("userInfo",userInfo)
-
+    const {userInfo, setStoreUserInfo} = props
     // OSS远程头像删除
-    const deleteAvatar = useMemoizedFn((imgName)=>{
+    const deleteAvatar = useMemoizedFn((imgName) => {
         NetWorkApi<API.DeleteResource, API.ActionSucceeded>({
             method: "post",
             url: "delete/resource",
             data: {
-                file_type:"img",
-                file_name:[imgName],
+                file_type: "img",
+                file_name: [imgName]
             }
-            })
+        })
             .then((result) => {
                 // if(result.ok){
                 //     success("原有头像删除成功")
@@ -244,24 +245,24 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     })
 
     // 修改头像
-    const setAvatar = useMemoizedFn(async(file) => {
+    const setAvatar = useMemoizedFn(async (file) => {
         await ipcRenderer
-            .invoke("upload-img", { path: file.path, type: file.type })
+            .invoke("upload-img", {path: file.path, type: file.type})
             .then((res) => {
-                let imgUrl:string= res.data
+                let imgUrl: string = res.data
                 NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
                     method: "post",
                     url: "urm/up/userinfo",
                     data: {
-                        head_img:imgUrl
+                        head_img: imgUrl
                     }
-                    })
+                })
                     .then((result) => {
-                        if(result.ok){
+                        if (result.ok) {
                             success("头像更换成功")
                             setStoreUserInfo({
                                 ...userInfo,
-                                companyHeadImg:imgUrl
+                                companyHeadImg: imgUrl
                             })
                             let imgName = imgUrl.split("/").reverse()[0]
                             deleteAvatar(imgName)
@@ -270,50 +271,49 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                     .catch((err) => {
                         failed("头像更换失败：" + err)
                     })
-                    .finally(() => {
-                    })
-
+                    .finally(() => {})
             })
             .catch((err) => {
                 failed("头像上传失败")
             })
-            .finally(() => {
-                
-            })
+            .finally(() => {})
     })
-    return(
-        <div className="dropdown-menu-user-info">
+    return (
+        <div className='dropdown-menu-user-info'>
             <Upload.Dragger
-                        className='author-upload-dragger'
-                        accept={FileType.join(",")}
-                        // accept=".jpg, .jpeg, .png"
-                        multiple={false}
-                        maxCount={1}
-                        showUploadList={false}
-                        beforeUpload={(f) => {
-                            if (!FileType.includes(f.type)) {
-                                failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
-                                return false
-                            }
-                            setAvatar(f)
-                            return false
-                        }}
-                        >
-            <div className="img-box">
-                <div className="img-box-mask">
-                {
-                    judgeAvatar(userInfo) 
-                }
+                className='author-upload-dragger'
+                accept={FileType.join(",")}
+                // accept=".jpg, .jpeg, .png"
+                multiple={false}
+                maxCount={1}
+                showUploadList={false}
+                beforeUpload={(f) => {
+                    if (!FileType.includes(f.type)) {
+                        failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
+                        return false
+                    }
+                    setAvatar(f)
+                    return false
+                }}
+            >
+                <div className='img-box'>
+                    <div className='img-box-mask'>{judgeAvatar(userInfo)}</div>
+                    <CameraOutlined className='hover-icon' />
                 </div>
-                <CameraOutlined className="hover-icon"/>
-            </div>   
-            </Upload.Dragger>          
-            
-            <div className="content-box" style={userInfo.role!=="admin"?{display:"flex",justifyContent:"center",alignItems:"center",fontSize:16}:{}}>
-                <div className="user-name">{userInfo.companyName}</div>
-                {userInfo.role==="admin"&&<div className="permission-show">管理员</div>}
+            </Upload.Dragger>
+
+            <div
+                className='content-box'
+                style={
+                    userInfo.role !== "admin"
+                        ? {display: "flex", justifyContent: "center", alignItems: "center", fontSize: 16}
+                        : {}
+                }
+            >
+                <div className='user-name'>{userInfo.companyName}</div>
+                {userInfo.role === "admin" && <div className='permission-show'>管理员</div>}
             </div>
-    </div>
+        </div>
     )
 })
 
@@ -395,7 +395,7 @@ const Main: React.FC<MainProp> = (props) => {
                         if (item.key === Route.GeneralModule) {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
-                                    icon: <EllipsisOutlined/>,
+                                    icon: <EllipsisOutlined />,
                                     key: `plugin:${i.Id}`,
                                     label: i.ScriptName
                                 } as unknown as MenuDataProps
@@ -686,40 +686,39 @@ const Main: React.FC<MainProp> = (props) => {
     ])
 
     useEffect(() => {
-        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo}/>
+        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo} />
         // 非企业管理员登录
-        if (userInfo.role === "admin"&&userInfo.platform !== "company") {
+        if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
-                {key: "trust-list", title: "用户管理"},  
+                {key: "trust-list", title: "用户管理"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"},
+                {key: "sign-out", title: "退出登录"}
             ])
-        } 
+        }
         // 企业用户管理员登录
-        else if(userInfo.role === "admin"&&userInfo.platform === "company"){
+        else if (userInfo.role === "admin" && userInfo.platform === "company") {
             setUserMenu([
-                {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
+                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                 {key: "account-admin", title: "账号管理"},
                 {key: "set-password", title: "修改密码"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"},
+                {key: "sign-out", title: "退出登录"}
             ])
         }
         // 企业用户非管理员登录
-        else if(userInfo.role !== "admin"&&userInfo.platform === "company"){
+        else if (userInfo.role !== "admin" && userInfo.platform === "company") {
             setUserMenu([
-                {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
+                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                 {key: "set-password", title: "修改密码"},
-                {key: "sign-out", title: "退出登录"},
+                {key: "sign-out", title: "退出登录"}
             ])
-        }
-        else {
+        } else {
             setUserMenu([
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"},
+                {key: "sign-out", title: "退出登录"}
             ])
         }
-    }, [userInfo.role,userInfo.companyHeadImg])
+    }, [userInfo.role, userInfo.companyHeadImg])
 
     // 全局注册快捷键功能
     const documentKeyDown = useMemoizedFn((e: any) => {
@@ -870,7 +869,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         title: "Notification",
                                         content: (
                                             <>
-                                                <MDEditor.Markdown source={e}/>
+                                                <MDEditor.Markdown source={e} />
                                             </>
                                         )
                                     })
@@ -903,7 +902,7 @@ const Main: React.FC<MainProp> = (props) => {
 
     // Global Sending Function(全局发送功能|通过发送新增功能页面)
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, request} = res || {}
+        const {isHttps, request, list} = res || {}
         const time = new Date().getTime().toString()
         if (request) {
             addTabPage(Route.HTTPFuzzer, {
@@ -1122,10 +1121,8 @@ const Main: React.FC<MainProp> = (props) => {
             }
         })
     })
-    const goRouterPage = (key:Route) => {
-        const flag =
-        pageCache.filter((item) => item.route === (key))
-            .length === 0
+    const goRouterPage = (key: Route) => {
+        const flag = pageCache.filter((item) => item.route === key).length === 0
         if (flag) menuAddPage(key)
         else setCurrentTabKey(key)
     }
@@ -1173,9 +1170,9 @@ const Main: React.FC<MainProp> = (props) => {
                                 <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
                                     <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} />
                                 </div>
-                                <Divider type={"vertical"}/>
-                                <YakVersion/>
-                                <YakitVersion/>
+                                <Divider type={"vertical"} />
+                                <YakVersion />
+                                <YakitVersion />
                                 {!hideMenu && (
                                     <Button
                                         style={{marginLeft: 4, color: "#207ee8"}}
@@ -1184,7 +1181,7 @@ const Main: React.FC<MainProp> = (props) => {
                                         onClick={(e) => {
                                             setCollapsed(!collapsed)
                                         }}
-                                        icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                                     />
                                 )}
                                 <Button
@@ -1194,7 +1191,7 @@ const Main: React.FC<MainProp> = (props) => {
                                     onClick={(e) => {
                                         updateMenuItems()
                                     }}
-                                    icon={<ReloadOutlined/>}
+                                    icon={<ReloadOutlined />}
                                 />
                             </Space>
                         </Col>
@@ -1205,7 +1202,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                                <ReversePlatformStatus/>
+                                <ReversePlatformStatus />
                                 <Dropdown
                                     overlayClassName='setting-menu'
                                     forceRender={true}
@@ -1280,7 +1277,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                 onClick={() => {
                                                     const m = showModal({
                                                         title: "配置私有域",
-                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()}/>
+                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()} />
                                                     })
                                                     return m
                                                 }}
@@ -1294,7 +1291,7 @@ const Main: React.FC<MainProp> = (props) => {
                                     }
                                     trigger={["click"]}
                                 >
-                                    <Button icon={<SettingOutlined/>}>配置</Button>
+                                    <Button icon={<SettingOutlined />}>配置</Button>
                                 </Dropdown>
                                 {userInfo.isLogin ? (
                                     <div>
@@ -1320,14 +1317,23 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                             }}
                                         >
-                                            {userInfo.platform==="company"?
-                                            judgeAvatar(userInfo) 
-                                            :<img
-                                                src={
-                                                    userInfo[UserPlatformType[userInfo.platform || ""].img] || yakitImg
-                                                }
-                                                style={{width: 32, height: 32, borderRadius: "50%", cursor: "pointer"}}
-                                            />}
+                                            {userInfo.platform === "company" ? (
+                                                judgeAvatar(userInfo)
+                                            ) : (
+                                                <img
+                                                    src={
+                                                        (userInfo &&
+                                                            userInfo[UserPlatformType[userInfo.platform || ""]?.img]) ||
+                                                        yakitImg
+                                                    }
+                                                    style={{
+                                                        width: 32,
+                                                        height: 32,
+                                                        borderRadius: "50%",
+                                                        cursor: "pointer"
+                                                    }}
+                                                />
+                                            )}
                                         </DropdownMenu>
                                     </div>
                                 ) : (
@@ -1338,7 +1344,7 @@ const Main: React.FC<MainProp> = (props) => {
                                 <Button
                                     type={"link"}
                                     danger={true}
-                                    icon={<PoweroffOutlined/>}
+                                    icon={<PoweroffOutlined />}
                                     onClick={() => {
                                         if (winCloseFlag) {
                                             setWinCloseShow(true)
@@ -1391,7 +1397,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                                 return (
                                                     <Menu.SubMenu
-                                                        icon={<EllipsisOutlined/>}
+                                                        icon={<EllipsisOutlined />}
                                                         key={i.Group}
                                                         title={i.Group}
                                                     >
@@ -1399,7 +1405,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             if (item.YakScriptId > 0) {
                                                                 return (
                                                                     <MenuItem
-                                                                        icon={<EllipsisOutlined/>}
+                                                                        icon={<EllipsisOutlined />}
                                                                         key={`plugin:${item.Group}:${item.YakScriptId}`}
                                                                     >
                                                                         <Text ellipsis={{tooltip: true}}>
@@ -1410,7 +1416,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                             }
                                                             return (
                                                                 <MenuItem
-                                                                    icon={<EllipsisOutlined/>}
+                                                                    icon={<EllipsisOutlined />}
                                                                     key={`batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`}
                                                                 >
                                                                     <Text ellipsis={{tooltip: true}}>
@@ -1536,7 +1542,7 @@ const Main: React.FC<MainProp> = (props) => {
                                                                     </>
                                                                 }
                                                             >
-                                                                <EditOutlined className='main-container-cion'/>
+                                                                <EditOutlined className='main-container-cion' />
                                                             </Popover>
                                                             <CloseOutlined
                                                                 className='main-container-cion'
@@ -1700,7 +1706,7 @@ const Main: React.FC<MainProp> = (props) => {
                 onCancel={() => setPasswordShow(false)}
                 footer={null}
             >
-                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo}/>
+                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
             </Modal>
         </Layout>
     )

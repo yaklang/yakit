@@ -276,6 +276,7 @@
             display: flex;
             align-items: center;
             width: 80%;
+            height: 100%;
 
             .content-ellipsis {
                 white-space: pre;
@@ -285,6 +286,7 @@
                 font-size: 16px;
                 font-weight: 600;
                 color: #595b64;
+                height: 100%;
             }
 
             .icon-body {
@@ -527,13 +529,15 @@
     }
 }
 
-.plug-in-menu-box{
+.plug-in-menu-box {
     margin-top: 8px;
     display: flex;
-    .check-box{
+
+    .check-box {
         flex: 1;
     }
-    .add-icon{
+
+    .add-icon {
         color: #1890ff;
         margin-left: 12px;
         cursor: pointer;

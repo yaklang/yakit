@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {Button, Card, Descriptions, Divider, Space, Switch, Tag} from "antd";
-import {LogLevelToCode} from "./HTTPFlowTable";
+import {LogLevelToCode} from "./HTTPFlowTable/HTTPFlowTable";
 import {CopyableField} from "../utils/inputUtil";
 import {showModal} from "../utils/showModal";
 import {CodeViewer} from "../utils/codeViewer";

@@ -1,10 +1,8 @@
-const {ipcMain} = require("electron");
-
+const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("delete-http-flows-all", async (e, params) => {
-        getClient().DeleteHTTPFlows({DeleteAll: true, ...params}, (err, data) => {
-        })
+        getClient().DeleteHTTPFlows({DeleteAll: true, ...params}, (err, data) => {})
     })
 
     // asyncDeleteHTTPFlows wrapper
@@ -84,7 +82,6 @@ module.exports = (win, getClient) => {
         return await asyncSetTagForHTTPFlow(params)
     })
 
-
     // asyncGetHTTPFlowById wrapper
     const asyncGetHTTPFlowById = (params) => {
         return new Promise((resolve, reject) => {
@@ -131,5 +128,20 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("ForceUpdateAvailableYakScriptTags", async (e, params) => {
         return await asyncForceUpdateAvailableYakScriptTags(params)
+    })
+
+    const asyncHTTPFlowsFieldGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().HTTPFlowsFieldGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("HTTPFlowsFieldGroup", async (e, params) => {
+        return await asyncHTTPFlowsFieldGroup(params)
     })
 }
