@@ -1930,7 +1930,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             overlayClassName={style["http-history-table-shield-popover"]}
                                         >
                                             <div className={style["http-history-table-left-shield"]}>
-                                                <span>已屏蔽条件</span>
+                                                <span className="content-ellipsis">已屏蔽条件</span>
                                                 <span className={style["http-history-table-left-number"]}>
                                                     {shieldData?.data.length}
                                                 </span>
