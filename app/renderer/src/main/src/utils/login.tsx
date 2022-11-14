@@ -2,7 +2,8 @@ import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {setRemoteValue} from "./kv"
-
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
 
 export const loginOut = (userInfo: UserInfoProps) => {
@@ -16,7 +17,7 @@ export const loginOut = (userInfo: UserInfoProps) => {
         })
         .catch((e) => {})
         .finally(() => {
-            setRemoteValue("token-online", "")
+            IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
         })
 }
 

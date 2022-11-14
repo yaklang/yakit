@@ -83,7 +83,8 @@ import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
-
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
 const {Header, Content, Sider} = Layout
@@ -681,7 +682,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
-            setRemoteValue("token-online", res.token)
+            IsEnterprise?setRemoteValue("token-online-enterprise", res.token):setRemoteValue("token-online", res.token)
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
@@ -689,7 +690,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
-            setRemoteValue("token-online", "")
+            IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
         })
         return () => ipcRenderer.removeAllListeners("login-out")
     }, [])

@@ -16,6 +16,7 @@ import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const InterceptKeyword = [
     // "KeyA",
     // "KeyB",
@@ -210,13 +211,14 @@ function App() {
     }
 
     const refreshLogin = useMemoizedFn(() => {
-        // 获取引擎中的token
-        getRemoteValue("token-online")
+        // 获取引擎中的token(区分企业版与社区版)
+        const TokenSource = IsEnterprise?"token-online-enterprise":"token-online"
+        getRemoteValue(TokenSource)
             .then((resToken) => {
                 console.log("resToken", resToken)
                 if (!resToken) {
                     // 在第一次进入页面时，如若是企业登录则打开登录
-                    if (ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()) {
+                    if (IsEnterprise) {
                         // openLoginShow就是Main暴露给App的方法
                         childRef.current.openLoginShow()
                     }
@@ -231,7 +233,7 @@ function App() {
                     }
                 })
                     .then((res) => {
-                        setRemoteValue("token-online", resToken)
+                        IsEnterprise?setRemoteValue("token-online-enterprise", resToken):setRemoteValue("token-online", resToken)
                         const user = {
                             isLogin: true,
                             platform: res.from_platform,
@@ -252,11 +254,11 @@ function App() {
                         refreshToken(user)
                     })
                     .catch((e) => {
-                        setRemoteValue("token-online", "")
+                        IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
                     })
             })
             .catch((e) => {
-                setRemoteValue("token-online", "")
+                IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
             })
     })
 
