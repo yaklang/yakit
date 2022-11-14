@@ -31,7 +31,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
         setLoading(true)
         NetWorkApi<LicenseGetProps, LicenseResProps>({
             method: "get",
-            url: "http://192.168.101.100:8083/api/license",
+            url: "http://172.20.10.8:8083/api/license",
             params: {}
         })
             .then((res) => {
@@ -42,9 +42,14 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                 else{
                     props.onLicenseVerified()
                 }
+
                 ipcRenderer.invoke("GetMachineID", {}).then((e) => {
                     console.log("GetMachineID",e)
                 })
+                .catch((e) => {
+                    failed(`获取GetMachineID失败: ${e}`)
+                })
+                .finally(() => {})
             })
             .catch((err) => {
                 failed("获取License失败：" + err)
@@ -63,7 +68,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
         }
         NetWorkApi<LicensePostProps, LicensePostProps>({
             method: "post",
-            url: "http://192.168.101.100:8083/api/license",
+            url: "http://172.20.10.8:8083/api/license",
             data: params
         })
             .then((res) => {

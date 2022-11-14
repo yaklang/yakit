@@ -514,6 +514,7 @@ export interface OrganizationAdminPageProps {
     setSelectItemId: (v: string | number | undefined) => void
     treeCount: TreeCountProps | undefined
     treeReduceCount: TreeReduceCountProps
+    setSelectTitle:(v:string | undefined)=>void
 }
 
 interface ResetNameProps {
@@ -522,7 +523,7 @@ interface ResetNameProps {
     id?: number
 }
 const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
-    const {selectItemId, setSelectItemId, treeCount, treeReduceCount} = props
+    const {selectItemId, setSelectItemId, treeCount, treeReduceCount,setSelectTitle} = props
     const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([])
     const [loadedKeys, setLoadedKeys] = useState<(string | number)[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -563,6 +564,20 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
         noUpdate()
     }, [])
 
+    const updateSelectTitle = (list: DataSourceProps[],key:string|number,firstTitle?:string) => 
+    list.map((node)=>{
+        if (node.key === key) {
+            if(firstTitle){
+                setSelectTitle(`${firstTitle}>${node.title}`)
+            }
+            else{
+                setSelectTitle(node.title)
+            }
+        }
+        if (node.children) {
+            updateSelectTitle(node.children, key,node.title)
+        }
+    })
     const updateTreeCount = (list: DataSourceProps[], treeCount: TreeCountProps): DataSourceProps[] =>
         list.map((node) => {
             if (node.key === treeCount.id) {
@@ -650,11 +665,6 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
             }
         })
             .then((res: API.DepartmentListResponse) => {
-                console.log("组织架构-参数：", {
-                    ...paginationProps,
-                    offsetId
-                })
-                console.log("组织架构-返回结果：", res)
                 const newData = (res?.data || [])
                     .filter((item) => item.name || item.userNum > 0)
                     .map((item) => ({
@@ -701,6 +711,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                     success("删除成功")
                     // 重置回显示全部
                     setSelectItemId(undefined)
+                    setSelectTitle(undefined)
                     noUpdate()
                     if (pid) {
                         onLoadData({key: pid})
@@ -792,7 +803,6 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                 }
             })
                 .then((res: API.DepartmentGroupList) => {
-                    console.log("加载-返回结果：", res)
                     if (Array.isArray(res.data)) {
                         const newArr = res.data.map((item) => ({
                             title: item.name,
@@ -874,10 +884,10 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                             treeData={realDataSource}
                             blockNode={true}
                             onSelect={(key) => {
-                                // console.log("value",key)
                                 if (key.length <= 0) {
                                     return
                                 }
+                                updateSelectTitle(realDataSource,key[0])
                                 setSelectItemId(key[0])
                             }}
                             selectedKeys={selectItemId ? [selectItemId] : []}
@@ -885,15 +895,12 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                             expandedKeys={expandedKeys}
                             loadedKeys={loadedKeys}
                             onExpand={(expandedKeys, {expanded, node}) => {
-                                // console.log("expandedKeys",expandedKeys,expanded,node)
                                 setExpandedKeys(expandedKeys)
                             }}
                             onLoad={(loadedKeys, {event, node}) => {
-                                // console.log("loadedKeys",getLoadedKeys(),loadedKeys,event,node)
                                 setLoadedKeys(loadedKeys)
                             }}
                             titleRender={(nodeData: DataSourceProps) => {
-                                // console.log("nodeData", nodeData)
                                 const {isShowAllBtn = true} = nodeData
                                 return (
                                     <div
@@ -1053,6 +1060,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     // 编辑项信息
     const [editInfo, setEditInfo] = useState<API.UrmUserList>()
     const [selectItemId, setSelectItemId] = useState<string | number>()
+    const [selectTitle,setSelectTitle] = useState<string>()
     // 根据请求返回Total更改Count
     const [treeCount, setTreeCount] = useState<TreeCountProps>()
     // 根据数据动态处理计算Count条数
@@ -1086,11 +1094,6 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
             }
         })
             .then((res) => {
-                console.log("table表返回结果：", res, {
-                    ...params,
-                    ...paginationProps,
-                    departmentId: departmentId
-                })
                 // 创建账号 更改组织架构count
                 if (addDepartmentId) {
                     setTreeCount({
@@ -1134,7 +1137,6 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
 
     const rowSelection = {
         onChange: (selectedRowKeys, selectedRows: API.UrmUserList[]) => {
-            console.log("selectedRows", selectedRows)
             // let newArr = selectedRowKeys.map((item)=>parseInt(item))
             setSelectedRows(selectedRows)
             setSelectedRowKeys(selectedRowKeys)
@@ -1151,7 +1153,6 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
             }
         })
             .then((res) => {
-                console.log("返回结果：", res)
                 success("删除用户成功")
                 update()
                 // 如若是默认展示的所有数据进行删除处理
@@ -1171,7 +1172,6 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                             return pre
                         }, {})
                     }
-                    console.log("removeTool", removeTool)
                     setTreeReduceCount({obj: removeTool, reduce: true})
                 }
             })
@@ -1281,6 +1281,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
             )
         }
     ]
+
     return (
         <div className='account-admin-page'>
             <div className='title-operation'>
@@ -1338,13 +1339,14 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                         selectItemId={selectItemId}
                         treeCount={treeCount}
                         treeReduceCount={treeReduceCount}
+                        setSelectTitle={setSelectTitle}
                     />
                 }
                 firstMinSize={300}
                 firstRatio={"300px"}
                 secondNode={
                     <div style={{overflowY: "auto", height: "100%"}}>
-                        <div className='block-title'>全部成员</div>
+                        <div className='block-title'>{selectTitle?selectTitle:"全部成员"}</div>
                         <Table
                             loading={loading}
                             pagination={{

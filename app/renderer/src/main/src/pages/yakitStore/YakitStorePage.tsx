@@ -1406,11 +1406,20 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
     const numberLocal = useRef<number>(0) // 本地 选择的插件index
+    const [baseUrl,setBaseUrl] = useState<string>("")// 获取私有域
     useEffect(() => {
         if (isSelectAll) {
             if (onSelectList) onSelectList(response.Data)
         }
     }, [isSelectAll])
+    
+    useEffect(()=>{
+        getRemoteValue("httpSetting").then((setting) => {
+            const values = JSON.parse(setting)
+            const baseUrl:string  = values.BaseUrl
+            setBaseUrl(baseUrl)
+        })
+    },[])
     useEffect(() => {
         if (!updatePluginRecordLocal) return
         // 列表中第一次上传的时候,本地返回的数据有OnlineId ,但是列表中的上传的那个没有OnlineId
@@ -1533,6 +1542,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                             numberLocal.current = index
                             props.onClicked(info, index)
                         }}
+                        onlineProfile={baseUrl}
                         currentScript={props.currentScript}
                         onYakScriptRender={props.onYakScriptRender}
                         maxWidth={maxWidth}
@@ -2037,10 +2047,11 @@ interface PluginListLocalProps {
     selectedRowKeysRecord: YakScript[]
     setUpdatePluginRecordLocal: (y: YakScript) => any
     onSetUser?: (u: PluginUserInfoLocalProps) => any
+    onlineProfile: string
 }
 
 export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
-    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare, onSetUser} =
+    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare, onSetUser,onlineProfile} =
         props
     const {userInfo, maxWidth, onClicked} = props
     const [uploadLoading, setUploadLoading] = useState(false)
@@ -2055,6 +2066,8 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
     if (props.onYakScriptRender) {
         return props.onYakScriptRender(plugin, maxWidth)
     }
+    const isShowPrivateDom = plugin?.OnlineBaseUrl&&(plugin.OnlineBaseUrl !== onlineProfile)?false:true
+    // console.log("私有域比较",plugin.OnlineBaseUrl,onlineProfile)
     return (
         <div
             className={`plugin-item ${currentScript?.Id === plugin.Id && "plugin-item-active"}`}
@@ -2065,7 +2078,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
                     <div className='icon-body'>
                         <div className='text-icon'>
-                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && <OnlineCloudIcon />}
+                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && isShowPrivateDom&& <OnlineCloudIcon />}
                             {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
                         </div>
                         {gitUrlIcon(plugin.FromGit)}
@@ -3217,15 +3230,11 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
     const numberOnline = useRef(0) // 插件商店 选择的插件index
     // 获取私有域
     useEffect(()=>{
-        ipcRenderer
-                    .invoke("GetOnlineProfile", {}) 
-                    .then((data: OnlineProfileProps) => {
-                        // console.log("私有域",data)
-                        setBaseUrl(data.BaseUrl)
-                    })
-                    .catch((e) => {
-                        failed(`获取失败:${e}`)
-                    })
+        getRemoteValue("httpSetting").then((setting) => {
+            const values = JSON.parse(setting)
+            const baseUrl:string = values.BaseUrl
+            setBaseUrl(baseUrl)
+        })           
     },[])
     useEffect(() => {
         if (!updatePluginRecord) return
@@ -3408,7 +3417,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
     }
     // 是否为企业版
     const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
-    if(!userInfo.isLogin && isEnterprise && baseUrl!=="https://www.yaklang.com"){
+    if(!userInfo.isLogin && isEnterprise && !baseUrl.startsWith("https://www.yaklang.com")){
         return (
             <List
                 dataSource={[]}

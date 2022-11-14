@@ -143,22 +143,6 @@ function App() {
             .finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
 
-    // 获取License
-    // useEffect(() => {
-    //     NetWorkApi<LicenseProps, API.ActionSucceeded>({
-    //         method: "get",
-    //         url: "http://192.168.101.100:8083/api/license",
-    //         params: {}
-    //     })
-    //         .then((res) => {
-    //             console.log("License数据源：", res)
-    //         })
-    //         .catch((err) => {
-    //             failed("获取License失败：" + err)
-    //         })
-    //         .finally(() => {})
-    // }, [])
-
     useHotkeys("alt+a", (e) => {
         const a = getCompletions()
         const data = JSON.stringify(a)
