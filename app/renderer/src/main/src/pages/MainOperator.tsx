@@ -687,9 +687,26 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
 
+    // 关闭 tab
+    const onCloseTab = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.AccountAdminPage,
+                singleNode: true
+            })
+            ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.RoleAdminPage,
+                singleNode: true
+            })
+    })
+
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
+            if(IsEnterprise){
+                onCloseTab()
+            }
             IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
         })
         return () => ipcRenderer.removeAllListeners("login-out")
