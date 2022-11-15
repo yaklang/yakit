@@ -27,7 +27,7 @@ import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {ResizeBox} from "@/components/ResizeBox"
-import {PlusOutlined, EditOutlined, DeleteOutlined} from "@ant-design/icons"
+import {PlusOutlined, EditOutlined, DeleteOutlined,RightOutlined} from "@ant-design/icons"
 import {DefaultOptionType} from "antd/lib/cascader"
 const {Option} = Select
 export interface ShowUserInfoProps extends API.NewUrmResponse {
@@ -203,14 +203,14 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                             ? [department_parent_id, department_id]
                             : [department_id]
                         getDepartmentData(undefined, undefined, department_parent_id)
-                        console.log("默认值",department_parent_id,department_id)
-                        let obj:any = {
-                            user_name,
+                        console.log("默认值", department_parent_id, department_id)
+                        let obj: any = {
+                            user_name
                         }
-                        if(department_id){
+                        if (department_id) {
                             obj.department = department
                         }
-                        if(role_id){
+                        if (role_id) {
                             obj.role_id = {key: role_id, value: role_name}
                         }
                         form.setFieldsValue(obj)
@@ -514,7 +514,7 @@ export interface OrganizationAdminPageProps {
     setSelectItemId: (v: string | number | undefined) => void
     treeCount: TreeCountProps | undefined
     treeReduceCount: TreeReduceCountProps
-    setSelectTitle:(v:string | undefined)=>void
+    setSelectTitle: (v: SelectTitleProps | undefined) => void
 }
 
 interface ResetNameProps {
@@ -523,7 +523,7 @@ interface ResetNameProps {
     id?: number
 }
 const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
-    const {selectItemId, setSelectItemId, treeCount, treeReduceCount,setSelectTitle} = props
+    const {selectItemId, setSelectItemId, treeCount, treeReduceCount, setSelectTitle} = props
     const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([])
     const [loadedKeys, setLoadedKeys] = useState<(string | number)[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -564,20 +564,24 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
         noUpdate()
     }, [])
 
-    const updateSelectTitle = (list: DataSourceProps[],key:string|number,firstTitle?:string) => 
-    list.map((node)=>{
-        if (node.key === key) {
-            if(firstTitle){
-                setSelectTitle(`${firstTitle}>${node.title}`)
+    const updateSelectTitle = (list: DataSourceProps[], key: string | number, firstTitle?: string) =>
+        list.map((node) => {
+            if (node.key === key) {
+                if (firstTitle) {
+                    setSelectTitle({
+                        firstTitle,
+                        secondTitle: node.title
+                    })
+                } else {
+                    setSelectTitle({
+                        firstTitle: node.title
+                    })
+                }
             }
-            else{
-                setSelectTitle(node.title)
+            if (node.children) {
+                updateSelectTitle(node.children, key, node.title)
             }
-        }
-        if (node.children) {
-            updateSelectTitle(node.children, key,node.title)
-        }
-    })
+        })
     const updateTreeCount = (list: DataSourceProps[], treeCount: TreeCountProps): DataSourceProps[] =>
         list.map((node) => {
             if (node.key === treeCount.id) {
@@ -887,7 +891,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                                 if (key.length <= 0) {
                                     return
                                 }
-                                updateSelectTitle(realDataSource,key[0])
+                                updateSelectTitle(realDataSource, key[0])
                                 setSelectItemId(key[0])
                             }}
                             selectedKeys={selectItemId ? [selectItemId] : []}
@@ -1041,6 +1045,10 @@ interface TreeReduceCountProps {
     // 改变对象
     obj: any
 }
+interface SelectTitleProps {
+    firstTitle: string
+    secondTitle?: string
+}
 const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [userInfoForm, setUserInfoForm] = useState<boolean>(false)
@@ -1060,7 +1068,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     // 编辑项信息
     const [editInfo, setEditInfo] = useState<API.UrmUserList>()
     const [selectItemId, setSelectItemId] = useState<string | number>()
-    const [selectTitle,setSelectTitle] = useState<string>()
+    const [selectTitle, setSelectTitle] = useState<SelectTitleProps>()
     // 根据请求返回Total更改Count
     const [treeCount, setTreeCount] = useState<TreeCountProps>()
     // 根据数据动态处理计算Count条数
@@ -1346,7 +1354,21 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 firstRatio={"300px"}
                 secondNode={
                     <div style={{overflowY: "auto", height: "100%"}}>
-                        <div className='block-title'>{selectTitle?selectTitle:"全部成员"}</div>
+                        <div className='block-title'>
+                            {selectTitle ? (
+                                <>
+                                    <div className='first-title'>{selectTitle.firstTitle}</div>
+                                    {selectTitle?.secondTitle && (
+                                        <>
+                                        <RightOutlined  className='right-outlined'/>
+                                            <div className='second-title'>{selectTitle.secondTitle}</div>
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                "全部成员"
+                            )}
+                        </div>
                         <Table
                             loading={loading}
                             pagination={{
@@ -1394,7 +1416,8 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                             // 编辑时如若更换组织架构则需要更新2处 自己与变动处
                             id === selectItemId ? update() : update(1, undefined, id)
                             id !== selectItemId && oldId && update()
-                        } else { // 当没有 selectItemId 时count来源于加减法
+                        } else {
+                            // 当没有 selectItemId 时count来源于加减法
                             update()
                             if (oldId) {
                                 if (oldId !== id) {
