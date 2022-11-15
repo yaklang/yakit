@@ -1340,6 +1340,23 @@ message StartBasicCrawlerRequest {
   repeated HTTPCookie Cookies = 24;
 }
 
+message HTTPCookieSetting {
+  string Key = 1;
+  string Value = 2;
+  string Path = 3;
+  string Domain = 4;
+  int64 Expires = 5;
+  int64 MaxAge = 6;
+  bool Secure = 7;
+  bool HttpOnly = 8;
+
+  // default
+  // lax
+  // strict
+  // none
+  string SameSiteMode = 9;
+}
+
 message HTTPCookie {
   string Key = 1;
   string Value = 2;
@@ -2104,6 +2121,8 @@ message MITMRequest {
   repeated string includeSuffix = 10;
   repeated string excludeMethod = 11;
   repeated string excludeContentTypes = 40;
+  repeated string excludeUri = 43;
+  repeated string includeUri = 44;
   bool updateFilter = 12;
 
   // 劫持当前请求的响应信息
@@ -2182,7 +2201,12 @@ message MITMContentReplacer {
   // 一键禁用启用全部
   bool Disabled = 11;
 
+  // 展示名称，一般用于助记，不会有啥额外影响
   string VerboseName = 12;
+
+  // 为数据包新增 Header
+  repeated HTTPHeader ExtraHeaders = 13;
+  repeated HTTPCookieSetting ExtraCookies = 14;
 }
 
 message RemoveHookParams {
@@ -2210,6 +2234,8 @@ message MITMResponse {
   repeated string includeSuffix = 110;
   repeated string excludeMethod = 111;
   repeated string excludeContentTypes = 113;
+  repeated string excludeUri = 114;
+  repeated string includeUri = 115;
 
   // 替代过滤器的内容
   bool justContentReplacer = 120;
