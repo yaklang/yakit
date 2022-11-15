@@ -19,6 +19,8 @@ export interface MITMFilterSchema {
     excludeSuffix?: string[]
     excludeMethod?: string[]
     excludeContentTypes?: string[]
+    excludeUri?: string[]
+    includeUri?: string[]
 }
 
 export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
@@ -55,6 +57,26 @@ export const MITMFilters: React.FC<MITMFiltersProp> = (props) => {
                 value={(params.excludeHostname || []).join(",")}
                 setValue={(r) => {
                     setParams({...params, excludeHostname: r.split(",")})
+                }}
+                mode={"tags"}
+            />
+            <ManyMultiSelectForString
+                label={"包含 URL 路径"}
+                help={"可理解为 URI 匹配，例如 /main/index.php?a=123 或者 /*/index 或 /admin* "}
+                data={[]}
+                value={(params.includeUri || []).join(",")}
+                setValue={(r) => {
+                    setParams({...params, includeUri: r.split(",")})
+                }}
+                mode={"tags"}
+            />
+            <ManyMultiSelectForString
+                label={"排除 URL 路径"}
+                help={"可理解为 URI 过滤，例如 /main/index "}
+                data={[]}
+                value={(params.excludeUri || []).join(",")}
+                setValue={(r) => {
+                    setParams({...params, excludeUri: r.split(",")})
                 }}
                 mode={"tags"}
             />
