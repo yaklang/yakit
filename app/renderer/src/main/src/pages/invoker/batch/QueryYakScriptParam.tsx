@@ -124,15 +124,11 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
 
     const selectedAll = useMemoizedFn((value: boolean) => {
         if (value) {
-            // if (!selectRef || !selectRef.current) return
-            // console.log("ppx")
-            // const ref = selectRef.current as unknown as HTMLDivElement
-            // ref.blur()
             setTimeout(() => {
                 onIsAll(true)
                 setItemSelects([])
                 setSearchTag("")
-                setParams({type: params.type, tags: "", include: [], exclude: []})
+                setParams({type: params.type, tags: selectedTags.join(","), include: [], exclude: []})
             }, 200)
         } else {
             onIsAll(false)
@@ -352,18 +348,17 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
     // 获取全部插件数据 用于插件组本地缓存
     useEffect(() => {
         const payload = {
-            ExcludeNucleiWorkflow: true,
-            Type: "mitm,port-scan,nuclei",
+            ...params,
             Pagination: {
                 Limit: 10000,
                 Page: 1
-            }
+            },
         }
         ipcRenderer.invoke("QueryYakScript", payload).then((item: QueryYakScriptsResponse) => {
             // console.log("获取所有数据", item.Data)
             setAllResponse(item.Data)
         })
-    }, [])
+    }, [selectedTags])
     useEffect(() => {
         if (selectedTags.length) {
             const payload = {
