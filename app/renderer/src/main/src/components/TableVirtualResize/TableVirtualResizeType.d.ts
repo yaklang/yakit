@@ -9,23 +9,24 @@ import {SelectProps} from "antd"
  * @extra: 表格顶部的title，右边
  * @renderTitle: 自定义表格顶部的title
  * @titleHeight: 自定义表格顶部的高度,使用renderTitle,需要传入对应的height,否则虚拟列表滚动会不正确
- * @data:数组 
+ * @data:数组
  * @renderKey:每行的key值，不可重复
  * @columns:每列的参数
  * @rowSelection:多选/单选配置，目前只支持多选
- * @enableDrag:true,表格列之间可以拖动，最后一列除外。columns中也可以单独设置某一列是否可以拖动 
- * @onRowClick:row鼠标左键点击事件，会返回当前选中row的数据 
- * @onRowContextMenu:row鼠标右键点击事件，会返回当前选中row的数据和e 
- * @pagination:分页配置 
- * @onChange:查询条件变化 
- * @loading：是否加载中 
- * @scrollToBottom：距离底部多少px开始加载下一页,默认300 
- * @isReset：重置表格条件 滚动至0 
- * @isShowTotal：内置的total是否显示；true显示，false不显示 
+ * @enableDrag:true,表格列之间可以拖动，最后一列除外。columns中也可以单独设置某一列是否可以拖动
+ * @onRowClick:row鼠标左键点击事件，会返回当前选中row的数据
+ * @onRowContextMenu:row鼠标右键点击事件，会返回当前选中row的数据和e
+ * @pagination:分页配置
+ * @onChange:查询条件变化
+ * @loading：是否加载中
+ * @scrollToBottom：距离底部多少px开始加载下一页,默认300
+ * @isReset：重置表格条件 滚动至0
+ * @isShowTotal：内置的total是否显示；true显示，false不显示
  * @currentIndex：当前row的index
  * @isRefresh： 刷新表格 滚动至0
  * @disableSorting：禁用排序
  * @query：查询条件
+ * @onSetCurrentRow:设置选中
  */
 export interface TableVirtualResizeProps<T> {
     ref?: any
@@ -51,6 +52,7 @@ export interface TableVirtualResizeProps<T> {
     isRefresh?: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
     query?: any
+    onSetCurrentRow?: (record: T) => void
 }
 
 export interface SortProps {
@@ -76,7 +78,7 @@ export interface SortProps {
  * @sorterProps：表格排序配置 
  * @enableDrag：表格排序配置 
  */
-export interface ColumnsTypeProps {  
+export interface ColumnsTypeProps {
     title: string
     dataKey: string
     width?: number
@@ -87,7 +89,7 @@ export interface ColumnsTypeProps {
     left?: number // 外面不需要传，不接收，紧作为固定列使用
     right?: number // 外面不需要传，不接收，紧作为固定列使用
     render?: (text, record, index) => ReactNode
-    // 搜索/筛选 
+    // 搜索/筛选
     filterProps?: FilterProps
     sorterProps?: SorterProps
     enableDrag?: boolean
