@@ -14,6 +14,8 @@ import classNames from "classnames"
 import {ChevronDownIcon, SaveIcon, SortDescendingIcon} from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useMutationObserver} from "ahooks"
+import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
+import {isReturnStatement} from "typescript"
 
 const {TabPane} = Tabs
 /**
@@ -32,50 +34,42 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
      */
     const [routeMenuDataAfter, setRouteMenuDataAfter] = useState<MenuDataProps[]>([])
     const [width, setWidth] = useState<number>(0)
+    const [widthInner, setWidthInner] = useState<number>(0)
     const [number, setNumber] = useState<number>(-1)
     const menuLeftRef = useRef<any>()
-    /**
-     * @description: 用来计算折叠菜单的
-     */
     const menuLeftInnerRef = useRef<any>()
-    /**
-     * @description: 用来展示菜单的
-     */
-    const menuLeftInnerDisplayRef = useRef<any>()
     // const number = useRef<number>(-1)
     useEffect(() => {
         // console.log("menuItemGroup", menuItemGroup)
         // console.log("routeMenuData", routeMenuData)
     }, [routeMenuData, menuItemGroup])
-    const childrenIsViewList = useRef<boolean[]>([])
     useEffect(() => {
         if (!width) return
-        const menuWidth = menuLeftInnerDisplayRef.current.clientWidth
-        // const childrenList: any[] = menuLeftInnerRef.current.children
-        const childrenList: any[] = menuLeftInnerDisplayRef.current.children
+        const menuWidth = menuLeftInnerRef.current.clientWidth
+        const childrenList: any[] = menuLeftInnerRef.current.children
         let childWidthAll = 0
         let number = -1
         let clientWidth: number[] = []
         for (let index = 0; index < childrenList.length; index++) {
             const element = childrenList[index]
-            if (index === 0) {
-                childWidthAll += element.clientWidth
-                clientWidth[index] = element.clientWidth
-            } else {
-                childWidthAll += element.clientWidth + 32
-                clientWidth[index] = element.clientWidth + 32
-            }
+            childWidthAll += element.clientWidth
             if (menuWidth < childWidthAll) {
                 number = index - 1
                 break
             }
+            clientWidth[index] = element.clientWidth
         }
-        console.log("menuLeftInnerDisplayRef.current", menuLeftInnerDisplayRef.current)
         console.log("childrenList", childrenList)
         console.log("clientWidth", clientWidth)
-        console.log("childrenIsViewList", childrenIsViewList.current)
-        console.log("number", number, menuWidth, childWidthAll)
+        console.log(
+            "number",
+            number,
+            menuWidth,
+            childWidthAll,
+            clientWidth.reduce((p, c) => p + c)
+        )
         setNumber(number)
+        setWidthInner(clientWidth.reduce((p, c) => p + c))
         if (number < 0) {
             setRouteMenuDataAfter([])
             setRouteMenuDataBefore(routeMenuData)
@@ -90,6 +84,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 afterRoute.push(ele)
             }
         })
+
         console.log("beforeRoute", beforeRoute)
         console.log("afterRoute", afterRoute)
         setRouteMenuDataAfter(afterRoute)
@@ -111,24 +106,40 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     refreshMode={"debounce"}
                     refreshRate={50}
                 />
-                {/* 不展示只是用来计算宽度 */}
-                {/* <HeardMenuLeft
-                    menuLeftInnerRef={menuLeftInnerRef}
-                    isDisplay={true}
-                    routeMenuData={routeMenuData}
-                    menuItemGroup={menuItemGroup}
-                /> */}
-                {/* 真正展示的菜单部分 */}
-                <HeardMenuLeft
-                    isDisplay={false}
-                    routeMenuData={routeMenuData}
-                    menuItemGroup={menuItemGroup}
-                    childrenIsViewList={childrenIsViewList.current || []}
-                    menuLeftInnerRef={menuLeftInnerDisplayRef}
-                    number={number}
-                />
-                {/* {routeMenuDataAfter.length > 0 && ( */}
-                {number > 0 && (
+                <div
+                    className={classNames(style["heard-menu-left-inner"])}
+                    style={{maxWidth: widthInner > 0 ? widthInner : ""}}
+                    ref={menuLeftInnerRef}
+                >
+                    {menuItemGroup.map((menuGroupItem) => (
+                        <Popover
+                            placement='bottomLeft'
+                            arrowPointAtCenter={true}
+                            content={<SubMenuGroup subMenuGroupData={menuGroupItem.Items || []} />}
+                            trigger='hover'
+                            overlayClassName={classNames(style["popover"], {
+                                [style["popover-content"]]: menuGroupItem.Items && menuGroupItem.Items.length <= 1
+                            })}
+                            key={`menuItem-${menuGroupItem.Group}`}
+                        >
+                            <div className={style["heard-menu-item"]}>
+                                <div className={style["heard-menu-item-label"]}>
+                                    {menuGroupItem.Group === "社区插件" ? "" : menuGroupItem.Group}
+                                </div>
+                            </div>
+                        </Popover>
+                    ))}
+                    {routeMenuData.map((menuItem, index) => (
+                        <>
+                            <RouteMenuDataItem
+                                key={`menuItem-${menuItem.id}`}
+                                menuItem={menuItem}
+                                isShow={number > 0 ? number <= index : false}
+                            />
+                        </>
+                    ))}
+                </div>
+                {number > 0 && routeMenuDataAfter.length > 0 && (
                     <>
                         <div className={style["heard-menu-more"]}>
                             <Popover
@@ -137,7 +148,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 content={
                                     <div>
                                         {routeMenuDataAfter.map((ele) => (
-                                            <div>{ele.label}</div>
+                                            <div key={`after-${ele.id}`}>{ele.label}</div>
                                         ))}
                                     </div>
                                 }
@@ -192,9 +203,8 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo(
                     className={classNames(style["heard-menu-item"], {
                         [style["heard-menu-item-none"]]: isShow
                     })}
-                    // id={menuItem.id}
                 >
-                    {menuItem.label}
+                    <div className={style["heard-menu-item-label"]}>{menuItem.label}</div>
                 </div>
             </Popover>
         )
@@ -210,12 +220,12 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo(
 const SubMenuGroup: React.FC<SubMenuGroupProps> = (props) => {
     const {subMenuGroupData} = props
     return (
-        <div className={style["sub-menu"]}>
+        <div className={style["heard-sub-menu"]}>
             {subMenuGroupData.map((subMenuGroupItem) => (
-                <div className={style["sub-menu-item"]}>
+                <div className={style["heard-sub-menu-item"]} key={subMenuGroupItem.YakScriptId}>
                     {/* {subMenuGroupItem.icon || <DefaultPluginIcon />} */}
                     <DefaultPluginIcon />
-                    <div className={style["sub-menu-label"]}>{subMenuGroupItem.Verbose}</div>
+                    <div className={style["heard-sub-menu-label"]}>{subMenuGroupItem.Verbose}</div>
                 </div>
             ))}
         </div>
@@ -225,11 +235,11 @@ const SubMenuGroup: React.FC<SubMenuGroupProps> = (props) => {
 const SubMenu: React.FC<SubMenuProps> = (props) => {
     const {subMenuData} = props
     return (
-        <div className={style["sub-menu"]}>
+        <div className={style["heard-sub-menu"]}>
             {subMenuData.map((subMenuItem) => (
-                <div className={style["sub-menu-item"]} key={`subMenuItem-${subMenuItem.id}`}>
+                <div className={style["heard-sub-menu-item"]} key={`subMenuItem-${subMenuItem.id}`}>
                     {subMenuItem.icon || <DefaultPluginIcon />}
-                    <div className={style["sub-menu-label"]}>{subMenuItem.label}</div>
+                    <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
                 </div>
             ))}
         </div>

@@ -21,6 +21,8 @@
         display: flex;
         align-items: center;
         align-self: stretch;
+        padding-left: 16px;
+        text-align: center;
     }
 
     .heard-menu-mask {
@@ -43,19 +45,29 @@
             cursor: pointer;
             font-weight: 500;
             font-size: 12px;
-            margin-left: 32px;
+            // margin-left: 32px;
             width: max-content;
             word-break: keep-all;
             display: flex;
             align-items: center;
             visibility: visible;
+            padding: 0 16px;
+            text-align: center;
+            max-width: 152px;
+
+            .heard-menu-item-label {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
+            }
 
             svg {
                 color: #85899E;
             }
 
             &:nth-child(1) {
-                margin-left: 0;
+                padding-left: 0;
             }
 
             &:hover {
@@ -63,11 +75,14 @@
             }
         }
 
-        .heard-menu-item-none {
-            visibility: hidden;
-            margin-left: 0;
-        }
+
     }
+
+    .heard-menu-item-none {
+        visibility: hidden;
+        margin-left: 0;
+    }
+
 
     .heard-menu-left-inner-none {
         position: absolute;
@@ -179,6 +194,7 @@
     }
 }
 
+
 .popover {
     z-index: 1099;
 
@@ -214,11 +230,11 @@
     }
 }
 
-.sub-menu {
-    width: 172px;
+.heard-sub-menu {
+    min-width: 172px;
     font-size: 12px;
 
-    .sub-menu-item {
+    .heard-sub-menu-item {
         display: flex;
         padding: 6px 12px;
         cursor: pointer;
@@ -227,14 +243,19 @@
         &:hover {
             background-color: #e6f7ff;
 
-            .sub-menu-label {
+            .heard-sub-menu-label {
                 color: #1890ff;
             }
         }
 
-        .sub-menu-label {
+        .heard-sub-menu-label {
             margin-left: 8px;
             color: #31343F;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+            max-width: 90vw;
         }
     }
 }
