@@ -357,7 +357,29 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                 </span>
                             </div>
                         </div>
+                        {isEnterprise?
                         <div className='plugin-info-examine'>
+                            {
+                                (isAdmin || userInfo.user_id === plugin.user_id||plugin.deletePlugin)&&<Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
+                                    <Button type='primary' danger>
+                                        删除
+                                    </Button>
+                                </Popconfirm>
+                            }
+                        {(isAdmin || plugin.checkPlugin) && (
+                            <>
+                                {plugin.status === 0 && !plugin.is_private && (
+                                    <>
+                                        <Button onClick={() => pluginExamine(2)}>不通过</Button>
+                                        <Button type='primary' onClick={() => pluginExamine(1)}>
+                                            通过
+                                        </Button>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </div>
+                        :<div className='plugin-info-examine'>
                             {(isAdmin || userInfo.user_id === plugin.user_id) && (
                                 <>
                                     <Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
@@ -370,7 +392,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                     </Button>
                                 </>
                             )}
-                            {(isAdmin||isEnterprise) && !user && (
+                            {isAdmin && !user && (
                                 <>
                                     {plugin.status === 0 && !plugin.is_private && (
                                         <>
@@ -382,7 +404,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                     )}
                                 </>
                             )}
-                        </div>
+                        </div>}
                     </div>
                     <Suspense fallback={<Spin />}>
                         <EditOnlinePluginDetails

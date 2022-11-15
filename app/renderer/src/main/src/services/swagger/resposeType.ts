@@ -78,6 +78,14 @@
      * 提交修改插件合并的的人
      */
     submitter?: string;
+    /**
+     * 是否有权限删除插件
+     */
+    deletePlugin?: boolean;
+    /**
+     * 是否能审核插件
+     */
+    checkPlugin?: boolean;
   }
   export interface UserOrdinaryResponse {
     data: UserList[];
