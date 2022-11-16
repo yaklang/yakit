@@ -716,7 +716,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         })
                     } catch (e) {
                         update(1)
-                        failed("加载屏蔽参数失败")
+                        failed(`加载屏蔽参数失败: ${e}`)
                     }
                 })
                 .finally(() => {
