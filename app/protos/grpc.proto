@@ -107,6 +107,7 @@ message GetYakScriptByNameRequest {
 message GetYakScriptByOnlineIDRequest {
   string UUID = 1;
   int64 OnlineID = 2;
+  string OnlineBaseUrl = 3;
 }
 
 service Yak {
@@ -540,6 +541,7 @@ message SavePayloadProgress {
 
 message DeletePluginByUserIDRequest {
   int64 UserID = 1;
+  string OnlineBaseUrl = 2;
 }
 
 message DeleteLocalPluginsByWhereRequest {
