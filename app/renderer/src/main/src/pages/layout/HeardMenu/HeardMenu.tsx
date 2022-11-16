@@ -14,6 +14,8 @@ import classNames from "classnames"
 import {ChevronDownIcon, SaveIcon, SortDescendingIcon} from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useMemoizedFn} from "ahooks"
+import {YakitMenu} from "../YakitMenu/YakitMenu"
+import {YakitPopover} from "../YakitPopover/YakitPopover"
 
 const {TabPane} = Tabs
 /**
@@ -125,7 +127,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 </div>
                 {number > 0 && routeMenuDataAfter.length > 0 && (
                     <>
-                        <div className={style["heard-menu-more"]} style={{left: moreLeft}}>
+                        <CollapseMenu moreLeft={moreLeft} menuData={routeMenuDataAfter} />
+                        {/* <div className={style["heard-menu-more"]} style={{left: moreLeft}}>
                             <Popover
                                 placement='bottomLeft'
                                 arrowPointAtCenter={true}
@@ -143,7 +146,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                     <ChevronDownIcon />
                                 </div>
                             </Popover>
-                        </div>
+                        </div> */}
                     </>
                 )}
             </div>
@@ -230,3 +233,75 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
         </div>
     )
 }
+
+interface CollapseMenuProp {
+    menuData: MenuDataProps[]
+    moreLeft: number
+}
+const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
+    const {menuData, moreLeft} = props
+
+    const [show, setShow] = useState<boolean>(false)
+
+    const menuSelect = useMemoizedFn((type: string) => {})
+
+    const menu = (
+        <YakitMenu
+            // selectedKeys={[engineMode]}
+            data={[
+                {
+                    key: "plugin",
+                    label: "配置插件源",
+                    children: [
+                        {label: "外部", key: "external"},
+                        {label: "插件商店", key: "store"}
+                    ]
+                },
+                {
+                    key: "reverse",
+                    label: "全局反连"
+                },
+                {
+                    key: "agent",
+                    label: "系统代理"
+                },
+                {
+                    key: "engineAgent",
+                    label: "引擎扫描代理"
+                },
+                {
+                    key: "engineVar",
+                    label: "引擎环境变量"
+                },
+                {
+                    key: "link",
+                    label: "切换连接模式",
+                    children: [
+                        {label: "本地", key: "local"},
+                        {label: "远程", key: "remote"},
+                        {label: "管理员", key: "admin"}
+                    ]
+                }
+            ]}
+            onSelect={({key}) => menuSelect(key)}
+        ></YakitMenu>
+    )
+
+    return (
+        <div className={style["heard-menu-more"]} style={{left: moreLeft}}>
+            <YakitPopover
+                placement={"bottomLeft"}
+                arrowPointAtCenter={true}
+                content={menu}
+                trigger='hover'
+                onVisibleChange={(visible) => setShow(visible)}
+                overlayClassName={classNames(style["ui-op-dropdown"], style["ui-op-setting-dropdown"])}
+            >
+                <div className={style["heard-menu-item"]}>
+                    更多
+                    <ChevronDownIcon />
+                </div>
+            </YakitPopover>
+        </div>
+    )
+})
