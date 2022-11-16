@@ -174,8 +174,12 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
 }
 
 export const InputHTTPHeader: React.FC<InputHTTPHeaderProp> = (props) => {
-    const [headers, setHeaders] = useState<HTTPHeader[]>([]);
+    const [headers, setHeaders] = useState<HTTPHeader[]>(props.headers);
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        props.onHeaderChange([...headers])
+    }, [headers])
 
     const reload = () => {
         setLoading(true)
@@ -224,8 +228,12 @@ export interface InputHTTPCookieProp {
 }
 
 export const InputHTTPCookie: React.FC<InputHTTPCookieProp> = (props) => {
-    const [cookies, setCookies] = useState<HTTPCookieSetting[]>([]);
+    const [cookies, setCookies] = useState<HTTPCookieSetting[]>(props.cookies);
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        props.onCookiesChange([...cookies])
+    }, [cookies])
 
     const reload = () => {
         setLoading(true)
