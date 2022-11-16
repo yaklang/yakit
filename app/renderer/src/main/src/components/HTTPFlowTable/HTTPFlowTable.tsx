@@ -709,6 +709,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (isOneceLoading.current) {
             getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA)
                 .then((data) => {
+                    if (!data) return
                     try {
                         const cacheData = JSON.parse(data)
                         setShieldData({
@@ -899,7 +900,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         return newData
     }
     const scrollUpdateTop = useMemoizedFn(() => {
-        if (maxId <= 0) return
+        // if (maxId <= 0) return
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         if (scrollTop < 10) {
             update(1, undefined, undefined, undefined, undefined, true)
@@ -1853,6 +1854,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         }}
                                         onSearch={(v) => {
                                             update(1)
+                                        }}
+                                        // 这个事件很关键哈，不要用 onChange
+                                        onBlur={(e) => {
+                                            if (props.onSearch) {
+                                                props.onSearch(e.target.value)
+                                            }
                                         }}
                                     />
                                     <Divider type='vertical' />
