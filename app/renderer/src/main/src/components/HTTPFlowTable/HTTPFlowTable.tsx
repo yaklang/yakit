@@ -1855,6 +1855,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         onSearch={(v) => {
                                             update(1)
                                         }}
+                                        // 这个事件很关键哈，不要用 onChange
+                                        onBlur={(e) => {
+                                            if (props.onSearch) {
+                                                props.onSearch(e.target.value)
+                                            }
+                                        }}
                                     />
                                     <Divider type='vertical' />
                                     <div className={style["empty-button"]}>
