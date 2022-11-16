@@ -107,7 +107,6 @@ message GetYakScriptByNameRequest {
 message GetYakScriptByOnlineIDRequest {
   string UUID = 1;
   int64 OnlineID = 2;
-  string OnlineBaseUrl = 3;
 }
 
 service Yak {
