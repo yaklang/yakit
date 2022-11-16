@@ -6,6 +6,12 @@ import {InputInteger, InputItem, ManyMultiSelectForString, ManySelectOne, Switch
 import {showDrawer, showModal} from "../../utils/showModal";
 import {MITMContentReplacerExport} from "./MITMContentReplacerImport";
 import {randomString} from "../../utils/randomUtil";
+import {
+    HTTPCookieSetting,
+    HTTPHeader,
+    InputHTTPCookie,
+    InputHTTPHeader
+} from "@/pages/mitm/MITMContentReplacerHeaderOperator";
 
 export interface MITMContentReplacerProp {
     rules: MITMContentReplacerRule[]
@@ -26,6 +32,10 @@ export interface MITMContentReplacerRule {
     ExtraTag: string[]
     Disabled: boolean
     VerboseName: string
+
+    // 设置额外Header
+    ExtraHeaders: HTTPHeader[]
+    ExtraCookies: HTTPCookieSetting[]
 }
 
 const {Text} = Typography;
@@ -323,6 +333,8 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
         ExtraTag: [],
         Disabled: false,
         VerboseName: "RULE:" + randomString(10),
+        ExtraCookies: [],
+        ExtraHeaders: [],
     })
     return <Form
         style={{marginBottom: 20}}
@@ -343,7 +355,10 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
                    value={params.VerboseName}/>
         <InputItem label={"规则内容"} setValue={Rule => setParams({...params, Rule})} value={params.Rule} required={true}/>
         <InputItem label={"替换结果"} setValue={Result => setParams({...params, Result})} value={params.Result}
-                   placeholder={"想要替换成的内容，可以为空~"}/>
+                   placeholder={"想要替换成的内容，可以为空~"}
+        />
+        <InputHTTPHeader/>
+        <InputHTTPCookie/>
         {/*<SwitchItem label={"禁用规则"} setValue={NoReplace => setParams({...params, NoReplace})} value={params.NoReplace}/>*/}
         {/*{!params.NoReplace && <>*/}
         {/*    <SwitchItem label={"对 Request 生效"} setValue={EnableForRequest => setParams({...params, EnableForRequest})}*/}
