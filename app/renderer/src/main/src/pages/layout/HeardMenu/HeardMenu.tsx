@@ -13,9 +13,7 @@ import {DefaultPluginIcon, PayloadIcon, YakRunnerIcon} from "@/pages/customizeMe
 import classNames from "classnames"
 import {ChevronDownIcon, SaveIcon, SortDescendingIcon} from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
-import {useMutationObserver} from "ahooks"
-import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
-import {isReturnStatement} from "typescript"
+import {useMemoizedFn} from "ahooks"
 
 const {TabPane} = Tabs
 /**
@@ -26,91 +24,75 @@ const {TabPane} = Tabs
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const {routeMenuData, menuItemGroup} = props
     /**
-     * @description: 显示的菜单
-     */
-    const [routeMenuDataBefore, setRouteMenuDataBefore] = useState<MenuDataProps[]>([])
-    /**
      * @description: 折叠起来的菜单
      */
     const [routeMenuDataAfter, setRouteMenuDataAfter] = useState<MenuDataProps[]>([])
     const [width, setWidth] = useState<number>(0)
-    const [widthInner, setWidthInner] = useState<number>(0)
     const [number, setNumber] = useState<number>(-1)
+    const [moreLeft, setMoreLeft] = useState<number>(0) // 更多文字的left
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
-    // const number = useRef<number>(-1)
     useEffect(() => {
         // console.log("menuItemGroup", menuItemGroup)
         // console.log("routeMenuData", routeMenuData)
     }, [routeMenuData, menuItemGroup])
     useEffect(() => {
         if (!width) return
-        const menuWidth = menuLeftInnerRef.current.clientWidth
-        const childrenList: any[] = menuLeftInnerRef.current.children
+        toMove()
+    }, [width])
+
+    /**
+     * @description: 计算是否显示折叠菜单
+     */
+    const toMove = useMemoizedFn(() => {
+        const menuWidth = menuLeftRef.current.clientWidth
+        let childrenList: any[] = menuLeftInnerRef.current.children
         let childWidthAll = 0
-        let number = -1
+        let n = -1
         let clientWidth: number[] = []
         for (let index = 0; index < childrenList.length; index++) {
             const element = childrenList[index]
             childWidthAll += element.clientWidth
-            if (menuWidth < childWidthAll) {
-                number = index - 1
+            if (childWidthAll > menuWidth) {
+                n = index - 1
                 break
             }
             clientWidth[index] = element.clientWidth
         }
-        console.log("childrenList", childrenList)
-        console.log("clientWidth", clientWidth)
-        console.log(
-            "number",
-            number,
-            menuWidth,
-            childWidthAll,
-            clientWidth.reduce((p, c) => p + c)
-        )
-        setNumber(number)
-        setWidthInner(clientWidth.reduce((p, c) => p + c))
-        if (number < 0) {
+        setNumber(n)
+        setMoreLeft(clientWidth.reduce((p, c) => p + c))
+        if (n < 0) {
             setRouteMenuDataAfter([])
-            setRouteMenuDataBefore(routeMenuData)
             return
         }
         const afterRoute: MenuDataProps[] = []
         const beforeRoute: MenuDataProps[] = []
         routeMenuData.forEach((ele, index) => {
-            if (index < number) {
+            if (index < n) {
                 beforeRoute.push(ele)
             } else {
                 afterRoute.push(ele)
             }
         })
-
-        console.log("beforeRoute", beforeRoute)
-        console.log("afterRoute", afterRoute)
         setRouteMenuDataAfter(afterRoute)
-        setRouteMenuDataBefore(beforeRoute)
-    }, [width])
+    })
 
     return (
         <div className={style["heard-menu"]}>
+            <ReactResizeDetector
+                onResize={(w) => {
+                    if (!w) {
+                        return
+                    }
+                    setWidth(w)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
             <div className={style["heard-menu-left"]} ref={menuLeftRef}>
-                <ReactResizeDetector
-                    onResize={(w) => {
-                        if (!w) {
-                            return
-                        }
-                        setWidth(w)
-                    }}
-                    handleWidth={true}
-                    handleHeight={true}
-                    refreshMode={"debounce"}
-                    refreshRate={50}
-                />
-                <div
-                    className={classNames(style["heard-menu-left-inner"])}
-                    style={{maxWidth: widthInner > 0 ? widthInner : ""}}
-                    ref={menuLeftInnerRef}
-                >
+                <div className={classNames(style["heard-menu-left-inner"])} ref={menuLeftInnerRef}>
                     {menuItemGroup.map((menuGroupItem) => (
                         <Popover
                             placement='bottomLeft'
@@ -129,19 +111,21 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             </div>
                         </Popover>
                     ))}
-                    {routeMenuData.map((menuItem, index) => (
-                        <>
-                            <RouteMenuDataItem
-                                key={`menuItem-${menuItem.id}`}
-                                menuItem={menuItem}
-                                isShow={number > 0 ? number <= index : false}
-                            />
-                        </>
-                    ))}
+                    {routeMenuData.map((menuItem, index) => {
+                        return (
+                            <>
+                                <RouteMenuDataItem
+                                    key={`menuItem-${menuItem.id}`}
+                                    menuItem={menuItem}
+                                    isShow={number > 0 ? number <= index : false}
+                                />
+                            </>
+                        )
+                    })}
                 </div>
                 {number > 0 && routeMenuDataAfter.length > 0 && (
                     <>
-                        <div className={style["heard-menu-more"]}>
+                        <div className={style["heard-menu-more"]} style={{left: moreLeft}}>
                             <Popover
                                 placement='bottomLeft'
                                 arrowPointAtCenter={true}
@@ -154,8 +138,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 }
                                 trigger='hover'
                             >
-                                <div className={style["heard-menu-item"]} style={{width: "max-content"}}>
-                                    更多 <ChevronDownIcon />
+                                <div className={style["heard-menu-item"]}>
+                                    更多
+                                    <ChevronDownIcon />
                                 </div>
                             </Popover>
                         </div>
@@ -241,45 +226,6 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                     {subMenuItem.icon || <DefaultPluginIcon />}
                     <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
                 </div>
-            ))}
-        </div>
-    )
-}
-
-const HeardMenuLeft: React.FC<HeardMenuLeftProps> = (props) => {
-    const {menuLeftInnerRef, menuItemGroup, routeMenuData, childrenIsViewList = [], isDisplay, number} = props
-    return (
-        <div
-            className={classNames(style["heard-menu-left-inner"], {
-                [style["heard-menu-left-inner-none"]]: isDisplay
-            })}
-            ref={menuLeftInnerRef}
-        >
-            {menuItemGroup.map((menuGroupItem) => (
-                <Popover
-                    placement='bottomLeft'
-                    arrowPointAtCenter={true}
-                    content={<SubMenuGroup subMenuGroupData={menuGroupItem.Items || []} />}
-                    trigger='hover'
-                    overlayClassName={classNames(style["popover"], {
-                        [style["popover-content"]]: menuGroupItem.Items && menuGroupItem.Items.length <= 1
-                    })}
-                    key={`menuItem-${menuGroupItem.Group}`}
-                >
-                    <div className={style["heard-menu-item"]}>
-                        {menuGroupItem.Group === "社区插件" ? "" : menuGroupItem.Group}
-                    </div>
-                </Popover>
-            ))}
-            {routeMenuData.map((menuItem, index) => (
-                <>
-                    <RouteMenuDataItem
-                        key={`menuItem-${menuItem.id}`}
-                        menuItem={menuItem}
-                        // isShow={childrenIsViewList.length > 0 ? !childrenIsViewList[index] : false}
-                        isShow={number > 0 ? number <= index : false}
-                    />
-                </>
             ))}
         </div>
     )
