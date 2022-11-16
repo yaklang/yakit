@@ -290,11 +290,12 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
             setPluginUUIdOnlineUUId(props.yakScriptUUIdOnlineUUId)
         }
     })
-    const getYakScriptLocal = useMemoizedFn((id) => {
+    const getYakScriptLocal = useMemoizedFn((id,uuid) => {
         setLoading(true)
         ipcRenderer
             .invoke("GetYakScriptByOnlineID", {
-                OnlineID: id
+                OnlineID: id,
+                UUID: uuid,
             } as GetYakScriptByOnlineIDRequest)
             .then((newSrcipt: YakScript) => {
                 setIsDisabledLocal(false)
@@ -322,9 +323,9 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     useEffect(() => {
         // 下载插件后，刷新
         ipcRenderer.on("ref-plugin-operator", async (e: any, data: any) => {
-            const { pluginOnlineId } = data
+            const { pluginOnlineId,pluginUUID } = data
             if (getScript()?.OnlineId == pluginOnlineId || getPluginIdOnlineId() === pluginOnlineId) {
-                getYakScriptLocal(pluginOnlineId)
+                getYakScriptLocal(pluginOnlineId,pluginUUID)
             }
         })
         return () => {
