@@ -1,7 +1,7 @@
 import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {setRemoteValue} from "./kv"
+import {getRemoteValue,setRemoteValue} from "./kv"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
@@ -23,13 +23,20 @@ export const loginOut = (userInfo: UserInfoProps) => {
 
 export const loginOutLocal = (userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
-    ipcRenderer
+    getRemoteValue("httpSetting").then((setting) => {
+        if (!setting) return
+        const values = JSON.parse(setting)
+        const OnlineBaseUrl:string  = values.BaseUrl
+        ipcRenderer
         .invoke("DeletePluginByUserID", {
-            UserID: userInfo.user_id
+            UserID: userInfo.user_id,
+            OnlineBaseUrl
         })
         .finally(() => {
             ipcRenderer.send("user-sign-out")
         })
+    })
+    
 }
 
 export const refreshToken = (userInfo: UserInfoProps) => {
