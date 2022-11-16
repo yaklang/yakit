@@ -104,7 +104,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         currentIndex,
         isRefresh,
         disableSorting,
-        query
+        query,
+        onSetCurrentRow
     } = props
 
     const [currentRow, setCurrentRow] = useState<T>()
@@ -171,6 +172,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
             if (!currentRow) {
                 setCurrentRow(data[0])
+                if (onSetCurrentRow) onSetCurrentRow(data[0])
                 return
             }
             let index
@@ -188,6 +190,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
             if (index >= 0) {
                 setCurrentRow(data[index])
+                if (onSetCurrentRow) onSetCurrentRow(data[index])
                 setTimeout(() => {
                     upKey(index)
                 }, 50)
@@ -230,6 +233,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
             if (!currentRow) {
                 setCurrentRow(data[0])
+                if (onSetCurrentRow) onSetCurrentRow(data[0])
                 return
             }
 
@@ -249,6 +253,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
             if (index) {
                 setCurrentRow(data[index])
+                if (onSetCurrentRow) onSetCurrentRow(data[index])
                 setTimeout(() => {
                     downKey(index)
                 }, 50)

@@ -932,7 +932,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     // 没有增量数据
                     return
                 }
-                
+
                 // 有增量数据刷新total
                 const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
                 // setLoading(true)
@@ -1025,6 +1025,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             // setSelected(undefined)
         }
     })
+    const onSetCurrentRow = useDebounceFn(
+        (rowDate: HTTPFlow) => {
+            onRowClick(rowDate)
+        },
+        {wait: 200}
+    ).run
     const getLength = useMemoizedFn((length: number) => {
         if (getBodyLengthUnit() === "k") {
             length = length * 1024
@@ -1930,7 +1936,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             overlayClassName={style["http-history-table-shield-popover"]}
                                         >
                                             <div className={style["http-history-table-left-shield"]}>
-                                                <span className="content-ellipsis">已屏蔽条件</span>
+                                                <span className='content-ellipsis'>已屏蔽条件</span>
                                                 <span className={style["http-history-table-left-number"]}>
                                                     {shieldData?.data.length}
                                                 </span>
@@ -2200,6 +2206,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         onChange: update
                     }}
                     onChange={onTableChange}
+                    onSetCurrentRow={onSetCurrentRow}
                 />
             </div>
         </div>
@@ -2215,7 +2222,7 @@ interface ColorSearchProps {
     setIsShowColor: (b: boolean) => void
 }
 const ColorSearch = React.memo((props: ColorSearchProps) => {
-    const {color, setColor,onReset, onSure, setIsShowColor} = props
+    const {color, setColor, onReset, onSure, setIsShowColor} = props
     const onMouseLeave = useMemoizedFn(() => {
         setIsShowColor(false)
         onSure()

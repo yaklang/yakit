@@ -1,11 +1,17 @@
 import React, {useEffect, useState} from "react";
 import {AutoCard} from "../../components/AutoCard";
-import {Button, Checkbox, Form, List, Space, Table, Typography} from "antd";
+import {Button, Checkbox, Form, List, Space, Table, Tag, Typography} from "antd";
 import {failed, info} from "../../utils/notification";
 import {InputInteger, InputItem, ManyMultiSelectForString, ManySelectOne, SwitchItem} from "../../utils/inputUtil";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {MITMContentReplacerExport} from "./MITMContentReplacerImport";
 import {randomString} from "../../utils/randomUtil";
+import {
+    HTTPCookieSetting,
+    HTTPHeader,
+    InputHTTPCookie,
+    InputHTTPHeader
+} from "@/pages/mitm/MITMContentReplacerHeaderOperator";
 
 export interface MITMContentReplacerProp {
     rules: MITMContentReplacerRule[]
@@ -26,6 +32,10 @@ export interface MITMContentReplacerRule {
     ExtraTag: string[]
     Disabled: boolean
     VerboseName: string
+
+    // 设置额外Header
+    ExtraHeaders: HTTPHeader[]
+    ExtraCookies: HTTPCookieSetting[]
 }
 
 const {Text} = Typography;
@@ -163,7 +173,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     </div>
                 },
                 {
-                    title: "完全禁用", render: (i: MITMContentReplacerRule) => <Checkbox
+                    title: "禁用", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.Disabled}
                         onChange={() => {
                             rules.forEach(target => {
@@ -177,7 +187,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     />
                 },
                 {
-                    title: "不替换内容", render: (i: MITMContentReplacerRule) => <Checkbox
+                    title: "不修改流量", render: (i: MITMContentReplacerRule) => <Checkbox
                         disabled={i.Disabled}
                         checked={i.NoReplace}
                         onChange={() => {
@@ -192,7 +202,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     />
                 },
                 {
-                    title: "对请求生效", render: (i: MITMContentReplacerRule) => <Checkbox
+                    title: "请求", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.EnableForRequest}
                         disabled={i.Disabled}
                         onChange={() => {
@@ -207,7 +217,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     />
                 },
                 {
-                    title: "对响应生效", render: (i: MITMContentReplacerRule) => <Checkbox
+                    title: "响应", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.EnableForResponse}
                         disabled={i.Disabled}
                         onChange={() => {
@@ -222,7 +232,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     />
                 },
                 {
-                    title: "对 Header 生效", render: (i: MITMContentReplacerRule) => <Checkbox
+                    title: "Header", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.EnableForHeader}
                         disabled={i.Disabled}
                         onChange={() => {
@@ -237,7 +247,7 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                     />
                 },
                 {
-                    title: "对 Body 生效", render: (i: MITMContentReplacerRule) => <Checkbox
+                    title: "Body", render: (i: MITMContentReplacerRule) => <Checkbox
                         checked={i.EnableForBody}
                         disabled={i.Disabled}
                         onChange={() => {
@@ -250,6 +260,17 @@ export const MITMContentReplacer: React.FC<MITMContentReplacerProp> = (props) =>
                             setRules([...rules])
                         }}
                     />
+                },
+                {
+                    title: "修改 Cookie 与 Header", render: (i: MITMContentReplacerRule) => {
+                        if (i.ExtraHeaders.length > 0 || i.ExtraCookies.length > 0) {
+                            return <Space direction={"vertical"}>
+                                {i.ExtraHeaders.length > 0 && <Tag>额外 HTTP Header: {i.ExtraHeaders.length}</Tag>}
+                                {i.ExtraCookies.length > 0 && <Tag>额外 HTTP Cookie: {i.ExtraCookies.length}</Tag>}
+                            </Space>
+                        }
+                        return ""
+                    }, width: 180,
                 },
                 {
                     title: "命中颜色", render: (i: MITMContentReplacerRule) => <ManySelectOne
@@ -323,6 +344,8 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
         ExtraTag: [],
         Disabled: false,
         VerboseName: "RULE:" + randomString(10),
+        ExtraCookies: [],
+        ExtraHeaders: [],
     })
     return <Form
         style={{marginBottom: 20}}
@@ -343,7 +366,12 @@ const CreateMITMContentReplacer: React.FC<CreateMITMContentReplacerProp> = (prop
                    value={params.VerboseName}/>
         <InputItem label={"规则内容"} setValue={Rule => setParams({...params, Rule})} value={params.Rule} required={true}/>
         <InputItem label={"替换结果"} setValue={Result => setParams({...params, Result})} value={params.Result}
-                   placeholder={"想要替换成的内容，可以为空~"}/>
+                   placeholder={"想要替换成的内容，可以为空~"}
+        />
+        <InputHTTPHeader headers={params.ExtraHeaders}
+                         onHeaderChange={headers => setParams({...params, ExtraHeaders: headers})}/>
+        <InputHTTPCookie cookies={params.ExtraCookies}
+                         onCookiesChange={ExtraCookies => setParams({...params, ExtraCookies})}/>
         {/*<SwitchItem label={"禁用规则"} setValue={NoReplace => setParams({...params, NoReplace})} value={params.NoReplace}/>*/}
         {/*{!params.NoReplace && <>*/}
         {/*    <SwitchItem label={"对 Request 生效"} setValue={EnableForRequest => setParams({...params, EnableForRequest})}*/}
