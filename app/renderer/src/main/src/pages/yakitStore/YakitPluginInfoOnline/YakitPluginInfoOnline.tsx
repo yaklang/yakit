@@ -360,7 +360,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         {isEnterprise?
                         <div className='plugin-info-examine'>
                             {
-                                (isAdmin || userInfo.user_id === plugin.user_id||plugin.deletePlugin)&&<Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
+                                (isAdmin || userInfo.user_id === plugin.user_id||plugin.checkPlugin)&&<Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
                                     <Button type='primary' danger>
                                         删除
                                     </Button>

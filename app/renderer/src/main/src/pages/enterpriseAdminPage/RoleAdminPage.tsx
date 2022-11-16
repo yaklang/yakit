@@ -60,7 +60,19 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             }
         })
     ]
+    const NoTreePluginType = [
+        ...PluginTypeKeyArr.map((key) => {
+            return {
+                id: key,
+                value: key,
+                title: PluginType[key],
+                isLeaf: true
+            }
+        })
+    ]
     const [selectedAll, setSelectedAll] = useState<boolean>(false)
+     // 受控模式控制浮层
+     const [open, setOpen] = useState(false)
 
     useEffect(() => {
         if (editInfo) {
@@ -74,17 +86,21 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             })
                 .then((res: API.NewRoleRequest) => {
                     // console.log("返回结果：", res)
-                    let {checkPlugin, deletePlugin, id, name, pluginIds = "", plugin, pluginType = ""} = res
+                    let {
+                        checkPlugin, 
+                        // deletePlugin, 
+                         name, plugin, pluginType = ""} = res
                     const pluginArr = (plugin || []).map((item) => ({label: item.script_name, value: item.id}))
                     const pluginTypeArr: string[] = pluginType.split(",").filter((item) => item.length > 0)
                     const value = {
                         name,
                         checkPlugin,
-                        deletePlugin,
+                        // deletePlugin,
                         treeSelect: [...pluginTypeArr, ...pluginArr]
                         // treeSelect:["port-scan",{value:4389,label:"1021"}]
                     }
                     console.log("value", value)
+                    if(!checkPlugin)setTreeData(NoTreePluginType)
                     if (
                         pluginTypeArr.length === PluginTypeKeyArr.length &&
                         pluginTypeArr.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
@@ -109,13 +125,16 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     // 保留数组中重复元素
     const filterUnique = (arr) => arr.filter((i) => arr.indexOf(i) !== arr.lastIndexOf(i))
     const onFinish = useMemoizedFn((values) => {
-        const {name, deletePlugin, checkPlugin, treeSelect} = values
+        const {name, 
+            // deletePlugin, 
+            checkPlugin,
+             treeSelect} = values
         setLoading(true)
         let pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
         let pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
         let params: API.NewRoleRequest = {
             name,
-            deletePlugin,
+            // deletePlugin,
             checkPlugin,
             pluginType: pluginTypeArr.join(","),
             pluginIds: pluginIdsArr.join(",")
@@ -192,6 +211,21 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             setSelectedAll(false)
         }
     }
+
+    const setTreeSelect = (value:boolean) => {
+        if(value){
+            setTreeData(TreePluginType)
+        }
+        else{
+            setTreeData(NoTreePluginType)
+        }
+        form.setFieldsValue({
+            treeSelect:[]
+        })
+        setSelectedAll(false)
+        setOpen(true)
+    }
+
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <>
@@ -226,6 +260,38 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 <Form.Item name='name' label='角色名' rules={[{required: true, message: "该项为必填"}]}>
                     <Input placeholder='请输入角色名' allowClear />
                 </Form.Item>
+                <Row>
+                    <Col span={5}>
+                        <div style={{textAlign: "right", paddingTop: 4}}>操作权限：</div>
+                    </Col>
+                    <Col span={16}>
+                        <div style={{display: "flex"}}>
+                            <div style={{width: "50%"}}>
+                                <Form.Item
+                                    {...itemLayout}
+                                    name='checkPlugin'
+                                    valuePropName='checked'
+                                    label='审核插件'
+                                    initialValue={false}
+                                >
+                                    <Switch onChange={setTreeSelect} checkedChildren='开' unCheckedChildren='关' />
+                                </Form.Item>
+                            </div>
+
+                            {/* <div style={{width: "50%"}}>
+                                <Form.Item
+                                    {...itemLayout}
+                                    name='deletePlugin'
+                                    valuePropName='checked'
+                                    label='插件删除'
+                                    initialValue={false}
+                                >
+                                    <Switch checkedChildren='开' unCheckedChildren='关' />
+                                </Form.Item>
+                            </div> */}
+                        </div>
+                    </Col>
+                </Row>
                 <Form.Item
                     name='treeSelect'
                     label='插件权限'
@@ -248,40 +314,11 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         maxTagCount={selectedAll ? 0 : 10}
                         maxTagPlaceholder={selectedAll ? "全部" : null}
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+                        open={open}
+                        onDropdownVisibleChange={(visible) => setOpen(visible)}
                     />
                 </Form.Item>
-                <Row>
-                    <Col span={5}>
-                        <div style={{textAlign: "right", paddingTop: 4}}>操作权限：</div>
-                    </Col>
-                    <Col span={16}>
-                        <div style={{display: "flex"}}>
-                            <div style={{width: "50%"}}>
-                                <Form.Item
-                                    {...itemLayout}
-                                    name='checkPlugin'
-                                    valuePropName='checked'
-                                    label='审核插件'
-                                    initialValue={false}
-                                >
-                                    <Switch checkedChildren='开' unCheckedChildren='关' />
-                                </Form.Item>
-                            </div>
-
-                            <div style={{width: "50%"}}>
-                                <Form.Item
-                                    {...itemLayout}
-                                    name='deletePlugin'
-                                    valuePropName='checked'
-                                    label='插件删除'
-                                    initialValue={false}
-                                >
-                                    <Switch checkedChildren='开' unCheckedChildren='关' />
-                                </Form.Item>
-                            </div>
-                        </div>
-                    </Col>
-                </Row>
+                
                 <div style={{textAlign: "center"}}>
                     <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
                         确认
@@ -393,9 +430,9 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
             title: "操作权限",
             render: (text: string, record) => (
                 <div>
-                    {!record.checkPlugin && !record.deletePlugin && "-"}
+                    {!record.checkPlugin && "-"}
                     {record.checkPlugin && <span style={{marginRight: 10}}>审核插件</span>}
-                    {record.deletePlugin && <span style={{marginRight: 10}}>插件删除</span>}
+                    {/* {record.deletePlugin && <span style={{marginRight: 10}}>插件删除</span>} */}
                 </div>
             )
         },

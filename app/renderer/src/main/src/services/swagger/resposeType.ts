@@ -199,7 +199,6 @@
     id: number;
     name: string;
     createdAt: number;
-    deletePlugin: boolean;
     checkPlugin: boolean;
   }
   export interface Principle {
@@ -337,7 +336,6 @@
   export interface NewRoleRequest {
     id?: number;
     name: string;
-    deletePlugin: boolean;
     checkPlugin: boolean;
     pluginType?: string;
     pluginIds?: string;
