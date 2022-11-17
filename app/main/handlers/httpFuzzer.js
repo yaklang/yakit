@@ -143,6 +143,22 @@ module.exports = (win, getClient) => {
         return await asyncQueryHistoryHTTPFuzzerTask(params)
     })
 
+    // asyncQueryHistoryHTTPFuzzerTaskEx wrapper
+    const asyncQueryHistoryHTTPFuzzerTaskEx = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHistoryHTTPFuzzerTaskEx(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHistoryHTTPFuzzerTaskEx", async (e, params) => {
+        return await asyncQueryHistoryHTTPFuzzerTaskEx(params)
+    })
+
     // asyncGetHistoryHTTPFuzzerTask wrapper
     const asyncGetHistoryHTTPFuzzerTask = (params) => {
         return new Promise((resolve, reject) => {

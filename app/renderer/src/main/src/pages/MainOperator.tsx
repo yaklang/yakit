@@ -811,7 +811,6 @@ const Main: React.FC<MainProp> = (props) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
                 const total = JSON.parse(completionJson) as CompletionTotal
-                console.info(total)
                 setCompletions(total)
             } catch (e) {
                 console.info(e)

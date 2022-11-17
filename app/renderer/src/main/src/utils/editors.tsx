@@ -317,6 +317,8 @@ export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: 
     />
 })
 
+export const HTTP_PACKET_EDITOR_FONT_SIZE = "HTTP_PACKET_EDITOR_FONT_SIZE";
+
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
     const isResponse = props.isResponse;
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
@@ -331,7 +333,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
     const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array(props.originValue))
     const [searchValue, setSearchValue] = useState("");
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>();
-    const [fontSize, setFontSize] = useState(12);
+    const [fontSize, setFontSize] = useState<undefined | number>();
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([]);
     const [noWordwrap, setNoWordwrap] = useState(false);
 
@@ -340,6 +342,22 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
+
+        // 无落如何都会设置，最小为 12
+        getRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE).then((data: string) => {
+            try {
+                const size = parseInt(data);
+                if (size > 0) {
+                    setFontSize(size)
+                } else {
+                    setFontSize(12)
+                }
+            } catch (e) {
+                setFontSize(12)
+            }
+        }).catch(() => {
+            setFontSize(12)
+        })
     }, [])
 
 
@@ -439,23 +457,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         }
     }, [props.defaultSearchKeyword, monacoEditor])
 
-    // 缓存 fontSize
-    useEffect(() => {
-        if (fontSize <= 0) {
-            return
-        }
-        setRemoteValue("MONACO_EDITOR_FONTSIZE", `${fontSize}`)
-    }, [fontSize])
-    // 第一次加载的时候，读区 FONTSIZE
-    useEffect(() => {
-        getRemoteValue("MONACO_EDITOR_FONTSIZE").then(e => {
-            const fontSizeFetched = parseInt(e);
-            if (fontSize > 0) {
-                setFontSize(fontSizeFetched)
-            }
-        })
-    }, [])
-
     return <div style={{width: "100%", height: "100%"}}>
         <Card
             className={"flex-card"}
@@ -535,15 +536,19 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                             wrapperCol={{span: 16}}
                             labelCol={{span: 8}}
                         >
-                            <SelectOne
+                            {(fontSize || 0) > 0 && <SelectOne
                                 formItemStyle={{marginBottom: 4}}
                                 label={"字号"}
                                 data={[
                                     {text: "小", value: 12},
                                     {text: "中", value: 16},
                                     {text: "大", value: 20},
-                                ]} value={fontSize} setValue={setFontSize}
-                            />
+                                ]} value={fontSize}
+                                setValue={size => {
+                                    setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
+                                    setFontSize(size)
+                                }}
+                            />}
                             <Form.Item label={"全屏"}>
                                 <Button
                                     size={"small"}

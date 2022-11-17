@@ -164,11 +164,14 @@ const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 
-interface HistoryHTTPFuzzerTask {
+export interface HistoryHTTPFuzzerTask {
     Request: string
     RequestRaw: Uint8Array
     Proxy: string
     IsHTTPS: boolean
+
+    // 展示渲染，一般来说 Verbose > RequestRaw > Request
+    Verbose?: string
 }
 
 export const showDictsAndSelect = (res: (i: string) => any) => {
@@ -355,7 +358,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const resetResponse = useMemoizedFn(() => {
         setFirstResponse({...emptyFuzzer})
         setSuccessFuzzer([])
+        setRedirectedResponse(undefined)
         setFailedFuzzer([])
+        setSuccessCount(0)
+        setFailedCount(0)
     })
 
     const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
@@ -406,6 +412,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [props.isHttps, props.request])
 
     const loadHistory = useMemoizedFn((id: number) => {
+        resetResponse()
+        setHistoryTask(undefined)
+        setLoading(true)
+        setDroppedCount(0)
+
         setLoading(true)
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
@@ -519,7 +530,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     return
                 }
             }
-
             const r = {
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
@@ -562,6 +572,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             failedBuffer = []
             count = 0
             droppedCount = 0
+            lastUpdateCount = 0
             setLoading(false)
         })
 
@@ -943,7 +954,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <ShareData module='fuzzer' getShareContent={getShareContent}/>
                         <Popover
                             trigger={"click"}
-                            placement={"bottom"}
+                            placement={"leftTop"}
                             destroyTooltipOnHide={true}
                             content={
                                 <div style={{width: 400}}>
@@ -1414,7 +1425,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </Popover>
                                 <Popover
                                     trigger={"click"}
-                                    placement={"bottom"}
+                                    placement={"leftTop"}
                                     destroyTooltipOnHide={true}
                                     content={
                                         <div style={{width: 400}}>

@@ -167,6 +167,7 @@ service Yak {
   // Fuzzer
   rpc GetHistoryHTTPFuzzerTask(GetHistoryHTTPFuzzerTaskRequest) returns (HistoryHTTPFuzzerTaskDetail);
   rpc QueryHistoryHTTPFuzzerTask(Empty) returns (HistoryHTTPFuzzerTasks);
+  rpc QueryHistoryHTTPFuzzerTaskEx(QueryHistoryHTTPFuzzerTaskExParams) returns (HistoryHTTPFuzzerTasksResponse);
   rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
   rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
@@ -955,6 +956,18 @@ message HistoryHTTPFuzzerTask {
 
 message HistoryHTTPFuzzerTasks {
   repeated HistoryHTTPFuzzerTask Tasks = 1;
+}
+
+message HistoryHTTPFuzzerTasksResponse {
+  repeated HistoryHTTPFuzzerTaskDetail Data = 1;
+  int64 Total = 2;
+  int64 TotalPage = 3;
+  Paging Pagination = 4;
+}
+
+message QueryHistoryHTTPFuzzerTaskExParams {
+  Paging Pagination = 1;
+  string Keyword = 2;
 }
 
 message ExecutePacketYakScriptParams {
@@ -1848,6 +1861,11 @@ message FuzzerRequest {
   // 默认或者不填为 UTF8
   // 中国的话，用 gb18030
   string ResponseCharset = 23;
+
+  // Verbose
+  // 这个字段不需要用户做任何处理，也不需要客户端传递
+  // 这是服务端用来初始化的字段，用以构建快速搜索
+  string Verbose = 24;
 }
 
 message FuzzerResponseFilter {

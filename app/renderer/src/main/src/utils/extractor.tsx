@@ -120,7 +120,6 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
         const extractedCache: string[] = [];
         let extractedCountLastUpdated = 0;
         ipcRenderer.on(`${token}-data`, async (e, data: { Extracted: Uint8Array, Token: string }) => {
-            console.info(1)
             extractedCache.push(Uint8ArrayToString(data.Extracted))
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
@@ -169,7 +168,6 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                     <Tag>共{responses.length}个响应</Tag>
                     <Button type={"primary"} size={"small"} onClick={() => {
                         responses.forEach(i => {
-                            console.info(matchedRegexp)
                             ipcRenderer.invoke("ExtractData", {
                                 Mode: mode,
                                 PrefixRegexp: prefix,

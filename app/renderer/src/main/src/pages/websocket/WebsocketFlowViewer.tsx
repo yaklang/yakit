@@ -69,7 +69,6 @@ export const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = (props) =>
                 newFlow.length !== flows.length ||
                 (flows.length > 0 && flows[0].DataFrameIndex !== newFlow[0].DataFrameIndex)
             ) {
-                console.info("update flows")
                 newFlow = [...flows];
                 setCurrent(newFlow)
                 return
