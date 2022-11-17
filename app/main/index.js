@@ -238,6 +238,7 @@ ipcMain.on("company-sign-in", (event, info) => {
         token: info.token,
         companyName: info.name,
         companyHeadImg: info.head_img,
+        showStatusSearch: info?.showStatusSearch
     }
     USER_INFO.isLogin = user.isLogin
     USER_INFO.platform = user.platform
@@ -250,6 +251,7 @@ ipcMain.on("company-sign-in", (event, info) => {
     USER_INFO.role = user.role
     USER_INFO.token = info.token
     USER_INFO.user_id = user.user_id
+    USER_INFO.showStatusSearch = user.showStatusSearch
     win.webContents.send("fetch-signin-token", user)
     win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
 })
@@ -266,6 +268,7 @@ ipcMain.on("user-sign-out", (event) => {
     USER_INFO.role = null
     USER_INFO.token = null
     USER_INFO.user_id = ""
+    USER_INFO.showStatusSearch = false
     win.webContents.send("login-out")
 })
 
@@ -281,6 +284,7 @@ ipcMain.on("sync-update-user", (event, user) => {
     USER_INFO.role = user.role
     USER_INFO.token = user.token
     USER_INFO.user_id = user.user_id
+    USER_INFO.showStatusSearch = user.showStatusSearch
     event.returnValue = user
 })
 

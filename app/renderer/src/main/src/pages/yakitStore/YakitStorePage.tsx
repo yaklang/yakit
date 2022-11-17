@@ -89,8 +89,11 @@ import {
     onLocalScriptToOnlinePlugin,
     SyncCloudButton
 } from "@/components/SyncCloudButton/SyncCloudButton"
+import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+import {fullscreen} from "@uiw/react-md-editor"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
+const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
 const {Option} = Select
@@ -210,6 +213,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setPublicKeyword("")
         onResetPluginDetails()
         setScriptIdOnlineId(undefined)
+        setScriptUUIdOnlineUUId(undefined)
         onResetNumber()
         getStatistics(width)
         onResetQuery()
@@ -268,6 +272,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [updatePluginRecordLocal, setUpdatePluginRecordLocal] = useState<YakScript>()
     // 线上插件id
     const [scriptIdOnlineId, setScriptIdOnlineId] = useState<number>()
+    // 线上插件UUid
+    const [scriptUUIdOnlineUUId, setScriptUUIdOnlineUUId] = useState<string>()
 
     //滚动
     const [numberLocal, setNumberLocal] = useState<number>()
@@ -294,6 +300,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .finally(() => {
                 setPlugin(p)
                 setScriptIdOnlineId(p.id)
+                setScriptUUIdOnlineUUId(p.uuid)
             })
     })
     const onSetUserPluginAndGetLocal = useMemoizedFn((p?: API.YakitPluginDetail) => {
@@ -317,6 +324,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             .finally(() => {
                 setUserPlugin(p)
                 setScriptIdOnlineId(p.id)
+                setScriptUUIdOnlineUUId(p.uuid)
             })
     })
     const [isFull, setIsFull] = useState(true) //是否全屏card展示
@@ -707,6 +715,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     plugSource={plugSource}
                                     yakScriptId={(script && script.Id) || 0}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
+                                    yakScriptUUIdOnlineUUId={scriptUUIdOnlineUUId}
                                     setTrigger={() => {}}
                                     setScript={(s) => {
                                         setScript(s)
@@ -788,6 +797,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             ? yakScriptTagsAndType || {}
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
+                                        console.log("item",statisticsDataOnlineOrUser,userInfo)
                                         const queryName = item[0]
                                         const statisticsList = item[1]
                                         const title = queryTitle[queryName]
@@ -801,16 +811,14 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         if (plugSource === "online") {
                                             current = statisticsQueryOnline[queryName] || ""
                                         }
-                                        if (
-                                            (queryName === "status" &&
-                                                plugSource === "user" &&
-                                                statisticsQueryUser.is_private !== "false") ||
-                                            (queryName === "status" &&
-                                                plugSource === "online" &&
-                                                userInfo.role !== "admin")
-                                        ) {
-                                            return <></>
-                                        }
+                                
+                                        // 审核状态展示
+                                        const UserIsPrivate = queryName === "status" && plugSource === "user" && statisticsQueryUser.is_private !== "false"
+                                        const OnlineAdmin = queryName === "status" && plugSource === "online" && userInfo.role !== "admin"
+                                        const OnlineStatusSearch = queryName === "status" && plugSource === "online" && userInfo.role !== "admin" && userInfo.showStatusSearch !== true
+                                        if (!IsEnterprise&&(UserIsPrivate || OnlineAdmin)) return <></>
+                                        if(IsEnterprise&&(UserIsPrivate || OnlineStatusSearch)) return <></>
+
                                         if (!Array.isArray(current)) {
                                             current = current.split(",")
                                         }
@@ -1398,11 +1406,20 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
     const numberLocal = useRef<number>(0) // 本地 选择的插件index
+    const [baseUrl,setBaseUrl] = useState<string>("")// 获取私有域
     useEffect(() => {
         if (isSelectAll) {
             if (onSelectList) onSelectList(response.Data)
         }
     }, [isSelectAll])
+    
+    useEffect(()=>{
+        getRemoteValue("httpSetting").then((setting) => {
+            const values = JSON.parse(setting)
+            const baseUrl:string  = values.BaseUrl
+            setBaseUrl(baseUrl)
+        })
+    },[])
     useEffect(() => {
         if (!updatePluginRecordLocal) return
         // 列表中第一次上传的时候,本地返回的数据有OnlineId ,但是列表中的上传的那个没有OnlineId
@@ -1525,6 +1542,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                             numberLocal.current = index
                             props.onClicked(info, index)
                         }}
+                        onlineProfile={baseUrl}
                         currentScript={props.currentScript}
                         onYakScriptRender={props.onYakScriptRender}
                         maxWidth={maxWidth}
@@ -2029,10 +2047,11 @@ interface PluginListLocalProps {
     selectedRowKeysRecord: YakScript[]
     setUpdatePluginRecordLocal: (y: YakScript) => any
     onSetUser?: (u: PluginUserInfoLocalProps) => any
+    onlineProfile: string
 }
 
 export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
-    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare, onSetUser} =
+    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare, onSetUser,onlineProfile} =
         props
     const {userInfo, maxWidth, onClicked} = props
     const [uploadLoading, setUploadLoading] = useState(false)
@@ -2047,6 +2066,8 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
     if (props.onYakScriptRender) {
         return props.onYakScriptRender(plugin, maxWidth)
     }
+    const isShowPrivateDom = plugin?.OnlineBaseUrl&&(plugin.OnlineBaseUrl !== onlineProfile)?false:true
+    // console.log("私有域比较",plugin.OnlineBaseUrl,onlineProfile)
     return (
         <div
             className={`plugin-item ${currentScript?.Id === plugin.Id && "plugin-item-active"}`}
@@ -2057,7 +2078,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
                     <div className='icon-body'>
                         <div className='text-icon'>
-                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && <OnlineCloudIcon />}
+                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && isShowPrivateDom&& <OnlineCloudIcon />}
                             {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
                         </div>
                         {gitUrlIcon(plugin.FromGit)}
@@ -3164,7 +3185,10 @@ interface YakModuleOnlineListProps {
     onSetUser?: (u: PluginUserInfoOnlineProps) => void
     setIsRequest?: (b: boolean) => void
 }
-
+interface OnlineProfileProps {
+    BaseUrl: string
+    Password?: string
+}
 export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const {
         queryOnline,
@@ -3201,8 +3225,17 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
     const [isRef, setIsRef] = useState(false)
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
+    const [baseUrl,setBaseUrl] = useState<string>("")
     const numberOnlineUser = useRef(0) // 我的插件 选择的插件index
     const numberOnline = useRef(0) // 插件商店 选择的插件index
+    // 获取私有域
+    useEffect(()=>{
+        getRemoteValue("httpSetting").then((setting) => {
+            const values = JSON.parse(setting)
+            const baseUrl:string = values.BaseUrl
+            setBaseUrl(baseUrl)
+        })           
+    },[])
     useEffect(() => {
         if (!updatePluginRecord) return
         const index = response.data.findIndex((ele) => ele.id === updatePluginRecord.id)
@@ -3382,6 +3415,15 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
             />
         )
     }
+ 
+    if(!userInfo.isLogin && IsEnterprise && !baseUrl.startsWith("https://www.yaklang.com")){
+        return (
+            <List
+                dataSource={[]}
+                locale={{emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='未登录,请先登录' />}}
+            />
+        )
+    }
     return (
         <Spin spinning={listBodyLoading}>
             <RollingLoadList<API.YakitPluginDetail>
@@ -3482,7 +3524,9 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
             })
         }
     })
-    const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private)
+    // 全局登录状态
+    const {userInfo} = useStore()
+    const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.showStatusSearch && !bind_me)
     const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
     return (
         <div className={`plugin-item ${currentId === info.id && "plugin-item-active"}`} onClick={() => onClick(info)}>
@@ -3683,7 +3727,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                         </Select>
                     </Form.Item>
                 )}
-                {((!user && isAdmin) || (user && isShowStatus)) && (
+                {((!user && isAdmin) || (user && isShowStatus) || (!user && userInfo.showStatusSearch)) && (
                     <Form.Item name='status' label='审核状态'>
                         <Select size='small' getPopupContainer={() => refTest.current}>
                             <Option value='all'>全部</Option>

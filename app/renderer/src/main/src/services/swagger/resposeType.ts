@@ -78,6 +78,14 @@
      * 提交修改插件合并的的人
      */
     submitter?: string;
+    /**
+     * 是否有权限删除插件
+     */
+    deletePlugin?: boolean;
+    /**
+     * 是否能审核插件
+     */
+    checkPlugin?: boolean;
   }
   export interface UserOrdinaryResponse {
     data: UserList[];
@@ -107,7 +115,11 @@
     token: string;
     role: string;
     user_id: number;
-    uid?: number;
+    uid?: string;
+    /**
+     * 是否显示审核状态筛选
+     */
+    showStatusSearch?: boolean;
   }
   export interface UrmUserListResponse extends Paging {
     data: UrmUserList[];
@@ -119,10 +131,19 @@
     head_img: string;
     from_platform: string;
     uid: string;
+    department_id?: number;
+    department_name?: string;
+    role_id?: number;
+    role_name?: string;
+    department_parent_id?: number;
+    department_parent_name?: string;
   }
   export interface UrmLoginRequest {
     user_name: string;
     pwd: string;
+  }
+  export interface UrmEditListResponse {
+    data: UrmUserList;
   }
   export interface UpUserInfoRequest {
     old_pwd?: string;
@@ -175,12 +196,28 @@
     download_total?: number;
     contributors?: string;
   }
+  export interface RoleListResponse extends Paging {
+    data: RoleList[];
+  }
+  export interface RoleList {
+    id: number;
+    name: string;
+    createdAt: number;
+    checkPlugin: boolean;
+  }
   export interface Principle {
     user: string;
     role: string;
     user_id: number;
     head_img: string;
     from_platform: string;
+  }
+  export interface PluginTypeListResponse {
+    data: PluginTypeList[];
+  }
+  export interface PluginTypeList {
+    id: number;
+    script_name: string;
   }
   export interface PluginDownloads {
     type: string;
@@ -295,6 +332,19 @@
     user_name: string;
     password: string;
   }
+  export interface NewUrmRequest {
+    user_name: string;
+    department: number;
+    role_id: number;
+  }
+  export interface NewRoleRequest {
+    id?: number;
+    name: string;
+    checkPlugin: boolean;
+    pluginType?: string;
+    pluginIds?: string;
+    plugin?: PluginTypeList[];
+  }
   export interface NewOperation {
     type: string;
     trigger_user_unique_id: string;
@@ -355,6 +405,27 @@
   export interface ExtractResponse {
     extract_content: string;
     module: string;
+  }
+  export interface EditUrmRequest {
+    uid: string;
+    user_name?: string;
+    department?: number;
+    role_id?: number;
+  }
+  export interface DepartmentListResponse extends Paging {
+    data: DepartmentList[];
+  }
+  export interface DepartmentList {
+    id: number;
+    name: string;
+    userNum: number;
+    /**
+     * 是否有二级分组
+     */
+    exist_group?: boolean;
+  }
+  export interface DepartmentGroupList {
+    data: DepartmentList[];
   }
   export interface DeleteUrm {
     uid: string[];

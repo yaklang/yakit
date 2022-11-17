@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
+import React, {forwardRef,useImperativeHandle,ReactNode, useEffect, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -82,8 +82,9 @@ import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
-
+import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
 const {Header, Content, Sider} = Layout
@@ -119,8 +120,10 @@ const singletonRoute: Route[] = [
     // 插件
     Route.AddYakitScript,
     Route.OnlinePluginRecycleBin,
-    // 管理
-    Route.AccountAdminPage
+    // 用户管理
+    Route.AccountAdminPage,
+    // 角色管理
+    Route.RoleAdminPage
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -135,13 +138,15 @@ const defaultUserInfo: UserInfoProps = {
     companyHeadImg: null,
     role: null,
     user_id: null,
-    token: ""
+    token: "",
+    showStatusSearch:false,
 }
 
 export interface MainProp {
     tlsGRPC?: boolean
     addr?: string
     onErrorConfirmed?: () => any
+    ref: any
 }
 
 export interface MenuItem {
@@ -317,7 +322,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     )
 })
 
-const Main: React.FC<MainProp> = (props) => {
+const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
     const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
     const [collapsed, setCollapsed] = useState(false)
@@ -347,6 +352,19 @@ const Main: React.FC<MainProp> = (props) => {
 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
+    
+    // 全局监听登录状态
+    const {userInfo, setStoreUserInfo} = useStore()
+    
+    // 企业版本显示登录弹窗
+    const openLoginShow =()=>{
+        setLoginShow(true)
+    }
+    // 此处注意useImperativeHandle方法的的第一个参数是目标元素的ref引用
+    useImperativeHandle(ref, () => ({
+        // openLoginShow 就是暴露给父组件的方法
+        openLoginShow
+    }))
 
     // 系统类型
     const [system, setSystem] = useState<string>("")
@@ -660,22 +678,37 @@ const Main: React.FC<MainProp> = (props) => {
             }, 50)
         }
     }, [])
-    // 全局监听登录状态
-    const {userInfo, setStoreUserInfo} = useStore()
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
-            setRemoteValue("token-online", res.token)
+            IsEnterprise?setRemoteValue("token-online-enterprise", res.token):setRemoteValue("token-online", res.token)
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
 
+    // 关闭 tab
+    const onCloseTab = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.AccountAdminPage,
+                singleNode: true
+            })
+            ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.RoleAdminPage,
+                singleNode: true
+            })
+    })
+
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
-            setRemoteValue("token-online", "")
+            if(IsEnterprise){
+                onCloseTab()
+            }
+            IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
         })
         return () => ipcRenderer.removeAllListeners("login-out")
     }, [])
@@ -698,8 +731,9 @@ const Main: React.FC<MainProp> = (props) => {
         // 企业用户管理员登录
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
             setUserMenu([
-                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "account-admin", title: "账号管理"},
+                {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
+                {key: "role-admin", title: "角色管理"},
+                {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
@@ -1310,6 +1344,10 @@ const Main: React.FC<MainProp> = (props) => {
                                                 }
                                                 if (key === "trust-list") setTrustShow(true)
                                                 if (key === "set-password") setPasswordShow(true)
+                                                if (key === "role-admin") {
+                                                    const key = Route.RoleAdminPage
+                                                    goRouterPage(key)
+                                                }
                                                 if (key === "account-admin") {
                                                     const key = Route.AccountAdminPage
                                                     goRouterPage(key)
@@ -1709,6 +1747,6 @@ const Main: React.FC<MainProp> = (props) => {
             </Modal>
         </Layout>
     )
-}
+})
 
 export default Main

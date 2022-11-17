@@ -53,7 +53,7 @@ export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema,
         ExcludeNucleiWorkflow: true,
         ExcludeScriptNames: i.exclude,
         IncludedScriptNames: i.include,
-        Tag: isAll ? [] : i.tags.split(","),
+        Tag: i.tags.split(","),
         NoResultReturn: false,
     }
 

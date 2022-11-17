@@ -540,6 +540,7 @@ message SavePayloadProgress {
 
 message DeletePluginByUserIDRequest {
   int64 UserID = 1;
+  string OnlineBaseUrl = 2;
 }
 
 message DeleteLocalPluginsByWhereRequest {

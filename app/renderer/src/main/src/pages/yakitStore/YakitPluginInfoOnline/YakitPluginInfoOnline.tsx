@@ -46,6 +46,7 @@ import { SecondConfirm } from "@/components/functionTemplate/SecondConfirm"
 import { YakEditor } from "@/utils/editors"
 import { YakScript } from "@/pages/invoker/schema"
 import { GetYakScriptByOnlineIDRequest } from "../YakitStorePage"
+import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
 import Login from "@/pages/Login"
 import { fail } from "assert"
 
@@ -58,6 +59,7 @@ const limit = 20
 interface YakitPluginInfoOnlineProps {
     // info: API.YakitPluginDetail
     pluginId: number
+    pluginUUId?:string
     user?: boolean
     deletePlugin: (i: API.YakitPluginDetail) => void
     updatePlugin: (i: API.YakitPluginDetail) => void
@@ -66,7 +68,7 @@ interface YakitPluginInfoOnlineProps {
 }
 
 export interface SearchPluginDetailRequest {
-    id: number
+    uuid: string
 }
 
 export interface StarsOperation {
@@ -91,7 +93,7 @@ export const TagColor: { [key: string]: string } = {
 }
 
 export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (props) => {
-    const { pluginId, user, deletePlugin, updatePlugin, deletePluginLocal } = props
+    const { pluginId,pluginUUId, user, deletePlugin, updatePlugin, deletePluginLocal } = props
     // 全局登录状态
     const { userInfo } = useStore()
     const [loading, setLoading] = useState<boolean>(false)
@@ -100,6 +102,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
     const [isEdit, setIsEdit] = useState<boolean>(false)
     const [tabKey, setTabKey] = useState<string>("1")
+
     useEffect(() => {
         if (pluginId >= 0) getPluginDetail()
     }, [pluginId])
@@ -120,7 +123,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             method: "get",
             url,
             params: {
-                id: pluginId
+                uuid:pluginUUId||""
             }
         })
             .then((res) => {
@@ -274,8 +277,9 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         )
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
-    const isShowAdmin = isAdmin && !plugin.is_private
-
+    const isShowAdmin = (isAdmin||userInfo.showStatusSearch) && !plugin.is_private
+    // 是否为企业版
+    const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
     return (
         <div className={`plugin-info`} id="plugin-info-scroll">
             <Spin spinning={loading} style={{ height: "100%" }}>
@@ -354,7 +358,29 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                 </span>
                             </div>
                         </div>
+                        {isEnterprise?
                         <div className='plugin-info-examine'>
+                            {
+                                (isAdmin || userInfo.user_id === plugin.user_id||plugin.checkPlugin)&&<Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
+                                    <Button type='primary' danger>
+                                        删除
+                                    </Button>
+                                </Popconfirm>
+                            }
+                        {(isAdmin || plugin.checkPlugin) && (
+                            <>
+                                {plugin.status === 0 && !plugin.is_private && (
+                                    <>
+                                        <Button onClick={() => pluginExamine(2)}>不通过</Button>
+                                        <Button type='primary' onClick={() => pluginExamine(1)}>
+                                            通过
+                                        </Button>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </div>
+                        :<div className='plugin-info-examine'>
                             {(isAdmin || userInfo.user_id === plugin.user_id) && (
                                 <>
                                     <Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
@@ -379,7 +405,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                     )}
                                 </>
                             )}
-                        </div>
+                        </div>}
                     </div>
                     <Suspense fallback={<Spin />}>
                         <EditOnlinePluginDetails

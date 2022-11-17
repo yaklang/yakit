@@ -1,4 +1,4 @@
-import React, {useEffect, useState, Suspense, lazy} from "react"
+import React, {useRef, useEffect, useState, Suspense, lazy} from "react"
 import {Form, Modal, notification, Spin, Tabs, Typography} from "antd"
 
 // by types
@@ -15,7 +15,8 @@ import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
-
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const InterceptKeyword = [
     // "KeyA",
     // "KeyB",
@@ -49,6 +50,7 @@ const InterceptKeyword = [
 const Main = lazy(() => import("./pages/MainOperator"))
 // import {YakEnvironment} from "./protected/YakEnvironment";
 const YakEnvironment = lazy(() => import("./protected/YakEnvironment"))
+const LicensePage = lazy(() => import("./pages/LicensePage"))
 
 const {ipcRenderer} = window.require("electron")
 const FormItem = Form.Item
@@ -112,6 +114,8 @@ export const UserProtocol = () => (
     </>
 )
 
+interface LicenseProps {}
+
 function App() {
     const [connected, setConnected] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -122,6 +126,12 @@ function App() {
     // 用户协议相关内容
     const [agreed, setAgreed] = useState(false)
     const [readingSeconds, setReadingSeconds] = useState<number>(1)
+
+    // 获取子组件方法Ref
+    const childRef = useRef<any>()
+
+    // License
+    const [licenseVerified, setLicenseVerified] = useState<boolean>(true);
 
     useEffect(() => {
         setLoading(true)
@@ -201,10 +211,17 @@ function App() {
     }
 
     const refreshLogin = useMemoizedFn(() => {
-        // 获取引擎中的token
-        getRemoteValue("token-online")
+        // 获取引擎中的token(区分企业版与社区版)
+        const TokenSource = IsEnterprise?"token-online-enterprise":"token-online"
+        getRemoteValue(TokenSource)
             .then((resToken) => {
+                console.log("resToken", resToken)
                 if (!resToken) {
+                    // 在第一次进入页面时，如若是企业登录则打开登录
+                    if (IsEnterprise) {
+                        // openLoginShow就是Main暴露给App的方法
+                        childRef.current.openLoginShow()
+                    }
                     return
                 }
                 // 通过token获取用户信息
@@ -216,7 +233,7 @@ function App() {
                     }
                 })
                     .then((res) => {
-                        setRemoteValue("token-online", resToken)
+                        IsEnterprise?setRemoteValue("token-online-enterprise", resToken):setRemoteValue("token-online", resToken)
                         const user = {
                             isLogin: true,
                             platform: res.from_platform,
@@ -230,18 +247,19 @@ function App() {
                             companyHeadImg: res.from_platform === "company" ? res.head_img : null,
                             role: res.role,
                             user_id: res.user_id,
-                            token: resToken
+                            token: resToken,
+                            showStatusSearch: res?.showStatusSearch||false
                         }
                         ipcRenderer.sendSync("sync-update-user", user)
                         setStoreUserInfo(user)
                         refreshToken(user)
                     })
                     .catch((e) => {
-                        setRemoteValue("token-online", "")
+                        IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
                     })
             })
             .catch((e) => {
-                setRemoteValue("token-online", "")
+                IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
             })
     })
 
@@ -327,11 +345,16 @@ function App() {
 
     return connected ? (
         <Suspense fallback={<div>Loading Main</div>}>
-            <Main
-                onErrorConfirmed={() => {
-                    setConnected(false)
-                }}
-            />
+            {licenseVerified ? (
+                <Main
+                    onErrorConfirmed={() => {
+                        setConnected(false)
+                    }}
+                    ref={childRef}
+                />
+            ) : (
+                <LicensePage onLicenseVerified={() => setLicenseVerified(true)}/>
+            )}
         </Suspense>
     ) : (
         <Suspense

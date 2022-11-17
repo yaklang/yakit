@@ -138,7 +138,7 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
-                if (params.OnlineID) win.webContents.send("ref-plugin-operator", {pluginOnlineId: params.OnlineID})
+                if (params.OnlineID&&params.UUID) win.webContents.send("ref-plugin-operator", {pluginOnlineId: params.OnlineID,pluginUUID:params.UUID})
                 resolve(data)
             })
         })

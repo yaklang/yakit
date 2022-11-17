@@ -31,6 +31,7 @@ import {getRemoteValue} from "@/utils/kv"
 export interface YakScriptOperatorProp {
     yakScriptId: number
     yakScriptIdOnlineId?: number
+    yakScriptUUIdOnlineUUId?: string
     size?: "big" | "small"
     fromMenu?: boolean
 
@@ -265,6 +266,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [isDisabledOnline, setIsDisabledOnline] = useState<boolean>(false)
     const [activeKey, setActiveKey] = useState<string>("runner")
     const [pluginIdOnlineId, setPluginIdOnlineId, getPluginIdOnlineId] = useGetState<number>()
+    const [pluginUUIdOnlineUUId, setPluginUUIdOnlineUUId] = useState<string>()
     const refTabsAndOnlinePlugin = useMemoizedFn(() => {
         if (script) {
             setIsDisabledLocal(false)
@@ -281,16 +283,19 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         if (script && script.OnlineId > 0) {
             // 有本地走本地
             setPluginIdOnlineId(script?.OnlineId)
+            setPluginUUIdOnlineUUId(script?.UUID)
         } else {
             // 没本地走线上
             setPluginIdOnlineId(props.yakScriptIdOnlineId)
+            setPluginUUIdOnlineUUId(props.yakScriptUUIdOnlineUUId)
         }
     })
-    const getYakScriptLocal = useMemoizedFn((id) => {
+    const getYakScriptLocal = useMemoizedFn((id,uuid) => {
         setLoading(true)
         ipcRenderer
             .invoke("GetYakScriptByOnlineID", {
-                OnlineID: id
+                OnlineID: id,
+                UUID: uuid,
             } as GetYakScriptByOnlineIDRequest)
             .then((newSrcipt: YakScript) => {
                 setIsDisabledLocal(false)
@@ -318,9 +323,9 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     useEffect(() => {
         // 下载插件后，刷新
         ipcRenderer.on("ref-plugin-operator", async (e: any, data: any) => {
-            const { pluginOnlineId } = data
+            const { pluginOnlineId,pluginUUID } = data
             if (getScript()?.OnlineId == pluginOnlineId || getPluginIdOnlineId() === pluginOnlineId) {
-                getYakScriptLocal(pluginOnlineId)
+                getYakScriptLocal(pluginOnlineId,pluginUUID)
             }
         })
         return () => {
@@ -544,6 +549,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                     {pluginIdOnlineId && pluginIdOnlineId > 0 && activeKey === 'online' && (
                         <YakitPluginInfoOnline
                             pluginId={pluginIdOnlineId}
+                            pluginUUId={pluginUUIdOnlineUUId}
                             deletePlugin={(p) => {
                                 if (props.deletePluginOnline) props.deletePluginOnline(p)
                             }}

@@ -53,7 +53,8 @@ import { YakitPluginJournalDetails } from "@/pages/yakitStore/YakitPluginOnlineJ
 import { OnlinePluginRecycleBin } from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
 import { JavaPayloadPage } from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import { NewReverseServerPage } from "@/pages/reverseServer/NewReverseServerPage"
-import AccountAdminPage from "@/pages/accountAdminPage/AccountAdminPage"
+import AccountAdminPage from "@/pages/enterpriseAdminPage/AccountAdminPage"
+import RoleAdminPage from "@/pages/enterpriseAdminPage/RoleAdminPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -128,6 +129,7 @@ export enum Route {
 
     // 管理
     AccountAdminPage = "account-admin-page", // 用户管理
+    RoleAdminPage = "role-admin-page", // 角色管理
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -251,7 +253,14 @@ export const RouteMenuData: MenuDataProps[] = [
     },
     {
         key: Route.AccountAdminPage,
-        label: "账号管理",
+        label: "用户管理",
+        icon: <FireOutlined />,
+        disabled: true,
+        hidden: true
+    },
+    {
+        key: Route.RoleAdminPage,
+        label: "角色管理",
         icon: <FireOutlined />,
         disabled: true,
         hidden: true
@@ -417,6 +426,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <OnlinePluginRecycleBin />
         case Route.AccountAdminPage: 
             return <AccountAdminPage />
+        case Route.RoleAdminPage: 
+            return <RoleAdminPage />
         default:
             return <div />
     }

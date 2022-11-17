@@ -1,0 +1,22 @@
+.role-admin-page {
+    .table-title {
+        display: flex;
+        .tab-title {
+            flex: 1;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .operation {
+            width: 152px;
+        }
+    }
+}
+.select-render-all {
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    cursor: pointer;
+}
+.select-render-all:hover {
+    color: #69c0ff;
+}
