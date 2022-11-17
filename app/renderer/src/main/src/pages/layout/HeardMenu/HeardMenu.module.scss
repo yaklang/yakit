@@ -84,6 +84,17 @@
             visibility: hidden;
             margin-left: 0;
         }
+
+        .heard-menu-item-open {
+            color: #1890ff;
+
+            svg {
+                color: #1890ff;
+                margin-left: 2px;
+                width: 16px;
+                height: 16px;
+            }
+        }
     }
 
     .heard-menu-right {
@@ -199,14 +210,15 @@
             text-overflow: ellipsis;
             overflow: hidden;
             word-break: break-all;
-            max-width: 90vw;
+            max-width: 80vw;
         }
     }
 }
 
 
 .popover {
-    top: 21px !important;
+    top: 81px !important;
+    // left: 12px !important;
     z-index: 1099;
 
     :global {

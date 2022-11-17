@@ -1,9 +1,10 @@
-import {MenuItem, MenuItemGroup} from "@/pages/MainOperator"
-import {MenuDataProps} from "@/routes/routeSpec"
+import { MenuItem, MenuItemGroup } from "@/pages/MainOperator"
+import { MenuDataProps, Route } from "@/routes/routeSpec"
 
 export interface HeardMenuProps {
     routeMenuData: MenuDataProps[]
     menuItemGroup: MenuItemGroup[]
+    onRouteMenuSelect:(key: Route) => void
 }
 
 /**
@@ -13,9 +14,11 @@ export interface HeardMenuProps {
 export interface RouteMenuDataItemProps {
     menuItem: MenuDataProps
     isShow: boolean
+    onSelect: (s: MenuDataProps) => void
 }
 export interface SubMenuProps {
     subMenuData: MenuDataProps[]
+    onSelect: (s: MenuDataProps) => void
 }
 
 export interface SubMenuGroupProps {
@@ -28,5 +31,5 @@ export interface HeardMenuLeftProps {
     menuItemGroup: MenuItemGroup[]
     routeMenuData: MenuDataProps[]
     childrenIsViewList?: boolean[]
-    number:number
+    number: number
 }

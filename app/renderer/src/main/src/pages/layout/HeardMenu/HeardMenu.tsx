@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState, ReactNode} from "react"
+import React, { useEffect, useRef, useState, ReactNode } from "react"
 import {
     HeardMenuProps,
     HeardMenuLeftProps,
@@ -7,22 +7,24 @@ import {
     SubMenuProps
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {DefaultRouteMenuData, MenuDataProps} from "@/routes/routeSpec"
-import {DefaultPluginIcon, PayloadIcon, YakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
+import { DefaultRouteMenuData, MenuDataProps, Route } from "@/routes/routeSpec"
+import { MenuDefaultPluginIcon, MenuPayloadIcon, MenuYakRunnerIcon } from "@/pages/customizeMenu/icon/menuIcon"
 import classNames from "classnames"
-import {ChevronDownIcon, SaveIcon, SortDescendingIcon} from "@/assets/newIcon"
+import { ChevronDownIcon, ChevronUpIcon, SaveIcon, SortDescendingIcon } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
-import {useMemoizedFn} from "ahooks"
-import {YakitMenu, YakitMenuItemProps} from "../YakitMenu/YakitMenu"
-import {YakitPopover} from "../YakitPopover/YakitPopover"
+import { useMemoizedFn } from "ahooks"
+import { YakitMenu, YakitMenuItemProps } from "../YakitMenu/YakitMenu"
+import { YakitPopover } from "../YakitPopover/YakitPopover"
+import { onImportShare } from "@/pages/fuzzer/components/ShareImport"
 
 /**
  * @description:
  * @param {MenuDataProps} menuItemGroup 自定义菜单参数
  * @param {menuItemGroup} routeMenuData 路由参数
+ * @param {} onRouteMenuSelect 系统菜单选择事件
  */
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
-    const {routeMenuData, menuItemGroup} = props
+    const { routeMenuData, menuItemGroup, onRouteMenuSelect } = props
     /**
      * @description: 折叠起来的菜单
      */
@@ -54,17 +56,20 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             const element = childrenList[index]
             childWidthAll += element.clientWidth
             if (childWidthAll > menuWidth) {
-                n = index - 1
+                n = index
                 break
             }
             clientWidth[index] = element.clientWidth
         }
         setNumber(n)
-        setMoreLeft(clientWidth.reduce((p, c) => p + c))
+        if (clientWidth.length > 0) {
+            setMoreLeft(clientWidth.reduce((p, c) => p + c))
+        }
         if (n < 0) {
             setRouteMenuDataAfter([])
             return
         }
+
         const afterRoute: MenuDataProps[] = []
         const beforeRoute: MenuDataProps[] = []
         routeMenuData.forEach((ele, index) => {
@@ -76,7 +81,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         })
         setRouteMenuDataAfter(afterRoute)
     })
-
     return (
         <div className={style["heard-menu"]}>
             <ReactResizeDetector
@@ -118,6 +122,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                     key={`menuItem-${menuItem.id}`}
                                     menuItem={menuItem}
                                     isShow={number > 0 ? number <= index : false}
+                                    onSelect={(r) => onRouteMenuSelect(r.key as Route)}
                                 />
                             </>
                         )
@@ -133,14 +138,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             <div className={style["heard-menu-right"]}>
                 <div className={style["heard-menu-theme"]}>
                     <SaveIcon />
-                    <span className={style["heard-menu-label"]}>导入协作资源</span>
+                    <span className={style["heard-menu-label"]} onClick={() => onImportShare()}>导入协作资源</span>
                 </div>
-                <div className={style["heard-menu-grey"]}>
-                    <PayloadIcon />
-                    <span className={style["heard-menu-label"]}>Payload</span>
+                <div className={style["heard-menu-grey"]} onClick={() => onRouteMenuSelect(Route.PayloadManager)}>
+                    <MenuPayloadIcon />
+                    <span className={style["heard-menu-label"]} >Payload</span>
                 </div>
-                <div className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"])}>
-                    <YakRunnerIcon />
+                <div className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"])} onClick={() => onRouteMenuSelect(Route.YakScript)}>
+                    <MenuYakRunnerIcon />
                     <span className={style["heard-menu-label"]}>Yak Runner</span>
                 </div>
                 <div className={style["heard-menu-sort"]}>
@@ -155,17 +160,16 @@ export default HeardMenu
 
 const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo(
     (props) => {
-        const {menuItem, isShow} = props
+        const { menuItem, isShow, onSelect } = props
         return (
             <YakitPopover
                 placement='bottomLeft'
-                arrowPointAtCenter={true}
-                content={<SubMenu subMenuData={menuItem.subMenuData || []} />}
+                content={<SubMenu subMenuData={menuItem.subMenuData || []} onSelect={onSelect} />}
                 trigger='hover'
                 overlayClassName={classNames(style["popover"], {
                     [style["popover-content"]]: menuItem.subMenuData && menuItem.subMenuData.length <= 1
                 })}
-                visible={menuItem.id==='2'}
+                // visible={menuItem.id==='3'}
             >
                 <div
                     className={classNames(style["heard-menu-item"], {
@@ -186,13 +190,13 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo(
 )
 
 const SubMenuGroup: React.FC<SubMenuGroupProps> = (props) => {
-    const {subMenuGroupData} = props
+    const { subMenuGroupData, } = props
     return (
         <div className={style["heard-sub-menu"]}>
             {subMenuGroupData.map((subMenuGroupItem) => (
                 <div className={style["heard-sub-menu-item"]} key={subMenuGroupItem.YakScriptId}>
-                    {/* {subMenuGroupItem.icon || <DefaultPluginIcon />} */}
-                    <DefaultPluginIcon />
+                    {/* {subMenuGroupItem.icon || <MenuDefaultPluginIcon />} */}
+                    <MenuDefaultPluginIcon />
                     <div className={style["heard-sub-menu-label"]}>{subMenuGroupItem.Verbose}</div>
                 </div>
             ))}
@@ -201,12 +205,12 @@ const SubMenuGroup: React.FC<SubMenuGroupProps> = (props) => {
 }
 
 const SubMenu: React.FC<SubMenuProps> = (props) => {
-    const {subMenuData} = props
+    const { subMenuData, onSelect } = props
     return (
         <div className={style["heard-sub-menu"]}>
             {subMenuData.map((subMenuItem) => (
-                <div className={style["heard-sub-menu-item"]} key={`subMenuItem-${subMenuItem.id}`}>
-                    {subMenuItem.icon || <DefaultPluginIcon />}
+                <div className={style["heard-sub-menu-item"]} key={`subMenuItem-${subMenuItem.id}`} onClick={() => onSelect(subMenuItem)}>
+                    {subMenuItem.icon || <MenuDefaultPluginIcon />}
                     <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
                 </div>
             ))}
@@ -219,11 +223,11 @@ interface CollapseMenuProp {
     moreLeft: number
 }
 const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
-    const {menuData, moreLeft} = props
+    const { menuData, moreLeft } = props
 
     const [show, setShow] = useState<boolean>(false)
 
-    const menuSelect = useMemoizedFn((type: string) => {})
+    const menuSelect = useMemoizedFn((type: string) => { })
     const newMenuData: YakitMenuItemProps[] = menuData.map((item) => ({
         key: item.id || "",
         label: item.label,
@@ -235,10 +239,10 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
             })) || []
     }))
 
-    const menu = <YakitMenu data={newMenuData} width={136} onSelect={({key}) => menuSelect(key)}></YakitMenu>
+    const menu = <YakitMenu data={newMenuData} width={136} onSelect={({ key }) => menuSelect(key)}></YakitMenu>
 
     return (
-        <div className={style["heard-menu-more"]} style={{left: moreLeft}}>
+        <div className={style["heard-menu-more"]} style={{ left: moreLeft }}>
             <YakitPopover
                 placement={"bottomLeft"}
                 arrowPointAtCenter={true}
@@ -247,9 +251,13 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                 onVisibleChange={(visible) => setShow(visible)}
                 overlayClassName={classNames(style["popover"])}
             >
-                <div className={style["heard-menu-item"]}>
+                <div className={classNames(style["heard-menu-item"], {
+                    [style['heard-menu-item-open']]: show
+                })}>
                     更多
-                    <ChevronDownIcon />
+                    {
+                        show && <ChevronUpIcon /> || <ChevronDownIcon />
+                    }
                 </div>
             </YakitPopover>
         </div>
