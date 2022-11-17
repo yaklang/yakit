@@ -164,11 +164,14 @@ const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 
-interface HistoryHTTPFuzzerTask {
+export interface HistoryHTTPFuzzerTask {
     Request: string
     RequestRaw: Uint8Array
     Proxy: string
     IsHTTPS: boolean
+
+    // 展示渲染，一般来说 Verbose > RequestRaw > Request
+    Verbose?: string
 }
 
 export const showDictsAndSelect = (res: (i: string) => any) => {
@@ -406,6 +409,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [props.isHttps, props.request])
 
     const loadHistory = useMemoizedFn((id: number) => {
+        resetResponse()
+
         setLoading(true)
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
