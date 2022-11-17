@@ -102,6 +102,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
     const [isEdit, setIsEdit] = useState<boolean>(false)
     const [tabKey, setTabKey] = useState<string>("1")
+
     useEffect(() => {
         if (pluginId >= 0) getPluginDetail()
     }, [pluginId])
@@ -276,7 +277,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         )
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
-    const isShowAdmin = isAdmin && !plugin.is_private
+    const isShowAdmin = (isAdmin||userInfo.showStatusSearch) && !plugin.is_private
     // 是否为企业版
     const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
     return (

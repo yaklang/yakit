@@ -138,7 +138,8 @@ const defaultUserInfo: UserInfoProps = {
     companyHeadImg: null,
     role: null,
     user_id: null,
-    token: ""
+    token: "",
+    showStatusSearch:false,
 }
 
 export interface MainProp {

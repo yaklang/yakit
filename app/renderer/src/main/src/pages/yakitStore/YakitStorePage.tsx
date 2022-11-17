@@ -93,6 +93,7 @@ import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
 import {fullscreen} from "@uiw/react-md-editor"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
+const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
 const {Option} = Select
@@ -796,6 +797,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             ? yakScriptTagsAndType || {}
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
+                                        console.log("item",statisticsDataOnlineOrUser,userInfo)
                                         const queryName = item[0]
                                         const statisticsList = item[1]
                                         const title = queryTitle[queryName]
@@ -809,16 +811,14 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         if (plugSource === "online") {
                                             current = statisticsQueryOnline[queryName] || ""
                                         }
-                                        if (
-                                            (queryName === "status" &&
-                                                plugSource === "user" &&
-                                                statisticsQueryUser.is_private !== "false") ||
-                                            (queryName === "status" &&
-                                                plugSource === "online" &&
-                                                userInfo.role !== "admin")
-                                        ) {
-                                            return <></>
-                                        }
+                                
+                                        // 审核状态展示
+                                        const UserIsPrivate = queryName === "status" && plugSource === "user" && statisticsQueryUser.is_private !== "false"
+                                        const OnlineAdmin = queryName === "status" && plugSource === "online" && userInfo.role !== "admin"
+                                        const OnlineStatusSearch = queryName === "status" && plugSource === "online" && userInfo.role !== "admin" && userInfo.showStatusSearch !== true
+                                        if (!IsEnterprise&&(UserIsPrivate || OnlineAdmin)) return <></>
+                                        if(IsEnterprise&&(UserIsPrivate || OnlineStatusSearch)) return <></>
+
                                         if (!Array.isArray(current)) {
                                             current = current.split(",")
                                         }
@@ -3415,9 +3415,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
             />
         )
     }
-    // 是否为企业版
-    const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
-    if(!userInfo.isLogin && isEnterprise && !baseUrl.startsWith("https://www.yaklang.com")){
+ 
+    if(!userInfo.isLogin && IsEnterprise && !baseUrl.startsWith("https://www.yaklang.com")){
         return (
             <List
                 dataSource={[]}
@@ -3525,7 +3524,9 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
             })
         }
     })
-    const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private)
+    // 全局登录状态
+    const {userInfo} = useStore()
+    const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.showStatusSearch && !bind_me)
     const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
     return (
         <div className={`plugin-item ${currentId === info.id && "plugin-item-active"}`} onClick={() => onClick(info)}>
@@ -3726,7 +3727,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                         </Select>
                     </Form.Item>
                 )}
-                {((!user && isAdmin) || (user && isShowStatus)) && (
+                {((!user && isAdmin) || (user && isShowStatus) || (!user && userInfo.showStatusSearch)) && (
                     <Form.Item name='status' label='审核状态'>
                         <Select size='small' getPopupContainer={() => refTest.current}>
                             <Option value='all'>全部</Option>

@@ -42,6 +42,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     const {onCancel, refresh, editInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
+    const [treeLoadedKeys,setTreeLoadedKeys] = useState<any>([])
     const PluginType = {
         yak: "YAK 插件",
         mitm: "MITM 插件",
@@ -56,7 +57,8 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             return {
                 id: key,
                 value: key,
-                title: PluginType[key]
+                title: PluginType[key],
+                isLeaf: false
             }
         })
     ]
@@ -100,7 +102,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         // treeSelect:["port-scan",{value:4389,label:"1021"}]
                     }
                     console.log("value", value)
-                    if(!checkPlugin)setTreeData(NoTreePluginType)
+                    if(checkPlugin)setTreeData(NoTreePluginType)
                     if (
                         pluginTypeArr.length === PluginTypeKeyArr.length &&
                         pluginTypeArr.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
@@ -163,7 +165,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 }, 200)
             })
     })
-    const [treeData, setTreeData] = useState<Omit<DefaultOptionType, "label">[]>(TreePluginType)
+    const [treeData, setTreeData] = useState<Omit<DefaultOptionType, "label">[]>([...TreePluginType])
 
     const onLoadData: TreeSelectProps["loadData"] = ({id}) => {
         return new Promise((resolve) => {
@@ -214,14 +216,15 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
 
     const setTreeSelect = (value:boolean) => {
         if(value){
-            setTreeData(TreePluginType)
+            setTreeData(NoTreePluginType)
         }
         else{
-            setTreeData(NoTreePluginType)
+            setTreeData([...TreePluginType])
         }
         form.setFieldsValue({
             treeSelect:[]
         })
+        setTreeLoadedKeys([])
         setSelectedAll(false)
         setOpen(true)
     }
@@ -316,6 +319,12 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                         open={open}
                         onDropdownVisibleChange={(visible) => setOpen(visible)}
+                        treeLoadedKeys={treeLoadedKeys}
+                        treeExpandedKeys={treeLoadedKeys}
+                        onTreeExpand={(expandedKeys)=>{
+                            // console.log("expandedKeys",expandedKeys)
+                            setTreeLoadedKeys(expandedKeys)
+                        }}
                     />
                 </Form.Item>
                 

@@ -247,7 +247,8 @@ function App() {
                             companyHeadImg: res.from_platform === "company" ? res.head_img : null,
                             role: res.role,
                             user_id: res.user_id,
-                            token: resToken
+                            token: resToken,
+                            showStatusSearch: res?.showStatusSearch||false
                         }
                         ipcRenderer.sendSync("sync-update-user", user)
                         setStoreUserInfo(user)

@@ -116,6 +116,10 @@
     role: string;
     user_id: number;
     uid?: string;
+    /**
+     * 是否显示审核状态筛选
+     */
+    showStatusSearch?: boolean;
   }
   export interface UrmUserListResponse extends Paging {
     data: UrmUserList[];
