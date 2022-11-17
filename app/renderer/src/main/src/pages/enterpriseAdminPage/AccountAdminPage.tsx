@@ -1117,8 +1117,8 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                         setDataSource([])
                     }
                     setPagination({...pagination, Limit: res.pagemeta.limit})
-                    setTotal(res.pagemeta.total)
-                    selectItemId &&
+                    setTotal(res.pagemeta.total);
+                    (selectItemId&&params.keywords==="") &&
                         setTreeCount({
                             id: selectItemId,
                             count: res.pagemeta.total
