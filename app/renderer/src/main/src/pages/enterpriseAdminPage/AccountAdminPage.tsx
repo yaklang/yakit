@@ -1067,7 +1067,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     const [total, setTotal] = useState<number>()
     // 编辑项信息
     const [editInfo, setEditInfo] = useState<API.UrmUserList>()
-    const [selectItemId, setSelectItemId] = useState<string | number>()
+    const [selectItemId, setSelectItemId,getSelectItemId] = useGetState<string | number>()
     const [selectTitle, setSelectTitle] = useState<SelectTitleProps>()
     // 根据请求返回Total更改Count
     const [treeCount, setTreeCount] = useState<TreeCountProps>()
@@ -1080,9 +1080,8 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
             page: page || 1,
             limit: limit || pagination.Limit
         }
-        // if (selectItemId) {
         // 处理无归属请求
-        const id = selectItemId === -1 ? 0 : selectItemId
+        const id = getSelectItemId() === -1 ? 0 : getSelectItemId()
         // 创建账号时用于更新组织架构数量
         const departmentId = addDepartmentId || id
         let filterObj: any = {
@@ -1134,7 +1133,6 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                     setLoading(false)
                 }, 200)
             })
-        // }
     }
 
     useEffect(() => {
@@ -1145,7 +1143,6 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
 
     const rowSelection = {
         onChange: (selectedRowKeys, selectedRows: API.UrmUserList[]) => {
-            // let newArr = selectedRowKeys.map((item)=>parseInt(item))
             setSelectedRows(selectedRows)
             setSelectedRowKeys(selectedRowKeys)
         },
@@ -1304,7 +1301,12 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                             setParams({...getParams(), keywords: e.target.value})
                         }}
                         onSearch={() => {
-                            update()
+                            if(getSelectItemId()===undefined){
+                                update()
+                            }
+                            else{
+                                setSelectItemId(undefined)
+                            }
                         }}
                     />
                 </div>
