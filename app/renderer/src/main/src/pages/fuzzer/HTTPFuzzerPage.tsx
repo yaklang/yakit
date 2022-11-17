@@ -567,7 +567,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // setContent([...buffer])
         })
         ipcRenderer.on(endToken, () => {
-            console.info(successBuffer, failedBuffer)
             updateData()
             successBuffer = []
             failedBuffer = []

@@ -137,7 +137,6 @@ function App() {
     useHotkeys("alt+a", (e) => {
         const a = getCompletions()
         const data = JSON.stringify(a)
-        console.info(data)
         showModal({
             title: "补全内容",
             width: "100%",

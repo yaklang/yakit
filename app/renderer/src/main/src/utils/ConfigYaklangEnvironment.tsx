@@ -125,7 +125,6 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
                         <Button
                             size={"small"}
                             onClick={() => {
-                                console.info(key)
                                 const m = showModal({
                                     title: "修改变量", width: 650, content: (
                                         <NewEnvKeyForm
@@ -143,7 +142,6 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
                             修改
                         </Button>
                         <Popconfirm title={"删除本环境变量"} onConfirm={() => {
-                            console.info(key)
                             ipcRenderer.invoke("DelKey", {Key: key.Key}).then(() => {
                                 info("删除成功")
                                 updateKeys()
