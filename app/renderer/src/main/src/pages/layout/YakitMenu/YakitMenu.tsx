@@ -8,7 +8,7 @@ import classnames from "classnames"
 import styles from "./yakitMenu.module.scss"
 
 export interface YakitMenuItemProps {
-    label: string
+    label: string | ReactNode
     key: string
     disabled?: boolean
     children?: YakitMenuItemProps[]
@@ -29,11 +29,11 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         if (info.children && info.children.length > 0) {
             const itemInfo: ItemType = {
                 label: (
-                    <div
-                        style={{width: width}}
-                        className={classnames(styles["yakit-menu-item"], styles["yakit-menu-item-style"])}
-                    >
-                        {info.label}
+                    <div style={{width: width}} className={classnames(styles["yakit-menu-item"])}>
+                        <div className={styles["yakit-menu-item-left"]}>
+                            {info.itemIcon}
+                            <div className='content-ellipsis'>{info.label}</div>
+                        </div>
                         <YakitMenuRightSvgIcon className={styles["icon-style"]} />
                     </div>
                 ),
@@ -51,11 +51,11 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         } else {
             const itemInfo: ItemType = {
                 label: (
-                    <div
-                        style={{width: width}}
-                        className={classnames(styles["yakit-menu-item"], styles["yakit-menu-item-style"])}
-                    >
-                        {info.label}
+                    <div style={{width: width}} className={classnames(styles["yakit-menu-item"])}>
+                        <div className={styles["yakit-menu-item-left"]}>
+                            {info.itemIcon}
+                            <div className='content-ellipsis'>{info.label}</div>
+                        </div>
                     </div>
                 ),
                 key: info.key,

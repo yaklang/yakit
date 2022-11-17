@@ -24,8 +24,8 @@
             text-align: center;
             width: 64px;
             z-index: 3;
-            // background-color: #f0f2f5;
             position: absolute;
+            height: 24px;
         }
 
         .heard-menu-left-inner {
@@ -38,8 +38,6 @@
             white-space: nowrap;
             transform: translate(0);
             z-index: 2;
-
-
 
         }
 
@@ -62,7 +60,6 @@
                 text-overflow: ellipsis;
                 overflow: hidden;
                 word-break: break-all;
-                height: 100%;
             }
 
             svg {
@@ -85,7 +82,6 @@
 
         .heard-menu-item-none {
             visibility: hidden;
-            // height: 0;
             margin-left: 0;
         }
     }
@@ -164,33 +160,6 @@
 }
 
 
-.popover {
-    z-index: 1099;
-
-    :global {
-        .ant-popover-inner-content {
-            padding: 6px 6px 12px;
-            border: 1px solid #EAECF3;
-        }
-
-        .ant-popover-inner {
-            box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
-            border-radius: 4px;
-        }
-
-        .ant-popover-arrow {
-            top: 2px;
-        }
-
-        .ant-popover-arrow-content {
-            background-color: #EAECF3;
-            top: -2px;
-            width: 12.313709px;
-            height: 12.313709px;
-        }
-    }
-}
-
 .popover-content {
     :global {
         .ant-popover-inner-content {
@@ -208,6 +177,12 @@
         padding: 6px 12px;
         cursor: pointer;
         align-items: center;
+        height: 28px;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
 
         &:hover {
             background-color: #e6f7ff;
@@ -225,6 +200,24 @@
             overflow: hidden;
             word-break: break-all;
             max-width: 90vw;
+        }
+    }
+}
+
+
+.popover {
+    top: 21px !important;
+    z-index: 1099;
+
+    :global {
+        .ant-popover-inner {
+            border: 1px solid #eaecf3;
+            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border-radius: 4px;
+
+            .ant-popover-inner-content {
+                padding: 6px 4px 8px 4px;
+            }
         }
     }
 }
