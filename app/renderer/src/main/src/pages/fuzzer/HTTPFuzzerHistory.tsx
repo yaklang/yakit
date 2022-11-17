@@ -9,7 +9,7 @@ import {HistoryHTTPFuzzerTask} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
 import {HTTPPacketEditor, YakEditor} from "@/utils/editors";
 import {InputItem} from "@/utils/inputUtil";
-import {QuestionOutlined} from "@ant-design/icons/lib";
+import {QuestionOutlined, SearchOutlined} from "@ant-design/icons/lib";
 
 export interface HTTPFuzzerHistorySelectorProp {
     onSelect: (i: number) => any
@@ -99,6 +99,9 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                 </div>} extraFormItemProps={{style: {marginBottom: 0}}}
                 value={keyword} setValue={setKeyword}
             />
+            <Form.Item style={{marginBottom: 0}}>
+                <Button type="primary" htmlType="submit" icon={<SearchOutlined/>}/>
+            </Form.Item>
         </Form>
         <Divider style={{marginTop: 10, marginBottom: 6}}/>
         <List<HTTPFuzzerTaskDetail>

@@ -955,7 +955,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <ShareData module='fuzzer' getShareContent={getShareContent}/>
                         <Popover
                             trigger={"click"}
-                            placement={"bottom"}
+                            placement={"leftTop"}
                             destroyTooltipOnHide={true}
                             content={
                                 <div style={{width: 400}}>
@@ -1426,7 +1426,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </Popover>
                                 <Popover
                                     trigger={"click"}
-                                    placement={"bottom"}
+                                    placement={"leftTop"}
                                     destroyTooltipOnHide={true}
                                     content={
                                         <div style={{width: 400}}>
