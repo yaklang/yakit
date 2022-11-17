@@ -358,7 +358,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const resetResponse = useMemoizedFn(() => {
         setFirstResponse({...emptyFuzzer})
         setSuccessFuzzer([])
+        setRedirectedResponse(undefined)
         setFailedFuzzer([])
+        setSuccessCount(0)
+        setFailedCount(0)
     })
 
     const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
@@ -410,6 +413,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const loadHistory = useMemoizedFn((id: number) => {
         resetResponse()
+        setHistoryTask(undefined)
+        setLoading(true)
+        setDroppedCount(0)
 
         setLoading(true)
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
@@ -524,7 +530,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     return
                 }
             }
-
             const r = {
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
@@ -562,11 +567,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // setContent([...buffer])
         })
         ipcRenderer.on(endToken, () => {
+            console.info(successBuffer, failedBuffer)
             updateData()
             successBuffer = []
             failedBuffer = []
             count = 0
             droppedCount = 0
+            lastUpdateCount = 0
             setLoading(false)
         })
 

@@ -136,7 +136,10 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                 return <List.Item key={i.Id} style={{padding: 2}}>
                     <Popover placement={"rightBottom"} content={(
                         <div style={{width: 600, height: 300}}>
-                            <HTTPPacketEditor originValue={StringToUint8Array(verbose || "")} readOnly={true}/>
+                            <HTTPPacketEditor
+                                originValue={StringToUint8Array(verbose || "")} readOnly={true}
+                                noMinimap={true} noHeader={true}
+                            />
                         </div>
                     )}>
                         <Card
