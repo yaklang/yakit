@@ -196,14 +196,14 @@ const getYakitDownloadUrl = (version,isEnterprise=false) => {
         switch (process.platform) {
             case "darwin":
                 if (process.arch === "arm64") {
-                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-ee-${version}-darwin-arm64.dmg`
+                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-darwin-arm64.dmg`
                 } else {
-                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-ee-${version}-darwin-x64.dmg`
+                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-darwin-x64.dmg`
                 }
             case "win32":
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-ee-${version}-windows-amd64.exe`
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-windows-amd64.exe`
             case "linux":
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-ee-${version}-linux-amd64.AppImage`
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-linux-amd64.AppImage`
             }
     }
     else{
@@ -379,7 +379,6 @@ module.exports = {
                     version = version.substr(1)
                 }
                 const downloadUrl = getYakitDownloadUrl(version,isEnterprise);
-
                 const dest = path.join(yakEngineDir, path.basename(downloadUrl));
                 try {
                     fs.unlinkSync(dest)
