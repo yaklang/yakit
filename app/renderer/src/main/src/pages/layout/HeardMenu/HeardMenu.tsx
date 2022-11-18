@@ -210,9 +210,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 <SortAscendingIcon />
                             </div>
                         }
-                        activeKey={"-"}
                         onTabClick={onTabClick}
-                        // popupClassName={style["heard-sub-menu-popup"]}
+                        popupClassName={style["heard-sub-menu-popup"]}
                         moreIcon={<DotsHorizontalIcon className={style["dots-icon"]} />}
                     >
                         {subMenuData.map((item, index) => (
@@ -279,6 +278,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
                     [style["popover-content"]]: menuItem.subMenuData && menuItem.subMenuData.length <= 1
                 })}
                 onVisibleChange={setVisible}
+                // visible={menuItem.id === "2"}
             >
                 {popoverContent}
             </YakitPopover>

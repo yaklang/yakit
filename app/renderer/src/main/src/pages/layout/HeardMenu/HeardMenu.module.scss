@@ -51,7 +51,6 @@
             visibility: visible;
             padding: 0 16px;
             text-align: center;
-            max-width: 152px;
             height: 24px;
 
             svg {
@@ -189,6 +188,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
     word-break: break-all;
+    max-width: 152px;
 }
 
 .heard-sub-menu {
@@ -201,7 +201,6 @@
         cursor: pointer;
         align-items: center;
         height: 28px;
-        border-radius: 4px;
         color: #31343F;
 
         svg {
@@ -211,6 +210,7 @@
 
         &:hover {
             background-color: #e6f7ff;
+            border-radius: 4px;
 
             .heard-sub-menu-label {
                 color: #1890ff;
@@ -281,7 +281,13 @@
             display: block;
         }
 
+        .ant-tabs-dropdown-open {
+            svg {
+                color: #40a9ff;
+            }
+        }
     }
+
 
     .dots-icon {
         color: #31343f;
@@ -322,7 +328,7 @@
 
             .sub-menu-expand-item-label {
                 font-size: 12px;
-                max-width: 152px;
+
             }
         }
 
@@ -336,10 +342,27 @@
 
 .heard-sub-menu-popup {
 
+    :global {
+        .ant-tabs-dropdown-menu-item:hover {
+            background-color: transparent;
+        }
+
+        .ant-tabs-dropdown-menu-item {
+            padding: 0;
+        }
+
+        .ant-tabs-dropdown-menu {
+            padding: 6px 6px 12px;
+        }
+    }
+
     .sub-menu-expand-item {
         display: flex;
         align-items: center;
         color: #31343F;
+        padding: 6px 8px;
+        padding-left: 6px !important;
+
 
         .sub-menu-expand-item-icon {
             width: 20px;
@@ -354,6 +377,7 @@
 
         &:hover {
             background-color: #e6f7ff;
+            border-radius: 4px;
 
             .sub-menu-expand-item-label {
                 color: #1890ff;
