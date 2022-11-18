@@ -132,7 +132,9 @@ const singletonRoute: Route[] = [
     // 用户管理
     Route.AccountAdminPage,
     // 角色管理
-    Route.RoleAdminPage
+    Route.RoleAdminPage,
+    // License管理
+    Route.LicenseAdminPage
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -698,14 +700,21 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
 
     // 关闭 tab
     const onCloseTab = useMemoizedFn(() => {
-        ipcRenderer.invoke("send-close-tab", {
-            router: Route.AccountAdminPage,
-            singleNode: true
-        })
-        ipcRenderer.invoke("send-close-tab", {
-            router: Route.RoleAdminPage,
-            singleNode: true
-        })
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.AccountAdminPage,
+                singleNode: true
+            })
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.RoleAdminPage,
+                singleNode: true
+            })
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.LicenseAdminPage,
+                singleNode: true
+            })
     })
 
     useEffect(() => {
@@ -740,6 +749,7 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                 {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "用户管理"},
+                {key: "license-admin",title:"License管理"},
                 {key: "set-password", title: "修改密码"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
@@ -1357,6 +1367,10 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                                                 }
                                                 if (key === "account-admin") {
                                                     const key = Route.AccountAdminPage
+                                                    goRouterPage(key)
+                                                }
+                                                if(key === "license-admin"){
+                                                    const key = Route.LicenseAdminPage
                                                     goRouterPage(key)
                                                 }
                                             }}

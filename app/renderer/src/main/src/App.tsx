@@ -345,16 +345,12 @@ function App() {
 
     return connected ? (
         <Suspense fallback={<div>Loading Main</div>}>
-            {licenseVerified ? (
                 <Main
                     onErrorConfirmed={() => {
                         setConnected(false)
                     }}
                     ref={childRef}
                 />
-            ) : (
-                <LicensePage onLicenseVerified={() => setLicenseVerified(true)}/>
-            )}
         </Suspense>
     ) : (
         <Suspense
@@ -363,7 +359,7 @@ function App() {
                     <AutoSpin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."} />
                 </div>
             }
-        >
+        >{licenseVerified ? (
             <YakEnvironment
                 setMode={setMode}
                 onConnected={() => {
@@ -373,7 +369,9 @@ function App() {
                     setTlsGRPC(e)
                 }}
                 onAddrChanged={setAddr}
-            />
+            />) : (
+                <LicensePage onLicenseVerified={() => setLicenseVerified(true)}/>
+            )}
         </Suspense>
     )
 }

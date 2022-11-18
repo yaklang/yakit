@@ -5,6 +5,7 @@ import {API} from "@/services/swagger/resposeType"
 import {Button, Col, Divider, Form, Modal, notification, Row, Spin} from "antd"
 import {InputItem} from "@/utils/inputUtil"
 import CopyToClipboard from "react-copy-to-clipboard";
+import "./LicensePage.scss"
 const {ipcRenderer} = window.require("electron")
 const {Item} = Form;
 
@@ -58,7 +59,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
     }, [])
 
     if (!licenseRequest) {
-        return <Spin tip={"加载 license"}/>
+        return <Spin className="license-spin-box" tip={"加载 license"}/>
     }
 
     const UploadLicense = () => {
