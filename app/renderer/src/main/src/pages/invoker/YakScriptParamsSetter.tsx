@@ -674,7 +674,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "integer":
             return <InputNumber
                 required={!!props.baseRequired}
-                value={props.values as number} onChange={e => props.setValue(e)}
+                value={props.values as number} onChange={e => props.setValue(e as number)}
                 step={1}
                 disabled={!!props.disabled}
             />
@@ -682,7 +682,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
             return <InputNumber
                 step={1} min={1}
                 required={!!props.baseRequired}
-                value={props.values as number} onChange={e => props.setValue(e)}
+                value={props.values as number} onChange={e => props.setValue(e as number)}
                 disabled={!!props.disabled}
             />
         case "float":
@@ -691,7 +691,7 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "double":
             return <InputNumber
                 required={!!props.baseRequired}
-                value={props.values as number} onChange={e => props.setValue(e)}
+                value={props.values as number} onChange={e => props.setValue(e as number)}
                 step={0.1}
                 disabled={!!props.disabled}
             />

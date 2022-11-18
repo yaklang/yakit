@@ -84,7 +84,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             })
     })
 
-    const rightClick = useMemoizedFn((e: { clientX: number; clientY: number }) => {
+    const rightClick = useMemoizedFn((e: {clientX: number; clientY: number}) => {
         showByCursorMenu(
             {
                 content: [
@@ -104,22 +104,20 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             <Button
                 size={"small"}
                 type='primary'
-                icon={<ShareIcon/>}
+                icon={<ShareIcon />}
                 onClick={rightClick}
                 onContextMenuCapture={rightClick}
             >
                 分享 / 导入
             </Button>
-            <Modal
-                title='分享'
-                visible={isModalVisible}
-                onCancel={handleCancel}
-                footer={null}
-            >
+            <Modal title='分享' visible={isModalVisible} onCancel={handleCancel} footer={null}>
                 <div className='content-value'>
                     <span className='label-text'>设置有效期：</span>
-                    <Radio.Group disabled={disabled} value={expiredTime}
-                                 onChange={(e) => setExpiredTime(e.target.value)}>
+                    <Radio.Group
+                        disabled={disabled}
+                        value={expiredTime}
+                        onChange={(e) => setExpiredTime(e.target.value)}
+                    >
                         <Radio.Button value={5}>5分钟</Radio.Button>
                         <Radio.Button value={15}>15分钟</Radio.Button>
                         <Radio.Button value={60}>1小时</Radio.Button>
@@ -128,17 +126,17 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
                 </div>
                 <div className='content-value'>
                     <span className='label-text'>密码：</span>
-                    <Switch disabled={disabled} checked={pwd} onChange={(checked) => setPwd(checked)}/>
+                    <Switch disabled={disabled} checked={pwd} onChange={(checked) => setPwd(checked)} />
                 </div>
                 <div className='content-value'>
                     <span className='label-text'>限制分享次数：</span>
-                    <Switch disabled={disabled} checked={shareNumber} onChange={(checked) => setShareNumber(checked)}/>
+                    <Switch disabled={disabled} checked={shareNumber} onChange={(checked) => setShareNumber(checked)} />
                     &emsp;
                     {shareNumber && (
                         <InputNumber
                             min={1}
                             value={limit_num}
-                            onChange={setLimit_num}
+                            onChange={(v) => setLimit_num(v as number)}
                             size='small'
                             formatter={(value) => `${value}次`}
                         />

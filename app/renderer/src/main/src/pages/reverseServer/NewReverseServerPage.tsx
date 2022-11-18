@@ -278,7 +278,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                             max={65535}
                             precision={0}
                             value={params.ReversePort}
-                            onChange={(ReversePort) => setValue({...params, ReversePort})}
+                            onChange={(ReversePort) => setValue({...params, ReversePort: ReversePort as number})}
                         />
                     </Form.Item>
 

@@ -276,6 +276,20 @@
         .ant-tabs-tab-active {
             border-bottom: 0;
         }
+
+        .ant-tabs-dropdown-hidden {
+            display: block;
+        }
+
+    }
+
+    .dots-icon {
+        color: #31343f;
+        cursor: pointer;
+
+        &:hover {
+            color: #40a9ff;
+        }
     }
 
     .sub-menu-expand {
@@ -284,7 +298,6 @@
 
         .sub-menu-expand-item {
             height: 100%;
-            max-width: 152px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -309,6 +322,7 @@
 
             .sub-menu-expand-item-label {
                 font-size: 12px;
+                max-width: 152px;
             }
         }
 
@@ -318,6 +332,35 @@
             background-color: #EAECF3;
         }
     }
+}
+
+.heard-sub-menu-popup {
+
+    .sub-menu-expand-item {
+        display: flex;
+        align-items: center;
+        color: #31343F;
+
+        .sub-menu-expand-item-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        &:hover {
+            background-color: #e6f7ff;
+
+            .sub-menu-expand-item-label {
+                color: #1890ff;
+            }
+        }
+    }
+
 }
 
 .margin-right-0 {

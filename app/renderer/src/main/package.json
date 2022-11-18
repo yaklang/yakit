@@ -23,7 +23,7 @@
     "@uiw/react-md-editor": "^3.6.5",
     "ahooks": "^3.1.6",
     "ali-react-table": "2.6.1",
-    "antd": "4.20.7",
+    "antd": "4.21.7",
     "bizcharts": "^4.1.12",
     "classnames": "^2.3.2",
     "codemirror": "^5.63.3",

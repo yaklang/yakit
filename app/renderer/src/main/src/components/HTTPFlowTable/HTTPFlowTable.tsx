@@ -1160,7 +1160,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     placeholder='Minimum'
                                     min={0}
                                     value={getAfterBodyLength()}
-                                    onChange={setAfterBodyLength}
+                                    onChange={(v) => setAfterBodyLength(v as number)}
                                     size='small'
                                 />
                                 <Input className={style["input-split"]} placeholder='~' disabled />
@@ -1169,7 +1169,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     placeholder='Maximum'
                                     min={getAfterBodyLength()}
                                     value={getBeforeBodyLength()}
-                                    onChange={setBeforeBodyLength}
+                                    onChange={(v) => {setBeforeBodyLength(v as number)}}
                                     size='small'
                                 />
                                 <Select

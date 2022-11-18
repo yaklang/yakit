@@ -510,7 +510,10 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                         precision={0}
                                                         value={addrParams.ReversePort}
                                                         onChange={(ReversePort) =>
-                                                            setAddrParams({...addrParams, ReversePort})
+                                                            setAddrParams({
+                                                                ...addrParams,
+                                                                ReversePort: ReversePort as number
+                                                            })
                                                         }
                                                     />
                                                 </Form.Item>
@@ -1063,7 +1066,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                         max={65535}
                                         precision={0}
                                         value={+params[item.Key]}
-                                        onChange={(value) => setParamsValue([{key: item.Key, value: value}])}
+                                        onChange={(value) => setParamsValue([{key: item.Key, value: value as number}])}
                                     />
                                 )}
                                 {item.Type === FormParamsType.StringBool && (

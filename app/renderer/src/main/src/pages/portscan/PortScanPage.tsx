@@ -567,7 +567,7 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                             <InputNumber
                                 addonBefore={"爬虫请求数"}
                                 value={params.BasicCrawlerRequestMax}
-                                onChange={(e) => setParams({...params, BasicCrawlerRequestMax: e})}
+                                onChange={(e) => setParams({...params, BasicCrawlerRequestMax: e as number})}
                             />
                         </Space>
                     </Form.Item>

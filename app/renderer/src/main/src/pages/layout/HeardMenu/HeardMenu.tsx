@@ -11,7 +11,14 @@ import style from "./HeardMenu.module.scss"
 import {DefaultRouteMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
 import {MenuDefaultPluginIcon, MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
 import classNames from "classnames"
-import {ChevronDownIcon, ChevronUpIcon, SaveIcon, SortAscendingIcon, SortDescendingIcon} from "@/assets/newIcon"
+import {
+    ChevronDownIcon,
+    ChevronUpIcon,
+    DotsHorizontalIcon,
+    SaveIcon,
+    SortAscendingIcon,
+    SortDescendingIcon
+} from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useMemoizedFn} from "ahooks"
 import {YakitMenu, YakitMenuItemProps} from "../YakitMenu/YakitMenu"
@@ -89,8 +96,18 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onExpand = useMemoizedFn(() => {
         setIsExpand(true)
         if (subMenuData.length === 0 && routeMenuData.length > 0) {
-            setSubMenuData(routeMenuData[0].subMenuData || [])
-            setMenuId(routeMenuData[0].id || "")
+            // setSubMenuData(routeMenuData[0].subMenuData || [])
+            setSubMenuData(
+                [
+                    ...(routeMenuData[0].subMenuData || []),
+                    ...(routeMenuData[1].subMenuData || []),
+                    ...(routeMenuData[2].subMenuData || []),
+                    ...(routeMenuData[3].subMenuData || []),
+                    ...(routeMenuData[4].subMenuData || []),
+                    ...(routeMenuData[5].subMenuData || [])
+                ] || []
+            )
+            // setMenuId(routeMenuData[0].id || "")
         }
     })
     const onTabClick = useMemoizedFn((key) => {
@@ -195,6 +212,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         }
                         activeKey={"-"}
                         onTabClick={onTabClick}
+                        // popupClassName={style["heard-sub-menu-popup"]}
+                        moreIcon={<DotsHorizontalIcon className={style["dots-icon"]} />}
                     >
                         {subMenuData.map((item, index) => (
                             <Tabs.TabPane
