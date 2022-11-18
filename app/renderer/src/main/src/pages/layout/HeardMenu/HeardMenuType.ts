@@ -1,10 +1,10 @@
-import { MenuItem, MenuItemGroup } from "@/pages/MainOperator"
-import { MenuDataProps, Route } from "@/routes/routeSpec"
+import {MenuItem, MenuItemGroup} from "@/pages/MainOperator"
+import {MenuDataProps, Route} from "@/routes/routeSpec"
 
 export interface HeardMenuProps {
     routeMenuData: MenuDataProps[]
     menuItemGroup: MenuItemGroup[]
-    onRouteMenuSelect:(key: Route) => void
+    onRouteMenuSelect: (key: Route) => void
 }
 
 /**
@@ -14,7 +14,10 @@ export interface HeardMenuProps {
 export interface RouteMenuDataItemProps {
     menuItem: MenuDataProps
     isShow: boolean
+    isExpand: boolean
     onSelect: (s: MenuDataProps) => void
+    setSubMenuData: (s: MenuDataProps) => void
+    activeMenuId:string
 }
 export interface SubMenuProps {
     subMenuData: MenuDataProps[]
@@ -32,4 +35,10 @@ export interface HeardMenuLeftProps {
     routeMenuData: MenuDataProps[]
     childrenIsViewList?: boolean[]
     number: number
+}
+
+export interface CollapseMenuProp {
+    menuData: MenuDataProps[]
+    moreLeft: number
+    isExpand: boolean
 }

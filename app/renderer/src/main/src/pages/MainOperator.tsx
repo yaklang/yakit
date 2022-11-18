@@ -27,7 +27,6 @@ import {
     MenuDataProps,
     NoScrollRoutes,
     Route,
-    RouteMenuData,
     RouteNameToVerboseName
 } from "../routes/routeSpec"
 import {
@@ -42,37 +41,37 @@ import {
     SettingOutlined,
     CameraOutlined
 } from "@ant-design/icons"
-import { failed, info, success } from "../utils/notification"
-import { showModal } from "../utils/showModal"
-import { YakLogoBanner } from "../utils/logo"
-import { ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion } from "../utils/basic"
-import { CompletionTotal, setCompletions } from "../utils/monacoSpec/yakCompletionSchema"
-import { randomString } from "../utils/randomUtil"
+import {failed, info, success} from "../utils/notification"
+import {showModal} from "../utils/showModal"
+import {YakLogoBanner} from "../utils/logo"
+import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
+import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema"
+import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
-import { genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse } from "./invoker/schema"
-import { PerformanceDisplay } from "../components/PerformanceDisplay"
-import { useHotkeys } from "react-hotkeys-hook"
-import { useGetState, useMemoizedFn } from "ahooks"
+import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "./invoker/schema"
+import {PerformanceDisplay} from "../components/PerformanceDisplay"
+import {useHotkeys} from "react-hotkeys-hook"
+import {useGetState, useMemoizedFn} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
-import { AutoSpin } from "../components/AutoSpin"
+import {AutoSpin} from "../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
-import { RiskStatsTag } from "../utils/RiskStatsTag"
-import { ItemSelects } from "../components/baseTemplate/FormItemUtil"
-import { BugInfoProps, BugList, CustomBugList } from "./invoker/batch/YakBatchExecutors"
-import { coordinate, UserPlatformType } from "./globalVariable"
-import { DropdownMenu } from "@/components/baseTemplate/DropdownMenu"
-import { MainTabs } from "./MainTabs"
+import {RiskStatsTag} from "../utils/RiskStatsTag"
+import {ItemSelects} from "../components/baseTemplate/FormItemUtil"
+import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
+import {coordinate, UserPlatformType} from "./globalVariable"
+import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
+import {MainTabs} from "./MainTabs"
 import Login from "./Login"
-import { TrustList } from "./TrustList"
+import {TrustList} from "./TrustList"
 import SetPassword from "./SetPassword"
 import yakitImg from "../assets/yakit.jpg"
-import { UserInfoProps, useStore } from "@/store"
-import { SimpleQueryYakScriptSchema } from "./invoker/batch/QueryYakScriptParam"
-import { UnfinishedBatchTask } from "./invoker/batch/UnfinishedBatchTaskList"
-import { LoadYakitPluginForm } from "./yakitStore/YakitStorePage"
-import { showConfigMenuItems } from "../utils/ConfigMenuItems"
-import { ConfigPrivateDomain } from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
+import {UserInfoProps, useStore} from "@/store"
+import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
+import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
+import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
+import {showConfigMenuItems} from "../utils/ConfigMenuItems"
+import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
 import "./main.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
@@ -91,8 +90,8 @@ const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuage
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
-const { Header, Content, Sider } = Layout
-const { Text } = Typography
+const {Header, Content, Sider} = Layout
+const {Text} = Typography
 
 const FuzzerCache = "fuzzer-list-cache"
 const WindowsCloseFlag = "windows-close-flag"
@@ -216,11 +215,11 @@ export interface SetUserInfoProp {
 }
 
 const judgeAvatar = (userInfo) => {
-    const { companyHeadImg, companyName } = userInfo
+    const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={38} style={{ cursor: "pointer" }} src={companyHeadImg} />
+        <Avatar size={38} style={{cursor: "pointer"}} src={companyHeadImg} />
     ) : (
-        <Avatar size={38} style={{ backgroundColor: "rgb(245, 106, 0)", cursor: "pointer" }}>
+        <Avatar size={38} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
             {companyName.slice(0, 1)}
         </Avatar>
     )
@@ -231,7 +230,7 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-    const { userInfo, setStoreUserInfo } = props
+    const {userInfo, setStoreUserInfo} = props
     // OSS远程头像删除
     const deleteAvatar = useMemoizedFn((imgName) => {
         NetWorkApi<API.DeleteResource, API.ActionSucceeded>({
@@ -250,13 +249,13 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
             .catch((err) => {
                 failed("头像更换失败：" + err)
             })
-            .finally(() => { })
+            .finally(() => {})
     })
 
     // 修改头像
     const setAvatar = useMemoizedFn(async (file) => {
         await ipcRenderer
-            .invoke("upload-img", { path: file.path, type: file.type })
+            .invoke("upload-img", {path: file.path, type: file.type})
             .then((res) => {
                 let imgUrl: string = res.data
                 NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
@@ -280,12 +279,12 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                     .catch((err) => {
                         failed("头像更换失败：" + err)
                     })
-                    .finally(() => { })
+                    .finally(() => {})
             })
             .catch((err) => {
                 failed("头像上传失败")
             })
-            .finally(() => { })
+            .finally(() => {})
     })
     return (
         <div className='dropdown-menu-user-info'>
@@ -315,7 +314,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 className='content-box'
                 style={
                     userInfo.role !== "admin"
-                        ? { display: "flex", justifyContent: "center", alignItems: "center", fontSize: 16 }
+                        ? {display: "flex", justifyContent: "center", alignItems: "center", fontSize: 16}
                         : {}
                 }
             >
@@ -328,7 +327,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 
 const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
-    const [status, setStatus] = useState<{ addr: string; isTLS: boolean }>()
+    const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
     const [collapsed, setCollapsed] = useState(false)
     const [hideMenu, setHideMenu] = useState(false)
 
@@ -395,7 +394,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         // Fetch User Defined Plugins
         ipcRenderer
             .invoke("GetAllMenuItem", {})
-            .then((data: { Groups: MenuItemGroup[] }) => {
+            .then((data: {Groups: MenuItemGroup[]}) => {
                 setMenuItems(data.Groups)
             })
             .catch((e: any) => failed("Update Menu Item Failed"))
@@ -446,7 +445,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`
     const routeKeyToLabel = new Map<string, string>()
     routeMenuData.forEach((k) => {
-        ; (k.subMenuData || []).forEach((subKey) => {
+        ;(k.subMenuData || []).forEach((subKey) => {
             routeKeyToLabel.set(`${subKey.key}`, subKey.label)
         })
 
@@ -664,7 +663,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     const coordinateTimer = useRef<any>(null)
     useEffect(() => {
         document.onmousemove = (e) => {
-            const { screenX, screenY, clientX, clientY, pageX, pageY } = e
+            const {screenX, screenY, clientX, clientY, pageX, pageY} = e
             if (coordinateTimer.current) {
                 clearTimeout(coordinateTimer.current)
                 coordinateTimer.current = null
@@ -680,7 +679,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         }
     }, [])
     // 全局监听登录状态
-    const { userInfo, setStoreUserInfo } = useStore()
+    const {userInfo, setStoreUserInfo} = useStore()
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
             // 刷新用户信息
@@ -717,8 +716,8 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     }, [])
 
     const [userMenu, setUserMenu] = useState<MenuItemType[]>([
-        { key: "sign-out", title: "退出登录" },
-        { key: "account-bind", title: "帐号绑定(监修)", disabled: true }
+        {key: "sign-out", title: "退出登录"},
+        {key: "account-bind", title: "帐号绑定(监修)", disabled: true}
     ])
 
     useEffect(() => {
@@ -726,9 +725,9 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         // 非企业管理员登录
         if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
-                { key: "trust-list", title: "用户管理" },
-                { key: "account-bind", title: "帐号绑定(监修)", disabled: true },
-                { key: "sign-out", title: "退出登录" }
+                {key: "trust-list", title: "用户管理"},
+                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "sign-out", title: "退出登录"}
             ])
         }
         // 企业用户管理员登录
@@ -745,14 +744,14 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         // 企业用户非管理员登录
         else if (userInfo.role !== "admin" && userInfo.platform === "company") {
             setUserMenu([
-                { key: "user-info", title: "用户信息", render: () => SetUserInfoModule() },
-                { key: "set-password", title: "修改密码" },
-                { key: "sign-out", title: "退出登录" }
+                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
+                {key: "set-password", title: "修改密码"},
+                {key: "sign-out", title: "退出登录"}
             ])
         } else {
             setUserMenu([
-                { key: "account-bind", title: "帐号绑定(监修)", disabled: true },
-                { key: "sign-out", title: "退出登录" }
+                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "sign-out", title: "退出登录"}
             ])
         }
     }, [userInfo.role, userInfo.companyHeadImg])
@@ -795,7 +794,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
 
                 for (let item of cache) {
                     const time = new Date().getTime().toString()
-                    fuzzerList.current.set(time, { ...item, time: time })
+                    fuzzerList.current.set(time, {...item, time: time})
                     addTabPage(Route.HTTPFuzzer, {
                         time: time,
                         node: ContentByRoute(Route.HTTPFuzzer, undefined, {
@@ -812,7 +811,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
     const addFuzzerList = (key: string, request?: string, isHttps?: boolean) => {
-        fuzzerList.current.set(key, { request, isHttps, time: key })
+        fuzzerList.current.set(key, {request, isHttps, time: key})
     }
     const delFuzzerList = (type: number, key?: string) => {
         if (type === 1) fuzzerList.current.clear()
@@ -844,7 +843,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
 
     // 加载补全
     useEffect(() => {
-        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
+        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
                 const total = JSON.parse(completionJson) as CompletionTotal
@@ -875,7 +874,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                 .catch((e: any) => {
                     setEngineStatus("error")
                 })
-                .finally(() => { })
+                .finally(() => {})
         }
         let id = setInterval(updateEngineStatus, 3000)
         return () => {
@@ -925,7 +924,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         ipcRenderer.on("main-container-add-compare", (e, params) => {
             const newTabId = `${Route.DataCompare}-[${randomString(49)}]`
             const verboseNameRaw = routeKeyToLabel.get(Route.DataCompare) || `${Route.DataCompare}`
-            addTabPage(Route.DataCompare, { node: ContentByRoute(Route.DataCompare, undefined, { system: system }) })
+            addTabPage(Route.DataCompare, {node: ContentByRoute(Route.DataCompare, undefined, {system: system})})
 
             // 区分新建对比页面还是别的页面请求对比的情况
             ipcRenderer.invoke("created-data-compare")
@@ -938,7 +937,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
 
     // Global Sending Function(全局发送功能|通过发送新增功能页面)
     const addFuzzer = useMemoizedFn((res: any) => {
-        const { isHttps, request, list } = res || {}
+        const {isHttps, request, list} = res || {}
         const time = new Date().getTime().toString()
         if (request) {
             addTabPage(Route.HTTPFuzzer, {
@@ -956,7 +955,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     })
 
     // websocket fuzzer 和 Fuzzer 类似
-    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
         addTabPage(Route.WebsocketFuzzer, {
             hideAdd: false,
             isRecord: false,
@@ -969,7 +968,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     })
     // websocket fuzzer 和 Fuzzer 类似
     const addWebsocketHistory = useMemoizedFn((res: any) => {
-        addTabPage(Route.WebsocketHistory, { hideAdd: false, isRecord: false, node: undefined, time: "" })
+        addTabPage(Route.WebsocketHistory, {hideAdd: false, isRecord: false, node: undefined, time: ""})
     })
 
     const addYakScript = useMemoizedFn((res: any) => {
@@ -997,7 +996,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         })
     })
     const addFacadeServer = useMemoizedFn((res: any) => {
-        const { facadeParams, classParam, classType } = res || {}
+        const {facadeParams, classParam, classType} = res || {}
         if (facadeParams && classParam && classType) {
             addTabPage(Route.ReverseServer_New, {
                 node: ContentByRoute(Route.ReverseServer_New, undefined, {
@@ -1009,18 +1008,18 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         }
     })
     const addScanPort = useMemoizedFn((res: any) => {
-        const { URL = "" } = res || {}
+        const {URL = ""} = res || {}
         if (URL) {
             addTabPage(Route.Mod_ScanPort, {
-                node: ContentByRoute(Route.Mod_ScanPort, undefined, { scanportParams: URL })
+                node: ContentByRoute(Route.Mod_ScanPort, undefined, {scanportParams: URL})
             })
         }
     })
     const addBrute = useMemoizedFn((res: any) => {
-        const { URL = "" } = res || {}
+        const {URL = ""} = res || {}
         if (URL) {
             addTabPage(Route.Mod_Brute, {
-                node: ContentByRoute(Route.Mod_Brute, undefined, { bruteParams: URL })
+                node: ContentByRoute(Route.Mod_Brute, undefined, {bruteParams: URL})
             })
         }
     })
@@ -1030,7 +1029,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
     const addBugTest = useMemoizedFn((type: number, res?: any) => {
-        const { URL = "" } = res || {}
+        const {URL = ""} = res || {}
         if (type === 1 && URL) {
             setBugUrl(URL)
             ipcRenderer
@@ -1039,19 +1038,19 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => { })
+                .catch(() => {})
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === Route.PoC)
             if (filter.length === 0) {
                 addTabPage(Route.PoC)
                 setTimeout(() => {
-                    ipcRenderer.invoke("send-to-bug-test", { type: bugTestValue, data: bugUrl })
+                    ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
                     setBugTestValue([])
                     setBugUrl("")
                 }, 300)
             } else {
-                ipcRenderer.invoke("send-to-bug-test", { type: bugTestValue, data: bugUrl })
+                ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
                 setCurrentTabKey(Route.PoC)
                 setBugTestValue([])
                 setBugUrl("")
@@ -1059,7 +1058,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         }
     })
     const addYakRunning = useMemoizedFn((res: any) => {
-        const { name = "", code = "" } = res || {}
+        const {name = "", code = ""} = res || {}
         const filter = pageCache.filter((item) => item.route === Route.YakScript)
 
         if (!name || !code) return false
@@ -1067,10 +1066,10 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         if ((filter || []).length === 0) {
             addTabPage(Route.YakScript)
             setTimeout(() => {
-                ipcRenderer.invoke("send-to-yak-running", { name, code })
+                ipcRenderer.invoke("send-to-yak-running", {name, code})
             }, 300)
         } else {
-            ipcRenderer.invoke("send-to-yak-running", { name, code })
+            ipcRenderer.invoke("send-to-yak-running", {name, code})
             setCurrentTabKey(Route.YakScript)
         }
     })
@@ -1101,7 +1100,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
 
     useEffect(() => {
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
-            const { type, data = {} } = res
+            const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
             if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
             if (type === "scan-port") addScanPort(data)
@@ -1125,7 +1124,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     }, [])
     useEffect(() => {
         ipcRenderer.on("fetch-close-tab", (e, res: any) => {
-            const { router, singleNode } = res
+            const {router, singleNode} = res
             if (singleNode) {
                 removePage(router, false)
             }
@@ -1171,11 +1170,11 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         <DropdownMenu
                             menu={{
                                 data: [
-                                    { key: "all", title: "关闭所有Tabs" },
-                                    { key: "other", title: "关闭其他Tabs" }
+                                    {key: "all", title: "关闭所有Tabs"},
+                                    {key: "other", title: "关闭其他Tabs"}
                                 ]
                             }}
-                            dropdown={{ trigger: ["contextMenu"] }}
+                            dropdown={{trigger: ["contextMenu"]}}
                             onClick={(key) => {
                                 switch (key) {
                                     case "all":
@@ -1219,7 +1218,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         <Col span={8}>
                             <Space>
                                 <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} />
+                                    <Image src={YakLogoBanner} preview={false} width={130} />
                                 </div>
                                 <Divider type={"vertical"} />
                                 <YakVersion />
@@ -1414,7 +1413,11 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         </Col>
                     </Row>
                 </Header>
-                <HeardMenu routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)} menuItemGroup={menuItems} onRouteMenuSelect={onRouteMenuSelect} />
+                <HeardMenu
+                    routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
+                    menuItemGroup={menuItems}
+                    onRouteMenuSelect={onRouteMenuSelect}
+                />
                 <Content
                     style={{
                         margin: 12,
@@ -1423,7 +1426,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         marginTop: 0
                     }}
                 >
-                    <Layout style={{ height: "100%", overflow: "hidden" }}>
+                    <Layout style={{height: "100%", overflow: "hidden"}}>
                         <Content
                             style={{
                                 overflow: "hidden",
@@ -1445,7 +1448,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                             >
                                 {pageCache.length > 0 ? (
                                     <Tabs
-                                        style={{ display: "flex", flex: "1" }}
+                                        style={{display: "flex", flex: "1"}}
                                         // tabBarStyle={{marginBottom: 8}}
                                         className='main-content-tabs yakit-layout-tabs'
                                         activeKey={currentTabKey}
@@ -1576,14 +1579,14 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                     </Button>
                 ]}
             >
-                <div style={{ height: 40 }}>
-                    <ExclamationCircleOutlined style={{ fontSize: 22, color: "#faad14" }} />
-                    <span style={{ fontSize: 18, marginLeft: 15 }}>提示</span>
+                <div style={{height: 40}}>
+                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
+                    <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
                 </div>
-                <p style={{ fontSize: 15, marginLeft: 37 }}>
+                <p style={{fontSize: 15, marginLeft: 37}}>
                     是否要退出yakit操作界面，一旦退出，界面内打开内容除fuzzer页外都会销毁
                 </p>
-                <div style={{ marginLeft: 37 }}>
+                <div style={{marginLeft: 37}}>
                     <Checkbox
                         defaultChecked={!winCloseFlag}
                         value={!winCloseFlag}
@@ -1592,7 +1595,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                             ipcRenderer.invoke("set-value", WindowsCloseFlag, false)
                         }}
                     ></Checkbox>
-                    <span style={{ marginLeft: 8 }}>不再出现该提示信息</span>
+                    <span style={{marginLeft: 8}}>不再出现该提示信息</span>
                 </div>
             </Modal>
             <Modal
@@ -1618,7 +1621,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                 <ItemSelects
                     item={{
                         label: "专项漏洞类型",
-                        style: { marginTop: 20 }
+                        style: {marginTop: 20}
                     }}
                     select={{
                         allowClear: true,
@@ -1627,16 +1630,16 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         optValue: "key",
                         value: (bugTestValue || [])[0]?.key,
                         onChange: (value, option: any) => {
-                            const { record } = option
+                            const {record} = option
                             setBugTestValue(
                                 value
                                     ? [
-                                        {
-                                            filter: record?.filter,
-                                            key: record?.key,
-                                            title: record?.title
-                                        }
-                                    ]
+                                          {
+                                              filter: record?.filter,
+                                              key: record?.key,
+                                              title: record?.title
+                                          }
+                                      ]
                                     : []
                             )
                         }
@@ -1649,7 +1652,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                 title={"用户管理"}
                 destroyOnClose={true}
                 maskClosable={false}
-                bodyStyle={{ padding: "10px 24px 24px 24px" }}
+                bodyStyle={{padding: "10px 24px 24px 24px"}}
                 width={800}
                 onCancel={() => setTrustShow(false)}
                 footer={null}
@@ -1661,7 +1664,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                 title={"修改密码"}
                 destroyOnClose={true}
                 maskClosable={false}
-                bodyStyle={{ padding: "10px 24px 24px 24px" }}
+                bodyStyle={{padding: "10px 24px 24px 24px"}}
                 width={520}
                 onCancel={() => setPasswordShow(false)}
                 footer={null}

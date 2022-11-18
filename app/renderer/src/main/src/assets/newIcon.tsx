@@ -1,5 +1,5 @@
 import Icon from "@ant-design/icons"
-import { CustomIconComponentProps } from "@ant-design/icons/lib/components/Icon"
+import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 import React from "react"
 
 const CheckCircle = () => (
@@ -213,14 +213,9 @@ export const ChevronDownIcon = (props: Partial<CustomIconComponentProps>) => {
 }
 
 const ChevronUp = () => (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2.5 7.5L6 4L9.5 7.5"
-            stroke='currentColor'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
+    <svg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path d='M2.5 7.5L6 4L9.5 7.5' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
     </svg>
-
 )
 
 /**
@@ -265,4 +260,23 @@ const SortDescending = () => (
  */
 export const SortDescendingIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={SortDescending} {...props} />
+}
+
+const SortAscending = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M3 4H16M3 8H12M3 12H9M13 12L17 8M17 8L21 12M17 8V20'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description: 排序 降序
+ */
+export const SortAscendingIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={SortAscending} {...props} />
 }

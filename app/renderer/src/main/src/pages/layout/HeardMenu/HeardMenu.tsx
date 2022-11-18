@@ -4,18 +4,20 @@ import {
     HeardMenuLeftProps,
     RouteMenuDataItemProps,
     SubMenuGroupProps,
-    SubMenuProps
+    SubMenuProps,
+    CollapseMenuProp
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
 import {DefaultRouteMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
 import {MenuDefaultPluginIcon, MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
 import classNames from "classnames"
-import {ChevronDownIcon, ChevronUpIcon, SaveIcon, SortDescendingIcon} from "@/assets/newIcon"
+import {ChevronDownIcon, ChevronUpIcon, SaveIcon, SortAscendingIcon, SortDescendingIcon} from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useMemoizedFn} from "ahooks"
 import {YakitMenu, YakitMenuItemProps} from "../YakitMenu/YakitMenu"
 import {YakitPopover} from "../YakitPopover/YakitPopover"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
+import {Tabs} from "antd"
 
 /**
  * @description:
@@ -32,6 +34,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [width, setWidth] = useState<number>(0)
     const [number, setNumber] = useState<number>(-1)
     const [moreLeft, setMoreLeft] = useState<number>(0) // 更多文字的left
+    const [isExpand, setIsExpand] = useState<boolean>(false)
+    const [subMenuData, setSubMenuData] = useState<MenuDataProps[]>([])
+    const [menuId, setMenuId] = useState<string>("")
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
     useEffect(() => {
@@ -81,92 +86,172 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         })
         setRouteMenuDataAfter(afterRoute)
     })
+    const onExpand = useMemoizedFn(() => {
+        setIsExpand(true)
+        if (subMenuData.length === 0 && routeMenuData.length > 0) {
+            setSubMenuData(routeMenuData[0].subMenuData || [])
+            setMenuId(routeMenuData[0].id || "")
+        }
+    })
+    const onTabClick = useMemoizedFn((key) => {
+        onRouteMenuSelect(key as Route)
+    })
     return (
-        <div className={style["heard-menu"]}>
-            <ReactResizeDetector
-                onResize={(w) => {
-                    if (!w) {
-                        return
-                    }
-                    setWidth(w)
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
-            <div className={style["heard-menu-left"]} ref={menuLeftRef}>
-                <div className={classNames(style["heard-menu-left-inner"])} ref={menuLeftInnerRef}>
-                    {menuItemGroup.map((menuGroupItem) => (
-                        <YakitPopover
-                            placement='bottomLeft'
-                            arrowPointAtCenter={true}
-                            content={<SubMenuGroup subMenuGroupData={menuGroupItem.Items || []} />}
-                            trigger='hover'
-                            overlayClassName={classNames(style["popover"], {
-                                [style["popover-content"]]: menuGroupItem.Items && menuGroupItem.Items.length <= 1
-                            })}
-                            key={`menuItem-${menuGroupItem.Group}`}
-                        >
-                            <div className={style["heard-menu-item"]}>
-                                <div className={style["heard-menu-item-label"]}>
-                                    {menuGroupItem.Group === "社区插件" ? "" : menuGroupItem.Group}
+        <>
+            <div className={style["heard-menu"]}>
+                <ReactResizeDetector
+                    onResize={(w) => {
+                        if (!w) {
+                            return
+                        }
+                        setWidth(w)
+                    }}
+                    handleWidth={true}
+                    handleHeight={true}
+                    refreshMode={"debounce"}
+                    refreshRate={50}
+                />
+                <div className={style["heard-menu-left"]} ref={menuLeftRef}>
+                    <div className={classNames(style["heard-menu-left-inner"])} ref={menuLeftInnerRef}>
+                        {menuItemGroup.map((menuGroupItem) => (
+                            <YakitPopover
+                                placement='bottomLeft'
+                                arrowPointAtCenter={true}
+                                content={<SubMenuGroup subMenuGroupData={menuGroupItem.Items || []} />}
+                                trigger='hover'
+                                overlayClassName={classNames(style["popover"], {
+                                    [style["popover-content"]]: menuGroupItem.Items && menuGroupItem.Items.length <= 1
+                                })}
+                                key={`menuItem-${menuGroupItem.Group}`}
+                            >
+                                <div
+                                    className={classNames(style["heard-menu-item"], {
+                                        [style["heard-menu-item-flex-start"]]: isExpand
+                                    })}
+                                >
+                                    <div className={style["heard-menu-item-label"]}>
+                                        {menuGroupItem.Group === "社区插件" ? "" : menuGroupItem.Group}
+                                    </div>
                                 </div>
+                            </YakitPopover>
+                        ))}
+                        {routeMenuData.map((menuItem, index) => {
+                            return (
+                                <>
+                                    <RouteMenuDataItem
+                                        key={`menuItem-${menuItem.id}`}
+                                        menuItem={menuItem}
+                                        isShow={number > 0 ? number <= index : false}
+                                        onSelect={(r) => onRouteMenuSelect(r.key as Route)}
+                                        isExpand={isExpand}
+                                        setSubMenuData={(menu) => {
+                                            setSubMenuData(menu.subMenuData || [])
+                                            setMenuId(menu.id || "")
+                                        }}
+                                        activeMenuId={menuId}
+                                    />
+                                </>
+                            )
+                        })}
+                    </div>
+                    {number > 0 && routeMenuDataAfter.length > 0 && (
+                        <>
+                            <CollapseMenu moreLeft={moreLeft} menuData={routeMenuDataAfter} isExpand={isExpand} />
+                        </>
+                    )}
+                </div>
+                <div className={style["heard-menu-right"]}>
+                    <div className={style["heard-menu-theme"]}>
+                        <SaveIcon />
+                        <span className={style["heard-menu-label"]} onClick={() => onImportShare()}>
+                            导入协作资源
+                        </span>
+                    </div>
+                    <div className={style["heard-menu-grey"]} onClick={() => onRouteMenuSelect(Route.PayloadManager)}>
+                        <MenuPayloadIcon />
+                        <span className={style["heard-menu-label"]}>Payload</span>
+                    </div>
+                    <div
+                        className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"], {
+                            [style["margin-right-0"]]: isExpand
+                        })}
+                        onClick={() => onRouteMenuSelect(Route.YakScript)}
+                    >
+                        <MenuYakRunnerIcon />
+                        <span className={style["heard-menu-label"]}>Yak Runner</span>
+                    </div>
+                    <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
+                        {!isExpand && <SortDescendingIcon />}
+                    </div>
+                </div>
+            </div>
+            {isExpand && (
+                <div className={style["heard-sub-menu-expand"]}>
+                    <Tabs
+                        tabBarExtraContent={
+                            <div className={style["heard-menu-sort"]} onClick={() => setIsExpand(false)}>
+                                <SortAscendingIcon />
                             </div>
-                        </YakitPopover>
-                    ))}
-                    {routeMenuData.map((menuItem, index) => {
-                        return (
-                            <>
-                                <RouteMenuDataItem
-                                    key={`menuItem-${menuItem.id}`}
-                                    menuItem={menuItem}
-                                    isShow={number > 0 ? number <= index : false}
-                                    onSelect={(r) => onRouteMenuSelect(r.key as Route)}
-                                />
-                            </>
-                        )
-                    })}
+                        }
+                        activeKey={"-"}
+                        onTabClick={onTabClick}
+                    >
+                        {subMenuData.map((item, index) => (
+                            <Tabs.TabPane
+                                tab={
+                                    <div className={style["sub-menu-expand"]}>
+                                        <div
+                                            className={style["sub-menu-expand-item"]}
+                                            style={{paddingLeft: index === 0 ? 0 : ""}}
+                                        >
+                                            <div className={style["sub-menu-expand-item-icon"]}>{item.icon}</div>
+                                            <div
+                                                className={classNames(
+                                                    style["sub-menu-expand-item-label"],
+                                                    style["heard-menu-item-label"]
+                                                )}
+                                            >
+                                                {item.label}
+                                            </div>
+                                        </div>
+                                        {index !== subMenuData.length - 1 && (
+                                            <div className={style["sub-menu-expand-item-line"]} />
+                                        )}
+                                    </div>
+                                }
+                                key={item.key}
+                            />
+                        ))}
+                    </Tabs>
                 </div>
-                {number > 0 && routeMenuDataAfter.length > 0 && (
-                    <>
-                        <CollapseMenu moreLeft={moreLeft} menuData={routeMenuDataAfter} />
-                    </>
-                )}
-            </div>
-
-            <div className={style["heard-menu-right"]}>
-                <div className={style["heard-menu-theme"]}>
-                    <SaveIcon />
-                    <span className={style["heard-menu-label"]} onClick={() => onImportShare()}>
-                        导入协作资源
-                    </span>
-                </div>
-                <div className={style["heard-menu-grey"]} onClick={() => onRouteMenuSelect(Route.PayloadManager)}>
-                    <MenuPayloadIcon />
-                    <span className={style["heard-menu-label"]}>Payload</span>
-                </div>
-                <div
-                    className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"])}
-                    onClick={() => onRouteMenuSelect(Route.YakScript)}
-                >
-                    <MenuYakRunnerIcon />
-                    <span className={style["heard-menu-label"]}>Yak Runner</span>
-                </div>
-                <div className={style["heard-menu-sort"]}>
-                    <SortDescendingIcon />
-                </div>
-            </div>
-        </div>
+            )}
+        </>
     )
 })
 
 export default HeardMenu
 
-const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo(
-    (props) => {
-        const {menuItem, isShow, onSelect} = props
-        return (
+const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) => {
+    const {menuItem, isShow, onSelect, isExpand, setSubMenuData, activeMenuId} = props
+    const [visible, setVisible] = useState<boolean>(false)
+    const onOpenSecondMenu = useMemoizedFn(() => {
+        if (!isExpand) return
+        setSubMenuData(menuItem || [])
+    })
+    const popoverContent = (
+        <div
+            className={classNames(style["heard-menu-item"], {
+                [style["heard-menu-item-none"]]: isShow,
+                [style["heard-menu-item-flex-start"]]: isExpand,
+                [style["heard-menu-item-active"]]: (isExpand && activeMenuId === menuItem.id) || visible
+            })}
+            onClick={() => onOpenSecondMenu()}
+        >
+            <div className={style["heard-menu-item-label"]}>{menuItem.label}</div>
+        </div>
+    )
+    return (
+        (isExpand && popoverContent) || (
             <YakitPopover
                 placement='bottomLeft'
                 content={<SubMenu subMenuData={menuItem.subMenuData || []} onSelect={onSelect} />}
@@ -174,25 +259,13 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo(
                 overlayClassName={classNames(style["popover"], {
                     [style["popover-content"]]: menuItem.subMenuData && menuItem.subMenuData.length <= 1
                 })}
-                // visible={menuItem.id==='3'}
+                onVisibleChange={setVisible}
             >
-                <div
-                    className={classNames(style["heard-menu-item"], {
-                        [style["heard-menu-item-none"]]: isShow
-                    })}
-                >
-                    <div className={style["heard-menu-item-label"]}>{menuItem.label}</div>
-                </div>
+                {popoverContent}
             </YakitPopover>
         )
-    },
-    (preProps, nextProps) => {
-        if (preProps.isShow != nextProps.isShow) {
-            return false
-        }
-        return true
-    }
-)
+    )
+})
 
 const SubMenuGroup: React.FC<SubMenuGroupProps> = (props) => {
     const {subMenuGroupData} = props
@@ -227,12 +300,8 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
     )
 }
 
-interface CollapseMenuProp {
-    menuData: MenuDataProps[]
-    moreLeft: number
-}
 const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
-    const {menuData, moreLeft} = props
+    const {menuData, moreLeft, isExpand} = props
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -262,7 +331,8 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
             >
                 <div
                     className={classNames(style["heard-menu-item"], {
-                        [style["heard-menu-item-open"]]: show
+                        [style["heard-menu-item-open"]]: show,
+                        [style["heard-menu-item-flex-start"]]: isExpand
                     })}
                 >
                     更多
