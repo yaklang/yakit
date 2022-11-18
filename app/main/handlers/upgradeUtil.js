@@ -196,14 +196,14 @@ const getYakitDownloadUrl = (version,isEnterprise=false) => {
         switch (process.platform) {
             case "darwin":
                 if (process.arch === "arm64") {
-                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-e-${version}-darwin-arm64.dmg`
+                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-ee-${version}-darwin-arm64.dmg`
                 } else {
-                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-e-${version}-darwin-x64.dmg`
+                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-ee-${version}-darwin-x64.dmg`
                 }
             case "win32":
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-e-${version}-windows-amd64.exe`
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-ee-${version}-windows-amd64.exe`
             case "linux":
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-e-${version}-linux-amd64.AppImage`
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-ee-${version}-linux-amd64.AppImage`
             }
     }
     else{
