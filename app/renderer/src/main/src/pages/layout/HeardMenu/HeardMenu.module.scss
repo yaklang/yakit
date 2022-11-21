@@ -1,5 +1,7 @@
 .heard-menu {
     height: 36px;
+    min-height: 36px;
+    max-height: 36px;
     display: flex;
     font-size: 12px;
     margin: 0 12px;
@@ -253,8 +255,8 @@
     align-items: center;
     height: 34px;
     font-size: 12px;
-    margin: 0 12px;
-    margin-top: 10px;
+    margin: 10px 12px;
+    margin-top: 0;
 
     :global {
         .ant-tabs {
@@ -286,6 +288,21 @@
                 color: #40a9ff;
             }
         }
+
+        .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+            text-shadow: none;
+        }
+
+        .ant-tabs-ink-bar {
+            height: 0 !important;
+        }
+
+        .ant-tabs-top>.ant-tabs-nav,
+        .ant-tabs-bottom>.ant-tabs-nav,
+        .ant-tabs-top>div>.ant-tabs-nav,
+        .ant-tabs-bottom>div>.ant-tabs-nav {
+            margin: 0;
+        }
     }
 
 
@@ -310,6 +327,7 @@
             align-items: center;
             padding: 0 16px;
             color: #85899E;
+            height: 34px;
 
             &:hover {
                 color: #40a9ff;
@@ -328,7 +346,8 @@
 
             .sub-menu-expand-item-label {
                 font-size: 12px;
-
+                height: 12px;
+                line-height: 12px;
             }
         }
 
@@ -353,6 +372,35 @@
 
         .ant-tabs-dropdown-menu {
             padding: 6px 6px 12px;
+        }
+
+        .ant-tabs-dropdown-menu {
+            overflow-y: overlay;
+        }
+
+        ::-webkit-scrollbar {
+            /*滚动条整体样式*/
+            width: 8px;
+            /*高宽分别对应横竖滚动条的尺寸*/
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            /*滚动条里面小方块*/
+            border-radius: 10px;
+            box-shadow: none;
+            background-clip: padding-box;
+            border: 1px solid transparent;
+        }
+
+        ::-webkit-scrollbar-track {
+            border-radius: 0;
+            box-shadow: none;
+            background: none;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            border-color: #c1c1c1;
         }
     }
 

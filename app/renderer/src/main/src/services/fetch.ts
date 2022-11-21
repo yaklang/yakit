@@ -4,7 +4,7 @@ import {loginOut, loginOutLocal} from "@/utils/login"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
 
 interface AxiosResponseInfoProps {
@@ -30,7 +30,7 @@ interface requestConfig<T = any> extends AxiosRequestConfig<T> {
 
 export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
     return new Promise((resolve, reject) => {
-        console.log("request-params", params)
+        // console.log("request-params", params)
         ipcRenderer
             .invoke("axios-api", params)
             .then((res) => {
@@ -45,7 +45,7 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
 
 export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, resolve, reject) => {
     const {code, message, data} = res
-    console.log("返回", res)
+    // console.log("返回", res)
     if (!code) {
         failed("请求超时，请重试")
         return
@@ -69,6 +69,6 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
 // token过期，退出
 const tokenOverdue = (res) => {
     if (res.userInfo) loginOutLocal(res.userInfo)
-    IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
+    IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
     failed("401,登录过期/未登录，请重新登录")
 }

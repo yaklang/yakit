@@ -1,4 +1,4 @@
-import React, {forwardRef,useImperativeHandle,ReactNode, useEffect, useRef, useState} from "react"
+import React, {forwardRef, useImperativeHandle, ReactNode, useEffect, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -82,11 +82,12 @@ import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
+import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-import HeardMenu from "./layout/HeardMenu/HeardMenu"
+import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 
-const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -142,7 +143,7 @@ const defaultUserInfo: UserInfoProps = {
     role: null,
     user_id: null,
     token: "",
-    showStatusSearch:false,
+    showStatusSearch: false
 }
 
 export interface MainProp {
@@ -325,7 +326,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     )
 })
 
-const Main: React.FC<MainProp> = forwardRef((props,ref) => {
+const Main: React.FC<MainProp> = forwardRef((props, ref) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
     const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
     const [collapsed, setCollapsed] = useState(false)
@@ -355,9 +356,9 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
-    
+
     // 企业版本显示登录弹窗
-    const openLoginShow =()=>{
+    const openLoginShow = () => {
         setLoginShow(true)
     }
     // 此处注意useImperativeHandle方法的的第一个参数是目标元素的ref引用
@@ -413,7 +414,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         if (item.key === Route.GeneralModule) {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
-                                    icon: <EllipsisOutlined />,
+                                    icon: getScriptIcon(i.ScriptName.replace(/\s*/g, "")),
                                     key: `plugin:${i.Id}`,
                                     label: i.ScriptName
                                 } as unknown as MenuDataProps
@@ -685,32 +686,32 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
-            IsEnterprise?setRemoteValue("token-online-enterprise", res.token):setRemoteValue("token-online", res.token)
+            IsEnterprise
+                ? setRemoteValue("token-online-enterprise", res.token)
+                : setRemoteValue("token-online", res.token)
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
 
     // 关闭 tab
     const onCloseTab = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("send-close-tab", {
-                router: Route.AccountAdminPage,
-                singleNode: true
-            })
-            ipcRenderer
-            .invoke("send-close-tab", {
-                router: Route.RoleAdminPage,
-                singleNode: true
-            })
+        ipcRenderer.invoke("send-close-tab", {
+            router: Route.AccountAdminPage,
+            singleNode: true
+        })
+        ipcRenderer.invoke("send-close-tab", {
+            router: Route.RoleAdminPage,
+            singleNode: true
+        })
     })
 
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
-            if(IsEnterprise){
+            if (IsEnterprise) {
                 onCloseTab()
             }
-            IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
+            IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
         return () => ipcRenderer.removeAllListeners("login-out")
     }, [])
@@ -733,7 +734,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         // 企业用户管理员登录
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
             setUserMenu([
-                {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
+                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                 {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
@@ -1197,7 +1198,6 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     }
     const onRouteMenuSelect = useMemoizedFn((route: Route) => {
         if (route === "ignore") return
-
         if (route === Route.HTTPFuzzer) {
             const time = new Date().getTime().toString()
             addTabPage(Route.HTTPFuzzer, {
@@ -1333,9 +1333,6 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                                                 }}
                                             >
                                                 <Button type={"link"}>配置私有域</Button>
-                                            </Menu.Item>
-                                            <Menu.Item key={"share-menu"} onClick={() => onImportShare()}>
-                                                <Button type={"link"}>导入协作资源</Button>
                                             </Menu.Item>
                                         </Menu>
                                     }

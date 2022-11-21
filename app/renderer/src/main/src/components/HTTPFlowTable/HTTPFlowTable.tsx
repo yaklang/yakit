@@ -1884,7 +1884,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 </Menu>
                                             }
                                             trigger={["click"]}
-                                            placement='bottomCenter'
+                                            placement='bottom'
                                             overlayClassName={style["drop-down"]}
                                         >
                                             <Button danger ghost size='small'>
