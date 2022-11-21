@@ -37,6 +37,7 @@ import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocket
 import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory";
 
 import styles from "./hTTPFlowDetail.module.scss"
+import {callCopyToClipboard} from "@/utils/basic";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -484,6 +485,16 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             defaultHttps={props.defaultHttps}
                             hideSearch={true}
                             noHex={true}
+                            actions={flow?.RawRequestBodyBase64 ? [
+                                {
+                                    contextMenuGroupId: "auto-suggestion",
+                                    label: "复制请求Body (Base64)",
+                                    id: "copy-request-base64-body",
+                                    run: ()=>{
+                                        callCopyToClipboard(flow?.RawRequestBodyBase64||"")
+                                    }
+                                }
+                            ] : undefined}
                             // 这个为了解决不可见字符的问题
                             defaultPacket={(!!flow?.SafeHTTPRequest) ? flow.SafeHTTPRequest : undefined}
                             extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>
@@ -503,6 +514,16 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     }
                     return (
                         <HTTPPacketEditor
+                            actions={flow?.RawResponseBodyBody64 ? [
+                                {
+                                    contextMenuGroupId: "auto-suggestion",
+                                    label: "复制响应Body (Base64)",
+                                    id: "copy-response-base64-body",
+                                    run: ()=>{
+                                        callCopyToClipboard(flow?.RawResponseBodyBody64||"")
+                                    }
+                                }
+                            ] : undefined}
                             isResponse={true}
                             noHex={true}
                             loading={loading}
