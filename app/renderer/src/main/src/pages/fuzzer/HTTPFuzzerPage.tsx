@@ -779,7 +779,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showModal({
             title: "调试 / 插入热加载代码",
-            width: "60%",
+            width: "80%",
             content: (
                 <div>
                     <HTTPFuzzerHotPatch

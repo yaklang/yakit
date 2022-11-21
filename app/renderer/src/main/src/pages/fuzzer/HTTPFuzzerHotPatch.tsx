@@ -1,11 +1,14 @@
 import React, {useEffect, useState} from "react";
-import {Button, Checkbox, Form, Popconfirm, Space, Tag, Tooltip} from "antd";
+import {Button, Checkbox, Form, Popconfirm, Popover, Space, Tag, Tooltip} from "antd";
 import {YakEditor} from "../../utils/editors";
 import {callCopyToClipboard} from "../../utils/basic";
 import {showDrawer, showModal} from "../../utils/showModal";
 import {AutoCard} from "../../components/AutoCard";
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
 import {useGetState} from "ahooks";
+import {RefreshIcon} from "@/assets/newIcon";
+import {FullscreenOutlined} from "@ant-design/icons/lib";
+import {SelectOne} from "@/utils/inputUtil";
 
 export interface HTTPFuzzerHotPatchProp {
     onInsert?: (s: string) => any
@@ -15,15 +18,27 @@ export interface HTTPFuzzerHotPatchProp {
     initialHotPatchCodeWithParamGetter?: string
 }
 
-const HotPatchDefaultContent = `handle = func(param) {
+const HotPatchDefaultContent = `// 使用标签 {{yak(handle|param)}} 可触发热加载调用
+handle = func(param) {
     // 在这里可以直接返回一个字符串
     return codec.EncodeBase64("base64-prefix" + param) + sprintf("_origin(%v)", param)
 }
 
+// 使用标签 {{yak(handle1|...)}} 可触发热加载调用
 handle1 = func(param) {
     // 这个特殊的 Hook 也支持返回数组
     return ["12312312", "abc", "def"]
-}`
+}
+
+// beforeRequest 允许发送数据包前再做一次处理，定义为 func(origin []byte) []byte
+beforeRequest = func(req) {
+    /*
+        // 我们可以提供一些基础用法，比如说单纯就是替换一个时间戳～
+        req = str.ReplaceAll(req, "TIMESTAMP_INT64", sprint(time.Now().Unix()))
+    */ 
+    return []byte(req)
+}
+`
 
 const HotPatchParamsGetterDefault = `__getParams__ = func() {
     /*
@@ -55,6 +70,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     });
     const [dynamicParam, setDynamicParam, getDynamicParam] = useGetState(false);
     const [loading, setLoading] = useState(false);
+    const [hotPatchEditorHeight, setHotPatchEditorHeight] = useState(400);
+    const [paramEditorHeight, setParamEditorHeight] = useState(250);
 
     useEffect(() => {
         getRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG).then(e => {
@@ -142,8 +159,31 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             {props.onSaveHotPatchCodeWithParamGetterCode && <Button type={"primary"} size={"small"} onClick={() => {
                 if (props.onSaveHotPatchCodeWithParamGetterCode) props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter);
             }}>保存</Button>}
+            <Popconfirm
+                title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
+                onConfirm={() => {
+                    if (props.onSaveHotPatchCodeWithParamGetterCode) {
+                        props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
+                    }
+
+                    setParams({...params, HotPatchCodeWithParamGetter: HotPatchParamsGetterDefault})
+                }}
+            >
+                <Button size={"small"} icon={<RefreshIcon/>} type={"link"}/>
+            </Popconfirm>
+            <Popover title={"扩大编辑器"} content={<>
+                <SelectOne data={[
+                    {text: "小", value: 250},
+                    {text: "中", value: 400},
+                    {text: "大", value: 600},
+                ]} setValue={setParamEditorHeight} value={
+                    paramEditorHeight
+                } size={"small"} formItemStyle={{marginBottom: 0}}/>
+            </>}>
+                <Button size={"small"} icon={<FullscreenOutlined/>} type={"link"}/>
+            </Popover>
         </Space>}>
-            <div style={{height: 250}}>
+            <div style={{height: paramEditorHeight}}>
                 <YakEditor
                     type={"yak"} value={params.HotPatchCodeWithParamGetter}
                     setValue={code => setParams({...params, HotPatchCodeWithParamGetter: code})}
@@ -155,8 +195,29 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             {props.onSaveCode && <Button type={"primary"} size={"small"} onClick={() => {
                 if (props.onSaveCode) props.onSaveCode(params.HotPatchCode);
             }}>保存</Button>}
+            <Popconfirm
+                title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
+                onConfirm={() => {
+                    if (props.onSaveCode) props.onSaveCode(params.HotPatchCode);
+
+                    setParams({...params, HotPatchCode: HotPatchDefaultContent})
+                }}
+            >
+                <Button size={"small"} icon={<RefreshIcon/>} type={"link"}/>
+            </Popconfirm>
+            <Popover title={"扩大编辑器"} content={<>
+                <SelectOne data={[
+                    {text: "小", value: 250},
+                    {text: "中", value: 400},
+                    {text: "大", value: 600},
+                ]} setValue={setHotPatchEditorHeight} value={
+                    hotPatchEditorHeight
+                } size={"small"} formItemStyle={{marginBottom: 0}}/>
+            </>}>
+                <Button size={"small"} icon={<FullscreenOutlined/>} type={"link"}/>
+            </Popover>
         </Space>}>
-            <div style={{height: 250}}>
+            <div style={{height: hotPatchEditorHeight}}>
                 <YakEditor
                     type={"yak"} value={params.HotPatchCode}
                     setValue={HotPatchCode => setParams({...params, HotPatchCode})}
