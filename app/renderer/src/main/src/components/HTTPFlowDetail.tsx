@@ -486,8 +486,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             noHex={true}
                             // 这个为了解决不可见字符的问题
                             defaultPacket={(!!flow?.SafeHTTPRequest) ? flow.SafeHTTPRequest : undefined}
-                            extra={flow.InvalidForUTF8Request ? <Tag>
-                                不可见字符
+                            extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>
+                                含二进制流
                             </Tag> : undefined}
                             defaultSearchKeyword={props.search}
                         />
