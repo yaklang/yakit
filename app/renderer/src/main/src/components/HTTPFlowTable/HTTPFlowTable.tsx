@@ -110,6 +110,14 @@ export interface HTTPFlow {
 
     // 仅仅是前端 表格单元格样式
     cellClassName?: string
+
+    /*
+    * */
+    InvalidForUTF8Request?: boolean
+    InvalidForUTF8Response?: boolean
+    RawRequestBodyBase64?: string
+    RawResponseBodyBody64?: string
+    SafeHTTPRequest?: string
 }
 
 export interface FuzzableParams {

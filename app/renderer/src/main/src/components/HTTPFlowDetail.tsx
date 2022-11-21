@@ -32,7 +32,7 @@ import {AutoSpin} from "./AutoSpin";
 import {ResizeBox} from "./ResizeBox";
 import ReactResizeDetector from "react-resize-detector";
 import {Buffer} from "buffer";
-import {Uint8ArrayToString} from "@/utils/str";
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
 import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer";
 import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory";
 
@@ -109,7 +109,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     }
 
     if (loading) {
-        return <Spin tip={"正在分析详细参数"} />
+        return <Spin tip={"正在分析详细参数"}/>
     }
 
     return (
@@ -200,7 +200,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Button
                                                 type='link'
                                                 disabled={!!props.isFront}
-                                                icon={<LeftOutlined />}
+                                                icon={<LeftOutlined/>}
                                                 onClick={() => {
                                                     props?.fetchRequest!(1)
                                                 }}
@@ -210,7 +210,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Button
                                                 type='link'
                                                 disabled={!!props.isBehind}
-                                                icon={<RightOutlined />}
+                                                icon={<RightOutlined/>}
                                                 onClick={() => {
                                                     props?.fetchRequest!(2)
                                                 }}
@@ -469,21 +469,26 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             <ResizeBox
                 firstNode={() => {
                     if (flow === undefined) {
-                        return <Empty description={"选择想要查看的 HTTP 记录请求"} />
+                        return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
                     }
                     if (flow?.IsWebsocket) {
-                        return <HTTPFlowForWebsocketViewer flow={flow} />
+                        return <HTTPFlowForWebsocketViewer flow={flow}/>
                     }
                     return (
                         <HTTPPacketEditor
                             originValue={flow?.Request || new Uint8Array()}
                             readOnly={true}
-                            sendToWebFuzzer={!!props.sendToWebFuzzer}
+                            sendToWebFuzzer={props.sendToWebFuzzer}
                             defaultHeight={props.defaultHeight}
                             loading={loading}
                             defaultHttps={props.defaultHttps}
                             hideSearch={true}
                             noHex={true}
+                            // 这个为了解决不可见字符的问题
+                            defaultPacket={(!!flow?.SafeHTTPRequest) ? flow.SafeHTTPRequest : undefined}
+                            extra={flow.InvalidForUTF8Request ? <Tag>
+                                不可见字符
+                            </Tag> : undefined}
                             defaultSearchKeyword={props.search}
                         />
                     )
@@ -491,10 +496,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 firstMinSize={300}
                 secondNode={() => {
                     if (flow === undefined) {
-                        return <Empty description={"选择想要查看的 HTTP 记录响应"} />
+                        return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
                     }
                     if (flow?.IsWebsocket) {
-                        return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
+                        return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""}/>
                     }
                     return (
                         <HTTPPacketEditor

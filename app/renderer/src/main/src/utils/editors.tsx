@@ -510,7 +510,9 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                             // 这儿的编码为了保证不要乱动
                             data: {
                                 isHttps: props.defaultHttps || false,
-                                request: Uint8ArrayToString(props.originValue, "utf8")
+                                request: props.defaultPacket ? props.defaultPacket : (
+                                    Uint8ArrayToString(props.originValue, "utf8")
+                                )
                             }
                         })
                     }}

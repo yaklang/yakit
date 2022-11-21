@@ -11,6 +11,7 @@ import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
     sendToWebFuzzer?: boolean | (() => any) | ((isHttps: boolean, request: string) => any)
+    defaultPacket?: string
 }
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {
