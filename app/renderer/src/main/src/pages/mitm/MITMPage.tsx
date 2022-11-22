@@ -39,7 +39,7 @@ import {MITMPluginList} from "./MITMPluginList";
 import {saveABSFileToOpen} from "../../utils/openWebsite";
 import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer";
 import {ChromeLauncherButton} from "./MITMChromeLauncher";
-import {MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm";
+import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm";
 import {MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking";
 import {Uint8ArrayToString} from "@/utils/str";
 
@@ -115,22 +115,22 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
 
     // 通过 gRPC 调用，启动 MITM 劫持
-    const startMITMServer = useMemoizedFn((targetHost, targetPort, downstreamProxy, enableHttp2) => {
+    const startMITMServer = useMemoizedFn((targetHost, targetPort, downstreamProxy, enableHttp2, certs: ClientCertificate[]) => {
         setLoading(true)
-        return ipcRenderer.invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2).catch((e: any) => {
+        return ipcRenderer.invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs).catch((e: any) => {
             notification["error"]({message: `启动中间人劫持失败：${e}`})
         })
     })
 
     // 设置开始服务器处理函数
-    const startMITMServerHandler = useMemoizedFn((host, port, downstreamProxy, enableInitialPlugin, plugins, enableHttp2) => {
+    const startMITMServerHandler = useMemoizedFn((host, port, downstreamProxy, enableInitialPlugin, plugins, enableHttp2, certs: ClientCertificate[]) => {
         setAddr(`https://${host}:${port}`)
         setHost(host)
         setPort(port)
         setLoading(true)
         setDefaultPlugins(plugins)
         setEnableInitialMITMPlugin(enableInitialPlugin)
-        startMITMServer(host, port, downstreamProxy, enableHttp2)
+        startMITMServer(host, port, downstreamProxy, enableHttp2, certs)
     })
 
     // 开始渲染组件

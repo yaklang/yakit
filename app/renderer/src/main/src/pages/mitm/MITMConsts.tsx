@@ -5,4 +5,5 @@ export enum MITMConsts {
     MITMDefaultPort = "YAKIT_MITMDefaultPort",
     MITMDefaultDownstreamProxy = "YAKIT_MITMDefaultDownstreamProxy",
     MITMDefaultHostHistoryList = "YAKIT_MITMDefaultHostHistoryList",
+    MITMDefaultClientCertificates = "YAKIT_MITMDefaultClientCertificates"
 }

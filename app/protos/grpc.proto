@@ -2200,13 +2200,13 @@ message MITMRequest {
   // enable h2
   bool enableHttp2 = 42;
 
-  repeated Certificate Certificates = 45;
+  repeated Certificate certificates = 45;
 }
 
 message Certificate {
   bytes CrtPem = 1;
   bytes KeyPem = 2;
-  repeated bytes CaCertifications = 3;
+  repeated bytes CaCertificates = 3;
 }
 
 message MITMContentReplacer {
