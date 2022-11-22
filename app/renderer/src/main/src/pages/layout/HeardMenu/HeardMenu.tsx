@@ -292,7 +292,6 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
             <div className={style["heard-menu-item-label"]}>{menuItem.label}</div>
         </div>
     )
-    console.log("activeMenuId", activeMenuId, menuItem.id, menuItem)
     return (
         (isExpand && popoverContent) || (
             <YakitPopover
