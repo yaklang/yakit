@@ -4,38 +4,41 @@ import {SelectProps} from "antd"
 
 /**
  * @description:表格的props描述，包裹虚拟表格的父元素需要设置高度
- * @ref: 返回的滚动条所在的div的元素
- * @title: 表格顶部的title,左边
- * @extra: 表格顶部的title，右边
- * @renderTitle: 自定义表格顶部的title
- * @titleHeight: 自定义表格顶部的高度,使用renderTitle,需要传入对应的height,否则虚拟列表滚动会不正确
- * @data:数组
- * @renderKey:每行的key值，不可重复
- * @columns:每列的参数
- * @rowSelection:多选/单选配置，目前只支持多选
- * @enableDrag:true,表格列之间可以拖动，最后一列除外。columns中也可以单独设置某一列是否可以拖动
- * @onRowClick:row鼠标左键点击事件，会返回当前选中row的数据
- * @onRowContextMenu:row鼠标右键点击事件，会返回当前选中row的数据和e
- * @pagination:分页配置
- * @onChange:查询条件变化
- * @loading：是否加载中
- * @scrollToBottom：距离底部多少px开始加载下一页,默认300
- * @isReset：重置表格条件 滚动至0
- * @isShowTotal：内置的total是否显示；true显示，false不显示
- * @currentIndex：当前row的index
- * @isRefresh： 刷新表格 滚动至0
- * @disableSorting：禁用排序
- * @query：查询条件
- * @onSetCurrentRow:设置选中
+ * @property {any} ref: 返回的滚动条所在的div的元素
+ * @property {string | ReactNode} title: 表格顶部的title,左边
+ * @property {ReactNode} extra: 表格顶部的title，右边
+ * @property {ReactNode} renderTitle: 自定义表格顶部的title
+ * @property {number} titleHeight: 自定义表格顶部的高度,使用renderTitle,需要传入对应的height,否则虚拟列表滚动会不正确
+ * @property {T[]} data:数组 可以传cellClassName用来控制单元格样式，不要传height
+ * @property {string} renderKey:每行的key值，不可重复
+ * @property {ColumnsTypeProps[]} columns:每列的参数
+ * @property {RowSelectionProps<T>} rowSelection:多选/单选配置，目前只支持多选
+ * @property {boolean} enableDrag:true,表格列之间可以拖动，最后一列除外。columns中也可以单独设置某一列是否可以拖动
+ * @event (record: T) => void onRowClick:row鼠标左键点击事件，会返回当前选中row的数据
+ * @event (record: T, e: React.MouseEvent) => void onRowContextMenu:row鼠标右键点击事件，会返回当前选中row的数据和e
+ * @property {PaginationProps} pagination:分页配置
+ * @event (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void onChange:查询条件变化
+ * @property {boolean} loading：是否加载中
+ * @property {number} scrollToBottom：距离底部多少px开始加载下一页,默认300
+ * @property {boolean} isReset：重置表格条件 滚动至0
+ * @property {boolean} isShowTotal：内置的total是否显示；true显示，false不显示
+ * @property {number} currentIndex：当前row的index
+ * @property {boolean} isRefresh： 刷新表格 滚动至0
+ * @property {boolean} disableSorting：禁用排序
+ * @property {object} query：查询条件
+ * @event (record: T) => void onSetCurrentRow:设置选中
  */
 export interface TableVirtualResizeProps<T> {
     ref?: any
-    getTableRef?: any // 组件自用
+    /**
+     * @private 组件自用
+     */
+    getTableRef?: any
     title?: string | ReactNode
     renderTitle?: ReactNode
     titleHeight?: number
     extra?: ReactNode
-    data: T[] //可以传cellClassName用来控制单元格样式，不要传height
+    data: T[]
     renderKey: string
     columns: ColumnsTypeProps[]
     rowSelection?: RowSelectionProps<T>
@@ -43,7 +46,7 @@ export interface TableVirtualResizeProps<T> {
     onRowClick?: (record: T) => void
     onRowContextMenu?: (record: T, e: React.MouseEvent) => void
     pagination?: PaginationProps
-    onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void // 查询条件变化
+    onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void
     loading?: boolean
     scrollToBottom?: number // 默认300
     isReset?: boolean //重置表格条件 滚动至0
@@ -51,7 +54,7 @@ export interface TableVirtualResizeProps<T> {
     currentIndex?: number //当前row的index
     isRefresh?: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
-    query?: any
+    query?: object
     onSetCurrentRow?: (record: T) => void
 }
 
@@ -62,21 +65,21 @@ export interface SortProps {
 
 /**
  * @description: 表格列的props描述
- * @title: 表格列的标题 
- * @dataKey: 表格列的key,用于查询条件等  
- * @width: 表格列的宽度  
- * @minWidth: 表格列的最小宽度 
- * @ellipsis: 超出...，默认true 
- * @align: 文字对齐方向，默认 left 
- * @fixed:固定列，目前不支持隔空固定,固定列的右边如果多列，最偏左的一列，需要自己修改样式
+ * @property {string}  title: 表格列的标题 
+ * @property {string} dataKey: 表格列的key,用于查询条件等  
+ * @property {number} width: 表格列的宽度  
+ * @property {number} minWidth: 表格列的最小宽度 
+ * @property {boolean} ellipsis: 超出...，默认true 
+ * @property {"left" | "right" | "center"} align: 文字对齐方向，默认 left 
+ * @property {"left" | "right"} fixed:固定列，目前不支持隔空固定,固定列的右边如果多列，最偏左的一列，需要自己修改样式
  * .virtual-table-row-content+.virtual-table-row-fixed-right:nth-last-child(1) {
         border-left: 1px solid #EAECF3;
         box-shadow: -4px 0px 6px rgba(133, 137, 158, 0.1);
     }
- * @render：自定义渲染每列的单元格  
- * @filterProps：筛选表格配置 
- * @sorterProps：表格排序配置 
- * @enableDrag：表格排序配置 
+ * @property {(text, record, index) => ReactNode} render：自定义渲染每列的单元格  
+ * @property {FilterProps} filterProps：筛选表格配置  
+ * @property {SorterProps} sorterProps：表格排序配置 
+ * @property {boolean} enableDrag：表格排序配置 
  */
 export interface ColumnsTypeProps {
     title: string
@@ -86,10 +89,11 @@ export interface ColumnsTypeProps {
     ellipsis?: boolean
     align?: "left" | "right" | "center" //默认 left
     fixed?: "left" | "right"
+    /** @access private */
     left?: number // 外面不需要传，不接收，紧作为固定列使用
+    /** @access private */
     right?: number // 外面不需要传，不接收，紧作为固定列使用
     render?: (text, record, index) => ReactNode
-    // 搜索/筛选
     filterProps?: FilterProps
     sorterProps?: SorterProps
     enableDrag?: boolean
@@ -148,8 +152,8 @@ export interface FiltersSelectAllProps {
  *  @property {boolean} isAll 是否全选
  *  @property {"checkbox" | "radio"} type //默认 checkbox
  *  @property {string[]} selectedRowKeys 选中的key值，传入的renderKey
- *  @property {(c: boolean, selectedRowsKey: string, selectedRows: T) => void} onChangeCheckboxSingle 多选的单个选中
- *  @property {(selectedRows: string[], selected: T[], checked: boolean) => void} onSelectAll 全选
+ *  @event (c: boolean, selectedRowsKey: string, selectedRows: T) => void onChangeCheckboxSingle 多选的单个选中
+ *  @event (selectedRows: string[], selected: T[], checked: boolean) => void onSelectAll 全选
  */
 export interface RowSelectionProps<T> {
     isAll?: boolean
