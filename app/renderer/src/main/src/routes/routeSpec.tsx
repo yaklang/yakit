@@ -183,7 +183,18 @@ export function RouteNameToVerboseName(r: string) {
             return r
     }
 }
-
+/**
+ * @description:菜单属性
+ * @param {string} id
+ * @param {Route} key 路由的跳转页面
+ * @param {MenuDataProps[]} subMenuData 子菜单数据
+ * @param {string} label 展示的菜单名称
+ * @param {JSX.Element} icon 展示的图标
+ * @param {boolean} hidden 是否隐藏
+ * @param {string} describe 描述
+ * @param {number} yakScriptId 如果该路由为插件时的插件id
+ * @param {string} yakScripName 插件名称
+ */
 export interface MenuDataProps {
     id: string
     key?: Route
@@ -193,115 +204,11 @@ export interface MenuDataProps {
     disabled?: boolean
     hidden?: boolean
     describe?: string
+    yakScriptId?: number
+    yakScripName?: string
 }
 
 export const NoScrollRoutes: Route[] = [Route.HTTPHacker, Route.Mod_Brute, Route.YakScript]
-
-// export const RouteMenuData: MenuDataProps[] = [
-//     {
-//         key: Route.PenTest,
-//         label: "手工渗透测试",
-//         icon: <AimOutlined />,
-//         subMenuData: [
-//             { key: Route.HTTPHacker, label: "MITM", icon: <FireOutlined /> },
-//             { key: Route.HTTPFuzzer, label: "Web Fuzzer", icon: <AimOutlined /> },
-//             { key: Route.WebsocketFuzzer, label: "Websocket Fuzzer", icon: <AimOutlined /> },
-//             { key: Route.PayloadGenerater_New, label: "Yso-Java Hack", icon: <OneToOneOutlined /> }
-//         ]
-//     },
-//     {
-//         key: Route.GeneralModule,
-//         label: "基础安全工具",
-//         icon: <RocketOutlined />,
-//         subMenuData: [
-//             { key: Route.Mod_ScanPort, label: "扫描端口/指纹", icon: <EllipsisOutlined /> },
-//             { key: Route.Mod_Brute, label: "爆破与未授权", icon: <EllipsisOutlined />, disabled: false }
-//             // {key: Route.Mod_Subdomain, label: "子域名发现", icon: <EllipsisOutlined/>, disabled: true},
-//             // {key: Route.Mod_Crawler, label: "基础爬虫", icon: <EllipsisOutlined/>, disabled: true},
-//             // {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
-//         ]
-//     },
-//     {
-//         key: Route.PoC,
-//         label: "专项漏洞检测",
-//         icon: <FunctionOutlined />
-//     },
-
-//     {
-//         key: Route.ModManagerDetail,
-//         label: "插件管理",
-//         icon: <AppstoreOutlined />,
-//         subMenuData: [
-//             { key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined /> },
-//             { key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined /> }
-//         ]
-//     },
-
-//     { key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined /> },
-//     { key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined /> },
-//     {
-//         key: Route.ReverseManager,
-//         label: "反连管理",
-//         icon: <AppstoreOutlined />,
-//         subMenuData: [
-//             { key: Route.ReverseServer_New, label: "反连服务器", icon: <OneToOneOutlined /> },
-//             { key: Route.PayloadGenerater_New, label: "Yso-Java Hack", icon: <OneToOneOutlined /> },
-//             // {key: Route.PayloadGenerater, label: "JavaPayload", icon: <OneToOneOutlined />},
-//             // {key: Route.ReverseServer, label: "反连服务器", icon: <OneToOneOutlined />},
-//             { key: Route.ShellReceiver, label: "端口监听器", icon: <OneToOneOutlined /> },
-//             { key: Route.DNSLog, label: "DNSLog", icon: <OneToOneOutlined /> },
-//             { key: Route.ICMPSizeLog, label: "ICMP-SizeLog", icon: <OneToOneOutlined /> },
-//             { key: Route.TCPPortLog, label: "TCP-PortLog", icon: <OneToOneOutlined /> }
-//         ]
-//     },
-//     {
-//         key: Route.DataHandler,
-//         label: "数据处理",
-//         icon: <FunctionOutlined />,
-//         subMenuData: [
-//             { key: Route.Codec, label: "Codec", icon: <FireOutlined /> },
-//             { key: Route.DataCompare, label: "数据对比", icon: <OneToOneOutlined /> }
-//         ]
-//     },
-
-//     {
-//         key: Route.Database,
-//         label: "数据库",
-//         icon: <FunctionOutlined />,
-//         subMenuData: [
-//             { key: Route.DB_HTTPHistory, label: "HTTP History", icon: <OneToOneOutlined /> },
-//             { key: Route.DB_Ports, label: "端口资产", icon: <OneToOneOutlined /> },
-//             { key: Route.DB_Domain, label: "域名资产", icon: <FireOutlined /> },
-//             { key: Route.DB_ExecResults, label: "插件执行结果", icon: <FireOutlined /> },
-//             { key: Route.DB_Risk, label: "漏洞与风险", icon: <BugOutlined /> },
-//             { key: Route.DB_Report, label: "报告(Beta*)", icon: <FireOutlined /> }
-//         ]
-//     },
-
-// 隐藏内容
-//     {
-//         key: Route.BatchExecutorRecover,
-//         label: "继续任务：批量执行插件",
-//         icon: <FireOutlined />,
-//         disabled: true,
-//         hidden: true
-//     },
-//     {
-//         key: Route.AccountAdminPage,
-//         label: "用户管理",
-//         icon: <FireOutlined />,
-//         disabled: true,
-//         hidden: true
-//     },
-//     {
-//         key: Route.RoleAdminPage,
-//         label: "角色管理",
-//         icon: <FireOutlined />,
-//         disabled: true,
-//         hidden: true
-//     }
-// ]
-
 interface ComponentParams {
     // Route.HTTPFuzzer 参数
     isHttps?: boolean

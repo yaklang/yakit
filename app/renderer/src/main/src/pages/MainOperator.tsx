@@ -86,7 +86,6 @@ import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 
-
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {ipcRenderer} = window.require("electron")
@@ -329,8 +328,6 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 const Main: React.FC<MainProp> = forwardRef((props, ref) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
     const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
-    const [collapsed, setCollapsed] = useState(false)
-    const [hideMenu, setHideMenu] = useState(false)
 
     const [loading, setLoading] = useState(false)
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([])
@@ -1223,17 +1220,6 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                                 <Divider type={"vertical"} />
                                 <YakVersion />
                                 <YakitVersion />
-                                {!hideMenu && (
-                                    <Button
-                                        style={{marginLeft: 4, color: "#207ee8"}}
-                                        type={"ghost"}
-                                        ghost={true}
-                                        onClick={(e) => {
-                                            setCollapsed(!collapsed)
-                                        }}
-                                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                                    />
-                                )}
                                 <Button
                                     style={{marginLeft: 4, color: "#207ee8"}}
                                     type={"ghost"}

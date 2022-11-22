@@ -104,7 +104,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     useEffect(() => {
         if (!width) return
         toMove()
-    }, [width])
+    }, [width, routeMenu])
 
     /**
      * @description: 计算是否显示一级折叠菜单
@@ -146,7 +146,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     })
     const onExpand = useMemoizedFn(() => {
         setIsExpand(true)
-        if (subMenuData.length === 0 && routeMenu.length > 0) {
+        if (routeMenu.length > 0) {
             setSubMenuData(routeMenu[0].subMenuData || [])
             setMenuId(routeMenu[0].id || "")
         }
@@ -173,19 +173,18 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     <div className={classNames(style["heard-menu-left-inner"])} ref={menuLeftInnerRef}>
                         {routeMenu.map((menuItem, index) => {
                             return (
-                                <div key={`menuItem-${menuItem.id}`}>
-                                    <RouteMenuDataItem
-                                        menuItem={menuItem}
-                                        isShow={number > 0 ? number <= index : false}
-                                        onSelect={(r) => onRouteMenuSelect(r.key as Route)}
-                                        isExpand={isExpand}
-                                        setSubMenuData={(menu) => {
-                                            setSubMenuData(menu.subMenuData || [])
-                                            setMenuId(menu.id || "")
-                                        }}
-                                        activeMenuId={menuId}
-                                    />
-                                </div>
+                                <RouteMenuDataItem
+                                    key={`menuItem-${menuItem.id}`}
+                                    menuItem={menuItem}
+                                    isShow={number > 0 ? number <= index : false}
+                                    onSelect={(r) => onRouteMenuSelect(r.key as Route)}
+                                    isExpand={isExpand}
+                                    setSubMenuData={(menu) => {
+                                        setSubMenuData(menu.subMenuData || [])
+                                        setMenuId(menu.id || "")
+                                    }}
+                                    activeMenuId={menuId}
+                                />
                             )
                         })}
                     </div>
@@ -317,7 +316,7 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
             {subMenuData.map((subMenuItem) => (
                 <div
                     className={style["heard-sub-menu-item"]}
-                    key={`subMenuItem-${subMenuItem.id}`}
+                    key={`subMenuItem-${subMenuItem.key}`}
                     onClick={() => onSelect(subMenuItem)}
                 >
                     {subMenuItem.icon || <MenuDefaultPluginIcon />}
