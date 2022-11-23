@@ -1193,20 +1193,6 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
             />
         )
     }
-    const onRouteMenuSelect = useMemoizedFn((route: Route) => {
-        if (route === "ignore") return
-        if (route === Route.HTTPFuzzer) {
-            const time = new Date().getTime().toString()
-            addTabPage(Route.HTTPFuzzer, {
-                time: time,
-                node: ContentByRoute(Route.HTTPFuzzer, undefined, {
-                    system: system,
-                    order: time
-                }),
-                isRecord: true
-            })
-        } else addTabPage(route as Route)
-    })
     return (
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
@@ -1399,7 +1385,7 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                 <HeardMenu
                     routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
                     menuItemGroup={menuItems}
-                    onRouteMenuSelect={onRouteMenuSelect}
+                    onRouteMenuSelect={menuAddPage}
                 />
                 <Content
                     style={{

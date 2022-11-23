@@ -40,9 +40,7 @@ export const getScriptIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
             return <MenuBasicCrawlerIcon />
-        case "空间引擎：Hunter": //中文
-            return <MenuSpaceEngineHunterIcon />
-        case "空间引擎:Hunter": //英文
+        case "空间引擎: Hunter": //中文
             return <MenuSpaceEngineHunterIcon />
         case "子域名收集":
             return <MenuSubDomainCollectionIcon />
