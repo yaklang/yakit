@@ -137,6 +137,61 @@ jobs:
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
+  publish_yakit_ee_to_oss:
+    if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+    needs:
+      - build_yakit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.10.0
+
+      # 提取版本
+      - name: Extract Version
+        id: extract_version
+        uses: Saionaro/extract-package-version@v1.1.1
+      - name: Echo Yakit Package Version
+        run: echo ${{ steps.extract_version.outputs.version }}
+
+      # Download From Artifacts
+      - name: Download Yakit (Darwin Amd64)
+        uses: actions/download-artifact@v2
+        with:
+          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+      - name: Download Yakit (Windows amd64)
+        uses: actions/download-artifact@v2
+        with:
+          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+      - name: Download Yakit (Darwin arm64)
+        uses: actions/download-artifact@v2
+        with:
+          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+      - name: Download Yakit (Linux amd64)
+        uses: actions/download-artifact@v2
+        with:
+          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      - run: ls
+        name: Ls Published Artifacts...
+
+      - name: Update OSS latest file
+        run: echo ${{ steps.extract_version.outputs.version }} > ./yakit-ee-version.txt
+
+      - name: Upload Yakit to oss(windows)
+        uses: tvrcgo/upload-to-oss@master
+        with:
+          key-id: ${{ secrets.OSS_KEY_ID }}
+          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          region: oss-accelerate
+          bucket: yaklang
+          assets: |
+            ./yakit-ee-version.txt:/yak/latest/yakit-ee-version.txt
+            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+
   download_artifacts_and_release:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:

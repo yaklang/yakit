@@ -204,7 +204,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 excludeSuffix: msg.excludeSuffix,
                 includeHostname: msg.includeHostname,
                 excludeHostname: msg.excludeHostname,
-                excludeContentTypes: msg.excludeContentTypes
+                excludeContentTypes: msg.excludeContentTypes,
+                excludeUri: msg.excludeUri,
+                includeUri: msg.includeUri,
             })
         })
 
