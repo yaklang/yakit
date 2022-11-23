@@ -2,10 +2,8 @@ import React, {useEffect, useRef, useState} from "react"
 import {
     HeardMenuProps,
     RouteMenuDataItemProps,
-    // SubMenuGroupProps,
     SubMenuProps,
     CollapseMenuProp
-    // MenuGroupItemProps
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
 import {MenuDataProps, Route} from "@/routes/routeSpec"
@@ -24,7 +22,6 @@ import {YakitMenu, YakitMenuItemProps} from "../YakitMenu/YakitMenu"
 import {YakitPopover} from "../YakitPopover/YakitPopover"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Tabs} from "antd"
-import {MenuItemGroup} from "@/pages/MainOperator"
 import {
     MenuBasicCrawlerIcon,
     MenuComprehensiveCatalogScanningAndBlastingIcon,
@@ -34,7 +31,6 @@ import {
     MenuPayloadIcon,
     MenuYakRunnerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
-import {randomString} from "@/utils/randomUtil"
 
 export const getScriptIcon = (name: string) => {
     switch (name) {
