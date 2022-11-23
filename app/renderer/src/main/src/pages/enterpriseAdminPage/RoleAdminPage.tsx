@@ -441,7 +441,6 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                 <div>
                     {!record.checkPlugin && "-"}
                     {record.checkPlugin && <span style={{marginRight: 10}}>审核插件</span>}
-                    {/* {record.deletePlugin && <span style={{marginRight: 10}}>插件删除</span>} */}
                 </div>
             )
         },

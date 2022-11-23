@@ -234,7 +234,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         // 编辑
         const departmentId: number = department[department.length - 1]
         if (editInfo) {
-            console.log("params888", editInfo)
             const params: API.EditUrmRequest = {
                 uid: editInfo.uid,
                 user_name,

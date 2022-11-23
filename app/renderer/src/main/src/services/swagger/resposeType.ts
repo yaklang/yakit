@@ -79,10 +79,6 @@
      */
     submitter?: string;
     /**
-     * 是否有权限删除插件
-     */
-    deletePlugin?: boolean;
-    /**
      * 是否能审核插件
      */
     checkPlugin?: boolean;
@@ -440,6 +436,17 @@
   }
   export interface DeletePluginUuid {
     uuid: string;
+  }
+  export interface CompanyLicenseConfigResponse extends Paging {
+    data: CompanyLicenseConfigList[];
+  }
+  export interface CompanyLicenseConfigList {
+    id: number;
+    company: string;
+    maxActivationNum: number;
+    useActivationNum: number;
+    maxUser: number;
+    durationDate: number;
   }
   export interface CommentListResponse extends Paging {
     data: CommentListData[];
