@@ -187,10 +187,10 @@ jobs:
           bucket: yaklang
           assets: |
             ./yakit-ee-version.txt:/yak/latest/yakit-ee-version.txt
-            Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-            Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-            Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-            Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
   download_artifacts_and_release:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
