@@ -3,7 +3,7 @@ name: Yakit-CI
 on:
   push:
     branches:
-      - "luoluo/*"
+      - "luoluo/feature/horizontal-menu"
     tags:
       - "v*"
 
