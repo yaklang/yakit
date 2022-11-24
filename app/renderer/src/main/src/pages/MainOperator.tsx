@@ -411,7 +411,7 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                         if (item.key === Route.GeneralModule) {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
-                                    icon: getScriptIcon(i.ScriptName.replace(/\s*/g, "")),
+                                    icon: getScriptIcon(i.ScriptName),
                                     key: `plugin:${i.Id}`,
                                     label: i.ScriptName
                                 } as unknown as MenuDataProps

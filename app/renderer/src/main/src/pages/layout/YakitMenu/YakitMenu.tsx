@@ -32,7 +32,9 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                     <div style={{width: width}} className={classnames(styles["yakit-menu-item"])}>
                         <div className={styles["yakit-menu-item-left"]}>
                             {info.itemIcon}
-                            <div className='content-ellipsis'>{info.label}</div>
+                            <div className='content-ellipsis' title={typeof info.label === "string" ? info.label : ""}>
+                                {info.label}
+                            </div>
                         </div>
                         <YakitMenuRightSvgIcon className={styles["icon-style"]} />
                     </div>

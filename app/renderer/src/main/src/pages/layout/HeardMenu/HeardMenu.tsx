@@ -246,6 +246,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                     style["sub-menu-expand-item-label"],
                                                     style["heard-menu-item-label"]
                                                 )}
+                                                title={item.label}
                                             >
                                                 {item.label}
                                             </div>
@@ -283,7 +284,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
             })}
             onClick={() => onOpenSecondMenu()}
         >
-            <div className={style["heard-menu-item-label"]}>{menuItem.label}</div>
+            <div className={style["heard-menu-item-label"]} title={menuItem.label}>{menuItem.label}</div>
         </div>
     )
     return (
@@ -315,7 +316,7 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                     onClick={() => onSelect(subMenuItem)}
                 >
                     {subMenuItem.icon || <MenuDefaultPluginIcon />}
-                    <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
+                    <div className={style["heard-sub-menu-label"]} title={subMenuItem.label}>{subMenuItem.label}</div>
                 </div>
             ))}
         </div>
