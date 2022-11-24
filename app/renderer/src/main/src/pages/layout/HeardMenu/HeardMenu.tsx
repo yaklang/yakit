@@ -68,7 +68,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const menuLeftInnerRef = useRef<any>()
     useEffect(() => {
         console.log("routeMenuData", routeMenuData)
-
         const newMenuItemGroup: MenuDataProps[] = []
         menuItemGroup.forEach((menuGroupItem, index) => {
             let item: MenuDataProps = {
@@ -91,6 +90,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         })
         const route = newMenuItemGroup.concat(routeMenuData)
         setRouteMenu(route)
+        if (menuId) {
+            let currentMenu = route.find((ele) => ele.id === menuId)
+            if (!currentMenu) return
+            setSubMenuData(currentMenu.subMenuData || [])
+        }
     }, [routeMenuData, menuItemGroup])
     useEffect(() => {
         if (!width) return
