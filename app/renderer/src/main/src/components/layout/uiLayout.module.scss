@@ -6,6 +6,8 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    position: relative;
+
     .ui-layout-header {
         width: 100%;
         height: 36px;
@@ -40,10 +42,12 @@
                 display: flex;
             }
             .header-title {
+                flex: 1;
                 height: 100%;
                 line-height: 36px;
                 font-weight: 600;
                 color: var(--base-font-color);
+                text-align: center;
             }
             .header-right {
                 height: 100%;
@@ -64,12 +68,23 @@
         width: 100%;
         flex: 1;
         overflow: hidden;
+
+        .ui-layout-body-mask {
+            z-index: 50;
+            width: 100%;
+            height: calc(100% - 36px);
+            position: absolute;
+            top: 36px;
+            left: 0;
+            overflow: hidden;
+        }
     }
     .ui-layout-mask {
         width: 100%;
         flex: 1;
         overflow: hidden;
         position: relative;
+        background: #fbe7d9;
     }
 }
 
@@ -80,13 +95,11 @@
 
 /** 未安装引擎的提示弹窗样式 **/
 .engine-hint-modal-wrapper {
-    width: 448px;
     position: absolute;
     top: 35%;
     left: calc(50% - 224px);
 }
 .engine-hint-modal-hidden-wrapper {
-    width: 448px;
     display: none;
 }
 .modal-yaklang-engine-hint {
@@ -142,7 +155,6 @@
             }
             .hint-right-content {
                 margin-top: 8px;
-                height: 20px;
                 font-size: 14px;
                 line-height: 20px;
                 color: #85899e;
@@ -291,15 +303,15 @@
 }
 /** 用户协议和常见问题弹窗样式 **/
 .agr-and-qs-modal-wrapper {
-    width: 624px;
+    z-index: 99;
     position: absolute;
     top: 30%;
     left: calc(50% - 312px);
 }
 .agr-and-qs-modal-hidden-wrapper {
-    width: 624px;
     display: none;
 }
+
 .yakit-agr-and-qs-modal {
     width: 100%;
     background: #ffffff;
@@ -349,7 +361,6 @@
             width: 36px;
             height: 36px;
             padding: 8px;
-            cursor: pointer;
             .icon-style {
                 color: #b4bbca;
             }
@@ -443,16 +454,74 @@
                     }
                 }
             }
+
+            .yakit-update-hint {
+                height: 24px;
+                font-size: 14px;
+                line-height: 24px;
+                text-align: justify;
+                color: #f7544a;
+            }
+            .yakit-update-link {
+                margin-top: 8px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .link-wrapper {
+                    height: 20px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    padding: 2px 6px;
+                    gap: 8px;
+                    background: #f8f8f8;
+                    border: 1px solid #eaecf3;
+                    border-radius: 4px;
+                    font-size: 11px;
+                    color: #85899e;
+                    .copy-icon {
+                        cursor: pointer;
+                        height: 16px;
+                        padding: 2px;
+                        display: flex;
+                    }
+                }
+            }
         }
     }
 }
 
+// 各类系统信息弹窗的宽度
+.yakit-agr-modal {
+    width: 624px;
+}
+.yaklang-update-modal {
+    width: 448px;
+}
+.yaklang-qs-modal {
+    width: 657px;
+}
+.yakit-update-modal {
+    width: 448px;
+}
+.yakit-qs-modal {
+    width: 448px;
+}
+
 /** 远程连接UI **/
 .remote-yaklang-engine-wrapper {
+    :global {
+        .ant-spin-dot-item {
+            background-color: #f28b44;
+        }
+    }
+
     width: 100%;
     height: 100%;
     overflow: hidden auto;
     padding: 56px 16.7% 0;
+    background: #f8f8f8;
     .remote-yaklang-engine-body {
         overflow: auto;
         .remote-title {
@@ -609,6 +678,39 @@
         .code-pem {
             width: 460px;
             height: 280px;
+        }
+        .path-wrapper {
+            margin-top: 6px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .link-wrapper {
+                width: 280px;
+                height: 20px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 2px 6px;
+                gap: 8px;
+                background: #f8f8f8;
+                border: 1px solid #eaecf3;
+                border-radius: 4px;
+                font-size: 11px;
+                color: #85899e;
+                .copy-icon {
+                    cursor: pointer;
+                    height: 16px;
+                    padding: 2px;
+                    display: flex;
+                }
+            }
+            .link-open {
+                height: 20px;
+                line-height: 20px;
+                color: #f28b44;
+                cursor: pointer;
+            }
         }
     }
 }

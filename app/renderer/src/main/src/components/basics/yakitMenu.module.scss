@@ -25,6 +25,15 @@
             border: 1px solid #eaecf3;
             box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
             border-radius: 4px;
+            .ant-menu-item-selected {
+                background-color: unset;
+                div {
+                    color: #f28b44;
+                }
+                div:hover {
+                    color: #ffffff;
+                }
+            }
         }
         .ant-menu-vertical.ant-menu-sub {
             min-width: 128px;

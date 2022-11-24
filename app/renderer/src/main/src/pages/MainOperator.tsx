@@ -90,7 +90,6 @@ import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData";
-import {YakitButton} from "@/components/YakitButton"
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
@@ -139,7 +138,7 @@ const singletonRoute: Route[] = [
     // 信任用户管理
     Route.TrustListPage,
 ]
-const defaultUserInfo: UserInfoProps = {
+export const defaultUserInfo: UserInfoProps = {
     isLogin: false,
     platform: null,
     githubName: null,
@@ -227,9 +226,9 @@ export interface SetUserInfoProp {
 const judgeAvatar = (userInfo) => {
     const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={38} style={{cursor: "pointer"}} src={companyHeadImg}/>
+        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
     ) : (
-        <Avatar size={38} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
+        <Avatar size={24} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
         </Avatar>
     )
@@ -239,8 +238,9 @@ const judgeAvatar = (userInfo) => {
 const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
-const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-    const {userInfo, setStoreUserInfo} = props
+export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
+    const {userInfo,setStoreUserInfo} = props
+
     // OSS远程头像删除
     const deleteAvatar = useMemoizedFn((imgName) => {
         NetWorkApi<API.DeleteResource, API.ActionSucceeded>({

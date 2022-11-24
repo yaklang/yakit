@@ -1,56 +1,49 @@
-import {useGetState, useMemoizedFn} from "ahooks"
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
+import {useMemoizedFn} from "ahooks"
 
 import styles from "./yakitGlobalHost.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
-export interface YakitGlobalHostProp {}
+export interface YakitGlobalHostProp {
+    isEngineLink: boolean
+}
 
 export const YakitGlobalHost: React.FC<YakitGlobalHostProp> = (props) => {
-    const [host, setHost, getHost] = useGetState<{addr: string; port: string}>({addr: "??", port: "??"})
+    const {isEngineLink} = props
 
+    const [host, setHost] = useState<{addr: string; port: string}>({addr: "??", port: "??"})
+    /** 获取连接引擎地址计时器 */
+    const timeRef = useRef<any>(null)
+
+    /** 获取连接引擎的地址参数 */
     const getGlobalHost = useMemoizedFn(() => {
-        console.log("getHost")
-
         ipcRenderer
-            .invoke("yakit-connect-status")
+            .invoke("fetch-yaklang-engine-addr")
             .then((data) => {
-                console.log(111, data)
+                if (data.addr === `${host.addr}:${host.port}`) return
                 const hosts: string[] = (data.addr as string).split(":")
                 if (hosts.length !== 2) return
                 setHost({addr: hosts[0], port: hosts[1]})
             })
-            .catch(() => {
-                console.log("1111erroe")
-            })
+            .catch(() => {})
     })
 
+    /** 引擎连接和断开时的展示内容处理 */
     useEffect(() => {
-        ipcRenderer.on("client-engine-status-ok", (e, reason) => {
-            console.log("ok")
-            getGlobalHost()
-        })
-        ipcRenderer.on("client-engine-status-error", (e, reason) => {
-            console.log("error")
-            if (getHost().addr === "??") return
-            setHost({addr: "??", port: "??"})
-        })
+        if (isEngineLink) {
+            if (timeRef.current) clearInterval(timeRef.current)
+            timeRef.current = setInterval(getGlobalHost, 1000)
 
-        const updateEngineStatus = () => {
-            console.log(123)
-            ipcRenderer.invoke("engine-status").catch((e: any) => {
-                if (getHost().addr === "??") return
-                setHost({addr: "??", port: "??"})
-            })
+            return () => {
+                clearInterval(timeRef.current)
+            }
+        } else {
+            if (timeRef.current) clearInterval(timeRef.current)
+            timeRef.current = null
+            setHost({addr: "??", port: "??"})
         }
-        // let id = setInterval(updateEngineStatus, 500)
-        return () => {
-            ipcRenderer.removeAllListeners("client-engine-status-error")
-            ipcRenderer.removeAllListeners("client-engine-status-ok")
-            // clearInterval(id)
-        }
-    }, [])
+    }, [isEngineLink])
 
     return (
         <div className={styles["yakit-global-host-wrapper"]}>

@@ -1,18 +1,14 @@
-const {app, BrowserWindow, dialog, nativeImage, ipcMain, session} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, ipcMain} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
 const {registerIPC, clearing} = require("./ipc")
-const {service, httpApi} = require("./httpServer")
-const {USER_INFO, HttpSetting, Global_YAK_SETTING, SYSTEM_INFO} = require("./state")
+const {httpApi} = require("./httpServer")
+const {USER_INFO, HttpSetting} = require("./state")
 const process = require("process")
 const {getExtraLocalCache, extraKVCache, setExtraLocalCache, getLocalCache} = require("./localCache")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
-
-/** 全局设置操作系统各项信息变量 */
-SYSTEM_INFO.system = process.platform
-SYSTEM_INFO.arch = process.arch
 
 /** 主进程窗口对象 */
 let win

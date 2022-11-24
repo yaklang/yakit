@@ -1,0 +1,95 @@
+.yakit-loading-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    .yakit-loading-body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #fbe7d9;
+
+        .yakit-loading-title {
+            margin-top: 20vh;
+            width: 100%;
+            .title-style {
+                width: 100%;
+                text-align: center;
+                font-size: 24px;
+                line-height: 56px;
+                color: #f28b44;
+                font-weight: 600;
+            }
+            .subtitle-stlye {
+                width: 100%;
+                text-align: center;
+                font-size: 16px;
+                line-height: 24px;
+                color: #f28b44;
+            }
+        }
+
+        .yakit-loading-icon-wrapper {
+            margin: 48px auto 0;
+            width: 96px;
+            height: 96px;
+            overflow: hidden;
+            position: relative;
+            font-size: 96px;
+            .theme-icon-wrapper {
+                width: 96px;
+                height: 96px;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                z-index: 99;
+                overflow: hidden;
+                -webkit-animation: building-blocks 1s ease 0s infinite;
+                animation: building-blocks 1s ease 0s infinite;
+                animation-direction: alternate;
+            }
+            .theme-icon {
+                width: 96px;
+                height: 96px;
+                line-height: 96px;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                overflow: hidden;
+            }
+            .white-icon {
+                width: 96px;
+                height: 96px;
+                line-height: 96px;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        }
+
+        .yakit-loading-content {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 16px;
+            color: #f28b44;
+            line-height: 24px;
+        }
+    }
+}
+
+@-webkit-keyframes building-blocks {
+    from {
+        height: 96;
+    }
+    to {
+        height: 0px;
+    }
+}
+@keyframes building-blocks {
+    from {
+        height: 96px;
+    }
+    to {
+        height: 0px;
+    }
+}

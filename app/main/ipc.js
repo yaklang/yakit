@@ -68,36 +68,54 @@ function getClient(createNew) {
 
 /**
  * @name 测试本地缓存端口是否已启动yaklang引擎
- * @param win electron主进程对象
  * @param {String} port 端口号
  */
-function testClient(win, port) {
-    const yak = new Yak(`127.0.0.1:${port}`, grpc.credentials.createInsecure(), options)
+function testClient(port, callback) {
+    const yak = new Yak(`localhost:${port}`, grpc.credentials.createInsecure(), options)
+    yak.Echo({text: "hello yak? are u ok?"}, callback)
+}
+/**
+ * @name 测试远程连接引擎是否成功
+ * @param {Object} params
+ * @param {String} params.host 域名
+ * @param {String} params.port 端口
+ * @param {String} params.caPem 证书
+ * @param {String} params.password 密钥
+ */
+function testRemoteClient(params, callback) {
+    const {host, port, caPem, password} = params
 
-    yak.Echo({text: "hello yak? are u ok?"}, (err, result) => {
-        if (!!err) win.webContents.send("callback-test-engine-started", false)
-        else {
-            win.webContents.send("callback-test-engine-started", true)
-            // 清空旧缓存数据
-            if (_client) _client.close()
-            _client = null
-            global.password = ""
-            global.caPem = ""
-            global.defaultYakGRPCAddr = `127.0.0.1:${port}`
-            newClient()
-        }
+    const md = new grpc.Metadata()
+    md.set("authorization", `bearer ${password}`)
+    const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
+        return callback(null, md)
     })
+    const yak = !caPem
+        ? new Yak(`${host}:${port}`, grpc.credentials.createInsecure(), options)
+        : new Yak(
+              `${host}:${port}`,
+              // grpc.credentials.createInsecure(),
+              grpc.credentials.combineChannelCredentials(
+                  grpc.credentials.createSsl(Buffer.from(caPem, "latin1"), null, null, {
+                      checkServerIdentity: (hostname, cert) => {
+                          return undefined
+                      }
+                  }),
+                  creds
+              ),
+              options
+          )
+
+    yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
 
 module.exports = {
+    testClient,
+    testRemoteClient,
     clearing: () => {
         require("./handlers/yakLocal").clearing()
     },
     registerIPC: (win) => {
-        // 测试本地缓存端口是否有已启动引擎进程
-        ipcMain.handle("test-engine-started", (e, port) => {
-            testClient(win, port)
-        })
         ipcMain.handle("yakit-connect-status", () => {
             return {
                 addr: global.defaultYakGRPCAddr,
@@ -113,6 +131,15 @@ module.exports = {
             )
             return text
         })
+        /** 获取本地引擎连接地址参数 */
+        ipcMain.handle("fetch-yaklang-engine-addr", () => {
+            return {
+                addr: global.defaultYakGRPCAddr,
+                isTLS: !!global.caPem
+            }
+        })
+        /** 注册本地缓存数据查改通信 */
+        require("./localCache").register(win, getClient)
         /** 启动、连接引擎 */
         require("./handlers/engineStatus")(
             win,

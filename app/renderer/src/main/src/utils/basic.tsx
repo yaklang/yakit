@@ -173,13 +173,13 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
         }).finally(
         )
 
-        ipcRenderer.on("client-yak-version", async (e: any, data) => {
+        ipcRenderer.on("fetch-yak-version-callback", async (e: any, data) => {
             setVersion(data)
         })
 
-        ipcRenderer.invoke("yak-version")
+        ipcRenderer.invoke("fetch-yak-version")
         return () => {
-            ipcRenderer.removeAllListeners("client-yak-version")
+            ipcRenderer.removeAllListeners("fetch-yak-version-callback")
         }
     }, [])
 

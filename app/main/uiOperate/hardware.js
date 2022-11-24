@@ -1,9 +1,9 @@
-const {ipcMain, clipboard} = require("electron")
+const {ipcMain, clipboard, shell} = require("electron")
 const OS = require("os")
-const https = require("https")
 const {execFile, exec} = require("child_process")
 const path = require("path")
 const process = require("process")
+const {yaklangEngineDir, remoteLinkDir} = require("../filePath")
 
 module.exports = (win, getClient) => {
     // CPU瞬时使用均值
@@ -34,7 +34,6 @@ module.exports = (win, getClient) => {
         //Return the average Idle and Tick times
         return {idle: totalIdle / cpus.length, total: totalTick / cpus.length}
     }
-
     // function to calculate average of array
     const arrAvg = function (arr) {
         if (arr && arr.length >= 1) {
@@ -42,7 +41,6 @@ module.exports = (win, getClient) => {
             return sumArr / arr.length
         }
     }
-
     // load average for the past 1000 milliseconds calculated every 100
     const getCPULoadAVG = (avgTime = 1000, delay = 100) => {
         return new Promise((resolve, reject) => {
@@ -143,22 +141,14 @@ module.exports = (win, getClient) => {
         return `${process.platform}-${process.arch}`
     })
 
-    /** 获取Yaklang引擎最新版本号 */
-    const asyncFetchLatestYaklangVersion = () => {
-        return new Promise((resolve, reject) => {
-            let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/version.txt")
-            rsp.on("response", (rsp) => {
-                rsp.on("data", (data) => {
-                    resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
-                }).on("error", (err) => {
-                    reject(err)
-                })
-            })
-            rsp.on("error", reject)
-        })
-    }
-    /** 获取Yaklang引擎最新版本号 */
-    ipcMain.handle("fetch-latest-yaklang-version", async (e) => {
-        return await asyncFetchLatestYaklangVersion()
+    /** 打开 yaklang 或 yakit 文件所在文件夹 */
+    ipcMain.handle("open-yakit-or-yaklang", (e) => {
+        return shell.openPath(yaklangEngineDir)
     })
+    /** 打开远程连接配置信息文件夹 */
+    ipcMain.handle("open-remote-link", (e) => {
+        return shell.openPath(remoteLinkDir)
+    })
+
+    
 }

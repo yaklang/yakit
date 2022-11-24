@@ -11,7 +11,7 @@ module.exports = (win, getClient) => {
         return URL.parse(value, true).protocol === "http:" || URL.parse(value, true).protocol === "https:"
     }
     /**
-     * @name 打开外部链接
+     * 打开外部链接
      * @description 需要渲染进程传入的url自带http或https协议头字符串
      */
     ipcMain.handle("open-url", (e, url) => {

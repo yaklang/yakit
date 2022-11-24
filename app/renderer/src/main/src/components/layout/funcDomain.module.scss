@@ -23,6 +23,17 @@
         .user-wrapper {
             box-sizing: border-box;
             padding: 3px 9px;
+            .user-show {
+                width: 30px;
+                height: 30px;
+                display: flex;
+            }
+            .user-info {
+                width: 30px;
+                height: 30px;
+                padding: 3px;
+                display: flex;
+            }
         }
     }
 
@@ -249,9 +260,10 @@
         display: flex;
         justify-content: space-between;
         padding: 8px;
-        background: #f0f2f5;
-        border: 1px solid #eaecf3;
-        border-radius: 4px 4px 0px 0px;
+        background: #f0f1f3;
+        // 暂时注释(后续带更新内容时使用)
+        // border: 1px solid #eaecf3;
+        // border-radius: 4px 4px 0px 0px;
         .header-info {
             display: flex;
             .update-icon {
@@ -267,7 +279,8 @@
             .update-title {
                 height: 16px;
                 font-weight: 600;
-                font-size: 12px;
+                // 暂时修改(后续带更新内容时使用)，原配置为12px
+                font-size: 14px;
                 line-height: 16px;
                 color: #85899e;
             }
@@ -279,13 +292,28 @@
             }
         }
         .header-btn {
-            width: 68px;
-            height: 24px;
+            width: 96px;
+            height: 28px;
             display: flex;
             justify-content: right;
             align-items: center;
             font-size: 12px;
             color: #ccd2de;
+            .btn-style {
+                width: 40px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                padding: 4px 8px;
+                background: #f28b44;
+                border-radius: 4px;
+                font-weight: 500;
+                font-size: 12px;
+                color: #ffffff;
+            }
+            .btn-style:hover {
+                border-color: unset;
+            }
         }
     }
 
@@ -313,7 +341,8 @@
     border: 1px solid #fbc6a1;
     .update-header-wrapper {
         background: #fbe7d9;
-        border: 1px solid #fbc6a1;
+        // 暂时注释(后续带更新内容时使用)
+        // border: 1px solid #fbc6a1;
         .header-info {
             .update-title {
                 color: #f28b44;
@@ -324,6 +353,12 @@
         }
         .header-btn {
             color: #f28b44;
+            .update-btn {
+                height: 28px;
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+            }
         }
     }
 }

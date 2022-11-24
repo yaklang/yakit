@@ -329,7 +329,7 @@ function NewApp() {
 
     return (
         <UILayout>
-            {connected ? (
+            {(true||connected) ? (
                 <Suspense fallback={<div>Loading Main</div>}>
                     <Main
                         onErrorConfirmed={() => {

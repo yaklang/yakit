@@ -1,3 +1,4 @@
+const {ipcMain} = require("electron")
 const fs = require("fs")
 const {localCachePath, extraLocalCachePath} = require("./filePath")
 
@@ -21,7 +22,6 @@ const getLocalCache = (callback) => {
                     kvCache.set(i["key"], i["value"])
                 }
             })
-            console.log("getcache", kvCache)
 
             if (callback) callback(null)
         })
@@ -65,7 +65,6 @@ const setLocalCache = (k, v) => {
         pairs.push({key: k, value: v})
     })
     pairs.sort((a, b) => a.key.localeCompare(b.key))
-    console.log("setcache", kvCache)
     fs.writeFileSync(localCachePath, new Buffer(JSON.stringify(pairs), "utf8"))
 }
 /** 通过KEY值设置扩展缓存数据 */
@@ -90,5 +89,28 @@ module.exports = {
     setLocalCache,
     extraKVCache,
     getExtraLocalCache,
-    setExtraLocalCache
+    setExtraLocalCache,
+    register: (win, getClient) => {
+        const asyncFetchLocalCache = (key) => {
+            return new Promise((resolve, reject) => {
+                getLocalCache((err) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(kvCache.get(key))
+                    }
+                })
+            })
+        }
+        /** 获取本地缓存数据 */
+        ipcMain.handle("fetch-local-cache", async (e, key) => {
+            return await asyncFetchLocalCache(key)
+        })
+        /** 设置本地缓存数据 */
+        ipcMain.handle("set-local-cache", (e, key, value) => {
+            setLocalCache(key, value)
+        })
+        /** 获取本地拓展缓存数据 */
+        /** 设置本地拓展缓存数据 */
+    }
 }
