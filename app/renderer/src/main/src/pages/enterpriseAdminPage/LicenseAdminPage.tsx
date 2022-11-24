@@ -11,21 +11,19 @@ import {PaginationSchema} from "../../pages/invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 
-export interface ShowUserInfoProps extends API.NewUrmResponse {
+export interface ShowUserInfoProps {
+    text:string
     onClose: () => void
 }
 const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
-    const {user_name, password, onClose} = props
+    const {text, onClose} = props
     const copyUserInfo = () => {
-        callCopyToClipboard(`用户名：${user_name}\n密码：${password}`)
+        callCopyToClipboard(`${text}`)
     }
     return (
         <div style={{padding: "0 10px"}}>
             <div>
-                用户名：<span>{user_name}</span>
-            </div>
-            <div>
-                密码：<span>{password}</span>
+                <span>{text}</span>
             </div>
             <div style={{textAlign: "center", paddingTop: 10}}>
                 <Button style={{width: 200}} type='primary' onClick={() => copyUserInfo()}>
@@ -121,20 +119,21 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
             company,
             maxUser
         }
-        NetWorkApi<LicenseProps, API.NewUrmResponse>({
+        console.log("参数",params)
+        NetWorkApi<LicenseProps, string>({
             method: "post",
             url: "license/activation",
             data: params
         })
-            .then((res: API.NewUrmResponse) => {
-                console.log("返回结果：", res)
+            .then((text: string) => {
+                console.log("返回结果：", text)
                 onCancel()
-                // const m = showModal({
-                //     title: "生成成功",
-                //     content: <ShowUserInfo user_name={user_name} password={password} onClose={() => m.destroy()} />
-                // })
-                // return m
-                // refresh()
+                refresh()
+                const m = showModal({
+                    title: "生成成功",
+                    content: <ShowUserInfo text={text} onClose={() => m.destroy()} />
+                })
+                return m
             })
             .catch((err) => {
                 failed("企业操作失败：" + err)
