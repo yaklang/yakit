@@ -277,7 +277,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
     })
     const popoverContent = (
         <div
-            className={classNames(style["heard-menu-item"], {
+            className={classNames(style["heard-menu-item"],style['heard-menu-item-font-weight'], {
                 [style["heard-menu-item-none"]]: isShow,
                 [style["heard-menu-item-flex-start"]]: isExpand,
                 [style["heard-menu-item-active"]]: (isExpand && activeMenuId === menuItem.id) || visible
@@ -354,7 +354,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                 // visible={true}
             >
                 <div
-                    className={classNames(style["heard-menu-item"], {
+                    className={classNames(style["heard-menu-item"],style['heard-menu-item-font-weight'],{
                         [style["heard-menu-item-open"]]: show,
                         [style["heard-menu-item-flex-start"]]: isExpand
                     })}
