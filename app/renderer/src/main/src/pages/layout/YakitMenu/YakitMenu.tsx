@@ -1,6 +1,6 @@
 import React, {ReactNode} from "react"
 import {useMemoizedFn} from "ahooks"
-import {Menu, MenuProps} from "antd"
+import {Menu, MenuProps, Tooltip} from "antd"
 import {ItemType} from "antd/lib/menu/hooks/useItems"
 import {YakitMenuRightSvgIcon} from "./icon"
 
@@ -32,9 +32,11 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                     <div style={{width: width}} className={classnames(styles["yakit-menu-item"])}>
                         <div className={styles["yakit-menu-item-left"]}>
                             {info.itemIcon}
-                            <div className='content-ellipsis' title={typeof info.label === "string" ? info.label : ""}>
-                                {info.label}
-                            </div>
+                            {(typeof info.label === "string" && (
+                                <Tooltip zIndex={9999} title={info.label} placement='leftBottom'>
+                                    <div className='content-ellipsis'>{info.label}</div>
+                                </Tooltip>
+                            )) || <div className='content-ellipsis'>{info.label}</div>}
                         </div>
                         <YakitMenuRightSvgIcon className={styles["icon-style"]} />
                     </div>
@@ -56,7 +58,11 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                     <div style={{width: width}} className={classnames(styles["yakit-menu-item"])}>
                         <div className={styles["yakit-menu-item-left"]}>
                             {info.itemIcon}
-                            <div className='content-ellipsis'>{info.label}</div>
+                            {(typeof info.label === "string" && (
+                                <Tooltip zIndex={9999} title={info.label} placement='rightBottom'>
+                                    <div className='content-ellipsis'>{info.label}</div>
+                                </Tooltip>
+                            )) || <div className='content-ellipsis'>{info.label}</div>}
                         </div>
                     </div>
                 ),

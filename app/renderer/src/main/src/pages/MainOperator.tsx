@@ -1389,10 +1389,10 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                 />
                 <Content
                     style={{
-                        margin: 12,
+                        // margin: 12,
                         backgroundColor: "#fff",
                         overflow: "auto",
-                        marginTop: 0
+                        // marginTop: 0
                     }}
                 >
                     <Layout style={{height: "100%", overflow: "hidden"}}>
@@ -1407,7 +1407,7 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                         >
                             <div
                                 style={{
-                                    padding: 12,
+                                    padding: 16,
                                     paddingTop: 8,
                                     overflow: "hidden",
                                     flex: "1",

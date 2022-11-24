@@ -1,10 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {
-    HeardMenuProps,
-    RouteMenuDataItemProps,
-    SubMenuProps,
-    CollapseMenuProp
-} from "./HeardMenuType"
+import {HeardMenuProps, RouteMenuDataItemProps, SubMenuProps, CollapseMenuProp} from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
 import {MenuDataProps, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
@@ -21,7 +16,7 @@ import {useMemoizedFn} from "ahooks"
 import {YakitMenu, YakitMenuItemProps} from "../YakitMenu/YakitMenu"
 import {YakitPopover} from "../YakitPopover/YakitPopover"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
-import {Tabs} from "antd"
+import {Tabs, Tooltip} from "antd"
 import {
     MenuBasicCrawlerIcon,
     MenuComprehensiveCatalogScanningAndBlastingIcon,
@@ -72,6 +67,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
     useEffect(() => {
+        console.log("routeMenuData", routeMenuData)
+
         const newMenuItemGroup: MenuDataProps[] = []
         menuItemGroup.forEach((menuGroupItem, index) => {
             let item: MenuDataProps = {
@@ -151,7 +148,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
     return (
         <>
-            <div className={style["heard-menu"]}>
+            <div
+                className={classNames(style["heard-menu"], {
+                    [style["heard-menu-expand"]]: isExpand
+                })}
+            >
                 <ReactResizeDetector
                     onResize={(w) => {
                         if (!w) {
@@ -164,7 +165,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     refreshMode={"debounce"}
                     refreshRate={50}
                 />
-                <div className={style["heard-menu-left"]} ref={menuLeftRef}>
+                <div className={classNames(style["heard-menu-left"])} ref={menuLeftRef}>
                     <div className={classNames(style["heard-menu-left-inner"])} ref={menuLeftInnerRef}>
                         {routeMenu.map((menuItem, index) => {
                             return (
@@ -194,7 +195,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         </>
                     )}
                 </div>
-                <div className={style["heard-menu-right"]}>
+                <div className={classNames(style["heard-menu-right"])}>
                     <div className={style["heard-menu-theme"]}>
                         <SaveIcon />
                         <span className={style["heard-menu-label"]} onClick={() => onImportShare()}>
@@ -214,9 +215,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         <MenuYakRunnerIcon />
                         <span className={style["heard-menu-label"]}>Yak Runner</span>
                     </div>
-                    <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
-                        {!isExpand && <SortDescendingIcon />}
-                    </div>
+                    {!isExpand && (
+                        <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
+                            {!isExpand && <SortDescendingIcon />}
+                        </div>
+                    )}
                 </div>
             </div>
             {isExpand && (
@@ -241,15 +244,16 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                             style={{paddingLeft: index === 0 ? 0 : ""}}
                                         >
                                             <div className={style["sub-menu-expand-item-icon"]}>{item.icon}</div>
-                                            <div
-                                                className={classNames(
-                                                    style["sub-menu-expand-item-label"],
-                                                    style["heard-menu-item-label"]
-                                                )}
-                                                title={item.label}
-                                            >
-                                                {item.label}
-                                            </div>
+                                            <Tooltip title={item.label} placement='bottom'>
+                                                <div
+                                                    className={classNames(
+                                                        style["sub-menu-expand-item-label"],
+                                                        style["heard-menu-item-label"]
+                                                    )}
+                                                >
+                                                    {item.label}
+                                                </div>
+                                            </Tooltip>
                                         </div>
                                         {index !== subMenuData.length - 1 && (
                                             <div className={style["sub-menu-expand-item-line"]} />
@@ -277,14 +281,16 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
     })
     const popoverContent = (
         <div
-            className={classNames(style["heard-menu-item"],style['heard-menu-item-font-weight'], {
+            className={classNames(style["heard-menu-item"], style["heard-menu-item-font-weight"], {
                 [style["heard-menu-item-none"]]: isShow,
                 [style["heard-menu-item-flex-start"]]: isExpand,
                 [style["heard-menu-item-active"]]: (isExpand && activeMenuId === menuItem.id) || visible
             })}
             onClick={() => onOpenSecondMenu()}
         >
-            <div className={style["heard-menu-item-label"]} title={menuItem.label}>{menuItem.label}</div>
+            <Tooltip title={menuItem.label} placement='top'>
+                <div className={style["heard-menu-item-label"]}>{menuItem.label}</div>
+            </Tooltip>
         </div>
     )
     return (
@@ -316,7 +322,7 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                     onClick={() => onSelect(subMenuItem)}
                 >
                     {subMenuItem.icon || <MenuDefaultPluginIcon />}
-                    <div className={style["heard-sub-menu-label"]} title={subMenuItem.label}>{subMenuItem.label}</div>
+                    <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
                 </div>
             ))}
         </div>
@@ -354,7 +360,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                 // visible={true}
             >
                 <div
-                    className={classNames(style["heard-menu-item"],style['heard-menu-item-font-weight'],{
+                    className={classNames(style["heard-menu-item"], style["heard-menu-item-font-weight"], {
                         [style["heard-menu-item-open"]]: show,
                         [style["heard-menu-item-flex-start"]]: isExpand
                     })}
