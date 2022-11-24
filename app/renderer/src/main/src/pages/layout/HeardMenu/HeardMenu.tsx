@@ -67,7 +67,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
     useEffect(() => {
-        console.log("routeMenuData", routeMenuData)
         const newMenuItemGroup: MenuDataProps[] = []
         menuItemGroup.forEach((menuGroupItem, index) => {
             let item: MenuDataProps = {
@@ -149,9 +148,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onTabClick = useMemoizedFn((key) => {
         onRouteMenuSelect(key as Route)
     })
-
     return (
-        <>
+        <div className={style["heard-menu-body"]}>
             <div
                 className={classNames(style["heard-menu"], {
                     [style["heard-menu-expand"]]: isExpand
@@ -235,7 +233,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             </div>
                         }
                         onTabClick={onTabClick}
-                        // @ts-ignore
                         popupClassName={style["heard-sub-menu-popup"]}
                         moreIcon={<DotsHorizontalIcon className={style["dots-icon"]} />}
                     >
@@ -270,7 +267,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     </Tabs>
                 </div>
             )}
-        </>
+        </div>
     )
 })
 

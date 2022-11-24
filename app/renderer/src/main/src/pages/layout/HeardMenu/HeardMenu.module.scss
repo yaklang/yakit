@@ -1,3 +1,8 @@
+.heard-menu-body{
+    background-color: #fafafa;
+    border-top: 1px solid #EAECF3;
+    border-bottom: 1px solid #EAECF3;
+}
 .heard-menu {
     display: flex;
     font-size: 12px;
@@ -307,6 +312,13 @@
         .ant-tabs-top>div>.ant-tabs-nav,
         .ant-tabs-bottom>div>.ant-tabs-nav {
             margin: 0;
+        }
+
+        .ant-tabs-top>.ant-tabs-nav::before,
+        .ant-tabs-bottom>.ant-tabs-nav::before,
+        .ant-tabs-top>div>.ant-tabs-nav::before,
+        .ant-tabs-bottom>div>.ant-tabs-nav::before {
+            border-bottom: 0;
         }
     }
 
