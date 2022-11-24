@@ -3,7 +3,7 @@ name: Yakit-CI
 on:
   push:
     branches:
-      - "ci/*"
+      - "luoluo/*"
     tags:
       - "v*"
 
@@ -16,7 +16,7 @@ jobs:
     #          - macos-latest
     #          - ubuntu-latest
     runs-on: macos-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') || startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ startsWith(github.ref, 'refs/heads/luoluo') || startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -42,7 +42,7 @@ jobs:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
       - run: yarn build-render-enterprise
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
         working-directory: ./
         name: "Build Enterprise"
         env:
@@ -110,28 +110,28 @@ jobs:
 
       - name: Upload Yakit Artifacts Windows
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Upload Yakit Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Upload Yakit Artifacts Linux
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/luoluo') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
