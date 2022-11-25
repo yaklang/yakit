@@ -25,3 +25,21 @@ export interface DownloadingState {
     percent: number
     size: DownloadingSize
 }
+
+/** @name 登录用户信息(暂不使用) */
+interface UserInfoProps {
+    isLogin: boolean
+    platform: string | null
+    githubName: string | null
+    githubHeadImg: string | null
+    wechatName: string | null
+    wechatHeadImg: string | null
+    qqName: string | null
+    qqHeadImg: string | null
+    companyName: string | null
+    companyHeadImg: string | null
+    role: string | null
+    user_id: number | null
+    token: string
+    showStatusSearch?: boolean
+}

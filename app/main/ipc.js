@@ -131,7 +131,7 @@ module.exports = {
             )
             return text
         })
-        /** 获取本地引擎连接地址参数 */
+        /** 获取 yaklang引擎 配置参数 */
         ipcMain.handle("fetch-yaklang-engine-addr", () => {
             return {
                 addr: global.defaultYakGRPCAddr,

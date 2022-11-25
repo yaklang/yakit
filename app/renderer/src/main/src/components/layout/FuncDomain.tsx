@@ -80,7 +80,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
             setUserMenu([
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "account-admin", title: "账号管理"},
+                {key: "role-admin", title: "角色管理"},
+                {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
                 // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
@@ -141,6 +142,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                     }
                                     if (key === "trust-list") setTrustShow(true)
                                     if (key === "set-password") setPasswordShow(true)
+                                    if (key === "role-admin") {
+                                        const key = Route.RoleAdminPage
+                                        // goRouterPage(key)
+                                    }
                                     if (key === "account-admin") {
                                         const key = Route.AccountAdminPage
                                         // goRouterPage(key)

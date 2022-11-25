@@ -55,7 +55,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** 当前引擎模式 */
     const [engineMode, setEngineMode, getEngineMode] = useGetState<YaklangEngineMode>("local")
 
-    const [loading, setLoading] = useState<boolean>(true)
+    /** 是否为正常启动引擎并连接 */
+    const isNormalStart = useRef<boolean>(false)
+    /** 是否提示用户重新启动本地引擎 */
+    const [restartEngine, setRestartEngine] = useState<boolean>(false)
 
     /**
      * 1.获取操作系统信息
@@ -106,6 +109,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
         ipcRenderer.on("local-yaklang-engine-start", () => {
             if (!getEngineLink()) {
+                isNormalStart.current = true
                 setTimeout(() => setEngineLink(true), 500)
 
                 if (pidTimeRef.current) {
@@ -120,6 +124,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
 
         ipcRenderer.on("local-yaklang-engine-end", (e) => {
+            if (isNormalStart.current) setRestartEngine(true)
             if (getEngineLink()) setEngineLink(false)
             if (!!e && e?.message) failed(e?.message)
         })
@@ -162,6 +167,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** kill启动的引擎 */
     const killEnginePid = useMemoizedFn(async () => {
+        isNormalStart.current = false
         let pids = process || []
 
         await ipcRenderer.invoke("cancel-global-reverse-server-status")
@@ -281,13 +287,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         if (isInstall) updateReconnect(true)
     })
 
+    const [yakitMode, setYakitMode] = useState<"soft" | "store">("soft")
+    const changeYakitMode = useMemoizedFn((type: "soft" | "store") => {
+        setYakitMode(type)
+    })
+
     /** MACOS 上双击放大窗口(不是最大化) */
     const maxScreen = () => {
         ipcRenderer.invoke("UIOperate", "max")
-    }
-
-    const stopBubbling = (e: any) => {
-        e.stopPropagation()
     }
 
     return (
@@ -298,31 +305,42 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         className={classnames(styles["header-body"], styles["mac-header-body"])}
                         onDoubleClick={maxScreen}
                     >
-                        <div className={styles["header-left"]}>
-                            <div className={styles["left-operate"]} onClick={stopBubbling}>
+                        <div
+                            style={{left: yakitMode === "soft" ? 76 : 120}}
+                            className={styles["header-border-yakit-mask"]}
+                        ></div>
+                        <div className={styles["header-left"]} onDoubleClick={(e) => e.stopPropagation()}>
+                            <div>
                                 <MacUIOp />
                             </div>
 
-                            <div className={styles["divider-wrapper"]}></div>
-
                             {engineLink && (
                                 <>
-                                    <div className={styles["yakit-icon"]} onClick={stopBubbling}>
+                                    <div
+                                        className={classnames(styles["yakit-mode-icon"], {
+                                            [styles["yakit-mode-selected"]]: yakitMode === "soft"
+                                        })}
+                                        onClick={() => changeYakitMode("soft")}
+                                    >
                                         <YakitThemeSvgIcon style={{fontSize: 20}} />
                                     </div>
 
-                                    <div className={styles["divider-wrapper"]}></div>
-                                    <div className={styles["yakit-store-icon"]} onClick={stopBubbling}>
+                                    <div
+                                        className={classnames(styles["yakit-mode-icon"], {
+                                            [styles["yakit-mode-selected"]]: yakitMode === "store"
+                                        })}
+                                        onClick={() => changeYakitMode("store")}
+                                    >
                                         <YakitStoreSvgIcon />
                                     </div>
 
                                     <div className={styles["divider-wrapper"]}></div>
                                     <YakitGlobalHost isEngineLink={engineLink} />
-                                    <div className={styles["short-divider-wrapper"]}>
-                                        <div className={styles["divider-style"]}></div>
-                                    </div>
                                 </>
                             )}
+                            <div className={styles["short-divider-wrapper"]}>
+                                <div className={styles["divider-style"]}></div>
+                            </div>
 
                             <div className={styles["left-cpu"]}>
                                 <PerformanceDisplay />
@@ -330,13 +348,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         </div>
                         <div className={styles["header-title"]}>Yakit</div>
                         {engineLink && (
-                            <div className={styles["header-right"]}>
+                            <div className={styles["header-right"]} onDoubleClick={(e) => e.stopPropagation()}>
                                 <FuncDomain
                                     isEngineLink={engineLink}
                                     engineMode={engineMode}
                                     isRemoteMode={engineMode === "remote"}
                                     startEngineMode={startEngineMode}
                                 />
+                                <div className={styles["divider-wrapper"]}></div>
                                 <GlobalReverseState isEngineLink={engineLink} />
                             </div>
                         )}
@@ -346,17 +365,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         className={classnames(styles["header-body"], styles["win-header-body"])}
                         onDoubleClick={maxScreen}
                     >
+                        <div
+                            style={{left: yakitMode === "soft" ? 44 : 88}}
+                            className={styles["header-border-yakit-mask"]}
+                        ></div>
+
                         {engineLink && (
-                            <div className={styles["header-left"]}>
+                            <div className={styles["header-left"]} onDoubleClick={(e) => e.stopPropagation()}>
                                 <GlobalReverseState isEngineLink={engineLink} />
 
-                                <div className={styles["divider-wrapper"]}></div>
-                                <div className={styles["yakit-icon"]} onClick={stopBubbling}>
+                                <div
+                                    className={classnames(styles["yakit-mode-icon"], {
+                                        [styles["yakit-mode-selected"]]: yakitMode === "soft"
+                                    })}
+                                    onClick={() => changeYakitMode("soft")}
+                                >
                                     <YakitThemeSvgIcon style={{fontSize: 20}} />
                                 </div>
 
-                                <div className={styles["divider-wrapper"]}></div>
-                                <div className={styles["yakit-store-icon"]} onClick={stopBubbling}>
+                                <div
+                                    className={classnames(styles["yakit-mode-icon"], {
+                                        [styles["yakit-mode-selected"]]: yakitMode === "store"
+                                    })}
+                                    onClick={() => changeYakitMode("store")}
+                                >
                                     <YakitStoreSvgIcon />
                                 </div>
 
@@ -375,19 +407,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                         <div className={styles["header-title"]}>Yakit</div>
 
-                        <div className={styles["header-right"]}>
+                        <div className={styles["header-right"]} onDoubleClick={(e) => e.stopPropagation()}>
                             <div className={styles["left-cpu"]}>
                                 <PerformanceDisplay />
                             </div>
+                            <div className={styles["short-divider-wrapper"]}>
+                                <div className={styles["divider-style"]}></div>
+                            </div>
                             {engineLink && (
                                 <>
-                                    <div className={styles["short-divider-wrapper"]}>
-                                        <div className={styles["divider-style"]}></div>
-                                    </div>
                                     <YakitGlobalHost isEngineLink={engineLink} />
+                                    <div className={styles["divider-wrapper"]}></div>
                                 </>
                             )}
-                            <div className={styles["divider-wrapper"]}></div>
                             <WinUIOp />
                         </div>
                     </div>
@@ -413,6 +445,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             loading={remoteLoading}
                             onSubmit={onSubmitRemoteLink}
                             onCancel={() => onCancelRemoteLink(true)}
+                        />
+                    )}
+                    {!engineLink && restartEngine && (
+                        <HintRestartEngine
+                            visible={restartEngine}
+                            setVisible={setRestartEngine}
+                            startEngine={() => startEngine(false)}
                         />
                     )}
                 </div>
@@ -1851,5 +1890,99 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                 </div>
             </div>
         </Draggable>
+    )
+})
+
+interface HintRestartEngineProps {
+    visible: boolean
+    setVisible: (flag: boolean) => any
+    startEngine: () => any
+}
+/** @name 意外断开引擎连接时的提示弹窗 */
+const HintRestartEngine: React.FC<HintRestartEngineProps> = React.memo((props) => {
+    const {visible, setVisible, startEngine} = props
+
+    const [disabled, setDisabled] = useState(true)
+    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
+    const draggleRef = useRef<HTMLDivElement>(null)
+
+    /** 立即启动 */
+    const onRestart = useMemoizedFn(() => {
+        startEngine()
+        setVisible(false)
+    })
+    /** 取消 */
+    const onClose = useMemoizedFn(() => ipcRenderer.invoke("UIOperate", "close"))
+
+    /** 弹窗拖拽移动触发事件 */
+    const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
+        const {clientWidth, clientHeight} = window.document.documentElement
+        const targetRect = draggleRef.current?.getBoundingClientRect()
+        if (!targetRect) return
+
+        setBounds({
+            left: -targetRect.left + uiData.x,
+            right: clientWidth - (targetRect.right - uiData.x),
+            top: -targetRect.top + uiData.y + 36,
+            bottom: clientHeight - (targetRect.bottom - uiData.y)
+        })
+    })
+
+    return (
+        <>
+            <Draggable
+                defaultClassName={classnames(
+                    styles["yaklang-update-modal"],
+                    visible ? styles["engine-hint-modal-wrapper"] : styles["engine-hint-modal-hidden-wrapper"],
+                    [styles["modal-top-wrapper"]]
+                )}
+                disabled={disabled}
+                bounds={bounds}
+                onStart={(event, uiData) => onStart(event, uiData)}
+            >
+                <div ref={draggleRef}>
+                    <div className={styles["modal-yaklang-engine-hint"]}>
+                        <div className={styles["yaklang-engine-hint-wrapper"]}>
+                            <div
+                                className={styles["hint-draggle-body"]}
+                                onMouseEnter={() => {
+                                    if (disabled) setDisabled(false)
+                                }}
+                                onMouseLeave={() => setDisabled(true)}
+                            ></div>
+
+                            <div className={styles["hint-left-wrapper"]}>
+                                <div className={styles["hint-icon"]}>
+                                    <YaklangInstallHintSvgIcon />
+                                </div>
+                            </div>
+
+                            <div className={styles["hint-right-wrapper"]}>
+                                <div className={styles["hint-right-title"]}>yaklang 引擎断开连接</div>
+                                <div className={styles["hint-right-content"]}>是否启动本地引擎进行新的连接？</div>
+
+                                <div className={styles["hint-right-btn"]}>
+                                    <div></div>
+                                    <div className={styles["btn-group-wrapper"]}>
+                                        <Button
+                                            className={classnames(styles["btn-wrapper"], styles["btn-default-wrapper"])}
+                                            onClick={onClose}
+                                        >
+                                            取消
+                                        </Button>
+                                        <Button
+                                            className={classnames(styles["btn-wrapper"], styles["btn-theme-wrapper"])}
+                                            onClick={onRestart}
+                                        >
+                                            立即启动
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Draggable>
+        </>
     )
 })

@@ -10,7 +10,7 @@
 
     .ui-layout-header {
         width: 100%;
-        height: 36px;
+        height: 37px;
         background-color: white; //var(--base-background-color);
         -webkit-app-region: drag;
         -webkit-user-select: none;
@@ -37,6 +37,18 @@
             display: flex;
             justify-content: space-between;
             // -webkit-app-region: no-drag;
+
+            border-bottom: 1px solid #eaecf3;
+            position: relative;
+
+            .header-border-yakit-mask {
+                position: absolute;
+                bottom: -1px;
+                width: 45px;
+                height: 1px;
+                background: #f8f8f8;
+            }
+
             .header-left {
                 height: 100%;
                 display: flex;
@@ -53,13 +65,13 @@
                 height: 100%;
                 display: flex;
             }
-            .yakit-icon {
+            .yakit-mode-icon {
                 box-sizing: border-box;
                 padding: 8px 12px;
+                border-left: 1px solid #eaecf3;
             }
-            .yakit-store-icon {
-                box-sizing: border-box;
-                padding: 8px 12px;
+            .yakit-mode-selected {
+                background: #f8f8f8;
             }
         }
     }
