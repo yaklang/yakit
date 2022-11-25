@@ -91,8 +91,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         setRouteMenu(route)
         if (menuId) {
             let currentMenu = route.find((ele) => ele.id === menuId)
-            if (!currentMenu) return
-            setSubMenuData(currentMenu.subMenuData || [])
+            if (!currentMenu) {
+                setSubMenuData((route[0] && route[0].subMenuData) || [])
+                setMenuId((route[0] && routeMenu[0].id) || "")
+            } else {
+                setSubMenuData(currentMenu.subMenuData || [])
+            }
         }
     }, [routeMenuData, menuItemGroup])
     useEffect(() => {
@@ -140,7 +144,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     })
     const onExpand = useMemoizedFn(() => {
         setIsExpand(true)
-        if (routeMenu.length > 0) {
+        if (!menuId && routeMenu.length > 0) {
             setSubMenuData(routeMenu[0].subMenuData || [])
             setMenuId(routeMenu[0].id || "")
         }
