@@ -350,17 +350,17 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
     const [appid, setAppid] = useState<string>("")
     const [role, setRole] = useState<string>("trusted")
 
-    const onAdd = useMemoizedFn((appid: string, operation: string, isSetLoading: boolean) => {
+    const onAdd = useMemoizedFn(() => {
         if (!appid) {
             info("请先选择用户")
             return
         }
         const param = {
             appid,
-            operation,
+            operation:"add",
             role
         }
-        if (isSetLoading) setLoading(true)
+        setLoading(true)
         NetWorkApi<AddOrRemoveUserProps, API.ActionSucceeded>({
             method: "post",
             url: "user",
@@ -430,7 +430,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
     })
     return (
         <div style={{marginTop: 24}} className='trust-list-admin-page-container'>
-            <Form {...layout} form={form} onFinish={() => onAdd(appid, "add", true)}>
+            <Form {...layout} form={form} onFinish={() => onAdd()}>
                 <div className='add-account-body' style={{marginLeft:50}}>
                 <span>添加用户：</span>
                 <ItemSelects
