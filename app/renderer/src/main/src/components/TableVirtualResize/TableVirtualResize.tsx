@@ -785,6 +785,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             <div ref={columnsRef} className={classNames(style["virtual-table-col"])}>
                                 {columns.map((columnsItem, cIndex) => (
                                     <ColumnsItemRender
+                                        key={`${columnsItem.dataKey}-title`}
                                         columnsItem={columnsItem}
                                         colWidth={colWidth}
                                         scroll={scroll}
@@ -1054,7 +1055,6 @@ interface ColRenderProps {
     columnsItem: ColumnsTypeProps
     colWidth: number
     list: {data: any; index: number}[]
-    key: string | number
     renderKey: string
     isLastItem: boolean
     onRowClick: (r: any) => void
@@ -1072,7 +1072,6 @@ const ColRender = React.memo((props: ColRenderProps) => {
         columnsItem,
         colWidth,
         list,
-        key,
         renderKey,
         isLastItem,
         onRowClick,
@@ -1107,7 +1106,6 @@ const ColRender = React.memo((props: ColRenderProps) => {
                     right: columnsItem.right
                 })
             }}
-            key={key}
         >
             {list.map((item, number) => (
                 <CellRender
@@ -1138,7 +1136,6 @@ interface CellRenderProps {
     item: {data: any; index: number}
     columnsItem: ColumnsTypeProps
     number: number
-    key: string | number
     isLastItem: boolean
     onRowClick: () => void
     onRowContextMenu: (e: any) => void
@@ -1157,7 +1154,6 @@ const CellRender = React.memo(
             item,
             columnsItem,
             number,
-            key,
             isLastItem,
             onRowClick,
             onRowContextMenu,
@@ -1172,7 +1168,6 @@ const CellRender = React.memo(
         } = props
         return (
             <div
-                key={key}
                 className={classNames(style["virtual-table-row-cell"], item.data["cellClassName"], {
                     [style["virtual-table-active-row"]]: isSelect,
                     [style["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],

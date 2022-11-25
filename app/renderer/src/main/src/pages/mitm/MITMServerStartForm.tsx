@@ -120,11 +120,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     />
                 </Item>
                 <Item label={"劫持代理监听端口"}>
-                    <InputNumber value={port} onChange={(e) => setPort(e)}/>
+                    <InputNumber value={port} onChange={(e) => setPort(e as number)} />
                 </Item>
                 <SwitchItem
-                    label={"HTTP/2.0 支持"} value={enableHttp2} setValue={setEnableHttp2}
-                    help={"开启该选项将支持 HTTP/2.0 劫持，关闭后自动降级为 HTTP/1.1，开启后 HTTP2 协商失败也会自动降级"}
+                    label={"HTTP/2.0 支持"}
+                    value={enableHttp2}
+                    setValue={setEnableHttp2}
+                    help={
+                        "开启该选项将支持 HTTP/2.0 劫持，关闭后自动降级为 HTTP/1.1，开启后 HTTP2 协商失败也会自动降级"
+                    }
                 />
                 <Item label={"选择插件"} colon={true}>
                     <div style={{height: 200, maxWidth: 420}}>

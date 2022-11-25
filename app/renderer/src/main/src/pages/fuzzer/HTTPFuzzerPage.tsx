@@ -70,7 +70,7 @@ import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import "./HTTPFuzzerPage.scss"
 import {ShareIcon} from "@/assets/icons"
 import {ShareData} from "./components/ShareData"
-import {showExtractFuzzerResponseOperator} from "@/utils/extractor";
+import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -134,7 +134,7 @@ export interface FuzzerResponse {
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: { Header: string; Value: string }[]
+    Headers: {Header: string; Value: string}[]
     ResponseRaw: Uint8Array
     RequestRaw: Uint8Array
     BodyLength: number
@@ -217,10 +217,10 @@ function filterIsEmpty(f: FuzzResponseFilter): boolean {
     )
 }
 
-function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
+function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
     ipcRenderer
         .invoke("ExtractUrl", f)
-        .then((data: { Url: string }) => {
+        .then((data: {Url: string}) => {
             callCopyToClipboard(data.Url)
         })
         .catch((e) => {
@@ -256,12 +256,12 @@ const emptyFuzzer = {
     Ok: false,
     Payloads: [],
     Reason: "",
-    RequestRaw: new Uint8Array,
-    ResponseRaw: new Uint8Array,
+    RequestRaw: new Uint8Array(),
+    ResponseRaw: new Uint8Array(),
     StatusCode: 0,
     Timestamp: 0,
     UUID: ""
-};
+}
 
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
@@ -300,14 +300,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [loading, setLoading] = useState(false)
 
     /*
-    * 内容
-    * */
+     * 内容
+     * */
     // const [content, setContent] = useState<FuzzerResponse[]>([])
-    const [_firstResponse, setFirstResponse, getFirstResponse] = useGetState<FuzzerResponse>(emptyFuzzer);
-    const [successFuzzer, setSuccessFuzzer] = useState<FuzzerResponse[]>([]);
-    const [failedFuzzer, setFailedFuzzer] = useState<FuzzerResponse[]>([]);
-    const [_successCount, setSuccessCount, getSuccessCount] = useGetState(0);
-    const [_failedCount, setFailedCount, getFailedCount] = useGetState(0);
+    const [_firstResponse, setFirstResponse, getFirstResponse] = useGetState<FuzzerResponse>(emptyFuzzer)
+    const [successFuzzer, setSuccessFuzzer] = useState<FuzzerResponse[]>([])
+    const [failedFuzzer, setFailedFuzzer] = useState<FuzzerResponse[]>([])
+    const [_successCount, setSuccessCount, getSuccessCount] = useGetState(0)
+    const [_failedCount, setFailedCount, getFailedCount] = useGetState(0)
 
     /**/
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -421,7 +421,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
-                .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+                .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
                     setHistoryTask(data.OriginRequest)
                 })
         })
@@ -452,7 +452,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     ...getFilter(),
                     StatusCode: getFilter().StatusCode.filter((i) => !!i),
                     Keywords: getFilter().Keywords.filter((i) => !!i),
-                    Regexps: getFilter().Regexps.filter((i) => !!i),
+                    Regexps: getFilter().Regexps.filter((i) => !!i)
                 },
                 DelayMinSeconds: minDelaySeconds,
                 DelayMaxSeconds: maxDelaySeconds
@@ -474,11 +474,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const endToken = `${token}-end`
 
         /*
-        * successCount
-        * failedCount
-        * */
-        let successCount = 0;
-        let failedCount = 0;
+         * successCount
+         * failedCount
+         * */
+        let successCount = 0
+        let failedCount = 0
 
         ipcRenderer.on(errToken, (e, details) => {
             notification["error"]({
@@ -551,7 +551,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Count: count,
                 BodySimilarity: data.BodySimilarity,
                 HeaderSimilarity: data.HeaderSimilarity
-            } as FuzzerResponse;
+            } as FuzzerResponse
 
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
@@ -602,8 +602,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
-                } catch (error) {
-                }
+                } catch (error) {}
             }, 500)
         )
     }
@@ -625,7 +624,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [successFuzzer])
 
-    const onlyOneResponse = !loading && (failedFuzzer.length + successFuzzer.length) === 1
+    const onlyOneResponse = !loading && failedFuzzer.length + successFuzzer.length === 1
 
     const sendFuzzerSettingInfo = useMemoizedFn(() => {
         const info: fuzzerInfoProp = {
@@ -654,8 +653,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let reason = "未知原因"
         try {
             reason = rsp!.Reason
-        } catch (e) {
-        }
+        } catch (e) {}
         return (
             <HTTPPacketEditor
                 system={props.system}
@@ -701,7 +699,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 readOnly={true}
                 extra={
                     <Space>
-                        {loading && <Spin size={"small"} spinning={loading}/>}
+                        {loading && <Spin size={"small"} spinning={loading} />}
                         {onlyOneResponse ? (
                             <Space>
                                 {rsp.IsHTTPS && <Tag>{rsp.IsHTTPS ? "https" : ""}</Tag>}
@@ -717,7 +715,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             })
                                         }}
                                         type={"primary"}
-                                        icon={<ProfileOutlined/>}
+                                        icon={<ProfileOutlined />}
                                     >
                                         详情
                                     </Button>
@@ -726,11 +724,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         size={"small"}
                                         onClick={() => {
                                             // setContent([])
-                                            setSuccessFuzzer([]);
-                                            setFailedFuzzer([]);
+                                            setSuccessFuzzer([])
+                                            setFailedFuzzer([])
                                         }}
                                         danger={true}
-                                        icon={<DeleteOutlined/>}
+                                        icon={<DeleteOutlined />}
                                     />
                                 </Space>
                             </Space>
@@ -749,8 +747,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     size={"small"}
                                     onClick={() => {
                                         // setContent([])
-                                        setSuccessFuzzer([]);
-                                        setFailedFuzzer([]);
+                                        setSuccessFuzzer([])
+                                        setFailedFuzzer([])
                                     }}
                                 >
                                     清除数据
@@ -810,64 +808,73 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         setLoading(true)
-        getRemoteValue(ALLOW_MULTIPART_DATA_ALERT).then(e => {
-            if (e === "1") {
+        getRemoteValue(ALLOW_MULTIPART_DATA_ALERT)
+            .then((e) => {
+                if (e === "1") {
+                    setLoading(false)
+                    return
+                }
+                ipcRenderer
+                    .invoke("IsMultipartFormDataRequest", {
+                        Request: StringToUint8Array(props.request || "", "utf8")
+                    })
+                    .then((e: {IsMultipartFormData: boolean}) => {
+                        if (e.IsMultipartFormData) {
+                            const notify = showModal({
+                                title: "潜在的数据包编码问题提示",
+                                content: (
+                                    <Space direction={"vertical"}>
+                                        <Space>
+                                            <Typography>
+                                                <Text>当前数据包包含一个</Text>
+                                                <Text mark={true}>原始文件内容 mutlipart/form-data</Text>
+                                                <Text>文件中的不可见字符进入编辑器将会被编码导致丢失信息。</Text>
+                                            </Typography>
+                                        </Space>
+                                        <Typography>
+                                            <Text>一般来说，上传文件内容不包含不可见字符时，没有信息丢失风险</Text>
+                                        </Typography>
+                                        <Typography>
+                                            <Text>如果上传文件内容包含图片，将有可能导致</Text>
+                                            <Text mark={true}>PNG 格式的图片被异常编码，</Text>
+                                            <Text>破坏图片格式，导致</Text>
+                                            <Text mark={true}>图片马</Text>
+                                            <Text>上传失败</Text>
+                                        </Typography>
+                                        <br />
+                                        <Space>
+                                            <Typography>
+                                                <Text>如需要插入具体文件内容，可右键</Text>
+                                                <Text mark={true}>插入文件</Text>
+                                            </Typography>
+                                        </Space>
+                                        <br />
+                                        <Checkbox
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "1", 3600 * 24 * 7)
+                                                    notify.destroy()
+                                                } else {
+                                                    setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "0", 3600 * 24 * 7)
+                                                }
+                                            }}
+                                        >
+                                            一周内不提醒
+                                        </Checkbox>
+                                        <Button type={"primary"} onClick={() => notify.destroy()}>
+                                            我知道了
+                                        </Button>
+                                    </Space>
+                                ),
+                                width: "40%"
+                            })
+                        }
+                    })
+                    .finally(() => setLoading(false))
+            })
+            .catch((e) => {
                 setLoading(false)
-                return
-            }
-            ipcRenderer
-                .invoke("IsMultipartFormDataRequest", {
-                    Request: StringToUint8Array(props.request || "", "utf8")
-                })
-                .then((e: { IsMultipartFormData: boolean }) => {
-                    if (e.IsMultipartFormData) {
-                        const notify = showModal({
-                            title: "潜在的数据包编码问题提示",
-                            content: (
-                                <Space direction={"vertical"}>
-                                    <Space>
-                                        <Typography>
-                                            <Text>当前数据包包含一个</Text>
-                                            <Text mark={true}>原始文件内容 mutlipart/form-data</Text>
-                                            <Text>文件中的不可见字符进入编辑器将会被编码导致丢失信息。</Text>
-                                        </Typography>
-                                    </Space>
-                                    <Typography>
-                                        <Text>一般来说，上传文件内容不包含不可见字符时，没有信息丢失风险</Text>
-                                    </Typography>
-                                    <Typography>
-                                        <Text>如果上传文件内容包含图片，将有可能导致</Text>
-                                        <Text mark={true}>PNG 格式的图片被异常编码，</Text>
-                                        <Text>破坏图片格式，导致</Text>
-                                        <Text mark={true}>图片马</Text>
-                                        <Text>上传失败</Text>
-                                    </Typography>
-                                    <br/>
-                                    <Space>
-                                        <Typography>
-                                            <Text>如需要插入具体文件内容，可右键</Text>
-                                            <Text mark={true}>插入文件</Text>
-                                        </Typography>
-                                    </Space>
-                                    <br/>
-                                    <Checkbox onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "1", 3600 * 24 * 7)
-                                            notify.destroy()
-                                        } else {
-                                            setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "0", 3600 * 24 * 7)
-                                        }
-                                    }}>一周内不提醒</Checkbox>
-                                    <Button type={"primary"} onClick={() => notify.destroy()}>我知道了</Button>
-                                </Space>
-                            ),
-                            width: "40%"
-                        })
-                    }
-                }).finally(() => setLoading(false))
-        }).catch(e => {
-            setLoading(false)
-        })
+            })
     }, [props.request])
     const getShareContent = useMemoizedFn((callback) => {
         const params: ShareValueProps = {
@@ -906,7 +913,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFilter(shareContent.advancedConfiguration.getFilter)
     })
 
-    const cachedTotal = successFuzzer.length + failedFuzzer.length;
+    const cachedTotal = successFuzzer.length + failedFuzzer.length
 
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
@@ -951,7 +958,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             setValue={setAdvancedConfig}
                             size={"small"}
                         />
-                        <ShareData module='fuzzer' getShareContent={getShareContent}/>
+                        <ShareData module='fuzzer' getShareContent={getShareContent} />
                         <Popover
                             trigger={"click"}
                             placement={"leftTop"}
@@ -966,11 +973,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </div>
                             }
                         >
-                            <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}>
+                            <Button size={"small"} type={"link"} icon={<HistoryOutlined />}>
                                 历史
                             </Button>
                         </Popover>
-
 
                         {droppedCount > 0 && <Tag color={"red"}>已丢弃[{droppedCount}]个响应</Tag>}
                         {onlyOneResponse && getFirstResponse().Ok && (
@@ -1004,7 +1010,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )}
                         {loading && (
                             <Space>
-                                <Spin size={"small"}/>
+                                <Spin size={"small"} />
                                 <div style={{color: "#3a8be3"}}>sending packets</div>
                             </Space>
                         )}
@@ -1199,7 +1205,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         precision={1}
                                                         value={minDelaySeconds}
                                                         onChange={(e) => {
-                                                            setMinDelaySeconds(e)
+                                                            setMinDelaySeconds(e as number)
                                                         }}
                                                         min={0}
                                                         step={0.5}
@@ -1214,7 +1220,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         step={0.5}
                                                         value={maxDelaySeconds}
                                                         onChange={(e) => {
-                                                            setMaxDelaySeconds(e)
+                                                            setMaxDelaySeconds(e as number)
                                                         }}
                                                         formatter={(e) => {
                                                             return `max: ${e} s`
@@ -1399,8 +1405,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 refreshRequest()
                                                             }
                                                         })
-                                                        .finally(() => {
-                                                        })
+                                                        .finally(() => {})
                                                 }}
                                                 size={"small"}
                                             >
@@ -1437,7 +1442,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         </div>
                                     }
                                 >
-                                    <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}/>
+                                    <Button size={"small"} type={"link"} icon={<HistoryOutlined />} />
                                 </Popover>
                             </Space>
                         }
@@ -1446,7 +1451,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 secondNode={() => (
                     <AutoSpin spinning={false}>
                         {onlyOneResponse ? (
-                            <>{redirectedResponse ? responseViewer(redirectedResponse) : responseViewer(getFirstResponse())}</>
+                            <>
+                                {redirectedResponse
+                                    ? responseViewer(redirectedResponse)
+                                    : responseViewer(getFirstResponse())}
+                            </>
                         ) : (
                             <>
                                 {cachedTotal > 0 ? (
@@ -1459,9 +1468,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         }}
                                         extra={
                                             <Space>
-                                                <Button size={"small"} onClick={() => {
-                                                    showExtractFuzzerResponseOperator(successFuzzer)
-                                                }}>提取响应数据</Button>
+                                                <Button
+                                                    size={"small"}
+                                                    onClick={() => {
+                                                        showExtractFuzzerResponseOperator(successFuzzer)
+                                                    }}
+                                                >
+                                                    提取响应数据
+                                                </Button>
                                                 <Popover
                                                     title={"导出数据"}
                                                     trigger={["click"]}
@@ -1490,9 +1504,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         </>
                                                     }
                                                 >
-                                                    <Button size={"small"}>
-                                                        导出数据
-                                                    </Button>
+                                                    <Button size={"small"}>导出数据</Button>
                                                 </Popover>
                                                 {/*<Input*/}
                                                 {/*    value={keyword}*/}
@@ -1548,8 +1560,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     setUrlPacketShow(false)
                                 }
                             })
-                            .finally(() => {
-                            })
+                            .finally(() => {})
                     }}
                     size={"small"}
                 >

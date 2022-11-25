@@ -1,4 +1,4 @@
-import React, {forwardRef,useImperativeHandle,ReactNode, useEffect, useRef, useState} from "react"
+import React, {forwardRef, useImperativeHandle, ReactNode, useEffect, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -23,10 +23,10 @@ import {
 } from "antd"
 import {
     ContentByRoute,
+    DefaultRouteMenuData,
     MenuDataProps,
     NoScrollRoutes,
     Route,
-    RouteMenuData,
     RouteNameToVerboseName
 } from "../routes/routeSpec"
 import {
@@ -82,9 +82,12 @@ import {onImportShare} from "./fuzzer/components/ShareImport"
 import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import { showConfigYaklangEnvironment } from "@/utils/ConfigYaklangEnvironment"
+import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
+
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
 const {Header, Content, Sider} = Layout
@@ -139,7 +142,7 @@ const defaultUserInfo: UserInfoProps = {
     role: null,
     user_id: null,
     token: "",
-    showStatusSearch:false,
+    showStatusSearch: false
 }
 
 export interface MainProp {
@@ -157,7 +160,7 @@ export interface MenuItem {
     MenuItemId: number
 }
 
-interface MenuItemGroup {
+export interface MenuItemGroup {
     Group: string
     Items: MenuItem[]
 }
@@ -322,15 +325,13 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     )
 })
 
-const Main: React.FC<MainProp> = forwardRef((props,ref) => {
+const Main: React.FC<MainProp> = forwardRef((props, ref) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
     const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
-    const [collapsed, setCollapsed] = useState(false)
-    const [hideMenu, setHideMenu] = useState(false)
 
     const [loading, setLoading] = useState(false)
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([])
-    const [routeMenuData, setRouteMenuData] = useState<MenuDataProps[]>(RouteMenuData)
+    const [routeMenuData, setRouteMenuData] = useState<MenuDataProps[]>(DefaultRouteMenuData)
 
     const [notification, setNotification] = useState("")
 
@@ -352,12 +353,9 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
-    
-    // 全局监听登录状态
-    const {userInfo, setStoreUserInfo} = useStore()
-    
+
     // 企业版本显示登录弹窗
-    const openLoginShow =()=>{
+    const openLoginShow = () => {
         setLoginShow(true)
     }
     // 此处注意useImperativeHandle方法的的第一个参数是目标元素的ref引用
@@ -407,13 +405,13 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                 Type: "yak"
             } as QueryYakScriptRequest)
             .then((data: QueryYakScriptsResponse) => {
-                const tabList: MenuDataProps[] = cloneDeep(RouteMenuData)
+                const tabList: MenuDataProps[] = cloneDeep(DefaultRouteMenuData)
                 for (let item of tabList) {
                     if (item.subMenuData) {
                         if (item.key === Route.GeneralModule) {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
-                                    icon: <EllipsisOutlined />,
+                                    icon: getScriptIcon(i.ScriptName),
                                     key: `plugin:${i.Id}`,
                                     label: i.ScriptName
                                 } as unknown as MenuDataProps
@@ -678,37 +676,39 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
             }, 50)
         }
     }, [])
+    // 全局监听登录状态
+    const {userInfo, setStoreUserInfo} = useStore()
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
-            IsEnterprise?setRemoteValue("token-online-enterprise", res.token):setRemoteValue("token-online", res.token)
+            IsEnterprise
+                ? setRemoteValue("token-online-enterprise", res.token)
+                : setRemoteValue("token-online", res.token)
         })
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
 
     // 关闭 tab
     const onCloseTab = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("send-close-tab", {
-                router: Route.AccountAdminPage,
-                singleNode: true
-            })
-            ipcRenderer
-            .invoke("send-close-tab", {
-                router: Route.RoleAdminPage,
-                singleNode: true
-            })
+        ipcRenderer.invoke("send-close-tab", {
+            router: Route.AccountAdminPage,
+            singleNode: true
+        })
+        ipcRenderer.invoke("send-close-tab", {
+            router: Route.RoleAdminPage,
+            singleNode: true
+        })
     })
 
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
-            if(IsEnterprise){
+            if (IsEnterprise) {
                 onCloseTab()
             }
-            IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
+            IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
         return () => ipcRenderer.removeAllListeners("login-out")
     }, [])
@@ -731,7 +731,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
         // 企业用户管理员登录
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
             setUserMenu([
-                {key: "user-info", title: "用户信息",render:()=>SetUserInfoModule()},
+                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                 {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
@@ -1201,22 +1201,11 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         <Col span={8}>
                             <Space>
                                 <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} />
+                                    <Image src={YakLogoBanner} preview={false} width={130} />
                                 </div>
                                 <Divider type={"vertical"} />
                                 <YakVersion />
                                 <YakitVersion />
-                                {!hideMenu && (
-                                    <Button
-                                        style={{marginLeft: 4, color: "#207ee8"}}
-                                        type={"ghost"}
-                                        ghost={true}
-                                        onClick={(e) => {
-                                            setCollapsed(!collapsed)
-                                        }}
-                                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                                    />
-                                )}
                                 <Button
                                     style={{marginLeft: 4, color: "#207ee8"}}
                                     type={"ghost"}
@@ -1317,9 +1306,6 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                                             >
                                                 <Button type={"link"}>配置私有域</Button>
                                             </Menu.Item>
-                                            <Menu.Item key={"share-menu"} onClick={() => onImportShare()}>
-                                                <Button type={"link"}>导入协作资源</Button>
-                                            </Menu.Item>
                                         </Menu>
                                     }
                                     trigger={["click"]}
@@ -1396,115 +1382,24 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         </Col>
                     </Row>
                 </Header>
+                <HeardMenu
+                    routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
+                    menuItemGroup={menuItems}
+                    onRouteMenuSelect={menuAddPage}
+                />
                 <Content
                     style={{
-                        margin: 12,
+                        // margin: 12,
                         backgroundColor: "#fff",
-                        overflow: "auto"
+                        overflow: "auto",
+                        // marginTop: 0
                     }}
                 >
                     <Layout style={{height: "100%", overflow: "hidden"}}>
-                        {!hideMenu && (
-                            <Sider style={{backgroundColor: "#fff", overflow: "auto"}} collapsed={collapsed}>
-                                <Spin spinning={loading}>
-                                    <Space
-                                        direction={"vertical"}
-                                        style={{
-                                            width: "100%"
-                                        }}
-                                    >
-                                        <Menu
-                                            theme={"light"}
-                                            style={{}}
-                                            selectedKeys={[]}
-                                            mode={"inline"}
-                                            onSelect={(e) => {
-                                                if (e.key === "ignore") return
-
-                                                const flag =
-                                                    pageCache.filter((item) => item.route === (e.key as Route))
-                                                        .length === 0
-                                                if (flag) menuAddPage(e.key as Route)
-                                                else setCurrentTabKey(e.key)
-                                            }}
-                                        >
-                                            {menuItems.map((i) => {
-                                                if (i.Group === "UserDefined") {
-                                                    i.Group = "社区插件"
-                                                }
-                                                return (
-                                                    <Menu.SubMenu
-                                                        icon={<EllipsisOutlined />}
-                                                        key={i.Group}
-                                                        title={i.Group}
-                                                    >
-                                                        {i.Items.map((item) => {
-                                                            if (item.YakScriptId > 0) {
-                                                                return (
-                                                                    <MenuItem
-                                                                        icon={<EllipsisOutlined />}
-                                                                        key={`plugin:${item.Group}:${item.YakScriptId}`}
-                                                                    >
-                                                                        <Text ellipsis={{tooltip: true}}>
-                                                                            {item.Verbose}
-                                                                        </Text>
-                                                                    </MenuItem>
-                                                                )
-                                                            }
-                                                            return (
-                                                                <MenuItem
-                                                                    icon={<EllipsisOutlined />}
-                                                                    key={`batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`}
-                                                                >
-                                                                    <Text ellipsis={{tooltip: true}}>
-                                                                        {item.Verbose}
-                                                                    </Text>
-                                                                </MenuItem>
-                                                            )
-                                                        })}
-                                                    </Menu.SubMenu>
-                                                )
-                                            })}
-                                            {(routeMenuData || [])
-                                                .filter((e) => !e.hidden)
-                                                .map((i) => {
-                                                    if (i.subMenuData) {
-                                                        return (
-                                                            <Menu.SubMenu icon={i.icon} key={i.key} title={i.label}>
-                                                                {(i.subMenuData || [])
-                                                                    .filter((e) => !e.hidden)
-                                                                    .map((subMenu) => {
-                                                                        return (
-                                                                            <MenuItem
-                                                                                icon={subMenu.icon}
-                                                                                key={subMenu.key}
-                                                                                disabled={subMenu.disabled}
-                                                                            >
-                                                                                <Text ellipsis={{tooltip: true}}>
-                                                                                    {subMenu.label}
-                                                                                </Text>
-                                                                            </MenuItem>
-                                                                        )
-                                                                    })}
-                                                            </Menu.SubMenu>
-                                                        )
-                                                    }
-                                                    return (
-                                                        <MenuItem icon={i.icon} key={i.key} disabled={i.disabled}>
-                                                            {i.label}
-                                                        </MenuItem>
-                                                    )
-                                                })}
-                                        </Menu>
-                                    </Space>
-                                </Spin>
-                            </Sider>
-                        )}
                         <Content
                             style={{
                                 overflow: "hidden",
                                 backgroundColor: "#fff",
-                                marginLeft: 12,
                                 height: "100%",
                                 display: "flex",
                                 flexFlow: "column"
@@ -1512,7 +1407,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         >
                             <div
                                 style={{
-                                    padding: 12,
+                                    padding: 16,
                                     paddingTop: 8,
                                     overflow: "hidden",
                                     flex: "1",

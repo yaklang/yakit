@@ -215,7 +215,7 @@ function App() {
         const TokenSource = IsEnterprise?"token-online-enterprise":"token-online"
         getRemoteValue(TokenSource)
             .then((resToken) => {
-                console.log("resToken", resToken)
+                // console.log("resToken", resToken)
                 if (!resToken) {
                     // 在第一次进入页面时，如若是企业登录则打开登录
                     if (IsEnterprise) {
