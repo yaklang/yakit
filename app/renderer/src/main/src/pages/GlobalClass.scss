@@ -46,6 +46,8 @@
 .ant-tooltip-inner {
     min-height: 24px;
     padding: 2px 8px;
+    display: flex;
+    align-items: center;
 }
 
 .ant-tooltip-arrow{
