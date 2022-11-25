@@ -20,15 +20,16 @@ export interface MITMServerStartFormProp {
         enableInitialPlugin: boolean,
         defaultPlugins: string[],
         enableHttp2: boolean,
-        clientCertificates: ClientCertificate[],
+        clientCertificates: ClientCertificate[]
     ) => any
+    setVisible: (b: boolean) => void
 }
 
 const {Item} = Form
 
 export interface ClientCertificate {
-    CrtPem: Uint8Array,
-    KeyPem: Uint8Array,
+    CrtPem: Uint8Array
+    KeyPem: Uint8Array
     CaCertificates: Uint8Array[]
 }
 
@@ -40,7 +41,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [downstreamProxy, setDownstreamProxy] = useState("")
     const [enableInitialPlugin, setEnableInitialPlugin] = useState(false)
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
-    const [certs, setCerts] = useState<ClientCertificate[]>([]);
+    const [certs, setCerts] = useState<ClientCertificate[]>([])
 
     useEffect(() => {
         // 设置 MITM 初始启动插件选项
@@ -54,10 +55,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             }
         })
 
-        getRemoteValue(MITMConsts.MITMDefaultClientCertificates).then(e => {
+        getRemoteValue(MITMConsts.MITMDefaultClientCertificates).then((e) => {
             if (!!e) {
                 try {
-                    const certsRaw = JSON.parse(e) as ClientCertificate[];
+                    const certsRaw = JSON.parse(e) as ClientCertificate[]
                     setCerts(certsRaw)
                 } catch (e) {
                     setCerts([])
@@ -91,12 +92,20 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     }, [])
 
     return (
-        <div style={{height: "100%", width: "100%"}}>
+        <div style={{height: "100%", width: "100%", position: "relative"}}>
             <Form
                 style={{marginTop: 40}}
                 onSubmitCapture={(e) => {
                     e.preventDefault()
-                    props.onStartMITMServer(host, port, downstreamProxy, enableInitialPlugin, defaultPlugins, enableHttp2, certs)
+                    props.onStartMITMServer(
+                        host,
+                        port,
+                        downstreamProxy,
+                        enableInitialPlugin,
+                        defaultPlugins,
+                        enableHttp2,
+                        certs
+                    )
                     const index = hostHistoryList.findIndex((ele) => ele === host)
                     if (index === -1) {
                         const newHostHistoryList = [host, ...hostHistoryList].filter((_, index) => index < 10)
@@ -152,40 +161,45 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         "，例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890"
                     }
                 >
-                    <Input value={downstreamProxy} onChange={(e) => setDownstreamProxy(e.target.value)}/>
+                    <Input value={downstreamProxy} onChange={(e) => setDownstreamProxy(e.target.value)} />
                 </Item>
-                <Item
-                    label={"客户端TLS导入"}
-                    help={`用于 mTLS（Mutual TLS）开启客户端验证的 HTTPS 网站抓包`}
-                >
+                <Item label={"客户端TLS导入"} help={`用于 mTLS（Mutual TLS）开启客户端验证的 HTTPS 网站抓包`}>
                     <Space>
-                        {
-                            certs.length > 0 ?
-                                <Tag color={"orange"}>包含[{certs.length}]个证书对</Tag> :
-                                <Tag color={"green"}>无 TLS 客户端证书</Tag>
-                        }
+                        {certs.length > 0 ? (
+                            <Tag color={"orange"}>包含[{certs.length}]个证书对</Tag>
+                        ) : (
+                            <Tag color={"green"}>无 TLS 客户端证书</Tag>
+                        )}
                         <Button
-                            icon={<PlusSquareOutlined/>} size={"small"} type={"link"}
+                            icon={<PlusSquareOutlined />}
+                            size={"small"}
+                            type={"link"}
                             onClick={() => {
                                 const m = showModal({
                                     title: "添加证书",
                                     width: "70%",
                                     content: (
-                                        <InputCertificateForm onChange={e => {
-                                            setCerts([...certs, e])
-                                            m.destroy()
-                                        }}/>
+                                        <InputCertificateForm
+                                            onChange={(e) => {
+                                                setCerts([...certs, e])
+                                                m.destroy()
+                                            }}
+                                        />
                                     )
                                 })
                             }}
-                        >添加</Button>
+                        >
+                            添加
+                        </Button>
                         <Popconfirm
                             title={"清除证书之后需要重新添加，请谨慎操作！"}
                             onConfirm={() => {
                                 setCerts([])
                             }}
                         >
-                            <Button danger={true} size={"small"} type={"link"}>删除</Button>
+                            <Button danger={true} size={"small"} type={"link"}>
+                                删除
+                            </Button>
                         </Popconfirm>
                     </Space>
                 </Item>
@@ -193,12 +207,13 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     <Space>
                         <Button
                             onClick={() => {
-                                let m = showDrawer({
-                                    placement: "top",
-                                    height: "50%",
-                                    content: <MITMContentReplacerViewer/>,
-                                    maskClosable: false
-                                })
+                                // let m = showDrawer({
+                                //     placement: "top",
+                                //     height: "50%",
+                                //     content: <MITMContentReplacerViewer />,
+                                //     maskClosable: false
+                                // })
+                                props.setVisible(true)
                             }}
                         >
                             已有规则
@@ -231,7 +246,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                     width: "50%",
                                     content: (
                                         <>
-                                            <MITMContentReplacerExport/>
+                                            <MITMContentReplacerExport />
                                         </>
                                     )
                                 })
@@ -246,7 +261,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <Button type={"primary"} htmlType={"submit"}>
                             劫持启动
                         </Button>
-                        <Divider type={"vertical"}/>
+                        <Divider type={"vertical"} />
                         <Checkbox
                             checked={enableInitialPlugin}
                             onChange={(node) => {
@@ -274,41 +289,55 @@ interface InputCertificateFormProp {
 
 const InputCertificateForm: React.FC<InputCertificateFormProp> = (props) => {
     const [params, setParams] = useState<ClientCertificate>({
-        CaCertificates: [], CrtPem: new Uint8Array, KeyPem: new Uint8Array,
+        CaCertificates: [],
+        CrtPem: new Uint8Array(),
+        KeyPem: new Uint8Array()
     })
-    return <Form
-        onSubmitCapture={e => {
-            e.preventDefault()
+    return (
+        <Form
+            onSubmitCapture={(e) => {
+                e.preventDefault()
 
-            props.onChange(params)
-        }}
-        labelCol={{span: 5}} wrapperCol={{span: 14}}
-    >
-        <Form.Item label={"客户端证书(PEM)"} required={true}>
-            <YakEditor
-                type={"html"} noMiniMap={true} noWordWrap={true}
-                setValue={CrtPem => setParams({...params, CrtPem: StringToUint8Array(CrtPem)})}
-                value={Uint8ArrayToString(params.CrtPem)}
-            />
-        </Form.Item>
-        <Form.Item label={"客户端私钥(PEM)"} required={true}>
-            <YakEditor
-                type={"html"}
-                setValue={KeyPem => setParams({...params, KeyPem: StringToUint8Array(KeyPem)})}
-                value={Uint8ArrayToString(params.KeyPem)}
-                noMiniMap={true} noWordWrap={true}
-            />
-        </Form.Item>
-        <Form.Item label={"CA 根证书"}>
-            <YakEditor
-                type={"html"}
-                setValue={CaCertBytes => setParams({...params, CaCertificates: [StringToUint8Array(CaCertBytes)]})}
-                value={params.CaCertificates.length > 0 ? Uint8ArrayToString(params.CaCertificates[0]) : ""}
-                noMiniMap={true} noWordWrap={true}
-            />
-        </Form.Item>
-        <Form.Item colon={false} label={" "}>
-            <Button type="primary" htmlType="submit"> 添加 TLS 证书 </Button>
-        </Form.Item>
-    </Form>
-};
+                props.onChange(params)
+            }}
+            labelCol={{span: 5}}
+            wrapperCol={{span: 14}}
+        >
+            <Form.Item label={"客户端证书(PEM)"} required={true}>
+                <YakEditor
+                    type={"html"}
+                    noMiniMap={true}
+                    noWordWrap={true}
+                    setValue={(CrtPem) => setParams({...params, CrtPem: StringToUint8Array(CrtPem)})}
+                    value={Uint8ArrayToString(params.CrtPem)}
+                />
+            </Form.Item>
+            <Form.Item label={"客户端私钥(PEM)"} required={true}>
+                <YakEditor
+                    type={"html"}
+                    setValue={(KeyPem) => setParams({...params, KeyPem: StringToUint8Array(KeyPem)})}
+                    value={Uint8ArrayToString(params.KeyPem)}
+                    noMiniMap={true}
+                    noWordWrap={true}
+                />
+            </Form.Item>
+            <Form.Item label={"CA 根证书"}>
+                <YakEditor
+                    type={"html"}
+                    setValue={(CaCertBytes) =>
+                        setParams({...params, CaCertificates: [StringToUint8Array(CaCertBytes)]})
+                    }
+                    value={params.CaCertificates.length > 0 ? Uint8ArrayToString(params.CaCertificates[0]) : ""}
+                    noMiniMap={true}
+                    noWordWrap={true}
+                />
+            </Form.Item>
+            <Form.Item colon={false} label={" "}>
+                <Button type='primary' htmlType='submit'>
+                    {" "}
+                    添加 TLS 证书{" "}
+                </Button>
+            </Form.Item>
+        </Form>
+    )
+}

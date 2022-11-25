@@ -3,6 +3,22 @@
     width: 100%;
 }
 
-.mitm-header-title .ant-page-header-content{
+.mitm-header-title .ant-page-header-content {
     padding-top: 0;
+}
+
+.mitm-page {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 1px);
+    overflow: hidden;
+
+}
+
+.mitm-rule-shadow {
+    height: 1px;
+    width: 100%;
+    box-shadow: 0px -2px 4px rgba(133, 137, 158, 0.2);
+    position: absolute;
+    left: 0;
 }

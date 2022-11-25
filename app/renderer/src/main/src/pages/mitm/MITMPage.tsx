@@ -1,4 +1,4 @@
-import React, {Ref, useEffect, useState} from "react";
+import React, {Ref, useEffect, useState} from "react"
 import {
     Alert,
     Button,
@@ -14,46 +14,46 @@ import {
     Tag,
     Tooltip,
     Typography
-} from "antd";
-import {failed, info, success} from "../../utils/notification";
-import {CheckOutlined, CopyOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons";
-import {HTTPPacketEditor, YakEditor} from "../../utils/editors";
-import {MITMFilters, MITMFilterSchema} from "./MITMFilters";
-import {showDrawer, showModal} from "../../utils/showModal";
-import {MITMHTTPFlowMiniTableCard} from "./MITMHTTPFlowMiniTableCard";
-import {ExecResult} from "../invoker/schema";
-import {ExecResultLog} from "../invoker/batch/ExecMessageViewer";
-import {ExtractExecResultMessage} from "../../components/yakitLogSchema";
-import {YakExecutorParam} from "../invoker/YakExecutorParams";
-import "./MITMPage.css";
-import {CopyableField, SelectOne} from "../../utils/inputUtil";
-import {useGetState, useLatest, useMemoizedFn} from "ahooks";
-import {StatusCardProps} from "../yakitStore/viewers/base";
-import {useHotkeys} from "react-hotkeys-hook";
-import * as monaco from 'monaco-editor';
-import CopyToClipboard from "react-copy-to-clipboard";
-import {AutoCard} from "../../components/AutoCard";
-import {ResizeBox} from "../../components/ResizeBox";
-import {MITMPluginLogViewer} from "./MITMPluginLogViewer";
-import {MITMPluginList} from "./MITMPluginList";
-import {saveABSFileToOpen} from "../../utils/openWebsite";
-import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer";
-import {ChromeLauncherButton} from "./MITMChromeLauncher";
-import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm";
-import {MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking";
-import {Uint8ArrayToString} from "@/utils/str";
+} from "antd"
+import {failed, info, success} from "../../utils/notification"
+import {CheckOutlined, CopyOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
+import {HTTPPacketEditor, YakEditor} from "../../utils/editors"
+import {MITMFilters, MITMFilterSchema} from "./MITMFilters"
+import {showDrawer, showModal} from "../../utils/showModal"
+import {MITMHTTPFlowMiniTableCard} from "./MITMHTTPFlowMiniTableCard"
+import {ExecResult} from "../invoker/schema"
+import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
+import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
+import {YakExecutorParam} from "../invoker/YakExecutorParams"
+import "./MITMPage.css"
+import {CopyableField, SelectOne} from "../../utils/inputUtil"
+import {useGetState, useLatest, useMemoizedFn} from "ahooks"
+import {StatusCardProps} from "../yakitStore/viewers/base"
+import {useHotkeys} from "react-hotkeys-hook"
+import * as monaco from "monaco-editor"
+import CopyToClipboard from "react-copy-to-clipboard"
+import {AutoCard} from "../../components/AutoCard"
+import {ResizeBox} from "../../components/ResizeBox"
+import {MITMPluginLogViewer} from "./MITMPluginLogViewer"
+import {MITMPluginList} from "./MITMPluginList"
+import {saveABSFileToOpen} from "../../utils/openWebsite"
+import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer"
+import {ChromeLauncherButton} from "./MITMChromeLauncher"
+import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm"
+import {MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking"
+import {Uint8ArrayToString} from "@/utils/str"
+import {MITMRule} from "./MITMRule/MITMRule"
 
-const {Text} = Typography;
-const {Item} = Form;
-const {ipcRenderer} = window.require("electron");
+const {Text} = Typography
+const {Item} = Form
+const {ipcRenderer} = window.require("electron")
 
-export interface MITMPageProp {
-}
+export interface MITMPageProp {}
 
 export interface MITMResponse extends MITMFilterSchema {
-    isHttps: boolean,
-    request: Uint8Array,
-    url: string,
+    isHttps: boolean
+    request: Uint8Array
+    url: string
     RemoteAddr?: string
     id: number
 
@@ -67,20 +67,20 @@ export interface MITMResponse extends MITMFilterSchema {
     isWebsocket?: boolean
 }
 
-export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL_PLUGIN";
+export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL_PLUGIN"
 
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 整体的劫持状态
-    const [status, setStatus] = useState<"idle" | "hijacked" | "hijacking">("idle");
+    const [status, setStatus] = useState<"idle" | "hijacked" | "hijacking">("idle")
 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false)
 
     // 通过启动表单的内容
-    const [addr, setAddr] = useState("");
-    const [host, setHost] = useState("127.0.0.1");
-    const [port, setPort] = useState(8083);
-    const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false);
-    const [defaultPlugins, setDefaultPlugins] = useState<string[]>([]);
+    const [addr, setAddr] = useState("")
+    const [host, setHost] = useState("127.0.0.1")
+    const [port, setPort] = useState(8083)
+    const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false)
+    const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
 
     // 检测当前劫持状态
     useEffect(() => {
@@ -100,10 +100,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         ipcRenderer.on("client-mitm-notification", (_, i: Uint8Array) => {
             try {
                 info(Uint8ArrayToString(i))
-            } catch (e) {
-
-            }
-
+            } catch (e) {}
         })
 
         return () => {
@@ -113,25 +110,30 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         }
     }, [])
 
-
     // 通过 gRPC 调用，启动 MITM 劫持
-    const startMITMServer = useMemoizedFn((targetHost, targetPort, downstreamProxy, enableHttp2, certs: ClientCertificate[]) => {
-        setLoading(true)
-        return ipcRenderer.invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs).catch((e: any) => {
-            notification["error"]({message: `启动中间人劫持失败：${e}`})
-        })
-    })
+    const startMITMServer = useMemoizedFn(
+        (targetHost, targetPort, downstreamProxy, enableHttp2, certs: ClientCertificate[]) => {
+            setLoading(true)
+            return ipcRenderer
+                .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs)
+                .catch((e: any) => {
+                    notification["error"]({message: `启动中间人劫持失败：${e}`})
+                })
+        }
+    )
 
     // 设置开始服务器处理函数
-    const startMITMServerHandler = useMemoizedFn((host, port, downstreamProxy, enableInitialPlugin, plugins, enableHttp2, certs: ClientCertificate[]) => {
-        setAddr(`https://${host}:${port}`)
-        setHost(host)
-        setPort(port)
-        setLoading(true)
-        setDefaultPlugins(plugins)
-        setEnableInitialMITMPlugin(enableInitialPlugin)
-        startMITMServer(host, port, downstreamProxy, enableHttp2, certs)
-    })
+    const startMITMServerHandler = useMemoizedFn(
+        (host, port, downstreamProxy, enableInitialPlugin, plugins, enableHttp2, certs: ClientCertificate[]) => {
+            setAddr(`https://${host}:${port}`)
+            setHost(host)
+            setPort(port)
+            setLoading(true)
+            setDefaultPlugins(plugins)
+            setEnableInitialMITMPlugin(enableInitialPlugin)
+            startMITMServer(host, port, downstreamProxy, enableHttp2, certs)
+        }
+    )
 
     // 开始渲染组件
     // if (!initialed) {
@@ -141,17 +143,31 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // }
 
     // 在没有开始的时候，渲染任务表单
-    if (status === "idle") {
-        return <MITMServerStartForm onStartMITMServer={startMITMServerHandler}/>
-    }
+    // if (status === "idle") {
+    //     return <MITMServerStartForm onStartMITMServer={startMITMServerHandler} />
+    // }
+    const [visible, setVisible] = useState<boolean>(false)
+    return (
+        <>
+            {visible && <div className='mitm-rule-shadow' />}
+            <div className='mitm-page' style={{overflow: visible ? "hidden" : "auto"}}>
+                {/* status === "idle" 在没有开始的时候，渲染任务表单 */}
 
-    return <MITMServerHijacking
-        port={port}
-        addr={addr}
-        host={host}
-        status={status}
-        setStatus={setStatus}
-        defaultPlugins={defaultPlugins}
-        enableInitialMITMPlugin={enableInitialMITMPlugin}
-    />
-};
+                {(status === "idle" && (
+                    <MITMServerStartForm onStartMITMServer={startMITMServerHandler} setVisible={setVisible} />
+                )) || (
+                    <MITMServerHijacking
+                        port={port}
+                        addr={addr}
+                        host={host}
+                        status={status}
+                        setStatus={setStatus}
+                        defaultPlugins={defaultPlugins}
+                        enableInitialMITMPlugin={enableInitialMITMPlugin}
+                    />
+                )}
+                <MITMRule visible={visible} setVisible={setVisible} getContainer={false} />
+            </div>
+        </>
+    )
+}

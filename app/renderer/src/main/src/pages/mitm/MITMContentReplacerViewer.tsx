@@ -41,7 +41,7 @@ export const MITMContentReplacerViewer: React.FC<MITMContentReplacerViewerProp> 
                 >保存</Button>
             </Space>
         )}
-        bodyStyle={{overflowY: "auto"}}
+        // bodyStyle={{overflowY: "auto"}}
     >
         <Table<MITMContentReplacerRule>
             dataSource={rules}
