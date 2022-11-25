@@ -263,6 +263,12 @@ ipcMain.on("company-refresh-in", (event) => {
     win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
 })
 
+ipcMain.handle("get-login-user-info", async (e) => {
+    return await new Promise((resolve, reject) => {
+            resolve(USER_INFO)
+    })
+})
+
 ipcMain.on("user-sign-out", (event) => {
     USER_INFO.isLogin = false
     USER_INFO.platform = null

@@ -1,79 +1,100 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {failed, info, success} from "@/utils/notification"
+import {Spin} from "antd"
 import LicensePage from "./LicensePage"
 import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
-import {NetWorkApi} from "@/services/fetch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {API} from "@/services/swagger/resposeType"
+import {useGetState} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
     setJudgeLicense: (v: boolean) => void
 }
-interface LicensePostProps {
-    licenseActivation: string
-    machineCode: string
-}
 const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     const {setJudgeLicense} = props
     // License
-    const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
-    const [machineCode, setMachineCode] = useState<string>("")
+    // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
     const [activateLicense, setActivateLicense] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(true)
+    const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
     useEffect(() => {
-        // 获取机器码
-        ipcRenderer
-            .invoke("GetMachineID", {})
-            .then((e) => {
-                console.log("GetMachineID", e)
-                const machineCode = e.MachineID
-                setMachineCode(machineCode)
-            })
-            .catch((e) => {
-                failed(`获取GetMachineID失败: ${e}`)
-            })
-            .finally(() => {})
+        // 验证License
+        judgeLicense()
     }, [])
 
-    const judgeLicense = () => {
-        getRemoteValue("LICENSE_ACTIVATION").then((setting) => {
-            if (!setting) {
+    const judgeLogin = () => {
+        ipcRenderer
+            .invoke("get-login-user-info", {})
+            .then((e) => {
+                if (e?.isLogin) {
+                    setJudgeLicense(false)
+                }
+            })
+            .finally(() => {
+                setLoading(false)
+                setLicensePageLoading(false)
+            })
+    }
+
+    const judgeLicense = (license?: string) => {
+        if (license?.length) {
+            judgeLicenseGrpc(license)
+        } else {
+            getRemoteValue("LICENSE_ACTIVATION").then((setting) => {
+                if (!setting) {
+                    setLoading(false)
+                    return
+                }
+                const licenseActivation = JSON.parse(setting)
+                judgeLicenseGrpc(licenseActivation, true)
+            })
+        }
+    }
+
+    const judgeLicenseGrpc = (LicenseActivation: string, isCache = false) => {
+        ipcRenderer
+            .invoke("CheckLicense", {
+                LicenseActivation
+            })
+            .then((e) => {
                 setActivateLicense(true)
-                return
-            }
-            const licenseActivation = JSON.parse(setting)
-            if (machineCode && licenseActivation) {
-                NetWorkApi<LicensePostProps, API.ActionSucceeded>({
-                    method: "post",
-                    url: "license",
-                    data: {
-                        machineCode,
-                        licenseActivation
-                    }
-                })
-                    .then((res) => {
-                        console.log("License激活数据源：", res)
-                        if (res.ok) {
-                            setJudgeLicense(false)
-                        }
-                    })
-                    .catch((err) => {
-                        setActivateLicense(true)
-                        failed("激活License失败：" + err)
-                    })
-                    .finally(() => {})
-            } else {
-                setActivateLicense(true)
-            }
-        })
+                setRemoteValue("LICENSE_ACTIVATION", JSON.stringify(LicenseActivation))
+                if (isCache) {
+                    judgeLogin()
+                }
+
+            })
+            .catch((e) => {
+                info("请重新激活License")
+                setLoading(false)
+                setLicensePageLoading(false)
+            })
+            .finally(() => {
+                if (!isCache) {
+                    setLoading(false)
+                    setLicensePageLoading(false)
+                }
+            })
     }
     return (
         <>
-            {activateLicense ? (
-                <div style={{width: 480, margin: "0 auto", paddingTop: 200}}>
-                    <ConfigPrivateDomain enterpriseLogin={true} />
+            {loading ? (
+                <div style={{paddingTop: 10, textAlign: "center"}}>
+                    <Spin tip='验证License中'></Spin>
                 </div>
             ) : (
-                <LicensePage onLicenseVerified={() => setJudgeLicense(false)} machineCode={machineCode} />
+                <>
+                    {activateLicense ? (
+                        <div style={{width: 480, margin: "0 auto", paddingTop: 200}}>
+                            <ConfigPrivateDomain enterpriseLogin={true} onSuccee={() => setJudgeLicense(false)} />
+                        </div>
+                    ) : (
+                        <LicensePage
+                            judgeLicense={judgeLicense}
+                            licensePageLoading={licensePageLoading}
+                            setLicensePageLoading={setLicensePageLoading}
+                        />
+                    )}
+                </>
             )}
         </>
     )

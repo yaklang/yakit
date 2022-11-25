@@ -1,0 +1,16 @@
+.trust-list-admin-page{
+    .table-title{
+        display: flex;
+        justify-content: space-between;
+    }
+}
+.trust-list-admin-page-container {
+    .add-account-body {
+        height: 50px;
+        line-height: 50px;
+        .add-btn {
+            border-radius: 4px;
+        }
+    }
+
+}

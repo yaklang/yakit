@@ -1,93 +1,54 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {failed, info, success} from "@/utils/notification"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 import {Button, Col, Divider, Form, Modal, notification, Row, Spin} from "antd"
 import {InputItem} from "@/utils/inputUtil"
 import CopyToClipboard from "react-copy-to-clipboard"
 import "./LicensePage.scss"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+const {ipcRenderer} = window.require("electron")
 const {Item} = Form
 
 export interface LicensePageProps {
-    onLicenseVerified: () => void
-    machineCode: string
+    judgeLicense: (v: string) => void
+    licensePageLoading: boolean
+    setLicensePageLoading: (v: boolean) => void
 }
-interface LicenseGetProps {}
-interface LicenseResProps {
-    org: string
-    license: string
-    ddl_timestamp: number
-}
+
 interface LicensePostProps {
     licenseActivation: string
-    machineCode: string
 }
 const LicensePage: React.FC<LicensePageProps> = (props) => {
-    const {machineCode} = props
+    const {judgeLicense, licensePageLoading, setLicensePageLoading} = props
     const [licenseRequest, setLicenseRequest] = useState("")
-    const [loading, setLoading] = useState(false)
-    const [paramsObj, setParamsObj] = useState<LicensePostProps>({licenseActivation: "", machineCode})
+    const [paramsObj, setParamsObj] = useState<LicensePostProps>({licenseActivation: ""})
 
     useEffect(() => {
-        if (machineCode.length) {
-            setLoading(true)
-            NetWorkApi<LicenseGetProps, LicenseResProps>({
-                method: "get",
-                url: "license",
-                data: {machineCode}
+        setLicensePageLoading(true)
+        ipcRenderer
+            .invoke("GetLicense", {})
+            .then((e) => {
+                setLicenseRequest(e.License)
             })
-                .then((res) => {
-                    console.log("License数据源：", res)
-                    if (res.license) {
-                        setLicenseRequest(res.license)
-                    } else {
-                        props.onLicenseVerified()
-                    }
-                })
-                .catch((err) => {
-                    failed("获取License失败：" + err)
-                })
-                .finally(() => {
-                    setLoading(false)
-                })
-        }
-    }, [machineCode])
+            .catch((e) => {
+                failed(`获取License失败: ${e}`)
+            })
+            .finally(() => {
+                setLicensePageLoading(false)
+            })
+    }, [])
 
     if (!licenseRequest) {
         return <Spin className='license-spin-box' tip={"加载 license"} />
     }
 
     const UploadLicense = () => {
-        setLoading(true)
-        let params = {
-            ...paramsObj
-        }
-        console.log("参数", params)
-        NetWorkApi<LicensePostProps, API.ActionSucceeded>({
-            method: "post",
-            url: "license",
-            data: params
-        })
-            .then((res) => {
-                if (res.ok) {
-                    setRemoteValue("LICENSE_ACTIVATION", JSON.stringify(paramsObj.licenseActivation))
-                    props.onLicenseVerified()
-                } else {
-                    failed("License审核异常")
-                }
-            })
-            .catch((err) => {
-                failed("激活License失败：" + err)
-            })
-            .finally(() => {
-                setLoading(false)
-            })
+        setLicensePageLoading(true)
+        judgeLicense(paramsObj.licenseActivation)
     }
 
     return (
         <div>
-            <Spin spinning={loading}>
+            <Spin spinning={licensePageLoading}>
                 <Row style={{paddingTop: 50}}>
                     <Col span={4} />
                     <Col span={16}>

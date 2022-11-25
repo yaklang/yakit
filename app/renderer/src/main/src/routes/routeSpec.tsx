@@ -56,6 +56,7 @@ import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
 import AccountAdminPage from "@/pages/enterpriseAdminPage/AccountAdminPage"
 import RoleAdminPage from "@/pages/enterpriseAdminPage/RoleAdminPage";
 import LicenseAdminPage from "@/pages/enterpriseAdminPage/LicenseAdminPage";
+import {TrustListPage} from "@/pages/enterpriseAdminPage/TrustListPage";
 
 import {
     MenuDomainAssetsIcon,
@@ -161,6 +162,7 @@ export enum Route {
     AccountAdminPage = "account-admin-page", // 用户管理
     RoleAdminPage = "role-admin-page", // 角色管理
     LicenseAdminPage = "license-admin-page", // license管理
+    TrustListPage = "trust-list-admin-page", // 信任用户管理
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -318,6 +320,13 @@ export const RouteMenuData: MenuDataProps[] = [
     {
         key: Route.LicenseAdminPage,
         label: "License管理",
+        icon: <FireOutlined />,
+        disabled: true,
+        hidden: true
+    },
+    {
+        key: Route.TrustListPage,
+        label: "用户管理",
         icon: <FireOutlined />,
         disabled: true,
         hidden: true
@@ -486,6 +495,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <RoleAdminPage />
         case Route.LicenseAdminPage: 
             return <LicenseAdminPage />
+        case Route.TrustListPage:
+            return <TrustListPage />
         default:
             return <div />
     }

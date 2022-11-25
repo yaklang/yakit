@@ -25,12 +25,13 @@ const layout = {
 
 interface ConfigPrivateDomainProps {
     onClose?: () => void,
+    onSuccee?:() => void,
     // 是否为企业登录
     enterpriseLogin?:boolean|undefined
 }
 
 export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
-    const {onClose,enterpriseLogin = false} = props
+    const {onClose,onSuccee,enterpriseLogin = false} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
@@ -64,6 +65,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     success("企业登录成功")
                     onCloseTab()
                     onClose&&onClose()
+                    onSuccee&&onSuccee()
                     res&&ipcRenderer.send("company-sign-in", {...res})
                 })
                 .catch((err) => {

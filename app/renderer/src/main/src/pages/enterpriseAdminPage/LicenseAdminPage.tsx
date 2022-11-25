@@ -113,20 +113,17 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
         const {id, license} = values
         const selectDate = data.filter((item) => item.id === id)[0]
         const {company, maxUser} = selectDate
-        console.log("selectDate", selectDate)
         let params = {
             license,
             company,
             maxUser
         }
-        console.log("参数",params)
         NetWorkApi<LicenseProps, string>({
             method: "post",
             url: "license/activation",
             data: params
         })
             .then((text: string) => {
-                console.log("返回结果：", text)
                 onCancel()
                 refresh()
                 const m = showModal({
@@ -169,7 +166,6 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                             update(1, undefined, value, true)
                         }}
                         onPopupScroll={(e) => {
-                            console.log("加载")
                             const {target} = e
                             const ref: HTMLDivElement = target as unknown as HTMLDivElement
                             if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
@@ -235,8 +231,6 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
             data: params
         })
             .then((res: API.NewUrmResponse) => {
-                console.log("返回结果：", res)
-                const {user_name, password} = res
                 onCancel()
                 refresh()
             })
@@ -328,7 +322,6 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
             }
         })
             .then((res) => {
-                console.log("数据源：", res)
                 // const newData = res.data.map((item) => ({...item}))
                 setData(res.data || [])
                 setPagination({...pagination, Limit: res.pagemeta.limit})
@@ -357,7 +350,6 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
             }
         })
             .then((res) => {
-                console.log("返回结果：", res)
                 success("删除企业成功")
                 update()
             })
