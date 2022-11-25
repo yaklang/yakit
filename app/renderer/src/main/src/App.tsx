@@ -15,8 +15,9 @@ import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
+// import {EnterpriseJudgeLogin} from "./pages/EnterpriseJudgeLogin"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const InterceptKeyword = [
     // "KeyA",
     // "KeyB",
@@ -47,10 +48,10 @@ const InterceptKeyword = [
 ]
 
 // import Main from "./pages/MainOperator";
+const EnterpriseJudgeLogin = lazy(() => import("./pages/EnterpriseJudgeLogin"))
 const Main = lazy(() => import("./pages/MainOperator"))
 // import {YakEnvironment} from "./protected/YakEnvironment";
 const YakEnvironment = lazy(() => import("./protected/YakEnvironment"))
-const LicensePage = lazy(() => import("./pages/LicensePage"))
 
 const {ipcRenderer} = window.require("electron")
 const FormItem = Form.Item
@@ -114,8 +115,6 @@ export const UserProtocol = () => (
     </>
 )
 
-interface LicenseProps {}
-
 function App() {
     const [connected, setConnected] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -127,11 +126,8 @@ function App() {
     const [agreed, setAgreed] = useState(false)
     const [readingSeconds, setReadingSeconds] = useState<number>(1)
 
-    // 获取子组件方法Ref
-    const childRef = useRef<any>()
-
-    // License
-    const [licenseVerified, setLicenseVerified] = useState<boolean>(true);
+    // 企业版-连接引擎后验证license=>展示企业登录
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(IsEnterprise)
 
     useEffect(() => {
         setLoading(true)
@@ -212,16 +208,11 @@ function App() {
 
     const refreshLogin = useMemoizedFn(() => {
         // 获取引擎中的token(区分企业版与社区版)
-        const TokenSource = IsEnterprise?"token-online-enterprise":"token-online"
+        const TokenSource = IsEnterprise ? "token-online-enterprise" : "token-online"
         getRemoteValue(TokenSource)
             .then((resToken) => {
                 // console.log("resToken", resToken)
                 if (!resToken) {
-                    // 在第一次进入页面时，如若是企业登录则打开登录
-                    if (IsEnterprise) {
-                        // openLoginShow就是Main暴露给App的方法
-                        childRef.current.openLoginShow()
-                    }
                     return
                 }
                 // 通过token获取用户信息
@@ -233,7 +224,9 @@ function App() {
                     }
                 })
                     .then((res) => {
-                        IsEnterprise?setRemoteValue("token-online-enterprise", resToken):setRemoteValue("token-online", resToken)
+                        IsEnterprise
+                            ? setRemoteValue("token-online-enterprise", resToken)
+                            : setRemoteValue("token-online", resToken)
                         const user = {
                             isLogin: true,
                             platform: res.from_platform,
@@ -248,18 +241,20 @@ function App() {
                             role: res.role,
                             user_id: res.user_id,
                             token: resToken,
-                            showStatusSearch: res?.showStatusSearch||false
+                            showStatusSearch: res?.showStatusSearch || false
                         }
                         ipcRenderer.sendSync("sync-update-user", user)
                         setStoreUserInfo(user)
                         refreshToken(user)
                     })
                     .catch((e) => {
-                        IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
+                        IsEnterprise
+                            ? setRemoteValue("token-online-enterprise", "")
+                            : setRemoteValue("token-online", "")
                     })
             })
             .catch((e) => {
-                IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
+                IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
             })
     })
 
@@ -288,6 +283,7 @@ function App() {
             } else {
                 failed(`Yakit Server 认证失败：${text}`)
             }
+            setJudgeLicense(IsEnterprise)
             setConnected(ok)
             setTimeout(() => setLoading(false), 500)
         })
@@ -345,12 +341,15 @@ function App() {
 
     return connected ? (
         <Suspense fallback={<div>Loading Main</div>}>
+            {isJudgeLicense ? (
+                <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} />
+            ) : (
                 <Main
                     onErrorConfirmed={() => {
                         setConnected(false)
                     }}
-                    ref={childRef}
                 />
+            )}
         </Suspense>
     ) : (
         <Suspense
@@ -359,19 +358,19 @@ function App() {
                     <AutoSpin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."} />
                 </div>
             }
-        >{licenseVerified ? (
-            <YakEnvironment
-                setMode={setMode}
-                onConnected={() => {
-                    testYak()
-                }}
-                onTlsGRPC={(e) => {
-                    setTlsGRPC(e)
-                }}
-                onAddrChanged={setAddr}
-            />) : (
-                <LicensePage onLicenseVerified={() => setLicenseVerified(true)}/>
-            )}
+        >
+            <>
+                <YakEnvironment
+                    setMode={setMode}
+                    onConnected={() => {
+                        testYak()
+                    }}
+                    onTlsGRPC={(e) => {
+                        setTlsGRPC(e)
+                    }}
+                    onAddrChanged={setAddr}
+                />
+            </>
         </Suspense>
     )
 }

@@ -27,12 +27,10 @@ interface ConfigPrivateDomainProps {
     onClose?: () => void,
     // 是否为企业登录
     enterpriseLogin?:boolean|undefined
-    // 成功后的回调
-    onSuccee?:() => void
 }
 
 export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
-    const {onClose,onSuccee,enterpriseLogin = false} = props
+    const {onClose,enterpriseLogin = false} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
@@ -61,13 +59,12 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     pwd
                 }
             })
-                .then((res) => {
+                .then((res:API.UserData) => {
                     console.log("返回结果：", res)
                     success("企业登录成功")
                     onCloseTab()
                     onClose&&onClose()
-                    onSuccee&&onSuccee()
-                    if (res) ipcRenderer.send("company-sign-in", {...res})
+                    res&&ipcRenderer.send("company-sign-in", {...res})
                 })
                 .catch((err) => {
                     setTimeout(() => setLoading(false), 300)

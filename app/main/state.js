@@ -6,6 +6,8 @@ const USER_INFO = {
     githubHeadImg: null,
     wechatName: null,
     wechatHeadImg: null,
+    companyName:null,
+    companyHeadImg:null,
     qqName: null,
     qqHeadImg: null,
     role: null,
