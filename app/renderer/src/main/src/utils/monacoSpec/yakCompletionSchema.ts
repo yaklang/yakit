@@ -1,5 +1,7 @@
 import {editor, IRange, languages, Position} from "monaco-editor";
 import {CancellationToken} from "typescript";
+import {removeRepeatedParams} from "@/pages/invoker/YakScriptParamsSetter";
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams";
 
 export interface CompletionSchema {
     libName: string
@@ -97,7 +99,35 @@ export const extraSuggestions: languages.CompletionItem[] = [
     ]
 ;
 
-export const setCompletions = (data: CompletionTotal) => {
+export interface MethodSuggestion {
+    FuzzKeywords: string[]
+    ExactKeywords: string[]
+    Regexp: string[]
+    /*
+    *
+// 这个定义我们争取和 monaco editor suggestion 基本一致
+message SuggestionDescription {
+  string Label = 1;
+  string Description = 2;
+  string InsertText = 3;
+  bool JustAppend = 4;
+}
+    * */
+    Suggestions: {
+        Label: string
+        Description: string
+        InsertText: string
+        JustAppend: boolean
+    }[]
+}
+
+let YaklangBuildInMethodCompletion: MethodSuggestion[] = [];
+
+export const setYaklangBuildInMethodCompletion = (methods: MethodSuggestion[]) => {
+    YaklangBuildInMethodCompletion = methods;
+}
+
+export const setYaklangCompletions = (data: CompletionTotal) => {
     if (!data.libToFieldCompletions) {
         data.libToFieldCompletions = {}
     }
@@ -165,6 +195,68 @@ export const getDefaultCompletionsWithRange = (range: IRange): languages.Complet
             range,
         }
     })
+};
+
+const removeRepeatedSuggestions = (params: languages.CompletionItem[]): languages.CompletionItem[] => {
+    const results: languages.CompletionItem[] = [];
+    const labels: string[] = [];
+
+    params.forEach(i => {
+        const key = `${i.label}`;
+        if (labels.includes(key)) {
+            return
+        }
+        labels.push(key)
+        results.push(i)
+    });
+    return results
+}
+
+const loadMethodFromCaller = (caller: string, prefix: string, range: IRange): languages.CompletionItem[] => {
+    if (!YaklangBuildInMethodCompletion) {
+        return []
+    }
+
+    if (prefix.endsWith("].") || prefix.endsWith(").")) {
+        // 无法判断 slice 内部和函数结果的内容，所以我们认为他是 raw
+        caller = "raw"
+    }
+
+    const items: languages.CompletionItem[] = [];
+    YaklangBuildInMethodCompletion.forEach(i => {
+        // 精确匹配到需要补全的变量
+        if (i.ExactKeywords.includes(caller)) {
+            i.Suggestions.forEach(desc => {
+                items.push({
+                    insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                    insertText: desc.InsertText,
+                    kind: languages.CompletionItemKind.Snippet,
+                    label: `${desc.InsertText}: ${desc.Description}`,
+                    range: range,
+                    documentation: desc.Description,
+                })
+            })
+            return
+        }
+
+        for (let j = 0; j < i.FuzzKeywords.length; j++) {
+            const m = i.FuzzKeywords[j];
+            if (caller.toLowerCase().includes(m.toLowerCase())) {
+                i.Suggestions.forEach(desc => {
+                    items.push({
+                        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        insertText: desc.InsertText,
+                        kind: languages.CompletionItemKind.Snippet,
+                        label: `${desc.InsertText}: ${desc.Description}`,
+                        range: range,
+                        documentation: desc.Description,
+                    })
+                })
+                return;
+            }
+        }
+    })
+    return items
 }
 
 export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, position: Position, context: languages.CompletionContext, token: CancellationToken): { suggestions: any[] } => {
@@ -198,7 +290,9 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
         endColumn: position.column || 0,
     };
 
-    // 设置补全
+    /*
+    * 设置补全: 库补全
+    * */
     let items: languages.CompletionItem[] = [];
     const libCompletions = (completions.libCompletions || []);
     for (let i = 0; i < libCompletions.length; i++) {
@@ -215,14 +309,17 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                 })
             })
             return {
-                suggestions: items,
+                suggestions: [...loadMethodFromCaller(lastWord, line, insertRange), ...items],
             }
         }
     }
 
     if (items.length <= 0) {
         if (!line.endsWith(".")) {
-            // 如果光标前最后一个不是 . 的话！说明该进入全局补全的内容了
+            /*
+            * 全局补全，不是方法补全
+            * 如果光标前最后一个不是 . 的话！说明该进入全局补全的内容了
+            * */
             return {
                 suggestions: [...completions.libNames.map(i => {
                     return {
@@ -299,7 +396,7 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                 fieldCompletion.push(...Array.from(fieldMerged.values()))
                 fieldCompletion.push(...Array.from(methodMerged.values()))
 
-                const suggestions = fieldCompletion.map(i => {
+                let suggestions: languages.CompletionItem[] = fieldCompletion.map(i => {
                     if (i.isMethod) {
                         return {
                             insertText: i.methodsCompletion,
@@ -319,7 +416,9 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                         range: insertRange,
                     }
                 });
-                return {suggestions}
+
+                suggestions = [...loadMethodFromCaller(lastWord, line, insertRange), ...suggestions]
+                return {suggestions: removeRepeatedSuggestions(suggestions)}
             } catch (e) {
                 console.info(e)
             }

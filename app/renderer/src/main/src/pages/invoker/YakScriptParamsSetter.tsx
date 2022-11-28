@@ -698,8 +698,8 @@ export const TypeVerboseToInput: React.FC<TypeVerboseToInputProp> = (props) => {
         case "bool":
         case "boolean":
             let value = props.values
-            if(typeof value ==="string"){
-                value=JSON.parse(value)
+            if (typeof value === "string") {
+                value = JSON.parse(value)
             }
             return <Switch checked={value as boolean} disabled={!!props.disabled} onChange={props.setValue}/>
         case "textarea":
