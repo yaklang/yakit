@@ -212,6 +212,7 @@ service Yak {
 
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
+  rpc GetYakVMBuildInMethodCompletion(GetYakVMBuildInMethodCompletionRequest) returns (GetYakVMBuildInMethodCompletionResponse);
   rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
 
   // 端口扫描的封装
@@ -1581,6 +1582,32 @@ message Port {
 
 message YakitCompletionRawResponse {
   bytes RawJson = 1;
+}
+
+message GetYakVMBuildInMethodCompletionRequest {
+
+}
+
+// 这个定义我们争取和 monaco editor suggestion 基本一致
+message SuggestionDescription {
+  string Label = 1;
+  string Description = 2;
+  string InsertText = 3;
+  bool JustAppend = 4;
+}
+
+message MethodSuggestion {
+  // 产生这个方法提示的关键词是啥？
+  repeated string ExactKeywords = 1;
+  repeated string FuzzKeywords = 2;
+  repeated string Regexp = 3;
+
+  // 提示的内容是啥？
+  repeated SuggestionDescription Suggestions = 4;
+}
+
+message GetYakVMBuildInMethodCompletionResponse {
+  repeated MethodSuggestion Suggestions = 1;
 }
 
 message GetAllPayloadGroupResponse {

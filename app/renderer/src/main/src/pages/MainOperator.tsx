@@ -45,7 +45,11 @@ import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {YakLogoBanner} from "../utils/logo"
 import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
-import {CompletionTotal, setCompletions} from "../utils/monacoSpec/yakCompletionSchema"
+import {
+    CompletionTotal, MethodSuggestion,
+    setYaklangBuildInMethodCompletion,
+    setYaklangCompletions
+} from "../utils/monacoSpec/yakCompletionSchema"
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "./invoker/schema"
@@ -845,12 +849,27 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
                 const total = JSON.parse(completionJson) as CompletionTotal
-                setCompletions(total)
+                setYaklangCompletions(total)
             } catch (e) {
                 console.info(e)
             }
 
             // success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
+        })
+
+        //
+        ipcRenderer.invoke("GetYakVMBuildInMethodCompletion", {}).then((data: {Suggestions: MethodSuggestion[]}) => {
+            try {
+                if (!data) {
+                    return
+                }
+                if (data.Suggestions.length <= 0) {
+                    return
+                }
+                setYaklangBuildInMethodCompletion(data.Suggestions)
+            }catch (e) {
+                console.info(e)
+            }
         })
     }, [])
 
