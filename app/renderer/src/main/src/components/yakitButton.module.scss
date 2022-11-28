@@ -1,15 +1,52 @@
+.yakit-button-wrapper {
+    display: inline-block;
+}
+
+.yakit-button-primary {
+}
+
 .yakit-button-small-size {
-    height: 20px;
+    height: 22px;
     padding: 3px 6px;
     border-radius: 4px;
+    font-weight: 500;
+    font-size: 11px;
+    line-height: 14px;
 }
 .yakit-button-size {
-    height: 24px;
+    height: 26px;
     padding: 4px 8px;
     border-radius: 4px;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
 }
 .yakit-button-big-size {
-    height: 28px;
+    height: 30px;
     padding: 4px 12px;
     border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.yakit-button-type {
+    background: #f28b44;
+    color: #ffffff;
+    border-color: #ffffff00;
+}
+.yakit-button-type:hover {
+    background: #f79c5d;
+    color: #ffffff;
+    border-color: #ffffff00;
+}
+.yakit-button-type[disabled] {
+    color: #ccd2de;
+    border-color: #ffffff00;
+    background: #f0f1f3;
+}
+.yakit-button-type[disabled]:hover {
+    color: #ccd2de;
+    border-color: #ffffff00;
+    background: #f0f1f3;
 }
