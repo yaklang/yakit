@@ -12,7 +12,7 @@ import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 
 export interface ShowUserInfoProps {
-    text:string
+    text: string
     onClose: () => void
 }
 const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
@@ -207,6 +207,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
     const {onCancel, refresh, editInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
+    const [submitBtn, setSubmitBtn] = useState<boolean>(!!editInfo)
 
     useEffect(() => {
         if (editInfo) {
@@ -247,19 +248,57 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
                 <Form.Item name='company' label='企业名称' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入企业名称' allowClear />
+                    <Input placeholder='请输入企业名称' allowClear disabled={!!editInfo} />
                 </Form.Item>
                 <Form.Item
                     name='maxActivationNum'
                     label='License总数'
-                    rules={[{required: true, message: "该项为必填"}]}
+                    rules={[
+                        {required: true, message: "该项为必填"},
+                        {
+                            validator: (rule, value) => {
+                                if (editInfo && value < editInfo.maxActivationNum) {
+                                    return Promise.reject("License总数仅能增加")
+                                } else {
+                                    setSubmitBtn(false)
+                                    return Promise.resolve()
+                                }
+                            }
+                        }
+                    ]}
                 >
                     <InputNumber placeholder='请输入License总数' style={{width: "100%"}} />
                 </Form.Item>
-                <Form.Item name='maxUser' label='用户总数' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item
+                    name='maxUser'
+                    label='用户总数'
+                    rules={[
+                        {required: true, message: "该项为必填"},
+                        {
+                            validator: (rule, value) => {
+                                if (editInfo && value < editInfo.maxUser) {
+                                    return Promise.reject("用户总数不可减少")
+                                } else {
+                                    setSubmitBtn(false)
+                                    return Promise.resolve()
+                                }
+                            }
+                        }
+                    ]}
+                >
                     <InputNumber placeholder='请输入用户总数' style={{width: "100%"}} />
                 </Form.Item>
-                <Form.Item name='durationDate' label='有效期' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item name='durationDate' label='有效期' rules={[{required: true, message: "该项为必填"},
+                        {
+                            validator: (rule, value) => {
+                                if (editInfo && value.unix() < editInfo.durationDate) {
+                                    return Promise.reject("有效期不可缩短")
+                                } else {
+                                    setSubmitBtn(false)
+                                    return Promise.resolve()
+                                }
+                            }
+                        }]}>
                     <DatePicker
                         showTime
                         format='YYYY-MM-DD HH:mm:ss'
@@ -268,7 +307,13 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                     />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
-                    <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
+                    <Button
+                        disabled={submitBtn}
+                        style={{width: 200}}
+                        type='primary'
+                        htmlType='submit'
+                        loading={loading}
+                    >
                         确认
                     </Button>
                 </div>

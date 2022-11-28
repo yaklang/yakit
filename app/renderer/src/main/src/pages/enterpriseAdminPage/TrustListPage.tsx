@@ -54,7 +54,6 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
             role
         }
         setLoading(true)
-        console.log("参数",param)
         NetWorkApi<API.UpdateUserRole, API.ActionSucceeded>({
             method: "post",
             url: "user",
@@ -233,7 +232,6 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("数据源：", res)
                 const dataSource = res.data??[]
                 const newData = dataSource.map((item) => ({...item}))
                 setData(newData)
@@ -262,10 +260,6 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
     }
 
     const onRemove = (appid: string[]) => {
-        console.log("data", {
-            appid,
-            operation:"remove"
-        })
         NetWorkApi<API.UpdateUserRole, API.NewUrmResponse>({
             method: "post",
             url: "user",
@@ -275,7 +269,6 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("返回结果：", res)
                 success("删除用户成功")
                 update()
             })
