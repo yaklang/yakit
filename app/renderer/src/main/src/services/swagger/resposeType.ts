@@ -153,9 +153,9 @@
     dump: boolean;
   }
   export interface UpdateUserRole {
-    appid: string;
+    appid: string[];
     operation: string;
-    role: string;
+    role?: string;
   }
   export interface UpdatePluginRequest {
     uuid: string;

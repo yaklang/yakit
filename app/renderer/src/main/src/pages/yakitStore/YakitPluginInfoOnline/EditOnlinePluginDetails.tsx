@@ -3,7 +3,7 @@ import {Form, Modal, Radio, Select, Switch} from "antd"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
-import {UserQuery} from "@/pages/TrustList"
+import {UserQuery} from "@/pages/enterpriseAdminPage/TrustListPage"
 import {failed, success} from "@/utils/notification"
 import {OnlineUserItem} from "@/components/OnlineUserItem/OnlineUserItem"
 import {UserInfoProps} from "@/store"
@@ -118,7 +118,7 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
             confirmLoading={loading}
         >
             <Form {...layout} form={form} name='control-hooks'>
-                {userInfo.role === "admin" && (
+                {userInfo.role === "superAdmin" && (
                     <>
                         <Form.Item name='user_id' label='作者'>
                             <Select

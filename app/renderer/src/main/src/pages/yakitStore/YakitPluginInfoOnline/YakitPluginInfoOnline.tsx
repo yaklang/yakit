@@ -98,7 +98,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const { userInfo } = useStore()
     const [loading, setLoading] = useState<boolean>(false)
     const [addLoading, setAddLoading] = useState<boolean>(false)
-    const [isAdmin, setIsAdmin] = useState<boolean>(userInfo.role === "admin")
+    const [isAdmin, setIsAdmin] = useState<boolean>(["admin","superAdmin"].includes(userInfo.role||""))
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
     const [isEdit, setIsEdit] = useState<boolean>(false)
     const [tabKey, setTabKey] = useState<string>("1")
@@ -107,7 +107,8 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         if (pluginId >= 0) getPluginDetail()
     }, [pluginId])
     useEffect(() => {
-        setIsAdmin(userInfo.role === "admin")
+        const boolAdmin = ["admin","superAdmin"].includes(userInfo.role||"")
+        setIsAdmin(boolAdmin)
     }, [userInfo.role])
     useEffect(() => {
         if (!plugin) return
@@ -220,7 +221,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     })
     const onRemove = useMemoizedFn(() => {
         if (!plugin) return
-        if (userInfo.role === "admin" || plugin?.user_id === userInfo.user_id) {
+        if (["admin","superAdmin"].includes(userInfo.role||"") || plugin?.user_id === userInfo.user_id) {
             const deletedParams: API.DeletePluginUuid = {
                 uuid: plugin.uuid || ""
             }

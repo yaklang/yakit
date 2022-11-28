@@ -813,9 +813,10 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         }
                                 
                                         // 审核状态展示
+                                        const boolAdmin = ["admin","superAdmin"].includes(userInfo.role||"")
                                         const UserIsPrivate = queryName === "status" && plugSource === "user" && statisticsQueryUser.is_private !== "false"
-                                        const OnlineAdmin = queryName === "status" && plugSource === "online" && userInfo.role !== "admin"
-                                        const OnlineStatusSearch = queryName === "status" && plugSource === "online" && userInfo.role !== "admin" && userInfo.showStatusSearch !== true
+                                        const OnlineAdmin = queryName === "status" && plugSource === "online" && !boolAdmin
+                                        const OnlineStatusSearch = queryName === "status" && plugSource === "online" && !boolAdmin && userInfo.showStatusSearch !== true
                                         if (!IsEnterprise&&(UserIsPrivate || OnlineAdmin)) return <></>
                                         if(IsEnterprise&&(UserIsPrivate || OnlineStatusSearch)) return <></>
 
@@ -3271,7 +3272,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         }
     }, [isSelectAll])
     useEffect(() => {
-        setIsAdmin(userInfo.role === "admin")
+        const boolAdmin = ["admin","superAdmin"].includes(userInfo.role||"")
+        setIsAdmin(boolAdmin)
     }, [userInfo.role])
     useEffect(() => {
         setListBodyLoading(true)
@@ -3640,11 +3642,12 @@ interface QueryComponentOnlineProps {
 const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
     const {onClose, userInfo, queryOnline, setQueryOnline, user} = props
     const [isShowStatus, setIsShowStatus] = useState<boolean>(queryOnline.is_private === "true")
-    const [isAdmin, setIsAdmin] = useState(userInfo.role === "admin")
+    const [isAdmin, setIsAdmin] = useState(["admin","superAdmin"].includes(userInfo.role||""))
     const [form] = Form.useForm()
     const refTest = useRef<any>()
     useEffect(() => {
-        setIsAdmin(userInfo.role === "admin")
+        const boolAdmin = ["admin","superAdmin"].includes(userInfo.role||"")
+        setIsAdmin(boolAdmin)
     }, [userInfo.role])
     useEffect(() => {
         document.addEventListener("mousedown", (e) => handleClickOutside(e), true)

@@ -160,7 +160,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                                             <div className="journal-text content-ellipsis" onClick={(e) => { e.stopPropagation() }}>
                                                 {moment.unix(item.created_at).format("YYYY-MM-DD HH:mm")}
                                                 &emsp;
-                                                {item.role === 'admin' && `管理员${item.user_name}修改插件` || `${item.user_name}申请修改插件`}
+                                                {["admin","superAdmin"].includes(item.role||"") && `管理员${item.user_name}修改插件` || `${item.user_name}申请修改插件`}
                                             </div>
                                             <div className="journal-item-operation">
                                                 <Button type="link" onClick={(e) => { e.stopPropagation(); onGoDetails(item) }}>详情</Button>
