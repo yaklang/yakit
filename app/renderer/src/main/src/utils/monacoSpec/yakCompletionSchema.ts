@@ -100,6 +100,7 @@ export const extraSuggestions: languages.CompletionItem[] = [
 ;
 
 export interface MethodSuggestion {
+    Verbose: string
     FuzzKeywords: string[]
     ExactKeywords: string[]
     Regexp: string[]
@@ -231,7 +232,8 @@ const loadMethodFromCaller = (caller: string, prefix: string, range: IRange): la
                     insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                     insertText: desc.InsertText,
                     kind: languages.CompletionItemKind.Snippet,
-                    label: `${desc.InsertText}: ${desc.Description}`,
+                    label: i.Verbose === "" ? `${desc.InsertText}: ${desc.Description}` : `${i.Verbose}.${desc.InsertText}:  ${desc.Description}`,
+                    detail: `${i.Verbose}`,
                     range: range,
                     documentation: desc.Description,
                 })
@@ -247,7 +249,8 @@ const loadMethodFromCaller = (caller: string, prefix: string, range: IRange): la
                         insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                         insertText: desc.InsertText,
                         kind: languages.CompletionItemKind.Snippet,
-                        label: `${desc.InsertText}: ${desc.Description}`,
+                        label: i.Verbose === "" ? `${desc.InsertText}: ${desc.Description}` : `${i.Verbose}.${desc.InsertText}:  ${desc.Description}`,
+                        detail: `${i.Verbose}`,
                         range: range,
                         documentation: desc.Description,
                     })
@@ -297,7 +300,7 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
     const libCompletions = (completions.libCompletions || []);
     for (let i = 0; i < libCompletions.length; i++) {
         const currentLib = libCompletions[i];
-        if (line.endsWith(currentLib.libName + ".")) {
+        if (lastWord === currentLib.libName) {
             currentLib.functions.forEach(f => {
                 items.push({
                     insertText: f.functionName,
@@ -309,7 +312,7 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                 })
             })
             return {
-                suggestions: [...loadMethodFromCaller(lastWord, line, insertRange), ...items],
+                suggestions: [...items, ...loadMethodFromCaller(lastWord, line, insertRange)],
             }
         }
     }
@@ -417,7 +420,7 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                     }
                 });
 
-                suggestions = [...loadMethodFromCaller(lastWord, line, insertRange), ...suggestions]
+                suggestions = [...suggestions, ...loadMethodFromCaller(lastWord, line, insertRange)]
                 return {suggestions: removeRepeatedSuggestions(suggestions)}
             } catch (e) {
                 console.info(e)
