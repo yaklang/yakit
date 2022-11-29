@@ -1604,6 +1604,9 @@ message MethodSuggestion {
 
   // 提示的内容是啥？
   repeated SuggestionDescription Suggestions = 4;
+
+  // 这个代码提示方法组是啥？
+  string Verbose = 5;
 }
 
 message GetYakVMBuildInMethodCompletionResponse {
