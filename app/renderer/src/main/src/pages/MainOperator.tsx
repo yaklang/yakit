@@ -89,7 +89,6 @@ import {API} from "@/services/swagger/resposeType"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
-import {YakitButton} from "@/components/YakitButton"
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
@@ -1231,7 +1230,6 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                     <Image src={YakLogoBanner} preview={false} width={130} />
                                 </div>
                                 <Divider type={"vertical"} />
-                                <YakitButton>123</YakitButton>
                                 <YakVersion />
                                 <YakitVersion />
                                 <Button
