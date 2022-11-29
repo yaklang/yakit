@@ -3,7 +3,7 @@ import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Select, Input
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn,useDebounceFn} from "ahooks"
 import moment from "moment"
 import "./LicenseAdminPage.scss"
 import {failed, success, warn} from "@/utils/notification"
@@ -288,7 +288,11 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                 >
                     <InputNumber placeholder='请输入用户总数' style={{width: "100%"}} />
                 </Form.Item>
-                <Form.Item name='durationDate' label='有效期' rules={[{required: true, message: "该项为必填"},
+                <Form.Item
+                    name='durationDate'
+                    label='有效期'
+                    rules={[
+                        {required: true, message: "该项为必填"},
                         {
                             validator: (rule, value) => {
                                 if (editInfo && value.unix() < editInfo.durationDate) {
@@ -298,10 +302,12 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                                     return Promise.resolve()
                                 }
                             }
-                        }]}>
+                        }
+                    ]}
+                >
                     <DatePicker
-                        showTime
-                        format='YYYY-MM-DD HH:mm:ss'
+                        // showTime
+                        format='YYYY-MM-DD'
                         placeholder='点击这里设置有效期'
                         style={{width: "100%"}}
                     />
@@ -410,12 +416,47 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
             dataIndex: "company"
         },
         {
-            title: "总数",
-            dataIndex: "maxActivationNum"
+            title: "状态",
+            dataIndex: "durationDate",
+            filters: [
+                {
+                    text: "已到期",
+                    value: "test1"
+                },
+                {
+                    text: "将要到期",
+                    value: "test2"
+                },
+                {
+                    text: "正常使用",
+                    value: "test3"
+                }
+            ],
+            filterMultiple: true,
+            onFilter: (value, record) => {
+                console.log("onFilter",value, record)
+                return record.company === "yak"
+            },
+            render:(text)=>{
+                // console.log("text",text)
+                return <Tag color="red">已过期</Tag>
+            }
         },
         {
-            title: "已使用",
-            dataIndex: "useActivationNum"
+            title: "有效期至",
+            dataIndex: "durationDate",
+            render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD")}</span>
+        },
+        {
+            title: "License(已使用/总数)",
+            dataIndex: "useActivationNum",
+            render: (text,record) => {
+                return `${text} / ${record.maxActivationNum}`
+            }
+        },
+        {
+            title: "用户总数",
+            dataIndex: "maxUser",
         },
         {
             title: "操作",
@@ -446,6 +487,11 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
             width: 140
         }
     ]
+    const onTableChange = useDebounceFn(
+        (pagination, filters, sorter, extra) => {
+            console.log('params', pagination, filters, sorter, extra);
+        }
+    ).run
     return (
         <div className='license-admin-page'>
             <Table
@@ -512,6 +558,7 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                 size={"small"}
                 bordered={true}
                 dataSource={data}
+                onChange={onTableChange}
             />
             <Modal
                 visible={licenseFormShow}

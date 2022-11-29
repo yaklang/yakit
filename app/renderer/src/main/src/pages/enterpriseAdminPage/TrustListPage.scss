@@ -3,6 +3,9 @@
         display: flex;
         justify-content: space-between;
     }
+    .ant-table-thead > tr > th {
+        font-weight: bolder;
+    }
 }
 .trust-list-admin-page-container {
     .add-account-body {

@@ -312,9 +312,8 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 <div style={{display: "flex"}}>
                     <div style={{width: 32, display: "flex", alignItems: "center"}}>{judgeAvatar(record)}</div>
 
-                    <div style={{paddingLeft: 10, flex: 1}}>
-                        <div>{text}</div>
-                        <div>{judgeSource(record)}</div>
+                    <div style={{paddingLeft: 10, flex: 1,lineHeight:"32px"}}>
+                        <div>{text}<span style={{paddingLeft:4}}>{judgeSource(record)}</span></div>
                     </div>
                 </div>
             )

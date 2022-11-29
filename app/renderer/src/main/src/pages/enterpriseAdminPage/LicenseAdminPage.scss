@@ -1,4 +1,4 @@
-.license-admin-page{
+.license-admin-page {
     .table-title {
         display: flex;
         justify-content: space-between;
@@ -7,5 +7,8 @@
             font-size: 16px;
             font-weight: bold;
         }
+    }
+    .ant-table-thead > tr > th {
+        font-weight: bolder;
     }
 }
