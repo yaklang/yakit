@@ -224,7 +224,7 @@ const loadMethodFromCaller = (caller: string, prefix: string, range: IRange): la
     if (prefix.endsWith("].") || prefix.endsWith(").")) {
         // 无法判断 slice 内部和函数结果的内容，所以我们认为他是 raw
         caller = "raw"
-    } else if (prefix.endsWith(`".`)) {
+    } else if (prefix.endsWith(`".`) || prefix.endsWith("`.")) {
         // 认为这是一个 string
         caller = "s"
     } else if (prefix.endsWith(`}.`)) {
