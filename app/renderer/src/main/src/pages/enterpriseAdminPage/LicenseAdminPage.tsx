@@ -1,15 +1,30 @@
 import React, {useEffect, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Select, InputNumber, DatePicker, Spin} from "antd"
+import {
+    Table,
+    Space,
+    Button,
+    Input,
+    Modal,
+    Form,
+    Popconfirm,
+    Tag,
+    Select,
+    InputNumber,
+    DatePicker,
+    Spin,
+    Tooltip
+} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn,useDebounceFn} from "ahooks"
+import {useGetState, useMemoizedFn, useDebounceFn} from "ahooks"
 import moment from "moment"
 import "./LicenseAdminPage.scss"
 import {failed, success, warn} from "@/utils/notification"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
+import {QuestionCircleOutlined} from "@ant-design/icons"
 
 export interface ShowUserInfoProps {
     text: string
@@ -81,6 +96,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
             url: "company/license/config",
             params: {
                 keywords,
+                status: 0,
                 ...paginationProps
             }
         })
@@ -220,12 +236,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
         }
     }, [])
 
-    const onFinish = useMemoizedFn((values) => {
-        let params = {
-            ...values,
-            durationDate: values.durationDate.unix()
-        }
-        if (editInfo?.id) params.id = editInfo?.id
+    const requestFun = (params) => {
         NetWorkApi<CreateProps, API.NewUrmResponse>({
             method: "post",
             url: "company/license/config",
@@ -243,6 +254,27 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                     setLoading(false)
                 }, 200)
             })
+    }
+
+    const onFinish = useMemoizedFn((values) => {
+        let params = {
+            ...values,
+            durationDate: values.durationDate.unix()
+        }
+        if (editInfo?.id) params.id = editInfo?.id
+        if (editInfo && values.maxUser > editInfo.maxUser) {
+            params.maxActivationNum = values.maxActivationNum + 1
+            Modal.info({
+                title: "由于修改用户总数需要修改私有部署服务器的License，会占用一次License生成次数，所以默认会把License总数加1",
+                onOk() {
+                    requestFun(params)
+                }
+            })
+        }
+        else{
+            requestFun(params)
+        }
+        
     })
     return (
         <div style={{marginTop: 24}}>
@@ -257,7 +289,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                         {required: true, message: "该项为必填"},
                         {
                             validator: (rule, value) => {
-                                if (editInfo && value < editInfo.maxActivationNum) {
+                                if (editInfo && value && value < editInfo.maxActivationNum) {
                                     return Promise.reject("License总数仅能增加")
                                 } else {
                                     setSubmitBtn(false)
@@ -271,12 +303,21 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                 </Form.Item>
                 <Form.Item
                     name='maxUser'
-                    label='用户总数'
+                    label={
+                        <>
+                            用户总数
+                            {editInfo && (
+                                <Tooltip title='如修改用户总数则需要修改私有部署服务器的License'>
+                                    <QuestionCircleOutlined style={{paddingLeft: 2, position: "relative", top: 1}} />
+                                </Tooltip>
+                            )}
+                        </>
+                    }
                     rules={[
                         {required: true, message: "该项为必填"},
                         {
                             validator: (rule, value) => {
-                                if (editInfo && value < editInfo.maxUser) {
+                                if (editInfo && value && value < editInfo.maxUser) {
                                     return Promise.reject("用户总数不可减少")
                                 } else {
                                     setSubmitBtn(false)
@@ -290,12 +331,21 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                 </Form.Item>
                 <Form.Item
                     name='durationDate'
-                    label='有效期'
+                    label={
+                        <>
+                            有效期
+                            {editInfo && (
+                                <Tooltip title='如修改有效期，则所有License都需替换，已使用License数清零'>
+                                    <QuestionCircleOutlined style={{paddingLeft: 2, position: "relative", top: 1}} />
+                                </Tooltip>
+                            )}
+                        </>
+                    }
                     rules={[
                         {required: true, message: "该项为必填"},
                         {
                             validator: (rule, value) => {
-                                if (editInfo && value.unix() < editInfo.durationDate) {
+                                if (editInfo && value && value.unix() < editInfo.durationDate) {
                                     return Promise.reject("有效期不可缩短")
                                 } else {
                                     setSubmitBtn(false)
@@ -332,6 +382,7 @@ export interface LicenseAdminPageProps {}
 
 export interface QueryExecResultsParams {
     keywords: string
+    status: number
 }
 
 interface QueryProps {}
@@ -341,7 +392,8 @@ interface RemoveProps {
 const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({
-        keywords: ""
+        keywords: "",
+        status: 0
     })
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: 20,
@@ -390,7 +442,7 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
 
     useEffect(() => {
         update()
-    }, [])
+    }, [params.status])
 
     const onRemove = (id: number) => {
         NetWorkApi<RemoveProps, API.NewUrmResponse>({
@@ -410,6 +462,20 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
             .finally(() => {})
     }
 
+    // 计算相差天数
+    const countDay = (now, later) => {
+        // 将时间戳相减获得差值（秒数）
+        const differ = later - now
+        const day = differ / 60 / 60 / 24
+        if (day > 30) {
+            return <Tag color='green'>正常使用</Tag>
+        } else if (0 < day && day <= 30) {
+            return <Tag color='orange'>即将过期</Tag>
+        } else {
+            return <Tag color='red'>已过期</Tag>
+        }
+    }
+
     const columns: ColumnsType<API.CompanyLicenseConfigList> = [
         {
             title: "企业名称",
@@ -417,30 +483,19 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
         },
         {
             title: "状态",
-            dataIndex: "durationDate",
+            dataIndex: "status",
             filters: [
                 {
-                    text: "已到期",
-                    value: "test1"
+                    text: "已过期",
+                    value: 1
                 },
                 {
-                    text: "将要到期",
-                    value: "test2"
-                },
-                {
-                    text: "正常使用",
-                    value: "test3"
+                    text: "即将过期",
+                    value: 2
                 }
             ],
-            filterMultiple: true,
-            onFilter: (value, record) => {
-                console.log("onFilter",value, record)
-                return record.company === "yak"
-            },
-            render:(text)=>{
-                // console.log("text",text)
-                return <Tag color="red">已过期</Tag>
-            }
+            filterMultiple: false,
+            render: (text, record) => countDay(record.currentTime, record.durationDate)
         },
         {
             title: "有效期至",
@@ -450,13 +505,13 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
         {
             title: "License(已使用/总数)",
             dataIndex: "useActivationNum",
-            render: (text,record) => {
+            render: (text, record) => {
                 return `${text} / ${record.maxActivationNum}`
             }
         },
         {
             title: "用户总数",
-            dataIndex: "maxUser",
+            dataIndex: "maxUser"
         },
         {
             title: "操作",
@@ -487,11 +542,14 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
             width: 140
         }
     ]
-    const onTableChange = useDebounceFn(
-        (pagination, filters, sorter, extra) => {
-            console.log('params', pagination, filters, sorter, extra);
+
+    const onTableChange = useDebounceFn((pagination, filters) => {
+        const {status} = filters
+        if (Array.isArray(status)) setParams({...getParams(), status: status[0]})
+        else {
+            setParams({...getParams(), status: 0})
         }
-    ).run
+    }).run
     return (
         <div className='license-admin-page'>
             <Table
@@ -504,7 +562,10 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                     total,
                     showTotal: (i) => <Tag>{`Total ${i}`}</Tag>,
                     onChange: (page: number, limit?: number) => {
-                        update(page, limit)
+                        setLoading(true)
+                        if (page !== pagination.Page || limit !== pagination.Limit) {
+                            update(page, limit)
+                        }
                     }
                 }}
                 rowKey={(row) => row.id}

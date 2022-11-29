@@ -447,6 +447,7 @@
     useActivationNum: number;
     maxUser: number;
     durationDate: number;
+    currentTime?: number;
   }
   export interface CommentListResponse extends Paging {
     data: CommentListData[];
