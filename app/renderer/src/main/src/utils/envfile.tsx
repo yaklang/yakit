@@ -21,3 +21,6 @@ export const getJuageEnvFile = () => {
             return 0
     }
 }
+export const fetchEnv=()=>{
+    return process.env?.REACT_APP_PLATFORM
+}
