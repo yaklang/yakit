@@ -1594,6 +1594,9 @@ message SuggestionDescription {
   string Description = 2;
   string InsertText = 3;
   bool JustAppend = 4;
+
+  // 展示定义的内容，如果没有的话，一般展示 InsertText 就行
+  string DefinitionVerbose = 5;
 }
 
 message MethodSuggestion {

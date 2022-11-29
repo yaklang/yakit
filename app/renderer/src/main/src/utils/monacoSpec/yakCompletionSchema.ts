@@ -114,12 +114,15 @@ message SuggestionDescription {
   bool JustAppend = 4;
 }
     * */
-    Suggestions: {
-        Label: string
-        Description: string
-        InsertText: string
-        JustAppend: boolean
-    }[]
+    Suggestions: MethodSuggestionItem[]
+}
+
+interface MethodSuggestionItem {
+    Label: string
+    Description: string
+    InsertText: string
+    JustAppend: boolean
+    DefinitionVerbose: string
 }
 
 let YaklangBuildInMethodCompletion: MethodSuggestion[] = [];
@@ -224,19 +227,24 @@ const loadMethodFromCaller = (caller: string, prefix: string, range: IRange): la
     }
 
     const items: languages.CompletionItem[] = [];
+    const pushCompletion = (i: MethodSuggestion, desc: MethodSuggestionItem) => {
+        const labelDef = (!!desc.DefinitionVerbose) ? `${desc.DefinitionVerbose}` : `${desc.InsertText}`
+        items.push({
+            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            insertText: desc.InsertText,
+            kind: languages.CompletionItemKind.Snippet,
+            label: i.Verbose === "" ? `${labelDef}: ${desc.Description}` : `${i.Verbose}.${labelDef}:  ${desc.Description}`,
+            detail: `${i.Verbose}`,
+            range: range,
+            documentation: desc.Description,
+        })
+    }
+
     YaklangBuildInMethodCompletion.forEach(i => {
         // 精确匹配到需要补全的变量
         if (i.ExactKeywords.includes(caller)) {
             i.Suggestions.forEach(desc => {
-                items.push({
-                    insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    insertText: desc.InsertText,
-                    kind: languages.CompletionItemKind.Snippet,
-                    label: i.Verbose === "" ? `${desc.InsertText}: ${desc.Description}` : `${i.Verbose}.${desc.InsertText}:  ${desc.Description}`,
-                    detail: `${i.Verbose}`,
-                    range: range,
-                    documentation: desc.Description,
-                })
+                pushCompletion(i, desc)
             })
             return
         }
@@ -245,15 +253,7 @@ const loadMethodFromCaller = (caller: string, prefix: string, range: IRange): la
             const m = i.FuzzKeywords[j];
             if (caller.toLowerCase().includes(m.toLowerCase())) {
                 i.Suggestions.forEach(desc => {
-                    items.push({
-                        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                        insertText: desc.InsertText,
-                        kind: languages.CompletionItemKind.Snippet,
-                        label: i.Verbose === "" ? `${desc.InsertText}: ${desc.Description}` : `${i.Verbose}.${desc.InsertText}:  ${desc.Description}`,
-                        detail: `${i.Verbose}`,
-                        range: range,
-                        documentation: desc.Description,
-                    })
+                    pushCompletion(i, desc);
                 })
                 return;
             }
