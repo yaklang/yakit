@@ -455,7 +455,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                 <Space>
                     <Button
                         size='small'
-                        type='primary'
+                        type="link"
                         onClick={() => {
                             setEditInfo(i)
                             setRoleFormShow(true)
@@ -469,7 +469,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                             onRemove([i.id])
                         }}
                     >
-                        <Button size={"small"} danger={true}>
+                        <Button size={"small"} danger={true} type="link">
                             删除
                         </Button>
                     </Popconfirm>

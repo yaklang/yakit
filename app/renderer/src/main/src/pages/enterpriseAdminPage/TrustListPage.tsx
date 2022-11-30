@@ -353,12 +353,12 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             render: (i) => (
                 <Space>
                     <Popconfirm
-                        title={"确定删除该用户吗？"}
+                        title={"确定移除该用户吗？"}
                         onConfirm={() => {
                             onRemove([i.appid])
                         }}
                     >
-                        <Button size={"small"} danger={true}>
+                        <Button size={"small"} danger={true} type="link">
                             移除
                         </Button>
                     </Popconfirm>

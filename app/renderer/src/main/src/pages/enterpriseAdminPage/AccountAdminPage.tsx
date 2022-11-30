@@ -1258,7 +1258,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 <Space>
                     <Button
                         size='small'
-                        type='primary'
+                        type="link"
                         onClick={() => {
                             setEditInfo(i)
                             setUserInfoForm(true)
@@ -1267,7 +1267,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                         编辑
                     </Button>
                     <Popconfirm title={"确定要重置该用户密码吗？"} onConfirm={() => onReset(i.uid, i.user_name)}>
-                        <Button size='small' type='primary'>
+                        <Button size='small' type="link">
                             重置密码
                         </Button>
                     </Popconfirm>
@@ -1277,7 +1277,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                             onRemove([i.uid], i.department_id)
                         }}
                     >
-                        <Button size={"small"} danger={true}>
+                        <Button size={"small"} danger={true} type="link">
                             删除
                         </Button>
                     </Popconfirm>

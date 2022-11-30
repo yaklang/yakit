@@ -519,7 +519,7 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                 <Space>
                     <Button
                         size='small'
-                        type='primary'
+                        type="link"
                         onClick={() => {
                             setEditInfo(i)
                             setLicenseFormShow(true)
@@ -533,7 +533,7 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                             onRemove(i.id)
                         }}
                     >
-                        <Button size={"small"} danger={true}>
+                        <Button size={"small"} danger={true} type="link">
                             删除
                         </Button>
                     </Popconfirm>
