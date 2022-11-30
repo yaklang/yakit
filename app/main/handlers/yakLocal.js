@@ -27,7 +27,6 @@ function generateWindowsSudoCommand(file, args) {
 const getLatestYakLocalEngine = require("./upgradeUtil").getLatestYakLocalEngine;
 
 function sudoExec(cmd, opt, callback) {
-    console.log("envfile",dbFile)
     if (isWindows) {
         childProcess.exec(
             cmd,
@@ -233,7 +232,6 @@ module.exports = {
                             )
                         }
                     } else {
-                        console.info("EEEEE", dbFile)
                         childProcess.spawn(
                             getLatestYakLocalEngine(),
                             ["grpc", "--port", `${randPort}`],
