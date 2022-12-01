@@ -26,6 +26,7 @@ import {
 } from "@/pages/customizeMenu/icon/menuIcon"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 
 export const getScriptIcon = (name: string) => {
     switch (name) {
@@ -205,25 +206,38 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    <div className={style["heard-menu-theme"]}>
+                    {/* <div className={style["heard-menu-theme"]}>
                         <SaveIcon />
                         <span className={style["heard-menu-label"]} onClick={() => onImportShare()}>
                             导入协作资源
                         </span>
-                    </div>
-                    <div className={style["heard-menu-grey"]} onClick={() => onRouteMenuSelect(Route.PayloadManager)}>
-                        <MenuPayloadIcon />
-                        <span className={style["heard-menu-label"]}>Payload</span>
-                    </div>
-                    <div
+                    </div> */}
+                    <YakitButton
+                        type='text'
+                        className={style["heard-menu-theme"]}
+                        onClick={() => onImportShare()}
+                        icon={<SaveIcon />}
+                    >
+                        导入协作资源
+                    </YakitButton>
+                    <YakitButton
+                        type='outline1'
+                        className={style["heard-menu-grey"]}
+                        onClick={() => onRouteMenuSelect(Route.PayloadManager)}
+                        icon={<MenuPayloadIcon />}
+                    >
+                        Payload
+                    </YakitButton>
+                    <YakitButton
+                        type='outline1'
                         className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"], {
                             [style["margin-right-0"]]: isExpand
                         })}
                         onClick={() => onRouteMenuSelect(Route.YakScript)}
+                        icon={<MenuYakRunnerIcon />}
                     >
-                        <MenuYakRunnerIcon />
-                        <span className={style["heard-menu-label"]}>Yak Runner</span>
-                    </div>
+                        Yak Runner
+                    </YakitButton>
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
                             {!isExpand && <SortDescendingIcon />}

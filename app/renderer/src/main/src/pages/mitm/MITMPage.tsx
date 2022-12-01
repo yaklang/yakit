@@ -1,4 +1,4 @@
-import React, {Ref, useEffect, useState} from "react"
+import React, {Ref, useEffect, useRef, useState} from "react"
 import {
     Alert,
     Button,
@@ -27,7 +27,7 @@ import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import "./MITMPage.css"
 import {CopyableField, SelectOne} from "../../utils/inputUtil"
-import {useGetState, useLatest, useMemoizedFn} from "ahooks"
+import {useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {useHotkeys} from "react-hotkeys-hook"
 import * as monaco from "monaco-editor"
@@ -147,12 +147,18 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     //     return <MITMServerStartForm onStartMITMServer={startMITMServerHandler} />
     // }
     const [visible, setVisible] = useState<boolean>(false)
+    const [top, setTop] = useState<number>(0)
+    const mitmPageRef = useRef<any>()
+    const [inViewport] = useInViewport(mitmPageRef)
+    useEffect(() => {
+        if (!mitmPageRef.current) return
+        const client = mitmPageRef.current.getBoundingClientRect()
+        setTop(client.top)
+    }, [mitmPageRef])
     return (
         <>
-            {visible && <div className='mitm-rule-shadow' />}
-            <div className='mitm-page' style={{overflow: visible ? "hidden" : "auto"}}>
+            <div className='mitm-page' ref={mitmPageRef}>
                 {/* status === "idle" 在没有开始的时候，渲染任务表单 */}
-
                 {(status === "idle" && (
                     <MITMServerStartForm onStartMITMServer={startMITMServerHandler} setVisible={setVisible} />
                 )) || (
@@ -166,8 +172,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         enableInitialMITMPlugin={enableInitialMITMPlugin}
                     />
                 )}
-                <MITMRule visible={visible} setVisible={setVisible} getContainer={false} />
             </div>
+            <MITMRule visible={visible && !!inViewport} setVisible={setVisible} top={top} />
         </>
     )
 }

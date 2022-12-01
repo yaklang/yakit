@@ -1,0 +1,58 @@
+.yakit-input-number {
+    height: 28px;
+    border-radius: 4px;
+    line-height: 28px;
+    max-width: 88px;
+    display: inline-flex;
+    align-items: center;
+
+    :global {
+
+        .ant-input-number-input {
+            height: 28px;
+        }
+
+        .ant-input-number-input {
+            padding: 0 12px;
+        }
+    }
+}
+
+.yakit-input-number-max-large {
+    height: 40px;
+    line-height: 40px;
+    max-width: 96px;
+
+    :global {
+
+        .ant-input-number-input {
+            height: 40px;
+        }
+    }
+}
+
+.yakit-input-number-large {
+    height: 32px;
+    line-height: 32px;
+    max-width: 88px;
+
+    :global {
+
+        .ant-input-number-input {
+            height: 32px;
+        }
+    }
+}
+
+.yakit-input-number-small {
+    height: 24px;
+    line-height: 24px;
+    max-width: 80px;
+
+    :global {
+
+        .ant-input-number-input {
+            height: 24px;
+        }
+    }
+}

@@ -2,11 +2,165 @@
     :global {
         .ant-drawer-body {
             padding: 0;
+            overflow: hidden;
         }
     }
 
-    .mitm-rule-shadow {
-        height: 1px;
-        box-shadow: 0px -2px 4px rgba(133, 137, 158, 0.2);
+
+    .heard-title {
+        font-weight: 600;
+        font-size: 14px;
+        color: #31343F;
+        height: 20px;
+        line-height: 20px;
+    }
+
+    .heard-right-operation {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+
+        .button-text:first-child {
+            margin-right: 0;
+        }
+
+        .button-export {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+
+        .button-save {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+
+        .button-question {
+            padding: 4px;
+            margin-right: 16px;
+
+            span {
+                height: 16px;
+            }
+        }
+
+        .icon-question {
+            color: #85899E;
+
+            :hover {
+                color: #40a9ff;
+            }
+        }
+
+        .icon-remove {
+            color: #B4BBCA;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            :hover {
+                color: #40a9ff;
+            }
+        }
+    }
+
+    .mitm-rule-table {
+        height: 100%;
+        padding: 4px 16px 16px;
+
+        .table-title-body {
+            display: flex;
+            align-items: center;
+            height: 24px;
+            font-size: 12px;
+
+            .table-title {
+                font-weight: 600;
+                font-size: 12px;
+                color: #31343F;
+                margin-right: 12px;
+            }
+
+            .table-total {
+                font-weight: 400;
+                font-size: 12px;
+                color: #B4BBCA;
+
+                span {
+                    color: #1890ff;
+                }
+            }
+
+            .table-switch {
+                display: flex;
+                align-items: center;
+
+                .switch-text {
+                    margin-right: 4px;
+                }
+            }
+
+            .button-batch-remove {
+                margin-left: 16px;
+                margin-right: 8px;
+            }
+
+
+            .button-add-rule {
+                display: flex;
+                align-items: center;
+                font-weight: 500;
+                font-size: 12px;
+
+                svg {
+                    color: #CCD2DE;
+                    margin-right: 4px;
+                }
+            }
+        }
+
+        .table-action-icon {
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+
+            .action-icon {
+                svg {
+                    &:hover {
+                        color: #1890ff;
+                    }
+                }
+            }
+
+            span {
+                padding: 0 12px;
+                border-right: 1px solid #EAECF3;
+                color: #85899E;
+
+                &:first-child {
+                    padding-left: 0;
+                }
+            }
+
+
+            .icon-trash {
+                color: #F6544A;
+            }
+
+
+        }
+
+        .table-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
     }
 }

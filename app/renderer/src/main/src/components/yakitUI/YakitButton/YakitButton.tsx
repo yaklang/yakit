@@ -78,7 +78,7 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
     }, [size])
 
     return (
-        <div className={classnames(styles["yakit-button-wrapper"], styles[typeClass], themeClass)}>
+        <div className={classnames(styles["yakit-button-wrapper"], styles[typeClass || ""], themeClass || "")}>
             <Button
                 {...resePopover}
                 size='middle'
