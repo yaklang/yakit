@@ -1,0 +1,69 @@
+.yakit-modal-wrapper {
+    :global {
+        .ant-modal-body {
+            padding: 0;
+        }
+    }
+
+    .yakit-modal-body {
+        background-color: #ffffff;
+        position: relative;
+
+        .body-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            font-size: 16px;
+            color: #b4bbca;
+            cursor: pointer;
+        }
+        .body-close:hover {
+            color: #f28b44;
+        }
+
+        .body-header {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            gap: 16px;
+            height: 41px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #eaecf3;
+            border-radius: 4px 4px 0px 0px;
+
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            color: #31343f;
+        }
+        .body-content {
+        }
+        .body-footer {
+            box-sizing: border-box;
+            display: flex;
+            justify-content: right;
+            align-items: center;
+            padding: 8px 16px;
+            gap: 8px;
+            height: 41px;
+            background: #f8f8f8;
+            border-top: 1px solid #eaecf3;
+            border-radius: 0px 0px 4px 4px;
+        }
+        .body-custom-footer {
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #f8f8f8;
+            border-top: 1px solid #eaecf3;
+            border-radius: 0px 0px 4px 4px;
+        }
+    }
+}

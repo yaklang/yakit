@@ -105,6 +105,18 @@
                     border-right: 0;
                 }
 
+                .virtual-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    width: 100%;
+                    flex: 1;
+
+                    .icon-question {
+                        color: #B4BBCA;
+                    }
+                }
+
                 .virtual-table-title-left {
                     box-shadow: 4px 0px 8px rgba(133, 137, 158, 0.12);
                 }
@@ -402,22 +414,8 @@
 
         .check {
             margin-right: 4px;
-            height: 16px;
+            height: 18px;
             width: 16px;
-
-            :global {
-                .ant-checkbox-inner {
-                    border-radius: 4px;
-                }
-
-                .ant-checkbox-checked::after {
-                    border-radius: 4px;
-                }
-
-                .ant-checkbox-wrapper {
-                    height: 16px;
-                }
-            }
         }
 
         .virtual-table-row-left {

@@ -28,7 +28,6 @@ import ReactResizeDetector from "react-resize-detector"
 import style from "./TableVirtualResize.module.scss"
 import {
     DatePicker,
-    Checkbox,
     Divider,
     Input,
     Popconfirm,
@@ -37,14 +36,16 @@ import {
     RadioChangeEvent,
     Select,
     Spin,
-    Tag
+    Tag,
+    Tooltip
 } from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import "../style.css"
-import {FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon} from "@/assets/newIcon"
+import {FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon, QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
 import moment, {Moment} from "moment"
 import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
+import {YakitCheckbox} from "../yakit/YakitCheckbox/YakitCheckbox"
 
 const {Search} = Input
 const {RangePicker} = DatePicker
@@ -943,24 +944,31 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 })
             }}
         >
-            <div className={classNames(style["justify-content-between"])}>
-                {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                <div className='virtual-col-title' style={{width: "100%"}}>
-                    <div className={style["ellipsis-1"]}>
-                        {cIndex === 0 && rowSelection && (
-                            <span className={style["check"]}>
-                                {rowSelection.type !== "radio" && (
-                                    <Checkbox
-                                        onChange={(e) => {
-                                            onChangeCheckbox(e.target.checked)
-                                        }}
-                                        checked={isAll}
-                                    />
-                                )}
-                            </span>
-                        )}
-                        {columnsItem.title}
+            <div className={classNames(style["justify-content-between"])} style={{height: 28}}>
+                <div className={style["virtual-title"]}>
+                    {/* 这个不要用 module ，用来拖拽最小宽度*/}
+                    <div className='virtual-col-title' style={{maxWidth: "90%"}}>
+                        <div className={style["ellipsis-1"]}>
+                            {cIndex === 0 && rowSelection && (
+                                <span className={style["check"]}>
+                                    {rowSelection.type !== "radio" && (
+                                        <YakitCheckbox
+                                            onChange={(e) => {
+                                                onChangeCheckbox(e.target.checked)
+                                            }}
+                                            checked={isAll}
+                                        />
+                                    )}
+                                </span>
+                            )}
+                            {columnsItem.title}
+                        </div>
                     </div>
+                    {columnsItem.tip && (
+                        <Tooltip title={columnsItem.tip}>
+                            <QuestionMarkCircleIcon className={style["icon-question"]} />
+                        </Tooltip>
+                    )}
                 </div>
                 <div className={style["virtual-table-title-icon"]}>
                     {columnsItem.sorterProps?.sorter && (
@@ -1036,6 +1044,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                             </Popover>
                         </>
                     )}
+                    {columnsItem.extra}
                 </div>
                 {enableDrag && columnsItem.enableDrag !== false && cIndex < columns.length - 1 && (
                     <div
@@ -1191,31 +1200,31 @@ const CellRender = React.memo(
                     setMouseLeave()
                 }}
             >
+                {colIndex === 0 && rowSelection && (
+                    <span className={classNames(style["check"])}>
+                        {rowSelection.type !== "radio" && (
+                            <YakitCheckbox
+                                onChange={(e) => {
+                                    onChangeCheckboxSingle(
+                                        e.target.checked,
+                                        renderKey ? item.data[renderKey] : number,
+                                        item.data
+                                    )
+                                }}
+                                checked={
+                                    rowSelection?.selectedRowKeys?.findIndex(
+                                        (ele) => ele === (renderKey ? item.data[renderKey] : number)
+                                    ) !== -1
+                                }
+                            />
+                        )}
+                    </span>
+                )}
                 <div
                     className={classNames({
                         [style["virtual-table-row-ellipsis"]]: columnsItem.ellipsis === false ? false : true
                     })}
                 >
-                    {colIndex === 0 && rowSelection && (
-                        <span className={classNames(style["check"])}>
-                            {rowSelection.type !== "radio" && (
-                                <Checkbox
-                                    onChange={(e) => {
-                                        onChangeCheckboxSingle(
-                                            e.target.checked,
-                                            renderKey ? item.data[renderKey] : number,
-                                            item.data
-                                        )
-                                    }}
-                                    checked={
-                                        rowSelection?.selectedRowKeys?.findIndex(
-                                            (ele) => ele === (renderKey ? item.data[renderKey] : number)
-                                        ) !== -1
-                                    }
-                                />
-                            )}
-                        </span>
-                    )}
                     {columnsItem.render
                         ? columnsItem.render(item.data[columnsItem.dataKey], item.data, number)
                         : item.data[columnsItem.dataKey] || "-"}
@@ -1444,7 +1453,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                         })}
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
-                                        <Checkbox checked={checked} />
+                                        <YakitCheckbox checked={checked} />
                                         <span className={style["select-item-text"]}>{item.data.label}</span>
                                     </div>
                                 )

@@ -1,3 +1,30 @@
+.yakit-switch-wrapper-item {
+    padding: 3px;
+
+    :global {
+
+        [ant-click-animating-without-extra-node='true']::after,
+        .ant-click-animating-node {
+            box-shadow: none;
+            opacity: 1;
+            animation: yakitFadeEffectSwitch 1s cubic-bezier(0.08, 0.82, 0.17, 1), yakitWaveEffectSwitch 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
+        }
+
+        .ant-switch-disabled {
+            background: #F0F1F3;
+            border: 1px solid #EAECF3;
+            opacity: 1;
+            .ant-switch-handle {
+                top: 1px;
+            }
+        }
+
+    }
+}
+
+
+
+
 .yakit-switch-item {
     display: inline-flex;
     align-items: center;
@@ -14,7 +41,9 @@
 }
 
 
-.yakit-switch-body-max-large {
+
+// ========================== max-large ==========================
+.yakit-switch-wrapper-max-large {
     display: inline-flex;
 
     :global {
@@ -43,7 +72,8 @@
     }
 }
 
-.yakit-switch-body-large {
+// ========================== large ==========================
+.yakit-switch-wrapper-large {
     display: inline-flex;
 
     :global {
@@ -91,7 +121,8 @@
     }
 }
 
-.yakit-switch-body-middle {
+// ========================== middle ==========================
+.yakit-switch-wrapper-middle {
     display: inline-flex;
 
     :global {
@@ -139,7 +170,8 @@
     }
 }
 
-.yakit-switch-body-small {
+// ========================== small ==========================
+.yakit-switch-wrapper-small {
     display: inline-flex;
 
     :global {

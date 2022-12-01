@@ -80,6 +80,8 @@ export interface SortProps {
  * @property {FilterProps} filterProps：筛选表格配置  
  * @property {SorterProps} sorterProps：表格排序配置 
  * @property {boolean} enableDrag：表格排序配置 
+ * @property {string} tip :提示 
+ * @property {ReactNode} extra :右边 
  */
 export interface ColumnsTypeProps {
     title: string
@@ -97,6 +99,8 @@ export interface ColumnsTypeProps {
     filterProps?: FilterProps
     sorterProps?: SorterProps
     enableDrag?: boolean
+    tip?: string
+    extra?: ReactNode
 }
 
 interface FilterSearchInputProps extends SearchProps {

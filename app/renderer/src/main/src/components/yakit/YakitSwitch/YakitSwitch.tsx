@@ -48,11 +48,11 @@ export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
     }
     return (
         <div
-            className={classNames({
-                [styles["yakit-switch-body-max-large"]]: size === "maxLarge",
-                [styles["yakit-switch-body-large"]]: size === "large",
-                [styles["yakit-switch-body-middle"]]: size === "middle",
-                [styles["yakit-switch-body-small"]]: size === "small",
+            className={classNames(styles["yakit-switch-wrapper-item"], {
+                [styles["yakit-switch-wrapper-max-large"]]: size === "maxLarge",
+                [styles["yakit-switch-wrapper-large"]]: size === "large",
+                [styles["yakit-switch-wrapper-middle"]]: size === "middle",
+                [styles["yakit-switch-wrapper-small"]]: size === "small",
                 wrapperClassName
             })}
         >

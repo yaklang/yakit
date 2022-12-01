@@ -94,3 +94,18 @@
     border: 1px solid rgba(95, 105, 221, 0.3);
     color: #5F69DD;
 }
+
+.yakit-tag-disable {
+    background: #F8F8F8;
+    border: 1px solid #F0F1F3;
+    color: #CCD2DE;
+    cursor: not-allowed;
+
+    :global {
+        .ant-tag-close-icon {
+            cursor: not-allowed;
+            color: #CCD2DE;
+        }
+    }
+
+}

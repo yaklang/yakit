@@ -1,4 +1,4 @@
-import {Button, Divider, Drawer, Switch, Tag} from "antd"
+import {Button, Checkbox, Divider, Drawer, Switch, Tag} from "antd"
 import React, {ReactNode, useEffect, useState} from "react"
 import {ButtonTextProps, MITMRuleProp} from "./MITMRuleType"
 import styles from "./MITMRule.module.scss"
@@ -27,6 +27,7 @@ import {TagsList} from "@/components/baseTemplate/BaseTags"
 import {YakitTag} from "@/components/yakit/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakit/YakitSwitch/YakitSwitch"
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 const {ipcRenderer, shell} = window.require("electron")
 
@@ -109,6 +110,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             title: "替换结果",
             dataKey: "Result",
             width: 350,
+            tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
+            extra: <div className={styles["table-result-extra"]}>不替换</div>,
             render: (_, i: MITMContentReplacerRule) => {
                 let node: ReactNode = <div>{i.Result}</div>
                 if (i.ExtraHeaders.length > 0 || i.ExtraCookies.length > 0) {
@@ -136,45 +139,25 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
         },
         {
-            title: "禁用",
-            dataKey: "Disabled"
-        },
-        {
-            title: "不修改流量",
-            dataKey: "NoReplace"
-        },
-        {
             title: "请求",
-            dataKey: "EnableForRequest"
+            dataKey: "EnableForRequest",
+            render: (checked) => <YakitCheckbox checked={checked} />
         },
         {
             title: "响应",
-            dataKey: "EnableForResponse"
+            dataKey: "EnableForResponse",
+            render: (checked) => <YakitCheckbox checked={checked} />
         },
         {
             title: "Header",
-            dataKey: "EnableForHeader"
+            dataKey: "EnableForHeader",
+            render: (checked) => <YakitCheckbox checked={checked} />
         },
         {
             title: "Body",
-            dataKey: "EnableForBody"
+            dataKey: "EnableForBody",
+            render: (checked) => <YakitCheckbox checked={checked} />
         },
-        // {
-        //     title: "修改 Cookie 与 Header",
-        //     dataKey: "ExtraHeaders",
-        //     width: 180,
-        //     render: (_, i: MITMContentReplacerRule) => {
-        //         if (i.ExtraHeaders.length > 0 || i.ExtraCookies.length > 0) {
-        //             return (
-        //                 <div>
-        //                     {i.ExtraHeaders.length > 0 && <Tag>额外 HTTP Header: {i.ExtraHeaders.length}</Tag>}
-        //                     {i.ExtraCookies.length > 0 && <Tag>额外 HTTP Cookie: {i.ExtraCookies.length}</Tag>}
-        //                 </div>
-        //             )
-        //         }
-        //         return ""
-        //     }
-        // },
         {
             title: "命中颜色",
             dataKey: "Color"
@@ -187,6 +170,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             title: "操作",
             dataKey: "action",
             fixed: "right",
+            width: 128,
             render: (_, record: MITMContentReplacerRule) => {
                 return (
                     <div className={styles["table-action-icon"]}>

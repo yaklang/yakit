@@ -10,9 +10,10 @@ import {RemoveIcon} from "@/assets/newIcon"
  * @augments TagProps 继承antd的TagProps默认属性
  * @param {middle|large|small} size 默认middle
  * @param {"danger" | "info" | "success" | "warning" | "purple" | "blue" | "cyan" | "bluePurple"} color 颜色
+ * @param {boolean} disable
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const {color, size, className} = props
+    const {color, size, disable, className} = props
     return (
         <Tag
             closeIcon={<RemoveIcon />}
@@ -28,8 +29,13 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                 [styles["yakit-tag-blue"]]: color === "blue",
                 [styles["yakit-tag-cyan"]]: color === "cyan",
                 [styles["yakit-tag-bluePurple"]]: color === "bluePurple",
+                [styles["yakit-tag-disable"]]: !!disable,
                 className
             })}
+            onClose={(e) => {
+                if (disable) return
+                if (props.onClose) props.onClose(e)
+            }}
         >
             {props.children}
         </Tag>
