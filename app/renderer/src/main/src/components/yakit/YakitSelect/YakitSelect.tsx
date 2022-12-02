@@ -12,6 +12,7 @@ const {Option} = Select
  * @description: 下拉选择
  * @augments SwitchProps 继承antd的 SelectProps 默认属性
  * @param {string} wrapperClassName Switch装饰div的className
+ * @param {CSSProperties} wrapperStyle Switch装饰div的style
  */
 export const YakitSelectCustom = <ValueType, OptionType>(
     {className, size, wrapperClassName, wrapperStyle, dropdownRender, ...props}: YakitSelectProps<OptionType>,

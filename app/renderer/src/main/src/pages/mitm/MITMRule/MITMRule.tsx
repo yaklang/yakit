@@ -23,7 +23,7 @@ import classNames from "classnames"
 import {YakitDrawer} from "@/components/yakit/YakitDrawer/YakitDrawer"
 import {YakitInputNumber} from "@/components/yakit/YakitInputNumber/YakitInputNumber"
 import {openExternalWebsite} from "@/utils/openWebsite"
-import {TagsList} from "@/components/baseTemplate/BaseTags"
+import {TagsList, Test} from "@/components/baseTemplate/BaseTags"
 import {YakitTag} from "@/components/yakit/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakit/YakitSwitch/YakitSwitch"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -235,7 +235,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         },
         {
             title: "追加 Tag",
-            dataKey: "ExtraTag"
+            dataKey: "ExtraTag",
+            render: (_) => {
+                const text = ["公钥传输", "登陆/密码传输", "疑似JSONP"]
+                return <TagsList data={text} ellipsis={true} />
+            }
         },
         {
             title: "操作",
@@ -313,6 +317,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     }
                     extra={
                         <div className={styles["table-title-body"]}>
+                            <Test />
                             <div className={styles["table-switch"]}>
                                 <span className={styles["switch-text"]}>全部禁用</span>
                                 <YakitSwitch />
