@@ -4,10 +4,7 @@ import {Button, ButtonProps} from "antd"
 import classnames from "classnames"
 import styles from "./yakitButton.module.scss"
 
-type RemoveSizeButton = Omit<ButtonProps, "size">
-type RemoveTypeButton = Omit<RemoveSizeButton, "type">
-
-export interface YakitButtonProp extends RemoveTypeButton {
+export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type"> {
     type?: "outline1"
     themeClass?: string
     size?: "big" | "small"
