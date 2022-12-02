@@ -139,6 +139,23 @@
                 }
             }
 
+            .action-icon-edit-disabled {
+                svg {
+                    color: #CCD2DE;
+                    cursor: not-allowed;
+
+                    &:hover {
+                        color: #CCD2DE;
+                    }
+                }
+            }
+
+            .action-icon-ban-disabled {
+                svg {
+                    color: #1890ff;
+                }
+            }
+
             span {
                 padding: 0 12px;
                 border-right: 1px solid #EAECF3;

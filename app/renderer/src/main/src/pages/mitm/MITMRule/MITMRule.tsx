@@ -133,7 +133,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 return (
                     <div className={styles["table-result"]}>
                         {node}
-                        <YakitSwitch size='small' />
+                        <YakitSwitch size='small' disabled={i.Disabled} />
                     </div>
                 )
             }
@@ -141,22 +141,30 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         {
             title: "请求",
             dataKey: "EnableForRequest",
-            render: (checked) => <YakitCheckbox checked={checked} />
+            render: (checked, record: MITMContentReplacerRule) => (
+                <YakitCheckbox checked={checked} disabled={record.Disabled} />
+            )
         },
         {
             title: "响应",
             dataKey: "EnableForResponse",
-            render: (checked) => <YakitCheckbox checked={checked} />
+            render: (checked, record: MITMContentReplacerRule) => (
+                <YakitCheckbox checked={checked} disabled={record.Disabled} />
+            )
         },
         {
             title: "Header",
             dataKey: "EnableForHeader",
-            render: (checked) => <YakitCheckbox checked={checked} />
+            render: (checked, record: MITMContentReplacerRule) => (
+                <YakitCheckbox checked={checked} disabled={record.Disabled} />
+            )
         },
         {
             title: "Body",
             dataKey: "EnableForBody",
-            render: (checked) => <YakitCheckbox checked={checked} />
+            render: (checked, record: MITMContentReplacerRule) => (
+                <YakitCheckbox checked={checked} disabled={record.Disabled} />
+            )
         },
         {
             title: "命中颜色",
@@ -175,8 +183,18 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 return (
                     <div className={styles["table-action-icon"]}>
                         <TrashIcon className={styles["icon-trash"]} onClick={() => onRemove(record)} />
-                        <PencilAltIcon className={styles["action-icon"]} onClick={() => onOpenAddOrEdit(record)} />
-                        <BanIcon className={styles["action-icon"]} onClick={() => onBan(record)} />
+                        <PencilAltIcon
+                            className={classNames(styles["action-icon"], {
+                                [styles["action-icon-edit-disabled"]]: record.Disabled
+                            })}
+                            onClick={() => onOpenAddOrEdit(record)}
+                        />
+                        <BanIcon
+                            className={classNames(styles["action-icon"], {
+                                [styles["action-icon-ban-disabled"]]: record.Disabled
+                            })}
+                            onClick={() => onBan(record)}
+                        />
                     </div>
                 )
             }

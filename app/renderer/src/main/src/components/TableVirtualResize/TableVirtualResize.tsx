@@ -1182,7 +1182,8 @@ const CellRender = React.memo(
                     [style["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
                     [style["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [style["virtual-table-row-cell-border-right-1"]]: isSelect && isLastItem,
-                    [style["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0
+                    [style["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0,
+                    [style["virtual-table-row-cell-disabled"]]: item.data["disabled"]||item.data["Disabled"]
                 })}
                 onClick={(e) => {
                     // @ts-ignore
