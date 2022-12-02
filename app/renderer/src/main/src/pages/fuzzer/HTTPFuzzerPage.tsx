@@ -430,7 +430,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 清楚历史任务的标记
         setHistoryTask(undefined)
 
-        saveValue(WEB_FUZZ_PROXY, proxy)
+        // saveValue(WEB_FUZZ_PROXY, proxy)
         setLoading(true)
         setDroppedCount(0)
         ipcRenderer.invoke(

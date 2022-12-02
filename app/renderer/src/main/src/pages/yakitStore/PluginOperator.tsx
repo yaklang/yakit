@@ -873,15 +873,16 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                     ipcRenderer
                         .invoke("ExportYakScript", params)
                         .then((data: { OutputDir: string }) => {
-                            const newCachePath = [...getCachePath(),getLocalPath()]
+                            const newCachePath = Array.from(new Set([...getCachePath(),getLocalPath()])) 
                             const savePath = newCachePath.slice(-5)
                             saveValue("YAKIT_CACHE_LOAD_LOCAL_PATH", JSON.stringify(savePath))
                             showModal({
                                 title: "导出成功!",
+                                width:520,
                                 content: (
                                     <>
                                         <Space direction={"vertical"}>
-                                            <CopyableField text={data.OutputDir} />
+                                            <CopyableField text={data.OutputDir} maxWidth="470px"/>
                                             <Button
                                                 type={"link"}
                                                 onClick={() => {
