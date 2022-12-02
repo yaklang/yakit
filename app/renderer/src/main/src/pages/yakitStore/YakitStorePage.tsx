@@ -25,7 +25,7 @@ import {
     Dropdown,
     AutoComplete,
     Menu,
-    Popover,
+    Popover
 } from "antd"
 import {
     ReloadOutlined,
@@ -90,16 +90,14 @@ import {
     onLocalScriptToOnlinePlugin,
     SyncCloudButton
 } from "@/components/SyncCloudButton/SyncCloudButton"
-import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {fullscreen} from "@uiw/react-md-editor"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
-import {
-    ChevronDownIcon
-} from "@/assets/newIcon"
+import {ChevronDownIcon} from "@/assets/newIcon"
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
-import { OutputPluginForm } from "./PluginOperator";
-const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+import {OutputPluginForm} from "./PluginOperator"
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
 const {Option} = Select
@@ -803,7 +801,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             ? yakScriptTagsAndType || {}
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
-                                        console.log("item",statisticsDataOnlineOrUser,userInfo)
                                         const queryName = item[0]
                                         const statisticsList = item[1]
                                         const title = queryTitle[queryName]
@@ -817,14 +814,22 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         if (plugSource === "online") {
                                             current = statisticsQueryOnline[queryName] || ""
                                         }
-                                
+
                                         // 审核状态展示
-                                        const boolAdmin = ["admin","superAdmin"].includes(userInfo.role||"")
-                                        const UserIsPrivate = queryName === "status" && plugSource === "user" && statisticsQueryUser.is_private !== "false"
-                                        const OnlineAdmin = queryName === "status" && plugSource === "online" && !boolAdmin
-                                        const OnlineStatusSearch = queryName === "status" && plugSource === "online" && !boolAdmin && userInfo.showStatusSearch !== true
-                                        if (!IsEnterprise&&(UserIsPrivate || OnlineAdmin)) return <></>
-                                        if(IsEnterprise&&(UserIsPrivate || OnlineStatusSearch)) return <></>
+                                        const boolAdmin = ["admin", "superAdmin"].includes(userInfo.role || "")
+                                        const UserIsPrivate =
+                                            queryName === "status" &&
+                                            plugSource === "user" &&
+                                            statisticsQueryUser.is_private !== "false"
+                                        const OnlineAdmin =
+                                            queryName === "status" && plugSource === "online" && !boolAdmin
+                                        const OnlineStatusSearch =
+                                            queryName === "status" &&
+                                            plugSource === "online" &&
+                                            !boolAdmin &&
+                                            userInfo.showStatusSearch !== true
+                                        if (!IsEnterprise && (UserIsPrivate || OnlineAdmin)) return <></>
+                                        if (IsEnterprise && (UserIsPrivate || OnlineStatusSearch)) return <></>
 
                                         if (!Array.isArray(current)) {
                                             current = current.split(",")
@@ -1195,24 +1200,27 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             number: 10,
             onClickBatch: () => {
                 onRemoveLocalPlugin()
-            },
+            }
         },
         {
             title: "导出插件",
             number: 10,
             onClickBatch: () => {
-                const Ids = selectedRowKeysRecordLocal.map((ele) =>typeof ele.Id==="number"?ele.Id:parseInt(ele.Id))
+                const Ids = selectedRowKeysRecordLocal.map((ele) =>
+                    typeof ele.Id === "number" ? ele.Id : parseInt(ele.Id)
+                )
                 showModal({
                     title: "导出插件配置",
                     width: "40%",
                     content: (
                         <>
-                            <OutputPluginForm YakScriptIds={Ids} isSelectAll={isSelectAllLocal}/>
+                            <OutputPluginForm YakScriptIds={Ids} isSelectAll={isSelectAllLocal} />
                         </>
                     )
                 })
-            },
-        },]
+            }
+        }
+    ]
 
     return (
         <div className='height-100'>
@@ -1322,58 +1330,61 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                         </>
                     )}
 
-
-{(selectedRowKeysRecordLocal.length === 0 && (<>
-{size === "small"?<></>:<Button
-                                            size='small'
-                                            disabled={selectedRowKeysRecordLocal.length === 0}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        >
-                                            批量操作
-                                            <ChevronDownIcon style={{color: "#85899E"}} />
-                                        </Button>}
-</>
-                                        
-                                    )) || (
-                                        <Popover
-                                            overlayClassName={style["http-history-table-drop-down-popover"]}
-                                            content={
-                                                <Menu
-                                                    className={style["http-history-table-drop-down-batch"]}
-                                                >
-                                                    {menuData.map((m) => {
-                                                    return (
-                                                        
-                                                            <Menu.Item
-                                                                onClick={() => {
-                                                                   m.onClickBatch()
-                                                                }}
-                                                                key={m.title}
-                                                            >
-                                                                {m.title}
-                                                            </Menu.Item>
-                                                        
-                                                    )
-                                                    })}
-                                                </Menu>
-                                            }
-                                            trigger='click'
-                                            placement='bottomLeft'
-                                        >
-                                            {size === "small"?<SettingOutlined className='operation-icon'/>:<Button
-                                                size='small'
-                                                disabled={selectedRowKeysRecordLocal.length === 0}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
+                    {(selectedRowKeysRecordLocal.length === 0 && (
+                        <>
+                            {size === "small" ? (
+                                <></>
+                            ) : (
+                                <Button
+                                    size='small'
+                                    disabled={selectedRowKeysRecordLocal.length === 0}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    批量操作
+                                    <ChevronDownIcon style={{color: "#85899E"}} />
+                                </Button>
+                            )}
+                        </>
+                    )) || (
+                        <Popover
+                            overlayClassName={style["http-history-table-drop-down-popover"]}
+                            content={
+                                <Menu className={style["http-history-table-drop-down-batch"]}>
+                                    {menuData.map((m) => {
+                                        return (
+                                            <Menu.Item
+                                                onClick={() => {
+                                                    m.onClickBatch()
                                                 }}
+                                                key={m.title}
                                             >
-                                                批量操作
-                                                <ChevronDownIcon style={{color: "#85899E"}} />
-                                            </Button>}
-                                        </Popover>
-                                    )}
+                                                {m.title}
+                                            </Menu.Item>
+                                        )
+                                    })}
+                                </Menu>
+                            }
+                            trigger='click'
+                            placement='bottomLeft'
+                        >
+                            {size === "small" ? (
+                                <SettingOutlined className='operation-icon' />
+                            ) : (
+                                <Button
+                                    size='small'
+                                    disabled={selectedRowKeysRecordLocal.length === 0}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    批量操作
+                                    <ChevronDownIcon style={{color: "#85899E"}} />
+                                </Button>
+                            )}
+                        </Popover>
+                    )}
                 </Col>
             </Row>
 
@@ -1492,20 +1503,20 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
     const numberLocal = useRef<number>(0) // 本地 选择的插件index
-    const [baseUrl,setBaseUrl] = useState<string>("")// 获取私有域
+    const [baseUrl, setBaseUrl] = useState<string>("") // 获取私有域
     useEffect(() => {
         if (isSelectAll) {
             if (onSelectList) onSelectList(response.Data)
         }
     }, [isSelectAll])
-    
-    useEffect(()=>{
+
+    useEffect(() => {
         getRemoteValue("httpSetting").then((setting) => {
             const values = JSON.parse(setting)
-            const baseUrl:string  = values.BaseUrl
+            const baseUrl: string = values.BaseUrl
             setBaseUrl(baseUrl)
         })
-    },[])
+    }, [])
     useEffect(() => {
         if (!updatePluginRecordLocal) return
         // 列表中第一次上传的时候,本地返回的数据有OnlineId ,但是列表中的上传的那个没有OnlineId
@@ -2137,8 +2148,16 @@ interface PluginListLocalProps {
 }
 
 export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
-    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare, onSetUser,onlineProfile} =
-        props
+    const {
+        plugin,
+        selectedRowKeysRecord,
+        onSelect,
+        setUpdatePluginRecordLocal,
+        currentScript,
+        onShare,
+        onSetUser,
+        onlineProfile
+    } = props
     const {userInfo, maxWidth, onClicked} = props
     const [uploadLoading, setUploadLoading] = useState(false)
     const updateListItem = useMemoizedFn((updatePlugin: YakScript) => {
@@ -2152,7 +2171,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
     if (props.onYakScriptRender) {
         return props.onYakScriptRender(plugin, maxWidth)
     }
-    const isShowPrivateDom = plugin?.OnlineBaseUrl&&(plugin.OnlineBaseUrl !== onlineProfile)?false:true
+    const isShowPrivateDom = plugin?.OnlineBaseUrl && plugin.OnlineBaseUrl !== onlineProfile ? false : true
     // console.log("私有域比较",plugin.OnlineBaseUrl,onlineProfile)
     return (
         <div
@@ -2164,7 +2183,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
                     <div className='icon-body'>
                         <div className='text-icon'>
-                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && isShowPrivateDom&& <OnlineCloudIcon />}
+                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && isShowPrivateDom && <OnlineCloudIcon />}
                             {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
                         </div>
                         {gitUrlIcon(plugin.FromGit)}
@@ -3311,17 +3330,17 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
     const [isRef, setIsRef] = useState(false)
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
-    const [baseUrl,setBaseUrl] = useState<string>("")
+    const [baseUrl, setBaseUrl] = useState<string>("")
     const numberOnlineUser = useRef(0) // 我的插件 选择的插件index
     const numberOnline = useRef(0) // 插件商店 选择的插件index
     // 获取私有域
-    useEffect(()=>{
+    useEffect(() => {
         getRemoteValue("httpSetting").then((setting) => {
             const values = JSON.parse(setting)
-            const baseUrl:string = values.BaseUrl
+            const baseUrl: string = values.BaseUrl
             setBaseUrl(baseUrl)
-        })           
-    },[])
+        })
+    }, [])
     useEffect(() => {
         if (!updatePluginRecord) return
         const index = response.data.findIndex((ele) => ele.id === updatePluginRecord.id)
@@ -3357,7 +3376,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         }
     }, [isSelectAll])
     useEffect(() => {
-        const boolAdmin = ["admin","superAdmin"].includes(userInfo.role||"")
+        const boolAdmin = ["admin", "superAdmin"].includes(userInfo.role || "")
         setIsAdmin(boolAdmin)
     }, [userInfo.role])
     useEffect(() => {
@@ -3502,8 +3521,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
             />
         )
     }
- 
-    if(!userInfo.isLogin && IsEnterprise && !baseUrl.startsWith("https://www.yaklang.com")){
+
+    if (!userInfo.isLogin && IsEnterprise && !baseUrl.startsWith("https://www.yaklang.com")) {
         return (
             <List
                 dataSource={[]}
@@ -3613,7 +3632,8 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     })
     // 全局登录状态
     const {userInfo} = useStore()
-    const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.showStatusSearch && !bind_me)
+    const isShowAdmin =
+        (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.showStatusSearch && !bind_me)
     const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
     return (
         <div className={`plugin-item ${currentId === info.id && "plugin-item-active"}`} onClick={() => onClick(info)}>
@@ -3727,11 +3747,11 @@ interface QueryComponentOnlineProps {
 const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
     const {onClose, userInfo, queryOnline, setQueryOnline, user} = props
     const [isShowStatus, setIsShowStatus] = useState<boolean>(queryOnline.is_private === "true")
-    const [isAdmin, setIsAdmin] = useState(["admin","superAdmin"].includes(userInfo.role||""))
+    const [isAdmin, setIsAdmin] = useState(["admin", "superAdmin"].includes(userInfo.role || ""))
     const [form] = Form.useForm()
     const refTest = useRef<any>()
     useEffect(() => {
-        const boolAdmin = ["admin","superAdmin"].includes(userInfo.role||"")
+        const boolAdmin = ["admin", "superAdmin"].includes(userInfo.role || "")
         setIsAdmin(boolAdmin)
     }, [userInfo.role])
     useEffect(() => {

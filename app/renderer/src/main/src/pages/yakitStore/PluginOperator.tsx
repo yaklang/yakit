@@ -14,7 +14,7 @@ import { openABSFile } from "../../utils/openWebsite"
 import { BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, YakScriptCreatorForm } from "../invoker/YakScriptCreator"
 import { EditOutlined, QuestionOutlined, SettingOutlined, FieldNumberOutlined, CloseOutlined } from "@ant-design/icons"
 import { YakScriptExecResultTable } from "../../components/YakScriptExecResultTable"
-import { getValue } from "../../utils/kv"
+import { getValue,saveValue } from "../../utils/kv"
 import { useDebounceEffect, useGetState, useMemoizedFn } from "ahooks"
 import { YakitPluginInfoOnline } from "./YakitPluginInfoOnline/YakitPluginInfoOnline"
 import "./PluginOperator.scss"
@@ -840,11 +840,17 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
     const {YakScriptId,YakScriptIds,isSelectAll} = props
     const [_, setLocalPath, getLocalPath] = useGetState("")
     const [pluginDirName, setPluginDirName, getPluginDirName] = useGetState("")
-
+    const [cachePath,setCachePath,getCachePath] = useGetState<string[]>([])
     useEffect(() => {
         getValue("YAKIT_DEFAULT_LOAD_LOCAL_PATH").then((e) => {
             if (e) {
                 setLocalPath(e)
+            }
+        })
+
+        getValue("YAKIT_CACHE_LOAD_LOCAL_PATH").then((data) => {
+            if (data) {
+                setCachePath(JSON.parse(data))
             }
         })
     }, [])
@@ -867,6 +873,9 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                     ipcRenderer
                         .invoke("ExportYakScript", params)
                         .then((data: { OutputDir: string }) => {
+                            const newCachePath = [...getCachePath(),getLocalPath()]
+                            const savePath = newCachePath.slice(-5)
+                            saveValue("YAKIT_CACHE_LOAD_LOCAL_PATH", JSON.stringify(savePath))
                             showModal({
                                 title: "导出成功!",
                                 content: (
@@ -897,6 +906,7 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                     value={getLocalPath()}
                     setValue={setLocalPath}
                     required={true}
+                    autoComplete={getCachePath()}
                 />
                 {YakScriptId&&<InputItem
                     label={"插件文件夹名"}
