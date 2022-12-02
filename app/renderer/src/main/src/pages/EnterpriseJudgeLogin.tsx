@@ -8,9 +8,10 @@ import {useGetState} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
     setJudgeLicense: (v: boolean) => void
+    setJudgeLogin: (v: boolean) => void
 }
 const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
-    const {setJudgeLicense} = props
+    const {setJudgeLicense,setJudgeLogin} = props
     // License
     // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
     const [activateLicense, setActivateLicense] = useState<boolean>(false)
@@ -26,7 +27,11 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
             .invoke("get-login-user-info", {})
             .then((e) => {
                 if (e?.isLogin) {
+                    setJudgeLogin(true)
                     setJudgeLicense(false)
+                }
+                else{
+                    setJudgeLogin(false)
                 }
             })
             .finally(() => {

@@ -823,10 +823,21 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
 })
 
 export interface OutputPluginFormProp {
-    YakScriptId: any
+    YakScriptId?: number
+    YakScriptIds?: number[]
+    isSelectAll?:boolean
+}
+
+interface ParamsProps{
+    OutputDir:string
+    OutputPluginDir?:string
+    YakScriptId?:number
+    YakScriptIds?:number[]
+    All?:boolean
 }
 
 export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((props) => {
+    const {YakScriptId,YakScriptIds,isSelectAll} = props
     const [_, setLocalPath, getLocalPath] = useGetState("")
     const [pluginDirName, setPluginDirName, getPluginDirName] = useGetState("")
 
@@ -843,13 +854,18 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
             <Form
                 onSubmitCapture={(e) => {
                     e.preventDefault()
+                    let params:ParamsProps = {
+                        OutputDir: getLocalPath(),
+                    }
+                    if(YakScriptId){
+                        params.OutputPluginDir = getPluginDirName()
+                        params.YakScriptId = YakScriptId
 
+                    }
+                    if(YakScriptIds&&!isSelectAll)params.YakScriptIds = YakScriptIds
+                    if(isSelectAll) params.All = true
                     ipcRenderer
-                        .invoke("ExportYakScript", {
-                            YakScriptId: props.YakScriptId,
-                            OutputDir: getLocalPath(),
-                            OutputPluginDir: getPluginDirName()
-                        })
+                        .invoke("ExportYakScript", params)
                         .then((data: { OutputDir: string }) => {
                             showModal({
                                 title: "导出成功!",
@@ -882,13 +898,13 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                     setValue={setLocalPath}
                     required={true}
                 />
-                <InputItem
+                {YakScriptId&&<InputItem
                     label={"插件文件夹名"}
                     help={"插件文件夹名，尽量精简，无特殊字符"}
                     value={getPluginDirName()}
                     setValue={setPluginDirName}
                     required={true}
-                />
+                />}
                 <Form.Item colon={false} label={" "}>
                     <Button type='primary' htmlType='submit'>
                         {" "}

@@ -24,7 +24,8 @@ import {
     Divider,
     Dropdown,
     AutoComplete,
-    Menu
+    Menu,
+    Popover,
 } from "antd"
 import {
     ReloadOutlined,
@@ -41,7 +42,7 @@ import {
     DownloadOutlined,
     PoweroffOutlined,
     InfoCircleOutlined,
-    CloudUploadOutlined,
+    SettingOutlined,
     CloseOutlined,
     DownOutlined
 } from "@ant-design/icons"
@@ -93,6 +94,11 @@ import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
 import {fullscreen} from "@uiw/react-md-editor"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
+import {
+    ChevronDownIcon
+} from "@/assets/newIcon"
+import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
+import { OutputPluginForm } from "./PluginOperator";
 const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
@@ -1182,6 +1188,32 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             setRefresh(!refresh)
         }, 100)
     })
+
+    const menuData = [
+        {
+            title: "删除插件",
+            number: 10,
+            onClickBatch: () => {
+                onRemoveLocalPlugin()
+            },
+        },
+        {
+            title: "导出插件",
+            number: 10,
+            onClickBatch: () => {
+                const Ids = selectedRowKeysRecordLocal.map((ele) =>typeof ele.Id==="number"?ele.Id:parseInt(ele.Id))
+                showModal({
+                    title: "导出插件配置",
+                    width: "40%",
+                    content: (
+                        <>
+                            <OutputPluginForm YakScriptIds={Ids} isSelectAll={isSelectAllLocal}/>
+                        </>
+                    )
+                })
+            },
+        },]
+
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
@@ -1241,7 +1273,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                             isFilter={isFilter}
                         />
                     )}
-                    <Popconfirm
+                    {/* <Popconfirm
                         title={selectedRowKeysRecordLocal.length === 0 ? "是否删除本地所有插件?" : "是否删除所选插件?"}
                         onConfirm={() => onRemoveLocalPlugin()}
                     >
@@ -1254,7 +1286,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                                 删除
                             </Button>
                         )}
-                    </Popconfirm>
+                    </Popconfirm> */}
                     <Popconfirm title='上传不支持全选且只能上传未上传至云端的插件' onConfirm={() => onBatchUpload()}>
                         {(size === "small" && (
                             <Tooltip title='上传'>
@@ -1289,6 +1321,59 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                             </Button>
                         </>
                     )}
+
+
+{(selectedRowKeysRecordLocal.length === 0 && (<>
+{size === "small"?<></>:<Button
+                                            size='small'
+                                            disabled={selectedRowKeysRecordLocal.length === 0}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                        >
+                                            批量操作
+                                            <ChevronDownIcon style={{color: "#85899E"}} />
+                                        </Button>}
+</>
+                                        
+                                    )) || (
+                                        <Popover
+                                            overlayClassName={style["http-history-table-drop-down-popover"]}
+                                            content={
+                                                <Menu
+                                                    className={style["http-history-table-drop-down-batch"]}
+                                                >
+                                                    {menuData.map((m) => {
+                                                    return (
+                                                        
+                                                            <Menu.Item
+                                                                onClick={() => {
+                                                                   m.onClickBatch()
+                                                                }}
+                                                                key={m.title}
+                                                            >
+                                                                {m.title}
+                                                            </Menu.Item>
+                                                        
+                                                    )
+                                                    })}
+                                                </Menu>
+                                            }
+                                            trigger='click'
+                                            placement='bottomLeft'
+                                        >
+                                            {size === "small"?<SettingOutlined className='operation-icon'/>:<Button
+                                                size='small'
+                                                disabled={selectedRowKeysRecordLocal.length === 0}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                }}
+                                            >
+                                                批量操作
+                                                <ChevronDownIcon style={{color: "#85899E"}} />
+                                            </Button>}
+                                        </Popover>
+                                    )}
                 </Col>
             </Row>
 

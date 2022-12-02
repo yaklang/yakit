@@ -347,7 +347,7 @@ function App() {
     return connected ? (
         <Suspense fallback={<div>Loading Main</div>}>
             {isJudgeLicense ? (
-                <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} />
+                <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v:boolean)=>{}}/>
             ) : (
                 <Main
                     onErrorConfirmed={() => {
