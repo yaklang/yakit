@@ -1,4 +1,4 @@
-import {Button, Checkbox, Divider, Drawer, Switch, Tag} from "antd"
+import {Button, Checkbox, Divider, Drawer, Select, Switch, Tag} from "antd"
 import React, {ReactNode, useEffect, useState} from "react"
 import {ButtonTextProps, MITMRuleProp} from "./MITMRuleType"
 import styles from "./MITMRule.module.scss"
@@ -26,10 +26,54 @@ import {openExternalWebsite} from "@/utils/openWebsite"
 import {TagsList} from "@/components/baseTemplate/BaseTags"
 import {YakitTag} from "@/components/yakit/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakit/YakitSwitch/YakitSwitch"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer, shell} = window.require("electron")
+
+const HitColor = [
+    {
+        title: "Red",
+        value: "red",
+        className: "bg-color-red-opacity"
+    },
+    {
+        title: "Green",
+        value: "green",
+        className: "bg-color-green-opacity"
+    },
+    {
+        title: "Blue",
+        value: "blue",
+        className: "bg-color-blue-opacity"
+    },
+    {
+        title: "Yellow",
+        value: "yellow",
+        className: "bg-color-yellow-opacity"
+    },
+    {
+        title: "Orange",
+        value: "orange",
+        className: "bg-color-orange-opacity"
+    },
+    {
+        title: "Purple",
+        value: "purple",
+        className: "bg-color-purple-opacity"
+    },
+    {
+        title: "Cyan",
+        value: "cyan",
+        className: "bg-color-cyan-opacity"
+    },
+    {
+        title: "Grey",
+        value: "grey",
+        className: "bg-color-grey-opacity"
+    }
+]
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const {visible, setVisible, getContainer, top} = props
@@ -168,7 +212,26 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         },
         {
             title: "命中颜色",
-            dataKey: "Color"
+            dataKey: "Color",
+            ellipsis: false,
+            render: (text, record: MITMContentReplacerRule) => (
+                <YakitSelect
+                    value={text}
+                    bordered={false}
+                    disabled={record.Disabled}
+                    size='small'
+                    wrapperStyle={{width: "100%"}}
+                >
+                    {HitColor.map((item) => (
+                        <YakitSelect.Option value={item.value}>
+                            <div className={classNames(styles["table-hit-color-content"])}>
+                                <div className={classNames(styles["table-hit-color"], item.className)} />
+                                {item.title}
+                            </div>
+                        </YakitSelect.Option>
+                    ))}
+                </YakitSelect>
+            )
         },
         {
             title: "追加 Tag",

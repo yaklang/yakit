@@ -188,3 +188,15 @@
         }
     }
 }
+
+.table-hit-color-content {
+    display: flex;
+    align-items: center;
+
+    .table-hit-color {
+        height: 8px;
+        width: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+}

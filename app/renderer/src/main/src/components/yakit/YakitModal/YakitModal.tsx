@@ -1,4 +1,4 @@
-import React from "react"
+import React, {CSSProperties, ReactNode} from "react"
 import {Modal, ModalProps} from "antd"
 import {YakitCloseSvgIcon} from "./icon"
 
@@ -10,6 +10,12 @@ export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "
     cancelButtonProps?: YakitButtonProp
     okButtonProps?: YakitButtonProp
     okType?: YakitButtonProp["type"]
+    /** @name 副标题 */
+    subTitle?: ReactNode
+    /** @name footer组件style */
+    footerStyle?: CSSProperties
+    /** @name footer组件左部操作区域 */
+    footerExtra?: ReactNode
 }
 
 /** 可以用，但是使用的时候考虑部分属性的覆盖重写问题， */
@@ -29,6 +35,10 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         okButtonProps,
         onCancel,
         onOk,
+        /** 自定义新增属性 ↓↓↓ */
+        subTitle,
+        footerStyle,
+        footerExtra,
         ...resetProps
     } = props
 
@@ -50,17 +60,28 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                 {footer === null ? (
                     <></>
                 ) : (
-                    <div className={!!footer ? styles["body-custom-footer"] : styles["body-footer"]}>
+                    <div
+                        style={footerStyle || {}}
+                        className={!!footer ? styles["body-custom-footer"] : styles["body-footer"]}
+                    >
                         {!!footer ? (
                             footer
                         ) : (
                             <>
-                                <YakitButton type='outline2' {...cancelButtonProps} onClick={onCancel}>
-                                    {cancelText}
-                                </YakitButton>
-                                <YakitButton {...okButtonProps} loading={confirmLoading} type={okType} onClick={onOk}>
-                                    {okText}
-                                </YakitButton>
+                                <div className={styles["body-footer-extra"]}>{footerExtra || <></>}</div>
+                                <div className={styles["body-footer-btn"]}>
+                                    <YakitButton type="outline2" {...cancelButtonProps} onClick={onCancel}>
+                                        {cancelText}
+                                    </YakitButton>
+                                    <YakitButton
+                                        {...okButtonProps}
+                                        loading={confirmLoading}
+                                        type={okType}
+                                        onClick={onOk}
+                                    >
+                                        {okText}
+                                    </YakitButton>
+                                </div>
                             </>
                         )}
                     </div>

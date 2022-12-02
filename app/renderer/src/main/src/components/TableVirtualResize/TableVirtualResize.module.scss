@@ -296,6 +296,12 @@
                     line-height: 100%;
                 }
 
+                .virtual-table-row-no-ellipsis {
+                    display: flex;
+                    align-items: center;
+                    width: 100%;
+                }
+
                 .virtual-table-row-content {
                     height: 100%;
                     background-color: #fff;
