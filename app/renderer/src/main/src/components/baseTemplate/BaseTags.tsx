@@ -1,19 +1,22 @@
-import React, {ReactNode, useEffect, useLayoutEffect, useRef, useState} from "react"
+import React, {useMemo, useEffect, useLayoutEffect, useRef, useState} from "react"
 import {Select, Button, Tag, TagProps, SelectProps, Tooltip, Space, Checkbox} from "antd"
 import {useGetState, useDebounce, useThrottle} from "ahooks"
 import {useHotkeys} from "react-hotkeys-hook"
 import {} from "@ant-design/icons"
 
 import "./BaseTags.scss"
+import classnames from "classnames"
+import styles from "./BaswButton.module.scss"
 export interface TagsListProps extends TagProps {
     data: string[]
     ellipsis?: boolean
-    tagClassName?: string
+    className?: string
+    size?: "big" | "small"
 }
 
 // Tags展示组件
 export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
-    const {data, ellipsis, tagClassName = "", ...otherProps} = props
+    const {data, ellipsis, className, size, ...otherProps} = props
     const tagListRef = useRef<any>(null)
     // 展示数据源
     const [dataSource, setDataSource] = useState<string[]>([])
@@ -50,26 +53,51 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
             setDataSource(data)
         }
     }, [data])
+
+    const sizeClass = useMemo(() => {
+        if (!size) return "base-tags-size"
+        if (size === "big") return "base-tags-big-size"
+        if (size === "small") return "base-tags-small-size"
+        return "base-tags-size"
+    }, [size])
+
     const tooltipStr = ellipsis && ellipsisTags.join("，")
     // console.log("ggg", dataSource, ellipsisTags)
     return (
-        <div className='base-tags-list'>
+        <div className={styles["base-tags-list"]}>
             {/* 隐藏DOM元素 用于实时计算 */}
             <div style={{overflow: "hidden", height: 0}} ref={tagListRef}>
                 {data.map((item) => (
-                    <Tag className={`base-tags-list-tag ${tagClassName}`} key={item} {...otherProps}>
+                    <Tag
+                        className={classnames(styles[sizeClass], styles["base-tags-list-tag"], {
+                            [styles[className || ""]]: !!className
+                        })}
+                        key={item}
+                        {...otherProps}
+                    >
                         {item}
                     </Tag>
                 ))}
             </div>
             {dataSource.map((item) => (
-                <Tag className={`base-tags-list-tag ${tagClassName}`} key={item} {...otherProps}>
+                <Tag
+                    className={classnames(styles[sizeClass], styles["base-tags-list-tag"], {
+                        [styles[className || ""]]: !!className
+                    })}
+                    key={item}
+                    {...otherProps}
+                >
                     {item}
                 </Tag>
             ))}
             {ellipsis && ellipsisTags.length > 0 && (
                 <Tooltip title={tooltipStr}>
-                    <Tag className={`base-tags-list-tag ${tagClassName}`} {...otherProps}>
+                    <Tag
+                        className={classnames(styles[sizeClass], styles["base-tags-list-tag"], {
+                            [styles[className || ""]]: !!className
+                        })}
+                        {...otherProps}
+                    >
                         ...
                     </Tag>
                 </Tooltip>
@@ -384,16 +412,6 @@ export const Test: React.FC = () => {
         <div>
             <TagsFilter
                 data={newData}
-                // data={[
-                //     {
-                //         label:"ppp",
-                //         value:"999"
-                //     },
-                //     {
-                //         label:"ppx",
-                //         value:"888"
-                //     },
-                // ]}
                 defaultData={tagList}
                 submitValue={(value) => {
                     setTagList(value)
@@ -402,7 +420,13 @@ export const Test: React.FC = () => {
                 style={{width: "200px"}}
             />
             <div style={{width: "20%"}}>
-                <TagsList data={tagList} ellipsis={true} tagClassName='gg' />
+                <TagsList size="small" data={tagList} ellipsis={true} className='gg' />
+            </div>
+            <div style={{width: "20%"}}>
+                <TagsList data={tagList} ellipsis={true} className='gg' />
+            </div>
+            <div style={{width: "20%"}}>
+                <TagsList size="big" data={tagList} ellipsis={true} className='gg' />
             </div>
         </div>
     )

@@ -4,13 +4,13 @@
         flex-wrap: nowrap;
         overflow: auto;
         &::-webkit-scrollbar {
-        width: 0;
-        height: 0;
-        display: none;
-    }
+            width: 0;
+            height: 0;
+            display: none;
+        }
     }
     // 默认select长度
-    .ant-select{
+    .ant-select {
         min-width: 160px;
     }
 }
@@ -53,21 +53,21 @@
         position: relative;
         overflow: auto;
         border: 1px solid #ddd;
-      }
-      .virtual-list-height {
+    }
+    .virtual-list-height {
         position: absolute;
         left: 0;
         top: 0;
         right: 0;
         z-index: -1;
-      }
-      
-      .view-content {
+    }
+
+    .view-content {
         position: absolute;
         left: 0;
         right: 0;
         top: 0;
-      }
+    }
     // 修改antd默认样式
     // .ant-checkbox-checked .ant-checkbox-inner {
     //     background-color: #f28b44;
@@ -80,20 +80,4 @@
     //     border-color: #f28b44;
     // }
 }
-.base-tags-list {
-    width: 100%;
-    font-family: "PingFang HK";
-    font-size: 10px;
-    &-tag {
-        color: #85899e;
-        background: #f9fbff;
-        border: 1px solid #eaecf3;
-        border-radius: 4px;
-        text-align: center;
-        cursor: default;
-    }
-    &-tag:hover {
-        color: #f28b44;
-        border: 1px solid #fbc6a1;
-    }
-}
+
