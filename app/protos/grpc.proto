@@ -360,6 +360,11 @@ service Yak {
 
   // machine id
   rpc GetMachineID(Empty) returns (GetMachineIDResponse);
+
+  // license
+  rpc GetLicense(Empty) returns (GetLicenseResponse);
+  rpc CheckLicense(CheckLicenseRequest) returns (Empty);
+
 }
 
 message ExtractDataResponse {
@@ -1382,6 +1387,8 @@ message ExportYakScriptRequest {
   int64 YakScriptId = 1;
   string OutputDir = 2;
   string OutputPluginDir = 3;
+  repeated int64 YakScriptIds = 4;
+  bool All = 5;
 }
 
 message ExportYakScriptResponse {
@@ -2410,4 +2417,12 @@ message ExecResult {
   int64 Id = 6;
 
   string RuntimeID = 7;
+}
+
+message GetLicenseResponse {
+  string License = 1;
+}
+
+message CheckLicenseRequest {
+  string LicenseActivation = 1;
 }
