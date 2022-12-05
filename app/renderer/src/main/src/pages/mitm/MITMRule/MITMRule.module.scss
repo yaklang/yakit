@@ -200,3 +200,11 @@
         margin-right: 8px;
     }
 }
+
+.popover-remove {
+    :global {
+        .ant-popover-inner-content {
+            padding: 8px 4px;
+        }
+    }
+}

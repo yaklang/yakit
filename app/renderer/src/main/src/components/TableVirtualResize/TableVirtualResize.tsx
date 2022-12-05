@@ -1217,6 +1217,7 @@ const CellRender = React.memo(
                                         (ele) => ele === (renderKey ? item.data[renderKey] : number)
                                     ) !== -1
                                 }
+                                disabled={item.data["disabled"] || item.data["Disabled"]}
                             />
                         )}
                     </span>
@@ -1455,7 +1456,9 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                         })}
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
-                                        <YakitCheckbox checked={checked} />
+                                        <YakitCheckbox
+                                            checked={checked}
+                                        />
                                         <span className={style["select-item-text"]}>{item.data.label}</span>
                                     </div>
                                 )

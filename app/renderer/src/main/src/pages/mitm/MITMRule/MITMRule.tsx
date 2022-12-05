@@ -20,15 +20,18 @@ import {MITMResponse} from "../MITMPage"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
-import {YakitDrawer} from "@/components/yakit/YakitDrawer/YakitDrawer"
-import {YakitInputNumber} from "@/components/yakit/YakitInputNumber/YakitInputNumber"
+import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {TagsList, Test} from "@/components/baseTemplate/BaseTags"
-import {YakitTag} from "@/components/yakit/YakitTag/YakitTag"
-import {YakitSwitch} from "@/components/yakit/YakitSwitch/YakitSwitch"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 const {ipcRenderer, shell} = window.require("electron")
 
@@ -72,6 +75,21 @@ const HitColor = [
         title: "Grey",
         value: "grey",
         className: "bg-color-grey-opacity"
+    }
+]
+
+const batchMenuData: YakitMenuItemProps[] = [
+    {
+        key: "ban",
+        label: "禁用"
+    },
+    {
+        key: "no-replace",
+        label: "不替换"
+    },
+    {
+        key: "remove",
+        label: "删除"
     }
 ]
 
@@ -223,7 +241,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     wrapperStyle={{width: "100%"}}
                 >
                     {HitColor.map((item) => (
-                        <YakitSelect.Option value={item.value}>
+                        <YakitSelect.Option value={item.value} key={item.value}>
                             <div className={classNames(styles["table-hit-color-content"])}>
                                 <div className={classNames(styles["table-hit-color"], item.className)} />
                                 {item.title}
@@ -267,6 +285,9 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
         }
     ]
+    const onMenuSelect = useMemoizedFn((key: string) => {
+        console.log("onMenuSelect", key)
+    })
     return (
         <YakitDrawer
             placement='bottom'
@@ -317,7 +338,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     }
                     extra={
                         <div className={styles["table-title-body"]}>
-                            <Test />
                             <div className={styles["table-switch"]}>
                                 <span className={styles["switch-text"]}>全部禁用</span>
                                 <YakitSwitch />
@@ -327,14 +347,32 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                 <span className={styles["switch-text"]}>全部不替换</span>
                                 <YakitSwitch />
                             </div>
-                            <YakitButton
-                                type='outline2'
-                                disabled={selectedRowKeys.length === 0}
-                                className={classNames(styles["button-batch-remove"])}
+                            <YakitPopover
+                                placement={"bottom"}
+                                arrowPointAtCenter={true}
+                                content={
+                                    <YakitMenu
+                                        data={batchMenuData}
+                                        selectedKeys={[]}
+                                        width={92}
+                                        onSelect={({key}) => onMenuSelect(key)}
+                                    />
+                                }
+                                trigger='hover'
+                                // onVisibleChange={(visible) => setShow(visible)}
+                                overlayClassName={classNames(styles["popover-remove"])}
+                                visible={true}
                             >
-                                批量删除
-                                <ChevronDownIcon />
-                            </YakitButton>
+                                <YakitButton
+                                    type='outline2'
+                                    disabled={selectedRowKeys.length === 0}
+                                    className={classNames(styles["button-batch-remove"])}
+                                >
+                                    批量删除
+                                    <ChevronDownIcon />
+                                </YakitButton>
+                            </YakitPopover>
+
                             <ButtonColor type='primary' size='small'>
                                 <div className={styles["button-add-rule"]}>
                                     <PlusIcon />
