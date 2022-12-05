@@ -18,6 +18,7 @@ export interface TagsListProps extends TagProps {
 export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
     const {data, ellipsis, className, size, ...otherProps} = props
     const tagListRef = useRef<any>(null)
+    const tagEllipsis = useRef<any>(null)
     // 展示数据源
     const [dataSource, setDataSource] = useState<string[]>([])
     // 省略后隐藏项
@@ -27,6 +28,7 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
         if (ellipsis) {
             const {current} = tagListRef
             const boxWidth = current.offsetWidth
+            const ellipsisWidth = tagEllipsis.current.offsetWidth
             let countWidth = 0 //计算当前宽度
             const lastItem = current.children.length - 1 // 最后一项Index
             const itemMargin = 8 //每一项的magin
@@ -36,11 +38,14 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
             for (let i = 0; i <= lastItem; i++) {
                 // 当前项完整宽度(包含margin)
                 let nowItemWidth = current.children[i].offsetWidth + itemMargin
-                // 最后一项完整宽度
-                let lastItemWidth = current.children[lastItem].offsetWidth + itemMargin
                 // 计算当前项后宽度
-                let nowWidth = countWidth + nowItemWidth + lastItemWidth
-                if (nowWidth < boxWidth) {
+                let nowWidth = countWidth + nowItemWidth
+                // 如不是最后一项,则添加...宽度计算
+                if(i<lastItem&&(nowWidth+ellipsisWidth)<boxWidth){
+                    countWidth += nowItemWidth
+                    showTagsArr = [...showTagsArr, data[i]]
+                }
+                else if (i===lastItem&&nowWidth < boxWidth) {
                     countWidth += nowItemWidth
                     showTagsArr = [...showTagsArr, data[i]]
                 } else {
@@ -78,6 +83,16 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
                         {item}
                     </Tag>
                 ))}
+            </div>
+            <div style={{overflow: "hidden",display:"inline-block",position:"absolute", height: 0}} ref={tagEllipsis}>
+                <Tag
+                    className={classnames(styles[sizeClass], styles["base-tags-list-tag"], {
+                        [styles[className || ""]]: !!className
+                    })}
+                    {...otherProps}
+                >
+                    ...
+                </Tag>
             </div>
             {dataSource.map((item) => (
                 <Tag
@@ -420,13 +435,13 @@ export const Test: React.FC = () => {
                 style={{width: "200px"}}
             />
             <div style={{width: "20%"}}>
-                <TagsList size="small" data={tagList} ellipsis={true} className='gg' />
+                <TagsList size='small' data={tagList} ellipsis={true} className='gg' />
             </div>
             <div style={{width: "20%"}}>
                 <TagsList data={tagList} ellipsis={true} className='gg' />
             </div>
             <div style={{width: "20%"}}>
-                <TagsList size="big" data={tagList} ellipsis={true} className='gg' />
+                <TagsList size='big' data={tagList} ellipsis={true} className='gg' />
             </div>
         </div>
     )
