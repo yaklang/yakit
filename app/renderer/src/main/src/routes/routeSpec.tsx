@@ -469,7 +469,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {
                 id: "1-1",
                 key: Route.HTTPHacker,
-                label: "MITM 交互式劫持",
+                label: "MITM",
                 icon: <MenuMITMInteractiveHijackingIcon />,
                 hoverIcon: <MenuSolidMITMInteractiveHijackingIcon />,
                 describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
@@ -505,9 +505,16 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
         key: Route.GeneralModule,
         subMenuData: [
             {
+                id: "2-4",
+                key: Route.Mod_ScanPort,
+                label: "扫描端口/指纹",
+                icon: <MenuPortScanningIcon />,
+                describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
+            },
+            {
                 id: "2-1",
                 key: Route.Mod_Brute,
-                label: "爆破与未授权检测",
+                label: "爆破与未授权",
                 icon: <MenuBlastingAndUnauthorizedTestingIcon />,
                 hoverIcon: <MenuSolidBlastingAndUnauthorizedTestingIcon />,
                 describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"
