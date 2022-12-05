@@ -358,9 +358,6 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
-    
-    // 全局监听登录状态
-    const {userInfo, setStoreUserInfo} = useStore()
 
     // 系统类型
     const [system, setSystem] = useState<string>("")
