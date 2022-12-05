@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron")
+const {ipcMain, dialog} = require("electron")
 
 module.exports = (win, getClient) => {
     // asyncQueryYakScript wrapper
@@ -344,6 +344,23 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("ExportYakScript", async (e, params) => {
         return await asyncExportYakScript(params)
+    })
+
+    ipcMain.handle("openDialog", async (e, params) => {
+        return await new Promise((resolve, reject) => {
+            dialog.showOpenDialog({
+                ...params
+            }).then((res)=>{
+                if(res){
+                    let result = {...res}
+                    resolve(result)
+                }
+                else{
+                    reject("获取文件失败")
+                }
+            })
+        })
+       
     })
 
     // asyncQueryYakScriptExecResult wrapper
