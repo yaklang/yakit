@@ -3,6 +3,8 @@ import {yaklangCompletionHandlerProvider} from "./yakCompletionSchema";
 
 export const YaklangMonacoSpec = "yak";
 
+export const YAK_FORMATTER_COMMAND_ID = "yak-formatter";
+
 monaco.languages.register({
     id: YaklangMonacoSpec,
     extensions: [".yak"],
@@ -218,3 +220,27 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
     },
     triggerCharacters: ["."]
 });
+
+// monaco.languages.registerCodeLensProvider(YaklangMonacoSpec, {
+//     provideCodeLenses: (model, token) => {
+//         return {
+//             lenses: [
+//                 {
+//                     range: {
+//                         startLineNumber: 1,
+//                         startColumn: 1,
+//                         endLineNumber: 2,
+//                         endColumn: 1,
+//                     },
+//                     id: "代码格式化",
+//                     command: {
+//                         title: "Yak 代码格式化",
+//                         id: YAK_FORMATTER_COMMAND_ID,
+//                     }
+//                 }
+//             ],
+//             dispose(): void {
+//             }
+//         }
+//     }
+// })

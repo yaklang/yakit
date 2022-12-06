@@ -134,7 +134,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
 
     useEffect(() => {
         ipcRenderer.on("fetch-send-to-yak-running", (e, res: any) => addFileTab(res))
-        return () => ipcRenderer.removeAllListeners("fetch-send-to-yak-running")
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-send-to-yak-running")
+        }
     }, [])
 
     // 自动保存

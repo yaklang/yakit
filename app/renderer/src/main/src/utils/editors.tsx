@@ -33,6 +33,7 @@ import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {callCopyToClipboard} from "@/utils/basic"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
 import ITextModel = editor.ITextModel
+import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -102,6 +103,10 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         }
     }, [props.triggerId])
 
+    const triggerReload = useMemoizedFn(() => {
+        setReload(true)
+    })
+
     useEffect(() => {
         if (!reload) {
             return
@@ -117,6 +122,22 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         setTimeout(() => {
             setLoading(false)
         }, 200)
+
+        if (props.type === "yak") {
+            const model = editor.getModel();
+            if (!model) {
+                return
+            }
+            editor.addAction({
+                contextMenuGroupId: "yaklang",
+                id: YAK_FORMATTER_COMMAND_ID,
+                label: "Yak 代码格式化",
+                run: () => {
+                    yakCompileAndFormat.run(editor, model)
+                    return undefined;
+                }
+            })
+        }
 
         if (props.actions) {
             // 注册右键菜单
@@ -180,12 +201,45 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         })
     })
 
+    const yakCompileAndFormat = useDebounceFn(
+        useMemoizedFn((editor: IMonacoEditor, model: ITextModel) => {
+            const allContent = model.getValue()
+            ipcRenderer
+                .invoke("YaklangCompileAndFormat", {Code: allContent})
+                .then((e: { Errors: YakStaticAnalyzeErrorResult[], Code: string }) => {
+                    console.info(e)
+                    if (e.Code !== "") {
+                        model.setValue(e.Code)
+                        triggerReload()
+                    }
+
+                    if (e && e.Errors.length > 0) {
+                        const markers = e.Errors.map(ConvertYakStaticAnalyzeErrorToMarker)
+                        // console.info(markers)
+                        // markers.push({
+                        //     endColumn: 14,
+                        //     endLineNumber: 4,
+                        //     message: "test",
+                        //     severity: MarkerSeverity.Error,
+                        //     startColumn: 12,
+                        //     startLineNumber: 5,
+                        // })
+                        monaco.editor.setModelMarkers(model, "owner", markers)
+                    } else {
+                        monaco.editor.setModelMarkers(model, "owner", [])
+                    }
+                }).catch(e => {
+                console.info(e)
+            })
+        }), {wait: 500}
+    )
+
     const yakSyntaxChecking = useDebounceFn(
         useMemoizedFn((editor: IMonacoEditor, model: ITextModel) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
-                .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
                     if (e && e.Result.length > 0) {
                         const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
                         // console.info(markers)
@@ -553,7 +607,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <Button
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<ThunderboltFilled />}
+                                    icon={<ThunderboltFilled/>}
                                     onClick={() => {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
@@ -574,7 +628,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <Button
                                     size={"small"}
                                     type={noWordwrap ? "link" : "primary"}
-                                    icon={<EnterOutlined />}
+                                    icon={<EnterOutlined/>}
                                     onClick={() => {
                                         setNoWordwrap(!noWordwrap)
                                     }}
@@ -614,7 +668,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     <Button
                                                         size={"small"}
                                                         type={"link"}
-                                                        icon={<FullscreenOutlined />}
+                                                        icon={<FullscreenOutlined/>}
                                                         onClick={() => {
                                                             showDrawer({
                                                                 title: "全屏",
@@ -641,7 +695,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     }}
                                     visible={popoverVisible}
                                 >
-                                    <Button icon={<SettingOutlined />} type={"link"} size={"small"} />
+                                    <Button icon={<SettingOutlined/>} type={"link"} size={"small"}/>
                                 </Popover>
                             )}
                         </Space>
@@ -674,7 +728,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         contextMenuGroupId: "auto-suggestion",
                                         keybindings: [
                                             (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                                monaco.KeyCode.KEY_R
+                                            monaco.KeyCode.KEY_R
                                         ],
                                         id: "new-web-fuzzer-tab",
                                         run: (e) => {
