@@ -928,7 +928,7 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                         required={true}
                         autoComplete={getCachePath()}
                     />
-                    <Tooltip title={"选择上传路径"}>
+                    <Tooltip title={"选择导出路径"}>
                         <CloudUploadOutlined
                             onClick={() => {
                                 ipcRenderer
@@ -937,7 +937,6 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                                         properties: ["openDirectory"]
                                     })
                                     .then((data: any) => {
-                                        console.log("data", data)
                                         if(data.filePaths.length){
                                             let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
                                             setLocalPath(absolutePath)

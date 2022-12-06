@@ -44,7 +44,8 @@ import {
     InfoCircleOutlined,
     SettingOutlined,
     CloseOutlined,
-    DownOutlined
+    DownOutlined,
+    CloudUploadOutlined,
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
@@ -930,6 +931,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
+    const [selectedUploadRowKeysRecordLocal,setSelectedUploadRowKeysRecordLocal,getSelectedUploadRowKeysRecordLocal] = useGetState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState<boolean>(false)
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
@@ -1100,33 +1102,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             warn("请先登录")
             return
         }
-        // if (isSelectAllLocal) {
-        //     warn("上传不支持全选")
-        //     return
-        // }
         if (selectedRowKeysRecordLocal.length === 0) {
             warn("请选择需要上传的本地数据")
             return
         }
-        // const index = selectedRowKeysRecordLocal.findIndex((s) => s.UUID !== "")
-        // if (index !== -1) {
-        //     warn("请选择未上传至云端的本地数据")
-        //     return
-        // }
-        setUpLoading(false)
-        setVisibleSyncSelect(true)
-    })
-    const onSyncSelect = useMemoizedFn((type) => {
-        // 1 私密：个人账号 2公开：审核后同步云端
-        if (type === 1) {
-            upOnlineBatchBefore("yakit/plugin", 1)
-        } else {
-            upOnlineBatchBefore("yakit/plugin", 2)
-        }
-    })
-
-    const upOnlineBatchBefore = useMemoizedFn(async (url: string, type: number) => {
-        setUpLoading(true)
         if(isSelectAllLocal){
             getRemoteValue("httpSetting").then((setting) => {
                 const values = JSON.parse(setting)
@@ -1138,29 +1117,50 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                                 UserId
                             } as QueryYakScriptLocalAndUserRequest)
                             .then((newSrcipt: {Data:YakScript[]}) => {
-                                upOnlineBatch(url,type,newSrcipt.Data)
+                                setSelectedUploadRowKeysRecordLocal(newSrcipt.Data)
+                                JudgeIsShowVisible(newSrcipt.Data)
                             })
                             .catch((e) => {
                                 failed(`查询所有插件错误:${e}`)
                                 setUpLoading(false)
                             })
-                            .finally(() => {
-                                
-                            })
+                            .finally(() => {})
             })
         }
         else{
-            upOnlineBatch(url,type)
+            setSelectedUploadRowKeysRecordLocal(selectedRowKeysRecordLocal)
+            JudgeIsShowVisible(selectedRowKeysRecordLocal)
         }
     })
 
-    const upOnlineBatch = useMemoizedFn(async(url: string, type: number,selectedAllRowKeysRecordLocal?:YakScript[]) => {
-        const realSelectedRowKeysRecordLocal = selectedAllRowKeysRecordLocal||selectedRowKeysRecordLocal
+    // 判断是否显示私密公开弹框(如没有新增则不显示弹窗)
+    const JudgeIsShowVisible = (selectArr:YakScript[]) => {
+        const index = selectArr.findIndex((s) => s.UUID === "")
+        if (index === -1) { // 所选插件全都有UUID
+            upOnlineBatch(2)
+            return
+        }
+        setUpLoading(false)
+        setVisibleSyncSelect(true)
+    }
+
+    const onSyncSelect = useMemoizedFn((type) => {
+        // 1 私密：个人账号 2公开：审核后同步云端
+        if (type === 1) {
+            upOnlineBatch(1)
+        } else {
+            upOnlineBatch(2)
+        }
+    })
+
+    const upOnlineBatch = useMemoizedFn(async(type: number) => {
+        setUpLoading(true)
+        const realSelectedRowKeysRecordLocal = [...getSelectedUploadRowKeysRecordLocal()]
         const length = realSelectedRowKeysRecordLocal.length
         const errList: any[] = []
         for (let index = 0; index < length; index++) {
             const element = realSelectedRowKeysRecordLocal[index]
-            const res = await upOnline(element, url, type)
+            const res = await upOnline(element, "yakit/plugin", type)
             if (res) {
                 errList.push(res)
             }
@@ -2628,14 +2628,50 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                 </>
             )}
             {loadMode === "local" && (
-                <>
-                    <InputItem label={"本地仓库地址"} value={localPath} setValue={setLocalPath} />
-                </>
+                <div style={{position: "relative"}}>
+                    <InputItem style={{width: "calc(100% - 20px)"}} label={"本地仓库地址"} value={localPath} setValue={setLocalPath} />
+                    <Tooltip title={"选择导入路径"}>
+                        <CloudUploadOutlined
+                            onClick={() => {
+                                ipcRenderer
+                                    .invoke("openDialog", {
+                                        title: "请选择上传文件夹",
+                                        properties: ["openDirectory"]
+                                    })
+                                    .then((data: any) => {
+                                        if(data.filePaths.length){
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                            setLocalPath(absolutePath)
+                                        }
+                                    })
+                            }}
+                            style={{position: "absolute", right: 90, top: 8, cursor: "pointer"}}
+                        />
+                    </Tooltip>
+                </div>
             )}
             {loadMode === "local-nuclei" && (
-                <>
-                    <InputItem label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath} />
-                </>
+                <div style={{position: "relative"}}>
+                    <InputItem style={{width: "calc(100% - 20px)"}} label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath} />
+                    <Tooltip title={"选择导入路径"}>
+                        <CloudUploadOutlined
+                            onClick={() => {
+                                ipcRenderer
+                                    .invoke("openDialog", {
+                                        title: "请选择上传文件夹",
+                                        properties: ["openDirectory"]
+                                    })
+                                    .then((data: any) => {
+                                        if(data.filePaths.length){
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                            setLocalNucleiPath(absolutePath)
+                                        }
+                                    })
+                            }}
+                            style={{position: "absolute", right: 90, top: 8, cursor: "pointer"}}
+                        />
+                    </Tooltip>
+                </div>
             )}
             {loadMode === "uploadId" && (
                 <>
