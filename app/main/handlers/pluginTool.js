@@ -226,6 +226,22 @@ module.exports = (win, getClient) => {
         return await asyncGetYakScriptByOnlineID(params)
     })
 
+    const asyncQueryYakScriptLocalAndUser = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptLocalAndUser(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    //通过OnlineBaseUrl与UserId 获取所有可上传插件
+    ipcMain.handle("QueryYakScriptLocalAndUser", async (e, params) => {
+        return await asyncQueryYakScriptLocalAndUser(params)
+    })
+
     const asyncGetYakScriptTagsAndType = (params) => {
         return new Promise((resolve, reject) => {
             getClient().GetYakScriptTagsAndType(params, (err, data) => {

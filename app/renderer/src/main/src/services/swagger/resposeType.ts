@@ -323,6 +323,7 @@
     is_general_module?: boolean;
     download_total?: number;
     contributors?: string;
+    is_private?: boolean;
   }
   export interface NewUrmResponse {
     user_name: string;

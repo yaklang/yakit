@@ -44,10 +44,12 @@ export const onLocalScriptToOnlinePlugin = (params: YakScript, type?: number) =>
         //
         enable_plugin_selector: params.EnablePluginSelector,
         plugin_selector_types: params.PluginSelectorTypes,
-        is_general_module: params.IsGeneralModule
+        is_general_module: params.IsGeneralModule,
+        is_private:false
     }
     if (type) {
         onlineParams.default_open = type === 1 ? false : true
+        onlineParams.is_private = type === 1 ? true : false
     }
     return onlineParams
 }
@@ -141,7 +143,7 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
         }
         if ((params.OnlineId as number) > 0) {
             if (params.OnlineIsPrivate) {
-                upOnlinePlugin("yakit/plugin/save", 1)
+                upOnlinePlugin("yakit/plugin", 1)
             } else {
                 upOnlinePlugin("yakit/plugin", 2)
             }
@@ -152,7 +154,7 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
     const onSyncSelect = useMemoizedFn((type) => {
         // 1 私密：个人账号 2公开：审核后同步云端
         if (type === 1) {
-            upOnlinePlugin("yakit/plugin/save", 1)
+            upOnlinePlugin("yakit/plugin", 1)
         } else {
             upOnlinePlugin("yakit/plugin", 2)
         }

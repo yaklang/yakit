@@ -113,6 +113,11 @@ export interface GetYakScriptByOnlineIDRequest {
     UUID: string
 }
 
+export interface QueryYakScriptLocalAndUserRequest{
+    OnlineBaseUrl: string
+    UserId: number
+}
+
 export interface SearchPluginOnlineRequest extends API.GetPluginWhere {
     order_by: string
     order?: string
@@ -1095,42 +1100,72 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             warn("请先登录")
             return
         }
-        if (isSelectAllLocal) {
-            warn("上传不支持全选")
-            return
-        }
+        // if (isSelectAllLocal) {
+        //     warn("上传不支持全选")
+        //     return
+        // }
         if (selectedRowKeysRecordLocal.length === 0) {
             warn("请选择需要上传的本地数据")
             return
         }
-        const index = selectedRowKeysRecordLocal.findIndex((s) => s.UUID !== "")
-        if (index !== -1) {
-            warn("请选择未上传至云端的本地数据")
-            return
-        }
+        // const index = selectedRowKeysRecordLocal.findIndex((s) => s.UUID !== "")
+        // if (index !== -1) {
+        //     warn("请选择未上传至云端的本地数据")
+        //     return
+        // }
         setUpLoading(false)
         setVisibleSyncSelect(true)
     })
     const onSyncSelect = useMemoizedFn((type) => {
         // 1 私密：个人账号 2公开：审核后同步云端
         if (type === 1) {
-            upOnlineBatch("yakit/plugin/save", 1)
+            upOnlineBatchBefore("yakit/plugin", 1)
         } else {
-            upOnlineBatch("yakit/plugin", 2)
+            upOnlineBatchBefore("yakit/plugin", 2)
         }
     })
 
-    const upOnlineBatch = useMemoizedFn(async (url: string, type: number) => {
-        const length = selectedRowKeysRecordLocal.length
-        const errList: any[] = []
+    const upOnlineBatchBefore = useMemoizedFn(async (url: string, type: number) => {
         setUpLoading(true)
+        if(isSelectAllLocal){
+            getRemoteValue("httpSetting").then((setting) => {
+                const values = JSON.parse(setting)
+                const OnlineBaseUrl: string = values.BaseUrl
+                const UserId = userInfo.user_id
+                ipcRenderer
+                            .invoke("QueryYakScriptLocalAndUser", {
+                                OnlineBaseUrl,
+                                UserId
+                            } as QueryYakScriptLocalAndUserRequest)
+                            .then((newSrcipt: {Data:YakScript[]}) => {
+                                upOnlineBatch(url,type,newSrcipt.Data)
+                            })
+                            .catch((e) => {
+                                failed(`查询所有插件错误:${e}`)
+                                setUpLoading(false)
+                            })
+                            .finally(() => {
+                                
+                            })
+            })
+        }
+        else{
+            upOnlineBatch(url,type)
+        }
+    })
+
+    const upOnlineBatch = useMemoizedFn(async(url: string, type: number,selectedAllRowKeysRecordLocal?:YakScript[]) => {
+        const realSelectedRowKeysRecordLocal = selectedAllRowKeysRecordLocal||selectedRowKeysRecordLocal
+        const length = realSelectedRowKeysRecordLocal.length
+        const errList: any[] = []
         for (let index = 0; index < length; index++) {
-            const element = selectedRowKeysRecordLocal[index]
+            const element = realSelectedRowKeysRecordLocal[index]
             const res = await upOnline(element, url, type)
             if (res) {
                 errList.push(res)
             }
         }
+
         if (errList.length > 0) {
             const errString = errList
                 .filter((_, index) => index < 10)
@@ -1150,6 +1185,9 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
 
     const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+        if (params.OnlineId) {
+            onlineParams.id = parseInt(`${params.OnlineId}`)
+        }
         return new Promise((resolve) => {
             NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
                 method: "post",
@@ -1219,7 +1257,14 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     )
                 })
             }
-        }
+        },
+        {
+            title: "上传插件",
+            number: 10,
+            onClickBatch: () => {
+                onBatchUpload()
+            }
+        },
     ]
 
     return (
@@ -1295,7 +1340,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                             </Button>
                         )}
                     </Popconfirm> */}
-                    <Popconfirm title='上传不支持全选且只能上传未上传至云端的插件' onConfirm={() => onBatchUpload()}>
+                    {/* <Popconfirm title='上传不支持全选且只能上传未上传至云端的插件' onConfirm={() => onBatchUpload()}>
                         {(size === "small" && (
                             <Tooltip title='上传'>
                                 <UploadOutlined className='operation-icon' />
@@ -1305,7 +1350,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                                 上传
                             </Button>
                         )}
-                    </Popconfirm>
+                    </Popconfirm> */}
                     {(size === "small" && (
                         <>
                             <Tooltip title='新建'>
