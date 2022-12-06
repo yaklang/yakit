@@ -82,6 +82,50 @@ export const monacoEditorRemoveAllHighlight = (editor?: IMonacoEditor) => {
 
 export const fuzzOperators: FuzzOperatorItem[] = [
     {
+        name: "生成一个字符", callback: editor => {
+            monacoEditorWrite(editor, "{{char(a-z)}}")
+        }, optionsRender: (origin: string, setOrigin: (s: string) => any) => {
+            return <SingleTag
+                help={"生成一个字符，例如 {{char(a-z)}}，使用 - 作为分割，解析前后 char 并生成此间范围"} origin={origin} setOrigin={setOrigin}
+                tag={"char"} defaultInput={"a-z"} label={"字符范围"} enableInput={true} exampleInput={"{{char(a-z)}}"}
+            />
+        }
+    },
+    {
+        name: "重复一个空字符串", callback: editor => {
+            monacoEditorWrite(editor, "{{repeat(10)}}")
+        }, optionsRender: (origin: string, setOrigin: (s: string) => any) => {
+            return <SingleTag
+                help={"控制重复执行次数的 Tag，一般 {{repeat(10)}} 指的是整体重复生成 10 次数据"} origin={origin} setOrigin={setOrigin}
+                tag={"repeat"} defaultInput={"10"} label={"重复次数"} enableInput={true} exampleInput={"例如：{{repeat(10)}}"}
+            />
+        }
+    },
+    {
+        name: "重复生成字符串", callback: editor => {
+            monacoEditorWrite(editor, "{{repeatstr(abc|3)}}")
+        }, optionsRender: (origin: string, setOrigin: (s: string) => any) => {
+            return <SingleTag
+                help={"控制重复渲染一定次数的数据，以 |n 来输入次数，一般 {{repeatstr(abc|3)}} 渲染为 abcabcabc"} origin={origin}
+                setOrigin={setOrigin}
+                tag={"repeatstr"} defaultInput={"abc|3"} label={"重复次数"} enableInput={true}
+                exampleInput={"例如：{{repeatstr(abc|3)}} -> abcabcabc"}
+            />
+        }
+    },
+    {
+        name: "构造数组（列表）", callback: editor => {
+            monacoEditorWrite(editor, "{{list(1|2|3)}}")
+        }, optionsRender: (origin: string, setOrigin: (s: string) => any) => {
+            return <SingleTag
+                origin={origin} setOrigin={setOrigin} enableInput={true}
+                help={"把数据进行切割，并把切割后的数据渲染进 payload，默认使用 | 分割"}
+                tag={"list"} defaultInput={"1|2|3"} label={"切割字符串（也可以用于组合 fuzztag）"}
+                exampleInput={"例如：{{list(1|2|3)}} 解析为 [1,2,3]"}
+            />
+        }
+    },
+    {
         name: "随机字符串(固定长度)", callback: editor => {
             monacoEditorWrite(editor, "{{rs(6)}}")
         }, optionsRender: (origin: string, setOrigin: (s: string) => any) => {
@@ -103,7 +147,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         }
     },
     {
-        name: "整数(自由范围)", callback: editor => {
+        name: "整数(自由范围) - 也可用于端口", callback: editor => {
 
         }, optionsRender: (origin: string, setOrigin: (s: string) => any) => {
             return <InputItem label={"输入范围"} setValue={r => setOrigin(`{{int(${r})}}`)}/>

@@ -214,6 +214,7 @@ service Yak {
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
   rpc GetYakVMBuildInMethodCompletion(GetYakVMBuildInMethodCompletionRequest) returns (GetYakVMBuildInMethodCompletionResponse);
   rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
+  rpc YaklangCompileAndFormat(YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
@@ -518,6 +519,15 @@ message ExecPacketScanRequest {
 
 message StaticAnalyzeErrorRequest {
   bytes Code = 1;
+}
+
+message YaklangCompileAndFormatRequest {
+  string Code = 1;
+}
+
+message YaklangCompileAndFormatResponse {
+  string Code = 1;
+  repeated StaticAnalyzeErrorResult Errors = 2;
 }
 
 message StaticAnalyzeErrorResult {
