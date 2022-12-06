@@ -43,6 +43,7 @@ import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerSta
 import {MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
 import {MITMRule} from "./MITMRule/MITMRule"
+import ReactResizeDetector from "react-resize-detector"
 
 const {Text} = Typography
 const {Item} = Form
@@ -148,16 +149,29 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // }
     const [visible, setVisible] = useState<boolean>(false)
     const [top, setTop] = useState<number>(0)
+    const [height, setHeight] = useState<number>(0)
     const mitmPageRef = useRef<any>()
     const [inViewport] = useInViewport(mitmPageRef)
     useEffect(() => {
         if (!mitmPageRef.current) return
         const client = mitmPageRef.current.getBoundingClientRect()
         setTop(client.top)
-    }, [mitmPageRef])
+    }, [height])
     return (
         <>
             <div className='mitm-page' ref={mitmPageRef}>
+                <ReactResizeDetector
+                    onResize={(w, h) => {
+                        if (!w || !h) {
+                            return
+                        }
+                        setHeight(h)
+                    }}
+                    handleWidth={true}
+                    handleHeight={true}
+                    refreshMode={"debounce"}
+                    refreshRate={50}
+                />
                 {/* status === "idle" 在没有开始的时候，渲染任务表单 */}
                 {(status === "idle" && (
                     <MITMServerStartForm onStartMITMServer={startMITMServerHandler} setVisible={setVisible} />

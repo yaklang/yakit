@@ -2,7 +2,6 @@
     border-right: 0px;
 
     :global {
-
         .ant-menu-submenu {
             .ant-menu-submenu-title {
                 height: 100%;
@@ -38,6 +37,12 @@
             padding: 0;
             margin: 0 !important;
             color: #31343f;
+
+            &:hover {
+                background-color: #e6f7ff;
+                color: #1890ff;
+                border-radius: 4px;
+            }
         }
     }
 }

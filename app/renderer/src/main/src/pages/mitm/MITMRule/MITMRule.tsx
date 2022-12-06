@@ -7,6 +7,7 @@ import {
     BanIcon,
     ChevronDownIcon,
     ExportIcon,
+    FilterIcon,
     PencilAltIcon,
     PlusIcon,
     QuestionMarkCircleIcon,
@@ -32,6 +33,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {MITMRuleFromModal} from "./MITMRuleFromModal"
 
 const {ipcRenderer, shell} = window.require("electron")
 
@@ -254,8 +256,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         {
             title: "追加 Tag",
             dataKey: "ExtraTag",
-            render: (_) => {
-                const text = ["公钥传输", "登陆/密码传输", "疑似JSONP"]
+            render: (text) => {
+                // const text = ["公钥传输", "登陆/密码传输", "疑似JSONP"]
                 return <TagsList data={text} ellipsis={true} />
             }
         },
@@ -288,120 +290,127 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const onMenuSelect = useMemoizedFn((key: string) => {
         console.log("onMenuSelect", key)
     })
+    const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
+        setModalVisible(b)
+    })
     return (
-        <YakitDrawer
-            placement='bottom'
-            closable={false}
-            onClose={() => setVisible(false)}
-            visible={visible}
-            getContainer={getContainer}
-            mask={false}
-            style={(visible && styleDrawer) || {}}
-            className={styles["mitm-rule-drawer"]}
-            contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
-            title={<div className={styles["heard-title"]}>内容规则配置</div>}
-            extra={
-                <div className={styles["heard-right-operation"]}>
-                    <YakitButton type='text' icon={<SaveIcon />}>
-                        导入配置
-                    </YakitButton>
-                    <Divider type='vertical' style={{margin: "0 4px"}} />
-                    <YakitButton type='text' icon={<ExportIcon />} className={styles["button-export"]}>
-                        导出配置
-                    </YakitButton>
-                    <YakitButton type='primary' className={styles["button-save"]}>
-                        保存
-                    </YakitButton>
-                    <YakitButton
-                        type='outline2'
-                        className={styles["button-question"]}
-                        onClick={() => openExternalWebsite("https://www.yaklang.com/")}
-                    >
-                        <QuestionMarkCircleIcon />
-                    </YakitButton>
-                    <div onClick={() => setVisible(false)} className={styles["icon-remove"]}>
-                        <RemoveIcon />
+        <>
+            <YakitDrawer
+                placement='bottom'
+                closable={false}
+                onClose={() => setVisible(false)}
+                visible={visible}
+                getContainer={getContainer}
+                mask={false}
+                style={(visible && styleDrawer) || {}}
+                className={styles["mitm-rule-drawer"]}
+                contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
+                title={<div className={styles["heard-title"]}>内容规则配置</div>}
+                extra={
+                    <div className={styles["heard-right-operation"]}>
+                        <YakitButton type='text' icon={<SaveIcon />}>
+                            导入配置
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: "0 4px"}} />
+                        <YakitButton type='text' icon={<ExportIcon />} className={styles["button-export"]}>
+                            导出配置
+                        </YakitButton>
+                        <YakitButton type='primary' className={styles["button-save"]}>
+                            保存
+                        </YakitButton>
+                        <YakitButton
+                            type='outline2'
+                            className={styles["button-question"]}
+                            onClick={() => openExternalWebsite("https://www.yaklang.com/")}
+                        >
+                            <QuestionMarkCircleIcon />
+                        </YakitButton>
+                        <div onClick={() => setVisible(false)} className={styles["icon-remove"]}>
+                            <RemoveIcon />
+                        </div>
                     </div>
-                </div>
-            }
-        >
-            <div className={styles["mitm-rule-table"]}>
-                <TableVirtualResize<MITMContentReplacerRule>
-                    titleHeight={42}
-                    title={
-                        <div className={styles["table-title-body"]}>
-                            <div className={styles["table-title"]}>现有 MITM 内容规则</div>
-                            <div className={styles["table-total"]}>
-                                共 <span>6</span> 条规则
-                            </div>
-                        </div>
-                    }
-                    extra={
-                        <div className={styles["table-title-body"]}>
-                            <div className={styles["table-switch"]}>
-                                <span className={styles["switch-text"]}>全部禁用</span>
-                                <YakitSwitch />
-                            </div>
-                            <Divider type='vertical' style={{margin: "0 16px"}} />
-                            <div className={styles["table-switch"]}>
-                                <span className={styles["switch-text"]}>全部不替换</span>
-                                <YakitSwitch />
-                            </div>
-                            <YakitPopover
-                                placement={"bottom"}
-                                arrowPointAtCenter={true}
-                                content={
-                                    <YakitMenu
-                                        data={batchMenuData}
-                                        selectedKeys={[]}
-                                        width={92}
-                                        onSelect={({key}) => onMenuSelect(key)}
-                                    />
-                                }
-                                trigger='hover'
-                                // onVisibleChange={(visible) => setShow(visible)}
-                                overlayClassName={classNames(styles["popover-remove"])}
-                                visible={true}
-                            >
-                                <YakitButton
-                                    type='outline2'
-                                    disabled={selectedRowKeys.length === 0}
-                                    className={classNames(styles["button-batch-remove"])}
-                                >
-                                    批量删除
-                                    <ChevronDownIcon />
-                                </YakitButton>
-                            </YakitPopover>
-
-                            <ButtonColor type='primary' size='small'>
-                                <div className={styles["button-add-rule"]}>
-                                    <PlusIcon />
-                                    新增规则
+                }
+            >
+                <div className={styles["mitm-rule-table"]}>
+                    <TableVirtualResize<MITMContentReplacerRule>
+                        titleHeight={42}
+                        title={
+                            <div className={styles["table-title-body"]}>
+                                <div className={styles["table-title"]}>现有 MITM 内容规则</div>
+                                <div className={styles["table-total"]}>
+                                    共 <span>6</span> 条规则
                                 </div>
-                            </ButtonColor>
-                        </div>
-                    }
-                    renderKey='Index'
-                    data={rules}
-                    rowSelection={{
-                        isAll: isAllSelect,
-                        type: "checkbox",
-                        selectedRowKeys,
-                        onSelectAll: onSelectAll,
-                        onChangeCheckboxSingle: onSelectChange
-                    }}
-                    pagination={{
-                        total: rules.length,
-                        limit: 20,
-                        page: 1,
-                        onChange: () => {}
-                    }}
-                    loading={loading}
-                    columns={columns}
-                    // onRowClick={onRowClick}
-                    onSetCurrentRow={onSetCurrentRow}
-                />
-            </div>
-        </YakitDrawer>
+                            </div>
+                        }
+                        extra={
+                            <div className={styles["table-title-body"]}>
+                                <div className={styles["table-switch"]}>
+                                    <span className={styles["switch-text"]}>全部禁用</span>
+                                    <YakitSwitch />
+                                </div>
+                                <Divider type='vertical' style={{margin: "0 16px"}} />
+                                <div className={styles["table-switch"]}>
+                                    <span className={styles["switch-text"]}>全部不替换</span>
+                                    <YakitSwitch />
+                                </div>
+                                {/* <YakitButton type='outline2' className={styles["button-filter"]}>
+                                <FilterIcon />
+                            </YakitButton> */}
+                                <YakitPopover
+                                    placement={"bottom"}
+                                    arrowPointAtCenter={true}
+                                    content={
+                                        <YakitMenu
+                                            data={batchMenuData}
+                                            selectedKeys={[]}
+                                            width={92}
+                                            onSelect={({key}) => onMenuSelect(key)}
+                                        />
+                                    }
+                                    trigger='hover'
+                                    overlayClassName={classNames(styles["popover-remove"])}
+                                >
+                                    <YakitButton
+                                        type='outline2'
+                                        disabled={selectedRowKeys.length === 0}
+                                        className={classNames(styles["button-batch-remove"])}
+                                    >
+                                        批量删除
+                                        <ChevronDownIcon />
+                                    </YakitButton>
+                                </YakitPopover>
+
+                                <ButtonColor type='primary' size='small' onClick={() => onOpenOrCloseModal(true)}>
+                                    <div className={styles["button-add-rule"]}>
+                                        <PlusIcon />
+                                        新增规则
+                                    </div>
+                                </ButtonColor>
+                            </div>
+                        }
+                        renderKey='Index'
+                        data={rules}
+                        rowSelection={{
+                            isAll: isAllSelect,
+                            type: "checkbox",
+                            selectedRowKeys,
+                            onSelectAll: onSelectAll,
+                            onChangeCheckboxSingle: onSelectChange
+                        }}
+                        pagination={{
+                            total: rules.length,
+                            limit: 20,
+                            page: 1,
+                            onChange: () => {}
+                        }}
+                        loading={loading}
+                        columns={columns}
+                        // onRowClick={onRowClick}
+                        onSetCurrentRow={onSetCurrentRow}
+                    />
+                </div>
+            </YakitDrawer>
+            <MITMRuleFromModal modalVisible={modalVisible} onClose={() => onOpenOrCloseModal(false)} />
+        </>
     )
 }

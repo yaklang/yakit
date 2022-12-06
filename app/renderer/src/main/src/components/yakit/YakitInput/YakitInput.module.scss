@@ -1,0 +1,41 @@
+.yakit-input-wrapper {
+    display: inline-block;
+
+    :global {
+        .ant-input-borderless {
+            border: none;
+        }
+    }
+}
+
+// ========================== disabled ==========================
+.yakit-input-disabled {
+    :global {
+        .ant-input[disabled] {
+            background-color: #F0F1F3;
+            border: 1px solid #EAECF3;
+        }
+    }
+}
+
+// ========================== middle ==========================
+.yakit-input-middle {
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid #EAECF3;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #31343F;
+}
+
+// ========================== small ==========================
+
+.yakit-input-small {
+    height: 24px;
+}
+
+// ========================== large ==========================
+.yakit-input-large {
+    height: 32px;
+    font-size: 14px;
+}

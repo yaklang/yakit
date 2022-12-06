@@ -108,7 +108,7 @@
             }
 
             .button-batch-remove {
-                margin-left: 16px;
+                margin-left: 8px;
                 margin-right: 8px;
             }
 
@@ -122,6 +122,21 @@
                 svg {
                     color: #CCD2DE;
                     margin-right: 4px;
+                }
+            }
+
+            .button-filter {
+                padding: 4px;
+                margin-left: 16px;
+
+                svg {
+                    color: #85899E;
+                }
+
+                &:hover {
+                    svg {
+                        color: #1890ff;
+                    }
                 }
             }
         }
@@ -202,6 +217,8 @@
 }
 
 .popover-remove {
+    padding-top: 6px;
+
     :global {
         .ant-popover-inner-content {
             padding: 8px 4px;

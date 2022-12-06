@@ -68,7 +68,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                     </div>
                 ),
                 key: info.key,
-                disabled: info.disabled,
+                disabled: info.disabled
             }
             return itemInfo
         }
@@ -76,7 +76,6 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
 
     let items: ItemType[] = []
     if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
-
     return (
         <Menu
             {...restMenu}
