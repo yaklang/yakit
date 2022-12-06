@@ -16,7 +16,7 @@ import {YakitPopover} from "../basics/YakitPopover"
 import {YakitMenu} from "../basics/YakitMenu"
 import {YakitEllipsis} from "../basics/YakitEllipsis"
 import {useMemoizedFn} from "ahooks"
-import {showModal} from "@/utils/showModal"
+import {showDrawer, showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {info, success} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
@@ -34,6 +34,9 @@ import {Route} from "@/routes/routeSpec"
 import {UserPlatformType} from "@/pages/globalVariable"
 import {TrustList} from "@/pages/TrustList"
 import SetPassword from "@/pages/SetPassword"
+import {QueryGeneralResponse} from "@/pages/invoker/schema"
+import {Risk} from "@/pages/risks/schema"
+import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
 
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
@@ -704,28 +707,96 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 interface UIOpRiskProp {
     isEngineLink: boolean
 }
+/** 最新风险与漏洞信息 */
+interface LatestRiskInfo {
+    Title: string
+    Id: number
+    CreatedAt: number
+    UpdatedAt: number
+    Verbose: string
+    TitleVerbose: string
+    Unread: boolean
+}
+interface RisksProps {
+    Data: LatestRiskInfo[]
+    Total: number
+    NewRiskTotal: number
+}
+/** 漏洞与风险等级对应关系 */
+const RiskType: {[key: string]: string} = {
+    "信息/指纹": "info",
+    低危: "low",
+    中危: "middle",
+    高危: "high",
+    严重: "critical"
+}
 const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     const {isEngineLink} = props
 
     const [show, setShow] = useState<boolean>(false)
 
-    const [total, setTotal] = useState<number>(0)
-    const [risks, setRisks] = useState<any>()
-
-    /** 上一版风险记录信息 */
-    const previousRisk = useRef<any>()
+    /** 查询最新风险与漏洞信息节点 */
+    const fetchNode = useRef<number>(0)
+    const [risks, setRisks] = useState<RisksProps>({
+        Data: [],
+        Total: 0,
+        NewRiskTotal: 0
+    })
 
     /** 定时器 */
     const timeRef = useRef<any>(null)
 
     /** 查询最新的风险数据 */
-    const update = useMemoizedFn(() => {})
+    const update = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("fetch-latest-risk-info", {AfterId: fetchNode.current})
+            .then((res: RisksProps) => {
+                console.log("boolean", JSON.stringify(risks.Data) === JSON.stringify(res.Data))
 
+                if (
+                    JSON.stringify(risks.Data) === JSON.stringify(res.Data) &&
+                    risks.NewRiskTotal === res.NewRiskTotal &&
+                    risks.Total === res.Total
+                ) {
+                    return
+                }
+
+                const infos = [...res.Data]
+                const risksOjb: RisksProps = {
+                    Total: res.Total,
+                    NewRiskTotal: res.NewRiskTotal,
+                    Data: infos.map((item) => {
+                        const info = risks.Data.filter((el) => el.Id === item.Id && el.Title === item.Title)[0]
+                        if (!!info) item.Unread = info.Unread
+                        else item.Unread = true
+                        return item
+                    })
+                }
+                setRisks({...risksOjb})
+            })
+            .catch(() => {})
+    })
+
+    /** 获取最新的风险与漏洞信息(5秒一次) */
     useEffect(() => {
         if (isEngineLink) {
             if (timeRef.current) clearInterval(timeRef.current)
-            update()
-            timeRef.current = setInterval(update, 5000)
+
+            ipcRenderer
+                .invoke("QueryRisks", {
+                    Pagination: {Limit: 1, Page: 1, Order: "desc", OrderBy: "updated_at"}
+                })
+                .then((res: QueryGeneralResponse<Risk>) => {
+                    const {Data} = res
+                    fetchNode.current = Data.length === 0 ? 0 : Data[0].Id
+                })
+                .catch((e) => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        update()
+                        timeRef.current = setInterval(update, 5000)
+                    }, 300)
+                })
 
             return () => {
                 clearInterval(timeRef.current)
@@ -733,63 +804,126 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         } else {
             if (timeRef.current) clearInterval(timeRef.current)
             timeRef.current = null
-            setTotal(0)
+            fetchNode.current = 0
+            setRisks({Data: [], Total: 0, NewRiskTotal: 0})
         }
     }, [isEngineLink])
 
     const unread = useMemo(() => {
-        return total
-    }, [total, risks])
+        let flag = false
+        for (let info of risks.Data) {
+            if (info.Unread) {
+                flag = true
+                break
+            }
+        }
+        return flag
+    }, [risks])
+
+    /** 单条点击阅读 */
+    const singleRead = useMemoizedFn((info: LatestRiskInfo) => {
+        ipcRenderer
+            .invoke("QueryRisk", {Id: info.Id})
+            .then((res: Risk) => {
+                if (!res) return
+                showModal({
+                    width: "80%",
+                    title: "详情",
+                    content: (
+                        <div style={{overflow: "auto"}}>
+                            <RiskDetails info={res} />
+                        </div>
+                    )
+                })
+                setRisks({
+                    ...risks,
+                    Data: risks.Data.map((item) => {
+                        if (item.Id === info.Id && item.Title === info.Title) item.Unread = false
+                        return item
+                    })
+                })
+            })
+            .catch(() => {})
+    })
+    /** 全部已读 */
+    const allRead = useMemoizedFn(() => {
+        setRisks({
+            ...risks,
+            Data: risks.Data.map((item) => {
+                item.Unread = false
+                return item
+            })
+        })
+    })
+    /** 查看全部 */
+    const viewAll = useMemoizedFn(() => {
+        showDrawer({
+            title: "Vulnerabilities && Risks",
+            width: "70%",
+            content: (
+                <>
+                    <RiskTable />
+                </>
+            )
+        })
+    })
 
     const notice = useMemo(() => {
         return (
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
                     <div className={styles["risk-header"]}>
-                        漏洞和风险统计（共 {total} 条，其中 {unread} 条未读）
+                        漏洞和风险统计（共 {risks.Total || 0} 条，其中新增 {risks.NewRiskTotal || 0} 条）
                     </div>
 
                     <div className={styles["risk-info"]}>
-                        <div className={styles["risk-info-opt"]}>
-                            <div className={classnames(styles["opt-icon-style"], styles["opt-fatal-icon"])}>严重</div>
-                            <Badge dot offset={[3, 0]}>
-                                <YakitEllipsis text='Git 敏感信息泄漏: edge.microsoft.com:80' width={310} />
-                            </Badge>
-                        </div>
-                        <div className={styles["risk-info-opt"]}>
-                            <div className={classnames(styles["opt-icon-style"], styles["opt-high-icon"])}>高危</div>
-                            <Badge dot offset={[3, 0]}>
-                                <YakitEllipsis text='Git 敏感信息泄漏: edge.microsoft.com:80' width={310} />
-                            </Badge>
-                        </div>
-                        <div className={styles["risk-info-opt"]}>
-                            <div className={classnames(styles["opt-icon-style"], styles["opt-middle-icon"])}>中危</div>
-                            <Badge dot offset={[3, 0]}>
-                                <YakitEllipsis text='Git 敏感信息泄漏: edge.microsoft.com:80' width={310} />
-                            </Badge>
-                        </div>
-                        <div className={styles["risk-info-opt"]}>
-                            <div className={classnames(styles["opt-icon-style"], styles["opt-low-icon"])}>低危</div>
-                            <Badge dot offset={[3, 0]}>
-                                <YakitEllipsis text='Git 敏感信息泄漏: edge.microsoft.com:80' width={310} />
-                            </Badge>
-                        </div>
-                        <div className={styles["risk-info-opt"]}>
-                            <div className={classnames(styles["opt-icon-style"], styles["opt-info-icon"])}>指纹</div>
-                            <Badge dot offset={[3, 0]}>
-                                <YakitEllipsis text='Git 敏感信息泄漏: edge.microsoft.com:80' width={310} />
-                            </Badge>
-                        </div>
+                        {risks.Data.map((item) => {
+                            const type = RiskType[item.Verbose]
+                            if (!!type) {
+                                return (
+                                    <div
+                                        className={styles["risk-info-opt"]}
+                                        key={item.Id}
+                                        onClick={() => singleRead(item)}
+                                    >
+                                        <div
+                                            className={classnames(styles["opt-icon-style"], styles[`opt-${type}-icon`])}
+                                        >
+                                            {item.Verbose}
+                                        </div>
+                                        <Badge dot={item.Unread} offset={[3, 0]}>
+                                            <YakitEllipsis text={item.Title} width={type === "info" ? 280 : 310} />
+                                        </Badge>
+                                    </div>
+                                )
+                            } else {
+                                return (
+                                    <div
+                                        className={styles["risk-info-opt"]}
+                                        key={item.Id}
+                                        onClick={() => singleRead(item)}
+                                    >
+                                        <Badge dot={item.Unread} offset={[3, 0]}>
+                                            <YakitEllipsis text={`${item.Title} ${item.Verbose}}`} width={350} />
+                                        </Badge>
+                                    </div>
+                                )
+                            }
+                        })}
                     </div>
 
                     <div className={styles["risk-footer"]}>
-                        <div className={styles["risk-footer-btn"]}>全部已读</div>
-                        <div className={styles["risk-footer-btn"]}>查看全部</div>
+                        <div className={styles["risk-footer-btn"]} onClick={allRead}>
+                            全部已读
+                        </div>
+                        <div className={styles["risk-footer-btn"]} onClick={viewAll}>
+                            查看全部
+                        </div>
                     </div>
                 </div>
             </div>
         )
-    }, [unread, total, risks])
+    }, [risks])
 
     return (
         <YakitPopover
@@ -799,7 +933,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
-                <Badge dot={unread > 0} offset={[2, 0]}>
+                <Badge dot={unread} offset={[2, 0]}>
                     <RiskStateSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
                 </Badge>
             </div>

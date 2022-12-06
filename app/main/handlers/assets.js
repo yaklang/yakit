@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron");
+const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
     // asyncQueryPorts wrapper
@@ -193,6 +193,22 @@ module.exports = (win, getClient) => {
         return await asyncResetRiskTableStats(params)
     })
 
+    /** 获取最新的风险与漏洞数据 */
+    const asyncFetchLatestRisk = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryNewRisk(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("fetch-latest-risk-info", async (e, params) => {
+        return await asyncFetchLatestRisk(params)
+    })
+
     // asyncDeleteHistoryHTTPFuzzerTask wrapper
     const asyncDeleteHistoryHTTPFuzzerTask = (params) => {
         return new Promise((resolve, reject) => {
@@ -272,4 +288,4 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryAvailableReportFrom", async (e, params) => {
         return await asyncQueryAvailableReportFrom(params)
     })
-};
+}

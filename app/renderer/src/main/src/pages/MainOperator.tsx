@@ -1228,7 +1228,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
     return (
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
-                <Header className='main-laytou-header'>
+                {false&&<Header className='main-laytou-header'>
                     <Row>
                         <Col span={8}>
                             <Space>
@@ -1428,7 +1428,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                             </Space>
                         </Col>
                     </Row>
-                </Header>
+                </Header>}
                 {IsNewUI && (
                     <HeardMenu
                         routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}

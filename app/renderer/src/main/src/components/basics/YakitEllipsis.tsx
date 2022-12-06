@@ -13,7 +13,7 @@ export const YakitEllipsis: React.FC<YakitEllipsisProp> = (props) => {
     const {text, width = 260} = props
 
     return (
-        <span style={{width: width}} className={styles["yakit-ellipsis-wrapper"]} title={text}>
+        <span style={{maxWidth: width}} className={styles["yakit-ellipsis-wrapper"]} title={text}>
             {text}
         </span>
     )

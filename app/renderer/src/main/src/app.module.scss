@@ -1,0 +1,37 @@
+.yakit-mask-drag-wrapper {
+    width: 100vh;
+    height: 36px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    -webkit-app-region: drag;
+}
+
+.yakit-agr-modal-body {
+    padding: 16px 24px 24px 24px;
+    .body-title {
+        height: 24px;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 24px;
+        color: #000000;
+    }
+    .body-content {
+        margin-top: 8px;
+        font-size: 14px;
+        line-height: 24px;
+        text-align: justify;
+        color: #85899e;
+        .sign-content {
+            color: #f6544a;
+        }
+        .underline-content {
+            color: #f6544a;
+            text-decoration: underline;
+        }
+        .sign-bold-content {
+            color: #f6544a;
+            font-weight: 500;
+        }
+    }
+}

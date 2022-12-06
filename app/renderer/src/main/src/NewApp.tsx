@@ -1,22 +1,25 @@
-import React, {useEffect, useState, Suspense, lazy} from "react"
-import {Form, Modal, notification, Spin, Tabs, Typography} from "antd"
-
+import {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
-import {yakEcho} from "./utils/yakEcho"
-import {failed, info, success} from "./utils/notification"
-import {AutoSpin} from "./components/AutoSpin"
+import {failed} from "./utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
 import {getCompletions} from "./utils/monacoSpec/yakCompletionSchema"
 import {showModal} from "./utils/showModal"
 import {YakCodeEditor} from "./utils/editors"
 import {getRemoteValue, setRemoteValue} from "./utils/kv"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {LocalGV} from "./yakitGV"
+import {YakitModal} from "./components/basics/YakitModal"
 
+import styles from "./app.module.scss"
+
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+/** 快捷键目录 */
 const InterceptKeyword = [
     // "KeyA",
     // "KeyB",
@@ -45,100 +48,62 @@ const InterceptKeyword = [
     // "KeyY",
     // "KeyZ",
 ]
-
-// import Main from "./pages/MainOperator";
+/** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
-// import {YakEnvironment} from "./protected/YakEnvironment";
-const YakEnvironment = lazy(() => import("./protected/YakEnvironment"))
+const LicensePage = lazy(() => import("./pages/LicensePage"))
 
 const {ipcRenderer} = window.require("electron")
-const FormItem = Form.Item
-const {Text, Title, Paragraph} = Typography
-
-const UserProtocolAgreed = "user-protocol-agreed"
 
 interface OnlineProfileProps {
     BaseUrl: string
     Password?: string
 }
 
-export const UserProtocol = () => (
-    <>
-        <Typography>
-            <Title level={2}>免责声明</Title>
-
-            <Paragraph>
-                1. 本工具仅面向{" "}
-                <Text mark={true} strong={true} underline={true}>
-                    合法授权
-                </Text>{" "}
-                的企业安全建设行为与个人学习行为，如您需要测试本工具的可用性，请自行搭建靶机环境。
-            </Paragraph>
-
-            <Paragraph>
-                2. 在使用本工具进行检测时，您应确保该行为符合当地的法律法规，并且已经取得了足够的授权。
-                <Text style={{color: "red"}} underline={true}>
-                    请勿对非授权目标进行扫描。
-                </Text>
-            </Paragraph>
-
-            <Paragraph>3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。</Paragraph>
-
-            <Paragraph>
-                <Text strong={true} style={{color: "red"}}>
-                    如果发现上述禁止行为，我们将保留追究您法律责任的权利。
-                </Text>
-            </Paragraph>
-
-            <Paragraph>
-                如您在使用本工具的过程中存在任何非法行为，您需自行承担相应后果，我们将不承担任何法律及连带责任。
-            </Paragraph>
-
-            <Paragraph>
-                在安装并使用本工具前，请您{" "}
-                <Text strong={true} underline={true} style={{color: "red"}}>
-                    务必审慎阅读、充分理解各条款内容
-                </Text>
-            </Paragraph>
-
-            <Paragraph>
-                限制、免责条款或者其他涉及您重大权益的条款可能会以 <Text strong={true}>加粗</Text>、
-                <Text underline={true}>加下划线</Text>等形式提示您重点注意。
-            </Paragraph>
-
-            <Paragraph>
-                除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。
-            </Paragraph>
-        </Typography>
-    </>
-)
-
 function NewApp() {
-    const [connected, setConnected] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [tlsGRPC, setTlsGRPC] = useState(false)
-    const [addr, setAddr] = useState("")
-    const [mode, setMode] = useState<"remote" | "local">()
 
-    // 用户协议相关内容
+    /** 是否展示用户协议 */
     const [agreed, setAgreed] = useState(false)
-    const [readingSeconds, setReadingSeconds] = useState<number>(1)
+    /** 展示用户协议计时时间 */
+    const [readingSeconds, setReadingSeconds, getReadingSeconds] = useGetState<number>(3)
+    const agrTimeRef = useRef<any>(null)
 
+    /** 是否展示用户协议 */
     useEffect(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("get-value", UserProtocolAgreed)
+            .invoke("fetch-local-cache", LocalGV.UserProtocolAgreed)
             .then((value: any) => {
                 setAgreed(!!value)
+                if (!value) {
+                    if (agrTimeRef.current) clearInterval(agrTimeRef.current)
+                    agrTimeRef.current = setInterval(() => {
+                        setReadingSeconds(getReadingSeconds() - 1)
+                        if (getReadingSeconds() === 0) {
+                            clearInterval(agrTimeRef.current)
+                            agrTimeRef.current = null
+                        }
+                    }, 1000)
+                }
             })
             .catch(() => {})
             .finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
 
+
+    // const [tlsGRPC, setTlsGRPC] = useState(false)
+    // const [addr, setAddr] = useState("")
+    // const [mode, setMode] = useState<"remote" | "local">()
+
+    // 获取子组件方法Ref
+    const childRef = useRef<any>()
+
+    // License
+    const [licenseVerified, setLicenseVerified] = useState<boolean>(true)
+
+    /** 全局拦截快捷键(补全内容) */
     useHotkeys("alt+a", (e) => {
         const a = getCompletions()
-        const data = JSON.stringify(a)
-        console.info(data)
         showModal({
             title: "补全内容",
             width: "100%",
@@ -150,26 +115,15 @@ function NewApp() {
         })
     })
 
-    useEffect(() => {
-        let second = readingSeconds
-        let id = setInterval(() => {
-            second--
-            if (second >= 0) {
-                setReadingSeconds(second)
-            }
-            if (second <= 0) {
-                clearInterval(id)
-            }
-        }, 1000)
-    }, [])
-
     // 全局监听登录状态
     const {userInfo, setStoreUserInfo} = useStore()
 
+    /** yaklang引擎 连接成功后的配置事件 */
+    const linkSuccess = () => {
+        testYak()
+    }
+
     const testYak = () => {
-        if (loading) {
-            return
-        }
         getRemoteValue("httpSetting").then((setting) => {
             if (!setting) {
                 ipcRenderer
@@ -197,16 +151,19 @@ function NewApp() {
                     .finally(() => setTimeout(() => setLoading(false), 300))
             }
         })
-
-        setLoading(true)
-        yakEcho()
     }
 
     const refreshLogin = useMemoizedFn(() => {
-        // 获取引擎中的token
-        getRemoteValue("token-online")
+        // 获取引擎中的token(区分企业版与社区版)
+        const TokenSource = IsEnterprise ? "token-online-enterprise" : "token-online"
+        getRemoteValue(TokenSource)
             .then((resToken) => {
                 if (!resToken) {
+                    // 在第一次进入页面时，如若是企业登录则打开登录
+                    if (IsEnterprise) {
+                        // openLoginShow就是Main暴露给App的方法
+                        childRef.current.openLoginShow()
+                    }
                     return
                 }
                 // 通过token获取用户信息
@@ -218,7 +175,9 @@ function NewApp() {
                     }
                 })
                     .then((res) => {
-                        setRemoteValue("token-online", resToken)
+                        IsEnterprise
+                            ? setRemoteValue("token-online-enterprise", resToken)
+                            : setRemoteValue("token-online", resToken)
                         const user = {
                             isLogin: true,
                             platform: res.from_platform,
@@ -232,58 +191,28 @@ function NewApp() {
                             companyHeadImg: res.from_platform === "company" ? res.head_img : null,
                             role: res.role,
                             user_id: res.user_id,
-                            token: resToken
+                            token: resToken,
+                            showStatusSearch: res?.showStatusSearch || false
                         }
                         ipcRenderer.sendSync("sync-update-user", user)
                         setStoreUserInfo(user)
                         refreshToken(user)
                     })
                     .catch((e) => {
-                        setRemoteValue("token-online", "")
+                        IsEnterprise
+                            ? setRemoteValue("token-online-enterprise", "")
+                            : setRemoteValue("token-online", "")
                     })
             })
             .catch((e) => {
-                setRemoteValue("token-online", "")
+                IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
             })
     })
 
-    useEffect(() => {
-        if (mode !== "local") {
-            return
-        }
-
-        ipcRenderer.on("client-yak-local-grpc-error", async (e: any, data: any) => {
-            failed("Yak 本地 gRPC 服务器发生错误: " + data)
-        })
-        ipcRenderer.on("client-yak-local-grpc-close", async (e: any, msg: any) => {
-            info("Yak 本地 gRPC 服务器已退出: " + msg)
-        })
-
-        return () => {
-            ipcRenderer.removeAllListeners("client-yak-local-grpc-error")
-            ipcRenderer.removeAllListeners("client-yak-local-grpc-close")
-        }
-    }, [mode])
-
-    useEffect(() => {
-        ipcRenderer.on("client-echo-yak", async (e: any, ok: boolean, text: string) => {
-            if (ok) {
-                // success("Yakit Server 认证成功")
-            } else {
-                failed(`Yakit Server 认证失败：${text}`)
-            }
-            setConnected(ok)
-            setTimeout(() => setLoading(false), 500)
-        })
-
-        if (mode === "remote") {
-            testYak()
-        }
-        return () => {
-            ipcRenderer.removeAllListeners("client-echo-yak")
-        }
-    }, [])
-
+    /**
+     * 拦截软件全局快捷键[(win:ctrl|mac:command) + 26字母]
+     * 通过 InterceptKeyword 变量进行拦截控制
+     */
     useEffect(() => {
         let originEvent = window.onkeydown
         window.onkeydown = (ev) => {
@@ -303,41 +232,78 @@ function NewApp() {
         }
     }, [])
 
-    const userProtocol = () => (
-        <Modal
-            title={"用户协议"}
-            visible={true}
-            width={"75%"}
-            onCancel={() => {
-                Modal.info({title: "不同意使用协议将无法使用"})
-            }}
-            closable={false}
-            cancelText={"关闭 / Closed"}
-            okButtonProps={{disabled: readingSeconds > 0}}
-            onOk={() => {
-                ipcRenderer.invoke("set-value", UserProtocolAgreed, true)
-                setAgreed(true)
-            }}
-            okText={readingSeconds > 0 ? `我已认真阅读本协议(${readingSeconds}s)` : "我已认真阅读本协议，认同协议内容"}
-        >
-            {UserProtocol()}
-        </Modal>
-    )
     if (!agreed) {
-        return userProtocol()
+        return (
+            <>
+                <div className={styles["yakit-mask-drag-wrapper"]}></div>
+                <YakitModal
+                    title='用户协议'
+                    centered={true}
+                    visible={true}
+                    closable={false}
+                    width='75%'
+                    cancelText={"关闭 / Closed"}
+                    onCancel={() => ipcRenderer.invoke("UIOperate", "close")}
+                    okButtonProps={{disabled: readingSeconds > 0}}
+                    onOk={() => {
+                        ipcRenderer.invoke("set-local-cache", LocalGV.UserProtocolAgreed, true)
+                        setReadingSeconds(3)
+                        setAgreed(true)
+                    }}
+                    okText={
+                        readingSeconds > 0
+                            ? `我已认真阅读本协议(${readingSeconds}s)`
+                            : "我已认真阅读本协议，认同协议内容"
+                    }
+                >
+                    <div className={styles["yakit-agr-modal-body"]}>
+                        <div className={styles["body-title"]}>免责声明</div>
+                        <div className={styles["body-content"]}>
+                            1. 本工具仅面向 <span className={styles["sign-content"]}>合法授权</span>{" "}
+                            的企业安全建设行为与个人学习行为，如您需要测试本工具的可用性，请自行搭建靶机环境。
+                            <br />
+                            2. 在使用本工具进行检测时，您应确保该行为符合当地的法律法规，并且已经取得了足够的授权。
+                            <span className={styles["underline-content"]}>请勿对非授权目标进行扫描。</span>
+                            <br />
+                            3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
+                            <br />
+                            <span className={styles["sign-bold-content"]}>
+                                如果发现上述禁止行为，我们将保留追究您法律责任的权利。
+                            </span>
+                            <br />
+                            如您在使用本工具的过程中存在任何非法行为，您需自行承担相应后果，我们将不承担任何法律及连带责任。
+                            <br />
+                            在安装并使用本工具前，请您{" "}
+                            <span className={styles["sign-bold-content"]}>务必审慎阅读、充分理解各条款内容。</span>
+                            <br />
+                            限制、免责条款或者其他涉及您重大权益的条款可能会以{" "}
+                            <span className={styles["sign-bold-content"]}>加粗</span>、
+                            <span className={styles["underline-content"]}>加下划线</span>
+                            等形式提示您重点注意。
+                            <br />
+                            除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。
+                        </div>
+                    </div>
+                </YakitModal>
+            </>
+        )
     }
 
     return (
-        <UILayout>
-            {(true||connected) ? (
-                <Suspense fallback={<div>Loading Main</div>}>
+        <UILayout linkSuccess={linkSuccess}>
+            {/* {connected ? ( */}
+            <Suspense fallback={<div>Loading Main</div>}>
+                {licenseVerified ? (
                     <Main
                         onErrorConfirmed={() => {
-                            setConnected(false)
                         }}
+                        ref={childRef}
                     />
-                </Suspense>
-            ) : (
+                ) : (
+                    <LicensePage onLicenseVerified={() => setLicenseVerified(true)} />
+                )}
+            </Suspense>
+            {/* ) : (
                 <Suspense
                     fallback={
                         <div style={{width: "100%", marginTop: 200, textAlign: "center"}}>
@@ -356,7 +322,7 @@ function NewApp() {
                         onAddrChanged={setAddr}
                     />
                 </Suspense>
-            )}
+            )} */}
         </UILayout>
     )
 }

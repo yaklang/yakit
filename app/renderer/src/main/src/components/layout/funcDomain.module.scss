@@ -193,10 +193,12 @@
                     font-weight: 500;
                     font-size: 12px;
                     color: #31343f;
+                    cursor: pointer;
 
                     .opt-icon-style {
                         margin-right: 8px;
-                        width: 40px;
+                        min-width: 40px;
+                        padding: 0 8px;
                         height: 20px;
                         border-radius: 4px;
                         font-size: 12px;
@@ -204,7 +206,7 @@
                         text-align: center;
                     }
 
-                    .opt-fatal-icon {
+                    .opt-critical-icon {
                         background: rgba(246, 84, 74, 0.08);
                         color: #bd2a21;
                     }
@@ -240,6 +242,9 @@
                     line-height: 16px;
                     color: #85899e;
                     cursor: pointer;
+                }
+                .risk-footer-btn:hover {
+                    color: #f28b44;
                 }
             }
         }

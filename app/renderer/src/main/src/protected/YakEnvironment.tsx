@@ -21,7 +21,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 
-const {Text, Title, Paragraph} = Typography
+const {Text} = Typography
 
 export interface YakEnvironmentProp {
     onConnected: () => any

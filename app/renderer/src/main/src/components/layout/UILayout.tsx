@@ -19,7 +19,7 @@ import {WinUIOp} from "./WinUIOp"
 import {GlobalReverseState} from "./GlobalReverseState"
 import {YakitGlobalHost} from "./YakitGlobalHost"
 import {DownloadingState, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
-import {failed, success} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
 import {YakitPopover} from "../basics/YakitPopover"
 import {CodeGV, LocalGV} from "@/yakitGV"
@@ -32,6 +32,7 @@ const {ipcRenderer} = window.require("electron")
 
 export interface UILayoutProp {
     children?: React.ReactNode
+    linkSuccess?: () => any
 }
 /** 已启动引擎的pid信息 */
 interface yakProcess {
@@ -60,6 +61,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** 是否提示用户重新启动本地引擎 */
     const [restartEngine, setRestartEngine] = useState<boolean>(false)
 
+    const [databaseError, setDatabaseError, getDatabaseError] = useGetState<boolean>(false)
+    /** 获取数据库是否有权限操作 */
+    const fetchDatabaseStatus = async () => {
+        await ipcRenderer.invoke("check-local-database").then((e) => {
+            setDatabaseError(e === "not allow to write")
+        })
+    }
+
     /**
      * 1.获取操作系统信息
      * 2.获取yaklang引擎是否安装的状态
@@ -68,10 +77,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      */
     useLayoutEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((type: YakitSystem) => setSystem(type))
-        ipcRenderer.invoke("is-yaklang-engine-installed").then((flag: boolean) => {
+        ipcRenderer.invoke("is-yaklang-engine-installed").then(async (flag: boolean) => {
             setIsYakInstalled(flag)
             setEngineShow(!flag)
-            if (flag) {
+
+            await fetchDatabaseStatus()
+
+            if (flag && !getDatabaseError()) {
                 ipcRenderer
                     .invoke("fetch-local-cache", LocalGV.YaklangEnginePort)
                     .then((port: number) => {
@@ -110,7 +122,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer.on("local-yaklang-engine-start", () => {
             if (!getEngineLink()) {
                 isNormalStart.current = true
-                setTimeout(() => setEngineLink(true), 500)
+                setTimeout(() => {
+                    setEngineLink(true)
+                    if (props.linkSuccess) props.linkSuccess()
+                }, 500)
 
                 if (pidTimeRef.current) {
                     clearInterval(pidTimeRef.current)
@@ -454,6 +469,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             startEngine={() => startEngine(false)}
                         />
                     )}
+                    {!engineLink && databaseError && isYakInstalled && system !== "Windows_NT" && (
+                        <DatabaseErrorHint
+                            visible={databaseError}
+                            setVisible={setDatabaseError}
+                            startEngine={() => startEngine(false)}
+                        />
+                    )}
                 </div>
             ) : (
                 <div className={styles["ui-layout-mask"]}>
@@ -754,7 +776,11 @@ const YaklangEngineHint: React.FC<YaklangEngineHintProps> = React.memo((props) =
                                                         styles["btn-wrapper"],
                                                         styles["btn-default-wrapper"]
                                                     )}
-                                                    onClick={() => setIsRemoteEngine(true)}
+                                                    onClick={() => {
+                                                        setCheckStatus(true)
+                                                        if (!agrCheck) return
+                                                        setIsRemoteEngine(true)
+                                                    }}
                                                 >
                                                     远程连接
                                                 </Button>
@@ -1100,7 +1126,7 @@ interface YakitAuthInfo {
     tls: boolean
     password: string
 }
-/** @name 远程连接UI UI写好，逻辑没有写 */
+/** @name 远程连接UI */
 const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((props) => {
     const {loading, onSubmit, onCancel} = props
 
@@ -1975,6 +2001,102 @@ const HintRestartEngine: React.FC<HintRestartEngineProps> = React.memo((props) =
                                             onClick={onRestart}
                                         >
                                             立即启动
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Draggable>
+        </>
+    )
+})
+
+interface DatabaseErrorHintProps {
+    visible: boolean
+    setVisible: (flag: boolean) => any
+    startEngine: () => any
+}
+/** @name 意外断开引擎连接时的提示弹窗 */
+const DatabaseErrorHint: React.FC<DatabaseErrorHintProps> = React.memo((props) => {
+    const {visible, setVisible, startEngine} = props
+
+    const [disabled, setDisabled] = useState(true)
+    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
+    const draggleRef = useRef<HTMLDivElement>(null)
+
+    /** 立即修复 */
+    const onRestart = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("fix-local-database")
+            .then((e) => {
+                info("修复成功")
+                startEngine()
+                setVisible(false)
+            })
+            .catch((e) => {
+                failed(`修复数据库权限错误：${e}`)
+            })
+    })
+
+    /** 弹窗拖拽移动触发事件 */
+    const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
+        const {clientWidth, clientHeight} = window.document.documentElement
+        const targetRect = draggleRef.current?.getBoundingClientRect()
+        if (!targetRect) return
+
+        setBounds({
+            left: -targetRect.left + uiData.x,
+            right: clientWidth - (targetRect.right - uiData.x),
+            top: -targetRect.top + uiData.y + 36,
+            bottom: clientHeight - (targetRect.bottom - uiData.y)
+        })
+    })
+
+    return (
+        <>
+            <Draggable
+                defaultClassName={classnames(
+                    styles["yaklang-update-modal"],
+                    visible ? styles["engine-hint-modal-wrapper"] : styles["engine-hint-modal-hidden-wrapper"],
+                    [styles["modal-top-wrapper"]]
+                )}
+                disabled={disabled}
+                bounds={bounds}
+                onStart={(event, uiData) => onStart(event, uiData)}
+            >
+                <div ref={draggleRef}>
+                    <div className={styles["modal-yaklang-engine-hint"]}>
+                        <div className={styles["yaklang-engine-hint-wrapper"]}>
+                            <div
+                                className={styles["hint-draggle-body"]}
+                                onMouseEnter={() => {
+                                    if (disabled) setDisabled(false)
+                                }}
+                                onMouseLeave={() => setDisabled(true)}
+                            ></div>
+
+                            <div className={styles["hint-left-wrapper"]}>
+                                <div className={styles["hint-icon"]}>
+                                    <YaklangInstallHintSvgIcon />
+                                </div>
+                            </div>
+
+                            <div className={styles["hint-right-wrapper"]}>
+                                <div className={styles["hint-right-title"]}>yaklang 数据库错误</div>
+                                <div className={styles["hint-right-content"]}>
+                                    尝试修复数据库写权限（可能要求 ROOT 权限）
+                                </div>
+
+                                <div className={styles["hint-right-btn"]}>
+                                    <div></div>
+                                    <div className={styles["btn-group-wrapper"]}>
+                                        <Button
+                                            className={classnames(styles["btn-wrapper"], styles["btn-theme-wrapper"])}
+                                            onClick={onRestart}
+                                        >
+                                            立即修复
                                         </Button>
                                     </div>
                                 </div>
