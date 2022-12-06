@@ -125,9 +125,9 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                 >
                     <Image src={TelecomBanner} style={{marginTop: 120, marginBottom: 40}} preview={false} width={400} />
                     <br />
-                    <Text style={{color: "#999"}}>
+                    {/* <Text style={{color: "#999"}}>
                         {isEnterprise ? "企业版" : "社区专业版"}：{version}
-                    </Text>
+                    </Text> */}
                     <SelectOne
                         label={" "}
                         colon={false}
@@ -357,7 +357,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                     >
                                         <p style={{marginBottom: 0}}>核心引擎安装与升级</p>
                                     </Button>
-                                    <Button
+                                    {/* <Button
                                         onClick={() => {
                                             let m = showModal({
                                                 keyboard: false,
@@ -376,7 +376,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                         }}
                                     >
                                         <p style={{marginBottom: 0}}>Yakit 升级</p>
-                                    </Button>
+                                    </Button> */}
                                 </Button.Group>
                             </Space>
                         </div>
