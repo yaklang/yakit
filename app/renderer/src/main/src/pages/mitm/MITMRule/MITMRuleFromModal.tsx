@@ -32,10 +32,10 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
         >
             <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
                 <Form.Item label='执行顺序' name='Index'>
-                    <YakitInputNumber type='horizontal' />
+                    <YakitInputNumber type='horizontal' min={1} />
                 </Form.Item>
                 <Form.Item label='执行顺序' name='66'>
-                    <YakitInputNumber min={1} />
+                    <YakitInputNumber />
                 </Form.Item>
                 <Form.Item label='规则名称' name='VerboseName'>
                     <Input />

@@ -17,7 +17,7 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
     const {type, size, className} = props
     return (
         <>
-            {(type === "horizontal" && <YakitInputNumberHorizontal />) || (
+            {(type === "horizontal" && <YakitInputNumberHorizontal {...props} />) || (
                 <InputNumber
                     {...props}
                     size='middle'
@@ -26,7 +26,8 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
                         {
                             [styles["yakit-input-number-max-large"]]: size === "maxLarge",
                             [styles["yakit-input-number-large"]]: size === "large",
-                            [styles["yakit-input-number-small"]]: size === "small"
+                            [styles["yakit-input-number-small"]]: size === "small",
+                            [styles["yakit-input-number-disabled"]]: !!props.disabled
                         },
                         className
                     )}
@@ -43,71 +44,157 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
  * @description:不支持 bordered false ，无边框模式
  */
 const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (props) => {
-    const {size, step = 1} = props
+    const {size, step = 1, controls, precision} = props
     const [value, setValue] = useState<ValueType | null | undefined>(props.value)
-    const ref = useRef<any>()
-    const isHovering = useHover(ref)
+    const [focus, setFocus] = useState<boolean>(false)
+    const precisionRef = useRef<number>(1)
     useEffect(() => {
         setValue(props.value)
     }, [props.value])
+    useEffect(() => {
+        const stepPrecision = getPrecision(step)
+        if (precision !== undefined) {
+            if (stepPrecision > precision) {
+                console.warn("[Yakit Warn][InputNumber]precision should not be less than the decimal places of step")
+            }
+            precisionRef.current = precision
+        } else {
+            precisionRef.current = Math.max(getPrecision(value), stepPrecision)
+        }
+    }, [props.value, props.step, props.precision])
+    /**
+     * @description: 获取精度
+     * @return {*} 精度
+     */
+    const getPrecision = (value) => {
+        if (value === undefined) return 0
+        const valueString = value.toString()
+        const dotPosition = valueString.indexOf(".")
+        let precision = 0
+        if (dotPosition !== -1) {
+            precision = valueString.length - dotPosition - 1
+        }
+        return precision
+    }
+    /**
+     * @description: 根据精度计算最后的值
+     */
+    const toPrecision = (num) => {
+        const precision = precisionRef.current
+        return parseFloat(`${Math.round(num * Math.pow(10, precision)) / Math.pow(10, precision)}`)
+    }
+    /**
+     * @description: 增加
+     */
+    const onIncrease = (val, step) => {
+        if (typeof val !== "number" && val === undefined) return value
+        const precisionFactor = Math.pow(10, precisionRef.current)
+        return toPrecision((precisionFactor * val + precisionFactor * step) / precisionFactor)
+    }
+    /**
+     * @description: 减少
+     */
+    const onDecrease = (val, step) => {
+        if (typeof val !== "number" && val === undefined) return value
+        const precisionFactor = Math.pow(10, precisionRef.current)
+        return toPrecision((precisionFactor * val - precisionFactor * step) / precisionFactor)
+    }
+    /**
+     * @description: up
+     */
     const onAdd = useMemoizedFn(() => {
-        let newNumber: number = Number(value) || 0
-        if (value === null || value === undefined) {
-            newNumber = Number(step)
-        } else {
-            newNumber = newNumber + Number(step)
+        if (props.disabled) return
+        const newVal = value ? onIncrease(Number(value), step) || 0 : Number(props.min || 0)
+        if (newVal && props.max && newVal >= props.max) {
+            const precisionFactor = Math.pow(10, precisionRef.current)
+            const max = toPrecision((precisionFactor * Number(props.max)) / precisionFactor)
+            setValue(max)
+            if (props.onChange) props.onChange(max)
+            return
         }
-        setValue(newNumber)
-        if (props.onChange) props.onChange(newNumber)
+        setValue(newVal)
+        if (props.onChange) props.onChange(newVal)
     })
+    /**
+     * @description: down
+     */
     const onReduce = useMemoizedFn(() => {
-        let newNumber: number = Number(value) || 0
-        if (value === null || value === undefined) {
-            newNumber = Number(step)
-        } else {
-            newNumber = newNumber - Number(step)
+        if (props.disabled) return
+        const newVal = value ? onDecrease(Number(value), step) || 0 : Number(props.min || 0)
+        if (newVal && props.min && newVal <= props.min) {
+            const precisionFactor = Math.pow(10, precisionRef.current)
+            const min = toPrecision((precisionFactor * Number(props.min)) / precisionFactor)
+            setValue(min)
+            if (props.onChange) props.onChange(min)
+            return
         }
-        setValue(newNumber)
-        if (props.onChange) props.onChange(newNumber)
+        setValue(newVal)
+        if (props.onChange) props.onChange(newVal)
     })
     const onInputChange = useMemoizedFn((value: number | string | null) => {
         setValue(value)
         if (props.onChange) props.onChange(value)
     })
+    const onFocus = useMemoizedFn((e) => {
+        setFocus(true)
+        if (props.onFocus) props.onFocus(e)
+    })
+    const onBlur = useMemoizedFn((e) => {
+        setFocus(false)
+        const precisionFactor = Math.pow(10, precisionRef.current)
+        const newVal = toPrecision((precisionFactor * Number(value)) / precisionFactor)
+        setValue(newVal)
+        if (props.onChange) props.onChange(newVal)
+        if (props.onBlur) props.onBlur(e)
+    })
     return (
         <div
             className={classNames(styles["yakit-input-number-horizontal"], {
-                [styles["yakit-input-number-horizontal-focus"]]: isHovering
+                [styles["yakit-input-number-horizontal-focus"]]: focus,
+                [styles["yakit-input-number-horizontal-disabled"]]: !!props.disabled
             })}
-            ref={ref}
         >
-            <div
-                className={classNames(styles["icon-left"], styles["icon-midden"], {
-                    [styles["icon-small"]]: size === "small",
-                    [styles["icon-large"]]: size === "large"
-                })}
-                onClick={() => onReduce()}
-            >
-                <ChevronLeftIcon />
-            </div>
-            {/* <YakitInput bordered={false} size={size}  /> */}
+            {controls !== false && (
+                <>
+                    <div
+                        className={classNames(styles["icon-left"], styles["icon-midden"], {
+                            [styles["icon-small"]]: size === "small",
+                            [styles["icon-large"]]: size === "large",
+                            [styles["icon-disabled"]]: !!props.disabled
+                        })}
+                        onClick={() => onReduce()}
+                    >
+                        {(typeof controls === "object" && controls?.upIcon) || <ChevronLeftIcon />}
+                    </div>
+                </>
+            )}
             <YakitInputNumber
                 {...props}
+                step={step}
                 value={value}
                 bordered={false}
                 type='vertical'
-                className={styles["yakit-input-number-wrapper"]}
-                onChange={onInputChange}
-            />
-            <div
-                className={classNames(styles["icon-right"], styles["icon-midden"], {
-                    [styles["icon-small"]]: size === "small",
-                    [styles["icon-large"]]: size === "large"
+                className={classNames(styles["yakit-input-number-wrapper"], {
+                    [styles["yakit-input-number-wrapper-disabled"]]: !!props.disabled
                 })}
-                onClick={() => onAdd()}
-            >
-                <ChevronRightIcon />
-            </div>
+                onChange={onInputChange}
+                onFocus={onFocus}
+                onBlur={onBlur}
+            />
+            {controls !== false && (
+                <>
+                    <div
+                        className={classNames(styles["icon-right"], styles["icon-midden"], {
+                            [styles["icon-small"]]: size === "small",
+                            [styles["icon-large"]]: size === "large",
+                            [styles["icon-disabled"]]: !!props.disabled
+                        })}
+                        onClick={() => onAdd()}
+                    >
+                        {(typeof controls === "object" && controls?.upIcon) || <ChevronRightIcon />}
+                    </div>
+                </>
+            )}
         </div>
     )
 }

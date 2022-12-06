@@ -60,12 +60,25 @@
     }
 }
 
+// ========================== disabled ==========================
+.yakit-input-number-disabled {
+    background: #F0F1F3;
+    cursor: not-allowed;
+    border-color: #EAECF3;
+
+    svg {
+        color: #B4BBCA;
+    }
+}
+
 // ========================== horizontal ==========================
 .yakit-input-number-horizontal {
     display: inline-flex;
     border: 1px solid #EAECF3;
     border-radius: 4px;
     align-items: center;
+    user-select: none;
+    transition: border 0.24s linear 0.14s;
 
     &:hover {
         border-color: #1890ff;
@@ -119,7 +132,7 @@
 
     .yakit-input-number-wrapper {
         width: 64px;
-        user-select: none;
+        border-radius: 0;
 
         :global {
             .ant-input-number-handler-wrap {
@@ -127,8 +140,30 @@
             }
         }
     }
+
+    // ========================== horizontal  disabled ==========================
+    .yakit-input-number-wrapper-disabled {
+        background: #F0F1F3;
+        cursor: not-allowed;
+    }
+
+    .icon-disabled {
+        background: #F0F1F3;
+        cursor: not-allowed;
+
+        svg {
+            color: #B4BBCA;
+        }
+    }
 }
 
 .yakit-input-number-horizontal-focus {
     box-shadow: 0 0 0 2px rgb(24 144 255 / 20%);
+    border-color: #1890ff;
+}
+
+.yakit-input-number-horizontal-disabled {
+    &:hover {
+        border-color: #d9d9d9;
+    }
 }
