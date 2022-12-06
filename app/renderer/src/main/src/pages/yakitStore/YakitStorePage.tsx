@@ -2635,7 +2635,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                             onClick={() => {
                                 ipcRenderer
                                     .invoke("openDialog", {
-                                        title: "请选择上传文件夹",
+                                        title: "请选择文件夹",
                                         properties: ["openDirectory"]
                                     })
                                     .then((data: any) => {
@@ -2658,7 +2658,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                             onClick={() => {
                                 ipcRenderer
                                     .invoke("openDialog", {
-                                        title: "请选择上传文件夹",
+                                        title: "请选择文件夹",
                                         properties: ["openDirectory"]
                                     })
                                     .then((data: any) => {
