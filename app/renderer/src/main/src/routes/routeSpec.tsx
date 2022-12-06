@@ -524,14 +524,14 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 describe: "通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合"
             },
             // {id: "1-6", key: Route.YakScript, label: "Yak Runner", icon: <MenuYakRunnerIcon />}
-            // {id: "1-3", key: Route.WebsocketFuzzer, label: "Websocket Fuzzer", icon: <MenuWebsocketFuzzerIcon />},
-            // {
-            //     id: "1-4",
-            //     key: Route.PayloadGenerater_New,
-            //     label: "Yso-Java Hack",
-            //     icon: <MenuYsoJavaHackIcon />,
-            //     describe: "配置序列化 Payload 或恶意类"
-            // }
+            {id: "1-3", key: Route.WebsocketFuzzer, label: "Websocket Fuzzer", icon: <MenuWebsocketFuzzerIcon />},
+            {
+                id: "1-4",
+                key: Route.PayloadGenerater_New,
+                label: "Yso-Java Hack",
+                icon: <MenuYsoJavaHackIcon />,
+                describe: "配置序列化 Payload 或恶意类"
+            }
         ]
     },
     {id: "5", key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined />},
@@ -544,8 +544,8 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {id: "7-2", key: Route.ReverseServer_New, label: "反连服务器", icon: <MenuReverseConnectionServerIcon />},
             {id: "7-3", key: Route.DNSLog, label: "DNSLog", icon: <MenuDNSLogIcon />},
             {id: "7-4", key: Route.ICMPSizeLog, label: "ICMP-SizeLog", icon: <MenuICMPSizeLogIcon />},
-            // {id: "7-6", key: Route.PayloadGenerater_New, label: "Yso-Java Hack", icon: <MenuYsoJavaHackIcon />},
-            {id: "7-5", key: Route.TCPPortLog, label: "TCP-PortLog", icon: <MenuTCPPortLogIcon />}
+            {id: "7-5", key: Route.TCPPortLog, label: "TCP-PortLog", icon: <MenuTCPPortLogIcon />},
+            {id: "7-6", key: Route.PayloadGenerater_New, label: "Yso-Java Hack", icon: <MenuYsoJavaHackIcon />}
         ]
     },
     {
