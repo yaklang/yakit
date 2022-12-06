@@ -34,6 +34,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {MITMRuleFromModal} from "./MITMRuleFromModal"
+import {randomString} from "@/utils/randomUtil"
 
 const {ipcRenderer, shell} = window.require("electron")
 
@@ -104,7 +105,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
     const [modalVisible, setModalVisible] = useState<boolean>(false)
-    const [selected, setSelected] = useState<MITMContentReplacerRule>()
+    const [isEdit, setIsEdit] = useState<boolean>(false)
+    const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
 
     useEffect(() => {
         setLoading(true)
@@ -136,7 +138,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
     const onSetCurrentRow = useDebounceFn(
         (rowDate: MITMContentReplacerRule) => {
-            setSelected(rowDate)
+            setCurrentItem(rowDate)
         },
         {wait: 200}
     ).run
@@ -147,7 +149,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const onOpenAddOrEdit = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
         console.log("编辑", rowDate)
         setModalVisible(true)
-        setSelected(rowDate)
+        setIsEdit(true)
+        setCurrentItem(rowDate)
     })
     const onBan = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
         console.log("禁用", rowDate)
@@ -291,6 +294,27 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         console.log("onMenuSelect", key)
     })
     const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
+        if (b) {
+            const defRowDate: MITMContentReplacerRule = {
+                Color: "red",
+                EnableForRequest: false,
+                EnableForResponse: true,
+                EnableForBody: true,
+                EnableForHeader: true,
+                Index: rules.length + 1,
+                NoReplace: false,
+                Result: "",
+                Rule: "",
+                ExtraTag: [],
+                Disabled: false,
+                VerboseName: "RULE:" + randomString(10),
+                ExtraCookies: [],
+                ExtraHeaders: []
+            }
+            setCurrentItem(defRowDate)
+        } else {
+            setIsEdit(false)
+        }
         setModalVisible(b)
     })
     return (
@@ -410,7 +434,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     />
                 </div>
             </YakitDrawer>
-            <MITMRuleFromModal modalVisible={modalVisible} onClose={() => onOpenOrCloseModal(false)} />
+            <MITMRuleFromModal
+                modalVisible={modalVisible}
+                isEdit={isEdit}
+                onClose={() => onOpenOrCloseModal(false)}
+                currentItem={currentItem}
+            />
         </>
     )
 }

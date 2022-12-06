@@ -1,5 +1,5 @@
 import {ReactNode} from "react"
-import { MITMContentReplacerRule } from "../MITMContentReplacer"
+import {MITMContentReplacerRule} from "../MITMContentReplacer"
 import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
 
 export interface MITMRuleProp {
@@ -16,7 +16,13 @@ export interface ButtonTextProps {
 }
 
 export interface MITMRuleFromModalProps {
+    defaultIndex?: number
+    isEdit: boolean
     modalVisible: boolean
     onClose: () => void
-    currentItem?:MITMContentReplacerRule
+    currentItem?: MITMContentReplacerRule
+}
+
+export interface ExtractRegularProps{
+
 }

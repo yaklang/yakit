@@ -55,7 +55,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                         {!!closeIcon ? closeIcon : <YakitCloseSvgIcon />}
                     </div>
                 )}
-                {!!title && <div className={styles["body-header"]}>{title}</div>}
+                {!!title && <div className={styles["body-header"]}>{title}<span className={styles["body-header-subTitle"]}>{subTitle}</span></div>}
                 <div className={styles["body-content"]}>{children}</div>
                 {footer === null ? (
                     <></>

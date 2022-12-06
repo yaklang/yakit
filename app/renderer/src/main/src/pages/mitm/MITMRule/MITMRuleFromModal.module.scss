@@ -1,3 +1,16 @@
 .modal-from {
     padding: 24px 16px;
+
+    .icon-adjustments {
+        cursor: pointer;
+
+        &:hover {
+            color: #1890ff;
+        }
+    }
+}
+
+.yakit-extract-regular-editor {
+    padding: 24px 16px;
+    height: 368px;
 }
