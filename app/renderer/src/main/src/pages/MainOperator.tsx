@@ -46,7 +46,8 @@ import {showModal} from "../utils/showModal"
 import {YakLogoBanner} from "../utils/logo"
 import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
 import {
-    CompletionTotal, MethodSuggestion,
+    CompletionTotal,
+    MethodSuggestion,
     setYaklangBuildInMethodCompletion,
     setYaklangCompletions
 } from "../utils/monacoSpec/yakCompletionSchema"
@@ -87,10 +88,12 @@ import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
+console.log("IsNewUI", IsNewUI)
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item
@@ -867,7 +870,7 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                     return
                 }
                 setYaklangBuildInMethodCompletion(data.Suggestions)
-            }catch (e) {
+            } catch (e) {
                 console.info(e)
             }
         })
@@ -1401,27 +1404,124 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                         </Col>
                     </Row>
                 </Header>
-                <HeardMenu
-                    routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
-                    menuItemGroup={menuItems}
-                    onRouteMenuSelect={menuAddPage}
-                />
+                {IsNewUI && (
+                    <HeardMenu
+                        routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
+                        menuItemGroup={menuItems}
+                        onRouteMenuSelect={menuAddPage}
+                    />
+                )}
                 <Content
                     style={{
-                        // margin: 12,
-                        backgroundColor: "#fff",
-                        overflow: "auto",
+                        margin: IsNewUI ? 0 : 12,
+                        backgroundColor: IsNewUI ? "#fff" : "",
+                        overflow: "auto"
                         // marginTop: 0
                     }}
                 >
                     <Layout style={{height: "100%", overflow: "hidden"}}>
+                        {!IsNewUI && (
+                            <Sider style={{backgroundColor: "#fff", overflow: "auto"}}>
+                                <Spin spinning={loading}>
+                                    <Space
+                                        direction={"vertical"}
+                                        style={{
+                                            width: "100%"
+                                        }}
+                                    >
+                                        <Menu
+                                            theme={"light"}
+                                            style={{}}
+                                            selectedKeys={[]}
+                                            mode={"inline"}
+                                            onSelect={(e) => {
+                                                if (e.key === "ignore") return
+                                                const flag =
+                                                    pageCache.filter((item) => item.route === (e.key as Route))
+                                                        .length === 0
+                                                if (flag) menuAddPage(e.key as Route)
+                                                else setCurrentTabKey(e.key)
+                                            }}
+                                        >
+                                            {menuItems.map((i) => {
+                                                if (i.Group === "UserDefined") {
+                                                    i.Group = "社区插件"
+                                                }
+                                                return (
+                                                    <Menu.SubMenu
+                                                        icon={<EllipsisOutlined />}
+                                                        key={i.Group}
+                                                        title={i.Group}
+                                                    >
+                                                        {i.Items.map((item) => {
+                                                            if (item.YakScriptId > 0) {
+                                                                return (
+                                                                    <MenuItem
+                                                                        icon={<EllipsisOutlined />}
+                                                                        key={`plugin:${item.Group}:${item.YakScriptId}`}
+                                                                    >
+                                                                        <Text ellipsis={{tooltip: true}}>
+                                                                            {item.Verbose}
+                                                                        </Text>
+                                                                    </MenuItem>
+                                                                )
+                                                            }
+                                                            return (
+                                                                <MenuItem
+                                                                    icon={<EllipsisOutlined />}
+                                                                    key={`batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`}
+                                                                >
+                                                                    <Text ellipsis={{tooltip: true}}>
+                                                                        {item.Verbose}
+                                                                    </Text>
+                                                                </MenuItem>
+                                                            )
+                                                        })}
+                                                    </Menu.SubMenu>
+                                                )
+                                            })}
+                                            {(routeMenuData || [])
+                                                .filter((e) => !e.hidden)
+                                                .map((i) => {
+                                                    if (i.subMenuData) {
+                                                        return (
+                                                            <Menu.SubMenu key={i.key} title={i.label}>
+                                                                {(i.subMenuData || [])
+                                                                    .filter((e) => !e.hidden)
+                                                                    .map((subMenu) => {
+                                                                        return (
+                                                                            <MenuItem
+                                                                                key={subMenu.key}
+                                                                                disabled={subMenu.disabled}
+                                                                            >
+                                                                                <Text ellipsis={{tooltip: true}}>
+                                                                                    {subMenu.label}
+                                                                                </Text>
+                                                                            </MenuItem>
+                                                                        )
+                                                                    })}
+                                                            </Menu.SubMenu>
+                                                        )
+                                                    }
+                                                    return (
+                                                        <MenuItem key={i.key} disabled={i.disabled}>
+                                                            {i.label}
+                                                        </MenuItem>
+                                                    )
+                                                })}
+                                        </Menu>
+                                    </Space>
+                                </Spin>
+                            </Sider>
+                        )}
                         <Content
                             style={{
                                 overflow: "hidden",
                                 backgroundColor: "#fff",
                                 height: "100%",
                                 display: "flex",
-                                flexFlow: "column"
+                                flexFlow: "column",
+                                marginLeft: IsNewUI ? 0 : 12
                             }}
                         >
                             <div
