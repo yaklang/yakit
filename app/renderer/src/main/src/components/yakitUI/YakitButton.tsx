@@ -4,10 +4,17 @@ import {Button, ButtonProps} from "antd"
 import classnames from "classnames"
 import styles from "./yakitButton.module.scss"
 
+/**
+ * 更新说明
+ * 1、新增yakit-button组件，新增按钮多种样式(参考原型稿 button 组件):
+ *     1)主题色-默认样式(不填)/outline1/outline2
+ *     2)大小-默认样式(不填)/big/small/max
+ */
+
 export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type"> {
-    type?: "outline1"
+    type?: "outline1" | "outline2"
     themeClass?: string
-    size?: "big" | "small"
+    size?: "big" | "small" | "max"
 }
 
 /**
@@ -52,6 +59,7 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
     const typeClass = useMemo(() => {
         if (!type) return "yakit-button-primary"
         if (type === "outline1") return "yakit-button-outline-1"
+        if (type === "outline2") return "yakit-button-outline-2"
         return "yakit-button-primary"
     }, [type])
 
@@ -59,6 +67,7 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
         if (!size) return "yakit-button-size"
         if (size === "big") return "yakit-button-big-size"
         if (size === "small") return "yakit-button-small-size"
+        if (size === "max") return "yakit-button-max-size"
         return "yakit-button-size"
     }, [size])
 
