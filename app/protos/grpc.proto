@@ -150,6 +150,7 @@ service Yak {
   rpc ExecutePacketYakScript(ExecutePacketYakScriptParams) returns (stream ExecResult);
   rpc ExecuteBatchPacketYakScript(ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
   rpc GetYakScriptTags(Empty) returns (GetYakScriptTagsResponse);
+  rpc QueryYakScriptLocalAndUser(QueryYakScriptLocalAndUserRequest) returns (QueryYakScriptLocalAndUserResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -694,6 +695,15 @@ message GetYakScriptTagsResponse {
 message Tags {
   string Value = 1;
   int32 Total = 2;
+}
+
+message QueryYakScriptLocalAndUserRequest {
+  string OnlineBaseUrl = 1;
+  int64 UserId = 2;
+}
+
+message QueryYakScriptLocalAndUserResponse {
+  repeated YakScript Data = 1;
 }
 
 message ExtractDataToFileRequest {
