@@ -1,4 +1,4 @@
-import {Input} from "antd"
+import {Input, InputRef} from "antd"
 import React from "react"
 import {YakitInputProps} from "./YakitInputType"
 import styles from "./YakitInput.module.scss"
@@ -8,13 +8,15 @@ import classNames from "classnames"
  * @description: 两种方式的数字输入
  * @augments InputProps 继承antd的Input默认属性
  */
-export const YakitInput: React.FC<YakitInputProps> = (props) => {
-    const {size, wrapperClassName, className, ...restProps} = props
+const InternalInput: React.FC<YakitInputProps> = (props) => {
+    const {size, wrapperClassName, className, addonAfter, ...restProps} = props
     return (
         <div
             className={classNames(
                 styles["yakit-input-wrapper"],
                 {
+                    [styles["yakit-input-wrapper-large"]]: size === "large",
+                    [styles["yakit-input-wrapper-small"]]: size === "small",
                     [styles["yakit-input-disabled"]]: !!props.disabled
                 },
                 wrapperClassName
@@ -22,6 +24,7 @@ export const YakitInput: React.FC<YakitInputProps> = (props) => {
         >
             <Input
                 {...restProps}
+                addonAfter={null}
                 size='middle'
                 className={classNames(styles["yakit-input-middle"], {
                     [styles["yakit-input-large"]]: size === "large",
@@ -31,6 +34,25 @@ export const YakitInput: React.FC<YakitInputProps> = (props) => {
             >
                 {props.children}
             </Input>
+            {addonAfter && <div className={styles["yakit-input-addonAfter"]}>{addonAfter}</div>}
         </div>
     )
 }
+
+type CompoundedComponent = React.ForwardRefExoticComponent<YakitInputProps & React.RefAttributes<InputRef>> & {
+    Group: typeof Input.Group
+    Search: typeof Input.Search
+    TextArea: typeof Input.TextArea
+    Password: typeof Input.Password
+}
+
+/**
+ * @description: 两种方式的数字输入
+ * @augments InputProps 继承antd的Input默认属性
+ */
+export const YakitInput = InternalInput as CompoundedComponent
+
+YakitInput.Group = Input.Group
+YakitInput.Search = Input.Search
+YakitInput.TextArea = Input.TextArea
+YakitInput.Password = Input.Password

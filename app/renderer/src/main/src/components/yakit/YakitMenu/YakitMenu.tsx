@@ -37,7 +37,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                                 <Tooltip zIndex={9999} title={info.label} placement='leftBottom'>
                                     <div className='content-ellipsis'>{info.label}</div>
                                 </Tooltip>
-                            )) || <div className='content-ellipsis'>{info.label}</div>}
+                            )) || <div className='content-ellipsis'>{info.label}66</div>}
                         </div>
                         <YakitMenuRightSvgIcon className={styles["icon-style"]} />
                     </div>
@@ -63,7 +63,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                                 <Tooltip zIndex={9999} title={info.label} placement='rightBottom'>
                                     <div className='content-ellipsis'>{info.label}</div>
                                 </Tooltip>
-                            )) || <div className='content-ellipsis'>{info.label}</div>}
+                            )) || <div className='content-ellipsis'>{info.label}99</div>}
                         </div>
                     </div>
                 ),

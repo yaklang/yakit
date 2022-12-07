@@ -23,6 +23,6 @@ export interface MITMRuleFromModalProps {
     currentItem?: MITMContentReplacerRule
 }
 
-export interface ExtractRegularProps{
-
+export interface ExtractRegularProps {
+    onSave: (s: string) => void
 }

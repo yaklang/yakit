@@ -1,18 +1,23 @@
-import {Drawer, Form, Input} from "antd"
+import {Divider, Drawer, Form, Input, Tag} from "antd"
 import React, {useEffect, useState} from "react"
 import styles from "./MITMRuleFromModal.module.scss"
 import classNames from "classnames"
 import {ExtractRegularProps, MITMRuleFromModalProps} from "./MITMRuleType"
 import {YakitModal} from "@/components/yakit/YakitModal/YakitModal"
-import {randomString} from "@/utils/randomUtil"
 import {YakitInputNumber} from "@/components/yakit/YakitInputNumber/YakitInputNumber"
-import {useMemoizedFn} from "ahooks"
-import {AdjustmentsIcon} from "@/assets/newIcon"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
+import {AdjustmentsIcon, CheckIcon, PencilAltIcon} from "@/assets/newIcon"
 import {WebFuzzerResponseExtractor} from "@/utils/extractor"
 import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {YakEditor} from "@/utils/editors"
 import {editor} from "monaco-editor"
-import {Uint8ArrayToString} from "@/utils/str"
+import {StringToUint8Array} from "@/utils/str"
+import {failed} from "@/utils/notification"
+import {YakitInput} from "@/components/yakit/YakitInput/YakitInput"
+import {YakitButton} from "@/components/YakitButton"
+import {YakitTag} from "@/components/yakit/YakitTag/YakitTag"
+
+const {ipcRenderer} = window.require("electron")
 
 const emptyFuzzer: FuzzerResponse = {
     Method: "",
@@ -55,6 +60,14 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
             })
             .catch((errorInfo) => {})
     })
+    const getRule = useMemoizedFn((val: string) => {
+        console.log("val", val)
+
+        form.setFieldsValue({
+            Rule: val
+        })
+        setRuleVisible(false)
+    })
     return (
         <>
             <YakitModal
@@ -75,10 +88,10 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         <YakitInputNumber type='horizontal' min={1} />
                     </Form.Item>
                     <Form.Item label='规则名称' name='VerboseName'>
-                        <Input />
+                        <YakitInput />
                     </Form.Item>
                     <Form.Item label='规则内容' name='Rule' rules={[{required: true, message: "该项为必填"}]}>
-                        <Input
+                        <YakitInput
                             placeholder='可用右侧辅助工具，自动生成正则'
                             addonAfter={
                                 <AdjustmentsIcon
@@ -87,25 +100,26 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                                 />
                             }
                         />
+                        <Divider dashed style={{marginBottom: 0}} />
                     </Form.Item>
                     <Form.Item
                         label='替换结果'
                         help='HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容'
                         name='Result'
                     >
-                        <Input />
+                        <YakitInput />
                     </Form.Item>
                     <Form.Item label='HTTP Header' name='ExtraHeaders'>
-                        <Input />
+                        <YakitInput />
                     </Form.Item>
                     <Form.Item label='HTTP Cookie' name='ExtraCookies'>
-                        <Input />
+                        <YakitInput />
                     </Form.Item>
                     <Form.Item label='命中颜色' name='Color'>
-                        <Input />
+                        <YakitInput />
                     </Form.Item>
                     <Form.Item label='标记 Tag' name='ExtraTag'>
-                        <Input />
+                        <YakitInput />
                     </Form.Item>
                 </Form>
             </YakitModal>
@@ -120,25 +134,121 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 closable={true}
                 centered={true}
             >
-                <ExtractRegular />
+                <ExtractRegular onSave={getRule} />
             </YakitModal>
         </>
     )
 }
 
 const ExtractRegular: React.FC<ExtractRegularProps> = (props) => {
+    const {onSave} = props
     const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>()
+    const [selected, setSelected] = useState<string>("")
+    const [_responseStr, setResponseStr] = useState<string>("")
+    const [isEdit, setIsEdit] = useState<boolean>(false)
+    //用户选择的数据转换成的正则
+    const [matchedRegexp, setMatchedRegexp] = useState<string>("")
+    const [editMatchedRegexp, setEditMatchedRegexp] = useState<string>("")
+    useEffect(() => {
+        if (!editor) {
+            return
+        }
+        const model = editor.getModel()
+        if (!model) {
+            return
+        }
+        const setSelectedFunc = () => {
+            try {
+                const selection = editor.getSelection()
+                if (!selection) {
+                    return
+                }
+
+                setResponseStr(model.getValue())
+                // 这里能获取到选择到的内容
+                setSelected(model.getValueInRange(selection))
+            } catch (e) {
+                failed("提取选择数据错误" + e)
+            }
+        }
+        setSelectedFunc()
+        const id = setInterval(setSelectedFunc, 500)
+        return () => {
+            clearInterval(id)
+        }
+    }, [editor])
+    useDebounceEffect(
+        () => {
+            if (!selected) {
+                return
+            }
+
+            ipcRenderer
+                .invoke("GenerateExtractRule", {
+                    Data: StringToUint8Array(_responseStr),
+                    Selected: StringToUint8Array(selected)
+                })
+                .then((e: {PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string}) => {
+                    setMatchedRegexp(e.SelectedRegexp)
+                })
+                .catch((e) => {
+                    failed(`无法生成数据提取规则: ${e}`)
+                })
+        },
+        [selected],
+        {wait: 500}
+    )
     return (
         <div className={styles["yakit-extract-regular-editor"]}>
-            <YakEditor
-                editorDidMount={(e) => {
-                    setEditor(e)
-                }}
-                noMiniMap={true}
-                noLineNumber={true}
-                type={"html"}
-                // value={Uint8ArrayToString(editor)}
-            />
+            <div className={styles["yakit-editor"]}>
+                <YakEditor
+                    editorDidMount={(e) => {
+                        setEditor(e)
+                    }}
+                    type={"html"}
+                />
+            </div>
+            <div className={styles["yakit-editor-regexp"]}>
+                {!isEdit && matchedRegexp && (
+                    <div className={styles["yakit-editor-regexp-tag"]}>
+                        <div className={styles["yakit-editor-regexp-value"]} title={matchedRegexp}>
+                            {matchedRegexp}
+                        </div>
+                        <div className={styles["yakit-editor-icon"]}>
+                            <PencilAltIcon
+                                onClick={() => {
+                                    setIsEdit(true)
+                                    setEditMatchedRegexp(matchedRegexp)
+                                }}
+                            />
+                            <Divider type='vertical' />
+                            <CheckIcon onClick={() => onSave(matchedRegexp)} />
+                        </div>
+                    </div>
+                )}
+                <div className={styles["yakit-editor-text-area"]} style={{display: isEdit ? "" : "none"}}>
+                    <YakitInput.TextArea
+                        value={editMatchedRegexp}
+                        onChange={(e) => setEditMatchedRegexp(e.target.value)}
+                        autoSize={{minRows: 1, maxRows: 3}}
+                    />
+                    <div className={styles["yakit-editor-btn"]}>
+                        <div className={styles["cancel-btn"]} onClick={() => setIsEdit(false)}>
+                            取消
+                        </div>
+                        <Divider type='vertical' style={{margin: "0 8px"}} />
+                        <div
+                            className={styles["save-btn"]}
+                            onClick={() => {
+                                setIsEdit(false)
+                                setMatchedRegexp(editMatchedRegexp)
+                            }}
+                        >
+                            确定
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
