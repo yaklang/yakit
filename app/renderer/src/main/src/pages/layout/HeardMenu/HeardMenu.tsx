@@ -175,18 +175,21 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     <div className={classNames(style["heard-menu-left-inner"])} ref={menuLeftInnerRef}>
                         {routeMenu.map((menuItem, index) => {
                             return (
-                                <RouteMenuDataItem
-                                    key={`menuItem-${menuItem.id}`}
-                                    menuItem={menuItem}
-                                    isShow={number > 0 ? number <= index : false}
-                                    onSelect={(r) => onRouteMenuSelect(r.key as Route)}
-                                    isExpand={isExpand}
-                                    setSubMenuData={(menu) => {
-                                        setSubMenuData(menu.subMenuData || [])
-                                        setMenuId(menu.id || "")
-                                    }}
-                                    activeMenuId={menuId}
-                                />
+                                menuItem.subMenuData &&
+                                menuItem.subMenuData.length > 0 && (
+                                    <RouteMenuDataItem
+                                        key={`menuItem-${menuItem.id}`}
+                                        menuItem={menuItem}
+                                        isShow={number > 0 ? number <= index : false}
+                                        onSelect={(r) => onRouteMenuSelect(r.key as Route)}
+                                        isExpand={isExpand}
+                                        setSubMenuData={(menu) => {
+                                            setSubMenuData(menu.subMenuData || [])
+                                            setMenuId(menu.id || "")
+                                        }}
+                                        activeMenuId={menuId}
+                                    />
+                                )
                             )
                         })}
                     </div>

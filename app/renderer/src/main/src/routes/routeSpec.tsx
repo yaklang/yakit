@@ -464,6 +464,8 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {id: "4-2", key: Route.BatchExecutorPage, label: "插件批量执行", icon: <MenuPluginBatchExecutionIcon />}
         ]
     },
+    {id: "5", key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined />},
+    {id: "6", key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined />},
     {
         id: "7",
         label: "反连",
