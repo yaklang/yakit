@@ -21,7 +21,6 @@
     --yakit-press-color: #ffffff;
     --yakit-press-border-color: #ffffff00;
 }
-
 .yakit-button-outline-1 {
     --yakit-wave-shadow-color: #fbe7d9;
 
@@ -41,9 +40,28 @@
     --yakit-press-color: #e27122;
     --yakit-press-border-color: #e27122;
 }
+.yakit-button-outline-2 {
+    --yakit-wave-shadow-color: #fbe7d9;
+
+    --yakit-background: #ffffff;
+    --yakit-color: #31343f;
+    --yakit-border-color: #eaecf3;
+
+    --yakit-hover-background: #ffffff;
+    --yakit-hover-color: #f79c5d;
+    --yakit-hover-border-color: #f79c5d;
+
+    --yakit-disable-background: #ffffff;
+    --yakit-disable-color: #ccd2de;
+    --yakit-disable-border-color: #eaecf3;
+
+    --yakit-press-background: #ffffff;
+    --yakit-press-color: #e27122;
+    --yakit-press-border-color: #e27122;
+}
 
 .yakit-button-small-size {
-    height: 22px;
+    height: 20px;
     padding: 3px 6px;
     border-radius: 4px;
     font-weight: 500;
@@ -51,7 +69,7 @@
     line-height: 14px;
 }
 .yakit-button-size {
-    height: 26px;
+    height: 24px;
     padding: 4px 8px;
     border-radius: 4px;
     font-weight: 500;
@@ -59,10 +77,18 @@
     line-height: 16px;
 }
 .yakit-button-big-size {
-    height: 30px;
+    height: 28px;
     padding: 4px 12px;
     border-radius: 4px;
     font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+}
+.yakit-button-max-size {
+    height: 32px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 500;
     font-size: 14px;
     line-height: 20px;
 }
