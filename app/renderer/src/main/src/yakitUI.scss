@@ -1,0 +1,8 @@
+// 考虑是否以后和UI有关的全局样式都往这里面放
+
+// 当行内容过长省略
+.yakit-single-line-ellipsis {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
