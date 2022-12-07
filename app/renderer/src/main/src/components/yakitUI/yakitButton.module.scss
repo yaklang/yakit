@@ -41,7 +41,6 @@
     --yakit-press-color: #ffffff;
     --yakit-press-border-color: #096dd9;
 }
-
 .yakit-button-outline-1 {
     // 新ui主题色
     // --yakit-wave-shadow-color: #fbe7d9;
@@ -169,9 +168,28 @@
     --yakit-press-color: #1890ff;
     --yakit-press-border-color: #adc6ff;
 }
+.yakit-button-outline-2 {
+    --yakit-wave-shadow-color: #fbe7d9;
+
+    --yakit-background: #ffffff;
+    --yakit-color: #31343f;
+    --yakit-border-color: #eaecf3;
+
+    --yakit-hover-background: #ffffff;
+    --yakit-hover-color: #f79c5d;
+    --yakit-hover-border-color: #f79c5d;
+
+    --yakit-disable-background: #ffffff;
+    --yakit-disable-color: #ccd2de;
+    --yakit-disable-border-color: #eaecf3;
+
+    --yakit-press-background: #ffffff;
+    --yakit-press-color: #e27122;
+    --yakit-press-border-color: #e27122;
+}
 
 .yakit-button-small-size {
-    height: 22px;
+    height: 20px;
     padding: 3px 6px;
     border-radius: 4px;
     font-weight: 500;
@@ -217,6 +235,14 @@
 .yakit-button {
     box-shadow: none;
     font-size: 12px;
+}
+.yakit-button-max-size {
+    height: 32px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
 }
 
 .yakit-button-type {
