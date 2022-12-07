@@ -5,11 +5,11 @@ import styles from "./YakitInput.module.scss"
 import classNames from "classnames"
 
 /**
- * @description: 两种方式的数字输入
+ * @description: 输入
  * @augments InputProps 继承antd的Input默认属性
  */
 const InternalInput: React.FC<YakitInputProps> = (props) => {
-    const {size, wrapperClassName, className, addonAfter, ...restProps} = props
+    const {size, wrapperClassName, className, ...restProps} = props
     return (
         <div
             className={classNames(
@@ -24,7 +24,6 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
         >
             <Input
                 {...restProps}
-                addonAfter={null}
                 size='middle'
                 className={classNames(styles["yakit-input-middle"], {
                     [styles["yakit-input-large"]]: size === "large",
@@ -34,7 +33,6 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
             >
                 {props.children}
             </Input>
-            {addonAfter && <div className={styles["yakit-input-addonAfter"]}>{addonAfter}</div>}
         </div>
     )
 }
@@ -47,7 +45,7 @@ type CompoundedComponent = React.ForwardRefExoticComponent<YakitInputProps & Rea
 }
 
 /**
- * @description: 两种方式的数字输入
+ * @description: 输入
  * @augments InputProps 继承antd的Input默认属性
  */
 export const YakitInput = InternalInput as CompoundedComponent
