@@ -45,7 +45,7 @@ import {FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon, QuestionMar
 import {useHotkeys} from "react-hotkeys-hook"
 import moment, {Moment} from "moment"
 import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
-import {YakitCheckbox} from "../yakit/YakitCheckbox/YakitCheckbox"
+import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 
 const {Search} = Input
 const {RangePicker} = DatePicker
