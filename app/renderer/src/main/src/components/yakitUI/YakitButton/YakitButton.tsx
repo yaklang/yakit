@@ -83,6 +83,7 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
                 type='default'
                 className={classnames(
                     styles[sizeClass],
+                    styles["yakit-button"],
                     styles["yakit-button-type"],
                     {[styles["yakit-button-press"]]: press},
                     {[styles[className || ""]]: !!className}

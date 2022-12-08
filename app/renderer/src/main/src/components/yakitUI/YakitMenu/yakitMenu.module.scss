@@ -1,21 +1,21 @@
 .yakit-menu-primary {
     // 新UI
-    // --yakit-menu-background: #f28b44;
-    // --yakit-menu-color: #ffffff;
+    --yakit-menu-background: #f28b44;
+    --yakit-menu-color: #ffffff;
 
     // 旧UI
-    --yakit-menu-background: #1890ff;
-    --yakit-menu-color: #ffffff;
+    // --yakit-menu-background: #1890ff;
+    // --yakit-menu-color: #ffffff;
 }
 
 .yakit-menu-secondary {
     // 新UI
-    // --yakit-menu-background: #ff7d230f;
-    // --yakit-menu-color: #f28b44;
+    --yakit-menu-background: #ff7d230f;
+    --yakit-menu-color: #f28b44;
 
     // 旧UI
-    --yakit-menu-background: #e6f7ff;
-    --yakit-menu-color: #1890ff;
+    // --yakit-menu-background: #e6f7ff;
+    // --yakit-menu-color: #1890ff;
 }
 
 .yakit-menu-wrapper {
@@ -128,19 +128,20 @@
     .yakit-submenu-item-content {
         display: flex;
         align-items: center;
-        // height: 16px;
+        height: 16px;
         max-width: calc(100% - 16px);
     }
 
     .yakit-menu-item-content {
         display: flex;
         align-items: center;
-        // height: 16px;
+        height: 16px;
         max-width: 100%;
     }
 
     .yakit-menu-item-title {
         height: 100%;
-        line-height: 100%;
+        display: flex;
+        align-items: center;
     }
 }

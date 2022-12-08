@@ -9,114 +9,95 @@
 
 .yakit-button-primary {
     // 新ui主题色
-    // --yakit-wave-shadow-color: #fbe7d9;
+    --yakit-wave-shadow-color: #fbe7d9;
 
-    // --yakit-background: #f28b44;
-    // --yakit-color: #ffffff;
-    // --yakit-border-color: transparent;
+    --yakit-background: #f28b44;
+    --yakit-color: #ffffff;
+    --yakit-border-color: transparent;
 
-    // --yakit-hover-background: #f79c5d;
-    // --yakit-hover-color: #ffffff;
-    // --yakit-hover-border-color: transparent;
+    --yakit-hover-background: #f79c5d;
+    --yakit-hover-color: #ffffff;
+    --yakit-hover-border-color: transparent;
 
-    // --yakit-disable-background: #f0f1f3;
-    // --yakit-disable-color: #ccd2de;
-    // --yakit-disable-border-color: transparent;
+    --yakit-disable-background: #f0f1f3;
+    --yakit-disable-color: #ccd2de;
+    --yakit-disable-border-color: transparent;
 
-    // --yakit-press-background: #e27122;
-    // --yakit-press-color: #ffffff;
-    // --yakit-press-border-color: transparent;
+    --yakit-press-background: #e27122;
+    --yakit-press-color: #ffffff;
+    --yakit-press-border-color: transparent;
 
     // 老ui主题色
-    --yakit-wave-shadow-color: #1890ff;
+    // --yakit-wave-shadow-color: #1890ff;
 
-    --yakit-background: #1890ff;
-    --yakit-color: #fff;
-    --yakit-border-color: #1890ff;
+    // --yakit-background: #1890ff;
+    // --yakit-color: #fff;
+    // --yakit-border-color: #1890ff;
 
-    --yakit-hover-background: #40a9ff;
-    --yakit-hover-color: #fff;
-    --yakit-hover-border-color: #40a9ff;
+    // --yakit-hover-background: #40a9ff;
+    // --yakit-hover-color: #fff;
+    // --yakit-hover-border-color: #40a9ff;
 
-    --yakit-disable-background: #F8F8F8;
-    --yakit-disable-color: #CCD2DE;
-    --yakit-disable-border-color: #EAECF3;
+    // --yakit-disable-background: #F8F8F8;
+    // --yakit-disable-color: #CCD2DE;
+    // --yakit-disable-border-color: #EAECF3;
 
-    --yakit-press-background: #096dd9;
-    --yakit-press-color: #ffffff;
-    --yakit-press-border-color: #096dd9;
+    // --yakit-press-background: #096dd9;
+    // --yakit-press-color: #ffffff;
+    // --yakit-press-border-color: #096dd9;
 }
 
 .yakit-button-outline-1 {
     // 新ui主题色
-    // --yakit-wave-shadow-color: #fbe7d9;
+    --yakit-wave-shadow-color: #fbe7d9;
 
-    // --yakit-background: #fef8f4;
-    // --yakit-color: #f28b44;
-    // --yakit-border-color: #fbc6a1;
+    --yakit-background: #fef8f4;
+    --yakit-color: #f28b44;
+    --yakit-border-color: #fbc6a1;
 
-    // --yakit-hover-background: #fef8f4;
-    // --yakit-hover-color: #f79c5d;
-    // --yakit-hover-border-color: #f79c5d;
-
-    // --yakit-disable-background: #f0f1f3;
-    // --yakit-disable-color: #ccd2de;
-    // --yakit-disable-border-color: #eaecf3;
-
-    // --yakit-press-background: #fef8f4;
-    // --yakit-press-color: #e27122;
-    // --yakit-press-border-color: #e27122;
-
-    // 老ui主题色
-    --yakit-wave-shadow-color: #1890ff;
-
-    --yakit-background: #f0f5ff;
-    --yakit-color: #1890ff;
-    --yakit-border-color: #adc6ff;
-
-    --yakit-hover-background: #f0f5ff;
-    --yakit-hover-color: #40a9ff;
-    --yakit-hover-border-color: #adc6ff;
+    --yakit-hover-background: #fef8f4;
+    --yakit-hover-color: #f79c5d;
+    --yakit-hover-border-color: #f79c5d;
 
     --yakit-disable-background: #f0f1f3;
     --yakit-disable-color: #ccd2de;
     --yakit-disable-border-color: #eaecf3;
 
-    --yakit-press-background: #F0F1F3;
-    --yakit-press-color: #1890ff;
-    --yakit-press-border-color: #adc6ff;
+    --yakit-press-background: #fef8f4;
+    --yakit-press-color: #e27122;
+    --yakit-press-border-color: #e27122;
+
+    // 老ui主题色
+    // --yakit-wave-shadow-color: #1890ff;
+
+    // --yakit-background: #f0f5ff;
+    // --yakit-color: #1890ff;
+    // --yakit-border-color: #adc6ff;
+
+    // --yakit-hover-background: #f0f5ff;
+    // --yakit-hover-color: #40a9ff;
+    // --yakit-hover-border-color: #adc6ff;
+
+    // --yakit-disable-background: #f0f1f3;
+    // --yakit-disable-color: #ccd2de;
+    // --yakit-disable-border-color: #eaecf3;
+
+    // --yakit-press-background: #F0F1F3;
+    // --yakit-press-color: #1890ff;
+    // --yakit-press-border-color: #adc6ff;
 }
 
 .yakit-button-text {
 
     // 新ui主题色
-    // --yakit-wave-shadow-color: transparent;
-
-    // --yakit-background: transparent;
-    // --yakit-color: #f28b44;
-    // --yakit-border-color: transparent;
-
-    // --yakit-hover-background: transparent;
-    // --yakit-hover-color: #f79c5d;
-    // --yakit-hover-border-color: transparent;
-
-    // --yakit-disable-background: transparent;
-    // --yakit-disable-color: #ccd2de;
-    // --yakit-disable-border-color: transparent;
-
-    // --yakit-press-background: transparent;
-    // --yakit-press-color: #e27122;
-    // --yakit-press-border-color: transparent;
-
-    // 老ui主题色
-    --yakit-wave-shadow-color: #fff;
+    --yakit-wave-shadow-color: transparent;
 
     --yakit-background: transparent;
-    --yakit-color: #1890ff;
+    --yakit-color: #f28b44;
     --yakit-border-color: transparent;
 
     --yakit-hover-background: transparent;
-    --yakit-hover-color: #40a9ff;
+    --yakit-hover-color: #f79c5d;
     --yakit-hover-border-color: transparent;
 
     --yakit-disable-background: transparent;
@@ -124,8 +105,27 @@
     --yakit-disable-border-color: transparent;
 
     --yakit-press-background: transparent;
-    --yakit-press-color: #1890ff;
+    --yakit-press-color: #e27122;
     --yakit-press-border-color: transparent;
+
+    // 老ui主题色
+    // --yakit-wave-shadow-color: #fff;
+
+    // --yakit-background: transparent;
+    // --yakit-color: #1890ff;
+    // --yakit-border-color: transparent;
+
+    // --yakit-hover-background: transparent;
+    // --yakit-hover-color: #40a9ff;
+    // --yakit-hover-border-color: transparent;
+
+    // --yakit-disable-background: transparent;
+    // --yakit-disable-color: #ccd2de;
+    // --yakit-disable-border-color: transparent;
+
+    // --yakit-press-background: transparent;
+    // --yakit-press-color: #1890ff;
+    // --yakit-press-border-color: transparent;
 
     [ant-click-animating-without-extra-node="true"]::after {
         box-shadow: none;
@@ -142,42 +142,42 @@
 
 .yakit-button-outline-2 {
     // 新ui主题色
-    // --yakit-wave-shadow-color: #fbe7d9;
-
-    // --yakit-background: #fff;
-    // --yakit-color: #31343F;
-    // --yakit-border-color: #EAECF3;
-
-    // --yakit-hover-background: #fff;
-    // --yakit-hover-color: #F79C5D;
-    // --yakit-hover-border-color: #F69C5D;
-
-    // --yakit-disable-background: #FFFFFF;
-    // --yakit-disable-color: #ccd2de;
-    // --yakit-disable-border-color: #EAECF3;
-
-    // --yakit-press-background: #FFFFFF;
-    // --yakit-press-color: #E27122;
-    // --yakit-press-border-color: #E27122;
-
-    // 老ui主题色
-    --yakit-wave-shadow-color: #1890ff;
+    --yakit-wave-shadow-color: #fbe7d9;
 
     --yakit-background: #fff;
     --yakit-color: #31343F;
     --yakit-border-color: #EAECF3;
 
     --yakit-hover-background: #fff;
-    --yakit-hover-color: #40a9ff;
-    --yakit-hover-border-color: #adc6ff;
+    --yakit-hover-color: #F79C5D;
+    --yakit-hover-border-color: #F69C5D;
 
-    --yakit-disable-background: #fff;
-    --yakit-disable-color: #CCD2DE;
+    --yakit-disable-background: #FFFFFF;
+    --yakit-disable-color: #ccd2de;
     --yakit-disable-border-color: #EAECF3;
 
-    --yakit-press-background: #fff;
-    --yakit-press-color: #1890ff;
-    --yakit-press-border-color: #adc6ff;
+    --yakit-press-background: #FFFFFF;
+    --yakit-press-color: #E27122;
+    --yakit-press-border-color: #E27122;
+
+    // 老ui主题色
+    // --yakit-wave-shadow-color: #1890ff;
+
+    // --yakit-background: #fff;
+    // --yakit-color: #31343F;
+    // --yakit-border-color: #EAECF3;
+
+    // --yakit-hover-background: #fff;
+    // --yakit-hover-color: #40a9ff;
+    // --yakit-hover-border-color: #adc6ff;
+
+    // --yakit-disable-background: #fff;
+    // --yakit-disable-color: #CCD2DE;
+    // --yakit-disable-border-color: #EAECF3;
+
+    // --yakit-press-background: #fff;
+    // --yakit-press-color: #1890ff;
+    // --yakit-press-border-color: #adc6ff;
 }
 
 .yakit-button-small-size {
