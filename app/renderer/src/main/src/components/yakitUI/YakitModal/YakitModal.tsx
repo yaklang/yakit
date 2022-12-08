@@ -5,6 +5,11 @@ import classnames from "classnames"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {RemoveIcon} from "@/assets/newIcon"
 
+/**
+ * 更新说明
+ * 1、close-icon 设置svg图标的大小
+ */
+
 export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType"> {
     cancelButtonProps?: YakitButtonProp
     okButtonProps?: YakitButtonProp
@@ -51,7 +56,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
             <div className={styles["yakit-modal-body"]}>
                 {closable && (
                     <div className={styles["body-close"]} onClick={onCancel}>
-                        {!!closeIcon ? closeIcon : <RemoveIcon />}
+                        {!!closeIcon ? closeIcon : <RemoveIcon className={styles["close-icon"]} />}
                     </div>
                 )}
                 {!!title && (
