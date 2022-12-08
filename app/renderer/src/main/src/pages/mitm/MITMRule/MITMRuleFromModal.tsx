@@ -11,9 +11,9 @@ import {YakEditor} from "@/utils/editors"
 import {editor} from "monaco-editor"
 import {StringToUint8Array} from "@/utils/str"
 import {failed} from "@/utils/notification"
-import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
-import { YakitInputNumber } from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -70,8 +70,8 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
         <>
             <YakitModal
                 title={isEdit ? "修改规则" : "新增规则"}
-                // visible={modalVisible}
-                visible={true}
+                visible={modalVisible}
+                // visible={true}
                 onCancel={() => onClose()}
                 closable
                 okType='primary'

@@ -2,12 +2,10 @@ import {Button, Checkbox, Divider, Drawer, Select, Switch, Tag} from "antd"
 import React, {ReactNode, useEffect, useState} from "react"
 import {ButtonTextProps, MITMRuleProp} from "./MITMRuleType"
 import styles from "./MITMRule.module.scss"
-import {ButtonColor, TestButton} from "@/components/baseTemplate/BaseButton"
 import {
     BanIcon,
     ChevronDownIcon,
     ExportIcon,
-    FilterIcon,
     PencilAltIcon,
     PlusIcon,
     QuestionMarkCircleIcon,
@@ -17,14 +15,12 @@ import {
 } from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {MITMContentReplacerRule} from "../MITMContentReplacer"
-import {MITMResponse} from "../MITMPage"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {openExternalWebsite} from "@/utils/openWebsite"
-import {TagsList, Test} from "@/components/baseTemplate/BaseTags"
+import {TagsList} from "@/components/baseTemplate/BaseTags"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
@@ -404,12 +400,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                     </YakitButton>
                                 </YakitPopover>
 
-                                <ButtonColor type='primary' size='small' onClick={() => onOpenOrCloseModal(true)}>
+                                <YakitButton type='primary' size='small' onClick={() => onOpenOrCloseModal(true)}>
                                     <div className={styles["button-add-rule"]}>
                                         <PlusIcon />
                                         新增规则
                                     </div>
-                                </ButtonColor>
+                                </YakitButton>
                             </div>
                         }
                         renderKey='Index'

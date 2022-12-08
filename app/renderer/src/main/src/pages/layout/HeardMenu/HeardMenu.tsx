@@ -25,8 +25,8 @@ import {
     MenuYakRunnerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 export const getScriptIcon = (name: string) => {
     switch (name) {
@@ -135,10 +135,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         const afterRoute: MenuDataProps[] = []
         const beforeRoute: MenuDataProps[] = []
         routeMenu.forEach((ele, index) => {
-            if (index < n) {
-                beforeRoute.push(ele)
-            } else {
-                afterRoute.push(ele)
+            if (ele.subMenuData && ele.subMenuData.length > 0) {
+                if (index < n) {
+                    beforeRoute.push(ele)
+                } else {
+                    afterRoute.push(ele)
+                }
             }
         })
         setRouteMenuDataAfter(afterRoute)
@@ -206,12 +208,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    {/* <div className={style["heard-menu-theme"]}>
-                        <SaveIcon />
-                        <span className={style["heard-menu-label"]} onClick={() => onImportShare()}>
-                            导入协作资源
-                        </span>
-                    </div> */}
                     <YakitButton
                         type='text'
                         className={style["heard-menu-theme"]}

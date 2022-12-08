@@ -120,25 +120,9 @@
         z-index: 4;
 
         .heard-menu-theme {
-            color: #1890ff;
-            font-size: 12px;
             font-weight: 500;
-            padding: 4px 8px;
-            height: 24px;
             width: 108px;
-            border-radius: 4px;
             margin-right: 8px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-
-            &:hover {
-                color: #40a9ff;
-
-                svg {
-                    color: #40a9ff;
-                }
-            }
         }
 
         .heard-menu-grey {
