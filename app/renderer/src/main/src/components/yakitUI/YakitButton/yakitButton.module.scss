@@ -2,6 +2,11 @@
     display: inline-block;
 }
 
+.yakit-button {
+    display: flex;
+    align-items: center;
+}
+
 .yakit-button-primary {
     // 新ui主题色
     // --yakit-wave-shadow-color: #fbe7d9;
@@ -128,6 +133,11 @@
         animation: none;
     }
 
+    :global {
+        .ant-btn {
+            box-shadow: none;
+        }
+    }
 }
 
 .yakit-button-outline-2 {
