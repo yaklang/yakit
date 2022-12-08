@@ -10,6 +10,7 @@ import styles from "./yakitButton.module.scss"
  *     1)主题色-默认样式(不填)/outline1/outline2
  *     2)大小-默认样式(不填)/big/small/max
  * 2、修改yakitButon，text有阴影问题和不居中问题
+ * 3、修改disabled时，出现的一些伪类样式问题
  */
 
 export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type"> {

@@ -235,9 +235,9 @@
 }
 
 .yakit-button-type[disabled] {
-    color: var(--yakit-disable-color);
-    border-color: var(--yakit-disable-border-color);
-    background: var(--yakit-disable-background);
+    color: var(--yakit-disable-color) !important;
+    border-color: var(--yakit-disable-border-color) !important;
+    background: var(--yakit-disable-background) !important;
 }
 
 [ant-click-animating-without-extra-node="true"]::after {
