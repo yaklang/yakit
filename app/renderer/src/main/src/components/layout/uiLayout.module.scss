@@ -58,8 +58,8 @@
                 color: var(--base-font-color);
                 text-align: center;
                 -webkit-app-region: drag;
-                .header-title-no-drag{
-                    -webkit-app-region: no-drag;
+                .header-title-no-drag {
+                    // -webkit-app-region: no-drag;
                 }
             }
             .header-right {
@@ -253,30 +253,6 @@
                 .btn-group-wrapper {
                     display: flex;
                     gap: 8px;
-                }
-
-                .btn-wrapper {
-                    height: 34px;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    font-weight: 500;
-                    font-size: 14px;
-                    line-height: normal;
-                    :global {
-                        span {
-                            line-height: 20px;
-                        }
-                    }
-                }
-                .btn-default-wrapper {
-                    color: #31343f;
-                    background: #ffffff;
-                    border: 1px solid #eaecf3;
-                }
-                .btn-theme-wrapper {
-                    color: #ffffff;
-                    background: #f28b44;
-                    border: 1px solid #f28b44;
                 }
             }
 
@@ -636,28 +612,6 @@
             .pem-content {
                 width: 400px;
                 height: 254px;
-            }
-
-            .btn-style {
-                padding: 6px 12px;
-                height: 32px;
-                background: #ffffff;
-                border: 1px solid #eaecf3;
-                border-radius: 4px;
-
-                font-weight: 500;
-                font-size: 14px;
-                line-height: 18px;
-                color: #31343f;
-                flex-grow: 0;
-            }
-            .btn-link {
-                background: #f28b44;
-                border: 1px solid #f28b44;
-                color: #ffffff;
-            }
-            .btn-style + .btn-style {
-                margin-left: 8px;
             }
         }
     }

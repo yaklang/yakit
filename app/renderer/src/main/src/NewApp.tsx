@@ -14,7 +14,7 @@ import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {LocalGV} from "./yakitGV"
-import {YakitModal} from "./components/basics/YakitModal"
+import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 
 import styles from "./app.module.scss"
 
@@ -89,7 +89,6 @@ function NewApp() {
             .catch(() => {})
             .finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
-
 
     // const [tlsGRPC, setTlsGRPC] = useState(false)
     // const [addr, setAddr] = useState("")
@@ -294,11 +293,7 @@ function NewApp() {
             {/* {connected ? ( */}
             <Suspense fallback={<div>Loading Main</div>}>
                 {licenseVerified ? (
-                    <Main
-                        onErrorConfirmed={() => {
-                        }}
-                        ref={childRef}
-                    />
+                    <Main onErrorConfirmed={() => {}} ref={childRef} />
                 ) : (
                     <LicensePage onLicenseVerified={() => setLicenseVerified(true)} />
                 )}

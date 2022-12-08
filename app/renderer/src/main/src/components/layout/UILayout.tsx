@@ -1,6 +1,6 @@
 import React, {useEffect, useLayoutEffect, useRef, useState} from "react"
 import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
-import {Button, Checkbox, Form, Input, Progress, Select, Spin, Switch} from "antd"
+import {Checkbox, Form, Input, Progress, Select, Spin, Switch} from "antd"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {MacUIOp} from "./MacUIOp"
@@ -21,9 +21,10 @@ import {YakitGlobalHost} from "./YakitGlobalHost"
 import {DownloadingState, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
 import {failed, info, success} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
-import {YakitPopover} from "../basics/YakitPopover"
 import {CodeGV, LocalGV} from "@/yakitGV"
 import {YakitLoading} from "../basics/YakitLoading"
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -699,15 +700,9 @@ const YaklangEngineHint: React.FC<YaklangEngineHintProps> = React.memo((props) =
                                             </div>
                                         </div>
                                         <div style={{marginTop: 24}}>
-                                            <Button
-                                                className={classnames(
-                                                    styles["btn-wrapper"],
-                                                    styles["btn-default-wrapper"]
-                                                )}
-                                                onClick={onClose}
-                                            >
+                                            <YakitButton size='max' type='outline2' onClick={onClose}>
                                                 取消
-                                            </Button>
+                                            </YakitButton>
                                         </div>
                                     </div>
                                 ) : (
@@ -764,22 +759,14 @@ const YaklangEngineHint: React.FC<YaklangEngineHintProps> = React.memo((props) =
 
                                         <div className={styles["hint-right-btn"]}>
                                             <div>
-                                                <Button
-                                                    className={classnames(
-                                                        styles["btn-wrapper"],
-                                                        styles["btn-default-wrapper"]
-                                                    )}
-                                                    onClick={onClose}
-                                                >
+                                                <YakitButton size='max' type='outline2' onClick={onClose}>
                                                     取消
-                                                </Button>
+                                                </YakitButton>
                                             </div>
                                             <div className={styles["btn-group-wrapper"]}>
-                                                <Button
-                                                    className={classnames(
-                                                        styles["btn-wrapper"],
-                                                        styles["btn-default-wrapper"]
-                                                    )}
+                                                <YakitButton
+                                                    size='max'
+                                                    type='outline2'
                                                     onClick={() => {
                                                         setCheckStatus(true)
                                                         if (!agrCheck) return
@@ -787,16 +774,10 @@ const YaklangEngineHint: React.FC<YaklangEngineHintProps> = React.memo((props) =
                                                     }}
                                                 >
                                                     远程连接
-                                                </Button>
-                                                <Button
-                                                    className={classnames(
-                                                        styles["btn-wrapper"],
-                                                        styles["btn-theme-wrapper"]
-                                                    )}
-                                                    onClick={installEngine}
-                                                >
+                                                </YakitButton>
+                                                <YakitButton size='max' onClick={installEngine}>
                                                     一键安装
-                                                </Button>
+                                                </YakitButton>
                                             </div>
                                         </div>
                                     </>
@@ -1293,15 +1274,12 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                                 </Form.Item>
                             )}
                             <Form.Item label=' ' style={{marginTop: 24}}>
-                                <Button
-                                    className={classnames(styles["btn-style"], styles["btn-link"])}
-                                    onClick={submit}
-                                >
+                                <YakitButton size='max' onClick={submit}>
                                     启动连接
-                                </Button>
-                                <Button className={styles["btn-style"]} onClick={cancel}>
+                                </YakitButton>
+                                <YakitButton style={{marginLeft: 8}} size='max' type='outline2' onClick={cancel}>
                                     取消
-                                </Button>
+                                </YakitButton>
                             </Form.Item>
                         </Form>
                     </div>
@@ -1585,15 +1563,9 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
                                             </div>
                                         </div>
                                         <div style={{marginTop: 24}}>
-                                            <Button
-                                                className={classnames(
-                                                    styles["btn-wrapper"],
-                                                    styles["btn-default-wrapper"]
-                                                )}
-                                                onClick={onInstallClose}
-                                            >
+                                            <YakitButton size='max' type='outline2' onClick={onInstallClose}>
                                                 取消
-                                            </Button>
+                                            </YakitButton>
                                         </div>
                                     </div>
                                 ) : (
@@ -1606,24 +1578,12 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
                                         <div className={styles["hint-right-btn"]}>
                                             <div></div>
                                             <div className={styles["btn-group-wrapper"]}>
-                                                <Button
-                                                    className={classnames(
-                                                        styles["btn-wrapper"],
-                                                        styles["btn-default-wrapper"]
-                                                    )}
-                                                    onClick={onWait}
-                                                >
+                                                <YakitButton size='max' type='outline2' onClick={onWait}>
                                                     稍后再说
-                                                </Button>
-                                                <Button
-                                                    className={classnames(
-                                                        styles["btn-wrapper"],
-                                                        styles["btn-theme-wrapper"]
-                                                    )}
-                                                    onClick={onUpdate}
-                                                >
+                                                </YakitButton>
+                                                <YakitButton size='max' onClick={onUpdate}>
                                                     立即更新
-                                                </Button>
+                                                </YakitButton>
                                             </div>
                                         </div>
                                     </>
@@ -1798,12 +1758,9 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                                         <div>下载速度 : {((downloadProgress?.speed || 0) / 1000000).toFixed(2)}M/s</div>
                                     </div>
                                     <div style={{marginTop: 24}}>
-                                        <Button
-                                            className={classnames(styles["btn-wrapper"], styles["btn-default-wrapper"])}
-                                            onClick={onCancel}
-                                        >
+                                        <YakitButton size='max' type='outline2' onClick={onCancel}>
                                             取消
-                                        </Button>
+                                        </YakitButton>
                                     </div>
                                 </div>
                             </div>
@@ -1994,18 +1951,12 @@ const HintRestartEngine: React.FC<HintRestartEngineProps> = React.memo((props) =
                                 <div className={styles["hint-right-btn"]}>
                                     <div></div>
                                     <div className={styles["btn-group-wrapper"]}>
-                                        <Button
-                                            className={classnames(styles["btn-wrapper"], styles["btn-default-wrapper"])}
-                                            onClick={onClose}
-                                        >
+                                        <YakitButton size='max' type='outline2' onClick={onClose}>
                                             取消
-                                        </Button>
-                                        <Button
-                                            className={classnames(styles["btn-wrapper"], styles["btn-theme-wrapper"])}
-                                            onClick={onRestart}
-                                        >
+                                        </YakitButton>
+                                        <YakitButton size='max' onClick={onRestart}>
                                             立即启动
-                                        </Button>
+                                        </YakitButton>
                                     </div>
                                 </div>
                             </div>
@@ -2096,12 +2047,9 @@ const DatabaseErrorHint: React.FC<DatabaseErrorHintProps> = React.memo((props) =
                                 <div className={styles["hint-right-btn"]}>
                                     <div></div>
                                     <div className={styles["btn-group-wrapper"]}>
-                                        <Button
-                                            className={classnames(styles["btn-wrapper"], styles["btn-theme-wrapper"])}
-                                            onClick={onRestart}
-                                        >
+                                        <YakitButton size='max' onClick={onRestart}>
                                             立即修复
-                                        </Button>
+                                        </YakitButton>
                                     </div>
                                 </div>
                             </div>

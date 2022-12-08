@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Button, Modal, Tooltip} from "antd"
+import {Badge, Modal, Tooltip} from "antd"
 import {
     BellSvgIcon,
     HelpSvgIcon,
@@ -12,8 +12,6 @@ import {
     YakitWhiteSvgIcon,
     YaklangSvgIcon
 } from "./icons"
-import {YakitPopover} from "../basics/YakitPopover"
-import {YakitMenu} from "../basics/YakitMenu"
 import {YakitEllipsis} from "../basics/YakitEllipsis"
 import {useMemoizedFn} from "ahooks"
 import {showDrawer, showModal} from "@/utils/showModal"
@@ -37,6 +35,9 @@ import SetPassword from "@/pages/SetPassword"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
+import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
@@ -355,12 +356,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
                 <div className={styles["header-btn"]}>
                     {isUpdateWait ? (
-                        <Button
-                            className={styles["btn-style"]}
-                            onClick={() => {
-                                ipcRenderer.invoke("open-yakit-or-yaklang")
-                            }}
-                        >{`安装 `}</Button>
+                        <YakitButton onClick={() => ipcRenderer.invoke("open-yakit-or-yaklang")}>{`安装 `}</YakitButton>
                     ) : isUpdate ? (
                         <div className={styles["update-btn"]} onClick={() => onDownload("yakit")}>
                             <UpdateSvgIcon style={{marginRight: 4}} />
@@ -409,10 +405,9 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
                 <div className={styles["header-btn"]}>
                     {!isRemoteMode && isUpdateWait && (
-                        <Button
-                            className={styles["btn-style"]}
+                        <YakitButton
                             onClick={() => ipcRenderer.invoke("update-yaklang-reconnect", lastVersion)}
-                        >{`更新 `}</Button>
+                        >{`更新 `}</YakitButton>
                     )}
                     {!isRemoteMode && !isUpdateWait && isUpdate && (
                         <div className={styles["update-btn"]} onClick={() => onDownload("yaklang")}>
