@@ -13,8 +13,6 @@ import {
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useMemoizedFn} from "ahooks"
-import {YakitMenu, YakitMenuItemProps} from "../YakitMenu/YakitMenu"
-import {YakitPopover} from "../YakitPopover/YakitPopover"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Tabs, Tooltip} from "antd"
 import {
@@ -26,6 +24,8 @@ import {
     MenuPayloadIcon,
     MenuYakRunnerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
+import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 export const getScriptIcon = (name: string) => {
     switch (name) {
@@ -353,7 +353,13 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
             })) || []
     }))
     const menu = (
-        <YakitMenu data={newMenuData} selectedKeys={[]} width={136} onSelect={({key}) => onMenuSelect(key)}></YakitMenu>
+        <YakitMenu
+            type='secondary'
+            data={newMenuData}
+            selectedKeys={[]}
+            width={136}
+            onSelect={({key}) => onMenuSelect(key)}
+        ></YakitMenu>
     )
 
     return (

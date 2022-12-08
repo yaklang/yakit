@@ -2,10 +2,10 @@ import React, {ReactNode} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Menu, MenuProps, Tooltip} from "antd"
 import {ItemType} from "antd/lib/menu/hooks/useItems"
-import {YakitMenuRightSvgIcon} from "./icon"
 
 import classnames from "classnames"
 import styles from "./yakitMenu.module.scss"
+import {ChevronRightIcon} from "@/assets/newIcon"
 
 /**
  * 更新说明
@@ -67,7 +67,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                                 </div>
                             )}
                         </div>
-                        <YakitMenuRightSvgIcon className='icon-style' />
+                        <ChevronRightIcon className='icon-style' />
                     </div>
                 ),
                 key: info.key,

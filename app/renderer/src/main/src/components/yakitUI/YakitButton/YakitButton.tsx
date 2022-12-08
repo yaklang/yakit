@@ -12,7 +12,7 @@ import styles from "./yakitButton.module.scss"
  */
 
 export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type"> {
-    type?: "outline1" | "outline2"
+    type?: "outline1" | "outline2" | "text" | "primary"
     themeClass?: string
     size?: "big" | "small" | "max"
 }
@@ -60,6 +60,8 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
         if (!type) return "yakit-button-primary"
         if (type === "outline1") return "yakit-button-outline-1"
         if (type === "outline2") return "yakit-button-outline-2"
+        if (type === "text") return "yakit-button-text"
+        if (type === "primary") return "yakit-button-primary"
         return "yakit-button-primary"
     }, [type])
 

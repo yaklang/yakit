@@ -1,0 +1,111 @@
+.yakit-tag-middle {
+    height: 22px;
+    border-radius: 4px;
+    padding: 2px 6px;
+    background: #F8F8F8;
+    border: 1px solid #EAECF3;
+    color: #85899E;
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+
+    :global {
+        .ant-tag-close-icon {
+            margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+            color: #85899E;
+        }
+    }
+}
+
+.yakit-tag-small {
+    height: 18px;
+    border-radius: 2px;
+    padding: 0px 6px;
+}
+
+.yakit-tag-large {
+    height: 24px;
+    padding: 4px 8px;
+    font-size: 12px;
+
+    :global {
+        .ant-tag-close-icon {
+            width: 14px;
+            height: 14px;
+
+            svg {
+                width: 14px;
+                height: 14px;
+            }
+        }
+
+        .anticon {
+            height: 12px;
+        }
+    }
+}
+
+.yakit-tag-danger {
+    background: rgba(246, 84, 74, 0.08);
+    border: 1px solid rgba(244, 115, 107, 0.3);
+    color: #F4736B;
+}
+
+.yakit-tag-info {
+    background: rgba(242, 139, 68, 0.06);
+    border: 1px solid rgba(242, 139, 68, 0.3);
+    color: #F28B44;
+}
+
+.yakit-tag-success {
+    background: rgba(86, 201, 145, 0.1);
+    border: 1px solid rgba(86, 201, 145, 0.3);
+    color: #56C991;
+}
+
+.yakit-tag-warning {
+    background: rgba(255, 182, 96, 0.1);
+    border: 1px solid rgba(255, 182, 96, 0.3);
+    color: #FFB660;
+}
+
+.yakit-tag-purple {
+    background: rgba(136, 99, 247, 0.1);
+    border: 1px solid rgba(136, 99, 247, 0.3);
+    color: #8863F7;
+}
+
+.yakit-tag-blue {
+    background: rgba(74, 148, 248, 0.1);
+    border: 1px solid rgba(74, 148, 248, 0.3);
+    color: #4A94F8;
+}
+
+.yakit-tag-cyan {
+    background: rgba(53, 216, 238, 0.1);
+    border: 1px solid rgba(53, 216, 238, 0.3);
+    color: #35D8EE;
+}
+
+.yakit-tag-bluePurple {
+    background: rgba(95, 105, 221, 0.1);
+    border: 1px solid rgba(95, 105, 221, 0.3);
+    color: #5F69DD;
+}
+
+.yakit-tag-disable {
+    background: #F8F8F8;
+    border: 1px solid #F0F1F3;
+    color: #CCD2DE;
+    cursor: not-allowed;
+
+    :global {
+        .ant-tag-close-icon {
+            cursor: not-allowed;
+            color: #CCD2DE;
+        }
+    }
+
+}

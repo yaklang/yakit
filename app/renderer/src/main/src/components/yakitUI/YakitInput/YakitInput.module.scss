@@ -1,0 +1,102 @@
+.yakit-input-wrapper {
+    display: inline-flex;
+    width: 100%;
+
+    :global {
+        .ant-input-borderless {
+            border: none;
+        }
+
+        .ant-input-group-wrapper {
+            padding: 0 !important;
+        }
+
+        .ant-input-group-addon {
+            border-radius: 4px;
+        }
+
+        .ant-input-group>.ant-input:first-child,
+        .ant-input-group-addon:first-child {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .ant-input-group>.ant-input:last-child,
+        .ant-input-group-addon:last-child {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+    }
+
+    .yakit-input-addonAfter {
+        background: #F8F8F8;
+        height: 100%;
+        padding: 0 12px;
+        border-left: 1px solid #EAECF3;
+        display: flex;
+        align-items: center;
+        border-radius: 0 4px 4px 0;
+    }
+
+    .yakit-input-addonBefore {
+        background: #F8F8F8;
+        height: 100%;
+        padding: 0 12px;
+        border-right: 1px solid #EAECF3;
+        display: flex;
+        align-items: center;
+        border-radius: 4px 0 0 4px;
+    }
+}
+
+// ========================== disabled ==========================
+.yakit-input-disabled {
+    :global {
+        .ant-input[disabled] {
+            background-color: #F0F1F3;
+            border: 1px solid #EAECF3;
+        }
+    }
+}
+
+// ========================== middle ==========================
+
+.yakit-input-middle {
+    height: 28px;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #31343F;
+
+    :global {
+        .ant-input {
+            font-size: 12px;
+        }
+    }
+}
+
+// ========================== small ==========================
+
+.yakit-input-wrapper-small {
+    height: 26px;
+}
+
+.yakit-input-small {
+    height: 24px;
+}
+
+// ========================== large ==========================
+.yakit-input-wrapper-large {
+    height: 34px;
+}
+
+.yakit-input-large {
+    height: 32px;
+    font-size: 14px;
+
+    :global {
+        .ant-input {
+            font-size: 14px;
+        }
+    }
+}

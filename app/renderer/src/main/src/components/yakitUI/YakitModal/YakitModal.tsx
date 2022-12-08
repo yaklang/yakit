@@ -1,17 +1,9 @@
 import React, {CSSProperties, ReactNode} from "react"
 import {Modal, ModalProps} from "antd"
 import {YakitCloseSvgIcon} from "./icon"
-import {YakitButton, YakitButtonProp} from "./YakitButton"
-
 import styles from "./yakitModal.module.scss"
 import classnames from "classnames"
-
-/**
- * 更新说明
- * 1、新增yakit-modal
- * 2、新增footerStyle-footer组件样式设置，footerExtra-footer组件左侧操作区
- * 3、新增subTitle-副标题字段，效果未实现
- */
+import {YakitButton, YakitButtonProp} from "../YakitButton"
 
 export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType"> {
     cancelButtonProps?: YakitButtonProp
@@ -62,7 +54,12 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                         {!!closeIcon ? closeIcon : <YakitCloseSvgIcon />}
                     </div>
                 )}
-                {!!title && <div className={styles["body-header"]}>{title}</div>}
+                {!!title && (
+                    <div className={styles["body-header"]}>
+                        {title}
+                        <span className={styles["body-header-subTitle"]}>{subTitle}</span>
+                    </div>
+                )}
                 <div className={styles["body-content"]}>{children}</div>
                 {footer === null ? (
                     <></>

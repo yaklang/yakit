@@ -2,6 +2,10 @@ import Icon from "@ant-design/icons"
 import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 import React from "react"
 
+interface IconProps extends CustomIconComponentProps {
+    onClick: () => void
+}
+
 const CheckCircle = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
         <path
@@ -16,7 +20,7 @@ const CheckCircle = () => (
 /**
  * @description:  实心的选择圆形
  */
-export const CheckCircleIcon = (props: Partial<CustomIconComponentProps>) => {
+export const CheckCircleIcon = (props: Partial<IconProps>) => {
     return <Icon component={CheckCircle} {...props} />
 }
 
@@ -35,7 +39,7 @@ const Refresh = () => (
 /**
  * @description:  刷新 两个圆弧的箭头
  */
-export const RefreshIcon = (props: Partial<CustomIconComponentProps>) => {
+export const RefreshIcon = (props: Partial<IconProps>) => {
     return <Icon component={Refresh} {...props} />
 }
 
@@ -53,7 +57,7 @@ const Filter = () => (
 /**
  * @description: 筛选
  */
-export const FilterIcon = (props: Partial<CustomIconComponentProps>) => {
+export const FilterIcon = (props: Partial<IconProps>) => {
     return <Icon component={Filter} {...props} />
 }
 
@@ -71,7 +75,7 @@ const Search = () => (
 /**
  * @description: 圆圈搜索
  */
-export const SearchIcon = (props: Partial<CustomIconComponentProps>) => {
+export const SearchIcon = (props: Partial<IconProps>) => {
     return <Icon component={Search} {...props} />
 }
 
@@ -87,7 +91,7 @@ const StatusOffline = () => (
 /**
  * @description: 屏蔽
  */
-export const StatusOfflineIcon = (props: Partial<CustomIconComponentProps>) => {
+export const StatusOfflineIcon = (props: Partial<IconProps>) => {
     return <Icon component={StatusOffline} {...props} />
 }
 
@@ -111,7 +115,7 @@ const SorterUp = () => (
 /**
  * @description: 向上的箭头 排序
  */
-export const SorterUpIcon = (props: Partial<CustomIconComponentProps>) => {
+export const SorterUpIcon = (props: Partial<IconProps>) => {
     return <Icon component={SorterUp} {...props} />
 }
 
@@ -135,7 +139,7 @@ const SorterDown = () => (
 /**
  * @description: 向下的箭头 排序
  */
-export const SorterDownIcon = (props: Partial<CustomIconComponentProps>) => {
+export const SorterDownIcon = (props: Partial<IconProps>) => {
     return <Icon component={SorterDown} {...props} />
 }
 
@@ -159,7 +163,7 @@ const DisableSorter = () => (
 /**
  * @description: 两个箭头颜色一样 排序
  */
-export const DisableSorterIcon = (props: Partial<CustomIconComponentProps>) => {
+export const DisableSorterIcon = (props: Partial<IconProps>) => {
     return <Icon component={DisableSorter} {...props} />
 }
 
@@ -172,7 +176,7 @@ const Remove = () => (
 /**
  * @description: x 删除图标
  */
-export const RemoveIcon = (props: Partial<CustomIconComponentProps>) => {
+export const RemoveIcon = (props: Partial<IconProps>) => {
     return <Icon component={Remove} {...props} />
 }
 
@@ -190,7 +194,7 @@ const ColorSwatch = () => (
 /**
  * @description:切换颜色
  */
-export const ColorSwatchIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ColorSwatchIcon = (props: Partial<IconProps>) => {
     return <Icon component={ColorSwatch} {...props} />
 }
 
@@ -208,7 +212,7 @@ const ChevronDown = () => (
 /**
  * @description: 方向性：向下
  */
-export const ChevronDownIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ChevronDownIcon = (props: Partial<IconProps>) => {
     return <Icon component={ChevronDown} {...props} />
 }
 
@@ -221,7 +225,7 @@ const ChevronUp = () => (
 /**
  * @description: 方向性：向上
  */
-export const ChevronUpIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ChevronUpIcon = (props: Partial<IconProps>) => {
     return <Icon component={ChevronUp} {...props} />
 }
 
@@ -237,9 +241,9 @@ const Save = () => (
 )
 
 /**
- * @description: save
+ * @description: save 导入
  */
-export const SaveIcon = (props: Partial<CustomIconComponentProps>) => {
+export const SaveIcon = (props: Partial<IconProps>) => {
     return <Icon component={Save} {...props} />
 }
 
@@ -258,7 +262,7 @@ const SortDescending = () => (
 /**
  * @description: 排序 降序
  */
-export const SortDescendingIcon = (props: Partial<CustomIconComponentProps>) => {
+export const SortDescendingIcon = (props: Partial<IconProps>) => {
     return <Icon component={SortDescending} {...props} />
 }
 
@@ -277,7 +281,7 @@ const SortAscending = () => (
 /**
  * @description: 排序 降序
  */
-export const SortAscendingIcon = (props: Partial<CustomIconComponentProps>) => {
+export const SortAscendingIcon = (props: Partial<IconProps>) => {
     return <Icon component={SortAscending} {...props} />
 }
 
@@ -295,6 +299,171 @@ const DotsHorizontal = () => (
 /**
  * @description: 省略号 横向
  */
-export const DotsHorizontalIcon = (props: Partial<CustomIconComponentProps>) => {
+export const DotsHorizontalIcon = (props: Partial<IconProps>) => {
     return <Icon component={DotsHorizontal} {...props} />
+}
+
+const Export = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M5.33333 6H3.33333C2.59695 6 2 6.59695 2 7.33333V12.6667C2 13.403 2.59695 14 3.33333 14H12.6667C13.403 14 14 13.403 14 12.6667V7.33333C14 6.59695 13.403 6 12.6667 6H10.6667M6 4L8 2M8 2L10 4M8 2V8.66667'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description:  导出
+ */
+export const ExportIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Export} {...props} />
+}
+
+const QuestionMarkCircle = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M8 2.5C4.96243 2.5 2.5 4.96243 2.5 8C2.5 11.0376 4.96243 13.5 8 13.5C11.0376 13.5 13.5 11.0376 13.5 8C13.5 4.96243 11.0376 2.5 8 2.5ZM1.5 8C1.5 4.41015 4.41015 1.5 8 1.5C11.5899 1.5 14.5 4.41015 14.5 8C14.5 11.5899 11.5899 14.5 8 14.5C4.41015 14.5 1.5 11.5899 1.5 8ZM8.00004 5.16667C6.9739 5.16667 6.19859 5.65892 5.9374 6.21315C5.81968 6.46294 5.52175 6.57001 5.27196 6.45229C5.02216 6.33457 4.9151 6.03664 5.03282 5.78685C5.50378 4.78749 6.704 4.16667 8.00004 4.16667C8.83414 4.16667 9.60852 4.41961 10.1857 4.85245C10.7629 5.28542 11.1667 5.92172 11.1667 6.66667C11.1667 7.93458 10.0368 8.84995 8.75705 9.09545C8.67554 9.11108 8.60519 9.15161 8.55928 9.2002C8.51566 9.24636 8.50004 9.29187 8.50004 9.33333C8.50004 9.60948 8.27618 9.83333 8.00004 9.83333C7.72389 9.83333 7.50004 9.60948 7.50004 9.33333C7.50004 8.67024 8.03016 8.21665 8.56865 8.11335C9.59315 7.91682 10.1667 7.26467 10.1667 6.66667C10.1667 6.30705 9.97351 5.94335 9.58565 5.65245C9.19764 5.36144 8.63869 5.16667 8.00004 5.16667ZM7.5 11.3333C7.5 11.0572 7.72386 10.8333 8 10.8333H8.00667C8.28281 10.8333 8.50667 11.0572 8.50667 11.3333C8.50667 11.6095 8.28281 11.8333 8.00667 11.8333H8C7.72386 11.8333 7.5 11.6095 7.5 11.3333Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description:  问号 带圈
+ */
+export const QuestionMarkCircleIcon = (props: Partial<IconProps>) => {
+    return <Icon component={QuestionMarkCircle} {...props} />
+}
+
+const Plus = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path d='M8 4V8M8 8V12M8 8H12M8 8L4 8' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+
+/**
+ * @description:  + plus
+ */
+export const PlusIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Plus} {...props} />
+}
+
+const Trash = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M12.6667 4.66667L12.0885 12.7617C12.0387 13.4594 11.4581 14 10.7586 14H5.24157C4.54205 14 3.96147 13.4594 3.91163 12.7617L3.33341 4.66667M6.66675 7.33333V11.3333M9.33341 7.33333V11.3333M10.0001 4.66667V2.66667C10.0001 2.29848 9.7016 2 9.33341 2H6.66675C6.29856 2 6.00008 2.29848 6.00008 2.66667V4.66667M2.66675 4.66667H13.3334'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description:Trash  删除 垃圾桶
+ */
+export const TrashIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Trash} {...props} />
+}
+
+const PencilAlt = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M7.33341 3.33334H4.00008C3.2637 3.33334 2.66675 3.93029 2.66675 4.66667V12C2.66675 12.7364 3.2637 13.3333 4.00008 13.3333H11.3334C12.0698 13.3333 12.6667 12.7364 12.6667 12V8.66667M11.7239 2.39052C12.2446 1.86983 13.0889 1.86983 13.6096 2.39052C14.1303 2.91122 14.1303 3.75544 13.6096 4.27614L7.8857 10H6.00008L6.00008 8.11438L11.7239 2.39052Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description:PencilAlt 编辑
+ */
+export const PencilAltIcon = (props: Partial<IconProps>) => {
+    return <Icon component={PencilAlt} {...props} />
+}
+
+const Ban = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M12.2426 12.2426C14.5858 9.8995 14.5858 6.10051 12.2426 3.75736C9.8995 1.41421 6.10051 1.41421 3.75736 3.75736M12.2426 12.2426C9.8995 14.5858 6.10051 14.5858 3.75736 12.2426C1.41421 9.8995 1.41421 6.10051 3.75736 3.75736M12.2426 12.2426L3.75736 3.75736'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description:Ban 禁止
+ */
+export const BanIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Ban} {...props} />
+}
+
+const Check = () => (
+    <svg width='10' height='10' viewBox='0 0 10 10' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M2.08333 5.41667L3.74999 7.08333L7.91666 2.91667'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description:Check 对勾
+ */
+export const CheckIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Check} {...props} />
+}
+
+const ChevronLeft = () => (
+    <svg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path d='M7.5 9.5L4 6L7.5 2.5' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+
+/**
+ * @description:向左 left
+ */
+export const ChevronLeftIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ChevronLeft} {...props} />
+}
+
+const ChevronRight = () => (
+    <svg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path d='M4.5 2.5L8 6L4.5 9.5' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+
+/**
+ * @description:向右 right
+ */
+export const ChevronRightIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ChevronRight} {...props} />
+}
+
+const Adjustments = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8.00008 3.99996V2.66663M8.00008 3.99996C7.2637 3.99996 6.66675 4.59691 6.66675 5.33329C6.66675 6.06967 7.2637 6.66663 8.00008 6.66663M8.00008 3.99996C8.73646 3.99996 9.33341 4.59691 9.33341 5.33329C9.33341 6.06967 8.73646 6.66663 8.00008 6.66663M4.00008 12C4.73646 12 5.33341 11.403 5.33341 10.6666C5.33341 9.93025 4.73646 9.33329 4.00008 9.33329M4.00008 12C3.2637 12 2.66675 11.403 2.66675 10.6666C2.66675 9.93025 3.2637 9.33329 4.00008 9.33329M4.00008 12V13.3333M4.00008 9.33329V2.66663M8.00008 6.66663V13.3333M12.0001 12C12.7365 12 13.3334 11.403 13.3334 10.6666C13.3334 9.93025 12.7365 9.33329 12.0001 9.33329M12.0001 12C11.2637 12 10.6667 11.403 10.6667 10.6666C10.6667 9.93025 11.2637 9.33329 12.0001 9.33329M12.0001 12V13.3333M12.0001 9.33329V2.66663'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description:调整
+ */
+export const AdjustmentsIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Adjustments} {...props} />
 }
