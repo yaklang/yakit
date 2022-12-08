@@ -937,11 +937,10 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                                         properties: ["openDirectory"]
                                     })
                                     .then((data: any) => {
-                                        if(data.filePaths.length){
-                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                        if (data.filePaths.length) {
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
                                             setLocalPath(absolutePath)
                                         }
-                                        
                                     })
                             }}
                             style={{position: "absolute", right: 0, top: 8, cursor: "pointer"}}

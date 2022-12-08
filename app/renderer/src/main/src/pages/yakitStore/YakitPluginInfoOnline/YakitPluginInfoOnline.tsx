@@ -1,9 +1,9 @@
-import { API } from "@/services/swagger/resposeType"
-import { useGetState, useMemoizedFn } from "ahooks"
-import React, { useState, useEffect, memo, Suspense } from "react"
-import { useStore } from "@/store"
-import { NetWorkApi } from "@/services/fetch"
-import { failed, success, warn } from "../../../utils/notification"
+import {API} from "@/services/swagger/resposeType"
+import {useGetState, useMemoizedFn} from "ahooks"
+import React, {useState, useEffect, memo, Suspense} from "react"
+import {useStore} from "@/store"
+import {NetWorkApi} from "@/services/fetch"
+import {failed, success, warn} from "../../../utils/notification"
 import {
     PageHeader,
     Space,
@@ -37,29 +37,29 @@ import numeral from "numeral"
 import "./YakitPluginInfoOnline.scss"
 import moment from "moment"
 import cloneDeep from "lodash/cloneDeep"
-import { showFullScreenMask } from "@/components/functionTemplate/showByContext"
-import { useCommenStore } from "@/store/comment"
+import {showFullScreenMask} from "@/components/functionTemplate/showByContext"
+import {useCommenStore} from "@/store/comment"
 import InfiniteScroll from "react-infinite-scroll-component"
-import { CollapseParagraph } from "./CollapseParagraph"
-import { OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon } from "@/assets/icons"
-import { SecondConfirm } from "@/components/functionTemplate/SecondConfirm"
-import { YakEditor } from "@/utils/editors"
-import { YakScript } from "@/pages/invoker/schema"
-import { GetYakScriptByOnlineIDRequest } from "../YakitStorePage"
-import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+import {CollapseParagraph} from "./CollapseParagraph"
+import {OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon} from "@/assets/icons"
+import {SecondConfirm} from "@/components/functionTemplate/SecondConfirm"
+import {YakEditor} from "@/utils/editors"
+import {YakScript} from "@/pages/invoker/schema"
+import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import Login from "@/pages/Login"
-import { fail } from "assert"
+import {fail} from "assert"
 
 const EditOnlinePluginDetails = React.lazy(() => import("./EditOnlinePluginDetails"))
 
-const { ipcRenderer } = window.require("electron")
-const { TabPane } = Tabs
+const {ipcRenderer} = window.require("electron")
+const {TabPane} = Tabs
 const limit = 20
 
 interface YakitPluginInfoOnlineProps {
     // info: API.YakitPluginDetail
     pluginId: number
-    pluginUUId?:string
+    pluginUUId?: string
     user?: boolean
     deletePlugin: (i: API.YakitPluginDetail) => void
     updatePlugin: (i: API.YakitPluginDetail) => void
@@ -86,19 +86,19 @@ interface AuditParameters {
     status: boolean
 }
 
-export const TagColor: { [key: string]: string } = {
+export const TagColor: {[key: string]: string} = {
     failed: "color-bgColor-red|审核不通过",
     success: "color-bgColor-green|审核通过",
     not: "color-bgColor-blue|待审核"
 }
 
 export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (props) => {
-    const { pluginId,pluginUUId, user, deletePlugin, updatePlugin, deletePluginLocal } = props
+    const {pluginId, pluginUUId, user, deletePlugin, updatePlugin, deletePluginLocal} = props
     // 全局登录状态
-    const { userInfo } = useStore()
+    const {userInfo} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
     const [addLoading, setAddLoading] = useState<boolean>(false)
-    const [isAdmin, setIsAdmin] = useState<boolean>(["admin","superAdmin"].includes(userInfo.role||""))
+    const [isAdmin, setIsAdmin] = useState<boolean>(["admin", "superAdmin"].includes(userInfo.role || ""))
     const [plugin, setPlugin] = useGetState<API.YakitPluginDetail>()
     const [isEdit, setIsEdit] = useState<boolean>(false)
     const [tabKey, setTabKey] = useState<string>("1")
@@ -107,7 +107,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         if (pluginId >= 0) getPluginDetail()
     }, [pluginId])
     useEffect(() => {
-        const boolAdmin = ["admin","superAdmin"].includes(userInfo.role||"")
+        const boolAdmin = ["admin", "superAdmin"].includes(userInfo.role || "")
         setIsAdmin(boolAdmin)
     }, [userInfo.role])
     useEffect(() => {
@@ -124,7 +124,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
             method: "get",
             url,
             params: {
-                uuid:pluginUUId||""
+                uuid: pluginUUId || ""
             }
         })
             .then((res) => {
@@ -162,7 +162,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                     plugin.is_stars = true
                     plugin.stars += 1
                 }
-                setPlugin({ ...plugin })
+                setPlugin({...plugin})
             })
             .catch((err) => {
                 failed("插件点星:" + err)
@@ -207,7 +207,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         })
             .then((res) => {
                 if (plugin) {
-                    const newPlugin = { ...plugin, status }
+                    const newPlugin = {...plugin, status}
                     setPlugin(newPlugin)
                 }
                 success(`插件审核${status === 1 ? "通过" : "不通过"}`)
@@ -221,7 +221,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     })
     const onRemove = useMemoizedFn(() => {
         if (!plugin) return
-        if (["admin","superAdmin"].includes(userInfo.role||"") || plugin?.user_id === userInfo.user_id) {
+        if (["admin", "superAdmin"].includes(userInfo.role || "") || plugin?.user_id === userInfo.user_id) {
             const deletedParams: API.DeletePluginUuid = {
                 uuid: plugin.uuid || ""
             }
@@ -270,7 +270,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     })
     if (!plugin) {
         return (
-            <Spin spinning={loading} style={{ height: "100%" }}>
+            <Spin spinning={loading} style={{height: "100%"}}>
                 <div className='yakit-plugin-info-container'>
                     <Empty description='无插件信息' />
                 </div>
@@ -278,23 +278,24 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         )
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
-    const isShowAdmin = (isAdmin||userInfo.showStatusSearch) && !plugin.is_private
+    const isShowAdmin = (isAdmin || userInfo.showStatusSearch) && !plugin.is_private
     // 是否为企业版
-    const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
+    const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
     return (
-        <div className={`plugin-info`} id="plugin-info-scroll">
-            <Spin spinning={loading} style={{ height: "100%" }}>
+        <div className={`plugin-info`} id='plugin-info-scroll'>
+            <Spin spinning={loading} style={{height: "100%"}}>
                 {/* PageHeader */}
                 <PageHeader
                     title={plugin?.script_name}
-                    style={{ marginBottom: 0, paddingBottom: 0 }}
+                    style={{marginBottom: 0, paddingBottom: 0}}
                     subTitle={
                         <Space>
                             {isShowAdmin && (
                                 <div className='plugin-status vertical-center'>
                                     <div
-                                        className={`${TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
-                                            } title-body-admin-tag`}
+                                        className={`${
+                                            TagColor[["not", "success", "failed"][plugin.status]].split("|")[0]
+                                        } title-body-admin-tag`}
                                     >
                                         {TagColor[["not", "success", "failed"][plugin.status]].split("|")[1]}
                                     </div>
@@ -308,7 +309,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             {(tags &&
                                 tags.length > 0 &&
                                 tags.map((i) => (
-                                    <Tag style={{ marginLeft: 2, marginRight: 0 }} key={`${i}`} color={"geekblue"}>
+                                    <Tag style={{marginLeft: 2, marginRight: 0}} key={`${i}`} color={"geekblue"}>
                                         {i}
                                     </Tag>
                                 ))) ||
@@ -346,10 +347,17 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         </div>
                     }
                 />
-                <div className={`plugin-body ${tabKey === '1' && 'plugin-code-height' || ''}`}>
-                    <Tooltip title={`插件id:${plugin?.uuid || "-"}`} placement="topLeft">
-                        <div className='plugin-author'>作者:{plugin.authors}&emsp;{plugin.submitter && `协作者:${plugin.submitter}`}</div>
+                <div className={`plugin-body ${(tabKey === "1" && "plugin-code-height") || ""}`}>
+                    <Tooltip title={`插件id:${plugin?.uuid || "-"}`} placement='topLeft'>
+                        <div className='plugin-author'>
+                            作者:{plugin.authors}&emsp;{plugin.submitter && `协作者:${plugin.submitter}`}
+                        </div>
                     </Tooltip>
+                    {plugin?.base_script_name && plugin.base_script_name.length && (
+                        <div style={{fontSize: 12, marginTop: 8}}>
+                            复制插件 {plugin.base_script_name} 为 {plugin.script_name}
+                        </div>
+                    )}
                     <div className='flex-space-between'>
                         <div className='vertical-center'>
                             <div className='preface-time'>
@@ -359,54 +367,56 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                 </span>
                             </div>
                         </div>
-                        {isEnterprise?
-                        <div className='plugin-info-examine'>
-                            {
-                                (isAdmin || userInfo.user_id === plugin.user_id||plugin.checkPlugin)&&<Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
-                                    <Button type='primary' danger>
-                                        删除
-                                    </Button>
-                                </Popconfirm>
-                            }
-                        {(isAdmin || plugin.checkPlugin) && (
-                            <>
-                                {plugin.status === 0 && !plugin.is_private && (
-                                    <>
-                                        <Button onClick={() => pluginExamine(2)}>不通过</Button>
-                                        <Button type='primary' onClick={() => pluginExamine(1)}>
-                                            通过
-                                        </Button>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </div>
-                        :<div className='plugin-info-examine'>
-                            {(isAdmin || userInfo.user_id === plugin.user_id) && (
-                                <>
+                        {isEnterprise ? (
+                            <div className='plugin-info-examine'>
+                                {(isAdmin || userInfo.user_id === plugin.user_id || plugin.checkPlugin) && (
                                     <Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
                                         <Button type='primary' danger>
                                             删除
                                         </Button>
                                     </Popconfirm>
-                                    <Button type='primary' onClick={() => setIsEdit(true)}>
-                                        修改
-                                    </Button>
-                                </>
-                            )}
-                            {isAdmin && !user && (
-                                <>
-                                    {plugin.status === 0 && !plugin.is_private && (
-                                        <>
-                                            <Button onClick={() => pluginExamine(2)}>不通过</Button>
-                                            <Button type='primary' onClick={() => pluginExamine(1)}>
-                                                通过
+                                )}
+                                {(isAdmin || plugin.checkPlugin) && (
+                                    <>
+                                        {plugin.status === 0 && !plugin.is_private && (
+                                            <>
+                                                <Button onClick={() => pluginExamine(2)}>不通过</Button>
+                                                <Button type='primary' onClick={() => pluginExamine(1)}>
+                                                    通过
+                                                </Button>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        ) : (
+                            <div className='plugin-info-examine'>
+                                {(isAdmin || userInfo.user_id === plugin.user_id) && (
+                                    <>
+                                        <Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
+                                            <Button type='primary' danger>
+                                                删除
                                             </Button>
-                                        </>
-                                    )}
-                                </>
-                            )}
-                        </div>}
+                                        </Popconfirm>
+                                        <Button type='primary' onClick={() => setIsEdit(true)}>
+                                            修改
+                                        </Button>
+                                    </>
+                                )}
+                                {isAdmin && !user && (
+                                    <>
+                                        {plugin.status === 0 && !plugin.is_private && (
+                                            <>
+                                                <Button onClick={() => pluginExamine(2)}>不通过</Button>
+                                                <Button type='primary' onClick={() => pluginExamine(1)}>
+                                                    通过
+                                                </Button>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                     <Suspense fallback={<Spin />}>
                         <EditOnlinePluginDetails
@@ -451,7 +461,7 @@ interface CommentStarsProps {
 }
 
 const PluginComment: React.FC<PluginCommentProps> = (props) => {
-    const { plugin, isLogin } = props
+    const {plugin, isLogin} = props
     const [commentLoading, setCommentLoading] = useState<boolean>(false)
     const [commentText, setCommentText] = useState<string>("")
     const [files, setFiles] = useState<string[]>([])
@@ -504,7 +514,8 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
                     data: page === 1 ? res.data : commentResponses.data.concat(res.data),
                     pagemeta: res.pagemeta
                 }
-                const isMore = res.data.length < limit || newCommentResponses.data.length === commentResponses.pagemeta.total
+                const isMore =
+                    res.data.length < limit || newCommentResponses.data.length === commentResponses.pagemeta.total
                 setHasMore(!isMore)
                 setCommentResponses({
                     data: [...newCommentResponses.data],
@@ -528,7 +539,7 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
             onOk() {
                 setLoginShow(true)
             },
-            onCancel() { }
+            onCancel() {}
         })
     })
     // 新增评论
@@ -554,7 +565,7 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
     })
 
     // 全局监听是否刷新子评论列表状态
-    const { setCommenData } = useCommenStore()
+    const {setCommenData} = useCommenStore()
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
     const addComment = useMemoizedFn((data: API.NewComment) => {
@@ -796,7 +807,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                 <div className='comment-body-name'>{info.user_name || "anonymous"}</div>
 
                 <div className='comment-body-content'>
-                    <CollapseParagraph value={`${info.message}`} rows={2} valueConfig={{ className: "content-style" }}>
+                    <CollapseParagraph value={`${info.message}`} rows={2} valueConfig={{className: "content-style"}}>
                         {info.by_user_name && (
                             <span>
                                 回复<span className='content-by-name'>{info.by_user_name}</span>:
@@ -816,7 +827,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                                 <OnlineCommentIcon className='icon-style-comment hover-active' />
                             </div>
                             <div
-                                style={{ marginLeft: 18 }}
+                                style={{marginLeft: 18}}
                                 className='hover-active  comment-and-star'
                                 onClick={() => onStar(info)}
                             >
@@ -869,12 +880,12 @@ interface PluginCommentInputProps {
 
 // 评论功能的部分组件-输入组件、展示图片组件、上传和提交按钮组件
 const PluginCommentInput = (props: PluginCommentInputProps) => {
-    const { value, loading, isLogin, setValue, files, setFiles, onSubmit } = props
+    const {value, loading, isLogin, setValue, files, setFiles, onSubmit} = props
     const [filesLoading, setFilesLoading] = useState<boolean>(false)
     const uploadFiles = (file) => {
         setFilesLoading(true)
         ipcRenderer
-            .invoke("upload-img", { path: file.path, type: file.type })
+            .invoke("upload-img", {path: file.path, type: file.type})
             .then((res) => {
                 setFiles(files.concat(res.data))
             })
@@ -891,7 +902,7 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                 <Input.TextArea
                     className='input-stlye'
                     value={value}
-                    autoSize={{ minRows: 1, maxRows: 6 }}
+                    autoSize={{minRows: 1, maxRows: 6}}
                     placeholder='说点什么...'
                     onChange={(e) => setValue(e.target.value)}
                 ></Input.TextArea>
@@ -975,7 +986,7 @@ interface CommentQueryProps extends API.PageMeta {
 }
 
 const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
-    const { parentInfo, visible, onReply, onCancel, isLogin } = props
+    const {parentInfo, visible, onReply, onCancel, isLogin} = props
 
     const [hasMore, setHasMore] = useState<boolean>(false)
     const [loadingChild, setLoadingChild] = useState<boolean>(false)
@@ -1007,7 +1018,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
         }
     })
     // 全局监听是否刷新子评论列表状态
-    const { commenData, setCommenData } = useCommenStore()
+    const {commenData, setCommenData} = useCommenStore()
     // 获取子评论列表
     const getChildComment = useMemoizedFn((page: number = 1, payload: any = {}) => {
         const params = {
@@ -1032,7 +1043,9 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     data: page === 1 ? item.data : commentChildResponses.data.concat(item.data),
                     pagemeta: item.pagemeta
                 }
-                const isMore = item.data.length < limit || newCommentChildResponses.data.length === commentChildResponses.pagemeta.total
+                const isMore =
+                    item.data.length < limit ||
+                    newCommentChildResponses.data.length === commentChildResponses.pagemeta.total
                 setHasMore(!isMore)
                 setCommentChildResponses({
                     data: [...newCommentChildResponses.data],
@@ -1085,7 +1098,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             .catch((err) => {
                 failed("点赞失败:" + err)
             })
-            .finally(() => { })
+            .finally(() => {})
     })
     useEffect(() => {
         if (!commenData.isRefChildCommentList) return
@@ -1110,8 +1123,8 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     key={parentInfo.id}
                     info={parentInfo}
                     isOperation={false}
-                    onStar={() => { }}
-                    onReply={() => { }}
+                    onStar={() => {}}
+                    onReply={() => {}}
                 />
                 <div className='child-comment-list'>
                     {/* @ts-ignore */}

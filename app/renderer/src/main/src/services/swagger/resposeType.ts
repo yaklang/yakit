@@ -82,6 +82,8 @@
      * 是否能审核插件
      */
     checkPlugin?: boolean;
+    base_plugin_id?: number;
+    base_script_name?: string;
   }
   export interface UserOrdinaryResponse {
     data: UserList[];
@@ -252,6 +254,7 @@
     contributors: string;
     uuid: string;
     head_img: string;
+    base_plugin_id?: number;
   }
   export interface PluginDownloadResponse extends Paging {
     data: PluginDownloadDetail[];
@@ -324,6 +327,10 @@
     download_total?: number;
     contributors?: string;
     is_private?: boolean;
+    /**
+     * 复制插件id
+     */
+    base_plugin_id?: number;
   }
   export interface NewUrmResponse {
     user_name: string;

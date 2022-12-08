@@ -143,7 +143,8 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
                         </Form.Item>
                     </>
                 )}
-                {pulgin.user_id === userInfo.user_id && (
+                {/* base_plugin_id存在时则为复制云端插件 不允许更改 私密/公开 */}
+                {!pulgin?.base_plugin_id && pulgin.user_id === userInfo.user_id && (
                     <Form.Item name='is_private' label='私密/公开'>
                         <Radio.Group>
                             <Radio.Button value='true'>私密</Radio.Button>
