@@ -279,11 +279,11 @@
     background: var(--button-disable-background) !important;
 }
 
-[ant-click-animating-without-extra-node="true"]::after {
-    box-shadow: none;
-    opacity: 1;
-    animation: fadeEffect 2s cubic-bezier(0.08, 0.82, 0.17, 1), waveEffect 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
-}
+// [ant-click-animating-without-extra-node="true"]::after {
+//     box-shadow: none;
+//     opacity: 1;
+//     animation: fadeEffect 2s cubic-bezier(0.08, 0.82, 0.17, 1), waveEffect 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
+// }
 
 .yakit-button-press {
     background: var(--button-press-background) !important;
@@ -291,11 +291,11 @@
     border-color: var(--button-press-border-color) !important;
 }
 
-@keyframes fadeEffect {
-    100% {
-        opacity: 0;
-    }
-}
+// @keyframes fadeEffect {
+//     100% {
+//         opacity: 0;
+//     }
+// }
 
 @keyframes waveEffect {
     100% {

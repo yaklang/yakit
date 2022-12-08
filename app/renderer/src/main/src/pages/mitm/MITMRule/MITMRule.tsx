@@ -381,6 +381,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                     arrowPointAtCenter={true}
                                     content={
                                         <YakitMenu
+                                            type='secondary'
                                             data={batchMenuData}
                                             selectedKeys={[]}
                                             width={92}
@@ -400,7 +401,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                     </YakitButton>
                                 </YakitPopover>
 
-                                <YakitButton type='primary' size='small' onClick={() => onOpenOrCloseModal(true)}>
+                                <YakitButton type='primary' onClick={() => onOpenOrCloseModal(true)}>
                                     <div className={styles["button-add-rule"]}>
                                         <PlusIcon />
                                         新增规则

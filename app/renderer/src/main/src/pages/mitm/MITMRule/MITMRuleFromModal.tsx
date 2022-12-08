@@ -1,4 +1,4 @@
-import {Divider, Drawer, Form, Input, Tag} from "antd"
+import {Col, Divider, Drawer, Form, Input, Row, Tag} from "antd"
 import React, {useEffect, useState} from "react"
 import styles from "./MITMRuleFromModal.module.scss"
 import classNames from "classnames"
@@ -14,6 +14,7 @@ import {failed} from "@/utils/notification"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -48,7 +49,9 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
         console.log("currentItem", currentItem)
 
         form.setFieldsValue({
-            ...currentItem
+            ...currentItem,
+            ResultType:
+                currentItem && (currentItem.ExtraHeaders.length > 0 || currentItem.ExtraCookies.length > 0) ? 2 : 1 //  1 文本  2 HTTP
         })
     }, [currentItem])
     const onOk = useMemoizedFn(() => {
@@ -98,14 +101,27 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                                 />
                             }
                         />
-                        <Divider dashed style={{marginBottom: 0}} />
                     </Form.Item>
+                    <Row>
+                        <Col span={5}>&nbsp;</Col>
+                        <Col span={16}>
+                            <Divider dashed style={{marginTop: 0}} />
+                        </Col>
+                    </Row>
+
                     <Form.Item
                         label='替换结果'
                         help='HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容'
-                        name='Result'
+                        name='ResultType'
                     >
-                        <YakitInput />
+                        <YakitRadioButtons
+                            size='large'
+                            options={[
+                                {label: "文本", value: 1},
+                                {label: "HTTP Header/Cookie", value: 2}
+                            ]}
+                            buttonStyle='solid'
+                        />
                     </Form.Item>
                     <Form.Item label='HTTP Header' name='ExtraHeaders'>
                         <YakitInput />
