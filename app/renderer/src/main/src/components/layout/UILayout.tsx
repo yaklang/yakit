@@ -361,7 +361,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 <PerformanceDisplay />
                             </div>
                         </div>
-                        <div className={styles["header-title"]}>Yakit</div>
+                        <div className={styles["header-title"]}>
+                            <div className={styles["header-title-no-drag"]}>Yakit</div>
+                        </div>
                         {engineLink && (
                             <div className={styles["header-right"]} onDoubleClick={(e) => e.stopPropagation()}>
                                 <FuncDomain
@@ -420,7 +422,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             </div>
                         )}
 
-                        <div className={styles["header-title"]}>Yakit</div>
+                        <div className={styles["header-title"]}>
+                            <div className={styles["header-title-no-drag"]}>Yakit</div>
+                        </div>
 
                         <div className={styles["header-right"]} onDoubleClick={(e) => e.stopPropagation()}>
                             <div className={styles["left-cpu"]}>

@@ -12,7 +12,6 @@
         width: 100%;
         height: 37px;
         background-color: white; //var(--base-background-color);
-        -webkit-app-region: drag;
         -webkit-user-select: none;
         user-select: none;
 
@@ -36,8 +35,6 @@
             height: 100%;
             display: flex;
             justify-content: space-between;
-            // -webkit-app-region: no-drag;
-
             border-bottom: 1px solid #eaecf3;
             position: relative;
 
@@ -60,6 +57,10 @@
                 font-weight: 600;
                 color: var(--base-font-color);
                 text-align: center;
+                -webkit-app-region: drag;
+                .header-title-no-drag{
+                    -webkit-app-region: no-drag;
+                }
             }
             .header-right {
                 height: 100%;

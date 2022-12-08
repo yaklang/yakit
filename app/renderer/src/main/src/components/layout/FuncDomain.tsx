@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Button, Modal} from "antd"
+import {Badge, Button, Modal, Tooltip} from "antd"
 import {
     BellSvgIcon,
     HelpSvgIcon,
@@ -112,7 +112,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     className={styles["ui-op-btn-wrapper"]}
                     onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")}
                 >
-                    <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                    <Tooltip placement='bottom' title='官方网站'>
+                        <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                    </Tooltip>
                 </div>
                 <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
                     <ScreensHotSvgIcon className={styles["icon-style"]} />
@@ -751,8 +753,6 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         ipcRenderer
             .invoke("fetch-latest-risk-info", {AfterId: fetchNode.current})
             .then((res: RisksProps) => {
-                console.log("boolean", JSON.stringify(risks.Data) === JSON.stringify(res.Data))
-
                 if (
                     JSON.stringify(risks.Data) === JSON.stringify(res.Data) &&
                     risks.NewRiskTotal === res.NewRiskTotal &&

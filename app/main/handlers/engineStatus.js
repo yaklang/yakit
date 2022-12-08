@@ -45,9 +45,9 @@ const probeEngineProcess = (win, port, sudo) => {
     } catch (e) {}
 }
 
-/** 探测 远程连接引擎 是否存活的定时器 */
+/** 探测 远程引擎 是否存活的定时器 */
 let probeSurvivalRemoteTime = null
-/** 探测 远程连接引擎 是否启动 */
+/** 探测 远程引擎 是否启动 */
 const probeRemoteEngineProcess = (win, params) => {
     try {
         testRemoteClient(params, async (err, result) => {
@@ -81,20 +81,6 @@ function sudoExec(cmd, opt, callback) {
 }
 
 module.exports = (win, callback, getClient) => {
-    /** |del|已废弃，后续测试通过后可以删除 */
-    // ipcMain.handle("yak-version", () => {
-    //     try {
-    //         getClient().Version({}, async (err, data) => {
-    //             if (win && data.Version) {
-    //                 win.webContents.send("client-yak-version", data.Version)
-    //             }
-    //         })
-    //     } catch (e) {
-    //         if (win && data.Version) {
-    //             win.webContents.send("client-yak-version", "")
-    //         }
-    //     }
-    // })
     /** 获取本地引擎版本号 */
     ipcMain.handle("fetch-yak-version", () => {
         try {
@@ -137,6 +123,9 @@ module.exports = (win, callback, getClient) => {
         const {sudo, port} = params
         let randPort = port || 40000 + Math.floor(Math.random() * 9999)
 
+        /** 防止因 回调函数机制 导致的无返回的ipc报错，从而设置了一个计时器，到时自己发送返回值 */
+        let callbackTime = null
+
         return new Promise((resolve, reject) => {
             try {
                 // 考虑如果管理员权限启动未成功该通过什么方式自启普通权限引擎进程
@@ -152,12 +141,22 @@ module.exports = (win, callback, getClient) => {
                         )
 
                         subprocess.on("error", (err) => {
+                            if (callbackTime) clearTimeout(callbackTime)
+                            callbackTime = null
+
                             if (err) reject(err)
                         })
 
                         subprocess.on("close", async (e) => {
+                            if (callbackTime) clearTimeout(callbackTime)
+                            callbackTime = null
+
                             if (e) reject(e)
                         })
+
+                        if (callbackTime) clearTimeout(callbackTime)
+                        callbackTime = null
+                        callbackTime = setTimeout(() => resolve(), 3000)
                     } else {
                         const cmd = `${getLocalYaklangEngine()} grpc --port ${randPort}`
                         sudoExec(
@@ -166,7 +165,12 @@ module.exports = (win, callback, getClient) => {
                                 name: `yak grpc port ${randPort}`
                             },
                             function (error, stdout, stderr) {
+                                if (!!error && error?.code === 137) return
+
                                 if (error || stderr) {
+                                    if (callbackTime) clearTimeout(callbackTime)
+                                    callbackTime = null
+
                                     if (error.message.indexOf("User did not grant permission") > -1) {
                                         asyncStartLocalYakEngineServer(win, {sudo: false, port: randPort})
                                     }
@@ -174,6 +178,9 @@ module.exports = (win, callback, getClient) => {
                                 }
                             }
                         )
+                        if (callbackTime) clearTimeout(callbackTime)
+                        callbackTime = null
+                        callbackTime = setTimeout(() => resolve(), 3000)
                     }
                 } else {
                     if (probeSurvivalTime) clearInterval(probeSurvivalTime)
@@ -185,6 +192,9 @@ module.exports = (win, callback, getClient) => {
                     })
                     subprocess.on("error", (err) => {
                         if (err) {
+                            if (callbackTime) clearTimeout(callbackTime)
+                            callbackTime = null
+
                             fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
                             reject(err)
                         }
@@ -192,6 +202,9 @@ module.exports = (win, callback, getClient) => {
                     subprocess.on("close", async (e) => {
                         console.log("main-engineStatus-nosudo-close", e)
                         if (e === 0) {
+                            if (callbackTime) clearTimeout(callbackTime)
+                            callbackTime = null
+
                             if (engineCount === 5) {
                                 if (probeSurvivalTime) clearInterval(probeSurvivalTime)
                                 probeSurvivalTime = null
@@ -203,6 +216,10 @@ module.exports = (win, callback, getClient) => {
                             else reject(result)
                         }
                     })
+
+                    if (callbackTime) clearTimeout(callbackTime)
+                    callbackTime = null
+                    callbackTime = setTimeout(() => resolve(), 3000)
                 }
             } catch (e) {
                 reject(e)
@@ -234,6 +251,7 @@ module.exports = (win, callback, getClient) => {
     }
     /** 本地启动yaklang引擎 */
     ipcMain.handle("start-local-yaklang-engine", async (e, params) => {
+        /** 断开远程引擎探测定时器 */
         if (probeSurvivalRemoteTime) clearInterval(probeSurvivalRemoteTime)
         probeSurvivalRemoteTime = null
 
@@ -268,6 +286,7 @@ module.exports = (win, callback, getClient) => {
     }
     /** 远程连接引擎 */
     ipcMain.handle("start-remote-yaklang-engine", async (e, params) => {
+        /** 断开本地引擎探测定时器 */
         if (probeSurvivalTime) clearInterval(probeSurvivalTime)
         probeSurvivalTime = null
 
@@ -284,7 +303,7 @@ module.exports = (win, callback, getClient) => {
         win.webContents.send("local-yaklang-engine-start")
     })
 
-    /** 断开引擎 */
+    /** 断开引擎(暂未使用) */
     ipcMain.handle("break-yaklalng-engine", () => {
         win.webContents.send("local-yaklang-engine-end")
     })
