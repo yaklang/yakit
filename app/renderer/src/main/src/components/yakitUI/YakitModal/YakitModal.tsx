@@ -1,9 +1,9 @@
 import React, {CSSProperties, ReactNode} from "react"
 import {Modal, ModalProps} from "antd"
-import {YakitCloseSvgIcon} from "./icon"
 import styles from "./yakitModal.module.scss"
 import classnames from "classnames"
-import {YakitButton, YakitButtonProp} from "../YakitButton"
+import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
+import {RemoveIcon} from "@/assets/newIcon"
 
 export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType"> {
     cancelButtonProps?: YakitButtonProp
@@ -51,7 +51,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
             <div className={styles["yakit-modal-body"]}>
                 {closable && (
                     <div className={styles["body-close"]} onClick={onCancel}>
-                        {!!closeIcon ? closeIcon : <YakitCloseSvgIcon />}
+                        {!!closeIcon ? closeIcon : <RemoveIcon />}
                     </div>
                 )}
                 {!!title && (
