@@ -235,29 +235,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         </Button>
                         <Button
                             type={"link"}
-                            style={{padding: `4px 6px`}}
-                            onClick={() => {
-                                let m = showModal({
-                                    width: "96%",
-                                    content: (
-                                        <div style={{marginTop: 20}}>
-                                            <MITMContentReplacer
-                                                rules={replacers}
-                                                onSaved={(rules) => {
-                                                    setReplacers(rules)
-                                                    m.destroy()
-                                                }}
-                                            />
-                                        </div>
-                                    ),
-                                    maskClosable: false
-                                })
-                            }}
-                        >
-                            标记 / 替换流量规则
-                        </Button>
-                        <Button
-                            type={"link"}
                             onClick={() => {
                                 const m = showModal({
                                     title: "从 JSON 中导入",
