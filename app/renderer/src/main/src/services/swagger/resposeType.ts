@@ -79,10 +79,6 @@
      */
     submitter?: string;
     /**
-     * 是否有权限删除插件
-     */
-    deletePlugin?: boolean;
-    /**
      * 是否能审核插件
      */
     checkPlugin?: boolean;
@@ -157,9 +153,9 @@
     dump: boolean;
   }
   export interface UpdateUserRole {
-    appid: string;
+    appid: string[];
     operation: string;
-    role: string;
+    role?: string;
   }
   export interface UpdatePluginRequest {
     uuid: string;
@@ -327,6 +323,7 @@
     is_general_module?: boolean;
     download_total?: number;
     contributors?: string;
+    is_private?: boolean;
   }
   export interface NewUrmResponse {
     user_name: string;
@@ -440,6 +437,18 @@
   }
   export interface DeletePluginUuid {
     uuid: string;
+  }
+  export interface CompanyLicenseConfigResponse extends Paging {
+    data: CompanyLicenseConfigList[];
+  }
+  export interface CompanyLicenseConfigList {
+    id: number;
+    company: string;
+    maxActivationNum: number;
+    useActivationNum: number;
+    maxUser: number;
+    durationDate: number;
+    currentTime?: number;
   }
   export interface CommentListResponse extends Paging {
     data: CommentListData[];

@@ -24,7 +24,8 @@ import {
     Divider,
     Dropdown,
     AutoComplete,
-    Menu
+    Menu,
+    Popover
 } from "antd"
 import {
     ReloadOutlined,
@@ -41,9 +42,10 @@ import {
     DownloadOutlined,
     PoweroffOutlined,
     InfoCircleOutlined,
-    CloudUploadOutlined,
+    SettingOutlined,
     CloseOutlined,
-    DownOutlined
+    DownOutlined,
+    CloudUploadOutlined,
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
@@ -89,11 +91,14 @@ import {
     onLocalScriptToOnlinePlugin,
     SyncCloudButton
 } from "@/components/SyncCloudButton/SyncCloudButton"
-import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {fullscreen} from "@uiw/react-md-editor"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
-const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+import {ChevronDownIcon} from "@/assets/newIcon"
+import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
+import {OutputPluginForm} from "./PluginOperator"
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
 const {Option} = Select
@@ -107,6 +112,11 @@ export interface YakitStorePageProp {}
 export interface GetYakScriptByOnlineIDRequest {
     OnlineID?: number
     UUID: string
+}
+
+export interface QueryYakScriptLocalAndUserRequest{
+    OnlineBaseUrl: string
+    UserId: number
 }
 
 export interface SearchPluginOnlineRequest extends API.GetPluginWhere {
@@ -797,7 +807,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             ? yakScriptTagsAndType || {}
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
-                                        console.log("item",statisticsDataOnlineOrUser,userInfo)
                                         const queryName = item[0]
                                         const statisticsList = item[1]
                                         const title = queryTitle[queryName]
@@ -811,13 +820,22 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         if (plugSource === "online") {
                                             current = statisticsQueryOnline[queryName] || ""
                                         }
-                                
+
                                         // 审核状态展示
-                                        const UserIsPrivate = queryName === "status" && plugSource === "user" && statisticsQueryUser.is_private !== "false"
-                                        const OnlineAdmin = queryName === "status" && plugSource === "online" && userInfo.role !== "admin"
-                                        const OnlineStatusSearch = queryName === "status" && plugSource === "online" && userInfo.role !== "admin" && userInfo.showStatusSearch !== true
-                                        if (!IsEnterprise&&(UserIsPrivate || OnlineAdmin)) return <></>
-                                        if(IsEnterprise&&(UserIsPrivate || OnlineStatusSearch)) return <></>
+                                        const boolAdmin = ["admin", "superAdmin"].includes(userInfo.role || "")
+                                        const UserIsPrivate =
+                                            queryName === "status" &&
+                                            plugSource === "user" &&
+                                            statisticsQueryUser.is_private !== "false"
+                                        const OnlineAdmin =
+                                            queryName === "status" && plugSource === "online" && !boolAdmin
+                                        const OnlineStatusSearch =
+                                            queryName === "status" &&
+                                            plugSource === "online" &&
+                                            !boolAdmin &&
+                                            userInfo.showStatusSearch !== true
+                                        if (!IsEnterprise && (UserIsPrivate || OnlineAdmin)) return <></>
+                                        if (IsEnterprise && (UserIsPrivate || OnlineStatusSearch)) return <></>
 
                                         if (!Array.isArray(current)) {
                                             current = current.split(",")
@@ -913,6 +931,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
+    const [selectedUploadRowKeysRecordLocal,setSelectedUploadRowKeysRecordLocal,getSelectedUploadRowKeysRecordLocal] = useGetState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState<boolean>(false)
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
@@ -1083,42 +1102,70 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             warn("请先登录")
             return
         }
-        if (isSelectAllLocal) {
-            warn("上传不支持全选")
-            return
-        }
         if (selectedRowKeysRecordLocal.length === 0) {
             warn("请选择需要上传的本地数据")
             return
         }
-        const index = selectedRowKeysRecordLocal.findIndex((s) => s.UUID !== "")
-        if (index !== -1) {
-            warn("请选择未上传至云端的本地数据")
+        if(isSelectAllLocal){
+            getRemoteValue("httpSetting").then((setting) => {
+                const values = JSON.parse(setting)
+                const OnlineBaseUrl: string = values.BaseUrl
+                const UserId = userInfo.user_id
+                ipcRenderer
+                            .invoke("QueryYakScriptLocalAndUser", {
+                                OnlineBaseUrl,
+                                UserId
+                            } as QueryYakScriptLocalAndUserRequest)
+                            .then((newSrcipt: {Data:YakScript[]}) => {
+                                setSelectedUploadRowKeysRecordLocal(newSrcipt.Data)
+                                JudgeIsShowVisible(newSrcipt.Data)
+                            })
+                            .catch((e) => {
+                                failed(`查询所有插件错误:${e}`)
+                                setUpLoading(false)
+                            })
+                            .finally(() => {})
+            })
+        }
+        else{
+            setSelectedUploadRowKeysRecordLocal(selectedRowKeysRecordLocal)
+            JudgeIsShowVisible(selectedRowKeysRecordLocal)
+        }
+    })
+
+    // 判断是否显示私密公开弹框(如没有新增则不显示弹窗)
+    const JudgeIsShowVisible = (selectArr:YakScript[]) => {
+        const index = selectArr.findIndex((s) => s.UUID === "")
+        if (index === -1) { // 所选插件全都有UUID
+            upOnlineBatch(2)
             return
         }
         setUpLoading(false)
         setVisibleSyncSelect(true)
-    })
+    }
+
     const onSyncSelect = useMemoizedFn((type) => {
         // 1 私密：个人账号 2公开：审核后同步云端
         if (type === 1) {
-            upOnlineBatch("yakit/plugin/save", 1)
+            upOnlineBatch(1)
         } else {
-            upOnlineBatch("yakit/plugin", 2)
+            upOnlineBatch(2)
         }
     })
 
-    const upOnlineBatch = useMemoizedFn(async (url: string, type: number) => {
-        const length = selectedRowKeysRecordLocal.length
-        const errList: any[] = []
+    const upOnlineBatch = useMemoizedFn(async(type: number) => {
         setUpLoading(true)
+        const realSelectedRowKeysRecordLocal = [...getSelectedUploadRowKeysRecordLocal()]
+        const length = realSelectedRowKeysRecordLocal.length
+        const errList: any[] = []
         for (let index = 0; index < length; index++) {
-            const element = selectedRowKeysRecordLocal[index]
-            const res = await upOnline(element, url, type)
+            const element = realSelectedRowKeysRecordLocal[index]
+            const res = await upOnline(element, "yakit/plugin", type)
             if (res) {
                 errList.push(res)
             }
         }
+
         if (errList.length > 0) {
             const errString = errList
                 .filter((_, index) => index < 10)
@@ -1138,6 +1185,9 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
 
     const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+        if (params.OnlineId) {
+            onlineParams.id = parseInt(`${params.OnlineId}`)
+        }
         return new Promise((resolve) => {
             NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
                 method: "post",
@@ -1181,6 +1231,42 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             setRefresh(!refresh)
         }, 100)
     })
+
+    const menuData = [
+        {
+            title: "删除插件",
+            number: 10,
+            onClickBatch: () => {
+                onRemoveLocalPlugin()
+            }
+        },
+        {
+            title: "导出插件",
+            number: 10,
+            onClickBatch: () => {
+                const Ids = selectedRowKeysRecordLocal.map((ele) =>
+                    typeof ele.Id === "number" ? ele.Id : parseInt(ele.Id)
+                )
+                showModal({
+                    title: "导出插件配置",
+                    width: "40%",
+                    content: (
+                        <>
+                            <OutputPluginForm YakScriptIds={Ids} isSelectAll={isSelectAllLocal} />
+                        </>
+                    )
+                })
+            }
+        },
+        {
+            title: "上传插件",
+            number: 10,
+            onClickBatch: () => {
+                onBatchUpload()
+            }
+        },
+    ]
+
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
@@ -1240,7 +1326,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                             isFilter={isFilter}
                         />
                     )}
-                    <Popconfirm
+                    {/* <Popconfirm
                         title={selectedRowKeysRecordLocal.length === 0 ? "是否删除本地所有插件?" : "是否删除所选插件?"}
                         onConfirm={() => onRemoveLocalPlugin()}
                     >
@@ -1253,8 +1339,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                                 删除
                             </Button>
                         )}
-                    </Popconfirm>
-                    <Popconfirm title='上传不支持全选且只能上传未上传至云端的插件' onConfirm={() => onBatchUpload()}>
+                    </Popconfirm> */}
+                    {/* <Popconfirm title='上传不支持全选且只能上传未上传至云端的插件' onConfirm={() => onBatchUpload()}>
                         {(size === "small" && (
                             <Tooltip title='上传'>
                                 <UploadOutlined className='operation-icon' />
@@ -1264,7 +1350,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                                 上传
                             </Button>
                         )}
-                    </Popconfirm>
+                    </Popconfirm> */}
                     {(size === "small" && (
                         <>
                             <Tooltip title='新建'>
@@ -1287,6 +1373,62 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                                 导入
                             </Button>
                         </>
+                    )}
+
+                    {(selectedRowKeysRecordLocal.length === 0 && (
+                        <>
+                            {size === "small" ? (
+                                <></>
+                            ) : (
+                                <Button
+                                    size='small'
+                                    disabled={selectedRowKeysRecordLocal.length === 0}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    批量操作
+                                    <ChevronDownIcon style={{color: "#85899E"}} />
+                                </Button>
+                            )}
+                        </>
+                    )) || (
+                        <Popover
+                            overlayClassName={style["http-history-table-drop-down-popover"]}
+                            content={
+                                <Menu className={style["http-history-table-drop-down-batch"]}>
+                                    {menuData.map((m) => {
+                                        return (
+                                            <Menu.Item
+                                                onClick={() => {
+                                                    m.onClickBatch()
+                                                }}
+                                                key={m.title}
+                                            >
+                                                {m.title}
+                                            </Menu.Item>
+                                        )
+                                    })}
+                                </Menu>
+                            }
+                            trigger='click'
+                            placement='bottomLeft'
+                        >
+                            {size === "small" ? (
+                                <SettingOutlined className='operation-icon' />
+                            ) : (
+                                <Button
+                                    size='small'
+                                    disabled={selectedRowKeysRecordLocal.length === 0}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    批量操作
+                                    <ChevronDownIcon style={{color: "#85899E"}} />
+                                </Button>
+                            )}
+                        </Popover>
                     )}
                 </Col>
             </Row>
@@ -1406,20 +1548,20 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
     const numberLocal = useRef<number>(0) // 本地 选择的插件index
-    const [baseUrl,setBaseUrl] = useState<string>("")// 获取私有域
+    const [baseUrl, setBaseUrl] = useState<string>("") // 获取私有域
     useEffect(() => {
         if (isSelectAll) {
             if (onSelectList) onSelectList(response.Data)
         }
     }, [isSelectAll])
-    
-    useEffect(()=>{
+
+    useEffect(() => {
         getRemoteValue("httpSetting").then((setting) => {
             const values = JSON.parse(setting)
-            const baseUrl:string  = values.BaseUrl
+            const baseUrl: string = values.BaseUrl
             setBaseUrl(baseUrl)
         })
-    },[])
+    }, [])
     useEffect(() => {
         if (!updatePluginRecordLocal) return
         // 列表中第一次上传的时候,本地返回的数据有OnlineId ,但是列表中的上传的那个没有OnlineId
@@ -2051,8 +2193,16 @@ interface PluginListLocalProps {
 }
 
 export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
-    const {plugin, selectedRowKeysRecord, onSelect, setUpdatePluginRecordLocal, currentScript, onShare, onSetUser,onlineProfile} =
-        props
+    const {
+        plugin,
+        selectedRowKeysRecord,
+        onSelect,
+        setUpdatePluginRecordLocal,
+        currentScript,
+        onShare,
+        onSetUser,
+        onlineProfile
+    } = props
     const {userInfo, maxWidth, onClicked} = props
     const [uploadLoading, setUploadLoading] = useState(false)
     const updateListItem = useMemoizedFn((updatePlugin: YakScript) => {
@@ -2066,7 +2216,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
     if (props.onYakScriptRender) {
         return props.onYakScriptRender(plugin, maxWidth)
     }
-    const isShowPrivateDom = plugin?.OnlineBaseUrl&&(plugin.OnlineBaseUrl !== onlineProfile)?false:true
+    const isShowPrivateDom = plugin?.OnlineBaseUrl && plugin.OnlineBaseUrl !== onlineProfile ? false : true
     // console.log("私有域比较",plugin.OnlineBaseUrl,onlineProfile)
     return (
         <div
@@ -2078,7 +2228,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
                     <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
                     <div className='icon-body'>
                         <div className='text-icon'>
-                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && isShowPrivateDom&& <OnlineCloudIcon />}
+                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && isShowPrivateDom && <OnlineCloudIcon />}
                             {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
                         </div>
                         {gitUrlIcon(plugin.FromGit)}
@@ -2478,14 +2628,50 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                 </>
             )}
             {loadMode === "local" && (
-                <>
-                    <InputItem label={"本地仓库地址"} value={localPath} setValue={setLocalPath} />
-                </>
+                <div style={{position: "relative"}}>
+                    <InputItem style={{width: "calc(100% - 20px)"}} label={"本地仓库地址"} value={localPath} setValue={setLocalPath} />
+                    <Tooltip title={"选择导入路径"}>
+                        <CloudUploadOutlined
+                            onClick={() => {
+                                ipcRenderer
+                                    .invoke("openDialog", {
+                                        title: "请选择文件夹",
+                                        properties: ["openDirectory"]
+                                    })
+                                    .then((data: any) => {
+                                        if(data.filePaths.length){
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                            setLocalPath(absolutePath)
+                                        }
+                                    })
+                            }}
+                            style={{position: "absolute", right: 90, top: 8, cursor: "pointer"}}
+                        />
+                    </Tooltip>
+                </div>
             )}
             {loadMode === "local-nuclei" && (
-                <>
-                    <InputItem label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath} />
-                </>
+                <div style={{position: "relative"}}>
+                    <InputItem style={{width: "calc(100% - 20px)"}} label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath} />
+                    <Tooltip title={"选择导入路径"}>
+                        <CloudUploadOutlined
+                            onClick={() => {
+                                ipcRenderer
+                                    .invoke("openDialog", {
+                                        title: "请选择文件夹",
+                                        properties: ["openDirectory"]
+                                    })
+                                    .then((data: any) => {
+                                        if(data.filePaths.length){
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                            setLocalNucleiPath(absolutePath)
+                                        }
+                                    })
+                            }}
+                            style={{position: "absolute", right: 90, top: 8, cursor: "pointer"}}
+                        />
+                    </Tooltip>
+                </div>
             )}
             {loadMode === "uploadId" && (
                 <>
@@ -3225,17 +3411,17 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
     const [isRef, setIsRef] = useState(false)
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
-    const [baseUrl,setBaseUrl] = useState<string>("")
+    const [baseUrl, setBaseUrl] = useState<string>("")
     const numberOnlineUser = useRef(0) // 我的插件 选择的插件index
     const numberOnline = useRef(0) // 插件商店 选择的插件index
     // 获取私有域
-    useEffect(()=>{
+    useEffect(() => {
         getRemoteValue("httpSetting").then((setting) => {
             const values = JSON.parse(setting)
-            const baseUrl:string = values.BaseUrl
+            const baseUrl: string = values.BaseUrl
             setBaseUrl(baseUrl)
-        })           
-    },[])
+        })
+    }, [])
     useEffect(() => {
         if (!updatePluginRecord) return
         const index = response.data.findIndex((ele) => ele.id === updatePluginRecord.id)
@@ -3271,7 +3457,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         }
     }, [isSelectAll])
     useEffect(() => {
-        setIsAdmin(userInfo.role === "admin")
+        const boolAdmin = ["admin", "superAdmin"].includes(userInfo.role || "")
+        setIsAdmin(boolAdmin)
     }, [userInfo.role])
     useEffect(() => {
         setListBodyLoading(true)
@@ -3415,8 +3602,8 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
             />
         )
     }
- 
-    if(!userInfo.isLogin && IsEnterprise && !baseUrl.startsWith("https://www.yaklang.com")){
+
+    if (!userInfo.isLogin && IsEnterprise && !baseUrl.startsWith("https://www.yaklang.com")) {
         return (
             <List
                 dataSource={[]}
@@ -3526,7 +3713,8 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     })
     // 全局登录状态
     const {userInfo} = useStore()
-    const isShowAdmin = (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.showStatusSearch && !bind_me)
+    const isShowAdmin =
+        (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.showStatusSearch && !bind_me)
     const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
     return (
         <div className={`plugin-item ${currentId === info.id && "plugin-item-active"}`} onClick={() => onClick(info)}>
@@ -3640,11 +3828,12 @@ interface QueryComponentOnlineProps {
 const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
     const {onClose, userInfo, queryOnline, setQueryOnline, user} = props
     const [isShowStatus, setIsShowStatus] = useState<boolean>(queryOnline.is_private === "true")
-    const [isAdmin, setIsAdmin] = useState(userInfo.role === "admin")
+    const [isAdmin, setIsAdmin] = useState(["admin", "superAdmin"].includes(userInfo.role || ""))
     const [form] = Form.useForm()
     const refTest = useRef<any>()
     useEffect(() => {
-        setIsAdmin(userInfo.role === "admin")
+        const boolAdmin = ["admin", "superAdmin"].includes(userInfo.role || "")
+        setIsAdmin(boolAdmin)
     }, [userInfo.role])
     useEffect(() => {
         document.addEventListener("mousedown", (e) => handleClickOutside(e), true)

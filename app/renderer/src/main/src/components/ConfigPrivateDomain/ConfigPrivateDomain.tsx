@@ -24,13 +24,14 @@ const layout = {
 }
 
 interface ConfigPrivateDomainProps {
-    onClose: () => void,
+    onClose?: () => void,
+    onSuccee?:() => void,
     // 是否为企业登录
     enterpriseLogin?:boolean|undefined
 }
 
 export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
-    const {onClose,enterpriseLogin = false} = props
+    const {onClose,onSuccee,enterpriseLogin = false} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
@@ -51,7 +52,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     // 企业登录
     const loginUser = useMemoizedFn(() => {
         const {user_name,pwd} = getFormValue()
-        console.log("xxx",user_name,pwd)
             NetWorkApi<API.UrmLoginRequest, API.UserData>({
                 method: "post",
                 url: "urm/login",
@@ -60,12 +60,13 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     pwd
                 }
             })
-                .then((res) => {
+                .then((res:API.UserData) => {
                     console.log("返回结果：", res)
                     success("企业登录成功")
                     onCloseTab()
-                    onClose()
-                    if (res) ipcRenderer.send("company-sign-in", {...res})
+                    onClose&&onClose()
+                    onSuccee&&onSuccee()
+                    res&&ipcRenderer.send("company-sign-in", {...res})
                 })
                 .catch((err) => {
                     setTimeout(() => setLoading(false), 300)
@@ -99,7 +100,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             if(!enterpriseLogin){
                 success("私有域设置成功")
                 onCloseTab()
-                onClose()
+                onClose&&onClose()
             }
         })
         .catch((e: any) => {

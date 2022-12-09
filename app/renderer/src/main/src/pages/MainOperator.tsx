@@ -68,7 +68,6 @@ import {coordinate, UserPlatformType} from "./globalVariable"
 import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
 import {MainTabs} from "./MainTabs"
 import Login from "./Login"
-import {TrustList} from "./TrustList"
 import SetPassword from "./SetPassword"
 import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
@@ -132,7 +131,11 @@ const singletonRoute: Route[] = [
     // 用户管理
     Route.AccountAdminPage,
     // 角色管理
-    Route.RoleAdminPage
+    Route.RoleAdminPage,
+    // License管理
+    Route.LicenseAdminPage,
+    // 信任用户管理
+    Route.TrustListPage,
 ]
 const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -155,7 +158,6 @@ export interface MainProp {
     tlsGRPC?: boolean
     addr?: string
     onErrorConfirmed?: () => any
-    ref: any
 }
 
 export interface MenuItem {
@@ -226,7 +228,7 @@ const judgeAvatar = (userInfo) => {
         <Avatar size={38} style={{cursor: "pointer"}} src={companyHeadImg} />
     ) : (
         <Avatar size={38} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
-            {companyName.slice(0, 1)}
+            {companyName&&companyName.slice(0, 1)}
         </Avatar>
     )
 }
@@ -331,7 +333,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     )
 })
 
-const Main: React.FC<MainProp> = forwardRef((props, ref) => {
+const Main: React.FC<MainProp> = forwardRef((props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
     const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
 
@@ -351,24 +353,11 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
     ])
     const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.HTTPHacker)
 
-    // 信任用户弹框
-    const [trustShow, setTrustShow] = useState<boolean>(false)
-
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
 
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
-
-    // 企业版本显示登录弹窗
-    const openLoginShow = () => {
-        setLoginShow(true)
-    }
-    // 此处注意useImperativeHandle方法的的第一个参数是目标元素的ref引用
-    useImperativeHandle(ref, () => ({
-        // openLoginShow 就是暴露给父组件的方法
-        openLoginShow
-    }))
 
     // 系统类型
     const [system, setSystem] = useState<string>("")
@@ -696,16 +685,30 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
 
+    useEffect(()=>{
+        // 企业版初始进入页面（已登录）已获取用户信息 因此刷新
+        if(IsEnterprise){
+            ipcRenderer.send("company-refresh-in")
+        }
+    },[])
+
     // 关闭 tab
     const onCloseTab = useMemoizedFn(() => {
-        ipcRenderer.invoke("send-close-tab", {
-            router: Route.AccountAdminPage,
-            singleNode: true
-        })
-        ipcRenderer.invoke("send-close-tab", {
-            router: Route.RoleAdminPage,
-            singleNode: true
-        })
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.AccountAdminPage,
+                singleNode: true
+            })
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.RoleAdminPage,
+                singleNode: true
+            })
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.LicenseAdminPage,
+                singleNode: true
+            })
     })
 
     useEffect(() => {
@@ -729,7 +732,23 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
         // 非企业管理员登录
         if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
+                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "sign-out", title: "退出登录"}
+            ])
+        }
+        // 非企业超级管理员登录
+        else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
+            setUserMenu([
                 {key: "trust-list", title: "用户管理"},
+                {key: "license-admin",title:"License管理"},
+                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "sign-out", title: "退出登录"}
+            ])
+        }
+        // 非企业license管理员
+        else if(userInfo.role === "licenseAdmin" && userInfo.platform !== "company"){
+            setUserMenu([
+                {key: "license-admin",title:"License管理"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
@@ -1349,7 +1368,10 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                                                     loginOut(userInfo)
                                                     setTimeout(() => success("已成功退出账号"), 500)
                                                 }
-                                                if (key === "trust-list") setTrustShow(true)
+                                                if (key === "trust-list") {
+                                                    const key = Route.TrustListPage
+                                                    goRouterPage(key)
+                                                }
                                                 if (key === "set-password") setPasswordShow(true)
                                                 if (key === "role-admin") {
                                                     const key = Route.RoleAdminPage
@@ -1357,6 +1379,10 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                                                 }
                                                 if (key === "account-admin") {
                                                     const key = Route.AccountAdminPage
+                                                    goRouterPage(key)
+                                                }
+                                                if(key === "license-admin"){
+                                                    const key = Route.LicenseAdminPage
                                                     goRouterPage(key)
                                                 }
                                             }}
@@ -1734,18 +1760,6 @@ const Main: React.FC<MainProp> = forwardRef((props, ref) => {
                 />
             </Modal>
             {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-            <Modal
-                visible={trustShow}
-                title={"用户管理"}
-                destroyOnClose={true}
-                maskClosable={false}
-                bodyStyle={{padding: "10px 24px 24px 24px"}}
-                width={800}
-                onCancel={() => setTrustShow(false)}
-                footer={null}
-            >
-                <TrustList></TrustList>
-            </Modal>
             <Modal
                 visible={passwordShow}
                 title={"修改密码"}

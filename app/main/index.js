@@ -252,8 +252,21 @@ ipcMain.on("company-sign-in", (event, info) => {
     USER_INFO.token = info.token
     USER_INFO.user_id = user.user_id
     USER_INFO.showStatusSearch = user.showStatusSearch
+    USER_INFO.companyName = user.companyName
+    USER_INFO.companyHeadImg = user.companyHeadImg
     win.webContents.send("fetch-signin-token", user)
     win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+})
+
+ipcMain.on("company-refresh-in", (event) => {
+    win.webContents.send("fetch-signin-token", USER_INFO)
+    win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+})
+
+ipcMain.handle("get-login-user-info", async (e) => {
+    return await new Promise((resolve, reject) => {
+            resolve(USER_INFO)
+    })
 })
 
 ipcMain.on("user-sign-out", (event) => {
@@ -269,6 +282,8 @@ ipcMain.on("user-sign-out", (event) => {
     USER_INFO.token = null
     USER_INFO.user_id = ""
     USER_INFO.showStatusSearch = false
+    USER_INFO.companyName = null
+    USER_INFO.companyHeadImg = null
     win.webContents.send("login-out")
 })
 

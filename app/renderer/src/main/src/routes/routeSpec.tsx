@@ -54,7 +54,9 @@ import {OnlinePluginRecycleBin} from "@/pages/yakitStore/OnlinePluginRecycleBin/
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
 import AccountAdminPage from "@/pages/enterpriseAdminPage/AccountAdminPage"
-import RoleAdminPage from "@/pages/enterpriseAdminPage/RoleAdminPage"
+import RoleAdminPage from "@/pages/enterpriseAdminPage/RoleAdminPage";
+import LicenseAdminPage from "@/pages/enterpriseAdminPage/LicenseAdminPage";
+import {TrustListPage} from "@/pages/enterpriseAdminPage/TrustListPage";
 
 import {
     MenuDomainAssetsIcon,
@@ -158,7 +160,9 @@ export enum Route {
 
     // 管理
     AccountAdminPage = "account-admin-page", // 用户管理
-    RoleAdminPage = "role-admin-page" // 角色管理
+    RoleAdminPage = "role-admin-page", // 角色管理
+    LicenseAdminPage = "license-admin-page", // license管理
+    TrustListPage = "trust-list-admin-page", // 信任用户管理
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -209,6 +213,7 @@ export interface MenuDataProps {
 }
 
 export const NoScrollRoutes: Route[] = [Route.HTTPHacker, Route.Mod_Brute, Route.YakScript]
+
 interface ComponentParams {
     // Route.HTTPFuzzer 参数
     isHttps?: boolean
@@ -369,6 +374,10 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <AccountAdminPage />
         case Route.RoleAdminPage:
             return <RoleAdminPage />
+        case Route.LicenseAdminPage: 
+            return <LicenseAdminPage />
+        case Route.TrustListPage:
+            return <TrustListPage />
         default:
             return <div />
     }
@@ -516,6 +525,20 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
         id: "12",
         key: Route.RoleAdminPage,
         label: "角色管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "13",
+        key: Route.LicenseAdminPage,
+        label: "License管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "14",
+        key: Route.TrustListPage,
+        label: "用户管理",
         disabled: true,
         hidden: true
     }

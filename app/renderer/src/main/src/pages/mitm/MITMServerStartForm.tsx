@@ -4,14 +4,14 @@ import {SimplePluginList} from "@/components/SimplePluginList"
 import {showDrawer, showModal} from "@/utils/showModal"
 import {MITMContentReplacerViewer} from "@/pages/mitm/MITMContentReplacerViewer"
 import {MITMContentReplacerExport, MITMContentReplacerImport} from "@/pages/mitm/MITMContentReplacerImport"
-import {getRemoteValue, getValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, getValue, saveValue, setRemoteValue} from "@/utils/kv"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {SwitchItem} from "@/utils/inputUtil";
 import {PlusSquareOutlined} from "@ant-design/icons/lib";
 import {YakEditor} from "@/utils/editors";
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
-
+import { WEB_FUZZ_PROXY } from "@/pages/fuzzer/HTTPFuzzerPage";
 export interface MITMServerStartFormProp {
     onStartMITMServer: (
         host: string,
@@ -102,6 +102,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         const newHostHistoryList = [host, ...hostHistoryList].filter((_, index) => index < 10)
                         setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
                     }
+                    saveValue(WEB_FUZZ_PROXY, downstreamProxy)
                     setRemoteValue(MITMConsts.MITMDefaultServer, host)
                     setRemoteValue(MITMConsts.MITMDefaultPort, `${port}`)
                     setRemoteValue(MITMConsts.MITMDefaultDownstreamProxy, downstreamProxy)

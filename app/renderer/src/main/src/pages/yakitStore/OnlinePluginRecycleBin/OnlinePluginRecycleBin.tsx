@@ -190,7 +190,7 @@ export const OnlinePluginRecycleBin: React.FC = () => {
                         renderRow={(data: API.YakitPluginDetail, index: number) => (
                             <PluginItemOnline
                                 currentId={0}
-                                isAdmin={userInfo.role === 'admin'}
+                                isAdmin={["admin","superAdmin"].includes(userInfo.role||"")}
                                 info={data}
                                 selectedRowKeysRecord={selectedRowKeysRecord}
                                 onSelect={onSelect}

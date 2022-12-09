@@ -160,7 +160,7 @@ Host: www.example.com
 
 {"key": "value"}`
 
-const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
+export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 
@@ -382,7 +382,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (!historyTask) {
             return
         }
-
         if (historyTask.Request === "") {
             setRequest(Uint8ArrayToString(historyTask.RequestRaw, "utf8"))
         } else {
@@ -431,7 +430,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 清楚历史任务的标记
         setHistoryTask(undefined)
 
-        saveValue(WEB_FUZZ_PROXY, proxy)
+        // saveValue(WEB_FUZZ_PROXY, proxy)
         setLoading(true)
         setDroppedCount(0)
         ipcRenderer.invoke(

@@ -441,7 +441,6 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                 <div>
                     {!record.checkPlugin && "-"}
                     {record.checkPlugin && <span style={{marginRight: 10}}>审核插件</span>}
-                    {/* {record.deletePlugin && <span style={{marginRight: 10}}>插件删除</span>} */}
                 </div>
             )
         },
@@ -456,7 +455,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                 <Space>
                     <Button
                         size='small'
-                        type='primary'
+                        type="link"
                         onClick={() => {
                             setEditInfo(i)
                             setRoleFormShow(true)
@@ -470,7 +469,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                             onRemove([i.id])
                         }}
                     >
-                        <Button size={"small"} danger={true}>
+                        <Button size={"small"} danger={true} type="link">
                             删除
                         </Button>
                     </Popconfirm>

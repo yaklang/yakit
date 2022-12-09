@@ -13,6 +13,8 @@ if (process.platform === "darwin" || process.platform === "linux") {
     process.env.PATH = process.env.PATH + ":/usr/local/bin/"
 }
 
+let dbFile =  "default-yakit.db"
+
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
@@ -28,12 +30,12 @@ function sudoExec(cmd, opt, callback) {
     if (isWindows) {
         childProcess.exec(
             cmd,
-            {maxBuffer: 1000 * 1000 * 1000},
+            {maxBuffer: 1000 * 1000 * 1000, env: {"YAK_DEFAULT_DATABASE_NAME": dbFile}},
             (err) => {
                 callback(err)
             })
     } else {
-        _sudoPrompt.exec(cmd, {...opt, env: {"YAKIT_HOME": path.join(os.homedir(), "yakit-projects/")}}, callback)
+        _sudoPrompt.exec(cmd, {...opt, env: {"YAKIT_HOME": path.join(os.homedir(), "yakit-projects/"),"YAK_DEFAULT_DATABASE_NAME": dbFile}}, callback)
     }
 }
 
@@ -66,6 +68,10 @@ module.exports = {
     clearing: () => {
     },
     register: (win, getClient) => {
+        ipcMain.handle("callback-process-env",(e,type)=>{
+            dbFile = type === "enterprise" ?  "company-default-yakit.db" : "default-yakit.db"
+            return""
+        })
         // asyncPsList wrapper
         const fetchWindowsYakProcess = () => {
             return new Promise((resolve, reject) => {
@@ -203,7 +209,7 @@ module.exports = {
                                 generateWindowsSudoCommand(
                                     getLatestYakLocalEngine(), `grpc --port ${randPort}`,
                                 ),
-                                {maxBuffer: 1000 * 1000 * 1000},
+                                {maxBuffer: 1000 * 1000 * 1000, env: {"YAK_DEFAULT_DATABASE_NAME": dbFile}},
                             ).on("error", err => {
                                 if (err) {
                                     reject(err)
@@ -229,7 +235,7 @@ module.exports = {
                         childProcess.spawn(
                             getLatestYakLocalEngine(),
                             ["grpc", "--port", `${randPort}`],
-                            {stdio: ["ignore", "ignore", "ignore"]},
+                            {stdio: ["ignore", "ignore", "ignore"], env: {"YAK_DEFAULT_DATABASE_NAME": dbFile}},
                         ).on("error", err => {
                             if (err) {
                                 fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
@@ -274,7 +280,7 @@ module.exports = {
                     return
                 }
                 try {
-                    const info = fs.statSync(path.join(os.homedir(), "yakit-projects/default-yakit.db"));
+                    const info = fs.statSync(path.join(os.homedir(), `yakit-projects/${dbFile}`));
                     if ((info.mode & 0o200) > 0) {
                         resolve("")
                     } else {
@@ -298,7 +304,7 @@ module.exports = {
                     resolve(true)
                     return
                 }
-                const databaseFile = path.join(os.homedir(), "yakit-projects/default-yakit.db")
+                const databaseFile = path.join(os.homedir(), `yakit-projects/${dbFile}`)
 
                 try {
                     fs.chmodSync(databaseFile, 0o644);

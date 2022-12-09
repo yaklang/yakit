@@ -191,8 +191,23 @@ const getLatestYakLocalEngine = () => {
     }
 }
 
-const getYakitDownloadUrl = (version) => {
-    switch (process.platform) {
+const getYakitDownloadUrl = (version,isEnterprise=false) => {
+    if(isEnterprise){
+        switch (process.platform) {
+            case "darwin":
+                if (process.arch === "arm64") {
+                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-darwin-arm64.dmg`
+                } else {
+                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-darwin-x64.dmg`
+                }
+            case "win32":
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-windows-amd64.exe`
+            case "linux":
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-linux-amd64.AppImage`
+            }
+    }
+    else{
+        switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
                 return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-arm64.dmg`
@@ -204,6 +219,8 @@ const getYakitDownloadUrl = (version) => {
         case "linux":
             return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
     }
+    }
+    
 }
 
 module.exports = {
@@ -356,13 +373,12 @@ module.exports = {
         })
 
         // asyncDownloadLatestYakit wrapper
-        const asyncDownloadLatestYakit = (version) => {
+        const asyncDownloadLatestYakit = (version,isEnterprise) => {
             return new Promise((resolve, reject) => {
                 if (version.startsWith("v")) {
                     version = version.substr(1)
                 }
-                const downloadUrl = getYakitDownloadUrl(version);
-
+                const downloadUrl = getYakitDownloadUrl(version,isEnterprise);
                 const dest = path.join(yakEngineDir, path.basename(downloadUrl));
                 try {
                     fs.unlinkSync(dest)
@@ -387,8 +403,8 @@ module.exports = {
                     }).pipe(fs.createWriteStream(dest));
             })
         }
-        ipcMain.handle("download-latest-yakit", async (e, version) => {
-            return await asyncDownloadLatestYakit(version)
+        ipcMain.handle("download-latest-yakit", async (e, version,isEnterprise) => {
+            return await asyncDownloadLatestYakit(version,isEnterprise)
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {
