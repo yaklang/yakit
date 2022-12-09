@@ -1,0 +1,80 @@
+// ========================== disabled ==========================
+.yakit-auto-complete-disabled {
+    :global {
+        .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            background-color: #F0F1F3;
+            border: 1px solid #EAECF3;
+        }
+    }
+}
+
+// ========================== middle ==========================
+.yakit-auto-complete-wrapper {
+    display: inline-flex;
+    width: 100%;
+
+    :global {
+        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor {
+            height: 28px;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+
+        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor .ant-auto-complete-auto-completeion-search-input {
+            height: 26px;
+            font-size: 12px;
+        }
+    }
+}
+
+// ========================== small ==========================
+.yakit-auto-complete-wrapper-small {
+    :global {
+        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor {
+            height: 24px;
+            padding: 4px 8px;
+        }
+
+        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor .ant-auto-complete-auto-completeion-search-input {
+            height: 22px;
+            font-size: 12px;
+        }
+    }
+}
+
+
+// ========================== large ==========================
+.yakit-auto-complete-wrapper-large {
+    :global {
+        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor {
+            height: 32px;
+        }
+
+        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor .ant-auto-complete-auto-completeion-search-input {
+            height: 30px;
+            font-size: 14px;
+        }
+    }
+}
+
+
+// ========================== popup ==========================
+.yakit-auto-complete-popup {
+    padding: 6px 4px;
+    border-radius: 4px;
+
+    :global {
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+            color: #1890ff;
+        }
+
+        .ant-select-item {
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+    }
+}
+
+.yakit-auto-complete-popup-y {
+    transform: translateY(-2px);
+}
