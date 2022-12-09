@@ -4,14 +4,18 @@ import {SimplePluginList} from "@/components/SimplePluginList"
 import {showDrawer, showModal} from "@/utils/showModal"
 import {MITMContentReplacerViewer} from "@/pages/mitm/MITMContentReplacerViewer"
 import {MITMContentReplacerExport, MITMContentReplacerImport} from "@/pages/mitm/MITMContentReplacerImport"
-import {getRemoteValue, getValue, saveValue, setRemoteValue} from "@/utils/kv"
-import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "@/pages/mitm/MITMPage"
+import {getRemoteValue, getValue, setRemoteValue} from "@/utils/kv"
+import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MITMResponse} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
-import {SwitchItem} from "@/utils/inputUtil";
-import {PlusSquareOutlined} from "@ant-design/icons/lib";
-import {YakEditor} from "@/utils/editors";
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
-import { WEB_FUZZ_PROXY } from "@/pages/fuzzer/HTTPFuzzerPage";
+import {SwitchItem} from "@/utils/inputUtil"
+import {PlusSquareOutlined} from "@ant-design/icons/lib"
+import {YakEditor} from "@/utils/editors"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import {MITMRule} from "./MITMRule/MITMRule"
+import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer"
+import {WEB_FUZZ_PROXY} from "@/pages/fuzzer/HTTPFuzzerPage"
+
+const {ipcRenderer} = window.require("electron")
 export interface MITMServerStartFormProp {
     onStartMITMServer: (
         host: string,
@@ -90,7 +94,18 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             }
         })
     }, [])
-
+    // 内容替代模块
+    const [replacers, setReplacers] = useState<MITMContentReplacerRule[]>([])
+    useEffect(() => {
+        ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
+            console.log("client-mitm-content-replacer-update.replacers", data?.replacers)
+            setReplacers(data?.replacers || [])
+            return
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
+        }
+    }, [])
     return (
         <div style={{height: "100%", width: "100%", position: "relative"}}>
             <Form
@@ -217,6 +232,29 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             }}
                         >
                             已有规则
+                        </Button>
+                        <Button
+                            type={"link"}
+                            style={{padding: `4px 6px`}}
+                            onClick={() => {
+                                let m = showModal({
+                                    width: "96%",
+                                    content: (
+                                        <div style={{marginTop: 20}}>
+                                            <MITMContentReplacer
+                                                rules={replacers}
+                                                onSaved={(rules) => {
+                                                    setReplacers(rules)
+                                                    m.destroy()
+                                                }}
+                                            />
+                                        </div>
+                                    ),
+                                    maskClosable: false
+                                })
+                            }}
+                        >
+                            标记 / 替换流量规则
                         </Button>
                         <Button
                             type={"link"}

@@ -1,11 +1,15 @@
-import {Col, Divider, Drawer, Form, Input, Row, Tag} from "antd"
+import {Col, Divider, Form, Row} from "antd"
 import React, {useEffect, useState} from "react"
 import styles from "./MITMRuleFromModal.module.scss"
 import classNames from "classnames"
-import {ExtractRegularProps, MITMRuleFromModalProps} from "./MITMRuleType"
+import {
+    ExtractRegularProps,
+    ExtraHTTPSelectProps,
+    InputHTTPHeaderFormProps,
+    MITMRuleFromModalProps
+} from "./MITMRuleType"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
-import {AdjustmentsIcon, CheckIcon, PencilAltIcon} from "@/assets/newIcon"
-import {WebFuzzerResponseExtractor} from "@/utils/extractor"
+import {AdjustmentsIcon, CheckIcon, PencilAltIcon, PlusCircleIcon} from "@/assets/newIcon"
 import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {YakEditor} from "@/utils/editors"
 import {editor} from "monaco-editor"
@@ -15,6 +19,14 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
+import {TagsFilter, TagsList} from "@/components/baseTemplate/BaseTags"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {colorSelectNode, HitColor} from "./MITMRule"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,6 +57,9 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const {modalVisible, onClose, currentItem, isEdit} = props
     const [ruleVisible, setRuleVisible] = useState<boolean>()
     const [form] = Form.useForm()
+    const resultType = Form.useWatch("ResultType", form)
+    const headers: HTTPHeader[] = Form.useWatch("ExtraHeaders", form) || []
+    const cookies: HTTPCookieSetting[] = Form.useWatch("ExtraCookies", form) || []
     useEffect(() => {
         console.log("currentItem", currentItem)
 
@@ -69,6 +84,28 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
         })
         setRuleVisible(false)
     })
+    const getExtraHeaders = useMemoizedFn((val) => {
+        console.log("getExtraHeaders", val)
+        form.setFieldsValue({
+            ExtraHeaders: [...headers, val]
+        })
+    })
+    const getExtraCookies = useMemoizedFn((val) => {
+        console.log("getExtraCookies", val)
+        form.setFieldsValue({
+            ExtraCookies: [...cookies, val]
+        })
+    })
+    const onRemoveExtraHeaders = useMemoizedFn((index: number) => {
+        form.setFieldsValue({
+            ExtraHeaders: headers.filter((_, i) => i !== index)
+        })
+    })
+    const onRemoveExtraCookies = useMemoizedFn((index: number) => {
+        form.setFieldsValue({
+            ExtraCookies: cookies.filter((_, i) => i !== index)
+        })
+    })
     return (
         <>
             <YakitModal
@@ -82,7 +119,6 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 width={720}
                 zIndex={1001}
                 onOk={() => onOk()}
-                centered={true}
             >
                 <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
                     <Form.Item label='执行顺序' name='Index'>
@@ -123,17 +159,38 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             buttonStyle='solid'
                         />
                     </Form.Item>
-                    <Form.Item label='HTTP Header' name='ExtraHeaders'>
-                        <YakitInput />
-                    </Form.Item>
-                    <Form.Item label='HTTP Cookie' name='ExtraCookies'>
-                        <YakitInput />
-                    </Form.Item>
+                    {(resultType === 1 && (
+                        <Form.Item label='文本' name='Result'>
+                            <YakitInput placeholder='输入想要替换的内容，可以为空～' />
+                        </Form.Item>
+                    )) || (
+                        <>
+                            <Form.Item label='HTTP Header' name='ExtraHeaders'>
+                                <ExtraHTTPSelect
+                                    tip='Header'
+                                    onSave={getExtraHeaders}
+                                    list={headers}
+                                    onRemove={onRemoveExtraHeaders}
+                                />
+                            </Form.Item>
+                            <Form.Item label='HTTP Cookie' name='ExtraCookies'>
+                                <ExtraHTTPSelect
+                                    tip='Cookie'
+                                    onSave={getExtraCookies}
+                                    list={cookies.map((item) => ({Header: item.Key, Value: item.Value}))}
+                                    onRemove={onRemoveExtraCookies}
+                                />
+                            </Form.Item>
+                        </>
+                    )}
                     <Form.Item label='命中颜色' name='Color'>
-                        <YakitInput />
+                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}}>
+                            {colorSelectNode}
+                        </YakitSelect>
                     </Form.Item>
                     <Form.Item label='标记 Tag' name='ExtraTag'>
-                        <YakitInput />
+                        {/* <TagsFilter data={[]} style={{width: "100%"}} submitValue={() => {}} /> */}
+                        <YakitSelect size='middle' mode='tags' wrapperStyle={{width: "100%"}} />
                     </Form.Item>
                 </Form>
             </YakitModal>
@@ -146,7 +203,6 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 zIndex={1002}
                 footer={null}
                 closable={true}
-                centered={true}
             >
                 <ExtractRegular onSave={getRule} />
             </YakitModal>
@@ -264,5 +320,221 @@ const ExtractRegular: React.FC<ExtractRegularProps> = (props) => {
                 </div>
             </div>
         </div>
+    )
+}
+
+const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = (props) => {
+    const {tip, onSave, list, onRemove} = props
+    const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
+    return (
+        <div className={styles["yakit-extra-http-select"]}>
+            <div className={styles["yakit-extra-http-select-heard"]}>
+                <YakitButton type='text' icon={<PlusCircleIcon />} onClick={() => setVisibleHTTPHeader(true)}>
+                    添加
+                </YakitButton>
+                <div className={styles["extra-tip"]}>
+                    已设置 <span className={styles["number"]}>{list.length}</span> 个额外 {tip}
+                </div>
+            </div>
+            {(tip === "Header" && (
+                <InputHTTPHeaderForm visible={visibleHTTPHeader} setVisible={setVisibleHTTPHeader} onSave={onSave} />
+            )) || <InputHTTPCookieForm visible={visibleHTTPHeader} setVisible={setVisibleHTTPHeader} onSave={onSave} />}
+
+            {list && list.length > 0 && (
+                <div className={styles["http-tags"]}>
+                    {list.map((item, index) => (
+                        <YakitTag
+                            key={`${item.Header}-${index}`}
+                            closable
+                            onClose={() => onRemove(index)}
+                            className={styles["tag-item"]}
+                        >
+                            {item.Header}
+                        </YakitTag>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
+    const {visible, setVisible, onSave} = props
+    const [form] = Form.useForm()
+    return (
+        <YakitModal
+            title='输入新的 HTTP Header'
+            visible={visible}
+            onCancel={() => setVisible(false)}
+            zIndex={1002}
+            footer={null}
+            closable={true}
+        >
+            <Form
+                labelCol={{span: 5}}
+                wrapperCol={{span: 14}}
+                onFinish={(val: HTTPHeader) => {
+                    onSave(val)
+                    setVisible(false)
+                    form.resetFields()
+                }}
+                form={form}
+                className={styles["http-heard-form"]}
+            >
+                <Form.Item label='HTTP Header' name='Header' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitAutoComplete
+                        options={[
+                            "Authorization",
+                            "Accept",
+                            "Accept-Charset",
+                            "Accept-Encoding",
+                            "Accept-Language",
+                            "Accept-Ranges",
+                            "Cache-Control",
+                            "Cc",
+                            "Connection",
+                            "Content-Id",
+                            "Content-Language",
+                            "Content-Length",
+                            "Content-Transfer-Encoding",
+                            "Content-Type",
+                            "Cookie",
+                            "Date",
+                            "Dkim-Signature",
+                            "Etag",
+                            "Expires",
+                            "From",
+                            "Host",
+                            "If-Modified-Since",
+                            "If-None-Match",
+                            "In-Reply-To",
+                            "Last-Modified",
+                            "Location",
+                            "Message-Id",
+                            "Mime-Version",
+                            "Pragma",
+                            "Received",
+                            "Return-Path",
+                            "Server",
+                            "Set-Cookie",
+                            "Subject",
+                            "To",
+                            "User-Agent",
+                            "X-Forwarded-For",
+                            "Via",
+                            "X-Imforwards",
+                            "X-Powered-By"
+                        ].map((ele) => ({value: ele, label: ele}))}
+                        filterOption={(inputValue, option) => {
+                            if (option?.value && typeof option?.value === "string") {
+                                return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                            }
+                            return false
+                        }}
+                        size='middle'
+                    />
+                </Form.Item>
+
+                <Form.Item label='HTTP Value' name='Value'>
+                    <YakitInput />
+                </Form.Item>
+                <Form.Item colon={false} label={" "}>
+                    <YakitButton type='primary' htmlType='submit'>
+                        设置该 Header
+                    </YakitButton>
+                </Form.Item>
+            </Form>
+        </YakitModal>
+    )
+}
+
+const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
+    const {visible, setVisible, onSave} = props
+    const [form] = Form.useForm()
+    const [advanced, setAdvanced] = useState(false)
+    return (
+        <YakitModal
+            title='输入新的 Cookie 值'
+            visible={visible}
+            onCancel={() => setVisible(false)}
+            zIndex={1002}
+            footer={null}
+            closable={true}
+            width={600}
+        >
+            <Form
+                labelCol={{span: 5}}
+                wrapperCol={{span: 14}}
+                onFinish={(val: HTTPHeader) => {
+                    onSave(val)
+                    setVisible(false)
+                    form.resetFields()
+                }}
+                form={form}
+                className={styles["http-heard-form"]}
+            >
+                <Form.Item label='Cookie Key' name='Key' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitAutoComplete
+                        options={["JSESSION", "PHPSESSION", "SESSION", "admin", "test", "debug"].map((ele) => ({
+                            value: ele,
+                            label: ele
+                        }))}
+                        filterOption={(inputValue, option) => {
+                            if (option?.value && typeof option?.value === "string") {
+                                return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                            }
+                            return false
+                        }}
+                        size='middle'
+                    />
+                </Form.Item>
+                <Form.Item label='Cookie Value' name='Value' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitInput />
+                </Form.Item>
+                <Divider orientation={"left"}>
+                    高级配置&emsp;
+                    <YakitSwitch checked={advanced} onChange={(c) => setAdvanced(c)} />
+                </Divider>
+                {advanced && (
+                    <>
+                        <Form.Item label='Path' name='Path'>
+                            <YakitInput />
+                        </Form.Item>
+                        <Form.Item label='Domain' name='Domain'>
+                            <YakitInput />
+                        </Form.Item>
+                        <Form.Item label='HttpOnly' name='HttpOnly'>
+                            <YakitSwitch />
+                        </Form.Item>
+                        <Form.Item label='Secure' name='Secure' help='仅允许 Cookie 在 HTTPS 生效'>
+                            <YakitSwitch />
+                        </Form.Item>
+                        <Form.Item label='SameSite 策略' name='SameSiteMode'>
+                            <YakitRadioButtons
+                                size='large'
+                                options={[
+                                    {label: "默认策略", value: "default"},
+                                    {label: "Lax 策略", value: "lax"},
+                                    {label: "Strict 策略", value: "strict"},
+                                    {label: "不设置", value: "none"}
+                                ]}
+                                buttonStyle='solid'
+                            />
+                        </Form.Item>
+                        <Form.Item label='Expires 时间戳' name='Expires'>
+                            <YakitSwitch />
+                        </Form.Item>
+                        <Form.Item label='MaxAge' name='MaxAge'>
+                            <YakitSwitch />
+                        </Form.Item>
+                    </>
+                )}
+                <Form.Item colon={false} label={" "}>
+                    <YakitButton type='primary' htmlType='submit'>
+                        添加该 Cookie
+                    </YakitButton>
+                </Form.Item>
+            </Form>
+        </YakitModal>
     )
 }

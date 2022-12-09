@@ -13,6 +13,7 @@
     justify-content: space-between;
 }
 
+// ========================== monaco ==========================
 .monaco-editor,
 .monaco-editor-background,
 .monaco-editor .inputarea.ime-input {
@@ -23,7 +24,7 @@
     background-color: #e8e9e8 !important;
 }
 
-
+// ========================== ant ==========================
 .ant-dropdown {
     box-shadow: 0 3px 6px -4px rgb(0 0 0 / 12%), 0 6px 16px 0 rgb(0 0 0 / 8%), 0 9px 28px 8px rgb(0 0 0 / 5%);
     background: #fff;
@@ -57,6 +58,15 @@
     height: 16px;
 }
 
+.ant-form-item-with-help {
+    margin-bottom: 16px;
+}
+
+.ant-form-item {
+    margin-bottom: 16px;
+}
+
+// ========================== color ==========================
 .bg-color-red-opacity {
     background-color: #F4736B;
 }

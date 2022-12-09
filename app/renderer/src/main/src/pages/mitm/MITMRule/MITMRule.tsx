@@ -14,7 +14,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {MITMContentReplacerRule} from "../MITMContentReplacer"
+import {MITMContentReplacer, MITMContentReplacerRule} from "../MITMContentReplacer"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
@@ -31,10 +31,12 @@ import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/Yaki
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {MITMRuleFromModal} from "./MITMRuleFromModal"
 import {randomString} from "@/utils/randomUtil"
+import {showModal} from "@/utils/showModal"
+import {MITMResponse} from "../MITMPage"
 
-const {ipcRenderer, shell} = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
-const HitColor = [
+export const HitColor = [
     {
         title: "Red",
         value: "red",
@@ -91,6 +93,19 @@ const batchMenuData: YakitMenuItemProps[] = [
         label: "删除"
     }
 ]
+
+export const colorSelectNode = (
+    <>
+        {HitColor.map((item) => (
+            <YakitSelect.Option value={item.value} key={item.value}>
+                <div className={classNames(styles["table-hit-color-content"])}>
+                    <div className={classNames(styles["table-hit-color"], item.className)} />
+                    {item.title}
+                </div>
+            </YakitSelect.Option>
+        ))}
+    </>
+)
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const {visible, setVisible, getContainer, top} = props
@@ -151,6 +166,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const onBan = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
         console.log("禁用", rowDate)
     })
+  
     const columns: ColumnsTypeProps[] = [
         {
             title: "执行顺序",
@@ -241,14 +257,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     size='small'
                     wrapperStyle={{width: "100%"}}
                 >
-                    {HitColor.map((item) => (
-                        <YakitSelect.Option value={item.value} key={item.value}>
-                            <div className={classNames(styles["table-hit-color-content"])}>
-                                <div className={classNames(styles["table-hit-color"], item.className)} />
-                                {item.title}
-                            </div>
-                        </YakitSelect.Option>
-                    ))}
+                    {colorSelectNode}
                 </YakitSelect>
             )
         },
@@ -313,6 +322,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         }
         setModalVisible(b)
     })
+
     return (
         <>
             <YakitDrawer

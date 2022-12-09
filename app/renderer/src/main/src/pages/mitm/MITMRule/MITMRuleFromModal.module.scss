@@ -120,3 +120,43 @@
 
     }
 }
+
+.yakit-extra-http-select {
+    .yakit-extra-http-select-heard {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+
+        :global {
+            .anticon {
+                height: 16px;
+            }
+        }
+
+        .extra-tip {
+            color: #B4BBCA;
+            font-weight: 400;
+
+            .number {
+                color: #1890ff;
+                margin: 0 4px;
+            }
+        }
+    }
+
+    .http-tags {
+        border: 1px solid #EAECF3;
+        border-radius: 4px;
+        padding: 4px;
+        padding-bottom: 0;
+
+        .tag-item {
+            margin-bottom: 4px;
+        }
+    }
+}
+
+.http-heard-form {
+    padding: 24px 16px;
+}

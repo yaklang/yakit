@@ -467,3 +467,21 @@ const Adjustments = () => (
 export const AdjustmentsIcon = (props: Partial<IconProps>) => {
     return <Icon component={Adjustments} {...props} />
 }
+
+const PlusCircle = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M8 2.5C4.96243 2.5 2.5 4.96243 2.5 8C2.5 11.0376 4.96243 13.5 8 13.5C11.0376 13.5 13.5 11.0376 13.5 8C13.5 4.96243 11.0376 2.5 8 2.5ZM1.5 8C1.5 4.41015 4.41015 1.5 8 1.5C11.5899 1.5 14.5 4.41015 14.5 8C14.5 11.5899 11.5899 14.5 8 14.5C4.41015 14.5 1.5 11.5899 1.5 8ZM8 5.5C8.27614 5.5 8.5 5.72386 8.5 6V7.5H10C10.2761 7.5 10.5 7.72386 10.5 8C10.5 8.27614 10.2761 8.5 10 8.5H8.5V10C8.5 10.2761 8.27614 10.5 8 10.5C7.72386 10.5 7.5 10.2761 7.5 10V8.5H6C5.72386 8.5 5.5 8.27614 5.5 8C5.5 7.72386 5.72386 7.5 6 7.5H7.5V6C7.5 5.72386 7.72386 5.5 8 5.5Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description:  + plus Circle 带圈
+ */
+export const PlusCircleIcon = (props: Partial<IconProps>) => {
+    return <Icon component={PlusCircle} {...props} />
+}
