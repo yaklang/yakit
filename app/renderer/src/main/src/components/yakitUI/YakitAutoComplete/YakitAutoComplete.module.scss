@@ -14,13 +14,13 @@
     width: 100%;
 
     :global {
-        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor {
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
             height: 28px;
             padding: 6px 12px;
             border-radius: 4px;
         }
 
-        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor .ant-auto-complete-auto-completeion-search-input {
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
             height: 26px;
             font-size: 12px;
         }
@@ -30,12 +30,12 @@
 // ========================== small ==========================
 .yakit-auto-complete-wrapper-small {
     :global {
-        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor {
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
             height: 24px;
             padding: 4px 8px;
         }
 
-        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor .ant-auto-complete-auto-completeion-search-input {
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
             height: 22px;
             font-size: 12px;
         }
@@ -46,11 +46,11 @@
 // ========================== large ==========================
 .yakit-auto-complete-wrapper-large {
     :global {
-        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor {
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
             height: 32px;
         }
 
-        .ant-auto-complete-single:not(.ant-auto-complete-customize-input) .ant-auto-complete-auto-completeor .ant-auto-complete-auto-completeion-search-input {
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
             height: 30px;
             font-size: 14px;
         }
@@ -71,6 +71,7 @@
         .ant-select-item {
             border-radius: 4px;
             padding: 4px 8px;
+            font-size: 12px;
         }
     }
 }
