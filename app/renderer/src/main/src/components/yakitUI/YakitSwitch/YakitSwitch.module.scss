@@ -14,11 +14,30 @@
             background: #F0F1F3;
             border: 1px solid #EAECF3;
             opacity: 1;
+
             .ant-switch-handle {
                 top: 1px;
             }
         }
 
+        // ========================== 老UI ==========================
+        // .ant-switch-checked {
+        //     // background-color: #1890ff;
+        // }
+
+        // .ant-switch-checked:focus {
+        //     // box-shadow: 0 0 0 2px #e6f7ff;
+        // }
+
+        // ========================== 新UI ==========================
+
+        .ant-switch-checked {
+            background-color: #F28B44;
+        }
+
+        .ant-switch-checked:focus {
+            box-shadow: 0 0 0 2px #fbe7d9;
+        }
     }
 }
 
