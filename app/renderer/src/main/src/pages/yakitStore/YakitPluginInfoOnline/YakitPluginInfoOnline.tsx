@@ -398,9 +398,10 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                                                 删除
                                             </Button>
                                         </Popconfirm>
-                                        <Button type='primary' onClick={() => setIsEdit(true)}>
+                                        {/* base_plugin_id存在时则为复制云端插件 不允许更改 私密/公开 */}
+                                        {!plugin?.base_plugin_id && <Button type='primary' onClick={() => setIsEdit(true)}>
                                             修改
-                                        </Button>
+                                        </Button>}
                                     </>
                                 )}
                                 {isAdmin && !user && (
