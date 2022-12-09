@@ -3,10 +3,6 @@
     width: 100%;
 
     :global {
-        .ant-input {
-            border: 1px solid #EAECF3;
-        }
-
         .ant-input-borderless {
             border: none;
         }
@@ -30,6 +26,15 @@
         .ant-input-group-addon:last-child {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
+        }
+
+        .ant-input {
+            border-color: #EAECF3;
+        }
+
+        .ant-input:focus,
+        .ant-input-focused {
+            border-color: #40a9ff;
         }
     }
 
