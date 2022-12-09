@@ -3,6 +3,14 @@ import React from "react"
 import {YakitInputProps} from "./YakitInputType"
 import styles from "./YakitInput.module.scss"
 import classNames from "classnames"
+import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
+
+const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
+
+/**
+ * 更新说明
+ * 1.增加环境变量加载主题色
+ */
 
 
 /**
@@ -29,6 +37,7 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
             className={classNames(
                 styles["yakit-input-wrapper"],
                 {
+                    [styles["yakit-input-wrapper-item-newUI"]]: IsNewUI,
                     [styles["yakit-input-wrapper-large"]]: size === "large",
                     [styles["yakit-input-wrapper-small"]]: size === "small",
                     [styles["yakit-input-disabled"]]: !!props.disabled
