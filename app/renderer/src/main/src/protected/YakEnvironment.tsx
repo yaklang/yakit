@@ -12,14 +12,7 @@ import {UserProtocol} from "../App"
 import {YakitUpgrade} from "../components/YakitUpgrade"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {LoadYakitRemoteConfig} from "@/protected/LoadYakitRemoteConfig"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 
 const {Text} = Typography
 
@@ -385,6 +378,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                         <p style={{marginBottom: 0}}>Yakit 升级</p>
                                     </Button>
                                 </Button.Group>
+                                <YakitInput style={{width: 200}} />
                             </Space>
                         </div>
                     </Form>
