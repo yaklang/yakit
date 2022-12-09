@@ -5,6 +5,13 @@ import styles from "./YakitTag.module.scss"
 import classNames from "classnames"
 import {RemoveIcon} from "@/assets/newIcon"
 
+
+/**
+ * 更新说明
+ * 1、关闭按钮增加hover主题色
+ */
+
+
 /**
  * @description: tag
  * @augments TagProps 继承antd的TagProps默认属性

@@ -15,6 +15,10 @@
             display: inline-flex;
             align-items: center;
             color: #85899E;
+
+            &:hover {
+                color: #1890ff;
+            }
         }
     }
 }
