@@ -3,6 +3,10 @@
     width: 100%;
 
     :global {
+        .ant-input {
+            border: 1px solid #EAECF3;
+        }
+
         .ant-input-borderless {
             border: none;
         }
@@ -13,6 +17,7 @@
 
         .ant-input-group-addon {
             border-radius: 4px;
+            border-color: #EAECF3;
         }
 
         .ant-input-group>.ant-input:first-child,
