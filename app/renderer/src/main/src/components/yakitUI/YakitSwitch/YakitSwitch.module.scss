@@ -1,3 +1,17 @@
+// ========================== 新UI ==========================
+.yakit-switch-wrapper-item-newUI {
+    :global {
+        .ant-switch-checked {
+            background-color: #F28B44;
+        }
+
+        .ant-switch-checked:focus {
+            box-shadow: 0 0 0 2px #fbe7d9;
+        }
+    }
+}
+
+// ========================== switch ==========================
 .yakit-switch-wrapper-item {
     padding: 3px;
 
@@ -20,28 +34,8 @@
             }
         }
 
-        // ========================== 老UI ==========================
-        // .ant-switch-checked {
-        //     // background-color: #1890ff;
-        // }
-
-        // .ant-switch-checked:focus {
-        //     // box-shadow: 0 0 0 2px #e6f7ff;
-        // }
-
-        // ========================== 新UI ==========================
-
-        .ant-switch-checked {
-            background-color: #F28B44;
-        }
-
-        .ant-switch-checked:focus {
-            box-shadow: 0 0 0 2px #fbe7d9;
-        }
     }
 }
-
-
 
 
 .yakit-switch-item {
