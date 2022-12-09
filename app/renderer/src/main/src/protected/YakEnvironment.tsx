@@ -11,8 +11,12 @@ import {YakUpgrade} from "../components/YakUpgrade"
 import {UserProtocol} from "../App"
 import {YakitUpgrade} from "../components/YakitUpgrade"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+<<<<<<< HEAD
 import {LoadYakitRemoteConfig} from "@/protected/LoadYakitRemoteConfig";
 
+=======
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+>>>>>>> 3960fc93 (YakitSwitch,主题色配置新UI)
 const {Text, Title, Paragraph} = Typography
 
 export interface YakEnvironmentProp {

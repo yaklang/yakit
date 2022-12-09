@@ -66,7 +66,7 @@ export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
                     [styles["yakit-switch-wrapper-middle"]]: size === "middle",
                     [styles["yakit-switch-wrapper-small"]]: size === "small"
                 },
-                wrapperClassName
+                wrapperClassName 
             )}
         >
             <Switch
