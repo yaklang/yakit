@@ -367,6 +367,23 @@ service Yak {
   rpc GetLicense(Empty) returns (GetLicenseResponse);
   rpc CheckLicense(CheckLicenseRequest) returns (Empty);
 
+  // 扩展
+  rpc GetRequestBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
+  rpc GetResponseBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
+  rpc GetHTTPPacketBody(GetHTTPPacketBodyRequest) returns (Bytes);
+}
+
+message GetHTTPPacketBodyRequest {
+  string Packet = 1;
+  bytes PacketRaw = 2;
+}
+
+message DownloadBodyByHTTPFlowIDRequest {
+  int64 Id = 1;
+}
+
+message Bytes {
+  bytes Raw = 1;
 }
 
 message ExtractDataResponse {
