@@ -59,6 +59,7 @@ import {
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
+import {saveABSFileToOpen} from "@/utils/openWebsite";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1634,6 +1635,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 20,
             onClickSingle: (v) => onRemoveCalloutColor(v),
             onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
+        },
+        {
+            title: "下载 Response Body",
+            onClickSingle: (v) => {
+                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
+                    saveABSFileToOpen(`response-body.txt`, bytes.Raw)
+                })
+            },
         },
         {
             title: "发送到对比器",

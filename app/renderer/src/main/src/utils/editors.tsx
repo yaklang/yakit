@@ -34,6 +34,7 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
 import ITextModel = editor.ITextModel
 import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor";
+import {saveABSFileToOpen} from "@/utils/openWebsite";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -776,6 +777,38 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         }
                                     },
                                     {
+                                        label: "下载 Body",
+                                        contextMenuGroupId: "auto-suggestion",
+                                        id: "download-body",
+                                        run: (e) => {
+                                            try {
+                                                if (props.readOnly && props.originValue) {
+                                                    console.info(Uint8ArrayToString(props.originValue))
+                                                    ipcRenderer.invoke("GetHTTPPacketBody", {PacketRaw: props.originValue}).then((bytes: { Raw: Uint8Array }) => {
+                                                        saveABSFileToOpen("packet-body.txt", bytes.Raw)
+                                                    }).catch(e => {
+                                                        info(`保存失败：${e}`)
+                                                    })
+                                                    return
+                                                }
+                                                // @ts-ignore
+                                                const text = e.getModel()?.getValue()
+                                                if (!text) {
+                                                    Modal.info({
+                                                        title: "下载 Body 失败",
+                                                        content: <>{"无数据包-无法下载 Body"}</>
+                                                    })
+                                                    return
+                                                }
+                                                ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text}).then((bytes: { Raw: Uint8Array }) => {
+                                                    saveABSFileToOpen("packet-body.txt", bytes.Raw)
+                                                })
+                                            } catch (e) {
+                                                failed("editor exec download body failed")
+                                            }
+                                        }
+                                    },
+                                    {
                                         label: "复制为 CSRF PoC",
                                         contextMenuGroupId: "auto-suggestion",
                                         id: "csrfpoc",
@@ -799,7 +832,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 ],
                                 ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
                                 ...(props.noPacketModifier ? [] : MonacoEditorFullCodecActions)
-                            ]}
+                            ].filter(i => !!i)}
                             editorDidMount={(editor) => {
                                 setMonacoEditor(editor)
                             }}

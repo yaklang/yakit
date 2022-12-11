@@ -144,4 +144,52 @@ module.exports = (win, getClient) => {
     ipcMain.handle("HTTPFlowsFieldGroup", async (e, params) => {
         return await asyncHTTPFlowsFieldGroup(params)
     })
+
+    // asyncGetRequestBodyByHTTPFlowID wrapper
+    const asyncGetRequestBodyByHTTPFlowID = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetRequestBodyByHTTPFlowID(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetRequestBodyByHTTPFlowID", async (e, params) => {
+        return await asyncGetRequestBodyByHTTPFlowID(params)
+    })
+
+    // asyncGetResponseBodyByHTTPFlowID wrapper
+    const asyncGetResponseBodyByHTTPFlowID = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetResponseBodyByHTTPFlowID(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetResponseBodyByHTTPFlowID", async (e, params) => {
+        return await asyncGetResponseBodyByHTTPFlowID(params)
+    })
+
+    // asyncGetHTTPPacketBody wrapper
+    const asyncGetHTTPPacketBody = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetHTTPPacketBody(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetHTTPPacketBody", async (e, params) => {
+        return await asyncGetHTTPPacketBody(params)
+    })
 }
