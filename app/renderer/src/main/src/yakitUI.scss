@@ -121,6 +121,44 @@ html {
     --yakit-danger-color-press: #d33a30;
 }
 
+html {
+    // 主题色
+    --yakit-primary-color: #f28b44;
+    --yakit-primary-border-color: #fbc6a1;
+    --yakit-primary-background-color: #fef8f4;
+    --yakit-primary-color-hover: #ea7d32;
+    --yakit-primary-color-focus: #fbe7d9;
+    --yakit-primary-color-press: #e27122;
+    // 成功状态色
+    --yakit-success-color: #56c991;
+    --yakit-success-border-color: #c6ebd9;
+    --yakit-success-background-color: #f1fbf6;
+    --yakit-success-color-hover: #4dbe87;
+    --yakit-success-color-focus: #d9f2e6;
+    --yakit-success-color-press: #33ad72;
+    // 警告状态色
+    --yakit-warning-color: #ffb660;
+    --yakit-warning-border-color: #fddfbd;
+    --yakit-warning-background-color: #fff9f2;
+    --yakit-warning-color-hover: #f6a94f;
+    --yakit-warning-color-focus: #ffecd6;
+    --yakit-warning-color-press: #f39628;
+    // 错误状态色
+    --yakit-danger-color: #f6544a;
+    --yakit-danger-border-color: #f3c2bf;
+    --yakit-danger-background-color: #fef1f1;
+    --yakit-danger-color-hover: #eb493f;
+    --yakit-danger-color-focus: #ffe0de;
+    --yakit-danger-color-press: #d33a30;
+    // 严重状态色
+    --yakit-serious-color: #bd2a21;
+    --yakit-serious-border-color: #d89591;
+    --yakit-serious-background-color: #faeeed;
+    --yakit-serious-color-hover: #b62117;
+    --yakit-serious-color-focus: #f5d1cf;
+    --yakit-serious-color-press: #9d1b13;
+}
+
 // 当行内容过长省略
 .yakit-single-line-ellipsis {
     white-space: nowrap;
