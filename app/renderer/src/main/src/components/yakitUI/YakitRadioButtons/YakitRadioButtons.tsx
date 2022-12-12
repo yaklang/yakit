@@ -19,7 +19,7 @@ import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
  * @param optionType 弃用
  * @param {"small" | "middle" | "large" | "maxLarge"} size  默认middle
  * @augments RadioGroupProps 继承antd的 RadioGroupProps 默认属性
- * @params {string} className RadioGroup  className 
+ * @params {string} className RadioGroup  className
  */
 export const YakitRadioButtons: React.FC<YakitRadioButtonsProps> = (props) => {
     const {className, size, ...restProps} = props
