@@ -24,10 +24,7 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
                 styles["yakit-input-wrapper"],
                 {
                     [styles["yakit-input-wrapper-item-newUI"]]: IsNewUI,
-<<<<<<< HEAD
                     [styles["yakit-input-wrapper-item-oldUI"]]: !IsNewUI,
-=======
->>>>>>> fbeab249 (YakitInput,配置主题色)
                     [styles["yakit-input-wrapper-large"]]: size === "large",
                     [styles["yakit-input-wrapper-small"]]: size === "small",
                     [styles["yakit-input-disabled"]]: !!props.disabled
