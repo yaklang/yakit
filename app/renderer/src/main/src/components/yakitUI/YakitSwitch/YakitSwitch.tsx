@@ -60,6 +60,7 @@ export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
                 styles["yakit-switch-wrapper-item"],
                 {
                     [styles["yakit-switch-wrapper-item-newUI"]]: IsNewUI,
+                    [styles["yakit-switch-wrapper-item-oldUI"]]: !IsNewUI,
                     [styles["yakit-switch-wrapper-max-large"]]: size === "maxLarge",
                     [styles["yakit-switch-wrapper-large"]]: size === "large",
                     [styles["yakit-switch-wrapper-middle"]]: size === "middle",
