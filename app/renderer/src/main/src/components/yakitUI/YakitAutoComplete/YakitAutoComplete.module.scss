@@ -1,3 +1,17 @@
+// ========================== 新UI ==========================
+.yakit-auto-complete-wrapper-newUI {
+    --yakit-box-shadow-color: #FBE7D9;
+    --yakit-border-color: #F79C5D;
+    --yakit-font-color: #F28B44;
+}
+
+// ========================== 老UI ==========================
+.yakit-auto-complete-wrapper-oldUI {
+    --yakit-box-shadow-color: #e6f7ff;
+    --yakit-border-color: #40a9ff;
+    --yakit-font-color: #1890ff;
+}
+
 // ========================== disabled ==========================
 .yakit-auto-complete-disabled {
     :global {
@@ -23,6 +37,20 @@
         .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
             height: 26px;
             font-size: 12px;
+        }
+
+        .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+            border-color: var(--yakit-border-color);
+            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+        }
+
+        // .ant-select-focused:not(.ant-select-disabled) .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+        //     border-color: var(--yakit-border-color);
+        //     box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+        // }
+        .ant-select-focused .ant-select-selector {
+            border-color: var(--yakit-border-color) !important;
+            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color) !important;
         }
     }
 }
@@ -65,7 +93,7 @@
 
     :global {
         .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-            color: #1890ff;
+            color: var(--yakit-font-color);
         }
 
         .ant-select-item {
