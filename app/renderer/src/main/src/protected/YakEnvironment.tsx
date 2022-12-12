@@ -12,7 +12,6 @@ import {UserProtocol} from "../App"
 import {YakitUpgrade} from "../components/YakitUpgrade"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {LoadYakitRemoteConfig} from "@/protected/LoadYakitRemoteConfig";
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {Text} = Typography
 
@@ -378,11 +377,6 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                         <p style={{marginBottom: 0}}>Yakit 升级</p>
                                     </Button>
                                 </Button.Group>
-                                <YakitSelect open={true} style={{width: 200}}>
-                                    <YakitSelect.Option value={555}>555</YakitSelect.Option>
-                                    <YakitSelect.Option value={444}>444</YakitSelect.Option>
-                                    <YakitSelect.Option value={333}>333</YakitSelect.Option>
-                                </YakitSelect>
                             </Space>
                         </div>
                     </Form>
