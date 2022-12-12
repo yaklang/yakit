@@ -8,6 +8,10 @@ import {BaseSelectRef, OptGroup} from "rc-select"
 import {YakitTag} from "../YakitTag/YakitTag"
 import {ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
 
+import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
+
+const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
+
 const {Option} = Select
 
 /**
