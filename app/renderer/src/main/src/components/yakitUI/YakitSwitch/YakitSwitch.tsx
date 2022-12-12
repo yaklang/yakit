@@ -5,7 +5,7 @@ import styles from "./YakitSwitch.module.scss"
 import classNames from "classnames"
 import {CheckIcon, RemoveIcon} from "@/assets/newIcon"
 import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
-
+import "./yakitSwitchAnimation.scss"
 const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
 
 /**

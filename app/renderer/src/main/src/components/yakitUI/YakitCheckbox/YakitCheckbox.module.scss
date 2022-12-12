@@ -1,3 +1,22 @@
+// ========================== 新UI ==========================
+.yakit-checkbox-wrapper-newUI {
+    --yakit-box-shadow-color: #FBE7D9;
+    --yakit-hover-color: #F79C5D;
+    --yakit-active-color: #e27122;
+    --yakit-border-color: #F28B44;
+    --yakit-background-color: #F28B44;
+}
+
+// ========================== 老UI ==========================
+.yakit-checkbox-wrapper-oldUI {
+    --yakit-box-shadow-color: #e6f7ff;
+    --yakit-hover-color: #40a9ff;
+    --yakit-active-color: #096dd9;
+    --yakit-border-color: #1890ff;
+    --yakit-background-color: #1890ff;
+}
+
+// ========================== checkbox ==========================
 .yakit-checkbox-wrapper {
     height: 16px;
     width: 16px;
@@ -9,6 +28,7 @@
 
         .ant-checkbox-checked::after {
             border-radius: 4px;
+            border-color: var(--yakit-border-color);
         }
 
         .ant-checkbox-wrapper {
@@ -23,50 +43,78 @@
             animation: yakitEffectCheckbox 0.36s ease-in-out;
         }
 
+        .ant-checkbox-wrapper:hover .ant-checkbox-inner,
+        .ant-checkbox:hover .ant-checkbox-inner,
+        .ant-checkbox-input:focus+.ant-checkbox-inner {
+            border-color: var(--yakit-border-color);
+        }
+
+        .ant-checkbox-wrapper:active .ant-checkbox-inner,
+        .ant-checkbox:active .ant-checkbox-inner,
+        .ant-checkbox-input:focus+.ant-checkbox-inner {
+            border-color: var(--yakit-border-color);
+            box-shadow: 0 0 0 3px var(--yakit-box-shadow-color);
+        }
+
+        .ant-checkbox-checked .ant-checkbox-inner {
+            background-color: var(--yakit-background-color);
+            border-color: var(--yakit-border-color);
+        }
+
+        .ant-checkbox-checked:active {
+            .ant-checkbox-inner {
+                box-shadow: 0 0 0 3px var(--yakit-box-shadow-color);
+            }
+        }
+
         // ========================== indeterminate ==========================
+
         .ant-checkbox-indeterminate .ant-checkbox-inner::after {
             width: 10px;
             height: 10px;
             border-radius: 2px;
+            background-color: var(--yakit-background-color);
         }
 
         .ant-checkbox-indeterminate .ant-checkbox-inner {
-            border-color: #1890ff;
-            border-width: 2px;
+            border-color: var(--yakit-border-color);
+            background-color: #fff !important;
+            border-width: 2px !important;
         }
 
         .ant-checkbox-indeterminate:hover {
             .ant-checkbox-inner {
-                border-color: #40a9ff;
+                border-width: 2px;
             }
 
             .ant-checkbox-inner::after {
-                background-color: #40a9ff;
+                background-color: var(--yakit-background-color);
             }
         }
 
         .ant-checkbox-indeterminate:active {
             .ant-checkbox-inner {
-                border-color: #096dd9;
+                border-color: var(--yakit-active-color);
+                box-shadow: 0 0 0 3px var(--yakit-box-shadow-color);
             }
 
             .ant-checkbox-inner::after {
-                background-color: #096dd9;
+                background-color: var(--yakit-active-color);
             }
         }
 
         // ========================== check ==========================
         .ant-checkbox-checked:hover {
             .ant-checkbox-inner {
-                background-color: #40a9ff;
-                border-color: #40a9ff;
+                background-color: var(--yakit-hover-color);
+                border-color: var(--yakit-hover-color);
             }
         }
 
         .ant-checkbox-checked:active {
             .ant-checkbox-inner {
-                background-color: #096dd9;
-                border-color: #096dd9;
+                background-color: var(--yakit-background-color);
+                border: 1px solid var(--yakit-border-color);
             }
         }
 

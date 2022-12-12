@@ -1,0 +1,12 @@
+// ========================== Switch ==========================
+@keyframes yakitFadeEffectSwitch {
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes yakitWaveEffectSwitch {
+    100% {
+        box-shadow: 0 0 0 2px var(--yakit-primary-color);
+    }
+}
