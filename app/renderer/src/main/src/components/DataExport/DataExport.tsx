@@ -11,6 +11,9 @@ interface ExportExcelProps {
     getData: (query: PaginationSchema) => Promise<any>
     fileName?: string
     pageSize?: number
+    showButton?: boolean
+    text?: string
+    openModal?: boolean
 }
 
 interface resProps {
@@ -28,7 +31,7 @@ interface PaginationProps {
 const maxCellNumber = 100000 // 最大单元格10w
 
 export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
-    const {btnProps, getData, fileName = "端口资产", pageSize = 100000} = props
+    const {btnProps, getData, fileName = "端口资产", pageSize = 100000, showButton = true, text,openModal=false} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     const [frequency, setFrequency] = useState<number>(0)
@@ -45,29 +48,31 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         setLoading(true)
         getData(query as any)
             .then((res: resProps) => {
-                const {header, exportData, response, optsSingleCellSetting} = res
-                const totalCellNumber = header.length * exportData.length
-                if (totalCellNumber < maxCellNumber && response.Total <= pageSize) {
-                    // 单元格数量小于最大单元格数量，直接导出
-                    export_json_to_excel({
-                        header: res.header,
-                        data: res.exportData,
-                        filename: `${fileName}1-${exportData.length}`,
-                        autoWidth: true,
-                        bookType: "xlsx",
-                        optsSingleCellSetting
-                    })
-                } else {
-                    // 分批导出
-                    const frequency = Math.ceil(totalCellNumber / maxCellNumber) // 导出次数
-                    exportNumber.current = Math.floor(maxCellNumber / header.length) //每次导出的数量
-                    exportDataBatch.current = exportData
-                    headerExcel.current = header
-                    setFrequency(frequency)
-                    setVisible(true)
+                if (res) {
+                    const {header, exportData, response, optsSingleCellSetting} = res
+                    const totalCellNumber = header.length * exportData.length
+                    if (totalCellNumber < maxCellNumber && response.Total <= pageSize) {
+                        // 单元格数量小于最大单元格数量，直接导出
+                        export_json_to_excel({
+                            header: res.header,
+                            data: res.exportData,
+                            filename: `${fileName}1-${exportData.length}`,
+                            autoWidth: true,
+                            bookType: "xlsx",
+                            optsSingleCellSetting
+                        })
+                    } else {
+                        // 分批导出
+                        const frequency = Math.ceil(totalCellNumber / maxCellNumber) // 导出次数
+                        exportNumber.current = Math.floor(maxCellNumber / header.length) //每次导出的数量
+                        exportDataBatch.current = exportData
+                        headerExcel.current = header
+                        setFrequency(frequency)
+                        setVisible(true)
+                    }
+                    optsCell.current = optsSingleCellSetting
+                    setPagination(response)
                 }
-                optsCell.current = optsSingleCellSetting
-                setPagination(response)
             })
             .catch((e: any) => {
                 failed("数据导出失败: " + `${e}`)
@@ -85,7 +90,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         const name = `${fileName}(第${pagination.Pagination.Page}页${
             exportNumber.current && firstIndx + 1
         }-${lastIndex})`
-        const list:Array<string[]> = exportDataBatch.current?.slice(firstIndx, lastIndex + 1)
+        const list: Array<string[]> = exportDataBatch.current?.slice(firstIndx, lastIndex + 1)
         export_json_to_excel({
             header: headerExcel.current,
             data: list,
@@ -105,9 +110,13 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     }
     return (
         <>
-            <Button onClick={() => toExcel()} loading={loading} {...btnProps}>
-                导出Excel
-            </Button>
+            {showButton ? (
+                <Button onClick={() => toExcel()} loading={loading} {...btnProps}>
+                    {text || "导出Excel"}
+                </Button>
+            ) : (
+                <span onClick={() => toExcel()}>{text || "导出Excel"}</span>
+            )}
             <Modal title='数据导出' visible={visible} onCancel={() => setVisible(false)} footer={null}>
                 {/* <p>
                     共&nbsp;&nbsp;<Tag>{exportDataBatch.current?.length || 0}</Tag>条记录

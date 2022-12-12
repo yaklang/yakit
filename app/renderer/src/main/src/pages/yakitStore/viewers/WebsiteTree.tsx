@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react"
-import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Popconfirm} from "antd"
+import React, {useEffect, useState,useRef} from "react"
+import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu,Popconfirm,Popover} from "antd"
 import {
     AntDTreeData,
     ConvertWebsiteForestToTreeData,
@@ -7,11 +7,14 @@ import {
 } from "../../../components/WebsiteTree"
 import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable"
 import {genDefaultPagination, QueryGeneralResponse} from "../../invoker/schema"
-import {ReloadOutlined, SearchOutlined, DeleteOutlined} from "@ant-design/icons"
+import {ReloadOutlined, SearchOutlined, DeleteOutlined,SettingOutlined} from "@ant-design/icons"
 import {InputItem, SwitchItem} from "../../../utils/inputUtil"
 import { showByContextMenu } from "../../../components/functionTemplate/showByContext"
 import { HTTPFlow } from "../../../components/HTTPFlowTable/HTTPFlowTable"
-import { failed } from "../../../utils/notification"
+import { failed,warn } from "../../../utils/notification"
+import style from "./WebsiteTree.module.scss"
+import {useGetState, useMemoizedFn} from "ahooks"
+import {ExportExcel} from "../../../components/DataExport/DataExport"
 
 import "./WebsiteTreeStyle.css"
 
@@ -35,6 +38,36 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [searchTarget, setSearchTarget] = useState(props.targets)
     const [loading, setLoading] = useState(false)
     const [isDelKey, setisDelKey] = useState("")
+    const [treeHeight, setTreeHeight] = useState<number>(0)
+    const [delUrlArr,setDelUrlArr] = useState<string[]>([])
+    const [downLoadUrlArr,setDownLoadUrlArr] = useState<string[]>([])
+    const [downLoadUrlPageSize,setDownLoadUrlPageSize] = useState<number>(20)
+    const TreeBoxRef = useRef<any>()
+
+    useEffect(()=>{
+        setTreeHeight(TreeBoxRef.current.offsetHeight)
+    },[])
+
+    const setTreeCheckable = (treeDataRaw:AntDTreeData[],bool=false) => {
+        return treeDataRaw.map((item)=>{
+            if(!bool){
+                if(item.children.length>0){
+                    item.children = setTreeCheckable(item.children,true)
+                }
+                //@ts-ignore
+                item.checkable = true
+                return item
+            }
+            else{
+                if(item.children.length>0){
+                    item.children = setTreeCheckable(item.children,true)
+                }
+                //@ts-ignore
+                item.checkable = false
+                return item
+            }
+        })
+    }
 
     const refresh = () => {
         setLoading(true)
@@ -46,23 +79,36 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                 const treeDataRaw = ConvertWebsiteForestToTreeData(
                     JSON.parse(Buffer.from(data.TreeDataJson).toString("utf8")) as WebsiteForest
                 ) as AntDTreeData[]
-                setTreeData([...treeDataRaw])
+                const newTreeDataRaw = setTreeCheckable(treeDataRaw)
+                setTreeData([...newTreeDataRaw])
                 setLoading(false)
             })
     }
 
-    const delReord = (node: AntDTreeData) => {
-        function fetchUrl(node: AntDTreeData, url: string): string {
-            if (!!node.parent) {
-                const str = `${node.title[0] === "/" ? "" : "/"}${node.title}${url}`
-                return fetchUrl(node.parent, str)
-            } else {
-                return `${node.title}${url}`
-            }
+    const fetchDelUrl = (node: AntDTreeData, url: string): string => {
+        if (!!node.parent) {
+            const str = `${node.title[0] === "/" ? "" : "/"}${node.title}${url}`
+            return fetchDelUrl(node.parent, str)
+        } else {
+            return `${node.title}${url}`
         }
+    }
 
+    const delReord = (node: AntDTreeData) => {
         ipcRenderer
-            .invoke("DeleteHTTPFlows", {URLPrefix: fetchUrl(node, "")})
+            .invoke("DeleteHTTPFlows", {URLPrefix: fetchDelUrl(node, "")})
+            .then((res) => {
+                refresh()
+            })
+    }
+
+    const delManyReord = () => {
+        if(delUrlArr.length===0){
+            warn("请选择")
+            return
+        }
+        ipcRenderer
+            .invoke("DeleteHTTPFlows", {URLPrefixBatch: delUrlArr})
             .then((res) => {
                 refresh()
             })
@@ -103,14 +149,61 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
         }
     }, [autoRefresh])
 
+    const getData = useMemoizedFn((query) => {
+        return new Promise((resolve) => {
+           if(downLoadUrlArr.length===0){
+            warn("请选择")
+            resolve(null)
+        } 
+        else{
+            ipcRenderer.invoke("QueryHTTPFlows", {
+            IncludeInUrl:downLoadUrlArr,
+            Pagination: {
+                ...genDefaultPagination(20),
+                Page: page,
+                Limit: limit,
+                ...query
+            }
+            }).then((res: QueryGeneralResponse<HTTPFlow>) => {
+                const {Data} = res
+                //    数据导出
+                let exportData: any = []
+                    const header: string[] = []
+                    const filterVal: string[] = []
+                    header.push("URL")
+                    filterVal.push("url")
+                    // [["test"],["test1"]]
+                    exportData = Data.map((item)=>([item.Url]))
+                    setDownLoadUrlPageSize(res.Pagination.Limit)
+                    resolve({
+                        header,
+                        exportData,
+                        response: res
+                    })
+            })  
+            .catch((e: any) => {
+                failed("数据导出失败 " + `${e}`)
+            })
+        }
+          
+        })
+        
+    })
+
     return (
         <>
             <Row gutter={8} style={{height: "100%"}}>
                 <Col span={7} style={{height: "100%", overflow: "auto"}}>
-                    <Spin spinning={loading}>
+                    <Spin spinning={loading} 
+                    style={{height:"100%"}}
+                    wrapperClassName="Website-tree-spin"
+                    >
                         <Card
+                            className="Website-tree-card"
                             title={
-                                <Space>
+                                <>
+                                <div>
+                                  <Space>
                                     业务结构
                                     <Button
                                         type={"link"}
@@ -120,56 +213,111 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                             refresh()
                                         }}
                                     />
-                                </Space>
+                                </Space>  
+                                </div>
+                                
+                                        {
+                                            !props.targets ? (
+                                                <Space>
+                                                    <Form
+                                                        size={"small"}
+                                                        onSubmitCapture={(e) => {
+                                                            e.preventDefault()
+            
+                                                            refresh()
+                                                        }}
+                                                        layout={"inline"}
+                                                    >
+                                                        <InputItem
+                                                            label={"URL关键字"}
+                                                            value={searchTarget}
+                                                            setValue={setSearchTarget}
+                                                            width={100}
+                                                        />
+                                                        <Form.Item style={{marginLeft: 0, marginRight: 0}}>
+                                                            <Button
+                                                                size={"small"}
+                                                                type='link'
+                                                                htmlType='submit'
+                                                                icon={<SearchOutlined/>}
+                                                                style={{marginLeft: 0, marginRight: 0}}
+                                                            />
+                                                        </Form.Item>
+                                                    </Form>
+                                                    {/*<Input onBlur={r => setSearchTarget(r.target.value)} size={"small"}/>*/}
+                                                </Space>
+                                            ) : (
+                                                <Space>
+                                                    <Form onSubmitCapture={e => {
+                                                        e.preventDefault()
+                                                    }} size={"small"}>
+                                                        <SwitchItem
+                                                            label={"自动刷新"} formItemStyle={{marginBottom: 0}}
+                                                            value={autoRefresh} setValue={setAutoRefresh}
+                                                        />
+                                                    </Form>
+                                                </Space>
+                                            )
+                                        }
+                                </>
                             }
                             size={"small"}
                             extra={
-                                !props.targets ? (
-                                    <Space>
-                                        <Form
-                                            size={"small"}
-                                            onSubmitCapture={(e) => {
-                                                e.preventDefault()
+                                <Popover
+                                            overlayClassName={style["http-history-table-drop-down-popover"]}
+                                            content={ 
+                                        <Menu
+                                        className={style["http-history-table-drop-down-batch"]}>
+                                            <Menu.Item
+                                                onClick={() => {
+                                                    delManyReord()
+                                                }}
+                                            >
+                                                批量删除
+                                            </Menu.Item>
+                                            <Menu.Item>
+                                                <ExportExcel fileName="网站树视角" pageSize={downLoadUrlPageSize} text="批量导出" showButton={false} getData={getData} btnProps={{size: "small"}} />
+                                            </Menu.Item>
+                                        </Menu>
+                                        
+                                    }
+                                    trigger='click'
+                                    placement='bottomLeft'
+><SettingOutlined />
+</Popover>
 
-                                                refresh()
-                                            }}
-                                            layout={"inline"}
-                                        >
-                                            <InputItem
-                                                label={"URL关键字"}
-                                                value={searchTarget}
-                                                setValue={setSearchTarget}
-                                                width={100}
-                                            />
-                                            <Form.Item style={{marginLeft: 0, marginRight: 0}}>
-                                                <Button
-                                                    size={"small"}
-                                                    type='link'
-                                                    htmlType='submit'
-                                                    icon={<SearchOutlined/>}
-                                                    style={{marginLeft: 0, marginRight: 0}}
-                                                />
-                                            </Form.Item>
-                                        </Form>
-                                        {/*<Input onBlur={r => setSearchTarget(r.target.value)} size={"small"}/>*/}
-                                    </Space>
-                                ) : (
-                                    <Space>
-                                        <Form onSubmitCapture={e => {
-                                            e.preventDefault()
-                                        }} size={"small"}>
-                                            <SwitchItem
-                                                label={"自动刷新"} formItemStyle={{marginBottom: 0}}
-                                                value={autoRefresh} setValue={setAutoRefresh}
-                                            />
-                                        </Form>
-                                    </Space>
-                                )
+                               
+                                
                             }
                         >
-                            <div style={{width: "100%", overflowX: "auto", maxHeight: props.maxHeight}}>
+                            <div ref={TreeBoxRef} style={{height:"100%",maxHeight: props.maxHeight}}>
                                 <Tree
+                                    height={treeHeight}
                                     className='ellipsis-tree'
+                                    checkable
+                                    onCheck={(checkedKeys,info)=>{
+                                        // @ts-ignore
+                                        const {children,key,parent,title,urls} = info.node
+                                        let node = {
+                                            children,
+                                            key,
+                                            parent,
+                                            title,
+                                            urls,
+                                        }
+                                        // @ts-ignore
+                                        const delUrlStr = fetchDelUrl(node, "")
+                                        // @ts-ignore
+                                        const pathStr:string = title
+                                        if(info.checked){
+                                            setDownLoadUrlArr((item)=>(Array.from(new Set([...item,pathStr]))))
+                                            setDelUrlArr((item)=>(Array.from(new Set([...item,delUrlStr]))))
+                                        }
+                                        else{
+                                            setDownLoadUrlArr((value)=>value.filter((item)=>!item.startsWith(pathStr)))
+                                            setDelUrlArr((value)=>value.filter((item)=>!item.startsWith(delUrlStr)))
+                                        }
+                                    }}
                                     showLine={true}
                                     treeData={treeData}
                                     titleRender={(nodeData: any) => {
@@ -181,34 +329,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                 >
                                                     {nodeData.title}
                                                 </span>
-                                                <Popconfirm
-                                                    title={"确定要删除该记录吗？本操作不可恢复"}
-                                                    onConfirm={(e) => {
-                                                        // 阻止冒泡
-                                                        e?.stopPropagation()
-
-                                                        delReord(nodeData)
-                                                    }}
-                                                    onCancel={(e) => {
-                                                        // 阻止冒泡
-                                                        e?.stopPropagation()
-                                                    }}
-                                                >
-                                                    {isDelKey === nodeData.title && (
-                                                        <DeleteOutlined
-                                                            style={{
-                                                                paddingLeft: 5,
-                                                                paddingTop: 5,
-                                                                cursor: "pointer",
-                                                                color: "#707070"
-                                                            }}
-                                                            onClick={(e) => {
-                                                                // 阻止冒泡
-                                                                e.stopPropagation()
-                                                            }}
-                                                        />
-                                                    )}
-                                                </Popconfirm>
                                             </div>
                                         )
                                     }}
@@ -238,14 +358,23 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     autoExpandParent={true}
                                     defaultExpandAll={true}
                                     onRightClick={({event, node}) => {
+                                        let data = [
+                                            {key:'bug-test',title:"发送到漏洞检测"},
+                                            {key:'scan-port',title:"发送到端口扫描"},
+                                            {key:'brute',title:"发送到爆破"},
+                                        ]
+                                        if(node.checkable===false){
+                                            data.push({key:"del-item",title:"删除该记录"})
+                                        }
                                         showByContextMenu(
                                             {
-                                                data: [
-                                                    {key:'bug-test',title:"发送到漏洞检测"},
-                                                    {key:'scan-port',title:"发送到端口扫描"},
-                                                    {key:'brute',title:"发送到爆破"}
-                                                ],
+                                                data,
                                                 onClick: ({key}) => {
+                                                    if(key==="del-item"){
+                                                        // @ts-ignore
+                                                        delReord(node)
+                                                        return
+                                                    }
                                                     let str: string[] = []
                                                     fetchUrl(node, str)
                                                     const param = {

@@ -1,7 +1,7 @@
 import React, {useEffect, useState, useRef} from "react"
 import {
     Button,
-    Card,
+    Checkbox,
     Col,
     Descriptions,
     Form,
@@ -16,7 +16,7 @@ import {
     Tooltip
 } from "antd"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
-import {failed} from "../../utils/notification"
+import {failed,warn} from "../../utils/notification"
 import {PortAsset} from "./models"
 import {CopyableField, InputItem} from "../../utils/inputUtil"
 import {formatTimestamp} from "../../utils/timeUtil"
@@ -88,6 +88,41 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const [outputByNetwork, setOutputByNetwork] = useState("")
     const [checkedURL, setCheckedURL] = useState<string[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+    const [checkedAll, setCheckedAll] = useState<boolean>(false)
+    const [allResponse, setAllResponse] = useState<QueryGeneralResponse<PortAsset>>({
+        Data: [],
+        Pagination: {
+            Limit: 15,
+            Page: 1,
+            OrderBy: "desc",
+            Order: "updated_at"
+        } as PaginationSchema,
+        Total: 0
+    })
+
+    useEffect(()=>{
+        if(checkedAll){
+            setSelectedRowKeys(allResponse.Data.map((item)=>item.Id.toString()))
+            setCheckedURL(allResponse.Data.map((item) => `${item.Host}:${item.Port}`))
+        }
+    },[checkedAll])
+
+    useEffect(()=>{
+        getAllData()
+    },[])
+    const getAllData = () => {
+        ipcRenderer
+        .invoke("QueryPorts", {
+            All:true
+        })
+        .then((data:QueryGeneralResponse<PortAsset>) => {
+            setAllResponse(data)
+        })
+        .catch((e: any) => {
+            failed("QueryPorts failed: " + `${e}`)
+        })
+        .finally(() => {})
+    }
 
     const update = (current?: number, pageSize?: number, order?: string, orderBy?: string) => {
         setLoading(true)
@@ -322,7 +357,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     })
     const onRemove = useMemoizedFn(() => {
         const transferParams = {
-            selectedRowKeys,
+            selectedRowKeys:checkedAll?[]:selectedRowKeys,
             params,
             interfaceName: "DeletePorts"
         }
@@ -376,13 +411,14 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 <ExportExcel getData={getData} btnProps={{size: "small"}} />
                                 <Popconfirm
                                     title={
-                                        selectedRowKeys.length > 0
-                                            ? "确定删除选择的端口资产吗？不可恢复"
-                                            : "确定删除所有端口资产吗? 不可恢复"
+                                        checkedAll
+                                            ? "确定删除所有端口资产吗? 不可恢复"
+                                            : "确定删除选择的端口资产吗？不可恢复"
                                     }
                                     onConfirm={onRemove}
+                                    disabled={selectedRowKeys.length===0}
                                 >
-                                    <Button size='small' danger={true}>
+                                    <Button size='small' danger={true} disabled={selectedRowKeys.length===0}>
                                         删除端口
                                     </Button>
                                 </Popconfirm>
@@ -400,7 +436,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             failed("请最少选择一个选项再进行操作")
                                             return
                                         }
-
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: key,
                                             data: {URL: JSON.stringify(checkedURL)}
@@ -410,6 +445,16 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     <Button type='link' icon={<LineMenunIcon />}></Button>
                                 </DropdownMenu>
                             </Space>
+                        </Col>
+                        <Col span={24}>
+                            <Checkbox checked={checkedAll} onChange={(e)=>{
+                                if(!e.target.checked){
+                                    setSelectedRowKeys([])
+                                    setCheckedURL([])
+                                }
+                                setCheckedAll(e.target.checked)
+                                }}
+                                disabled={allResponse.Data.length===0}>全选</Checkbox>
                         </Col>
                     </Row>
                 )
@@ -449,6 +494,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             }}
             rowSelection={{
                 onChange: (selectedRowKeys, selectedRows) => {
+                    if(selectedRowKeys.length===allResponse.Data.length) setCheckedAll(true)
+                    else{ setCheckedAll(false)}
                     setSelectedRowKeys(selectedRowKeys as string[])
                     setCheckedURL(selectedRows.map((item) => `${item.Host}:${item.Port}`))
                 },

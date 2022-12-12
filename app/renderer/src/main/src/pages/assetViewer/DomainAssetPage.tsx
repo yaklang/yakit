@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Form, Popconfirm, Popover, Space, Table, Tag, Typography, Tooltip} from "antd"
+import {Button, Form, Popconfirm, Checkbox, Space, Table, Tag, Typography, Tooltip} from "antd"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {failed} from "../../utils/notification"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
@@ -55,6 +55,37 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
 
     const [checkedURL, setCheckedURL] = useState<string[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+    const [checkedAll, setCheckedAll] = useState<boolean>(false)
+
+    const [allResponse, setAllResponse] = useState<QueryGeneralResponse<Domain>>({
+        Data: [],
+        Pagination: genDefaultPagination(20),
+        Total: 0
+    })
+    useEffect(()=>{
+        if(checkedAll){
+            const rowKeys = allResponse.Data.map((item)=>(item.ID||"").toString()).filter((item)=>item!=="")
+            setSelectedRowKeys(rowKeys)
+            setCheckedURL(allResponse.Data.map((item) => item.DomainName))
+        }
+    },[checkedAll])
+
+    useEffect(()=>{
+        getAllData()
+    },[])
+    const getAllData = () => {
+        ipcRenderer
+        .invoke("QueryDomains", {
+            All:true
+        })
+        .then((data:QueryGeneralResponse<Domain>) => {
+            setAllResponse(data)
+        })
+        .catch((e: any) => {
+            failed("QueryExecHistory failed: " + `${e}`)
+        })
+        .finally(() => {})
+    }
 
     const update = useMemoizedFn((page?: number, limit?: number) => {
         const newParams = {
@@ -235,7 +266,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
 
     const onRemove = useMemoizedFn(() => {
         const transferParams = {
-            selectedRowKeys,
+            selectedRowKeys:checkedAll?[]:selectedRowKeys,
             params,
             interfaceName: "DeleteDomains",
             selectedRowKeysNmae: "IDs"
@@ -271,6 +302,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             }}
             title={(e) => {
                 return (
+                    <>
                     <div style={{display: "flex", justifyContent: "space-between"}}>
                         <Space>
                             <div>域名资产</div>
@@ -289,9 +321,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                             <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
                             <Popconfirm
                                 title={
-                                    selectedRowKeys.length > 0
-                                        ? "确定删除选择的域名资产吗？不可恢复"
-                                        : "确定删除所有域名资产吗? 不可恢复"
+                                    checkedAll
+                                        ? "确定删除所有域名资产吗? 不可恢复"
+                                        : "确定删除选择的域名资产吗？不可恢复"
                                 }
                                 // onConfirm={(e) => {
                                 //     delDomainBatch()
@@ -299,9 +331,10 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                 //     setCheckedURL([])
                                 // }}
                                 onConfirm={onRemove}
+                                disabled={selectedRowKeys.length===0}
                             >
-                                <Button size='small' danger={true}>
-                                    删除全部
+                                <Button size='small' danger={true} disabled={selectedRowKeys.length===0}>
+                                    删除资产
                                 </Button>
                             </Popconfirm>
                             <DropdownMenu
@@ -329,6 +362,17 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                             </DropdownMenu>
                         </Space>
                     </div>
+                    <div>
+                    <Checkbox checked={checkedAll} onChange={(e)=>{
+                                if(!e.target.checked){
+                                    setSelectedRowKeys([])
+                                    setCheckedURL([])
+                                }
+                                setCheckedAll(e.target.checked)
+                                }}
+                                disabled={allResponse.Data.length===0}>全选</Checkbox>
+                    </div>
+                    </>
                 )
             }}
             size={"small"}
