@@ -378,6 +378,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                     </Button>
                                 </Button.Group>
                                 <YakitInput style={{width: 200}} />
+                                <YakitSwitch />
                             </Space>
                         </div>
                     </Form>
