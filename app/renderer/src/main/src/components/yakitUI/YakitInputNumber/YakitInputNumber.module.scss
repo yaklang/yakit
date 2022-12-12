@@ -1,3 +1,43 @@
+// ========================== 新UI ==========================
+.yakit-input-number-newUI {
+    --yakit-box-shadow-color: #fbe7d9;
+    --yakit-border-hover-color: #F79C5D;
+    --yakit-border-focus-color: #F28B44;
+    --yakit-hover-color: #F79C5D;
+}
+
+// ========================== 老UI ==========================
+.yakit-input-number-oldUI {
+    --yakit-box-shadow-color: #e6f7ff;
+    --yakit-border-hover-color: #40a9ff;
+    --yakit-border-focus-color: #1890ff;
+    --yakit-hover-color: #40a9ff;
+}
+
+// ========================== wrapper ==========================
+.yakit-input-number-wrapper {
+    :global {
+        .ant-input-number:hover {
+            border-color: var(--yakit-border-hover-color)
+        }
+
+        .ant-input-number-focused {
+            border-color: var(--yakit-border-focus-color)
+        }
+
+        .ant-input-number-handler:hover .ant-input-number-handler-up-inner,
+        .ant-input-number-handler:hover .ant-input-number-handler-down-inner {
+            color: var(--yakit-hover-color);
+        }
+
+        .ant-input-number:focus,
+        .ant-input-number-focused {
+            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color)
+        }
+    }
+}
+
+// ========================== midden ==========================
 .yakit-input-number {
     height: 28px;
     border-radius: 4px;
@@ -15,6 +55,7 @@
         .ant-input-number-input {
             padding: 0 12px;
         }
+
     }
 }
 
@@ -29,6 +70,7 @@
         .ant-input-number-input {
             height: 40px;
         }
+
     }
 }
 
@@ -80,12 +122,20 @@
     user-select: none;
     transition: border 0.24s linear 0.14s;
 
+    :global {
+
+        .ant-input-number:focus,
+        .ant-input-number-focused {
+            box-shadow: none
+        }
+    }
+
     &:hover {
-        border-color: #1890ff;
+        border-color: var(--yakit-border-hover-color);
     }
 
     &:focus {
-        box-shadow: 0 0 0 2px rgb(24 144 255 / 20%);
+        box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
     }
 
     .icon-left {
@@ -94,7 +144,7 @@
         cursor: pointer;
 
         &:hover {
-            color: #1890ff;
+            color: var(--yakit-hover-color);
         }
     }
 
@@ -104,7 +154,7 @@
         cursor: pointer;
 
         &:hover {
-            color: #1890ff;
+            color: var(--yakit-hover-color);
         }
     }
 
@@ -115,6 +165,10 @@
         height: 28px;
         line-height: 28px;
         text-align: center;
+
+        &:active {
+            background-color: #f4f4f4;
+        }
     }
 
 
@@ -158,8 +212,8 @@
 }
 
 .yakit-input-number-horizontal-focus {
-    box-shadow: 0 0 0 2px rgb(24 144 255 / 20%);
-    border-color: #1890ff;
+    box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+    border-color: var(--yakit-border-focus-color);
 }
 
 .yakit-input-number-horizontal-disabled {

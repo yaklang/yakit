@@ -1,11 +1,20 @@
-import {InputNumber, Input} from "antd"
+import {InputNumber} from "antd"
 import React, {useEffect, useRef, useState} from "react"
 import {ValueType, YakitInputNumberHorizontalProps, YakitInputNumberProps} from "./YakitInputNumberType"
 import styles from "./YakitInputNumber.module.scss"
 import classNames from "classnames"
-import {YakitInput} from "../YakitInput/YakitInput"
 import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
-import {useHover, useMemoizedFn} from "ahooks"
+import {useMemoizedFn} from "ahooks"
+
+import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
+
+const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
+
+/**
+ * 更新说明
+ * 1.增加环境变量加载主题色
+ * 2.修复横向输入时，value为0无法加减问题
+ */
 
 /**
  * @description: 两种方式的数字输入
@@ -16,7 +25,12 @@ import {useHover, useMemoizedFn} from "ahooks"
 export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
     const {type, size, className} = props
     return (
-        <>
+        <div
+            className={classNames(styles["yakit-input-number-wrapper"], {
+                [styles["yakit-input-number-newUI"]]: IsNewUI,
+                [styles["yakit-input-number-oldUI"]]: !IsNewUI
+            })}
+        >
             {(type === "horizontal" && <YakitInputNumberHorizontal {...props} />) || (
                 <InputNumber
                     {...props}
@@ -35,7 +49,7 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
                     {props.children}
                 </InputNumber>
             )}
-        </>
+        </div>
     )
 }
 
@@ -104,7 +118,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
      */
     const onAdd = useMemoizedFn(() => {
         if (props.disabled) return
-        const newVal = value ? onIncrease(Number(value), step) || 0 : Number(props.min || 0)
+        const newVal = value || value === 0 ? onIncrease(Number(value), step) || 0 : Number(props.min || 0)
         if (newVal && props.max && newVal >= props.max) {
             const precisionFactor = Math.pow(10, precisionRef.current)
             const max = toPrecision((precisionFactor * Number(props.max)) / precisionFactor)
@@ -120,7 +134,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
      */
     const onReduce = useMemoizedFn(() => {
         if (props.disabled) return
-        const newVal = value ? onDecrease(Number(value), step) || 0 : Number(props.min || 0)
+        const newVal = value || value === 0 ? onDecrease(Number(value), step) || 0 : Number(props.min || 0)
         if (newVal && props.min && newVal <= props.min) {
             const precisionFactor = Math.pow(10, precisionRef.current)
             const min = toPrecision((precisionFactor * Number(props.min)) / precisionFactor)
@@ -150,6 +164,8 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
     return (
         <div
             className={classNames(styles["yakit-input-number-horizontal"], {
+                [styles["yakit-input-number-newUI"]]: IsNewUI,
+                [styles["yakit-input-number-oldUI"]]: !IsNewUI,
                 [styles["yakit-input-number-horizontal-focus"]]: focus,
                 [styles["yakit-input-number-horizontal-disabled"]]: !!props.disabled
             })}
