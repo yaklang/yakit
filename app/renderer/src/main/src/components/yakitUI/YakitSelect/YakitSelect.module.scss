@@ -1,3 +1,18 @@
+// ========================== 新UI ==========================
+.yakit-select-wrapper-newUI {
+    --yakit-box-shadow-color: #fbe7d9;
+    --yakit-border-color: #fbc6a1;
+    --yakit-primary-font-color: #f28b44;
+}
+
+// ========================== 老UI ==========================
+.yakit-select-wrapper-oldUI {
+    --yakit-box-shadow-color: #e6f7ff;
+    --yakit-border-color: #40a9ff;
+    --yakit-primary-font-color: #1890ff;
+}
+
+// ========================== select ==========================
 .yakit-select {
     font-weight: 400;
     font-size: 12px;
@@ -33,6 +48,15 @@
             height: 16px;
         }
 
+        .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            border: 1px solid var(--yakit-border-color);
+            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector:hover {
+            border: 1px solid var(--yakit-border-color);
+        }
+
         // ========================== disabled ==========================
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
             background: #F0F1F3;
@@ -48,7 +72,7 @@
 
     :global {
         .ant-select-item-option-content:hover {
-            color: #1890ff;
+            color: var(--yakit-primary-font-color);
         }
 
         .ant-select-item {

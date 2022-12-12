@@ -7,7 +7,7 @@
 // ========================== 老UI ==========================
 .yakit-switch-wrapper-item-oldUI {
     --yakit-box-shadow-color: #e6f7ff;
-    --yakit-background-color: #1890ff;
+    --yakit-background-color: #40a9ff;
 }
 
 
@@ -22,6 +22,10 @@
             box-shadow: none;
             opacity: 1;
             animation: yakitFadeEffectSwitch 1s cubic-bezier(0.08, 0.82, 0.17, 1), yakitWaveEffectSwitch 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
+        }
+
+        .ant-switch{
+            background: #CCD2DE;
         }
 
         .ant-switch-disabled {

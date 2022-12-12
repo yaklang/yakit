@@ -6,7 +6,16 @@ import classNames from "classnames"
 import {BaseOptionType, DefaultOptionType, SelectProps} from "antd/lib/select"
 import {BaseSelectRef, OptGroup} from "rc-select"
 
+import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
+
+const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
+
 const {Option} = Select
+
+/**
+ * 更新说明
+ * 1.增加环境变量加载主题色
+ */
 
 /**
  * @description: 下拉选择
@@ -24,6 +33,8 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             className={classNames(
                 styles["yakit-select"],
                 {
+                    [styles["yakit-select-wrapper-newUI"]]: IsNewUI,
+                    [styles["yakit-select-wrapper-oldUI"]]: !IsNewUI,
                     [styles["yakit-select-large"]]: size === "large",
                     [styles["yakit-select-middle"]]: size === "middle",
                     [styles["yakit-select-small"]]: size === "small"
@@ -38,6 +49,8 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                 dropdownClassName={classNames(
                     styles["yakit-select-popup"],
                     {
+                        [styles["yakit-select-wrapper-newUI"]]: IsNewUI,
+                        [styles["yakit-select-wrapper-oldUI"]]: !IsNewUI,
                         [styles["yakit-select-popup-y"]]: show
                     },
                     props.dropdownClassName
