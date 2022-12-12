@@ -10,6 +10,7 @@ const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
 /**
  * 更新说明
  * 1.增加环境变量加载主题色
+ * 2.优化solid风格的样式
  */
 
 /**
@@ -22,21 +23,29 @@ const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
 export const YakitRadioButtons: React.FC<YakitRadioButtonsProps> = (props) => {
     const {className, size, ...restProps} = props
     return (
-        <Radio.Group
-            {...restProps}
-            size='middle'
-            optionType='button'
-            className={classNames(
-                styles["yakit-radio-buttons-middle"],
-                {
-                    [styles["yakit-radio-buttons-newUI"]]: IsNewUI,
-                    [styles["yakit-radio-buttons-oldUI"]]: !IsNewUI,
-                    [styles["yakit-radio-buttons-max-large"]]: size === "maxLarge",
-                    [styles["yakit-radio-buttons-large"]]: size === "large",
-                    [styles["yakit-radio-buttons-small"]]: size === "small"
-                },
-                className
-            )}
-        />
+        <div
+            className={classNames({
+                [styles["yakit-radio-buttons-solid"]]: props.buttonStyle === "solid"
+            })}
+        >
+            <Radio.Group
+                {...restProps}
+                size='middle'
+                optionType='button'
+                className={classNames(
+                    styles["yakit-radio-buttons-middle"],
+                    {
+                        [styles["yakit-radio-buttons-newUI"]]: IsNewUI,
+                        [styles["yakit-radio-buttons-oldUI"]]: !IsNewUI,
+                        [styles["yakit-radio-buttons-solid-newUI"]]: IsNewUI,
+                        [styles["yakit-radio-buttons-solid-oldUI"]]: !IsNewUI && props.buttonStyle === "solid",
+                        [styles["yakit-radio-buttons-max-large"]]: size === "maxLarge",
+                        [styles["yakit-radio-buttons-large"]]: size === "large",
+                        [styles["yakit-radio-buttons-small"]]: size === "small"
+                    },
+                    className
+                )}
+            />
+        </div>
     )
 }
