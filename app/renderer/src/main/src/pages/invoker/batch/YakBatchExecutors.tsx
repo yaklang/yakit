@@ -771,8 +771,9 @@ const BugTestExecutor: React.FC<YakBatchExecutorsProp> = (props) => {
                                 <ContentUploadInput
                                     type='textarea'
                                     beforeUpload={(f) => {
-                                        if (f.type !== "text/plain") {
-                                            failed(`${f.name}非txt文件，请上传txt格式文件！`)
+                                        const typeArr:string[] = ["text/plain",'.csv', '.xls', '.xlsx',"application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+                                        if (!typeArr.includes(f.type)) {
+                                            failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
                                             return false
                                         }
 

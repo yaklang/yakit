@@ -1,6 +1,6 @@
 const {ipcMain} = require("electron");
 const FS=require("fs")
-
+const xlsx = require("node-xlsx")
 module.exports = (win, getClient) => {
     const handlerHelper = require("./handleStreamWithContext");
 
@@ -13,14 +13,30 @@ module.exports = (win, getClient) => {
 
     const asyncFetchFileContent = (params) => {
         return new Promise((resolve, reject) => {
-            FS.readFile(params,'utf-8',function(err,data){
-                if(err){
+            const type = params.split(".").pop()
+            const typeArr = ['csv', 'xls', 'xlsx']
+            // 读取Excel
+            if(typeArr.includes(type)){
+                // 读取xlsx
+                try {
+                    const obj = xlsx.parse(params)
+                    resolve(obj)
+                } catch (error) {
                     reject(err)
                 }
-                else{
-                    resolve(data)
-                }
-            });
+            }
+            // 读取txt
+            else{
+                FS.readFile(params,'utf-8',function(err,data){
+                    if(err){
+                        reject(err)
+                    }
+                    else{
+                        resolve(data)
+                    }
+                });
+            }
+            
         })
     }
 
