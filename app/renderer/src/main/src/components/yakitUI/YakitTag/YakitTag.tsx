@@ -5,12 +5,11 @@ import styles from "./YakitTag.module.scss"
 import classNames from "classnames"
 import {RemoveIcon} from "@/assets/newIcon"
 
-
 /**
  * 更新说明
  * 1、关闭按钮增加hover主题色
+ * 2.height 修为不加border
  */
-
 
 /**
  * @description: tag
