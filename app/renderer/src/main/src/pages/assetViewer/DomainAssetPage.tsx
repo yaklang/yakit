@@ -381,6 +381,8 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             rowKey={(e) => `${e.ID}`}
             rowSelection={{
                 onChange: (selectedRowKeys, selectedRows) => {
+                    if(selectedRowKeys.length===allResponse.Data.length) setCheckedAll(true)
+                    else{ setCheckedAll(false)}
                     setSelectedRowKeys(selectedRowKeys as string[])
                     setCheckedURL(selectedRows.map((item) => item.DomainName))
                 },

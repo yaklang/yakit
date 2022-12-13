@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Col, Row, Table, Tag, Tooltip} from "antd";
+import {Button, Col, Row, Table, Tag, Tooltip,Checkbox} from "antd";
 import {YakitPort} from "../../components/yakitLogSchema";
 import {CopyableField, InputItem, OneLine} from "../../utils/inputUtil";
 import {formatTimestamp} from "../../utils/timeUtil";
@@ -27,6 +27,15 @@ const {ipcRenderer} = window.require("electron");
 export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
     const [checkedURL, setCheckedURL] = useState<string[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+    const [checkedAll, setCheckedAll] = useState<boolean>(false)
+
+    useEffect(()=>{
+        if(checkedAll){
+            const rowKeys = props.data.map((item,index)=>`${item.host}:${item.port}-${item.timestamp}`)
+            setSelectedRowKeys(rowKeys)
+            setCheckedURL(props.data.map(item => `${item.host}:${item.port}`))
+        }
+    },[checkedAll])
 
     useEffect(() => {
         if (props.data.length === 0) {
@@ -56,7 +65,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
 
     return <Table<YakitPort>
         size={"small"} bordered={true}
-        rowKey={(row, index) => `${row.host}:${row.port}-${index}`}
+        rowKey={(row, index) => `${row.host}:${row.port}-${row.timestamp}`}
         title={e => {
             return <Row>
                 <Col span={12}>开放端口 / Open Ports</Col>
@@ -75,7 +84,6 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                                 failed("请最少选择一个选项再进行操作")
                                 return
                             }
-
                             ipcRenderer.invoke("send-to-tab", {
                                 type: key,
                                 data: {URL: JSON.stringify(checkedURL)}
@@ -85,6 +93,17 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                         <Button type="link" style={{height: 16}} icon={<LineMenunIcon/>}></Button>
                     </DropdownMenu>
                 </Col>
+                <div>
+                    <Checkbox checked={checkedAll} onChange={(e)=>{
+                                if(!e.target.checked){
+                                    setSelectedRowKeys([])
+                                    setCheckedURL([])
+                                }
+                                setCheckedAll(e.target.checked)
+                                }}
+                                disabled={props.data.length===0}
+                                >全选</Checkbox>
+                    </div>
             </Row>
         }}
         dataSource={props.data}
@@ -127,15 +146,12 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
         }}
         rowSelection={{
             onChange: (selectedRowKeys, selectedRows) => {
+                if(selectedRowKeys.length===props.data.length) setCheckedAll(true)
+                else{ setCheckedAll(false)}
                 setSelectedRowKeys(selectedRowKeys as string[])
                 setCheckedURL(selectedRows.map(item => `${item.host}:${item.port}`))
             },
             selectedRowKeys
-        }}
-        // @ts-ignore*/
-        onChange={(paging: any, _: any) => {
-            setSelectedRowKeys([])
-            setCheckedURL([])
         }}
     >
 
