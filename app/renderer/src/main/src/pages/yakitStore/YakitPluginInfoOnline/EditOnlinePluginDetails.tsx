@@ -118,7 +118,7 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
             confirmLoading={loading}
         >
             <Form {...layout} form={form} name='control-hooks'>
-                {userInfo.role === "superAdmin" && (
+                {["admin","superAdmin"].includes(userInfo.role||"")&& (
                     <>
                         <Form.Item name='user_id' label='作者'>
                             <Select
