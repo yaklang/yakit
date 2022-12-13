@@ -364,6 +364,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     noPacketModifier?: boolean
     noTitle?: boolean
+    title?: React.ReactNode
     noHex?: boolean
     noMinimap?: boolean
 
@@ -551,7 +552,13 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                 title={
                     !props.noHeader && (
                         <Space>
-                            {!props.noTitle && <span>{isResponse ? "Response" : "Request"}</span>}
+                            {!props.noTitle && (
+                                (!!props.title) ? (
+                                    props.title
+                                ) : (
+                                    <span>{isResponse ? "Response" : "Request"}</span>
+                                )
+                            )}
                             {!props.simpleMode ? (
                                 !props.noHex && (
                                     <SelectOne

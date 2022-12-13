@@ -71,6 +71,7 @@ import "./HTTPFuzzerPage.scss"
 import {ShareIcon} from "@/assets/icons"
 import {ShareData} from "./components/ShareData"
 import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
+import {SearchOutlined} from "@ant-design/icons/lib";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -284,6 +285,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
     const [hotPatchCode, setHotPatchCode] = useState<string>("")
     const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
+    const [affixSearch, setAffixSearch] = useState("");
+    const [defaultResponseSearch, setDefaultResponseSearch] = useState("");
 
     // filter
     const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
@@ -429,6 +432,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const submitToHTTPFuzzer = useMemoizedFn(() => {
         // 清楚历史任务的标记
         setHistoryTask(undefined)
+
+        // 更新默认搜索
+        setDefaultResponseSearch(affixSearch)
 
         // saveValue(WEB_FUZZ_PROXY, proxy)
         setLoading(true)
@@ -657,6 +663,29 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
         return (
             <HTTPPacketEditor
+                title={<Form
+                    size={"small"} layout={"inline"}
+                    onSubmitCapture={(e) => {
+                        e.preventDefault()
+
+                        setDefaultResponseSearch(affixSearch)
+                    }}
+                >
+                    <InputItem
+                        width={150} allowClear={true}
+                        label={""} value={affixSearch}
+                        placeholder={"搜索定位响应"}
+                        suffixNode={<Button size={"small"} type="link" htmlType="submit" icon={<SearchOutlined/>}/>}
+                        setValue={value => {
+                            setAffixSearch(value)
+                            if (value === "" && defaultResponseSearch !== "") {
+                                setDefaultResponseSearch("")
+                            }
+                        }}
+                        extraFormItemProps={{style: {marginBottom: 0}}}
+                    />
+                </Form>}
+                defaultSearchKeyword={defaultResponseSearch}
                 system={props.system}
                 originValue={rsp.ResponseRaw}
                 bordered={true}
@@ -699,13 +728,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
                 readOnly={true}
                 extra={
-                    <Space>
+                    <Space size={0}>
                         {loading && <Spin size={"small"} spinning={loading}/>}
                         {onlyOneResponse ? (
-                            <Space>
+                            <Space size={0}>
                                 {rsp.IsHTTPS && <Tag>{rsp.IsHTTPS ? "https" : ""}</Tag>}
-                                <Tag>{rsp.DurationMs}ms</Tag>
-                                <Tag>{rsp.BodyLength}字节</Tag>
+                                <Tag>{rsp.BodyLength}bytes / {rsp.DurationMs}ms</Tag>
                                 <Space key='single'>
                                     <Button
                                         size={"small"}
@@ -717,9 +745,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         }}
                                         type={"primary"}
                                         icon={<ProfileOutlined/>}
-                                    >
-                                        详情
-                                    </Button>
+                                    />
+                                    {/*    详情*/}
+                                    {/*</Button>*/}
                                     <Button
                                         type={"primary"}
                                         size={"small"}
