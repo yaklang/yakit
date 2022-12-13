@@ -692,30 +692,16 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         }
     },[])
 
-    // 关闭 tab
-    const onCloseTab = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("send-close-tab", {
-                router: Route.AccountAdminPage,
-                singleNode: true
-            })
-        ipcRenderer
-            .invoke("send-close-tab", {
-                router: Route.RoleAdminPage,
-                singleNode: true
-            })
-        ipcRenderer
-            .invoke("send-close-tab", {
-                router: Route.LicenseAdminPage,
-                singleNode: true
-            })
-    })
-
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
             if (IsEnterprise) {
-                onCloseTab()
+                removePage(Route.AccountAdminPage, false)
+                removePage(Route.RoleAdminPage, false)
+            }
+            else{
+                removePage(Route.LicenseAdminPage, false)
+                removePage(Route.TrustListPage, false)
             }
             IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
