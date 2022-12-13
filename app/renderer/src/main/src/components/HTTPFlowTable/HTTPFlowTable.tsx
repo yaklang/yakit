@@ -119,6 +119,13 @@ export interface HTTPFlow {
     RawRequestBodyBase64?: string
     RawResponseBodyBody64?: string
     SafeHTTPRequest?: string
+
+    /*
+    Extracted
+    * */
+    Domains?: string[]
+    RootDomains?: string[]
+    JsonObjects?: string[]
 }
 
 export interface FuzzableParams {

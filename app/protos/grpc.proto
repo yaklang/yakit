@@ -2156,6 +2156,13 @@ message HTTPFlow {
 
   // 可以安全的传输到 Fuzzer 的 HTTPRequest
   string SafeHTTPRequest = 38;
+
+  /*
+  在完全数据下，可加载 Domain 和 RootDomain 还有 Json
+  */
+  repeated string Domains = 40;
+  repeated string RootDomains = 41;
+  repeated string JsonObjects = 42;
 }
 
 message FuzzableParam {
