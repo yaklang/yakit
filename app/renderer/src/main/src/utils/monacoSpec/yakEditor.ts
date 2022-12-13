@@ -224,18 +224,18 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
     triggerCharacters: ["."]
 });
 
-monaco.languages.registerCodeActionProvider(YaklangMonacoSpec, {
-    provideCodeActions: (model, range, context, token) => {
-        console.info("code action: RANGE - ", range)
-        console.info("code action: CONTEXT - ", context)
-        return {
-            actions: [{title: "Hello World!"}],
-            dispose: () => {
-                console.info("dispose called")
-            }
-        } as CodeActionList;
-    }
-})
+// monaco.languages.registerCodeActionProvider(YaklangMonacoSpec, {
+//     provideCodeActions: (model, range, context, token) => {
+//         console.info("code action: RANGE - ", range)
+//         console.info("code action: CONTEXT - ", context)
+//         return {
+//             actions: [{title: "Hello World!"}],
+//             dispose: () => {
+//                 console.info("dispose called")
+//             }
+//         } as CodeActionList;
+//     }
+// })
 
 // monaco.languages.registerCodeLensProvider(YaklangMonacoSpec, {
 //     provideCodeLenses: (model, token) => {
