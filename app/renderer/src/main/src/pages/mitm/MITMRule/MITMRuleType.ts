@@ -21,6 +21,7 @@ export interface MITMRuleFromModalProps {
     modalVisible: boolean
     onClose: () => void
     currentItem?: MITMContentReplacerRule
+    rules:MITMContentReplacerRule[]
 }
 
 export interface ExtractRegularProps {

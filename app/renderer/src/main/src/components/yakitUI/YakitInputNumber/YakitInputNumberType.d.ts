@@ -13,6 +13,7 @@ export declare type ValueType = string | number
 export interface YakitInputNumberProps extends Omit<InputNumberProps, "size"> {
     type?: "horizontal" | "vertical"
     size?: YakitSizeType
+    ref?:any
 }
 
 /**

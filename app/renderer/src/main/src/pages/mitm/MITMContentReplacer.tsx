@@ -24,7 +24,7 @@ export interface MITMContentReplacerRule {
     Rule: string
     NoReplace: boolean
     Result: string
-    Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan"
+    Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan"|''
     EnableForRequest: boolean
     EnableForResponse: boolean
     EnableForBody: boolean

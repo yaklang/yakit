@@ -166,7 +166,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const onBan = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
         console.log("禁用", rowDate)
     })
-  
+
     const columns: ColumnsTypeProps[] = [
         {
             title: "执行顺序",
@@ -301,7 +301,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
         if (b) {
             const defRowDate: MITMContentReplacerRule = {
-                Color: "red",
+                Color: "",
                 EnableForRequest: false,
                 EnableForResponse: true,
                 EnableForBody: true,
@@ -442,6 +442,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 </div>
             </YakitDrawer>
             <MITMRuleFromModal
+                rules={rules}
                 modalVisible={modalVisible}
                 isEdit={isEdit}
                 onClose={() => onOpenOrCloseModal(false)}

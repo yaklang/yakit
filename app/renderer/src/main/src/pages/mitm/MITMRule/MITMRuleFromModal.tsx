@@ -22,11 +22,11 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
-import {TagsFilter, TagsList} from "@/components/baseTemplate/BaseTags"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {colorSelectNode, HitColor} from "./MITMRule"
+import {ValidateStatus} from "antd/lib/form/FormItem"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,7 +54,7 @@ const emptyFuzzer: FuzzerResponse = {
  * @param {Function} onClose 关闭回调
  */
 export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
-    const {modalVisible, onClose, currentItem, isEdit} = props
+    const {modalVisible, onClose, currentItem, isEdit, rules} = props
     const [ruleVisible, setRuleVisible] = useState<boolean>()
     const [form] = Form.useForm()
     const resultType = Form.useWatch("ResultType", form)
@@ -72,6 +72,10 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const onOk = useMemoizedFn(() => {
         form.validateFields()
             .then((values) => {
+                // if (rules.filter((i) => i.Index === values.Index).length > 0) {
+                //     failed("执行顺序冲突（Index 冲突），重新设置执行顺序")
+                //     return
+                // }
                 console.log("values", values)
             })
             .catch((errorInfo) => {})
@@ -106,6 +110,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
             ExtraCookies: cookies.filter((_, i) => i !== index)
         })
     })
+
     return (
         <>
             <YakitModal
@@ -121,7 +126,26 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 onOk={() => onOk()}
             >
                 <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
-                    <Form.Item label='执行顺序' name='Index'>
+                    <Form.Item
+                        label='执行顺序'
+                        name='Index'
+                        rules={[
+                            {
+                                validator: async (_, value) => {
+                                    if (!value) {
+                                        return Promise.reject("请输入大于0的数字")
+                                    }
+                                    if (value <= 0) {
+                                        return Promise.reject("需要输入大于0的数字")
+                                    }
+                                    if (rules.filter((i) => i.Index === value).length > 0) {
+                                        return Promise.reject("执行顺序冲突（Index 冲突），重新设置执行顺序")
+                                    }
+                                }
+                            }
+                        ]}
+                    >
+                        {/* <YakitInputNumber  min={1} /> */}
                         <YakitInputNumber type='horizontal' min={1} />
                     </Form.Item>
                     <Form.Item label='规则名称' name='VerboseName'>
@@ -189,7 +213,6 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         </YakitSelect>
                     </Form.Item>
                     <Form.Item label='标记 Tag' name='ExtraTag'>
-                        {/* <TagsFilter data={[]} style={{width: "100%"}} submitValue={() => {}} /> */}
                         <YakitSelect size='middle' mode='tags' wrapperStyle={{width: "100%"}} />
                     </Form.Item>
                 </Form>
@@ -509,7 +532,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
                         <Form.Item label='Secure' name='Secure' help='仅允许 Cookie 在 HTTPS 生效'>
                             <YakitSwitch />
                         </Form.Item>
-                        <Form.Item label='SameSite 策略' name='SameSiteMode'>
+                        <Form.Item label='SameSite 策略' name='SameSiteMode' initialValue='default'>
                             <YakitRadioButtons
                                 size='large'
                                 options={[
@@ -522,10 +545,10 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
                             />
                         </Form.Item>
                         <Form.Item label='Expires 时间戳' name='Expires'>
-                            <YakitSwitch />
+                            <YakitInputNumber type='horizontal' />
                         </Form.Item>
                         <Form.Item label='MaxAge' name='MaxAge'>
-                            <YakitSwitch />
+                            <YakitInputNumber type='horizontal' />
                         </Form.Item>
                     </>
                 )}
