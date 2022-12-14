@@ -37,7 +37,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [treeHeight, setTreeHeight] = useState<number>(0)
     const [delUrlArr, setDelUrlArr] = useState<string[]>([])
     const [downLoadUrlArr, setDownLoadUrlArr] = useState<string[]>([])
-    const [downLoadUrlPageSize, setDownLoadUrlPageSize] = useState<number>(500)
+    const [downLoadUrlPageSize, setDownLoadUrlPageSize] = useState<number>(100)
     const TreeBoxRef = useRef<any>()
 
     useEffect(() => {
