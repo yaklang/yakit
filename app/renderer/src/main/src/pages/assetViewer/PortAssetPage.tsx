@@ -16,7 +16,7 @@ import {
     Tooltip
 } from "antd"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
-import {failed,warn} from "../../utils/notification"
+import {failed, warn} from "../../utils/notification"
 import {PortAsset} from "./models"
 import {CopyableField, InputItem} from "../../utils/inputUtil"
 import {formatTimestamp} from "../../utils/timeUtil"
@@ -32,7 +32,7 @@ import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
-
+import style from "./Common.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 export interface PortAssetTableProp {
@@ -100,28 +100,29 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         Total: 0
     })
 
-    useEffect(()=>{
-        if(checkedAll){
-            setSelectedRowKeys(allResponse.Data.map((item)=>item.Id.toString()))
+    useEffect(() => {
+        if (checkedAll) {
+            setSelectedRowKeys(allResponse.Data.map((item) => item.Id.toString()))
             setCheckedURL(allResponse.Data.map((item) => `${item.Host}:${item.Port}`))
         }
-    },[checkedAll])
+    }, [checkedAll])
 
-    useEffect(()=>{
+    useEffect(() => {
         getAllData()
-    },[])
+    }, [])
     const getAllData = () => {
         ipcRenderer
-        .invoke("QueryPorts", {
-            All:true
-        })
-        .then((data:QueryGeneralResponse<PortAsset>) => {
-            setAllResponse(data)
-        })
-        .catch((e: any) => {
-            failed("QueryPorts failed: " + `${e}`)
-        })
-        .finally(() => {})
+            .invoke("QueryPorts", {
+                All: true,
+                State: props.closed ? "closed" : "open",
+            })
+            .then((data: QueryGeneralResponse<PortAsset>) => {
+                setAllResponse(data)
+            })
+            .catch((e: any) => {
+                failed("QueryPorts failed: " + `${e}`)
+            })
+            .finally(() => {})
     }
 
     const update = (current?: number, pageSize?: number, order?: string, orderBy?: string) => {
@@ -137,8 +138,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 }
             })
             .then((data) => {
-                setSelectedRowKeys([])
-                setCheckedURL([])
                 setResponse(data)
             })
             .catch((e: any) => {
@@ -357,7 +356,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     })
     const onRemove = useMemoizedFn(() => {
         const transferParams = {
-            selectedRowKeys:checkedAll?[]:selectedRowKeys,
+            selectedRowKeys: checkedAll ? [] : selectedRowKeys,
             params,
             interfaceName: "DeletePorts"
         }
@@ -365,6 +364,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         onRemoveToolFC(transferParams)
             .then(() => {
                 refList()
+                setSelectedRowKeys([])
+                setCheckedURL([])
+                setCheckedAll(false)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -385,78 +387,97 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setTimeout(() => {
             update()
         }, 10)
+        setTimeout(()=>{
+            getAllData()
+        },10)
     })
     return (
         <Table<PortAsset>
             title={() => {
                 return (
-                    <Row>
-                        <Col span={12}>
-                            <Space>
-                                端口资产列表
-                                <Tooltip title='刷新会重置所有查询条件'>
-                                    <Button
-                                        icon={<ReloadOutlined />}
-                                        size={"small"}
-                                        type={"link"}
-                                        onClick={() => {
-                                            refList()
-                                        }}
-                                    />
-                                </Tooltip>
-                            </Space>
-                        </Col>
-                        <Col span={12} style={{textAlign: "right"}}>
-                            <Space>
-                                <ExportExcel getData={getData} btnProps={{size: "small"}} />
-                                <Popconfirm
-                                    title={
-                                        checkedAll
-                                            ? "确定删除所有端口资产吗? 不可恢复"
-                                            : "确定删除选择的端口资产吗？不可恢复"
-                                    }
-                                    onConfirm={onRemove}
-                                    disabled={selectedRowKeys.length===0}
-                                >
-                                    <Button size='small' danger={true} disabled={selectedRowKeys.length===0}>
-                                        删除端口
-                                    </Button>
-                                </Popconfirm>
-                                <DropdownMenu
-                                    menu={{
-                                        data: [
-                                            {key: "bug-test", title: "发送到漏洞检测"},
-                                            {key: "scan-port", title: "发送到端口扫描"},
-                                            {key: "brute", title: "发送到爆破"}
-                                        ]
-                                    }}
-                                    dropdown={{placement: "bottomRight"}}
-                                    onClick={(key) => {
-                                        if (checkedURL.length === 0) {
-                                            failed("请最少选择一个选项再进行操作")
-                                            return
+                    <>
+                        <Row>
+                            <Col span={12}>
+                                <Space>
+                                    端口资产列表
+                                    <Tooltip title='刷新会重置所有查询条件'>
+                                        <Button
+                                            icon={<ReloadOutlined />}
+                                            size={"small"}
+                                            type={"link"}
+                                            onClick={() => {
+                                                refList()
+                                            }}
+                                        />
+                                    </Tooltip>
+                                </Space>
+                            </Col>
+                            <Col span={12}></Col>
+                        </Row>
+                        <Row>
+                            <Col span={12} style={{display: "flex", alignItems: "center"}}>
+                                <Checkbox
+                                    checked={checkedAll}
+                                    onChange={(e) => {
+                                        if (!e.target.checked) {
+                                            setSelectedRowKeys([])
+                                            setCheckedURL([])
                                         }
-                                        ipcRenderer.invoke("send-to-tab", {
-                                            type: key,
-                                            data: {URL: JSON.stringify(checkedURL)}
-                                        })
+                                        setCheckedAll(e.target.checked)
                                     }}
+                                    disabled={allResponse.Data.length === 0}
                                 >
-                                    <Button type='link' icon={<LineMenunIcon />}></Button>
-                                </DropdownMenu>
-                            </Space>
-                        </Col>
-                        <Col span={24}>
-                            <Checkbox checked={checkedAll} onChange={(e)=>{
-                                if(!e.target.checked){
-                                    setSelectedRowKeys([])
-                                    setCheckedURL([])
-                                }
-                                setCheckedAll(e.target.checked)
-                                }}
-                                disabled={allResponse.Data.length===0}>全选</Checkbox>
-                        </Col>
-                    </Row>
+                                    全选
+                                </Checkbox>
+                                <div className={style["http-history-table-total-item"]}>
+                                    <span className={style["http-history-table-total-item-text"]}>Selected</span>
+                                    <span className={style["http-history-table-total-item-number"]}>
+                                        {checkedAll ? allResponse.Total : selectedRowKeys?.length}
+                                    </span>
+                                </div>
+                            </Col>
+                            <Col span={12} style={{textAlign: "right"}}>
+                                <Space>
+                                    <ExportExcel getData={getData} btnProps={{size: "small"}} />
+                                    <Popconfirm
+                                        title={
+                                            checkedAll
+                                                ? "确定删除所有端口资产吗? 不可恢复"
+                                                : "确定删除选择的端口资产吗？不可恢复"
+                                        }
+                                        onConfirm={onRemove}
+                                        disabled={selectedRowKeys.length === 0}
+                                    >
+                                        <Button size='small' danger={true} disabled={selectedRowKeys.length === 0}>
+                                            删除端口
+                                        </Button>
+                                    </Popconfirm>
+                                    <DropdownMenu
+                                        menu={{
+                                            data: [
+                                                {key: "bug-test", title: "发送到漏洞检测"},
+                                                {key: "scan-port", title: "发送到端口扫描"},
+                                                {key: "brute", title: "发送到爆破"}
+                                            ]
+                                        }}
+                                        dropdown={{placement: "bottomRight"}}
+                                        onClick={(key) => {
+                                            if (checkedURL.length === 0) {
+                                                failed("请最少选择一个选项再进行操作")
+                                                return
+                                            }
+                                            ipcRenderer.invoke("send-to-tab", {
+                                                type: key,
+                                                data: {URL: JSON.stringify(checkedURL)}
+                                            })
+                                        }}
+                                    >
+                                        <Button type='link' icon={<LineMenunIcon />}></Button>
+                                    </DropdownMenu>
+                                </Space>
+                            </Col>
+                        </Row>
+                    </>
                 )
             }}
             scroll={{x: "auto"}}
@@ -494,8 +515,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             }}
             rowSelection={{
                 onChange: (selectedRowKeys, selectedRows) => {
-                    if(selectedRowKeys.length===allResponse.Data.length) setCheckedAll(true)
-                    else{ setCheckedAll(false)}
+                    if (selectedRowKeys.length === allResponse.Data.length) setCheckedAll(true)
+                    else {
+                        setCheckedAll(false)
+                    }
                     setSelectedRowKeys(selectedRowKeys as string[])
                     setCheckedURL(selectedRows.map((item) => `${item.Host}:${item.Port}`))
                 },

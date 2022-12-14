@@ -1,0 +1,15 @@
+.http-history-table-total-item {
+    display: flex;
+    align-items: center;
+
+    .http-history-table-total-item-text {
+        color: #B4BBCA;
+        font-size: 12px;
+        margin-right: 4px;
+    }
+
+    .http-history-table-total-item-number {
+        color: #1890ff;
+        font-size: 12px;
+    }
+}

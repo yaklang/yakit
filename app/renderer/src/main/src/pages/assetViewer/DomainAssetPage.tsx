@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Button, Form, Popconfirm, Checkbox, Space, Table, Tag, Typography, Tooltip} from "antd"
+import {Button, Form, Popconfirm, Checkbox, Space, Table, Tag, Typography, Tooltip, Row, Col} from "antd"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {failed} from "../../utils/notification"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
@@ -13,7 +13,7 @@ import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {onRemoveToolFC} from "../../utils/deleteTool"
-
+import style from "./Common.module.scss"
 export interface Domain {
     ID?: number
     DomainName: string
@@ -62,29 +62,29 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         Pagination: genDefaultPagination(20),
         Total: 0
     })
-    useEffect(()=>{
-        if(checkedAll){
-            const rowKeys = allResponse.Data.map((item)=>(item.ID||"").toString()).filter((item)=>item!=="")
+    useEffect(() => {
+        if (checkedAll) {
+            const rowKeys = allResponse.Data.map((item) => (item.ID || "").toString()).filter((item) => item !== "")
             setSelectedRowKeys(rowKeys)
             setCheckedURL(allResponse.Data.map((item) => item.DomainName))
         }
-    },[checkedAll])
+    }, [checkedAll])
 
-    useEffect(()=>{
+    useEffect(() => {
         getAllData()
-    },[])
+    }, [])
     const getAllData = () => {
         ipcRenderer
-        .invoke("QueryDomains", {
-            All:true
-        })
-        .then((data:QueryGeneralResponse<Domain>) => {
-            setAllResponse(data)
-        })
-        .catch((e: any) => {
-            failed("QueryExecHistory failed: " + `${e}`)
-        })
-        .finally(() => {})
+            .invoke("QueryDomains", {
+                All: true
+            })
+            .then((data: QueryGeneralResponse<Domain>) => {
+                setAllResponse(data)
+            })
+            .catch((e: any) => {
+                failed("QueryExecHistory failed: " + `${e}`)
+            })
+            .finally(() => {})
     }
 
     const update = useMemoizedFn((page?: number, limit?: number) => {
@@ -99,8 +99,6 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             .invoke("QueryDomains", newParams)
             .then((data) => {
                 setResponse(data)
-                setSelectedRowKeys([])
-                setCheckedURL([])
             })
             .catch((e: any) => {
                 failed("QueryExecHistory failed: " + `${e}`)
@@ -120,6 +118,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             .invoke("DeleteDomains", newParams)
             .then(() => {
                 update(1)
+                getAllData()
             })
             .catch((e) => {
                 failed(`DelDomain failed: ${e}`)
@@ -222,6 +221,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                             delDomainSingle(i.DomainName)
                             setSelectedRowKeys([])
                             setCheckedURL([])
+                            setCheckedAll(false)
                         }}
                     >
                         删除
@@ -266,7 +266,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
 
     const onRemove = useMemoizedFn(() => {
         const transferParams = {
-            selectedRowKeys:checkedAll?[]:selectedRowKeys,
+            selectedRowKeys: checkedAll ? [] : selectedRowKeys,
             params,
             interfaceName: "DeleteDomains",
             selectedRowKeysNmae: "IDs"
@@ -275,6 +275,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         onRemoveToolFC(transferParams)
             .then(() => {
                 refList()
+                setSelectedRowKeys([])
+                setCheckedURL([])
+                setCheckedAll(false)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -285,6 +288,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         setTimeout(() => {
             update(1)
         }, 10)
+        setTimeout(()=>{
+            getAllData()
+        },10)
     })
     return (
         <Table<Domain>
@@ -303,75 +309,85 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             title={(e) => {
                 return (
                     <>
-                    <div style={{display: "flex", justifyContent: "space-between"}}>
-                        <Space>
-                            <div>域名资产</div>
-                            <Tooltip title='刷新会重置所有查询条件'>
-                                <Button
-                                    type={"link"}
-                                    onClick={() => {
-                                        refList()
+                        <div style={{display: "flex", justifyContent: "space-between"}}>
+                            <Space>
+                                <div>域名资产</div>
+                                <Tooltip title='刷新会重置所有查询条件'>
+                                    <Button
+                                        type={"link"}
+                                        onClick={() => {
+                                            refList()
+                                        }}
+                                        size={"small"}
+                                        icon={<ReloadOutlined />}
+                                    />
+                                </Tooltip>
+                            </Space>
+                        </div>
+                        <Row>
+                            <Col span={12} style={{display: "flex", alignItems: "center"}}>
+                                <Checkbox
+                                    checked={checkedAll}
+                                    onChange={(e) => {
+                                        if (!e.target.checked) {
+                                            setSelectedRowKeys([])
+                                            setCheckedURL([])
+                                        }
+                                        setCheckedAll(e.target.checked)
                                     }}
-                                    size={"small"}
-                                    icon={<ReloadOutlined />}
-                                />
-                            </Tooltip>
-                        </Space>
-                        <Space>
-                            <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
-                            <Popconfirm
-                                title={
-                                    checkedAll
-                                        ? "确定删除所有域名资产吗? 不可恢复"
-                                        : "确定删除选择的域名资产吗？不可恢复"
-                                }
-                                // onConfirm={(e) => {
-                                //     delDomainBatch()
-                                //     setSelectedRowKeys([])
-                                //     setCheckedURL([])
-                                // }}
-                                onConfirm={onRemove}
-                                disabled={selectedRowKeys.length===0}
-                            >
-                                <Button size='small' danger={true} disabled={selectedRowKeys.length===0}>
-                                    删除资产
-                                </Button>
-                            </Popconfirm>
-                            <DropdownMenu
-                                menu={{
-                                    data: [
-                                        {key: "bug-test", title: "发送到漏洞检测"},
-                                        {key: "scan-port", title: "发送到端口扫描"},
-                                        {key: "brute", title: "发送到爆破"}
-                                    ]
-                                }}
-                                dropdown={{placement: "bottomRight"}}
-                                onClick={(key) => {
-                                    if (checkedURL.length === 0) {
-                                        failed("请最少选择一个选项再进行操作")
-                                        return
-                                    }
+                                    disabled={allResponse.Data.length === 0}
+                                >
+                                    全选
+                                </Checkbox>
+                                <div className={style["http-history-table-total-item"]}>
+                                    <span className={style["http-history-table-total-item-text"]}>Selected</span>
+                                    <span className={style["http-history-table-total-item-number"]}>
+                                        {checkedAll ? allResponse.Total : selectedRowKeys?.length}
+                                    </span>
+                                </div>
+                            </Col>
+                            <Col span={12} style={{textAlign: "right"}}>
+                                <Space>
+                                    <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
+                                    <Popconfirm
+                                        title={
+                                            checkedAll
+                                                ? "确定删除所有域名资产吗? 不可恢复"
+                                                : "确定删除选择的域名资产吗？不可恢复"
+                                        }
+                                        onConfirm={onRemove}
+                                        disabled={selectedRowKeys.length === 0}
+                                    >
+                                        <Button size='small' danger={true} disabled={selectedRowKeys.length === 0}>
+                                            删除资产
+                                        </Button>
+                                    </Popconfirm>
+                                    <DropdownMenu
+                                        menu={{
+                                            data: [
+                                                {key: "bug-test", title: "发送到漏洞检测"},
+                                                {key: "scan-port", title: "发送到端口扫描"},
+                                                {key: "brute", title: "发送到爆破"}
+                                            ]
+                                        }}
+                                        dropdown={{placement: "bottomRight"}}
+                                        onClick={(key) => {
+                                            if (checkedURL.length === 0) {
+                                                failed("请最少选择一个选项再进行操作")
+                                                return
+                                            }
 
-                                    ipcRenderer.invoke("send-to-tab", {
-                                        type: key,
-                                        data: {URL: JSON.stringify(checkedURL)}
-                                    })
-                                }}
-                            >
-                                <Button type='link' icon={<LineMenunIcon />}></Button>
-                            </DropdownMenu>
-                        </Space>
-                    </div>
-                    <div>
-                    <Checkbox checked={checkedAll} onChange={(e)=>{
-                                if(!e.target.checked){
-                                    setSelectedRowKeys([])
-                                    setCheckedURL([])
-                                }
-                                setCheckedAll(e.target.checked)
-                                }}
-                                disabled={allResponse.Data.length===0}>全选</Checkbox>
-                    </div>
+                                            ipcRenderer.invoke("send-to-tab", {
+                                                type: key,
+                                                data: {URL: JSON.stringify(checkedURL)}
+                                            })
+                                        }}
+                                    >
+                                        <Button type='link' icon={<LineMenunIcon />}></Button>
+                                    </DropdownMenu>
+                                </Space>
+                            </Col>
+                        </Row>
                     </>
                 )
             }}
@@ -381,8 +397,10 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             rowKey={(e) => `${e.ID}`}
             rowSelection={{
                 onChange: (selectedRowKeys, selectedRows) => {
-                    if(selectedRowKeys.length===allResponse.Data.length) setCheckedAll(true)
-                    else{ setCheckedAll(false)}
+                    if (selectedRowKeys.length === allResponse.Data.length) setCheckedAll(true)
+                    else {
+                        setCheckedAll(false)
+                    }
                     setSelectedRowKeys(selectedRowKeys as string[])
                     setCheckedURL(selectedRows.map((item) => item.DomainName))
                 },
