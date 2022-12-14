@@ -11,6 +11,7 @@ const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
 /**
  * 更新说明
  * 1.增加环境变量加载主题色
+ * 2.修改disabled状态下checked没有变灰
  */
 
 /**

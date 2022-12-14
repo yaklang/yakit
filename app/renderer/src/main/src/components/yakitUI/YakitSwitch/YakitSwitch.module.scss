@@ -28,15 +28,6 @@
             background: #CCD2DE;
         }
 
-        .ant-switch-disabled {
-            background: #F0F1F3;
-            border: 1px solid #EAECF3;
-            opacity: 1;
-
-            .ant-switch-handle {
-                top: 1px;
-            }
-        }
 
         .ant-switch-checked:focus {
             box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
@@ -50,6 +41,15 @@
             box-shadow: none;
         }
 
+        .ant-switch-disabled {
+            background: #F0F1F3;
+            // border: 1px solid #EAECF3;
+            opacity: 1;
+
+            .ant-switch-handle {
+                top: 2px;
+            }
+        }
     }
 }
 
