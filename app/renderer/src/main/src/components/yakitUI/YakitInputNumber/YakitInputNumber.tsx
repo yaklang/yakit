@@ -14,7 +14,7 @@ const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
  * 更新说明
  * 1.增加环境变量加载主题色
  * 2.修复横向输入时，value为0无法加减问题
- * 3.antd form 校验错误状态做兼容处理 
+ * 3.antd form 校验错误状态做兼容处理
  */
 
 /**
