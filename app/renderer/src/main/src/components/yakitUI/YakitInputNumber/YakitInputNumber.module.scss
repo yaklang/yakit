@@ -1,17 +1,34 @@
 // ========================== 新UI ==========================
 .yakit-input-number-newUI {
     --yakit-box-shadow-color: #fbe7d9;
+    --yakit-box-shadow-error-color: #ff4d4f33;
+
     --yakit-border-hover-color: #F79C5D;
     --yakit-border-focus-color: #F28B44;
+    --yakit-border-error-color: #F7544A;
+
+    --yakit-icon-hover-color: #F79C5D;
+    --yakit-icon-error-color: #F7544A;
+
     --yakit-hover-color: #F79C5D;
+    --yakit-hover-error-color: #EB493F;
 }
 
 // ========================== 老UI ==========================
 .yakit-input-number-oldUI {
     --yakit-box-shadow-color: #e6f7ff;
+    --yakit-box-shadow-error-color: #ff4d4f33;
+
     --yakit-border-hover-color: #40a9ff;
     --yakit-border-focus-color: #1890ff;
+    --yakit-border-error-color: #ff4d4f;
+
+    --yakit-icon-hover-color: #40a9ff;
+    --yakit-icon-error-color: #ff4d4f;
+
     --yakit-hover-color: #40a9ff;
+    --yakit-hover-error-color: #ff4d4f;
+
 }
 
 // ========================== wrapper ==========================
@@ -114,9 +131,11 @@
 }
 
 // ========================== horizontal ==========================
+
 .yakit-input-number-horizontal {
     display: inline-flex;
-    border: 1px solid #EAECF3;
+    border: 1px solid;
+    border-color: #EAECF3;
     border-radius: 4px;
     align-items: center;
     user-select: none;
@@ -169,6 +188,8 @@
         &:active {
             background-color: #f4f4f4;
         }
+
+
     }
 
 
@@ -220,4 +241,35 @@
     &:hover {
         border-color: #d9d9d9;
     }
+}
+
+:global {
+    .ant-form-item-has-error {
+        .yakit-input-number-horizontal-error {
+            border-color: var(--yakit-border-error-color);
+
+            &:hover {
+                border-color: var(--yakit-border-error-color);
+            }
+
+            &:focus {
+                border-color: var(--yakit-border-error-color);
+                box-shadow: 0 0 0 2px var(--yakit-box-shadow-error-color);
+            }
+
+            .icon-error svg {
+                color: var(--yakit-icon-error-color);
+
+                &:hover {
+                    color: var(--yakit-hover-color);
+                }
+            }
+        }
+
+        .yakit-input-number-horizontal-focus-error {
+            border-color: var(--yakit-border-error-color);
+            box-shadow: 0 0 0 2px var(--yakit-box-shadow-error-color);
+        }
+    }
+
 }

@@ -4,7 +4,7 @@ import {ValueType, YakitInputNumberHorizontalProps, YakitInputNumberProps} from 
 import styles from "./YakitInputNumber.module.scss"
 import classNames from "classnames"
 import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useMutationObserver} from "ahooks"
 
 import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
 
@@ -14,6 +14,7 @@ const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
  * 更新说明
  * 1.增加环境变量加载主题色
  * 2.修复横向输入时，value为0无法加减问题
+ * 3.antd form 校验错误状态做兼容处理
  */
 
 /**
@@ -81,7 +82,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
      * @return {*} 精度
      */
     const getPrecision = (value) => {
-        if (value === undefined) return 0
+        if (value === undefined || value === null) return 0
         const valueString = value.toString()
         const dotPosition = valueString.indexOf(".")
         let precision = 0
@@ -163,17 +164,18 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
     })
     return (
         <div
-            className={classNames(styles["yakit-input-number-horizontal"], {
+            className={classNames(styles["yakit-input-number-horizontal"], "yakit-input-number-horizontal-error", {
                 [styles["yakit-input-number-newUI"]]: IsNewUI,
                 [styles["yakit-input-number-oldUI"]]: !IsNewUI,
                 [styles["yakit-input-number-horizontal-focus"]]: focus,
+                "yakit-input-number-horizontal-focus-error": focus,
                 [styles["yakit-input-number-horizontal-disabled"]]: !!props.disabled
             })}
         >
             {controls !== false && (
                 <>
                     <div
-                        className={classNames(styles["icon-left"], styles["icon-midden"], {
+                        className={classNames(styles["icon-left"], styles["icon-midden"], "icon-error", {
                             [styles["icon-small"]]: size === "small",
                             [styles["icon-large"]]: size === "large",
                             [styles["icon-disabled"]]: !!props.disabled
@@ -200,7 +202,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
             {controls !== false && (
                 <>
                     <div
-                        className={classNames(styles["icon-right"], styles["icon-midden"], {
+                        className={classNames(styles["icon-right"], styles["icon-midden"], "icon-error", {
                             [styles["icon-small"]]: size === "small",
                             [styles["icon-large"]]: size === "large",
                             [styles["icon-disabled"]]: !!props.disabled
