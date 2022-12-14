@@ -4,7 +4,7 @@ import {ValueType, YakitInputNumberHorizontalProps, YakitInputNumberProps} from 
 import styles from "./YakitInputNumber.module.scss"
 import classNames from "classnames"
 import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useMutationObserver} from "ahooks"
 
 /**
  * 更新说明
