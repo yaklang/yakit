@@ -37,7 +37,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [treeHeight, setTreeHeight] = useState<number>(0)
     const [delUrlArr, setDelUrlArr] = useState<string[]>([])
     const [downLoadUrlArr, setDownLoadUrlArr] = useState<string[]>([])
-    const [downLoadUrlPageSize, setDownLoadUrlPageSize] = useState<number>(20)
+    const [downLoadUrlPageSize, setDownLoadUrlPageSize] = useState<number>(500)
     const TreeBoxRef = useRef<any>()
 
     useEffect(() => {
@@ -151,7 +151,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                     .invoke("QueryHTTPFlows", {
                         IncludeInUrl: downLoadUrlArr,
                         Pagination: {
-                            ...genDefaultPagination(20),
+                            ...genDefaultPagination(downLoadUrlPageSize),
                             Page: page,
                             Limit: limit,
                             ...query
@@ -273,7 +273,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                 <Menu className={style["http-history-table-drop-down-batch"]}>
                                                     <Menu.Item>
                                                         <Popconfirm
-                                                            title={"确定删除选择的用户吗？不可恢复"}
+                                                            title={"确定删除选择的URL吗？不可恢复"}
                                                             onConfirm={() => {
                                                                 delManyReord()
                                                             }}
