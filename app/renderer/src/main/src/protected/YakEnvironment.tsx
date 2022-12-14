@@ -11,6 +11,8 @@ import {YakUpgrade} from "../components/YakUpgrade"
 import {UserProtocol} from "../App"
 import {YakitUpgrade} from "../components/YakitUpgrade"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {LoadYakitRemoteConfig} from "@/protected/LoadYakitRemoteConfig";
+
 const {Text, Title, Paragraph} = Typography
 
 export interface YakEnvironmentProp {
@@ -120,8 +122,8 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                         marginRight: 150
                     }}
                 >
-                    <Image src={YakLogoBanner} style={{marginTop: 120, marginBottom: 40}} preview={false} width={400} />
-                    <br />
+                    <Image src={YakLogoBanner} style={{marginTop: 120, marginBottom: 40}} preview={false} width={400}/>
+                    <br/>
                     <Text style={{color: "#999"}}>
                         {isEnterprise ? "企业版" : "社区专业版"}：{version}
                     </Text>
@@ -172,7 +174,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                         setPassword(info.password)
                                     }}
                                 />
-                                <SwitchItem value={allowSave} setValue={setAllowSave} label={"保存历史连接"} />
+                                <SwitchItem value={allowSave} setValue={setAllowSave} label={"保存历史连接"}/>
                                 {allowSave && (
                                     <InputItem
                                         label={"连接名"}
@@ -181,7 +183,26 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                         help={"可选，如果填写了，将会保存历史记录，之后可以选择该记录"}
                                     />
                                 )}
-                                <FormItem label={"Yak gRPC 主机地址"}>
+                                <FormItem label={"Yak gRPC 主机地址"} help={<>
+                                    <Button size={"small"} type={"link"} onClick={() => {
+                                        const m = showModal({
+                                            title: "加载现有配置",
+                                            width: "60%",
+                                            content: (
+                                                <>
+                                                    <LoadYakitRemoteConfig onLoad={(tls, host, port, pub, secret) => {
+                                                        setHost(host);
+                                                        setTls(tls);
+                                                        setPort(parseInt(port));
+                                                        setCaPem(pub)
+                                                        setPassword(secret)
+                                                        m.destroy()
+                                                    }}/>
+                                                </>
+                                            )
+                                        })
+                                    }}>加载配置</Button>
+                                </>}>
                                     <Input
                                         value={host}
                                         onChange={(e) => {
@@ -228,7 +249,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                                                         启动核心服务器的时候，会把 RootCA
                                                                         打印到屏幕上，复制到该输入框即可：
                                                                     </div>
-                                                                    <br />
+                                                                    <br/>
                                                                     <div>例如如下内容：</div>
                                                                     <div style={{width: 500, height: 400}}>
                                                                         <YakEditor
@@ -242,7 +263,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                                     >
                                                         <Button
                                                             style={{color: "#2f74d0"}}
-                                                            icon={<QuestionCircleOutlined />}
+                                                            icon={<QuestionCircleOutlined/>}
                                                             type={"link"}
                                                             ghost={true}
                                                         />
@@ -251,7 +272,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                             }
                                         >
                                             <div style={{height: 420}}>
-                                                <YakEditor value={caPem} setValue={setCaPem} type={"pem"} />
+                                                <YakEditor value={caPem} setValue={setCaPem} type={"pem"}/>
                                             </div>
                                         </Form.Item>
                                         <InputItem
