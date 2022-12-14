@@ -32,7 +32,6 @@ import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
-import style from "./Common.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 export interface PortAssetTableProp {
@@ -114,7 +113,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         ipcRenderer
             .invoke("QueryPorts", {
                 All: true,
-                State: props.closed ? "closed" : "open",
+                State: props.closed ? "closed" : "open"
             })
             .then((data: QueryGeneralResponse<PortAsset>) => {
                 setAllResponse(data)
@@ -387,9 +386,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setTimeout(() => {
             update()
         }, 10)
-        setTimeout(()=>{
+        setTimeout(() => {
             getAllData()
-        },10)
+        }, 10)
     })
     return (
         <Table<PortAsset>
@@ -429,12 +428,11 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 >
                                     全选
                                 </Checkbox>
-                                <div className={style["http-history-table-total-item"]}>
-                                    <span className={style["http-history-table-total-item-text"]}>Selected</span>
-                                    <span className={style["http-history-table-total-item-number"]}>
-                                        {checkedAll ? allResponse.Total : selectedRowKeys?.length}
-                                    </span>
-                                </div>
+                                {selectedRowKeys.length > 0 && (
+                                    <Tag color='blue'>
+                                        已选{checkedAll ? allResponse.Total : selectedRowKeys?.length}条
+                                    </Tag>
+                                )}
                             </Col>
                             <Col span={12} style={{textAlign: "right"}}>
                                 <Space>

@@ -9,7 +9,6 @@ import {LineMenunIcon} from "../../assets/icons"
 import {callCopyToClipboard} from "../../utils/basic"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {useMemoizedFn} from "ahooks"
-import style from "./PortTable.module.scss"
 export interface PortTableProp {
     data: YakitPort[]
 }
@@ -95,12 +94,11 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                                 >
                                     全选
                                 </Checkbox>
-                                <div className={style["http-history-table-total-item"]}>
-                                    <span className={style["http-history-table-total-item-text"]}>Selected</span>
-                                    <span className={style["http-history-table-total-item-number"]}>
-                                        {selectedRowKeys?.length}
-                                    </span>
-                                </div>
+                                {selectedRowKeys.length > 0 && (
+                                    <Tag color='blue'>
+                                        已选{selectedRowKeys?.length}条
+                                    </Tag>
+                                )}
                             </Col>
                             <Col span={12} style={{textAlign: "right"}}>
                                 <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='开放端口' />

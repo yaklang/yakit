@@ -13,7 +13,6 @@ import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {onRemoveToolFC} from "../../utils/deleteTool"
-import style from "./Common.module.scss"
 export interface Domain {
     ID?: number
     DomainName: string
@@ -288,9 +287,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         setTimeout(() => {
             update(1)
         }, 10)
-        setTimeout(()=>{
+        setTimeout(() => {
             getAllData()
-        },10)
+        }, 10)
     })
     return (
         <Table<Domain>
@@ -339,12 +338,11 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                 >
                                     全选
                                 </Checkbox>
-                                <div className={style["http-history-table-total-item"]}>
-                                    <span className={style["http-history-table-total-item-text"]}>Selected</span>
-                                    <span className={style["http-history-table-total-item-number"]}>
-                                        {checkedAll ? allResponse.Total : selectedRowKeys?.length}
-                                    </span>
-                                </div>
+                                {selectedRowKeys.length > 0 && (
+                                    <Tag color='blue'>
+                                        已选{checkedAll ? allResponse.Total : selectedRowKeys?.length}条
+                                    </Tag>
+                                )}
                             </Col>
                             <Col span={12} style={{textAlign: "right"}}>
                                 <Space>
