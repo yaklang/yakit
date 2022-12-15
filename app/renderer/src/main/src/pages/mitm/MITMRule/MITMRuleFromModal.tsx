@@ -49,7 +49,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
         form.setFieldsValue({
             ...currentItem,
             ResultType:
-                currentItem && (currentItem.ExtraHeaders.length > 0 || currentItem.ExtraCookies.length > 0) ? 2 : 1 //  1 文本  2 HTTP
+                currentItem && (currentItem?.ExtraHeaders?.length > 0 || currentItem?.ExtraCookies?.length > 0) ? 2 : 1 //  1 文本  2 HTTP
         })
     }, [currentItem])
     const onOk = useMemoizedFn(() => {
@@ -196,18 +196,20 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                     </Form.Item>
                 </Form>
             </YakitModal>
-            <YakitModal
-                title='自动提取正则'
-                subTitle='在编译器中选中内容，即可自动生成正则'
-                visible={ruleVisible}
-                onCancel={() => setRuleVisible(false)}
-                width={840}
-                zIndex={1002}
-                footer={null}
-                closable={true}
-            >
-                {ruleVisible && <ExtractRegular onSave={getRule} />}
-            </YakitModal>
+            {modalVisible && (
+                <YakitModal
+                    title='自动提取正则'
+                    subTitle='在编译器中选中内容，即可自动生成正则'
+                    visible={ruleVisible}
+                    onCancel={() => setRuleVisible(false)}
+                    width={840}
+                    zIndex={1002}
+                    footer={null}
+                    closable={true}
+                >
+                    <ExtractRegular onSave={getRule} />
+                </YakitModal>
+            )}
         </>
     )
 }
@@ -294,7 +296,11 @@ const ExtractRegular: React.FC<ExtractRegularProps> = (props) => {
                                 }}
                             />
                             <Divider type='vertical' />
-                            <CheckIcon onClick={() => onSave(matchedRegexp)} />
+                            <CheckIcon
+                                onClick={() => {
+                                    onSave(matchedRegexp)
+                                }}
+                            />
                         </div>
                     </div>
                 )}

@@ -1253,9 +1253,6 @@ const CellRender = React.memo(
         if (preProps.mouseCellId !== nextProps.mouseCellId) {
             return false
         }
-        // if (preProps.item.data[preProps.columnsItem.dataKey] !== nextProps.item.data[preProps.columnsItem.dataKey]) {
-        //     return false
-        // }
         if (preProps.item.data !== nextProps.item.data) {
             return false
         }

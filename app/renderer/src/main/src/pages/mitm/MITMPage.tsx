@@ -184,10 +184,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setStatus={setStatus}
                         defaultPlugins={defaultPlugins}
                         enableInitialMITMPlugin={enableInitialMITMPlugin}
+                        setVisible={setVisible}
                     />
                 )}
             </div>
-            <MITMRule visible={visible && !!inViewport} setVisible={setVisible} top={top} />
+            <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} top={top} />
         </>
     )
 }

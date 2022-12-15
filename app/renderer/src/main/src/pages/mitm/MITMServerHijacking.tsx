@@ -54,6 +54,7 @@ export interface MITMServerHijackingProp {
     defaultPlugins?: string[]
     setStatus: (status: MITMStatus) => any
     onLoading?: (loading: boolean) => any
+    setVisible: (b: boolean) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -64,7 +65,7 @@ interface CaCertData {
 }
 
 export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
-    const {host, port, addr, status, setStatus} = props
+    const {host, port, addr, status, setStatus, setVisible} = props
 
     const [error, setError] = useState("")
     const [caCerts, setCaCerts] = useState<CaCertData>({
@@ -475,21 +476,22 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 type={"link"}
                 style={{padding: `4px 6px`}}
                 onClick={() => {
-                    let m = showModal({
-                        width: "96%",
-                        content: (
-                            <div style={{marginTop: 20}}>
-                                <MITMContentReplacer
-                                    rules={replacers}
-                                    onSaved={(rules) => {
-                                        setReplacers(rules)
-                                        m.destroy()
-                                    }}
-                                />
-                            </div>
-                        ),
-                        maskClosable: false
-                    })
+                    // let m = showModal({
+                    //     width: "96%",
+                    //     content: (
+                    //         <div style={{marginTop: 20}}>
+                    //             <MITMContentReplacer
+                    //                 rules={replacers}
+                    //                 onSaved={(rules) => {
+                    //                     setReplacers(rules)
+                    //                     m.destroy()
+                    //                 }}
+                    //             />
+                    //         </div>
+                    //     ),
+                    //     maskClosable: false
+                    // })
+                    setVisible(true)
                 }}
             >
                 标记 / 替换流量规则

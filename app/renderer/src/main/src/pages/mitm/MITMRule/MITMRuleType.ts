@@ -1,8 +1,9 @@
 import {ReactNode} from "react"
 import {MITMContentReplacerRule} from "../MITMContentReplacer"
-import { HTTPHeader } from "../MITMContentReplacerHeaderOperator"
+import {HTTPHeader} from "../MITMContentReplacerHeaderOperator"
 
 export interface MITMRuleProp {
+    status: "idle" | "hijacked" | "hijacking"
     top: number
     visible: boolean
     setVisible: (b: boolean) => void
@@ -20,9 +21,9 @@ export interface MITMRuleFromModalProps {
     isEdit: boolean
     modalVisible: boolean
     onClose: () => void
-    onSave: (m:MITMContentReplacerRule) => void
+    onSave: (m: MITMContentReplacerRule) => void
     currentItem?: MITMContentReplacerRule
-    rules:MITMContentReplacerRule[]
+    rules: MITMContentReplacerRule[]
 }
 
 export interface ExtractRegularProps {
@@ -30,7 +31,7 @@ export interface ExtractRegularProps {
 }
 
 export interface ExtraHTTPSelectProps {
-    list:HTTPHeader[]
+    list: HTTPHeader[]
     tip: string
     onSave: (h: HTTPHeader) => any
     onRemove: (h: number) => any

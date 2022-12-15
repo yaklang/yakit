@@ -1,5 +1,5 @@
 import {Button, Checkbox, Divider, Drawer, Select, Switch, Tag} from "antd"
-import React, {ReactNode, useEffect, useState} from "react"
+import React, {ReactNode, useEffect, useMemo, useState} from "react"
 import {ButtonTextProps, MITMRuleProp} from "./MITMRuleType"
 import styles from "./MITMRule.module.scss"
 import {
@@ -109,7 +109,7 @@ export const colorSelectNode = (
 )
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
-    const {visible, setVisible, getContainer, top} = props
+    const {visible, setVisible, getContainer, top, status} = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
@@ -127,20 +127,19 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         ipcRenderer
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-                console.log("rsp.Rules", rsp.Rules)
                 setRules(rsp.Rules)
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     }, [visible])
-    // useEffect(() => {
-    //     ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
-    //         setRules(data?.replacers || [])
-    //         return
-    //     })
-    //     return () => {
-    //         ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
-    //     }
-    // }, [])
+    useEffect(() => {
+        ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
+            setRules(data?.replacers || [])
+            return
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
+        }
+    }, [])
     const styleDrawer = useCreation(() => {
         return {width: "100vw", top, height: `calc(100vh - ${top + 1}px)`}
     }, [top])
@@ -178,165 +177,172 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
     const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
-            if (item.Index != rowDate.Index) {
-                return item
+            if (item.Index === rowDate.Index) {
+                item = {
+                    ...rowDate,
+                    Disabled: !rowDate.Disabled
+                }
             }
-            item.Disabled = !rowDate.Disabled
             return item
         })
         setRules(newRules)
     })
 
-    const columns: ColumnsTypeProps[] = [
-        {
-            title: "执行顺序",
-            dataKey: "Index",
-            fixed: "left",
-            width: 130
-        },
-        {
-            title: "规则名称",
-            dataKey: "VerboseName",
-            fixed: "left",
-            width: 150
-        },
-        {
-            title: "规则内容",
-            dataKey: "Rule",
-            width: 240
-        },
-        {
-            title: "替换结果",
-            dataKey: "NoReplace",
-            width: 350,
-            tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-            extra: <div className={styles["table-result-extra"]}>不替换</div>,
-            render: (_, i: MITMContentReplacerRule) => {
-                let node: ReactNode = <div>{i.Result}</div>
-                if ((i.ExtraHeaders && i.ExtraHeaders.length > 0) || (i.ExtraCookies && i.ExtraCookies.length > 0)) {
-                    node = (
-                        <div>
-                            {i.ExtraHeaders.length > 0 && (
-                                <YakitTag size='small' color='purple'>
-                                    HTTP Header: {i.ExtraHeaders.length}
-                                </YakitTag>
-                            )}
-                            {i.ExtraCookies.length > 0 && (
-                                <YakitTag size='small' color='success'>
-                                    HTTP Cookie: {i.ExtraCookies.length}
-                                </YakitTag>
-                            )}
+    const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
+        return [
+            {
+                title: "执行顺序",
+                dataKey: "Index",
+                fixed: "left",
+                width: 130
+            },
+            {
+                title: "规则名称",
+                dataKey: "VerboseName",
+                fixed: "left",
+                width: 150
+            },
+            {
+                title: "规则内容",
+                dataKey: "Rule",
+                width: 240
+            },
+            {
+                title: "替换结果",
+                dataKey: "NoReplace",
+                width: 350,
+                tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
+                extra: <div className={styles["table-result-extra"]}>不替换</div>,
+                render: (_, i: MITMContentReplacerRule) => {
+                    let node: ReactNode = <div>{i.Result}</div>
+                    if (
+                        (i.ExtraHeaders && i.ExtraHeaders.length > 0) ||
+                        (i.ExtraCookies && i.ExtraCookies.length > 0)
+                    ) {
+                        node = (
+                            <div>
+                                {i.ExtraHeaders.length > 0 && (
+                                    <YakitTag size='small' color='purple'>
+                                        HTTP Header: {i.ExtraHeaders.length}
+                                    </YakitTag>
+                                )}
+                                {i.ExtraCookies.length > 0 && (
+                                    <YakitTag size='small' color='success'>
+                                        HTTP Cookie: {i.ExtraCookies.length}
+                                    </YakitTag>
+                                )}
+                            </div>
+                        )
+                    }
+                    return (
+                        <div className={styles["table-result"]}>
+                            {node}
+                            <YakitSwitch
+                                size='small'
+                                disabled={i.Disabled}
+                                checked={i.NoReplace}
+                                onChange={(val) => onEdit({...i, NoReplace: val}, "NoReplace")}
+                            />
                         </div>
                     )
                 }
-                return (
-                    <div className={styles["table-result"]}>
-                        {node}
-                        <YakitSwitch
-                            size='small'
-                            disabled={i.Disabled}
-                            checked={i.NoReplace}
-                            onChange={(val) => onEdit({...i, NoReplace: val}, "NoReplace")}
-                        />
-                    </div>
+            },
+            {
+                title: "请求",
+                dataKey: "EnableForRequest",
+                render: (checked, record: MITMContentReplacerRule) => (
+                    <YakitCheckbox
+                        checked={checked}
+                        disabled={record.Disabled}
+                        onChange={(e) => onEdit({...record, EnableForRequest: e.target.checked}, "EnableForRequest")}
+                    />
                 )
-            }
-        },
-        {
-            title: "请求",
-            dataKey: "EnableForRequest",
-            render: (checked, record: MITMContentReplacerRule) => (
-                <YakitCheckbox
-                    checked={checked}
-                    disabled={record.Disabled}
-                    onChange={(e) => onEdit({...record, EnableForRequest: e.target.checked}, "EnableForRequest")}
-                />
-            )
-        },
-        {
-            title: "响应",
-            dataKey: "EnableForResponse",
-            render: (checked, record: MITMContentReplacerRule) => (
-                <YakitCheckbox
-                    checked={checked}
-                    disabled={record.Disabled}
-                    onChange={(e) => onEdit({...record, EnableForResponse: e.target.checked}, "EnableForResponse")}
-                />
-            )
-        },
-        {
-            title: "Header",
-            dataKey: "EnableForHeader",
-            render: (checked, record: MITMContentReplacerRule) => (
-                <YakitCheckbox
-                    checked={checked}
-                    disabled={record.Disabled}
-                    onChange={(e) => onEdit({...record, EnableForHeader: e.target.checked}, "EnableForHeader")}
-                />
-            )
-        },
-        {
-            title: "Body",
-            dataKey: "EnableForBody",
-            render: (checked, record: MITMContentReplacerRule) => (
-                <YakitCheckbox
-                    checked={checked}
-                    disabled={record.Disabled}
-                    onChange={(e) => onEdit({...record, EnableForBody: e.target.checked}, "EnableForBody")}
-                />
-            )
-        },
-        {
-            title: "命中颜色",
-            dataKey: "Color",
-            ellipsis: false,
-            render: (text, record: MITMContentReplacerRule) => (
-                <YakitSelect
-                    value={text}
-                    bordered={false}
-                    disabled={record.Disabled}
-                    size='small'
-                    wrapperStyle={{width: "100%"}}
-                    onSelect={(val) => onEdit({...record, Color: val}, "Color")}
-                >
-                    {colorSelectNode}
-                </YakitSelect>
-            )
-        },
-        {
-            title: "追加 Tag",
-            dataKey: "ExtraTag",
-            render: (text) => {
-                // const text = ["公钥传输", "登陆/密码传输", "疑似JSONP"]
-                return <TagsList data={text} ellipsis={true} />
-            }
-        },
-        {
-            title: "操作",
-            dataKey: "action",
-            fixed: "right",
-            width: 128,
-            render: (_, record: MITMContentReplacerRule) => {
-                return (
-                    <div className={styles["table-action-icon"]}>
-                        <TrashIcon className={styles["icon-trash"]} onClick={() => onRemove(record)} />
-                        <PencilAltIcon
-                            className={classNames(styles["action-icon"], {
-                                [styles["action-icon-edit-disabled"]]: record.Disabled
-                            })}
-                            onClick={() => onOpenAddOrEdit(record)}
-                        />
-                        <BanIcon
-                            className={classNames(styles["action-icon"], {
-                                [styles["action-icon-ban-disabled"]]: record.Disabled
-                            })}
-                            onClick={() => onBan(record)}
-                        />
-                    </div>
+            },
+            {
+                title: "响应",
+                dataKey: "EnableForResponse",
+                render: (checked, record: MITMContentReplacerRule) => (
+                    <YakitCheckbox
+                        checked={checked}
+                        disabled={record.Disabled}
+                        onChange={(e) => onEdit({...record, EnableForResponse: e.target.checked}, "EnableForResponse")}
+                    />
                 )
+            },
+            {
+                title: "Header",
+                dataKey: "EnableForHeader",
+                render: (checked, record: MITMContentReplacerRule) => (
+                    <YakitCheckbox
+                        checked={checked}
+                        disabled={record.Disabled}
+                        onChange={(e) => onEdit({...record, EnableForHeader: e.target.checked}, "EnableForHeader")}
+                    />
+                )
+            },
+            {
+                title: "Body",
+                dataKey: "EnableForBody",
+                render: (checked, record: MITMContentReplacerRule) => (
+                    <YakitCheckbox
+                        checked={checked}
+                        disabled={record.Disabled}
+                        onChange={(e) => onEdit({...record, EnableForBody: e.target.checked}, "EnableForBody")}
+                    />
+                )
+            },
+            {
+                title: "命中颜色",
+                dataKey: "Color",
+                ellipsis: false,
+                render: (text, record: MITMContentReplacerRule) => (
+                    <YakitSelect
+                        value={text}
+                        bordered={false}
+                        disabled={record.Disabled}
+                        size='small'
+                        wrapperStyle={{width: "100%"}}
+                        onSelect={(val) => onEdit({...record, Color: val}, "Color")}
+                    >
+                        {colorSelectNode}
+                    </YakitSelect>
+                )
+            },
+            {
+                title: "追加 Tag",
+                dataKey: "ExtraTag",
+                render: (text) => {
+                    // const text = ["公钥传输", "登陆/密码传输", "疑似JSONP"]
+                    return <TagsList data={text} ellipsis={true} />
+                }
+            },
+            {
+                title: "操作",
+                dataKey: "action",
+                fixed: "right",
+                width: 128,
+                render: (_, record: MITMContentReplacerRule) => {
+                    return (
+                        <div className={styles["table-action-icon"]}>
+                            <TrashIcon className={styles["icon-trash"]} onClick={() => onRemove(record)} />
+                            <PencilAltIcon
+                                className={classNames(styles["action-icon"], {
+                                    [styles["action-icon-edit-disabled"]]: record.Disabled
+                                })}
+                                onClick={() => onOpenAddOrEdit(record)}
+                            />
+                            <BanIcon
+                                className={classNames(styles["action-icon"], {
+                                    [styles["action-icon-ban-disabled"]]: record.Disabled
+                                })}
+                                onClick={() => onBan(record)}
+                            />
+                        </div>
+                    )
+                }
             }
-        }
-    ]
+        ]
+    }, [])
     const onEdit = useMemoizedFn((record: MITMContentReplacerRule, text: string) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item) => {
             if (item.Index === record.Index) {
@@ -347,7 +353,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setRules(newRules)
     })
     const onMenuSelect = useMemoizedFn((key: string) => {
-        console.log("onMenuSelect", key, selectedRowKeys)
         if (key === "ban") {
             onBatchNoReplaceOrBan(false, "NoReplace")
         }
@@ -390,21 +395,37 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             rules[index] = {...val}
             setRules([...rules])
         } else {
-            setRules([{...val}, ...rules])
+            setRules([{...val}, ...rules].sort((a, b) => a.Index - b.Index))
         }
         onOpenOrCloseModal(false)
     })
 
     const onSaveToDataBase = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("SetCurrentRules", {Rules: rules})
-            .then((e) => {
-                setVisible(false)
-                success("保存成功")
-            })
-            .catch((e) => {
-                failed(`保存失败: ${e}`)
-            })
+        if (status === "idle") {
+            // 劫持未开启
+            ipcRenderer
+                .invoke("SetCurrentRules", {Rules: rules})
+                .then((e) => {
+                    setVisible(false)
+                    success("保存成功")
+                })
+                .catch((e) => {
+                    failed(`保存失败: ${e}`)
+                })
+        } else {
+            // 开启劫持
+            ipcRenderer
+                .invoke("mitm-content-replacers", {
+                    replacers: rules
+                })
+                .then((val) => {
+                    setVisible(false)
+                    success("保存成功")
+                })
+                .catch((e) => {
+                    failed(`保存失败: ${e}`)
+                })
+        }
     })
     const onBatchNoReplaceOrBan = useMemoizedFn((checked: boolean, text: string) => {
         if (selectedRowKeys.length === 0) return
@@ -437,23 +458,25 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         }, 200)
     })
     const onAllBan = useMemoizedFn((checked: boolean) => {
+        setIsAllBan(checked)
         setLoading(true)
         const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, Disabled: checked}))
         setRules(newRules)
-        setIsAllBan(checked)
         setTimeout(() => {
             setLoading(false)
         }, 200)
     })
     const onAllNoReplace = useMemoizedFn((checked: boolean) => {
+        setIsNoReplace(checked)
         setLoading(true)
         const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, NoReplace: checked}))
         setRules(newRules)
-        setIsNoReplace(checked)
         setTimeout(() => {
             setLoading(false)
         }, 200)
     })
+    console.log("rules", rules)
+
     return (
         <>
             <YakitDrawer
@@ -503,7 +526,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             <div className={styles["table-title-body"]}>
                                 <div className={styles["table-title"]}>现有 MITM 内容规则</div>
                                 <div className={styles["table-total"]}>
-                                    共 <span>6</span> 条规则
+                                    共 <span>{rules.length}</span> 条规则
                                 </div>
                             </div>
                         }
@@ -516,7 +539,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                 <Divider type='vertical' style={{margin: "0 16px"}} />
                                 <div className={styles["table-switch"]}>
                                     <span className={styles["switch-text"]}>全部不替换</span>
-                                    <YakitSwitch onChange={(c) => onAllNoReplace(c)} />
+                                    <YakitSwitch checked={isNoReplace} onChange={(c) => onAllNoReplace(c)} />
                                 </div>
                                 {/* <YakitButton type='outline2' className={styles["button-filter"]}>
                                 <FilterIcon />
