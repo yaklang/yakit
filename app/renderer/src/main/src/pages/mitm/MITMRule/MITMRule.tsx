@@ -475,8 +475,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             setLoading(false)
         }, 200)
     })
-    console.log("rules", rules)
-
     return (
         <>
             <YakitDrawer
