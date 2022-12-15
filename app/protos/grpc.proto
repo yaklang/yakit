@@ -1304,6 +1304,7 @@ message QueryDomainsRequest {
   string Network = 2;
   string DomainKeyword = 3;
   string Title = 4;
+  bool   All = 5;
 }
 
 message DeleteDomainsRequest {
@@ -1599,6 +1600,7 @@ message QueryPortsRequest {
   string Service = 4;
   string State = 5;
   string Title = 6;
+  bool   All = 7;
 }
 
 message QueryPortsResponse {
@@ -1780,6 +1782,7 @@ message YakScript {
   bool OnlineIsPrivate = 24;
   string HeadImg = 25;
   string OnlineBaseUrl = 26;
+  int64  BaseOnlineId = 27;
 }
 
 message GetYakScriptTagsAndTypeResponse {
@@ -2084,6 +2087,7 @@ message DeleteHTTPFlowRequest {
 
   string URLPrefix = 3;
   QueryHTTPFlowRequest Filter = 5;
+  repeated string  URLPrefixBatch = 6;
 }
 
 message QueryHTTPFlowsIdsRequest {
