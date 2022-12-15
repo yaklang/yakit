@@ -1,12 +1,14 @@
 // ========================== 新UI ==========================
 .yakit-switch-wrapper-item-newUI {
     --yakit-box-shadow-color: #fbe7d9;
+    --yakit-border-color: #F79C5D;
     --yakit-background-color: #F79C5D;
 }
 
 // ========================== 老UI ==========================
 .yakit-switch-wrapper-item-oldUI {
     --yakit-box-shadow-color: #e6f7ff;
+    --yakit-border-color: #40a9ff;
     --yakit-background-color: #40a9ff;
 }
 
@@ -26,6 +28,7 @@
 
         .ant-switch {
             background: #CCD2DE;
+            border: 1px solid transparent;
         }
 
 
@@ -34,6 +37,7 @@
         }
 
         .ant-switch-checked {
+            border: 1px solid var(--yakit-border-color);
             background: var(--yakit-background-color);
         }
 
@@ -45,10 +49,10 @@
             background: #F0F1F3;
             border: 1px solid #EAECF3;
             opacity: 1;
+        }
 
-            .ant-switch-handle {
-                top: 1px;
-            }
+        .ant-switch-handle {
+            top: auto;
         }
     }
 }
