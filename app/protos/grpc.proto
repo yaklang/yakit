@@ -367,10 +367,28 @@ service Yak {
   rpc GetLicense(Empty) returns (GetLicenseResponse);
   rpc CheckLicense(CheckLicenseRequest) returns (Empty);
 
-  // 扩展
+  // Response Body 的魔法操作
   rpc GetRequestBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
   rpc GetResponseBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
   rpc GetHTTPPacketBody(GetHTTPPacketBodyRequest) returns (Bytes);
+
+  // 注册一个 Facades HTTP 响应
+  rpc RegisterFacadesHTTP(RegisterFacadesHTTPRequest) returns (RegisterFacadesHTTPResponse);
+}
+
+message RegisterFacadesHTTPRequest {
+  // 这个优先级比较高，如果有这个的话，他的响应应该像是
+  // /_yakit/history/<id>
+  int64 HTTPFlowID = 1;
+
+  // 散装 HTTPFlow
+  bytes HTTPResponse = 2;
+  string Url = 3;
+}
+
+message RegisterFacadesHTTPResponse {
+  // http(s)://localhost:<facadesport>/...
+  string FacadesUrl = 1;
 }
 
 message GetHTTPPacketBodyRequest {
