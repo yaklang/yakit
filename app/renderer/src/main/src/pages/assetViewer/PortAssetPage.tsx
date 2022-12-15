@@ -32,6 +32,7 @@ import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
+import style from "./portAssetPage.module.scss";
 const {ipcRenderer} = window.require("electron")
 
 export interface PortAssetTableProp {
@@ -416,6 +417,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         <Row>
                             <Col span={12} style={{display: "flex", alignItems: "center"}}>
                                 <Checkbox
+                                    className={style["check-all-box"]}
                                     checked={checkedAll}
                                     onChange={(e) => {
                                         if (!e.target.checked) {
@@ -492,6 +494,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             expandable={{
                 expandedRowRender: (record) => <PortAssetDescription port={record} />
             }}
+            className={style["common-page-table"]}
             loading={loading}
             columns={columns || []}
             dataSource={response.Data}

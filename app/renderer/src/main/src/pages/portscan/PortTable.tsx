@@ -82,6 +82,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                         <Row>
                             <Col span={12} style={{display: "flex", alignItems: "center"}}>
                                 <Checkbox
+                                    style={{marginLeft:8}}
                                     checked={checkedAll}
                                     onChange={(e) => {
                                         if (!e.target.checked) {

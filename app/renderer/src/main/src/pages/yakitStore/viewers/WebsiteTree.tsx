@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useRef} from "react"
-import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popconfirm, Popover} from "antd"
+import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popconfirm, Popover,Checkbox} from "antd"
 import {AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest} from "../../../components/WebsiteTree"
 import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable"
 import {genDefaultPagination, QueryGeneralResponse} from "../../invoker/schema"
@@ -38,11 +38,29 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [delUrlArr, setDelUrlArr] = useState<string[]>([])
     const [downLoadUrlArr, setDownLoadUrlArr] = useState<string[]>([])
     const [downLoadUrlPageSize, setDownLoadUrlPageSize] = useState<number>(100)
+    const [checkedAll, setCheckedAll] = useState<boolean>(false)
+    const [selectedKeys,setSelectedKeys] = useState<string[]>([])
     const TreeBoxRef = useRef<any>()
 
     useEffect(() => {
         setTreeHeight(TreeBoxRef.current.offsetHeight)
     }, [])
+
+    useEffect(() => {
+        if (checkedAll) {
+            let pathArr:string[] = []
+            let delUrlArr:string[] = []
+            treeData.map((node)=>{
+                const delUrlStr = fetchDelUrl(node, "")
+                pathArr.push(delUrlStr)
+                const pathStr: string = node.title
+                delUrlArr.push(pathStr)
+            })
+            setDownLoadUrlArr(pathArr)
+            setDelUrlArr(delUrlArr)
+            setSelectedKeys(treeData.map(ele=>ele.key))
+        }
+    }, [checkedAll])
 
     const setTreeCheckable = (treeDataRaw: AntDTreeData[], bool = false) => {
         return treeDataRaw.map((item) => {
@@ -190,6 +208,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             className='Website-tree-card'
                             title={
                                 <>
+                                <Space direction="vertical" style={{width:"100%"}}>
                                     <div>
                                         <Space>
                                             业务结构
@@ -205,7 +224,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     </div>
 
                                     {!props.targets ? (
-                                        <Space>
+                                     
                                             <Form
                                                 size={"small"}
                                                 onSubmitCapture={(e) => {
@@ -214,12 +233,12 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                     refresh()
                                                 }}
                                                 layout={"inline"}
+                                                style={{justifyContent:"space-between"}}
                                             >
                                                 <InputItem
                                                     label={"URL关键字"}
                                                     value={searchTarget}
                                                     setValue={setSearchTarget}
-                                                    width={100}
                                                 />
                                                 <Form.Item style={{marginLeft: 0, marginRight: 0}}>
                                                     <Button
@@ -231,8 +250,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                     />
                                                 </Form.Item>
                                             </Form>
-                                            {/*<Input onBlur={r => setSearchTarget(r.target.value)} size={"small"}/>*/}
-                                        </Space>
+                                  
                                     ) : (
                                         <Space>
                                             <Form
@@ -250,11 +268,21 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                             </Form>
                                         </Space>
                                     )}
-                                </>
-                            }
-                            size={"small"}
-                            extra={
-                                <>
+                                     <div style={{display:"flex",justifyContent:"space-between"}}>
+                                     <Checkbox
+                                    checked={checkedAll}
+                                    onChange={(e) => {
+                                        if (!e.target.checked) {
+                                            setDownLoadUrlArr([])
+                                            setDelUrlArr([])
+                                            setSelectedKeys([])
+                                        }
+                                        setCheckedAll(e.target.checked)
+                                    }}
+                                    
+                                >
+                                    全选
+                                </Checkbox>
                                     {delUrlArr.length === 0 ? (
                                         <Button
                                             size='small'
@@ -307,8 +335,12 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                             </Button>
                                         </Popover>
                                     )}
+                                </div>
+                                </Space>
                                 </>
                             }
+                            size={"small"}
+                            extra={null} 
                         >
                             <div ref={TreeBoxRef} style={{height: "100%", maxHeight: props.maxHeight}}>
                                 <Tree
@@ -316,6 +348,8 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     className='ellipsis-tree'
                                     checkable
                                     onCheck={(checkedKeys, info) => {
+                                        // @ts-ignore
+                                        setSelectedKeys(checkedKeys)
                                         // @ts-ignore
                                         const {children, key, parent, title, urls} = info.node
                                         let node = {
@@ -330,17 +364,24 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                         // @ts-ignore
                                         const pathStr: string = title
                                         if (info.checked) {
+                                            if(Array.isArray(checkedKeys)&&checkedKeys.length===treeData.length){
+                                                setCheckedAll(true)
+                                            }
                                             setDownLoadUrlArr((item) => Array.from(new Set([...item, pathStr])))
                                             setDelUrlArr((item) => Array.from(new Set([...item, delUrlStr])))
                                         } else {
+                                            setCheckedAll(false)
                                             setDownLoadUrlArr((value) =>
                                                 value.filter((item) => !item.startsWith(pathStr))
                                             )
                                             setDelUrlArr((value) => value.filter((item) => !item.startsWith(delUrlStr)))
                                         }
                                     }}
+                                    checkedKeys={selectedKeys}
+                                    selectable={true}
                                     showLine={true}
                                     treeData={treeData}
+                                    
                                     titleRender={(nodeData: any) => {
                                         return (
                                             <div style={{display: "flex", width: "100%"}}>
