@@ -747,8 +747,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     info("数据包为空")
                                                     return
                                                 }
-                                                newWebFuzzerTab(false, text).finally(() => {
-                                                    info(`创建的新 WebFuzzer Tab 需用户自行判断是否开启 HTTPS`)
+                                                newWebFuzzerTab(props.defaultHttps||false, text).finally(() => {
+                                                    // info(`创建的新 WebFuzzer Tab 需用户自行判断是否开启 HTTPS`)
                                                     // Modal.info({
                                                     //     title: "注意",
                                                     //     content: (
