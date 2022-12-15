@@ -799,7 +799,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         rowSelection={rowSelection as RowSelectionProps<any>}
                                         cIndex={cIndex}
                                         onChangeCheckbox={onChangeCheckbox}
-                                        isAll={list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length}
+                                        // isAll={list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length}
+                                        isAll={rowSelection?.isAll||(list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length)}
                                         disableSorting={disableSorting}
                                         sort={sort}
                                         onSorter={onSorter}

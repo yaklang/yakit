@@ -14,7 +14,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {MITMContentReplacer, MITMContentReplacerRule} from "../MITMContentReplacer"
+import {MITMContentReplacerRule} from "../MITMContentReplacer"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
@@ -31,9 +31,9 @@ import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/Yaki
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {MITMRuleFromModal} from "./MITMRuleFromModal"
 import {randomString} from "@/utils/randomUtil"
-import {showModal} from "@/utils/showModal"
 import {MITMResponse} from "../MITMPage"
 import {failed, success} from "@/utils/notification"
+import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -116,7 +116,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [selectedRows, setSelectedRows] = useState<MITMContentReplacerRule[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
+
     const [modalVisible, setModalVisible] = useState<boolean>(false)
+    const [exportVisible, setExportVisible] = useState<boolean>(false)
+    const [importVisible, setImportVisible] = useState<boolean>(false)
+
     const [isEdit, setIsEdit] = useState<boolean>(false)
     const [isAllBan, setIsAllBan] = useState<boolean>(false)
     const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
@@ -144,10 +148,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         return {width: "100vw", top, height: `calc(100vh - ${top + 1}px)`}
     }, [top])
     const onSelectAll = (newSelectedRowKeys: string[], selected: MITMContentReplacerRule[], checked: boolean) => {
+        const rows = selected.filter((ele) => !ele.Disabled)
         setIsAllSelect(checked)
-        setSelectedRowKeys(newSelectedRowKeys)
-        setSelectedRows(selected)
+        setSelectedRowKeys(rows.map((ele: any) => ele.Index))
+        setSelectedRows(rows)
     }
+
     const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: MITMContentReplacerRule) => {
         if (c) {
             setSelectedRowKeys([...selectedRowKeys, keys])
@@ -469,7 +475,14 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const onAllNoReplace = useMemoizedFn((checked: boolean) => {
         setIsNoReplace(checked)
         setLoading(true)
-        const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, NoReplace: checked}))
+        const newRules: MITMContentReplacerRule[] = []
+        rules.forEach((item) => {
+            if (item.Disabled) {
+                newRules.push(item)
+            } else {
+                newRules.push({...item, NoReplace: checked})
+            }
+        })
         setRules(newRules)
         setTimeout(() => {
             setLoading(false)
@@ -490,11 +503,23 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 title={<div className={styles["heard-title"]}>内容规则配置</div>}
                 extra={
                     <div className={styles["heard-right-operation"]}>
-                        <YakitButton type='text' icon={<SaveIcon />}>
+                        <YakitButton type='text' icon={<SaveIcon />} onClick={() => setImportVisible(true)}>
                             导入配置
                         </YakitButton>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
-                        <YakitButton type='text' icon={<ExportIcon />} className={styles["button-export"]}>
+                        <YakitButton
+                            type='text'
+                            icon={<ExportIcon />}
+                            className={styles["button-export"]}
+                            onClick={() => {
+                                // showModal({
+                                //     title: "导出配置",
+                                //     width: "50%",
+                                //     content: <MITMContentReplacerExport />
+                                // })
+                                setExportVisible(true)
+                            }}
+                        >
                             导出配置
                         </YakitButton>
                         <YakitButton
@@ -605,6 +630,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 onSave={onSaveRules}
                 currentItem={currentItem}
             />
+            {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
+            {importVisible && <MITMRuleImport visible={importVisible} setVisible={setImportVisible} />}
         </>
     )
 }

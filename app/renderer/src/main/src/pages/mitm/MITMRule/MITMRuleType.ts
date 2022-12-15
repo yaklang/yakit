@@ -42,3 +42,4 @@ export interface InputHTTPHeaderFormProps {
     setVisible: (b: boolean) => void
     onSave: (h: HTTPHeader) => any
 }
+
