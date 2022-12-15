@@ -98,7 +98,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [replacers, setReplacers] = useState<MITMContentReplacerRule[]>([])
     useEffect(() => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
-            console.log("client-mitm-content-replacer-update.replacers", data?.replacers)
             setReplacers(data?.replacers || [])
             return
         })

@@ -55,7 +55,6 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const onOk = useMemoizedFn(() => {
         form.validateFields()
             .then((values: MITMContentReplacerRule) => {
-                console.log("values", values)
                 onSave(values)
             })
             .catch((errorInfo) => {})
