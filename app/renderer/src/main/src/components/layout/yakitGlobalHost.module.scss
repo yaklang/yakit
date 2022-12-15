@@ -7,10 +7,10 @@
         line-height: 20px;
         text-transform: capitalize;
         .addr-ip {
-            color: #b4bbca;
+            color: var(--yakit-helper-text-color);
         }
         .addr-port {
-            color: var(--base-font-color);
+            color: var(--yakit-header-color);
         }
     }
 }

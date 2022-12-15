@@ -30,7 +30,6 @@ import {DropdownMenu} from "../baseTemplate/DropdownMenu"
 import {loginOut} from "@/utils/login"
 import {Route} from "@/routes/routeSpec"
 import {UserPlatformType} from "@/pages/globalVariable"
-import {TrustList} from "@/pages/TrustList"
 import SetPassword from "@/pages/SetPassword"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
@@ -38,6 +37,7 @@ import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
+import {showConfigMenuItems} from "@/utils/ConfigMenuItems"
 
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
@@ -65,8 +65,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         {title: "退出登录", key: "sign-out"}
         // {title: "帐号绑定(监修)", key: "account-bind"}
     ])
-    /** 信任用户弹框 */
-    const [trustShow, setTrustShow] = useState<boolean>(false)
     /** 修改密码弹框 */
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
 
@@ -75,7 +73,23 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         // 非企业管理员登录
         if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
+                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "sign-out", title: "退出登录"}
+            ])
+        }
+        // 非企业超级管理员登录
+        else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
+            setUserMenu([
                 {key: "trust-list", title: "用户管理"},
+                {key: "license-admin", title: "License管理"},
+                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "sign-out", title: "退出登录"}
+            ])
+        }
+        // 非企业license管理员
+        else if (userInfo.role === "licenseAdmin" && userInfo.platform !== "company") {
+            setUserMenu([
+                {key: "license-admin", title: "License管理"},
                 // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
@@ -106,6 +120,11 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
     }, [userInfo.role, userInfo.companyHeadImg])
 
+    /** 通知软件打开管理页面 */
+    const openMenu = (type: Route) => {
+        ipcRenderer.invoke("open-user-manage", type)
+    }
+
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classnames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
@@ -117,9 +136,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
                     </Tooltip>
                 </div>
-                <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
+                {/* <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
                     <ScreensHotSvgIcon className={styles["icon-style"]} />
-                </div>
+                </div> */}
                 <div className={styles["short-divider-wrapper"]}>
                     <div className={styles["divider-style"]}></div>
                 </div>
@@ -146,15 +165,22 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                         loginOut(userInfo)
                                         setTimeout(() => success("已成功退出账号"), 500)
                                     }
-                                    if (key === "trust-list") setTrustShow(true)
+                                    if (key === "trust-list") {
+                                        const key = Route.TrustListPage
+                                        openMenu(key)
+                                    }
                                     if (key === "set-password") setPasswordShow(true)
                                     if (key === "role-admin") {
                                         const key = Route.RoleAdminPage
-                                        // goRouterPage(key)
+                                        openMenu(key)
                                     }
                                     if (key === "account-admin") {
                                         const key = Route.AccountAdminPage
-                                        // goRouterPage(key)
+                                        openMenu(key)
+                                    }
+                                    if (key === "license-admin") {
+                                        const key = Route.LicenseAdminPage
+                                        openMenu(key)
                                     }
                                 }}
                             >
@@ -177,18 +203,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             </div>
 
             {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)} />}
-            <Modal
-                visible={trustShow}
-                title={"用户管理"}
-                destroyOnClose={true}
-                maskClosable={false}
-                bodyStyle={{padding: "10px 24px 24px 24px"}}
-                width={800}
-                onCancel={() => setTrustShow(false)}
-                footer={null}
-            >
-                <TrustList />
-            </Modal>
             <Modal
                 visible={passwordShow}
                 title={"修改密码"}
@@ -261,6 +275,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 if (type === engineMode && type !== "remote") return
                 startEngineMode(type)
                 return
+            case "refreshMenu":
+                ipcRenderer.invoke("change-main-menu")
+                return
+            case "settingMenu":
+                showConfigMenuItems()
+                return
 
             default:
                 return
@@ -303,6 +323,14 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                         {label: "远程", key: "remote"},
                         {label: "管理员", key: "admin"}
                     ]
+                },
+                {
+                    key: "refreshMenu",
+                    label: "刷新菜单"
+                },
+                {
+                    key: "settingMenu",
+                    label: "配置菜单栏"
                 }
             ]}
             onClick={({key}) => menuSelect(key)}

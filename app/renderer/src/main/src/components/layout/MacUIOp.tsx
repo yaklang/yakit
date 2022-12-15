@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import {MacUIOpCloseSvgIcon, MacUIOpMaxSvgIcon, MacUIOpMinSvgIcon, MacUIOpRestoreSvgIcon} from "./icons"
 import {useMemoizedFn} from "ahooks"
 import classnames from "classnames"
@@ -12,10 +12,19 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
     const [show, setShow] = useState<boolean>(false)
     const [isMax, setIsMax] = useState<boolean>(false)
 
-    const operate = useMemoizedFn(async (type: "close" | "min" | "full") => {
-        let flag: boolean = await ipcRenderer.invoke("UIOperate", type)
-        if (type === "full") setIsMax(flag)
+    const operate = useMemoizedFn((type: "close" | "min" | "full") => {
+        ipcRenderer.invoke("UIOperate", type)
     })
+
+    useEffect(() => {
+        ipcRenderer.on("callback-win-enter-full", async (e: any) => setIsMax(true))
+        ipcRenderer.on("callback-win-leave-full", async (e: any) => setIsMax(false))
+
+        return () => {
+            ipcRenderer.removeAllListeners("callback-win-enter-full")
+            ipcRenderer.removeAllListeners("callback-win-leave-full")
+        }
+    }, [])
 
     return (
         <div

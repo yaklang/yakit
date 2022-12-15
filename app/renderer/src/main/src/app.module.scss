@@ -21,16 +21,16 @@
         font-size: 14px;
         line-height: 24px;
         text-align: justify;
-        color: #85899e;
+        color: var(--yakit-body-text-color);
         .sign-content {
-            color: #f6544a;
+            color: var(--yakit-danger-color);
         }
         .underline-content {
-            color: #f6544a;
+            color: var(--yakit-danger-color);
             text-decoration: underline;
         }
         .sign-bold-content {
-            color: #f6544a;
+            color: var(--yakit-danger-color);
             font-weight: 500;
         }
     }

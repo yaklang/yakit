@@ -10,10 +10,10 @@
         margin-right: 4px;
         font-size: 12px;
         .title-headline {
-            color: #b4bbca;
+            color: var(--yakit-helper-text-color);
         }
         .title-content {
-            color: var(--base-font-color);
+            color: var(--yakit-header-color);
         }
     }
     .cpu-spark {

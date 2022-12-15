@@ -11,6 +11,7 @@ const getLocalCache = (callback) => {
     kvCache.clear()
 
     try {
+        if (!fs.existsSync(localCachePath)) return
         fs.readFile(localCachePath, (err, data) => {
             if (!!err) {
                 callback(err)
@@ -34,6 +35,7 @@ const getExtraLocalCache = (callback) => {
     extraKVCache.clear()
 
     try {
+        if (!fs.existsSync(extraLocalCachePath)) return
         fs.readFile(extraLocalCachePath, (err, data) => {
             if (!!err) {
                 callback(err)

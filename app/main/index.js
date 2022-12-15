@@ -58,7 +58,7 @@ const createWindow = () => {
 
     win.setMenu(null)
     win.setMenuBarVisibility(false)
-    win.setWindowButtonVisibility(false)
+    if (process.platform === "darwin") win.setWindowButtonVisibility(false)
 
     win.on("close", (e) => {
         e.preventDefault()

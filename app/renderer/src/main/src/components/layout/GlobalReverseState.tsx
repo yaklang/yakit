@@ -1,12 +1,13 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
+import {useMemoizedFn} from "ahooks"
+import {Tooltip} from "antd"
 import {ReverseLinkSvgIcon, ReverseUnlinkSvgIcon} from "./icons"
 import {getRemoteValue} from "@/utils/kv"
-import {LocalGV} from "@/yakitGV"
+import {RemoteGV} from "@/yakitGV"
 import {failed, info} from "@/utils/notification"
 
 import classnames from "classnames"
 import styles from "./globalReverseState.module.scss"
-import {useMemoizedFn} from "ahooks"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -37,8 +38,8 @@ export const GlobalReverseState: React.FC<GlobalReverseStateProp> = React.memo((
     /** 自启全局反连配置(默认指定为本地) */
     useEffect(() => {
         if (isEngineLink) {
-            getRemoteValue(LocalGV.GlobalBridgeAddr).then((addr) => {
-                getRemoteValue(LocalGV.GlobalBridgeSecret).then((secret) => {
+            getRemoteValue(RemoteGV.GlobalBridgeAddr).then((addr) => {
+                getRemoteValue(RemoteGV.GlobalBridgeSecret).then((secret) => {
                     ipcRenderer
                         .invoke("ConfigGlobalReverse", {
                             ConnectParams: {Addr: addr, Secret: secret},
@@ -47,7 +48,7 @@ export const GlobalReverseState: React.FC<GlobalReverseStateProp> = React.memo((
                         .then((a: any) => console.info("自启-全局反连配置成功"))
                         .catch((e) => console.info(e))
 
-                    getRemoteValue(LocalGV.GlobalDNSLogBridgeInherit).then((data) => {
+                    getRemoteValue(RemoteGV.GlobalDNSLogBridgeInherit).then((data) => {
                         switch (`${data}`) {
                             case "true":
                                 ipcRenderer
@@ -59,9 +60,9 @@ export const GlobalReverseState: React.FC<GlobalReverseStateProp> = React.memo((
                                     .catch((e) => failed(`配置全局 DNSLog 失败：${e}`))
                                 break
                             case "false":
-                                getRemoteValue(LocalGV.GlobalDNSLogAddr).then((dnslogAddr: string) => {
+                                getRemoteValue(RemoteGV.GlobalDNSLogAddr).then((dnslogAddr: string) => {
                                     if (!!dnslogAddr) {
-                                        getRemoteValue(LocalGV.GlobalDNSLogSecret).then((secret: string) => {
+                                        getRemoteValue(RemoteGV.GlobalDNSLogSecret).then((secret: string) => {
                                             ipcRenderer
                                                 .invoke("SetYakBridgeLogServer", {
                                                     DNSLogAddr: dnslogAddr,
@@ -128,7 +129,12 @@ export const GlobalReverseState: React.FC<GlobalReverseStateProp> = React.memo((
                 {[styles["unlink-stat"]]: !isLink}
             )}
         >
-            {isLink ? <ReverseLinkSvgIcon /> : <ReverseUnlinkSvgIcon />}
+            <Tooltip
+                placement='bottomRight'
+                title={isLink ? `反连地址: ${details.PublicReverseIP}:${details.PublicReversePort}` : "未配置全局反连"}
+            >
+                {isLink ? <ReverseLinkSvgIcon /> : <ReverseUnlinkSvgIcon />}
+            </Tooltip>
         </div>
     )
 })

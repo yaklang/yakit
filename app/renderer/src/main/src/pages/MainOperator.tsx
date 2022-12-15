@@ -1,22 +1,14 @@
-import React, {forwardRef, useImperativeHandle, ReactNode, useEffect, useRef, useState} from "react"
+import React, {forwardRef, ReactNode, useEffect, useRef, useState} from "react"
 import {
     Button,
-    Checkbox,
-    Col,
-    Divider,
-    Dropdown,
-    Image,
     Input,
     Layout,
     Menu,
     Modal,
     Popover,
-    Row,
     Space,
     Spin,
     Tabs,
-    Tag,
-    Tooltip,
     Typography,
     Upload,
     Avatar
@@ -33,18 +25,12 @@ import {
     CloseOutlined,
     EditOutlined,
     EllipsisOutlined,
-    ExclamationCircleOutlined,
-    MenuFoldOutlined,
-    MenuUnfoldOutlined,
-    PoweroffOutlined,
-    ReloadOutlined,
-    SettingOutlined,
     CameraOutlined
 } from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
-import {YakLogoBanner} from "../utils/logo"
-import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
+// import {YakLogoBanner} from "../utils/logo"
+// import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
 import {
     CompletionTotal,
     MethodSuggestion,
@@ -54,14 +40,13 @@ import {
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "./invoker/schema"
-import {PerformanceDisplay} from "../components/PerformanceDisplay"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useGetState, useMemoizedFn} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import {AutoSpin} from "../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
-import {RiskStatsTag} from "../utils/RiskStatsTag"
+// import {RiskStatsTag} from "../utils/RiskStatsTag"
 import {ItemSelects} from "../components/baseTemplate/FormItemUtil"
 import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
 import {coordinate, UserPlatformType} from "./globalVariable"
@@ -69,27 +54,28 @@ import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
 import {MainTabs} from "./MainTabs"
 import Login from "./Login"
 import SetPassword from "./SetPassword"
-import yakitImg from "../assets/yakit.jpg"
+// import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
-import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
-import {showConfigMenuItems} from "../utils/ConfigMenuItems"
-import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
+// import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
+// import {showConfigMenuItems} from "../utils/ConfigMenuItems"
+// import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
 import "./main.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
 import {setRemoteValue} from "@/utils/kv"
-import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
-import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
-import {onImportShare} from "./fuzzer/components/ShareImport"
-import {ShareImportIcon} from "@/assets/icons"
+// import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
+// import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
+// import {onImportShare} from "./fuzzer/components/ShareImport"
+// import {ShareImportIcon} from "@/assets/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
+// import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData";
+import {LocalGV} from "@/yakitGV"
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
@@ -100,7 +86,6 @@ const {Header, Content, Sider} = Layout
 const {Text} = Typography
 
 const FuzzerCache = "fuzzer-list-cache"
-const WindowsCloseFlag = "windows-close-flag"
 
 const singletonRoute: Route[] = [
     Route.HTTPHacker,
@@ -136,7 +121,7 @@ const singletonRoute: Route[] = [
     // License管理
     Route.LicenseAdminPage,
     // 信任用户管理
-    Route.TrustListPage,
+    Route.TrustListPage
 ]
 export const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -223,7 +208,7 @@ export interface SetUserInfoProp {
     setStoreUserInfo: (info: any) => void
 }
 
-const judgeAvatar = (userInfo) => {
+export const judgeAvatar = (userInfo) => {
     const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
         <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
@@ -239,7 +224,7 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-    const {userInfo,setStoreUserInfo} = props
+    const {userInfo, setStoreUserInfo} = props
 
     // OSS远程头像删除
     const deleteAvatar = useMemoizedFn((imgName) => {
@@ -382,7 +367,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
     const [winCloseShow, setWinCloseShow] = useState<boolean>(false)
     useEffect(() => {
         ipcRenderer
-            .invoke("get-value", WindowsCloseFlag)
+            .invoke("fetch-local-cache", LocalGV.WindowsCloseFlag)
             .then((flag: any) => setWinCloseFlag(flag === undefined ? true : flag))
     }, [])
 
@@ -435,9 +420,9 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         }
     }, [])
 
-    useEffect(() => {
-        if (engineStatus === "error") props.onErrorConfirmed && props.onErrorConfirmed()
-    }, [engineStatus])
+    // useEffect(() => {
+    //     if (engineStatus === "error") props.onErrorConfirmed && props.onErrorConfirmed()
+    // }, [engineStatus])
 
     // 整合路由对应名称
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`
@@ -884,34 +869,34 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         })
     }, [])
 
-    useEffect(() => {
-        ipcRenderer.invoke("yakit-connect-status").then((data) => {
-            setStatus(data)
-        })
+    // 判断引擎状态和获取引擎地址的功能(后续可以销毁)
+    // useEffect(() => {
+    //     ipcRenderer.invoke("yakit-connect-status").then((data) => {
+    //         setStatus(data)
+    //     })
 
-        ipcRenderer.on("client-engine-status-ok", (e, reason) => {
-            if (engineStatus !== "ok") setEngineStatus("ok")
-        })
-        ipcRenderer.on("client-engine-status-error", (e, reason) => {
-            if (engineStatus === "ok") setEngineStatus("error")
-        })
+    //     ipcRenderer.on("client-engine-status-ok", (e, reason) => {
+    //         if (engineStatus !== "ok") setEngineStatus("ok")
+    //     })
+    //     ipcRenderer.on("client-engine-status-error", (e, reason) => {
+    //         if (engineStatus === "ok") setEngineStatus("error")
+    //     })
 
-        const updateEngineStatus = () => {
-            ipcRenderer
-                .invoke("engine-status")
-                .catch((e: any) => {
-                    setEngineStatus("error")
-                })
-                .finally(() => {
-                })
-        }
-        let id = setInterval(updateEngineStatus, 3000)
-        return () => {
-            ipcRenderer.removeAllListeners("client-engine-status-error")
-            ipcRenderer.removeAllListeners("client-engine-status-ok")
-            clearInterval(id)
-        }
-    }, [])
+    //     const updateEngineStatus = () => {
+    //         ipcRenderer
+    //             .invoke("engine-status")
+    //             .catch((e: any) => {
+    //                 setEngineStatus("error")
+    //             })
+    //             .finally(() => {})
+    //     }
+    //     let id = setInterval(updateEngineStatus, 3000)
+    //     return () => {
+    //         ipcRenderer.removeAllListeners("client-engine-status-error")
+    //         ipcRenderer.removeAllListeners("client-engine-status-ok")
+    //         clearInterval(id)
+    //     }
+    // }, [])
 
     useHotkeys("Ctrl+Alt+T", () => {
         addWebsocketHistory({})
@@ -1129,6 +1114,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
     )
 
     useEffect(() => {
+        // 写成HOC是否好点呢，现在一个页面启动就是一个函数
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
             const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
@@ -1191,6 +1177,16 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         if (flag) menuAddPage(key)
         else setCurrentTabKey(key)
     }
+
+    useEffect(() => {
+        ipcRenderer.on("callback-open-user-manage", (e, type: Route) => {
+            goRouterPage(type)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("callback-open-user-manage")
+        }
+    }, [])
+
     const bars = (props: any, TabBarDefault: any) => {
         return (
             <TabBarDefault
@@ -1228,207 +1224,206 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
     return (
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
-                {false&&<Header className='main-laytou-header'>
-                    <Row>
-                        <Col span={8}>
-                            <Space>
-                                <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                    <Image src={YakLogoBanner} preview={false} width={130}/>
-                                </div>
-                                <Divider type={"vertical"}/>
-                                <YakVersion/>
-                                <YakitVersion/>
-                                <Button
-                                    style={{marginLeft: 4, color: "#207ee8"}}
-                                    type={"ghost"}
-                                    ghost={true}
-                                    onClick={(e) => {
-                                        updateMenuItems()
-                                    }}
-                                    icon={<ReloadOutlined/>}
-                                />
-                            </Space>
-                        </Col>
-                        <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                            <PerformanceDisplay/>
-                            <RiskStatsTag professionalMode={true}/>
-                            <Space>
-                                {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
-                                {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
-                                {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                                <ReversePlatformStatus/>
-                                <Dropdown
-                                    overlayClassName='setting-menu'
-                                    forceRender={true}
-                                    overlay={
-                                        <Menu>
-                                            <Menu.Item
-                                                key={"update"}
-                                                onClick={() => {
-                                                    showModal({
-                                                        title: "更新插件源",
-                                                        width: 800,
-                                                        content: (
-                                                            <div style={{width: 800}}>
-                                                                <LoadYakitPluginForm
-                                                                    onFinished={() => {
-                                                                        info("更新进程执行完毕")
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        )
-                                                    })
-                                                }}
-                                            >
-                                                <Button type={"link"}>更新 Yakit 插件源</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"reverse-global"}
-                                                onClick={() => {
-                                                    showModal({
-                                                        title: "配置全局反连",
-                                                        width: 800,
-                                                        content: (
-                                                            <div style={{width: 800}}>
-                                                                <ConfigGlobalReverse/>
-                                                            </div>
-                                                        )
-                                                    })
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置全局反连</Button>
-                                                {/*<ConfigGlobalReverseButton/>*/}
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"config-system-proxy"}
-                                                onClick={() => {
-                                                    showConfigSystemProxyForm()
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置系统代理</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"config-engine-proxy"}
-                                                onClick={() => {
-                                                    showConfigEngineProxyForm()
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置引擎扫描代理</Button>
-                                            </Menu.Item>
-                                            <Menu.Item key={"config-menu"} onClick={() => showConfigMenuItems()}>
-                                                <Button type={"link"}>配置菜单栏</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"config-yaklang-env-variable"}
-                                                onClick={() => {
-                                                    showConfigYaklangEnvironment()
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置引擎环境变量</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"config-private-domain"}
-                                                onClick={() => {
-                                                    const m = showModal({
-                                                        title: "配置私有域",
-                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()}/>
-                                                    })
-                                                    return m
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置私有域</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"invalid-cache"}
-                                                onClick={() => {
-                                                    invalidCacheAndUserData()
-                                                }}
-                                            >
-                                                <Button type={"link"} danger={true}>删除用户数据与缓存</Button>
-                                            </Menu.Item>
-                                        </Menu>
-                                    }
-                                    trigger={["click"]}
-                                >
-                                    <Button icon={<SettingOutlined/>}>配置</Button>
-                                </Dropdown>
-                                {userInfo.isLogin ? (
-                                    <div>
-                                        <DropdownMenu
-                                            menu={{
-                                                data: userMenu
-                                            }}
-                                            dropdown={{
-                                                placement: "bottomCenter",
-                                                trigger: ["click"]
-                                            }}
-                                            onClick={(key) => {
-                                                if (key === "sign-out") {
-                                                    setStoreUserInfo(defaultUserInfo)
-                                                    loginOut(userInfo)
-                                                    setTimeout(() => success("已成功退出账号"), 500)
-                                                }
-                                                if (key === "trust-list") {
-                                                    const key = Route.TrustListPage
-                                                    goRouterPage(key)
-                                                }
-                                                if (key === "set-password") setPasswordShow(true)
-                                                if (key === "role-admin") {
-                                                    const key = Route.RoleAdminPage
-                                                    goRouterPage(key)
-                                                }
-                                                if (key === "account-admin") {
-                                                    const key = Route.AccountAdminPage
-                                                    goRouterPage(key)
-                                                }
-                                                if (key === "license-admin") {
-                                                    const key = Route.LicenseAdminPage
-                                                    goRouterPage(key)
-                                                }
-                                            }}
-                                        >
-                                            {userInfo.platform === "company" ? (
-                                                judgeAvatar(userInfo)
-                                            ) : (
-                                                <img
-                                                    src={
-                                                        (userInfo &&
-                                                            userInfo[UserPlatformType[userInfo.platform || ""]?.img]) ||
-                                                        yakitImg
-                                                    }
-                                                    style={{
-                                                        width: 32,
-                                                        height: 32,
-                                                        borderRadius: "50%",
-                                                        cursor: "pointer"
-                                                    }}
-                                                />
-                                            )}
-                                        </DropdownMenu>
+                {/* <Header className='main-laytou-header'>
+                        <Row>
+                            <Col span={8}>
+                                <Space>
+                                    <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
+                                        <Image src={YakLogoBanner} preview={false} width={130} />
                                     </div>
-                                ) : (
-                                    <Button type='link' onClick={() => setLoginShow(true)}>
-                                        登录
-                                    </Button>
-                                )}
-                                <Button
-                                    type={"link"}
-                                    danger={true}
-                                    icon={<PoweroffOutlined/>}
-                                    onClick={() => {
-                                        if (winCloseFlag) {
-                                            setWinCloseShow(true)
-                                        } else {
-                                            refreshToken(userInfo)
-                                            success("退出当前 Yak 服务器成功")
-                                            setEngineStatus("error")
+                                    <Divider type={"vertical"} />
+                                    <YakVersion />
+                                    <YakitVersion />
+                                    <Button
+                                        style={{marginLeft: 4, color: "#207ee8"}}
+                                        type={"ghost"}
+                                        ghost={true}
+                                        onClick={(e) => {
+                                            updateMenuItems()
+                                        }}
+                                        icon={<ReloadOutlined />}
+                                    />
+                                </Space>
+                            </Col>
+                            <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
+                                <RiskStatsTag professionalMode={true} />
+                                <Space>
+                                    {status?.isTLS ? (
+                                        <Tag color={"green"}>TLS:通信已加密</Tag>
+                                    ) : (
+                                        <Tag color={"red"}>通信未加密</Tag>
+                                    )}
+                                    {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
+                                    <Tag color={engineStatus === "ok" ? "green" : "red"}>
+                                        Yak 引擎状态：{engineStatus}
+                                    </Tag>
+                                    <ReversePlatformStatus />
+                                    <Dropdown
+                                        overlayClassName='setting-menu'
+                                        forceRender={true}
+                                        overlay={
+                                            <Menu>
+                                                <Menu.Item
+                                                    key={"update"}
+                                                    onClick={() => {
+                                                        showModal({
+                                                            title: "更新插件源",
+                                                            width: 800,
+                                                            content: (
+                                                                <div style={{width: 800}}>
+                                                                    <LoadYakitPluginForm
+                                                                        onFinished={() => {
+                                                                            info("更新进程执行完毕")
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            )
+                                                        })
+                                                    }}
+                                                >
+                                                    <Button type={"link"}>更新 Yakit 插件源</Button>
+                                                </Menu.Item>
+                                                <Menu.Item
+                                                    key={"reverse-global"}
+                                                    onClick={() => {
+                                                        showModal({
+                                                            title: "配置全局反连",
+                                                            width: 800,
+                                                            content: (
+                                                                <div style={{width: 800}}>
+                                                                    <ConfigGlobalReverse />
+                                                                </div>
+                                                            )
+                                                        })
+                                                    }}
+                                                >
+                                                    <Button type={"link"}>配置全局反连</Button>
+                                                </Menu.Item>
+                                                <Menu.Item
+                                                    key={"config-system-proxy"}
+                                                    onClick={() => {
+                                                        showConfigSystemProxyForm()
+                                                    }}
+                                                >
+                                                    <Button type={"link"}>配置系统代理</Button>
+                                                </Menu.Item>
+                                                <Menu.Item
+                                                    key={"config-engine-proxy"}
+                                                    onClick={() => {
+                                                        showConfigEngineProxyForm()
+                                                    }}
+                                                >
+                                                    <Button type={"link"}>配置引擎扫描代理</Button>
+                                                </Menu.Item>
+                                                <Menu.Item key={"config-menu"} onClick={() => showConfigMenuItems()}>
+                                                    <Button type={"link"}>配置菜单栏</Button>
+                                                </Menu.Item>
+                                                <Menu.Item
+                                                    key={"config-yaklang-env-variable"}
+                                                    onClick={() => {
+                                                        showConfigYaklangEnvironment()
+                                                    }}
+                                                >
+                                                    <Button type={"link"}>配置引擎环境变量</Button>
+                                                </Menu.Item>
+                                                <Menu.Item
+                                                    key={"config-private-domain"}
+                                                    onClick={() => {
+                                                        const m = showModal({
+                                                            title: "配置私有域",
+                                                            content: <ConfigPrivateDomain onClose={() => m.destroy()} />
+                                                        })
+                                                        return m
+                                                    }}
+                                                >
+                                                    <Button type={"link"}>配置私有域</Button>
+                                                </Menu.Item>
+                                            </Menu>
                                         }
-                                    }}
-                                />
-                            </Space>
-                        </Col>
-                    </Row>
-                </Header>}
+                                        trigger={["click"]}
+                                    >
+                                        <Button icon={<SettingOutlined />}>配置</Button>
+                                    </Dropdown>
+                                    {userInfo.isLogin ? (
+                                        <div>
+                                            <DropdownMenu
+                                                menu={{
+                                                    data: userMenu
+                                                }}
+                                                dropdown={{
+                                                    placement: "bottomCenter",
+                                                    trigger: ["click"]
+                                                }}
+                                                onClick={(key) => {
+                                                    if (key === "sign-out") {
+                                                        setStoreUserInfo(defaultUserInfo)
+                                                        loginOut(userInfo)
+                                                        setTimeout(() => success("已成功退出账号"), 500)
+                                                    }
+                                                    if (key === "trust-list") {
+                                                        const key = Route.TrustListPage
+                                                        goRouterPage(key)
+                                                    }
+                                                    if (key === "set-password") setPasswordShow(true)
+                                                    if (key === "role-admin") {
+                                                        const key = Route.RoleAdminPage
+                                                        goRouterPage(key)
+                                                    }
+                                                    if (key === "account-admin") {
+                                                        const key = Route.AccountAdminPage
+                                                        goRouterPage(key)
+                                                    }
+                                                    if (key === "license-admin") {
+                                                        const key = Route.LicenseAdminPage
+                                                        goRouterPage(key)
+                                                    }
+                                                }}
+                                            >
+                                                {userInfo.platform === "company" ? (
+                                                    judgeAvatar(userInfo)
+                                                ) : (
+                                                    <img
+                                                        src={
+                                                            (userInfo &&
+                                                                userInfo[
+                                                                    UserPlatformType[userInfo.platform || ""]?.img
+                                                                ]) ||
+                                                            yakitImg
+                                                        }
+                                                        style={{
+                                                            width: 32,
+                                                            height: 32,
+                                                            borderRadius: "50%",
+                                                            cursor: "pointer"
+                                                        }}
+                                                    />
+                                                )}
+                                            </DropdownMenu>
+                                        </div>
+                                    ) : (
+                                        <Button type='link' onClick={() => setLoginShow(true)}>
+                                            登录
+                                        </Button>
+                                    )}
+                                    <Button
+                                        type={"link"}
+                                        danger={true}
+                                        icon={<PoweroffOutlined />}
+                                        onClick={() => {
+                                            if (winCloseFlag) {
+                                                setWinCloseShow(true)
+                                            } else {
+                                                refreshToken(userInfo)
+                                                success("退出当前 Yak 服务器成功")
+                                                setEngineStatus("error")
+                                            }
+                                        }}
+                                    />
+                                </Space>
+                            </Col>
+                        </Row>
+                    </Header> */}
+
                 {IsNewUI && (
                     <HeardMenu
                         routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
@@ -1551,8 +1546,8 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                         >
                             <div
                                 style={{
-                                    padding: 16,
-                                    paddingTop: 8,
+                                    padding: 0,
+                                    // paddingTop: 8,
                                     overflow: "hidden",
                                     flex: "1",
                                     display: "flex",
@@ -1571,7 +1566,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                         renderTabBar={(props, TabBarDefault) => {
                                             return bars(props, TabBarDefault)
                                         }}
-                                        // hideAdd={true}
+                                        hideAdd={true}
                                         onTabClick={(key, e) => {
                                             const divExisted = document.getElementById("yakit-cursor-menu")
                                             if (divExisted) {
@@ -1582,15 +1577,15 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                 }
                                             }
                                         }}
-                                        addIcon={
-                                            <Tooltip title='导入协作资源'>
-                                                <ShareImportIcon
-                                                    // @ts-ignore
-                                                    className='share-import-icon'
-                                                    onClick={() => onImportShare()}
-                                                />
-                                            </Tooltip>
-                                        }
+                                        // addIcon={
+                                        //     <Tooltip title='导入协作资源'>
+                                        //         <ShareImportIcon
+                                        //             // @ts-ignore
+                                        //             className='share-import-icon'
+                                        //             onClick={() => onImportShare()}
+                                        //         />
+                                        //     </Tooltip>
+                                        // }
                                     >
                                         {pageCache.map((i) => {
                                             return (
@@ -1673,7 +1668,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                 </Content>
             </AutoSpin>
 
-            <Modal
+            {/* <Modal
                 visible={winCloseShow}
                 onCancel={() => setWinCloseShow(false)}
                 footer={[
@@ -1705,12 +1700,12 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                         value={!winCloseFlag}
                         onChange={() => {
                             setWinCloseFlag(!winCloseFlag)
-                            ipcRenderer.invoke("set-value", WindowsCloseFlag, false)
+                            ipcRenderer.invoke("set-local-cache", LocalGV.WindowsCloseFlag, false)
                         }}
                     ></Checkbox>
                     <span style={{marginLeft: 8}}>不再出现该提示信息</span>
                 </div>
-            </Modal>
+            </Modal> */}
             <Modal
                 visible={bugTestShow}
                 onCancel={() => setBugTestShow(false)}

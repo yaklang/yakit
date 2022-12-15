@@ -3,9 +3,9 @@ import {Input, Popover, Space, Tabs} from "antd"
 import {multipleNodeInfo} from "./MainOperator"
 import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
-
-import "./MainTabs.css"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
+
+import "./MainTabs.scss"
 
 const {TabPane} = Tabs
 
@@ -113,7 +113,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                 }}
             >
                 <Tabs
-                    className='secondary-menu-tabs yakit-layout-tabs'
+                    className='secondary-menu-tabs yakit-main-tabs'
                     size='small'
                     type='editable-card'
                     hideAdd={!isShowAdd}

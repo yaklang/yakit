@@ -9,7 +9,7 @@
             padding: 10px 0;
             .divider-style {
                 height: 100%;
-                border-left: 1px solid #eaecf3;
+                border-left: 1px solid var(--yakit-border-color);
             }
         }
         .state-setting-wrapper {
@@ -18,7 +18,7 @@
         .divider-wrapper {
             width: 1px;
             height: 100%;
-            border-left: 1px solid #eaecf3;
+            border-left: 1px solid var(--yakit-border-color);
         }
         .user-wrapper {
             box-sizing: border-box;
@@ -53,15 +53,15 @@
     padding: 8px 12px;
 
     .icon-style {
-        color: #85899e;
+        color: var(--yakit-body-text-color);
     }
     .icon-hover-style {
-        color: #f28b44;
+        color: var(--yakit-primary-color);
     }
 }
 .ui-op-btn-wrapper:hover {
     .icon-style {
-        color: #f28b44;
+        color: var(--yakit-primary-color);
     }
 }
 
@@ -71,7 +71,7 @@
 .ui-op-setting-dropdown {
     :global {
         .ant-popover-inner {
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--yakit-border-color);
             box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
             border-radius: 4px;
             .ant-popover-inner-content {
@@ -83,7 +83,7 @@
 .ui-op-plus-dropdown {
     :global {
         .ant-popover-inner {
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--yakit-border-color);
             box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
             border-radius: 4px;
             .ant-popover-inner-content {
@@ -105,14 +105,14 @@
                 width: 368px;
                 height: 36px;
                 padding: 4px;
-                background: #f0f2f5;
-                border: 1px solid #eaecf3;
+                background: var(--yakit-background-color);
+                border: 1px solid var(--yakit-border-color);
                 border-radius: 6px;
                 .notice-tabs-body {
                     display: flex;
                     font-weight: 500;
                     font-size: 12px;
-                    color: #31343f;
+                    color: var(--yakit-header-color) f;
 
                     .tabs-opt {
                         width: 180px;
@@ -125,20 +125,20 @@
                             .ant-badge {
                                 font-weight: 500;
                                 font-size: 12px;
-                                color: #31343f;
+                                color: var(--yakit-header-color) f;
                             }
                         }
                     }
                     .tabs-opt-selected {
-                        background: #ffffff;
+                        background: var(--yakit-neutral10-color);
                         box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
                         border-radius: 4px;
-                        color: #f28b44;
+                        color: var(--yakit-primary-color);
                         :global {
                             .ant-badge {
                                 font-weight: 500;
                                 font-size: 12px;
-                                color: #f28b44;
+                                color: var(--yakit-primary-color);
                             }
                         }
                     }
@@ -158,13 +158,13 @@
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
-                border-top: 1px solid #eaecf3;
+                border-top: 1px solid var(--yakit-border-color);
                 .notice-footer-btn {
                     width: 72px;
                     height: 16px;
                     font-size: 12px;
                     line-height: 16px;
-                    color: #85899e;
+                    color: var(--yakit-body-text-color);
                     cursor: pointer;
                 }
             }
@@ -176,7 +176,7 @@
                 height: 16px;
                 font-size: 12px;
                 line-height: 16px;
-                color: #85899e;
+                color: var(--yakit-body-text-color);
             }
             .risk-info {
                 margin: 16px 0;
@@ -192,7 +192,7 @@
                     line-height: 20px;
                     font-weight: 500;
                     font-size: 12px;
-                    color: #31343f;
+                    color: var(--yakit-header-color) f;
                     cursor: pointer;
 
                     .opt-icon-style {
@@ -208,23 +208,23 @@
 
                     .opt-critical-icon {
                         background: rgba(246, 84, 74, 0.08);
-                        color: #bd2a21;
+                        color: var(--yakit-serious-color);
                     }
                     .opt-high-icon {
                         background: rgba(246, 84, 74, 0.08);
-                        color: #f7544a;
+                        color: var(--yakit-danger-color);
                     }
                     .opt-middle-icon {
                         background: rgba(255, 213, 131, 0.08);
-                        color: #f28b44;
+                        color: var(--yakit-primary-color);
                     }
                     .opt-low-icon {
                         background: rgba(255, 213, 131, 0.08);
-                        color: #ffb660;
+                        color: var(--yakit-warning-color);
                     }
                     .opt-info-icon {
                         background: rgba(86, 201, 145, 0.08);
-                        color: #56c991;
+                        color: var(--yakit-success-color);
                     }
                 }
             }
@@ -234,17 +234,17 @@
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
-                border-top: 1px solid #eaecf3;
+                border-top: 1px solid var(--yakit-border-color);
                 .risk-footer-btn {
                     width: 48px;
                     height: 16px;
                     font-size: 12px;
                     line-height: 16px;
-                    color: #85899e;
+                    color: var(--yakit-body-text-color);
                     cursor: pointer;
                 }
                 .risk-footer-btn:hover {
-                    color: #f28b44;
+                    color: var(--yakit-primary-color);
                 }
             }
         }
@@ -254,8 +254,8 @@
 .version-update-wrapper {
     box-sizing: border-box;
     width: 100%;
-    background: #ffffff;
-    border: 1px solid #eaecf3;
+    background: var(--yakit-neutral10-color);
+    border: 1px solid var(--yakit-border-color);
     border-radius: 4px;
 
     .update-header-wrapper {
@@ -265,9 +265,10 @@
         display: flex;
         justify-content: space-between;
         padding: 8px;
-        background: #f0f1f3;
+        background: var(--yakit-background-color);
+        border-radius: 4px;
         // 暂时注释(后续带更新内容时使用)
-        // border: 1px solid #eaecf3;
+        // border: 1px solid var(--yakit-border-color);
         // border-radius: 4px 4px 0px 0px;
         .header-info {
             display: flex;
@@ -276,7 +277,7 @@
                 width: 28px;
                 height: 28px;
                 border-radius: 50%;
-                background: #f28b44;
+                background: var(--yakit-primary-color);
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -287,13 +288,13 @@
                 // 暂时修改(后续带更新内容时使用)，原配置为12px
                 font-size: 14px;
                 line-height: 16px;
-                color: #85899e;
+                color: var(--yakit-body-text-color);
             }
             .update-time {
                 height: 12px;
                 font-size: 11px;
                 line-height: 12px;
-                color: #b4bbca;
+                color: var(--yakit-helper-text-color);
             }
         }
         .header-btn {
@@ -303,7 +304,7 @@
             justify-content: right;
             align-items: center;
             font-size: 12px;
-            color: #ccd2de;
+            color: var(--yakit-disable-text-color);
         }
     }
 
@@ -316,33 +317,33 @@
             max-height: 48px;
             font-size: 12px;
             line-height: 16px;
-            color: #31343f;
+            color: var(--yakit-header-color) f;
         }
 
         .current-version {
             height: 16px;
             font-size: 12px;
             line-height: 16px;
-            color: #b4bbca;
+            color: var(--yakit-helper-text-color);
         }
     }
 }
 .version-has-update {
-    border: 1px solid #fbc6a1;
+    border: 1px solid var(--yakit-primary-border-color);
     .update-header-wrapper {
-        background: #fbe7d9;
+        background: var(--yakit-primary-color-focus);
         // 暂时注释(后续带更新内容时使用)
-        // border: 1px solid #fbc6a1;
+        // border: 1px solid var(--yakit-primary-border-color);
         .header-info {
             .update-title {
-                color: #f28b44;
+                color: var(--yakit-primary-color);
             }
             .update-time {
-                color: #f28b44;
+                color: var(--yakit-primary-color);
             }
         }
         .header-btn {
-            color: #f28b44;
+            color: var(--yakit-primary-color);
             .update-btn {
                 height: 28px;
                 display: flex;
@@ -366,7 +367,7 @@
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            background: #fbe7d9;
+            background: var(--yakit-primary-color-focus);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -376,13 +377,13 @@
                 height: 16px;
                 font-size: 12px;
                 line-height: 16px;
-                color: #85899e;
+                color: var(--yakit-body-text-color);
                 .accent-content {
                     font-weight: 600;
                     cursor: pointer;
                 }
                 .accent-content:hover {
-                    color: #f28b44;
+                    color: var(--yakit-primary-color);
                 }
             }
             .content-commit {
@@ -390,14 +391,14 @@
                 max-height: 32px;
                 font-size: 12px;
                 line-height: 16px;
-                color: #31343f;
+                color: var(--yakit-header-color) f;
             }
             .content-time {
                 margin-top: 2px;
                 height: 12px;
                 font-size: 11px;
                 line-height: 12px;
-                color: #b4bbca;
+                color: var(--yakit-helper-text-color);
             }
         }
     }

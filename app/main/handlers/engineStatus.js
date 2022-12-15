@@ -10,7 +10,7 @@ const {testClient, testRemoteClient} = require("../ipc")
 const {getLocalYaklangEngine} = require("../filePath")
 
 /**  获取缓存数据里本地引擎是否以管理员权限启动 */
-const YaklangEngineSudo = "yaklang-engine-sudo"
+const YaklangEngineSudo = "yaklang-engine-mode"
 /**  获取缓存数据里本地引擎启动的端口号 */
 const YaklangEnginePort = "yaklang-engine-port"
 
@@ -21,14 +21,17 @@ let engineCount = 0
 let probeSurvivalTime = null
 /** 探测指定端口的本地yaklang引擎是否启动 */
 const probeEngineProcess = (win, port, sudo) => {
+    const mode = sudo ? "admin" : "local"
+    const setting = JSON.stringify({port: port})
+
     try {
         testClient(port, async (err, result) => {
             if (!err) {
-                if (kvCache.get(YaklangEnginePort) !== port) {
-                    setLocalCache(YaklangEnginePort, port)
+                if (kvCache.get(YaklangEnginePort) !== setting) {
+                    setLocalCache(YaklangEnginePort, setting)
                 }
-                if (kvCache.get(YaklangEngineSudo) !== !!sudo) {
-                    setLocalCache(YaklangEngineSudo, !!sudo)
+                if (kvCache.get(YaklangEngineSudo) !== mode) {
+                    setLocalCache(YaklangEngineSudo, mode)
                 }
                 if (GLOBAL_YAK_SETTING.defaultYakGRPCAddr !== `localhost:${port}`) {
                     GLOBAL_YAK_SETTING.sudo = !!sudo
@@ -49,6 +52,13 @@ const probeEngineProcess = (win, port, sudo) => {
 let probeSurvivalRemoteTime = null
 /** 探测 远程引擎 是否启动 */
 const probeRemoteEngineProcess = (win, params) => {
+    const setting = JSON.stringify({
+        host: params.host,
+        port: params.port,
+        caPem: params.caPem,
+        password: params.password
+    })
+
     try {
         testRemoteClient(params, async (err, result) => {
             if (!!err) {
@@ -57,6 +67,13 @@ const probeRemoteEngineProcess = (win, params) => {
                 GLOBAL_YAK_SETTING.caPem = ""
                 GLOBAL_YAK_SETTING.password = ""
                 win.webContents.send("local-yaklang-engine-end", err)
+            } else {
+                if (kvCache.get(YaklangEnginePort) !== setting) {
+                    setLocalCache(YaklangEnginePort, setting)
+                }
+                if (kvCache.get(YaklangEngineSudo) !== "remote") {
+                    setLocalCache(YaklangEngineSudo, "remote")
+                }
             }
         })
     } catch (e) {}

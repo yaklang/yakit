@@ -12,8 +12,8 @@ import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-import {LocalGV} from "./yakitGV"
+import {ENTERPRISE_STATUS, fetchEnv, getJuageEnvFile} from "@/utils/envfile"
+import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 
 import styles from "./app.module.scss"
@@ -50,7 +50,7 @@ const InterceptKeyword = [
 ]
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
-const LicensePage = lazy(() => import("./pages/LicensePage"))
+const EnterpriseJudgeLogin = lazy(() => import("./pages/EnterpriseJudgeLogin"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -90,15 +90,13 @@ function NewApp() {
             .finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
 
-    // const [tlsGRPC, setTlsGRPC] = useState(false)
-    // const [addr, setAddr] = useState("")
-    // const [mode, setMode] = useState<"remote" | "local">()
+    // 企业版-连接引擎后验证license=>展示企业登录
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(IsEnterprise)
 
-    // 获取子组件方法Ref
-    const childRef = useRef<any>()
-
-    // License
-    const [licenseVerified, setLicenseVerified] = useState<boolean>(true)
+    /** 将渲染进程的环境变量传入主进程 */
+    useEffect(() => {
+        ipcRenderer.invoke("callback-process-env", fetchEnv())
+    }, [])
 
     /** 全局拦截快捷键(补全内容) */
     useHotkeys("alt+a", (e) => {
@@ -123,13 +121,13 @@ function NewApp() {
     }
 
     const testYak = () => {
-        getRemoteValue("httpSetting").then((setting) => {
+        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
             if (!setting) {
                 ipcRenderer
                     .invoke("GetOnlineProfile", {})
                     .then((data: OnlineProfileProps) => {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: data.BaseUrl}) // 同步
-                        setRemoteValue("httpSetting", JSON.stringify({BaseUrl: data.BaseUrl}))
+                        setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({BaseUrl: data.BaseUrl}))
                         refreshLogin()
                     })
                     .catch((e) => {
@@ -141,9 +139,9 @@ function NewApp() {
                     .invoke("SetOnlineProfile", {
                         ...values
                     } as OnlineProfileProps)
-                    .then((data) => {
+                    .then(() => {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步
-                        setRemoteValue("httpSetting", JSON.stringify(values))
+                        setRemoteValue(RemoteGV.HttpSetting, JSON.stringify(values))
                         refreshLogin()
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
@@ -154,15 +152,10 @@ function NewApp() {
 
     const refreshLogin = useMemoizedFn(() => {
         // 获取引擎中的token(区分企业版与社区版)
-        const TokenSource = IsEnterprise ? "token-online-enterprise" : "token-online"
+        const TokenSource = IsEnterprise ? RemoteGV.TokenOnlineEnterprise : RemoteGV.TokenOnline
         getRemoteValue(TokenSource)
             .then((resToken) => {
                 if (!resToken) {
-                    // 在第一次进入页面时，如若是企业登录则打开登录
-                    if (IsEnterprise) {
-                        // openLoginShow就是Main暴露给App的方法
-                        childRef.current.openLoginShow()
-                    }
                     return
                 }
                 // 通过token获取用户信息
@@ -174,9 +167,7 @@ function NewApp() {
                     }
                 })
                     .then((res) => {
-                        IsEnterprise
-                            ? setRemoteValue("token-online-enterprise", resToken)
-                            : setRemoteValue("token-online", resToken)
+                        setRemoteValue(TokenSource, resToken)
                         const user = {
                             isLogin: true,
                             platform: res.from_platform,
@@ -197,15 +188,9 @@ function NewApp() {
                         setStoreUserInfo(user)
                         refreshToken(user)
                     })
-                    .catch((e) => {
-                        IsEnterprise
-                            ? setRemoteValue("token-online-enterprise", "")
-                            : setRemoteValue("token-online", "")
-                    })
+                    .catch((e) => setRemoteValue(TokenSource, ""))
             })
-            .catch((e) => {
-                IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
-            })
+            .catch(() => setRemoteValue(TokenSource, ""))
     })
 
     /**
@@ -290,34 +275,13 @@ function NewApp() {
 
     return (
         <UILayout linkSuccess={linkSuccess}>
-            {/* {connected ? ( */}
             <Suspense fallback={<div>Loading Main</div>}>
-                {licenseVerified ? (
-                    <Main onErrorConfirmed={() => {}} ref={childRef} />
+                {isJudgeLicense ? (
+                    <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
                 ) : (
-                    <LicensePage onLicenseVerified={() => setLicenseVerified(true)} />
+                    <Main onErrorConfirmed={() => {}} />
                 )}
             </Suspense>
-            {/* ) : (
-                <Suspense
-                    fallback={
-                        <div style={{width: "100%", marginTop: 200, textAlign: "center"}}>
-                            <AutoSpin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."} />
-                        </div>
-                    }
-                >
-                    <YakEnvironment
-                        setMode={setMode}
-                        onConnected={() => {
-                            testYak()
-                        }}
-                        onTlsGRPC={(e) => {
-                            setTlsGRPC(e)
-                        }}
-                        onAddrChanged={setAddr}
-                    />
-                </Suspense>
-            )} */}
         </UILayout>
     )
 }

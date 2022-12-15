@@ -14,13 +14,16 @@
             }
 
             .close-bg-color {
-                background-color: #f7544a;
+                background-color: var(--yakit-danger-color);
+                border: 1px solid #ea4439;
             }
             .min-bg-color {
-                background-color: #ffb660;
+                background-color: var(--yakit-warning-color);
+                border: 1px solid #f8a94d;
             }
             .max-bg-color {
-                background-color: #56c991;
+                background-color: var(--yakit-success-color);
+                border: 1px solid #4bbb84;
             }
         }
 
@@ -46,19 +49,19 @@
             padding: 10px 0;
             .divider-style {
                 height: 100%;
-                border-left: 1px solid #eaecf3;
+                border-left: 1px solid var(--yakit-border-color);
             }
         }
 
         .op-btn {
             padding: 8px 12px;
             .icon-style {
-                color: #85899e;
+                color: var(--yakit-body-text-color);
             }
         }
         .op-btn:hover {
             .icon-style {
-                color: #f28b44;
+                color: var(--yakit-primary-color);
             }
         }
     }

@@ -2,10 +2,18 @@
 export enum LocalGV {
     /** @name 用户协议(需用户同意才能使用软件) */
     UserProtocolAgreed = "user-protocol-agreed",
-    /** @name 获取缓存数据里本地引擎是否以管理员权限启动 */
-    YaklangEngineSudo = "yaklang-engine-sudo",
-    /** @name 获取缓存数据里本地引擎启动的端口号 */
+    /** @name 获取缓存数据里引擎的启动模式("local"|"admin"|"remote") */
+    YaklangEngineMode = "yaklang-engine-mode",
+    /** @name 获取缓存数据里引擎启动配置 */
     YaklangEnginePort = "yaklang-engine-port",
+    /** @name 关闭窗口的二次确认 */
+    WindowsCloseFlag = "windows-close-flag"
+}
+
+/** 引擎数据库缓存数据-键值变量 */
+export enum RemoteGV {
+    /** @name 私有域地址 */
+    HttpSetting = "httpSetting",
     /** @name 全局反连地址 */
     GlobalBridgeAddr = "yak-bridge-addr",
     /** @name 全局反连密钥 */
@@ -15,13 +23,11 @@ export enum LocalGV {
     /** @name 全局DNS-Log地址 */
     GlobalDNSLogAddr = "yak-dnslog-addr",
     /** @name 全局DNS-Log密钥 */
-    GlobalDNSLogSecret = "yak-dnslog-secret"
-}
-
-/** 引擎数据库缓存数据-键值变量 */
-export enum RemoteGV {
-    /** @name 获取私有域地址 */
-    HttpSetting = "httpSetting"
+    GlobalDNSLogSecret = "yak-dnslog-secret",
+    /** @name 登录账户Token(enterprise) */
+    TokenOnlineEnterprise = "token-online-enterprise",
+    /** @name 登录账户Token */
+    TokenOnline = "token-online"
 }
 
 /** 项目逻辑全局变量 */

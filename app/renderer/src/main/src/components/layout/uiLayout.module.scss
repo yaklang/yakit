@@ -11,7 +11,7 @@
     .ui-layout-header {
         width: 100%;
         height: 37px;
-        background-color: white; //var(--base-background-color);
+        background-color: var(--yakit-neutral10-color);
         -webkit-user-select: none;
         user-select: none;
 
@@ -21,13 +21,13 @@
             padding: 10px 0;
             .divider-style {
                 height: 100%;
-                border-left: 1px solid #eaecf3;
+                border-left: 1px solid var(--yakit-border-color);
             }
         }
         .divider-wrapper {
             width: 1px;
             height: 100%;
-            border-left: 1px solid #eaecf3;
+            border-left: 1px solid var(--yakit-border-color);
         }
 
         .header-body {
@@ -35,7 +35,7 @@
             height: 100%;
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px solid #eaecf3;
+            border-bottom: 1px solid var(--yakit-border-color);
             position: relative;
 
             .header-border-yakit-mask {
@@ -43,7 +43,21 @@
                 bottom: -1px;
                 width: 45px;
                 height: 1px;
-                background: #f8f8f8;
+                background: var(--yakit-card-background-color);
+            }
+
+            .yakit-header-title {
+                width: 60px;
+                height: 36px;
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translate(-30px, 0);
+                line-height: 36px;
+                font-weight: 600;
+                color: var(--yakit-header-color);
+                text-align: center;
+                -webkit-app-region: drag;
             }
 
             .header-left {
@@ -53,14 +67,7 @@
             .header-title {
                 flex: 1;
                 height: 100%;
-                line-height: 36px;
-                font-weight: 600;
-                color: var(--base-font-color);
-                text-align: center;
                 -webkit-app-region: drag;
-                .header-title-no-drag {
-                    // -webkit-app-region: no-drag;
-                }
             }
             .header-right {
                 height: 100%;
@@ -69,10 +76,10 @@
             .yakit-mode-icon {
                 box-sizing: border-box;
                 padding: 8px 12px;
-                border-left: 1px solid #eaecf3;
+                border-left: 1px solid var(--yakit-border-color);
             }
             .yakit-mode-selected {
-                background: #f8f8f8;
+                background: var(--yakit-card-background-color);
             }
         }
     }
@@ -97,7 +104,7 @@
         flex: 1;
         overflow: hidden;
         position: relative;
-        background: #fbe7d9;
+        background: var(--yakit-primary-color-focus);
     }
 }
 
@@ -118,8 +125,8 @@
 .modal-yaklang-engine-hint {
     box-sizing: border-box;
     width: 100%;
-    background: #f8f8f8;
-    border: 1px solid #eaecf3;
+    background: var(--yakit-card-background-color);
+    border: 1px solid var(--yakit-border-color);
     box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
     border-radius: 4px;
 
@@ -149,11 +156,11 @@
             .qs-icon {
                 width: 20px;
                 height: 20px;
-                color: #85899e;
+                color: var(--yakit-body-text-color);
                 cursor: pointer;
             }
             .qs-icon:hover {
-                color: #f28b44;
+                color: var(--yakit-primary-color);
             }
         }
 
@@ -164,25 +171,25 @@
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
-                color: #31343f;
+                color: var(--yakit-header-color);
             }
             .hint-right-content {
                 margin-top: 8px;
                 font-size: 14px;
                 line-height: 20px;
-                color: #85899e;
+                color: var(--yakit-body-text-color);
             }
             .hint-right-macarm {
                 margin-top: 8px;
                 box-sizing: border-box;
                 padding: 12px;
-                background: #ffffff;
-                border: 1px solid #eaecf3;
+                background: var(--yakit-neutral10-color);
+                border: 1px solid var(--yakit-border-color);
                 border-radius: 4px;
                 .mac-arm-hint {
                     font-size: 12px;
                     line-height: 16px;
-                    color: #31343f;
+                    color: var(--yakit-header-color);
                 }
                 .mac-arm-command {
                     margin-top: 8px;
@@ -190,12 +197,12 @@
                     align-items: center;
                     height: 20px;
                     padding: 4px 6px;
-                    background: rgba(242, 139, 68, 0.06);
-                    border: 1px solid #fbc6a1;
+                    background: var(--yakit-primary-background-color);
+                    border: 1px solid var(--yakit-primary-border-color);
                     border-radius: 4px;
 
                     font-size: 11px;
-                    color: #f28b44;
+                    color: var(--yakit-primary-color);
                     .copy-icon {
                         width: 12px;
                         height: 12px;
@@ -212,16 +219,16 @@
                 align-items: center;
                 gap: 8px;
                 font-size: 12px;
-                color: #31343f;
+                color: var(--yakit-header-color);
                 .agreement-checkbox {
                     :global {
                         .ant-checkbox-inner {
-                            border: 1px solid #b4bbca;
+                            border: 1px solid var(--yakit-helper-text-color);
                             border-radius: 4px;
                         }
                         .ant-checkbox-checked .ant-checkbox-inner {
-                            background-color: #f28b44;
-                            border-color: #f28b44;
+                            background-color: var(--yakit-primary-color);
+                            border-color: var(--yakit-primary-color);
                         }
                         .ant-checkbox-checked::after {
                             border: 0px;
@@ -231,7 +238,7 @@
                 .agreement-danger-checkbox {
                     :global {
                         .ant-checkbox-inner {
-                            border: 1px solid #f7544a;
+                            border: 1px solid var(--yakit-danger-color);
                             border-radius: 4px;
                         }
                         .ant-checkbox-checked::after {
@@ -241,7 +248,7 @@
                 }
 
                 .agreement-style {
-                    color: #f28b44;
+                    color: var(--yakit-primary-color);
                     cursor: pointer;
                 }
             }
@@ -272,7 +279,7 @@
                     height: 16px;
                     font-size: 12px;
                     line-height: 16px;
-                    color: #b4bbca;
+                    color: var(--yakit-helper-text-color);
                     .divider-wrapper {
                         margin: 0 8px;
                         width: 1px;
@@ -282,7 +289,7 @@
                         .divider-style {
                             width: 100%;
                             height: 12px;
-                            border: 1px solid #eaecf3;
+                            border: 1px solid var(--yakit-border-color);
                         }
                     }
                 }
@@ -303,8 +310,8 @@
 
 .yakit-agr-and-qs-modal {
     width: 100%;
-    background: #ffffff;
-    border: 1px solid #eaecf3;
+    background: var(--yakit-neutral10-color);
+    border: 1px solid var(--yakit-border-color);
     box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
     border-radius: 4px;
 
@@ -314,13 +321,13 @@
         display: flex;
         align-items: center;
 
-        background: #f8f8f8;
-        border: 1px solid #eaecf3;
+        background: var(--yakit-card-background-color);
+        border-bottom: 1px solid var(--yakit-border-color);
         border-radius: 4px 4px 0px 0px;
 
         font-weight: 600;
         font-size: 14px;
-        color: #31343f;
+        color: var(--yakit-header-color);
     }
     .mac-header {
         gap: 12px;
@@ -336,7 +343,7 @@
                     width: 12px;
                     height: 12px;
                     border-radius: 50%;
-                    background-color: #f7544a;
+                    background-color: var(--yakit-danger-color);
                 }
             }
         }
@@ -351,12 +358,12 @@
             height: 36px;
             padding: 8px;
             .icon-style {
-                color: #b4bbca;
+                color: var(--yakit-helper-text-color);
             }
         }
         .close-wrapper:hover {
             .icon-style {
-                color: #f28b44;
+                color: var(--yakit-primary-color);
             }
         }
     }
@@ -369,23 +376,23 @@
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
-                color: #000000;
+                color: var(--yakit-header-color);
             }
             .body-content {
                 margin-top: 8px;
                 font-size: 14px;
                 line-height: 24px;
                 text-align: justify;
-                color: #85899e;
+                color: var(--yakit-body-text-color);
                 .sign-content {
-                    color: #f6544a;
+                    color: var(--yakit-danger-color);
                 }
                 .underline-content {
-                    color: #f6544a;
+                    color: var(--yakit-danger-color);
                     text-decoration: underline;
                 }
                 .sign-bold-content {
-                    color: #f6544a;
+                    color: var(--yakit-danger-color);
                     font-weight: 500;
                 }
             }
@@ -399,9 +406,9 @@
                 font-size: 14px;
                 line-height: 24px;
                 text-align: justify;
-                color: #85899e;
+                color: var(--yakit-body-text-color);
                 .hint-sign {
-                    color: #f6544a;
+                    color: var(--yakit-danger-color);
                 }
             }
             .body-link {
@@ -412,7 +419,7 @@
                 align-items: flex-start;
                 padding: 12px;
                 gap: 12px;
-                border: 1px solid #eaecf3;
+                border: 1px solid var(--yakit-border-color);
                 border-radius: 4px;
                 .link-opt {
                     display: flex;
@@ -421,19 +428,19 @@
                         font-size: 12px;
                         text-align: justify;
                         text-align-last: justify;
-                        color: #31343f;
+                        color: var(--yakit-header-color);
                     }
 
                     .link-style {
                         margin-left: 8px;
                         flex: 1;
                         padding: 4px 6px;
-                        background: #f8f8f8;
-                        border: 1px solid #eaecf3;
+                        background: var(--yakit-card-background-color);
+                        border: 1px solid var(--yakit-border-color);
                         border-radius: 4px;
                         font-size: 11px;
                         line-height: 12px;
-                        color: #85899e;
+                        color: var(--yakit-body-text-color);
                         word-break: break-all;
                         .copy-icon {
                             margin-left: 8px;
@@ -449,7 +456,7 @@
                 font-size: 14px;
                 line-height: 24px;
                 text-align: justify;
-                color: #f7544a;
+                color: var(--yakit-danger-color);
             }
             .yakit-update-link {
                 margin-top: 8px;
@@ -464,11 +471,11 @@
                     align-items: center;
                     padding: 2px 6px;
                     gap: 8px;
-                    background: #f8f8f8;
-                    border: 1px solid #eaecf3;
+                    background: var(--yakit-card-background-color);
+                    border: 1px solid var(--yakit-border-color);
                     border-radius: 4px;
                     font-size: 11px;
-                    color: #85899e;
+                    color: var(--yakit-body-text-color);
                     .copy-icon {
                         cursor: pointer;
                         height: 16px;
@@ -500,17 +507,18 @@
 
 /** 远程连接UI **/
 .remote-yaklang-engine-wrapper {
-    :global {
-        .ant-spin-dot-item {
-            background-color: #f28b44;
-        }
-    }
-
     width: 100%;
     height: 100%;
     overflow: hidden auto;
     padding: 56px 16.7% 0;
-    background: #f8f8f8;
+    background: var(--yakit-card-background-color);
+
+    :global {
+        .ant-spin-dot-item {
+            background-color: var(--yakit-primary-color);
+        }
+    }
+
     .remote-yaklang-engine-body {
         overflow: auto;
         .remote-title {
@@ -523,7 +531,7 @@
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
-                color: #31343f;
+                color: var(--yakit-header-color);
             }
             .remote-history {
                 margin-top: 16px;
@@ -535,21 +543,21 @@
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    background: #f8f8f8;
+                    background: var(--yakit-card-background-color);
                     border-width: 1px 0px 1px 1px;
                     border-style: solid;
-                    border-color: #eaecf3;
+                    border-color: var(--yakit-border-color);
                     border-radius: 4px 0px 0px 4px;
 
                     font-size: 14px;
-                    color: #31343f;
+                    color: var(--yakit-header-color);
                 }
                 .select-style {
                     width: 320px;
                     height: 32px;
                     box-sizing: border-box;
-                    background: #ffffff;
-                    border: 1px solid #eaecf3;
+                    background: var(--yakit-neutral10-color);
+                    border: 1px solid var(--yakit-border-color);
                     border-radius: 0px 4px 4px 0px;
                     :global {
                         .ant-select-selector {
@@ -563,7 +571,7 @@
                     .ant-select-focused {
                         .ant-select-selector {
                             height: 30px;
-                            box-shadow: 0 0 0 2px #fbe7d9;
+                            box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
                         }
                     }
                 }
@@ -572,32 +580,32 @@
         .rmeote-divider {
             width: 100%;
             margin: 24px 0;
-            border-top: 1px solid #f0f1f3;
+            border-top: 1px solid var(--yakit-background-color);
         }
         .remote-info {
             :global {
                 .ant-form-item-no-colon {
-                    color: #31343f;
+                    color: var(--yakit-header-color);
                 }
 
-                --antd-wave-shadow-color: #f28b44;
+                --antd-wave-shadow-color: var(--yakit-primary-color);
                 .ant-switch-checked {
-                    background: #f28b44;
+                    background: var(--yakit-primary-color);
                 }
             }
 
             .error-border {
-                border: 1px solid #f7544a !important;
+                border: 1px solid var(--yakit-danger-color) !important;
             }
 
             .input-style {
                 width: 400px;
-                background: #ffffff;
-                border: 1px solid #eaecf3;
+                background: var(--yakit-neutral10-color);
+                border: 1px solid var(--yakit-border-color);
                 border-radius: 4px;
             }
             .input-style:focus {
-                box-shadow: 0 0 0 2px #fbe7d9;
+                box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
             }
 
             .pem-title {
@@ -606,7 +614,12 @@
                 .icon-style {
                     margin: 0 4px;
                     font-size: 16px;
-                    color: #85899e;
+                    color: var(--yakit-body-text-color);
+                }
+                .icon-show-style {
+                    margin: 0 4px;
+                    font-size: 16px;
+                    color: var(--yakit-primary-color);
                 }
             }
             .pem-content {
@@ -620,7 +633,7 @@
 .pem-example-popover {
     :global {
         .ant-popover-inner {
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--yakit-border-color);
             box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
             border-radius: 4px;
         }
@@ -630,7 +643,7 @@
 
         line-height: 20px;
         font-size: 11px;
-        color: #31343f;
+        color: var(--yakit-header-color);
         .title-style {
             font-size: 14px;
             line-height: 24px;
@@ -638,8 +651,8 @@
         .content-code {
             display: inline-block;
             padding: 0 4px;
-            border: 1px solid #eaecf3;
-            background-color: #f8f8f8;
+            border: 1px solid var(--yakit-border-color);
+            background-color: var(--yakit-card-background-color);
             border-radius: 4px;
         }
         .code-pem {
@@ -660,11 +673,11 @@
                 align-items: center;
                 padding: 2px 6px;
                 gap: 8px;
-                background: #f8f8f8;
-                border: 1px solid #eaecf3;
+                background: var(--yakit-card-background-color);
+                border: 1px solid var(--yakit-border-color);
                 border-radius: 4px;
                 font-size: 11px;
-                color: #85899e;
+                color: var(--yakit-body-text-color);
                 .copy-icon {
                     cursor: pointer;
                     height: 16px;
@@ -675,7 +688,7 @@
             .link-open {
                 height: 20px;
                 line-height: 20px;
-                color: #f28b44;
+                color: var(--yakit-primary-color);
                 cursor: pointer;
             }
         }
