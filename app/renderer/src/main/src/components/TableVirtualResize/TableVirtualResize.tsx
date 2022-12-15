@@ -49,6 +49,11 @@ import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 
 const {Search} = Input
 const {RangePicker} = DatePicker
+
+/**
+ * @description: 更新说明
+ * 1.更新data值变化，单元格状态没变，dataKey需要和修改的值对应上
+ */
 interface tablePosition {
     bottom?: number
     height?: number
@@ -711,6 +716,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const oMouseLeaveCell = useMemoizedFn(() => {
         setMouseCellId(undefined)
     })
+
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -1247,6 +1253,12 @@ const CellRender = React.memo(
         if (preProps.mouseCellId !== nextProps.mouseCellId) {
             return false
         }
+        // if (preProps.item.data[preProps.columnsItem.dataKey] !== nextProps.item.data[preProps.columnsItem.dataKey]) {
+        //     return false
+        // }
+        if (preProps.item.data !== nextProps.item.data) {
+            return false
+        }
         return true
     }
 )
@@ -1456,9 +1468,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                         })}
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
-                                        <YakitCheckbox
-                                            checked={checked}
-                                        />
+                                        <YakitCheckbox checked={checked} />
                                         <span className={style["select-item-text"]}>{item.data.label}</span>
                                     </div>
                                 )

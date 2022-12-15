@@ -15,7 +15,7 @@ import {
 } from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {MITMContentReplacer, MITMContentReplacerRule} from "../MITMContentReplacer"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -33,6 +33,7 @@ import {MITMRuleFromModal} from "./MITMRuleFromModal"
 import {randomString} from "@/utils/randomUtil"
 import {showModal} from "@/utils/showModal"
 import {MITMResponse} from "../MITMPage"
+import {failed, success} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -117,6 +118,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [modalVisible, setModalVisible] = useState<boolean>(false)
     const [isEdit, setIsEdit] = useState<boolean>(false)
+    const [isAllBan, setIsAllBan] = useState<boolean>(false)
+    const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
     const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
 
     useEffect(() => {
@@ -129,7 +132,18 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     }, [visible])
-    const styleDrawer = {width: "100vw", top, height: `calc(100vh - ${top + 1}px)`}
+    // useEffect(() => {
+    //     ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
+    //         setRules(data?.replacers || [])
+    //         return
+    //     })
+    //     return () => {
+    //         ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
+    //     }
+    // }, [])
+    const styleDrawer = useCreation(() => {
+        return {width: "100vw", top, height: `calc(100vh - ${top + 1}px)`}
+    }, [top])
     const onSelectAll = (newSelectedRowKeys: string[], selected: MITMContentReplacerRule[], checked: boolean) => {
         setIsAllSelect(checked)
         setSelectedRowKeys(newSelectedRowKeys)
@@ -154,17 +168,23 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         {wait: 200}
     ).run
     const onRemove = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
-        console.log("删除", rowDate)
+        setRules(rules.filter((t) => t.Index !== rowDate.Index))
     })
 
     const onOpenAddOrEdit = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
-        console.log("编辑", rowDate)
         setModalVisible(true)
         setIsEdit(true)
         setCurrentItem(rowDate)
     })
-    const onBan = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
-        console.log("禁用", rowDate)
+    const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
+        const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
+            if (item.Index != rowDate.Index) {
+                return item
+            }
+            item.Disabled = !rowDate.Disabled
+            return item
+        })
+        setRules(newRules)
     })
 
     const columns: ColumnsTypeProps[] = [
@@ -187,13 +207,13 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         },
         {
             title: "替换结果",
-            dataKey: "Result",
+            dataKey: "NoReplace",
             width: 350,
             tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
             extra: <div className={styles["table-result-extra"]}>不替换</div>,
             render: (_, i: MITMContentReplacerRule) => {
                 let node: ReactNode = <div>{i.Result}</div>
-                if (i.ExtraHeaders.length > 0 || i.ExtraCookies.length > 0) {
+                if ((i.ExtraHeaders && i.ExtraHeaders.length > 0) || (i.ExtraCookies && i.ExtraCookies.length > 0)) {
                     node = (
                         <div>
                             {i.ExtraHeaders.length > 0 && (
@@ -212,7 +232,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 return (
                     <div className={styles["table-result"]}>
                         {node}
-                        <YakitSwitch size='small' disabled={i.Disabled} />
+                        <YakitSwitch
+                            size='small'
+                            disabled={i.Disabled}
+                            checked={i.NoReplace}
+                            onChange={(val) => onEdit({...i, NoReplace: val}, "NoReplace")}
+                        />
                     </div>
                 )
             }
@@ -221,28 +246,44 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             title: "请求",
             dataKey: "EnableForRequest",
             render: (checked, record: MITMContentReplacerRule) => (
-                <YakitCheckbox checked={checked} disabled={record.Disabled} />
+                <YakitCheckbox
+                    checked={checked}
+                    disabled={record.Disabled}
+                    onChange={(e) => onEdit({...record, EnableForRequest: e.target.checked}, "EnableForRequest")}
+                />
             )
         },
         {
             title: "响应",
             dataKey: "EnableForResponse",
             render: (checked, record: MITMContentReplacerRule) => (
-                <YakitCheckbox checked={checked} disabled={record.Disabled} />
+                <YakitCheckbox
+                    checked={checked}
+                    disabled={record.Disabled}
+                    onChange={(e) => onEdit({...record, EnableForResponse: e.target.checked}, "EnableForResponse")}
+                />
             )
         },
         {
             title: "Header",
             dataKey: "EnableForHeader",
             render: (checked, record: MITMContentReplacerRule) => (
-                <YakitCheckbox checked={checked} disabled={record.Disabled} />
+                <YakitCheckbox
+                    checked={checked}
+                    disabled={record.Disabled}
+                    onChange={(e) => onEdit({...record, EnableForHeader: e.target.checked}, "EnableForHeader")}
+                />
             )
         },
         {
             title: "Body",
             dataKey: "EnableForBody",
             render: (checked, record: MITMContentReplacerRule) => (
-                <YakitCheckbox checked={checked} disabled={record.Disabled} />
+                <YakitCheckbox
+                    checked={checked}
+                    disabled={record.Disabled}
+                    onChange={(e) => onEdit({...record, EnableForBody: e.target.checked}, "EnableForBody")}
+                />
             )
         },
         {
@@ -256,6 +297,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     disabled={record.Disabled}
                     size='small'
                     wrapperStyle={{width: "100%"}}
+                    onSelect={(val) => onEdit({...record, Color: val}, "Color")}
                 >
                     {colorSelectNode}
                 </YakitSelect>
@@ -295,8 +337,26 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
         }
     ]
+    const onEdit = useMemoizedFn((record: MITMContentReplacerRule, text: string) => {
+        const newRules: MITMContentReplacerRule[] = rules.map((item) => {
+            if (item.Index === record.Index) {
+                item = record
+            }
+            return item
+        })
+        setRules(newRules)
+    })
     const onMenuSelect = useMemoizedFn((key: string) => {
-        console.log("onMenuSelect", key)
+        console.log("onMenuSelect", key, selectedRowKeys)
+        if (key === "ban") {
+            onBatchNoReplaceOrBan(false, "NoReplace")
+        }
+        if (key === "no-replace ") {
+            onBatchNoReplaceOrBan(false, "Disabled")
+        }
+        if (key === "remove") {
+            onBatchRemove()
+        }
     })
     const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
         if (b) {
@@ -323,6 +383,77 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setModalVisible(b)
     })
 
+    const onSaveRules = useMemoizedFn((val: MITMContentReplacerRule) => {
+        if (isEdit) {
+            const index = rules.findIndex((item) => item.Index === val.Index)
+            if (index === -1) return
+            rules[index] = {...val}
+            setRules([...rules])
+        } else {
+            setRules([{...val}, ...rules])
+        }
+        onOpenOrCloseModal(false)
+    })
+
+    const onSaveToDataBase = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("SetCurrentRules", {Rules: rules})
+            .then((e) => {
+                setVisible(false)
+                success("保存成功")
+            })
+            .catch((e) => {
+                failed(`保存失败: ${e}`)
+            })
+    })
+    const onBatchNoReplaceOrBan = useMemoizedFn((checked: boolean, text: string) => {
+        if (selectedRowKeys.length === 0) return
+        setLoading(true)
+        const newRules: MITMContentReplacerRule[] = rules.map((item) => {
+            if (selectedRowKeys.findIndex((ele) => ele == `${item.Index}`) !== -1) {
+                item[text] = checked
+            }
+            return item
+        })
+        setRules({...newRules})
+        setSelectedRowKeys([])
+        setTimeout(() => {
+            setLoading(false)
+        }, 200)
+    })
+    const onBatchRemove = useMemoizedFn(() => {
+        if (selectedRowKeys.length === 0) return
+        setLoading(true)
+        const newRules: MITMContentReplacerRule[] = []
+        rules.forEach((item) => {
+            if (selectedRowKeys.findIndex((ele) => ele == `${item.Index}`) === -1) {
+                newRules.push(item)
+            }
+        })
+        setRules({...newRules})
+        setSelectedRowKeys([])
+        setTimeout(() => {
+            setLoading(false)
+        }, 200)
+    })
+    const onAllBan = useMemoizedFn((checked: boolean) => {
+        setLoading(true)
+        const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, Disabled: checked}))
+        setRules(newRules)
+        setIsAllBan(checked)
+        setTimeout(() => {
+            setLoading(false)
+        }, 200)
+    })
+    const onAllNoReplace = useMemoizedFn((checked: boolean) => {
+        setLoading(true)
+        const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, NoReplace: checked}))
+        setRules(newRules)
+        setIsNoReplace(checked)
+        setTimeout(() => {
+            setLoading(false)
+        }, 200)
+    })
     return (
         <>
             <YakitDrawer
@@ -345,7 +476,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         <YakitButton type='text' icon={<ExportIcon />} className={styles["button-export"]}>
                             导出配置
                         </YakitButton>
-                        <YakitButton type='primary' className={styles["button-save"]}>
+                        <YakitButton
+                            type='primary'
+                            className={styles["button-save"]}
+                            onClick={() => onSaveToDataBase()}
+                        >
                             保存
                         </YakitButton>
                         <YakitButton
@@ -376,12 +511,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             <div className={styles["table-title-body"]}>
                                 <div className={styles["table-switch"]}>
                                     <span className={styles["switch-text"]}>全部禁用</span>
-                                    <YakitSwitch />
+                                    <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />
                                 </div>
                                 <Divider type='vertical' style={{margin: "0 16px"}} />
                                 <div className={styles["table-switch"]}>
                                     <span className={styles["switch-text"]}>全部不替换</span>
-                                    <YakitSwitch />
+                                    <YakitSwitch onChange={(c) => onAllNoReplace(c)} />
                                 </div>
                                 {/* <YakitButton type='outline2' className={styles["button-filter"]}>
                                 <FilterIcon />
@@ -446,6 +581,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 modalVisible={modalVisible}
                 isEdit={isEdit}
                 onClose={() => onOpenOrCloseModal(false)}
+                onSave={onSaveRules}
                 currentItem={currentItem}
             />
         </>

@@ -27,24 +27,9 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {colorSelectNode, HitColor} from "./MITMRule"
 import {ValidateStatus} from "antd/lib/form/FormItem"
+import {MITMContentReplacerRule} from "../MITMContentReplacer"
 
 const {ipcRenderer} = window.require("electron")
-
-const emptyFuzzer: FuzzerResponse = {
-    Method: "",
-    StatusCode: 200,
-    Host: "",
-    ContentType: "",
-    Headers: [],
-    ResponseRaw: new Uint8Array(),
-    RequestRaw: new Uint8Array(),
-    BodyLength: 0,
-    UUID: "",
-    Timestamp: 0,
-    DurationMs: 0,
-    Ok: true,
-    Reason: ""
-}
 
 /**
  * @description:MITMRule 新增或修改
@@ -54,15 +39,13 @@ const emptyFuzzer: FuzzerResponse = {
  * @param {Function} onClose 关闭回调
  */
 export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
-    const {modalVisible, onClose, currentItem, isEdit, rules} = props
+    const {modalVisible, onClose, currentItem, isEdit, rules, onSave} = props
     const [ruleVisible, setRuleVisible] = useState<boolean>()
     const [form] = Form.useForm()
     const resultType = Form.useWatch("ResultType", form)
     const headers: HTTPHeader[] = Form.useWatch("ExtraHeaders", form) || []
     const cookies: HTTPCookieSetting[] = Form.useWatch("ExtraCookies", form) || []
     useEffect(() => {
-        console.log("currentItem", currentItem)
-
         form.setFieldsValue({
             ...currentItem,
             ResultType:
@@ -71,31 +54,24 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     }, [currentItem])
     const onOk = useMemoizedFn(() => {
         form.validateFields()
-            .then((values) => {
-                // if (rules.filter((i) => i.Index === values.Index).length > 0) {
-                //     failed("执行顺序冲突（Index 冲突），重新设置执行顺序")
-                //     return
-                // }
+            .then((values: MITMContentReplacerRule) => {
                 console.log("values", values)
+                onSave(values)
             })
             .catch((errorInfo) => {})
     })
     const getRule = useMemoizedFn((val: string) => {
-        console.log("val", val)
-
         form.setFieldsValue({
             Rule: val
         })
         setRuleVisible(false)
     })
     const getExtraHeaders = useMemoizedFn((val) => {
-        console.log("getExtraHeaders", val)
         form.setFieldsValue({
             ExtraHeaders: [...headers, val]
         })
     })
     const getExtraCookies = useMemoizedFn((val) => {
-        console.log("getExtraCookies", val)
         form.setFieldsValue({
             ExtraCookies: [...cookies, val]
         })
@@ -138,7 +114,10 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                                     if (value <= 0) {
                                         return Promise.reject("需要输入大于0的数字")
                                     }
-                                    if (rules.filter((i) => i.Index === value).length > 0) {
+                                    if (
+                                        rules.filter((i) => i.Index === value).length > 0 &&
+                                        !(isEdit && value === currentItem?.Index)
+                                    ) {
                                         return Promise.reject("执行顺序冲突（Index 冲突），重新设置执行顺序")
                                     }
                                 }
@@ -227,7 +206,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 footer={null}
                 closable={true}
             >
-                <ExtractRegular onSave={getRule} />
+                {ruleVisible && <ExtractRegular onSave={getRule} />}
             </YakitModal>
         </>
     )

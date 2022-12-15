@@ -31,6 +31,8 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     return (
         <div
             className={classNames(
+                "ant-select",
+                "ant-select-in-form-item",
                 styles["yakit-select"],
                 {
                     [styles["yakit-select-wrapper-tags"]]: props.mode === "tags" || props.mode === "multiple",

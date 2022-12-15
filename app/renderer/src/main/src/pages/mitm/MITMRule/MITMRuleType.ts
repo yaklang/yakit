@@ -20,6 +20,7 @@ export interface MITMRuleFromModalProps {
     isEdit: boolean
     modalVisible: boolean
     onClose: () => void
+    onSave: (m:MITMContentReplacerRule) => void
     currentItem?: MITMContentReplacerRule
     rules:MITMContentReplacerRule[]
 }
