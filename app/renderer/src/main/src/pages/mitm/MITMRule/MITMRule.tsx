@@ -33,6 +33,7 @@ import {randomString} from "@/utils/randomUtil"
 import {MITMResponse} from "../MITMPage"
 import {failed, success} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
+import {TableVirtualDrag} from "@/components/TableVirtualDrag/TableVirtualDrag"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -538,7 +539,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 }
             >
                 <div className={styles["mitm-rule-table"]}>
-                    <TableVirtualResize<MITMContentReplacerRule>
+                    <TableVirtualDrag<MITMContentReplacerRule>
                         titleHeight={42}
                         title={
                             <div className={styles["table-title-body"]}>
@@ -612,7 +613,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         }}
                         loading={loading}
                         columns={columns}
-                        // onRowClick={onRowClick}
                         onSetCurrentRow={onSetCurrentRow}
                     />
                 </div>
