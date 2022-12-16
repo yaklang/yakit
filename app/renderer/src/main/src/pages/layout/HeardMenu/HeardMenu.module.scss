@@ -1,7 +1,6 @@
 .heard-menu-body {
     background-color: var(--yakit-card-background-color);
-    // border-top: 1px solid #EAECF3;
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--yakit-border-color);
 }
 
 .heard-menu {
@@ -60,7 +59,7 @@
             height: 24px;
 
             svg {
-                color: #85899e;
+                color: var(--yakit-body-text-color);
                 margin-left: 2px;
             }
 
@@ -69,10 +68,10 @@
             }
 
             &:hover {
-                color: #40a9ff;
+                color: var(--yakit-primary-color-hover);
 
                 svg {
-                    color: #40a9ff;
+                    color: var(--yakit-primary-color-hover);
                 }
             }
         }
@@ -82,10 +81,10 @@
         }
 
         .heard-menu-item-active {
-            color: #1890ff;
+            color: var(--yakit-primary-color);
 
             svg {
-                color: #1890ff;
+                color: var(--yakit-primary-color);
             }
         }
 
@@ -99,10 +98,10 @@
         }
 
         .heard-menu-item-open {
-            color: #1890ff;
+            color: var(--yakit-primary-color);
 
             svg {
-                color: #1890ff;
+                color: var(--yakit-primary-color);
                 margin-left: 2px;
                 width: 16px;
                 height: 16px;
@@ -154,7 +153,7 @@
 }
 
 .heard-menu-sort {
-    color: #b4bbca;
+    color: var(--yakit-helper-text-color);
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -179,7 +178,7 @@
         cursor: pointer;
         align-items: center;
         height: 28px;
-        color: #31343f;
+        color: var(--yakit-header-color);
 
         svg {
             width: 20px;
@@ -187,17 +186,17 @@
         }
 
         &:hover {
-            background-color: #e6f7ff;
+            background-color: var(--yakit-primary-background-color);
             border-radius: 4px;
 
             .heard-sub-menu-label {
-                color: #1890ff;
+                color: var(--yakit-primary-color);
             }
         }
 
         .heard-sub-menu-label {
             margin-left: 8px;
-            color: #31343f;
+            color: var(--yakit-header-color);
             white-space: nowrap;
             text-overflow: ellipsis;
             overflow: hidden;
@@ -208,13 +207,13 @@
 }
 
 .popover {
-    top: 81px !important;
+    top: 61px !important;
     // left: 12px !important;
     z-index: 1099;
 
     :global {
         .ant-popover-inner {
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--yakit-border-color);
             box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
             border-radius: 4px;
 
@@ -260,7 +259,7 @@
 
         .ant-tabs-dropdown-open {
             svg {
-                color: #40a9ff;
+                color: var(--yakit-primary-color-hover);
             }
         }
 
@@ -288,11 +287,11 @@
     }
 
     .dots-icon {
-        color: #31343f;
+        color: var(--yakit-header-color);
         cursor: pointer;
 
         &:hover {
-            color: #40a9ff;
+            color: var(--yakit-primary-color-hover);
         }
     }
 
@@ -307,11 +306,11 @@
             justify-content: center;
             align-items: center;
             padding: 0 16px;
-            color: #85899e;
+            color: var(--yakit-body-text-color);
             height: 34px;
 
             &:hover {
-                color: #40a9ff;
+                color: var(--yakit-primary-color-hover);
             }
 
             .sub-menu-expand-item-icon {
@@ -335,7 +334,7 @@
         .sub-menu-expand-item-line {
             width: 1px;
             height: 20px;
-            background-color: #eaecf3;
+            background-color: var(--yakit-border-color);
         }
     }
 }
@@ -387,7 +386,7 @@
     .sub-menu-expand-item {
         display: flex;
         align-items: center;
-        color: #31343f;
+        color: var(--yakit-header-color);
         padding: 6px 8px;
         padding-left: 6px !important;
 
@@ -403,11 +402,11 @@
         }
 
         &:hover {
-            background-color: #e6f7ff;
+            background-color: var(--yakit-primary-background-color);
             border-radius: 4px;
 
             .sub-menu-expand-item-label {
-                color: #1890ff;
+                color: var(--yakit-primary-color);
             }
         }
     }
