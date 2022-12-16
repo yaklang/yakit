@@ -6,60 +6,6 @@
     height: 100%;
 }
 
-// MITM页面相关样式
-.httphacker-tabs {
-    height: 100%;
-}
-.httphacker-tabs .ant-tabs-content.ant-tabs-content-top {
-    height: 100%;
-}
-.httphacker-tabs {
-    .ant-tabs-nav {
-        margin: 0;
-        background: var(--yakit-neutral10-color);
-    }
-    .ant-tabs-tab-btn {
-        color: var(--yakit-header-color);
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 16px;
-    }
-    .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-        color: var(--yakit-primary-color);
-    }
-    .ant-tabs-tab-remove {
-        padding: 0 6px;
-        height: 16px;
-        line-height: 16px;
-        display: flex;
-        align-items: center;
-    }
-}
-.httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
-    padding: 8px 8px;
-    border-width: 0;
-    background-color: var(--yakit-neutral10-color);
-    border-right: 1px solid var(--yakit-border-color);
-    border-bottom: 1px solid var(--yakit-border-color);
-}
-.httphacker-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
-    border-bottom: 2px solid var(--yakit-primary-color);
-    background: rgba(242, 139, 68, 0.06);
-}
-.httphacker-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
-    padding: 0 16px;
-}
-.httphacker-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab {
-    margin-left: 0;
-}
-.httphacker-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-add {
-    margin-left: 0;
-    border-left-width: 0;
-}
-.httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
-    transition: none;
-}
-
 .flex-card {
     height: 100%;
     display: flex;
@@ -106,6 +52,7 @@
 .yakit-layout-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
     border-top: 2px solid var(--yakit-primary-color);
     border-bottom: 0;
+    background: var(--yakit-neutral10-color);
 }
 .yakit-layout-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
     padding: 0 16px;
@@ -115,6 +62,7 @@
 }
 .yakit-layout-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
     transition: none;
+    background: var(--yakit-card-background-color);
 }
 
 /* MainOperator页样式 */
@@ -198,4 +146,58 @@
     .ant-btn-link:hover {
         color: #fff;
     }
+}
+
+// MITM页面相关样式
+.httphacker-tabs {
+    height: 100%;
+}
+.httphacker-tabs .ant-tabs-content.ant-tabs-content-top {
+    height: 100%;
+}
+.httphacker-tabs {
+    .ant-tabs-nav {
+        margin: 0;
+        background: var(--yakit-neutral10-color);
+    }
+    .ant-tabs-tab-btn {
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+    }
+    .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: var(--yakit-primary-color);
+    }
+    .ant-tabs-tab-remove {
+        padding: 0 6px;
+        height: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+    }
+}
+.httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    padding: 8px 8px;
+    border-width: 0;
+    background-color: var(--yakit-neutral10-color);
+    border-right: 1px solid var(--yakit-border-color);
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+.httphacker-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
+    border-bottom: 2px solid var(--yakit-primary-color);
+    background: rgba(242, 139, 68, 0.06);
+}
+.httphacker-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
+    padding: 0 16px;
+}
+.httphacker-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab {
+    margin-left: 0;
+}
+.httphacker-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-add {
+    margin-left: 0;
+    border-left-width: 0;
+}
+.httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    transition: none;
 }

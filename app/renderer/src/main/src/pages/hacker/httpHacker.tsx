@@ -9,7 +9,7 @@ import {HackerPlugin} from "./HackerPlugin"
 import ReactDOM from "react-dom"
 import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory"
 
-import "../main.scss"
+// import "../main.scss"
 
 export interface HTTPHackerProp {}
 

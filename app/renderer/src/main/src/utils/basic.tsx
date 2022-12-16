@@ -498,6 +498,7 @@ export const ConfigGlobalReverse = React.memo(() => {
                 label={"本地反连 IP"}
                 value={localIP} disable={ok}
                 setValue={setLocalIP}
+                autoComplete={ifaces.filter((item) => !!item.IP).map((item) => item.IP)}
                 help={<div>
                     <Button type={"link"} size={"small"} onClick={() => {
                         updateIface()
