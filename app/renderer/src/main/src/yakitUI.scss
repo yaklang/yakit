@@ -129,10 +129,28 @@ html {
 }
 
 html {
+    --yakit-header-color: #31343f;
+    --yakit-body-text-color: #85899e;
+    --yakit-helper-text-color: #b4bbca;
+    --yakit-disable-text-color: #ccd2de;
+    --yakit-border-color: #eaecf3;
+    --yakit-background-color: #f0f1f3;
+    --yakit-card-background-color: #f8f8f8;
+
+    //未命名主题颜色
+    --yakit-neutral90-color: #454750;
+    --yakit-neutral80-color: #545663;
+    --yakit-neutral10-color: #ffffff;
+
+    // 老版主题色
+    // --yakit-primary-color: #1890ff;
+    // --yakit-primary-color-hover: #40a9ff;
+    // --yakit-primary-background-color: #e6f7ff;
+
     // 主题色
     --yakit-primary-color: #f28b44;
     --yakit-primary-border-color: #fbc6a1;
-    --yakit-primary-background-color: #fef8f4;
+    --yakit-primary-background-color: #fef8f4; // rgba(#f28b44 6%);
     --yakit-primary-color-hover: #ea7d32;
     --yakit-primary-color-focus: #fbe7d9;
     --yakit-primary-color-press: #e27122;
