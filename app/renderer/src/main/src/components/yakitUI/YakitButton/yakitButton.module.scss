@@ -9,123 +9,122 @@
 
 .yakit-button-primary {
     // 新ui主题色
-    --yakit-wave-shadow-color: #fbe7d9;
+    --button-wave-shadow-color: #fbe7d9;
 
-    --yakit-background: #f28b44;
-    --yakit-color: #ffffff;
-    --yakit-border-color: transparent;
+    --button-background: #f28b44;
+    --button-color: #ffffff;
+    --button-border-color: transparent;
 
-    --yakit-hover-background: #f79c5d;
-    --yakit-hover-color: #ffffff;
-    --yakit-hover-border-color: transparent;
+    --button-hover-background: #f79c5d;
+    --button-hover-color: #ffffff;
+    --button-hover-border-color: transparent;
 
-    --yakit-disable-background: #f0f1f3;
-    --yakit-disable-color: #ccd2de;
-    --yakit-disable-border-color: transparent;
+    --button-disable-background: #f0f1f3;
+    --button-disable-color: #ccd2de;
+    --button-disable-border-color: transparent;
 
-    --yakit-press-background: #e27122;
-    --yakit-press-color: #ffffff;
-    --yakit-press-border-color: transparent;
+    --button-press-background: #e27122;
+    --button-press-color: #ffffff;
+    --button-press-border-color: transparent;
 
     // 老ui主题色
-    // --yakit-wave-shadow-color: #1890ff;
+    // --button-wave-shadow-color: #1890ff;
 
-    // --yakit-background: #1890ff;
-    // --yakit-color: #fff;
-    // --yakit-border-color: #1890ff;
+    // --button-background: #1890ff;
+    // --button-color: #fff;
+    // --button-border-color: #1890ff;
 
-    // --yakit-hover-background: #40a9ff;
-    // --yakit-hover-color: #fff;
-    // --yakit-hover-border-color: #40a9ff;
+    // --button-hover-background: #40a9ff;
+    // --button-hover-color: #fff;
+    // --button-hover-border-color: #40a9ff;
 
-    // --yakit-disable-background: #F8F8F8;
-    // --yakit-disable-color: #CCD2DE;
-    // --yakit-disable-border-color: #EAECF3;
+    // --button-disable-background: #F8F8F8;
+    // --button-disable-color: #CCD2DE;
+    // --button-disable-border-color: #EAECF3;
 
-    // --yakit-press-background: #096dd9;
-    // --yakit-press-color: #ffffff;
-    // --yakit-press-border-color: #096dd9;
+    // --button-press-background: #096dd9;
+    // --button-press-color: #ffffff;
+    // --button-press-border-color: #096dd9;
 }
 
 .yakit-button-outline-1 {
     // 新ui主题色
-    --yakit-wave-shadow-color: #fbe7d9;
+    --button-wave-shadow-color: #fbe7d9;
 
-    --yakit-background: #fef8f4;
-    --yakit-color: #f28b44;
-    --yakit-border-color: #fbc6a1;
+    --button-background: #fef8f4;
+    --button-color: #f28b44;
+    --button-border-color: #fbc6a1;
 
-    --yakit-hover-background: #fef8f4;
-    --yakit-hover-color: #f79c5d;
-    --yakit-hover-border-color: #f79c5d;
+    --button-hover-background: #fef8f4;
+    --button-hover-color: #f79c5d;
+    --button-hover-border-color: #f79c5d;
 
-    --yakit-disable-background: #f0f1f3;
-    --yakit-disable-color: #ccd2de;
-    --yakit-disable-border-color: #eaecf3;
+    --button-disable-background: #f0f1f3;
+    --button-disable-color: #ccd2de;
+    --button-disable-border-color: #eaecf3;
 
-    --yakit-press-background: #fef8f4;
-    --yakit-press-color: #e27122;
-    --yakit-press-border-color: #e27122;
+    --button-press-background: #fef8f4;
+    --button-press-color: #e27122;
+    --button-press-border-color: #e27122;
 
     // 老ui主题色
-    // --yakit-wave-shadow-color: #1890ff;
+    // --button-wave-shadow-color: #1890ff;
 
-    // --yakit-background: #f0f5ff;
-    // --yakit-color: #1890ff;
-    // --yakit-border-color: #adc6ff;
+    // --button-background: #f0f5ff;
+    // --button-color: #1890ff;
+    // --button-border-color: #adc6ff;
 
-    // --yakit-hover-background: #f0f5ff;
-    // --yakit-hover-color: #40a9ff;
-    // --yakit-hover-border-color: #adc6ff;
+    // --button-hover-background: #f0f5ff;
+    // --button-hover-color: #40a9ff;
+    // --button-hover-border-color: #adc6ff;
 
-    // --yakit-disable-background: #f0f1f3;
-    // --yakit-disable-color: #ccd2de;
-    // --yakit-disable-border-color: #eaecf3;
+    // --button-disable-background: #f0f1f3;
+    // --button-disable-color: #ccd2de;
+    // --button-disable-border-color: #eaecf3;
 
-    // --yakit-press-background: #F0F1F3;
-    // --yakit-press-color: #1890ff;
-    // --yakit-press-border-color: #adc6ff;
+    // --button-press-background: #F0F1F3;
+    // --button-press-color: #1890ff;
+    // --button-press-border-color: #adc6ff;
 }
 
 .yakit-button-text {
-
     // 新ui主题色
-    --yakit-wave-shadow-color: transparent;
+    --button-wave-shadow-color: transparent;
 
-    --yakit-background: transparent;
-    --yakit-color: #f28b44;
-    --yakit-border-color: transparent;
+    --button-background: transparent;
+    --button-color: #f28b44;
+    --button-border-color: transparent;
 
-    --yakit-hover-background: transparent;
-    --yakit-hover-color: #f79c5d;
-    --yakit-hover-border-color: transparent;
+    --button-hover-background: transparent;
+    --button-hover-color: #f79c5d;
+    --button-hover-border-color: transparent;
 
-    --yakit-disable-background: transparent;
-    --yakit-disable-color: #ccd2de;
-    --yakit-disable-border-color: transparent;
+    --button-disable-background: transparent;
+    --button-disable-color: #ccd2de;
+    --button-disable-border-color: transparent;
 
-    --yakit-press-background: transparent;
-    --yakit-press-color: #e27122;
-    --yakit-press-border-color: transparent;
+    --button-press-background: transparent;
+    --button-press-color: #e27122;
+    --button-press-border-color: transparent;
 
     // 老ui主题色
-    // --yakit-wave-shadow-color: #fff;
+    // --button-wave-shadow-color: #fff;
 
-    // --yakit-background: transparent;
-    // --yakit-color: #1890ff;
-    // --yakit-border-color: transparent;
+    // --button-background: transparent;
+    // --button-color: #1890ff;
+    // --button-border-color: transparent;
 
-    // --yakit-hover-background: transparent;
-    // --yakit-hover-color: #40a9ff;
-    // --yakit-hover-border-color: transparent;
+    // --button-hover-background: transparent;
+    // --button-hover-color: #40a9ff;
+    // --button-hover-border-color: transparent;
 
-    // --yakit-disable-background: transparent;
-    // --yakit-disable-color: #ccd2de;
-    // --yakit-disable-border-color: transparent;
+    // --button-disable-background: transparent;
+    // --button-disable-color: #ccd2de;
+    // --button-disable-border-color: transparent;
 
-    // --yakit-press-background: transparent;
-    // --yakit-press-color: #1890ff;
-    // --yakit-press-border-color: transparent;
+    // --button-press-background: transparent;
+    // --button-press-color: #1890ff;
+    // --button-press-border-color: transparent;
 
     [ant-click-animating-without-extra-node="true"]::after {
         box-shadow: none;
@@ -142,42 +141,42 @@
 
 .yakit-button-outline-2 {
     // 新ui主题色
-    --yakit-wave-shadow-color: #fbe7d9;
+    --button-wave-shadow-color: #fbe7d9;
 
-    --yakit-background: #fff;
-    --yakit-color: #31343F;
-    --yakit-border-color: #EAECF3;
+    --button-background: #fff;
+    --button-color: #31343f;
+    --button-border-color: #eaecf3;
 
-    --yakit-hover-background: #fff;
-    --yakit-hover-color: #F79C5D;
-    --yakit-hover-border-color: #F69C5D;
+    --button-hover-background: #fff;
+    --button-hover-color: #f79c5d;
+    --button-hover-border-color: #f69c5d;
 
-    --yakit-disable-background: #FFFFFF;
-    --yakit-disable-color: #ccd2de;
-    --yakit-disable-border-color: #EAECF3;
+    --button-disable-background: #ffffff;
+    --button-disable-color: #ccd2de;
+    --button-disable-border-color: #eaecf3;
 
-    --yakit-press-background: #FFFFFF;
-    --yakit-press-color: #E27122;
-    --yakit-press-border-color: #E27122;
+    --button-press-background: #ffffff;
+    --button-press-color: #e27122;
+    --button-press-border-color: #e27122;
 
     // 老ui主题色
-    // --yakit-wave-shadow-color: #1890ff;
+    // --button-wave-shadow-color: #1890ff;
 
-    // --yakit-background: #fff;
-    // --yakit-color: #31343F;
-    // --yakit-border-color: #EAECF3;
+    // --button-background: #fff;
+    // --button-color: #31343F;
+    // --button-border-color: #EAECF3;
 
-    // --yakit-hover-background: #fff;
-    // --yakit-hover-color: #40a9ff;
-    // --yakit-hover-border-color: #adc6ff;
+    // --button-hover-background: #fff;
+    // --button-hover-color: #40a9ff;
+    // --button-hover-border-color: #adc6ff;
 
-    // --yakit-disable-background: #fff;
-    // --yakit-disable-color: #CCD2DE;
-    // --yakit-disable-border-color: #EAECF3;
+    // --button-disable-background: #fff;
+    // --button-disable-color: #CCD2DE;
+    // --button-disable-border-color: #EAECF3;
 
-    // --yakit-press-background: #fff;
-    // --yakit-press-color: #1890ff;
-    // --yakit-press-border-color: #adc6ff;
+    // --button-press-background: #fff;
+    // --button-press-color: #1890ff;
+    // --button-press-border-color: #adc6ff;
 }
 
 .yakit-button-small-size {
@@ -186,7 +185,7 @@
     border-radius: 4px;
     font-weight: 500;
     font-size: 11px;
-    line-height: 14px;
+    line-height: 12px;
 }
 
 .yakit-button-size {
@@ -195,7 +194,7 @@
     border-radius: 4px;
     font-weight: 500;
     font-size: 12px;
-    line-height: 16px;
+    line-height: 14px;
 }
 
 .yakit-button-big-size {
@@ -204,7 +203,7 @@
     border-radius: 4px;
     font-weight: 600;
     font-size: 14px;
-    line-height: 20px;
+    line-height: 18px;
 }
 
 .yakit-button-max-size {
@@ -213,31 +212,31 @@
     border-radius: 4px;
     font-weight: 500;
     font-size: 14px;
-    line-height: 20px;
+    line-height: 18px;
 }
 
 .yakit-button-type {
-    background: var(--yakit-background);
-    color: var(--yakit-color);
-    border-color: var(--yakit-border-color);
+    background: var(--button-background);
+    color: var(--button-color);
+    border-color: var(--button-border-color);
 }
 
 .yakit-button-type:focus {
-    background: var(--yakit-background);
-    color: var(--yakit-color);
-    border-color: var(--yakit-border-color);
+    background: var(--button-background);
+    color: var(--button-color);
+    border-color: var(--button-border-color);
 }
 
 .yakit-button-type:hover {
-    background: var(--yakit-hover-background);
-    color: var(--yakit-hover-color);
-    border-color: var(--yakit-hover-border-color);
+    background: var(--button-hover-background);
+    color: var(--button-hover-color);
+    border-color: var(--button-hover-border-color);
 }
 
 .yakit-button-type[disabled] {
-    color: var(--yakit-disable-color) !important;
-    border-color: var(--yakit-disable-border-color) !important;
-    background: var(--yakit-disable-background) !important;
+    color: var(--button-disable-color) !important;
+    border-color: var(--button-disable-border-color) !important;
+    background: var(--button-disable-background) !important;
 }
 
 [ant-click-animating-without-extra-node="true"]::after {
@@ -247,9 +246,9 @@
 }
 
 .yakit-button-press {
-    background: var(--yakit-press-background) !important;
-    color: var(--yakit-press-color) !important;
-    border-color: var(--yakit-press-border-color) !important;
+    background: var(--button-press-background) !important;
+    color: var(--button-press-color) !important;
+    border-color: var(--button-press-border-color) !important;
 }
 
 @keyframes fadeEffect {
@@ -260,6 +259,6 @@
 
 @keyframes waveEffect {
     100% {
-        box-shadow: 0 0 0 4px var(--yakit-wave-shadow-color);
+        box-shadow: 0 0 0 4px var(--button-wave-shadow-color);
     }
 }

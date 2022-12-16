@@ -86,7 +86,7 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
                     styles["yakit-button"],
                     styles["yakit-button-type"],
                     {[styles["yakit-button-press"]]: press},
-                    {[styles[className || ""]]: !!className}
+                    {[className || ""]: !!className}
                 )}
                 onMouseDown={(e) => {
                     if (onMouseDown) onMouseDown(e)
