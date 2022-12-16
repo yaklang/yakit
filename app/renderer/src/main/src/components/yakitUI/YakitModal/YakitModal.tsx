@@ -8,6 +8,7 @@ import {RemoveIcon} from "@/assets/newIcon"
 /**
  * 更新说明
  * 1、close-icon 设置svg图标的大小
+ * 2.body-header-subTitle 设置flex 占满剩余的宽度
  */
 
 export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType"> {
