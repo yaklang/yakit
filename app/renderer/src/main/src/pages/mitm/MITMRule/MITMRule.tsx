@@ -1,6 +1,6 @@
 import {Button, Checkbox, Divider, Drawer, Select, Switch, Tag} from "antd"
 import React, {ReactNode, useEffect, useMemo, useState} from "react"
-import {ButtonTextProps, MITMRuleProp} from "./MITMRuleType"
+import {ButtonTextProps, MITMContentReplacerRule, MITMRuleProp} from "./MITMRuleType"
 import styles from "./MITMRule.module.scss"
 import {
     BanIcon,
@@ -14,7 +14,6 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {MITMContentReplacerRule} from "../MITMContentReplacer"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
@@ -127,6 +126,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
 
     useEffect(() => {
+        if (importVisible) return
         setLoading(true)
         ipcRenderer
             .invoke("GetCurrentRules", {})
@@ -134,7 +134,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 setRules(rsp.Rules)
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
-    }, [visible])
+    }, [visible, importVisible])
     useEffect(() => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
             setRules(data?.replacers || [])
@@ -512,11 +512,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             icon={<ExportIcon />}
                             className={styles["button-export"]}
                             onClick={() => {
-                                // showModal({
-                                //     title: "导出配置",
-                                //     width: "50%",
-                                //     content: <MITMContentReplacerExport />
-                                // })
                                 setExportVisible(true)
                             }}
                         >

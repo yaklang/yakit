@@ -37,13 +37,13 @@ import {ResizeBox} from "../../components/ResizeBox"
 import {MITMPluginLogViewer} from "./MITMPluginLogViewer"
 import {MITMPluginList} from "./MITMPluginList"
 import {saveABSFileToOpen} from "../../utils/openWebsite"
-import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer"
 import {ChromeLauncherButton} from "./MITMChromeLauncher"
 import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm"
 import {MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
 import {MITMRule} from "./MITMRule/MITMRule"
 import ReactResizeDetector from "react-resize-detector"
+import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
 
 const {Text} = Typography
 const {Item} = Form

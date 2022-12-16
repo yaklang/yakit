@@ -6,6 +6,7 @@ import {
     ExtractRegularProps,
     ExtraHTTPSelectProps,
     InputHTTPHeaderFormProps,
+    MITMContentReplacerRule,
     MITMRuleFromModalProps
 } from "./MITMRuleType"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
@@ -27,7 +28,6 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {colorSelectNode, HitColor} from "./MITMRule"
 import {ValidateStatus} from "antd/lib/form/FormItem"
-import {MITMContentReplacerRule} from "../MITMContentReplacer"
 
 const {ipcRenderer} = window.require("electron")
 

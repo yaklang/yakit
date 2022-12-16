@@ -1,19 +1,17 @@
 import React, {useEffect, useState} from "react"
 import {AutoComplete, Button, Checkbox, Divider, Form, Input, InputNumber, Popconfirm, Space, Tag} from "antd"
 import {SimplePluginList} from "@/components/SimplePluginList"
-import {showDrawer, showModal} from "@/utils/showModal"
-import {MITMContentReplacerViewer} from "@/pages/mitm/MITMContentReplacerViewer"
-import {MITMContentReplacerExport, MITMContentReplacerImport} from "@/pages/mitm/MITMContentReplacerImport"
-import {getRemoteValue, getValue, saveValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, saveValue, setRemoteValue} from "@/utils/kv"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MITMResponse} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {SwitchItem} from "@/utils/inputUtil"
 import {PlusSquareOutlined} from "@ant-design/icons/lib"
 import {YakEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {MITMRule} from "./MITMRule/MITMRule"
-import {MITMContentReplacer, MITMContentReplacerRule} from "./MITMContentReplacer"
 import {WEB_FUZZ_PROXY} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {MITMRuleExport, MITMRuleImport} from "./MITMRule/MITMRuleConfigure/MITMRuleConfigure"
+import {showModal} from "@/utils/showModal"
+import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
 
 const {ipcRenderer} = window.require("electron")
 export interface MITMServerStartFormProp {
@@ -46,6 +44,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [enableInitialPlugin, setEnableInitialPlugin] = useState(false)
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
     const [certs, setCerts] = useState<ClientCertificate[]>([])
+
+    const [exportVisible, setExportVisible] = useState<boolean>(false)
+    const [importVisible, setImportVisible] = useState<boolean>(false)
 
     useEffect(() => {
         // 设置 MITM 初始启动插件选项
@@ -221,12 +222,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     <Space>
                         <Button
                             onClick={() => {
-                                // let m = showDrawer({
-                                //     placement: "top",
-                                //     height: "50%",
-                                //     content: <MITMContentReplacerViewer />,
-                                //     maskClosable: false
-                                // })
                                 props.setVisible(true)
                             }}
                         >
@@ -235,19 +230,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <Button
                             type={"link"}
                             onClick={() => {
-                                const m = showModal({
-                                    title: "从 JSON 中导入",
-                                    width: "60%",
-                                    content: (
-                                        <>
-                                            <MITMContentReplacerImport
-                                                onClosed={() => {
-                                                    m.destroy()
-                                                }}
-                                            />
-                                        </>
-                                    )
-                                })
+                                setImportVisible(true)
                             }}
                         >
                             从 JSON 导入
@@ -255,15 +238,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <Button
                             type={"link"}
                             onClick={() => {
-                                showModal({
-                                    title: "导出配置 JSON",
-                                    width: "50%",
-                                    content: (
-                                        <>
-                                            <MITMContentReplacerExport />
-                                        </>
-                                    )
-                                })
+                                setExportVisible(true)
                             }}
                         >
                             导出为 JSON
@@ -293,6 +268,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     </Space>
                 </Item>
             </Form>
+            {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
+            {importVisible && <MITMRuleImport visible={importVisible} setVisible={setImportVisible} />}
         </div>
     )
 })

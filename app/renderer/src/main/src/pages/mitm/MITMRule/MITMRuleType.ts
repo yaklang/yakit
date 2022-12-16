@@ -1,6 +1,25 @@
 import {ReactNode} from "react"
-import {MITMContentReplacerRule} from "../MITMContentReplacer"
-import {HTTPHeader} from "../MITMContentReplacerHeaderOperator"
+import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
+
+export interface MITMContentReplacerRule {
+    // 文本字符串，正则/Re2/字符串硬匹配
+    Index: number
+    Rule: string
+    NoReplace: boolean
+    Result: string
+    Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan" | ""
+    EnableForRequest: boolean
+    EnableForResponse: boolean
+    EnableForBody: boolean
+    EnableForHeader: boolean
+    ExtraTag: string[]
+    Disabled: boolean
+    VerboseName: string
+
+    // 设置额外Header
+    ExtraHeaders: HTTPHeader[]
+    ExtraCookies: HTTPCookieSetting[]
+}
 
 export interface MITMRuleProp {
     status: "idle" | "hijacked" | "hijacking"
@@ -42,4 +61,3 @@ export interface InputHTTPHeaderFormProps {
     setVisible: (b: boolean) => void
     onSave: (h: HTTPHeader) => any
 }
-

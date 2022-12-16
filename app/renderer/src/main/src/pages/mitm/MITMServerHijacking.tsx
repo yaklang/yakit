@@ -34,13 +34,13 @@ import {useGetState, useLatest, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import {MITMFilters, MITMFilterSchema} from "@/pages/mitm/MITMFilters"
-import {MITMContentReplacer, MITMContentReplacerRule} from "@/pages/mitm/MITMContentReplacer"
 import {ExecResult} from "@/pages/invoker/schema"
 import {ExtractExecResultMessage} from "@/components/yakitLogSchema"
 import {showDrawer, showModal} from "@/utils/showModal"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {MITMResponse} from "@/pages/mitm/MITMPage"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
+import { MITMContentReplacerRule } from "./MITMRule/MITMRuleType"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -476,21 +476,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 type={"link"}
                 style={{padding: `4px 6px`}}
                 onClick={() => {
-                    // let m = showModal({
-                    //     width: "96%",
-                    //     content: (
-                    //         <div style={{marginTop: 20}}>
-                    //             <MITMContentReplacer
-                    //                 rules={replacers}
-                    //                 onSaved={(rules) => {
-                    //                     setReplacers(rules)
-                    //                     m.destroy()
-                    //                 }}
-                    //             />
-                    //         </div>
-                    //     ),
-                    //     maskClosable: false
-                    // })
                     setVisible(true)
                 }}
             >
