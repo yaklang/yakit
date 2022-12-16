@@ -127,23 +127,23 @@
     --button-press-border-color: transparent;
 
     // 老ui主题色
-    // --yakit-wave-shadow-color: #fff;
+    // --button-wave-shadow-color: #fff;
 
-    // --yakit-background: transparent;
-    // --yakit-color: #1890ff;
-    // --yakit-border-color: transparent;
+    // --button-background: transparent;
+    // --button-color: #1890ff;
+    // --button-border-color: transparent;
 
-    // --yakit-hover-background: transparent;
-    // --yakit-hover-color: #40a9ff;
-    // --yakit-hover-border-color: transparent;
+    // --button-hover-background: transparent;
+    // --button-hover-color: #40a9ff;
+    // --button-hover-border-color: transparent;
 
-    // --yakit-disable-background: transparent;
-    // --yakit-disable-color: #ccd2de;
-    // --yakit-disable-border-color: transparent;
+    // --button-disable-background: transparent;
+    // --button-disable-color: #ccd2de;
+    // --button-disable-border-color: transparent;
 
-    // --yakit-press-background: transparent;
-    // --yakit-press-color: #1890ff;
-    // --yakit-press-border-color: transparent;
+    // --button-press-background: transparent;
+    // --button-press-color: #1890ff;
+    // --button-press-border-color: transparent;
 
     [ant-click-animating-without-extra-node="true"]::after {
         box-shadow: none;
