@@ -411,6 +411,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                         }
                                         const pathStr = (path || []).join("")
                                         setSelected(pathStr)
+                                        setPage(1)
                                     }}
                                     autoExpandParent={true}
                                     defaultExpandAll={true}
