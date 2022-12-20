@@ -21,6 +21,12 @@ export const getJuageEnvFile = () => {
             return 0
     }
 }
-export const fetchEnv=()=>{
+export const fetchEnv = () => {
     return process.env?.REACT_APP_PLATFORM
+}
+
+/** 是否展示开发者工具 */
+export const showDevTool = () => {
+    const devTool = process.env?.REACT_APP_DEVTOOL || ""
+    return devTool && devTool === "true"
 }

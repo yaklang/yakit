@@ -71,13 +71,15 @@
         "zustand": "^4.0.0-rc.1"
     },
     "scripts": {
-        "electron-render": "cross-env BROWSER=none react-app-rewired start",
-        "electron-render-enterprise": "env-cmd -f .env.enterprise cross-env BROWSER=none react-app-rewired start",
-        "electron-render-newUI": "env-cmd -f .env.name cross-env BROWSER=none react-app-rewired start",
+        "electron-render": "env-cmd -e noBrouser -f ./.env-cmdrc react-app-rewired start",
+        "electron-render-enterprise": "env-cmd -e newUI,devTool,noBrouser -f ./.env-cmdrc react-app-rewired start",
+        "electron-render-newUI": "env-cmd -e newUI,devTool,noBrouser -f ./.env-cmdrc react-app-rewired start",
         "start": "react-app-rewired start",
         "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
-        "build-enterprise": "env-cmd -f .env.enterprise cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
-        "build-newUI": "env-cmd -f .env.name cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-enterprise": "env-cmd -e enterprise -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-test-enterprise": "env-cmd -e enterprise,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-newUI": "env-cmd -e newUI -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-test-newUI": "env-cmd -e newUI,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "test": "react-app-rewired test",
         "eject": "react-app-rewired eject"
     },

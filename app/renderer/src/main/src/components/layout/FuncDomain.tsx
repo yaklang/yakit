@@ -38,6 +38,7 @@ import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 import {showConfigMenuItems} from "@/utils/ConfigMenuItems"
+import {showDevTool} from "@/utils/envfile"
 
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
@@ -128,6 +129,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classnames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
+                {showDevTool() && <UIDevTool />}
                 <div
                     className={styles["ui-op-btn-wrapper"]}
                     onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")}
@@ -331,6 +333,61 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "settingMenu",
                     label: "配置菜单栏"
+                }
+            ]}
+            onClick={({key}) => menuSelect(key)}
+        ></YakitMenu>
+    )
+
+    return (
+        <YakitPopover
+            overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
+            placement={"bottom"}
+            content={menu}
+            onVisibleChange={(visible) => setShow(visible)}
+        >
+            <div className={styles["ui-op-btn-wrapper"]}>
+                <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
+            </div>
+        </YakitPopover>
+    )
+})
+
+const UIDevTool: React.FC = React.memo(() => {
+    const [show, setShow] = useState<boolean>(false)
+
+    const menuSelect = useMemoizedFn((type: string) => {
+        switch (type) {
+            case "devtool":
+                ipcRenderer.invoke("trigger-devtool")
+                return
+            case "reload":
+                ipcRenderer.invoke("trigger-reload")
+                return
+            case "reloadCache":
+                ipcRenderer.invoke("trigger-reload-cache")
+                return
+
+            default:
+                return
+        }
+    })
+
+    const menu = (
+        <YakitMenu
+            selectedKeys={undefined}
+            data={[
+                {
+                    key: "devtool",
+                    label: "控制台"
+                },
+                {
+                    key: "reload",
+                    label: "刷新"
+                },
+                {
+                    key: "reloadCache",
+                    label: "强制刷新"
                 }
             ]}
             onClick={({key}) => menuSelect(key)}

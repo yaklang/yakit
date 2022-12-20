@@ -40,4 +40,22 @@ module.exports = (win, getClient) => {
     win.on("leave-full-screen", () => {
         win.webContents.send("callback-win-leave-full")
     })
+
+    /** 打开/关闭 devtool */
+    ipcMain.handle("trigger-devtool", () => {
+        const flag = win.webContents.isDevToolsOpened()
+        if (flag) win.webContents.closeDevTools()
+        else win.webContents.openDevTools()
+        return
+    })
+    /** 刷新缓存 */
+    ipcMain.handle("trigger-reload", () => {
+        win.webContents.reload()
+        return
+    })
+    /** 强制清空刷新缓存 */
+    ipcMain.handle("trigger-reload-cache", () => {
+        win.webContents.reloadIgnoringCache()
+        return
+    })
 }
