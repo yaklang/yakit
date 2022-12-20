@@ -101,7 +101,7 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
 }
 
 export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
-    const {visible, setVisible} = props
+    const {visible, setVisible, onOk} = props
     const [params, setParams] = useState<{JsonRaw: Uint8Array; ReplaceAll: boolean}>({
         JsonRaw: new Uint8Array(),
         ReplaceAll: false
@@ -120,7 +120,11 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
             ipcRenderer
                 .invoke("ImportMITMReplacerRules", {...params, JsonRaw: Buffer.from(JSON.stringify(rules))})
                 .then((e) => {
-                    setVisible(false)
+                    if (onOk) {
+                        onOk()
+                    } else {
+                        setVisible(false)
+                    }
                     info("导入成功")
                 })
                 .catch((e) => {

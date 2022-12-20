@@ -61,3 +61,23 @@ export interface InputHTTPHeaderFormProps {
     setVisible: (b: boolean) => void
     onSave: (h: HTTPHeader) => any
 }
+
+export interface YakitSelectMemoProps {
+    value: "" | "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan"
+    disabled: boolean
+    onSelect: (c: "" | "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan") => void
+}
+
+export interface YakitCheckboxProps {
+    checked: boolean
+    disabled: boolean
+    onChange: (e) => void
+}
+export interface YakitSwitchMemoProps {
+    checked: boolean
+    disabled: boolean
+    onChange: (e) => void
+    Result:string
+    ExtraHeaders:HTTPHeader[]
+    ExtraCookies:HTTPCookieSetting[]
+}

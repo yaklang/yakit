@@ -1399,9 +1399,10 @@ const CellRenderDrop = React.memo(
                 isDragging: monitor.isDragging()
             })
         })
-        if (enableDragSort) {
-            drag(drop(dragRef))
-        }
+        // if (enableDragSort) {
+        //     drag(drop(dragRef))
+        // }
+        drag(drop(dragRef))
 
         const styleDrag =
             (enableDragSort &&
