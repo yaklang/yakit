@@ -2,7 +2,7 @@
 .yakit-input-wrapper-item-newUI {
     --yakit-box-shadow-color: #fbe7d9;
     --yakit-border-color: #EAECF3;
-    --yakit-hover-border-color: #F79C5D;
+    --yakit-hover-border-color: #f69c5d;
 }
 
 // ========================== 老UI ==========================
@@ -46,10 +46,7 @@
 
         .ant-input {
             border-color: var(--yakit-border-color);
-<<<<<<< HEAD
             border-radius: 4px;
-=======
->>>>>>> fbeab249 (YakitInput,配置主题色)
         }
 
         .ant-input:hover {
