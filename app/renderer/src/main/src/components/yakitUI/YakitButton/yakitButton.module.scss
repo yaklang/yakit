@@ -149,19 +149,19 @@
     // --button-wave-shadow-color: #fff;
 
     // --button-background: transparent;
-    // --button-color: #1890ff;
+    // --button-color: var(--yakit-primary-color);
     // --button-border-color: transparent;
 
     // --button-hover-background: transparent;
-    // --button-hover-color: #40a9ff;
+    // --button-hover-color: var(--yakit-primary-color-hover);
     // --button-hover-border-color: transparent;
 
     // --button-disable-background: transparent;
-    // --button-disable-color: #ccd2de;
+    // --button-disable-color: var(--yakit-disable-text-color);
     // --button-disable-border-color: transparent;
 
     // --button-press-background: transparent;
-    // --button-press-color: #1890ff;
+    // --button-press-color: var(--yakit-primary-color);
     // --button-press-border-color: transparent;
 
     [ant-click-animating-without-extra-node="true"]::after {
