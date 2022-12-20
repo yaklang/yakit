@@ -18,11 +18,11 @@
 }
 
 .main-container-cion:hover {
-    color: #1890ff;
+    color: var(--yakit-primary-color-hover);
 }
 
 // 首页Tabs组件相关样式
-.yakit-layout-tabs {
+.yakit-layout-tabs.ant-tabs {
     .ant-tabs-nav {
         margin: 0;
         background: #f8f8f8;
@@ -37,6 +37,7 @@
     }
     .ant-tabs-tab-remove {
         padding: 0 6px;
+        margin-left: 10px;
         height: 16px;
         line-height: 16px;
         display: flex;
@@ -155,7 +156,7 @@
 .httphacker-tabs .ant-tabs-content.ant-tabs-content-top {
     height: 100%;
 }
-.httphacker-tabs {
+.httphacker-tabs.ant-tabs {
     .ant-tabs-nav {
         margin: 0;
         background: var(--yakit-neutral10-color);
@@ -171,10 +172,14 @@
     }
     .ant-tabs-tab-remove {
         padding: 0 6px;
+        margin-left: 10px;
         height: 16px;
         line-height: 16px;
         display: flex;
         align-items: center;
+    }
+    .ant-tabs-tabpane {
+        padding: 8px 16px 13px 16px;
     }
 }
 .httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
@@ -199,5 +204,56 @@
     border-left-width: 0;
 }
 .httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    transition: none;
+}
+
+.yakit-layout-tabs .no-theme-tabs.ant-tabs {
+    .ant-tabs-nav {
+        margin: 0;
+        background: var(--yakit-neutral10-color);
+    }
+    .ant-tabs-tab-btn {
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+    }
+    .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: #1890ff;
+    }
+    .ant-tabs-tab-remove {
+        padding: 0 6px;
+        margin-left: 10px;
+        height: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .ant-tabs-tabpane {
+        padding: 0;
+    }
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs-card.ant-tabs-small > .ant-tabs-nav .ant-tabs-tab {
+    padding: 8px 8px;
+    border-width: 0;
+    background-color: var(--yakit-neutral10-color);
+    border-right: 1px solid var(--yakit-border-color);
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
+    border-bottom: 2px solid var(--yakit-primary-color);
+    background: rgba(242, 139, 68, 0.06);
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
+    padding: 0 16px;
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab {
+    margin-left: 0;
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-add {
+    margin-left: 0;
+    border-left-width: 0;
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
     transition: none;
 }

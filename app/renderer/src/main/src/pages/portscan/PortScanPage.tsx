@@ -179,7 +179,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 
     return (
         <div style={{width: "100%", height: "100%"}}>
-            <Tabs className='scan-port-tabs' tabBarStyle={{marginBottom: 5}}>
+            <Tabs className='scan-port-tabs no-theme-tabs' tabBarStyle={{marginBottom: 5}}>
                 <Tabs.TabPane tab={"扫描端口操作台"} key={"scan"}>
                     <div className='scan-port-body'>
                         <div style={{width: 360, height: "100%"}}>

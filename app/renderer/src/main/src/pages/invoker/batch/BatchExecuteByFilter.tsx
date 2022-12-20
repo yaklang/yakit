@@ -352,7 +352,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
         <Divider style={{margin: 4}}/>
 
         <div className="result-table-body">
-            <Tabs className="div-width-height-100 yakit-layout-tabs" activeKey={activeKey} onChange={setActiveKey}>
+            <Tabs className="div-width-height-100 no-theme-tabs" activeKey={activeKey} onChange={setActiveKey}>
                 <Tabs.TabPane tab="任务日志" key={"executing"}>
                     <div className="div-width-height-100" style={{overflow: "hidden"}}>
                         <Timeline className="body-time-line" pending={props.executing} reverse={true}>

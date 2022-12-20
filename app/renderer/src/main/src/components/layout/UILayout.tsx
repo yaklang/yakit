@@ -84,6 +84,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 if (!getDatabaseError()) {
                     if (mode === "admin" && setting) startEngine(true, objSetting.port)
                     if (mode === "local" && setting) startEngine(false, objSetting.port)
+                    if (mode === "remote" && setting) onSubmitRemoteLink(objSetting)
                     if (!mode) startEngine(false)
                 }
             } else {
@@ -137,7 +138,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer
             .invoke("start-local-yaklang-engine", {sudo, port})
             .then(() => {})
-            .catch((e: Error) => failed(`${e.message}`))
+            .catch((e: Error) => {
+                if ((e.message || "").indexOf("reply was never sent") === -1) failed(`${e.message}`)
+            })
     })
     /**
      * 1.监听本地引擎进程是否启动成功
@@ -1552,17 +1555,21 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
         setLoading(true)
         await killEnginePid()
 
-        ipcRenderer
-            .invoke("install-yak-engine", latestVersion)
-            .then(() => {
-                success("安装成功，如未生效，重启 Yakit 即可")
-                updateReconnect()
-                setTimeout(() => setVisible(false), 500)
-            })
-            .catch((err: any) => {
-                failed(`安装失败: ${err.message.indexOf("operation not permitted") > -1 ? "请关闭引擎后重试" : err}`)
-                onInstallClose()
-            })
+        setTimeout(() => setVisible(false), 500)
+        setTimeout(() => {
+            ipcRenderer
+                .invoke("install-yak-engine", latestVersion)
+                .then(() => {
+                    success("安装成功，如未生效，重启 Yakit 即可")
+                    updateReconnect()
+                })
+                .catch((err: any) => {
+                    failed(
+                        `安装失败: ${err.message.indexOf("operation not permitted") > -1 ? "请关闭引擎后重试" : err}`
+                    )
+                    onInstallClose()
+                })
+        }, 2000)
     })
     /** 稍后再说 */
     const onWait = useMemoizedFn(() => {

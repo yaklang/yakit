@@ -123,6 +123,18 @@ const singletonRoute: Route[] = [
     // 信任用户管理
     Route.TrustListPage
 ]
+/** 不需要首页组件安全边距的页面 */
+const noPaddingPage = [
+    Route.PayloadGenerater_New,
+    Route.DataCompare,
+    Route.YakScript,
+    Route.HTTPHacker,
+    Route.ModManager,
+    Route.ICMPSizeLog,
+    Route.TCPPortLog,
+    Route.DNSLog
+]
+
 export const defaultUserInfo: UserInfoProps = {
     isLogin: false,
     platform: null,
@@ -1547,7 +1559,6 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                             <div
                                 style={{
                                     padding: 0,
-                                    // paddingTop: 8,
                                     overflow: "hidden",
                                     flex: "1",
                                     display: "flex",
@@ -1629,7 +1640,11 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                                 : "auto",
                                                             overflowX: "hidden",
                                                             height: "100%",
-                                                            maxHeight: "100%"
+                                                            maxHeight: "100%",
+                                                            padding:
+                                                                !i.singleNode || noPaddingPage.includes(i.route)
+                                                                    ? 0
+                                                                    : "8px 16px 13px 16px"
                                                         }}
                                                     >
                                                         {i.singleNode ? (

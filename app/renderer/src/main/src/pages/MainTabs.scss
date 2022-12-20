@@ -5,10 +5,10 @@
 }
 
 .main-container-cion:hover {
-    color: var(--yakit-primary-color);
+    color: var(--yakit-primary-color-hover);
 }
 
-.yakit-layout-tabs .yakit-main-tabs {
+.yakit-layout-tabs .yakit-main-tabs.ant-tabs {
     .ant-tabs-nav {
         margin: 0;
         background: var(--yakit-neutral10-color);
@@ -24,10 +24,14 @@
     }
     .ant-tabs-tab-remove {
         padding: 0 6px;
+        margin-left: 10px;
         height: 16px;
         line-height: 16px;
         display: flex;
         align-items: center;
+    }
+    .ant-tabs-tabpane {
+        padding: 8px 16px 13px 16px;
     }
 }
 .yakit-layout-tabs .yakit-main-tabs.ant-tabs-card.ant-tabs-small > .ant-tabs-nav .ant-tabs-tab {

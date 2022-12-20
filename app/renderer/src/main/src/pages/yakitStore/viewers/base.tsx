@@ -273,7 +273,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             )}
             <Tabs
                 style={{flex: 1}}
-                className={"main-content-tabs"}
+                className={"main-content-tabs no-theme-tabs"}
                 size={"small"}
                 activeKey={active}
                 onChange={(activeKey) => {
