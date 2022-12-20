@@ -128,17 +128,17 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
 
     return (
-        <Menu
-            {...restMenu}
-            className={classnames(
-                {
-                    [styles["yakit-menu-primary"]]: type === "primary",
-                    [styles["yakit-menu-secondary"]]: type === "secondary"
-                },
-                styles["yakit-menu-wrapper"],
-                {[className || ""]: !!className}
-            )}
-            items={data && data.length > 0 ? items : restMenu.items}
-        ></Menu>
+        <div
+            className={classnames(styles["yakit-menu-div-wrapper"], {
+                [styles["yakit-menu-primary"]]: type === "primary",
+                [styles["yakit-menu-secondary"]]: type === "secondary"
+            })}
+        >
+            <Menu
+                {...restMenu}
+                className={classnames(styles["yakit-menu-wrapper"], {[className || ""]: !!className})}
+                items={data && data.length > 0 ? items : restMenu.items}
+            ></Menu>
+        </div>
     )
 })

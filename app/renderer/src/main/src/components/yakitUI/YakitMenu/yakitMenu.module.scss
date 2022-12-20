@@ -1,3 +1,13 @@
+.yakit-menu-div-wrapper {
+    display: inline-block;
+
+    :global {
+        .ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
+            background-color: unset;
+        }
+    }
+}
+
 .yakit-menu-primary {
     // 新UI
     --yakit-menu-background: #f28b44;
@@ -35,6 +45,10 @@
             background-color: var(--yakit-menu-background) !important;
             color: var(--yakit-menu-color) !important;
             border-radius: 4px;
+        }
+
+        .ant-menu-item-selected {
+            color: var(--yakit-menu-background);
         }
 
         .ant-menu-submenu-active {
