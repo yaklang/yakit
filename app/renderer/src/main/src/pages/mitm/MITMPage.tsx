@@ -188,7 +188,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     />
                 )}
             </div>
-            <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} top={top} />
+            {visible && !!inViewport && (
+                <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} top={top} />
+            )}
         </>
     )
 }

@@ -1,5 +1,5 @@
 import {Button, Checkbox, Divider, Drawer, Select, Switch, Tag} from "antd"
-import React, {ReactNode, useEffect, useMemo, useState} from "react"
+import React, {ReactNode, useCallback, useEffect, useMemo, useState} from "react"
 import {ButtonTextProps, MITMContentReplacerRule, MITMRuleProp} from "./MITMRuleType"
 import styles from "./MITMRule.module.scss"
 import {
@@ -33,7 +33,7 @@ import {randomString} from "@/utils/randomUtil"
 import {MITMResponse} from "../MITMPage"
 import {failed, success} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
-import {TableVirtualDrag} from "@/components/TableVirtualDrag/TableVirtualDrag"
+import update from "immutability-helper"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -408,10 +408,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
 
     const onSaveToDataBase = useMemoizedFn(() => {
+        const newRules:MITMContentReplacerRule[]=rules.map((item,index)=>({...item,Index:index+1}))
         if (status === "idle") {
             // 劫持未开启
             ipcRenderer
-                .invoke("SetCurrentRules", {Rules: rules})
+                .invoke("SetCurrentRules", {Rules: newRules})
                 .then((e) => {
                     setVisible(false)
                     success("保存成功")
@@ -423,7 +424,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             // 开启劫持
             ipcRenderer
                 .invoke("mitm-content-replacers", {
-                    replacers: rules
+                    replacers: newRules
                 })
                 .then((val) => {
                     setVisible(false)
@@ -489,6 +490,17 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             setLoading(false)
         }, 200)
     })
+    const onMoveRow = useCallback((dragIndex: number, hoverIndex: number) => {
+        setRules((prevRules: MITMContentReplacerRule[]) =>
+            update(prevRules, {
+                $splice: [
+                    [dragIndex, 1],
+                    [hoverIndex, 0, prevRules[dragIndex]]
+                ]
+            })
+        )
+    }, [])
+    
     return (
         <>
             <YakitDrawer
@@ -539,7 +551,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 }
             >
                 <div className={styles["mitm-rule-table"]}>
-                    <TableVirtualDrag<MITMContentReplacerRule>
+                    <TableVirtualResize<MITMContentReplacerRule>
                         titleHeight={42}
                         title={
                             <div className={styles["table-title-body"]}>
@@ -614,17 +626,21 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         loading={loading}
                         columns={columns}
                         onSetCurrentRow={onSetCurrentRow}
+                        onMoveRow={onMoveRow}
+                        enableDragSort={true}
                     />
                 </div>
             </YakitDrawer>
-            <MITMRuleFromModal
-                rules={rules}
-                modalVisible={modalVisible}
-                isEdit={isEdit}
-                onClose={() => onOpenOrCloseModal(false)}
-                onSave={onSaveRules}
-                currentItem={currentItem}
-            />
+            {modalVisible && (
+                <MITMRuleFromModal
+                    rules={rules}
+                    modalVisible={modalVisible}
+                    isEdit={isEdit}
+                    onClose={() => onOpenOrCloseModal(false)}
+                    onSave={onSaveRules}
+                    currentItem={currentItem}
+                />
+            )}
             {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
             {importVisible && <MITMRuleImport visible={importVisible} setVisible={setImportVisible} />}
         </>

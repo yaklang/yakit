@@ -108,16 +108,27 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
     })
     const [loading, setLoading] = useState(false)
     const onImport = useMemoizedFn(() => {
-        console.log("params", params)
-        ipcRenderer
-            .invoke("ImportMITMReplacerRules", {...params})
-            .then((e) => {
-                setVisible(false)
-                info("导入成功")
-            })
-            .catch((e) => {
-                failed("导入失败:" + e)
-            })
+        if (!new Buffer(params.JsonRaw).toString("utf8")) {
+            failed("请填入数据!")
+            return
+        }
+        try {
+            let rules = JSON.parse(new Buffer(params.JsonRaw).toString("utf8")).map((item, index) => ({
+                ...item,
+                Index: index + 1
+            }))
+            ipcRenderer
+                .invoke("ImportMITMReplacerRules", {...params, JsonRaw: Buffer.from(JSON.stringify(rules))})
+                .then((e) => {
+                    setVisible(false)
+                    info("导入成功")
+                })
+                .catch((e) => {
+                    failed("导入失败:" + e)
+                })
+        } catch (error) {
+            failed("导入失败:" + error)
+        }
     })
     const onUseDefaultConfig = useMemoizedFn(() => {
         setParams({ReplaceAll: true, JsonRaw: Buffer.from(defaultConfig)})

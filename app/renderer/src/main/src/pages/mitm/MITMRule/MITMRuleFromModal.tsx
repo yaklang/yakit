@@ -55,7 +55,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const onOk = useMemoizedFn(() => {
         form.validateFields()
             .then((values: MITMContentReplacerRule) => {
-                onSave(values)
+                onSave({...currentItem, ...values})
             })
             .catch((errorInfo) => {})
     })
@@ -101,7 +101,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 onOk={() => onOk()}
             >
                 <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
-                    <Form.Item
+                    {/* <Form.Item
                         label='执行顺序'
                         name='Index'
                         rules={[
@@ -123,9 +123,8 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             }
                         ]}
                     >
-                        {/* <YakitInputNumber  min={1} /> */}
                         <YakitInputNumber type='horizontal' min={1} />
-                    </Form.Item>
+                    </Form.Item> */}
                     <Form.Item label='规则名称' name='VerboseName'>
                         <YakitInput />
                     </Form.Item>

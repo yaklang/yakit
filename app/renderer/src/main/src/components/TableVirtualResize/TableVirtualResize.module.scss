@@ -268,6 +268,16 @@
                     &:hover {
                         background: #F8F8F8;
                     }
+
+                    .drag-sort-icon {
+                        cursor: move;
+                        color: #CCD2DE;
+                        margin-right: 8px;
+
+                        &:hover {
+                            color: #1890ff;
+                        }
+                    }
                 }
 
                 .virtual-table-row-cell-disabled {
@@ -321,6 +331,10 @@
                     left: 0;
                     z-index: 1;
                     box-shadow: 4px 0px 6px rgba(133, 137, 158, 0.1);
+
+                    &:first-child {
+                        z-index: 2;
+                    }
                 }
 
                 .virtual-table-row-fixed-left-box-show-none {
@@ -426,8 +440,17 @@
 
         .check {
             margin-right: 4px;
-            height: 18px;
+            height: 16px;
             width: 16px;
+            line-height: 16px;
+        }
+
+        .check-title {
+            :global {
+                .ant-checkbox {
+                    top: 2px;
+                }
+            }
         }
 
         .virtual-table-row-left {

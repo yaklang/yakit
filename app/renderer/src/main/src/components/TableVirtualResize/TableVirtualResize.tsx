@@ -1,4 +1,4 @@
-import React, {ReactNode, Suspense, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {ReactNode, Suspense, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     useClickAway,
     useCreation,
@@ -41,11 +41,21 @@ import {
 } from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import "../style.css"
-import {FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon, QuestionMarkCircleIcon} from "@/assets/newIcon"
+import {
+    FilterIcon,
+    SorterDownIcon,
+    SorterUpIcon,
+    DisableSorterIcon,
+    QuestionMarkCircleIcon,
+    DragSortIcon
+} from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
 import moment, {Moment} from "moment"
 import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
+import {useDrag, useDrop, DndProvider} from "react-dnd"
+import {HTML5Backend} from "react-dnd-html5-backend"
+import type {Identifier, XYCoord} from "dnd-core"
 
 const {Search} = Input
 const {RangePicker} = DatePicker
@@ -63,6 +73,12 @@ interface tablePosition {
     width?: number
     x?: number
     y?: number
+}
+
+interface DragItem {
+    index: number
+    id: string
+    type: string
 }
 
 function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: React.ForwardedRef<any>) {
@@ -111,7 +127,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         isRefresh,
         disableSorting,
         query,
-        onSetCurrentRow
+        onSetCurrentRow,
+        onMoveRow,
+        enableDragSort
     } = props
 
     const [currentRow, setCurrentRow] = useState<T>()
@@ -717,6 +735,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         setMouseCellId(undefined)
     })
 
+    const moveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
+        if (onMoveRow) onMoveRow(dragIndex, hoverIndex)
+    })
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -800,7 +821,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         cIndex={cIndex}
                                         onChangeCheckbox={onChangeCheckbox}
                                         // isAll={list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length}
-                                        isAll={rowSelection?.isAll||(list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length)}
+                                        isAll={
+                                            rowSelection?.isAll ||
+                                            (list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length)
+                                        }
                                         disableSorting={disableSorting}
                                         sort={sort}
                                         onSorter={onSorter}
@@ -820,30 +844,35 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     />
                                 ))}
                             </div>
-                            <div ref={wrapperRef} className={classNames(style["virtual-table-list"])}>
-                                {columns.map((columnsItem, index) => (
-                                    <ColRender
-                                        colIndex={index}
-                                        currentRow={currentRow}
-                                        key={`${columnsItem.dataKey}-${index}` || index}
-                                        columnsItem={columnsItem}
-                                        list={list}
-                                        colWidth={colWidth}
-                                        renderKey={renderKey}
-                                        isLastItem={index === columns.length - 1}
-                                        onRowClick={onRowClick}
-                                        onRowContextMenu={(data, e) => {
-                                            onRowContextMenu(data, e)
-                                        }}
-                                        rowSelection={rowSelection as any}
-                                        onChangeCheckboxSingle={onChangeCheckboxSingle}
-                                        scroll={scroll}
-                                        setMouseEnter={onMouseEnterCell}
-                                        setMouseLeave={oMouseLeaveCell}
-                                        mouseCellId={mouseCellId}
-                                    />
-                                ))}
-                            </div>
+                            <DndProvider backend={HTML5Backend}>
+                                <div ref={wrapperRef} className={classNames(style["virtual-table-list"])}>
+                                    {columns.map((columnsItem, index) => (
+                                        <ColRender
+                                            colIndex={index}
+                                            currentRow={currentRow}
+                                            key={`${columnsItem.dataKey}-${index}` || index}
+                                            columnsItem={columnsItem}
+                                            list={list}
+                                            colWidth={colWidth}
+                                            renderKey={renderKey}
+                                            isLastItem={index === columns.length - 1}
+                                            onRowClick={onRowClick}
+                                            onRowContextMenu={(data, e) => {
+                                                onRowContextMenu(data, e)
+                                            }}
+                                            rowSelection={rowSelection as any}
+                                            onChangeCheckboxSingle={onChangeCheckboxSingle}
+                                            scroll={scroll}
+                                            setMouseEnter={onMouseEnterCell}
+                                            setMouseLeave={oMouseLeaveCell}
+                                            mouseCellId={mouseCellId}
+                                            moveRow={moveRow}
+                                            width={width}
+                                            enableDragSort={enableDragSort}
+                                        />
+                                    ))}
+                                </div>
+                            </DndProvider>
                         </div>
                         <div className={classNames(style["virtual-table-list-pagination"])}>
                             {loading && !(pagination?.total == data.length) && (
@@ -951,13 +980,13 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 })
             }}
         >
-            <div className={classNames(style["justify-content-between"])} style={{height: 28}}>
+            <div className={classNames(style["justify-content-between"])}>
                 <div className={style["virtual-title"]}>
                     {/* 这个不要用 module ，用来拖拽最小宽度*/}
                     <div className='virtual-col-title' style={{maxWidth: "90%"}}>
                         <div className={style["ellipsis-1"]}>
                             {cIndex === 0 && rowSelection && (
-                                <span className={style["check"]}>
+                                <span className={classNames(style["check"],style["check-title"])}>
                                     {rowSelection.type !== "radio" && (
                                         <YakitCheckbox
                                             onChange={(e) => {
@@ -1082,6 +1111,9 @@ interface ColRenderProps {
     setMouseEnter: (a: any) => void
     setMouseLeave: () => void
     mouseCellId?: string | number
+    moveRow?: (dragIndex: number, hoverIndex: number) => void
+    width: number
+    enableDragSort?: boolean
 }
 const ColRender = React.memo((props: ColRenderProps) => {
     const {
@@ -1099,7 +1131,10 @@ const ColRender = React.memo((props: ColRenderProps) => {
         scroll,
         setMouseEnter,
         setMouseLeave,
-        mouseCellId
+        mouseCellId,
+        moveRow,
+        width,
+        enableDragSort
     } = props
     return (
         <div
@@ -1123,26 +1158,51 @@ const ColRender = React.memo((props: ColRenderProps) => {
                 })
             }}
         >
-            {list.map((item, number) => (
-                <CellRender
-                    colIndex={colIndex}
-                    key={`${item.data[renderKey]}-${colIndex}` || number}
-                    item={item}
-                    columnsItem={columnsItem}
-                    number={number}
-                    isLastItem={isLastItem}
-                    onRowClick={() => onRowClick(item.data)}
-                    onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
-                    currentRow={currentRow}
-                    isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
-                    renderKey={renderKey}
-                    rowSelection={rowSelection}
-                    onChangeCheckboxSingle={onChangeCheckboxSingle}
-                    setMouseEnter={setMouseEnter}
-                    setMouseLeave={setMouseLeave}
-                    mouseCellId={mouseCellId}
-                />
-            ))}
+            {list.map(
+                (item, number) =>
+                    (colIndex === 0 && (
+                        <CellRenderDrop
+                            colIndex={colIndex}
+                            key={`${item.data[renderKey]}-${colIndex}` || number}
+                            item={item}
+                            columnsItem={columnsItem}
+                            number={number}
+                            isLastItem={isLastItem}
+                            onRowClick={() => onRowClick(item.data)}
+                            onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
+                            currentRow={currentRow}
+                            isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
+                            renderKey={renderKey}
+                            rowSelection={rowSelection}
+                            onChangeCheckboxSingle={onChangeCheckboxSingle}
+                            setMouseEnter={setMouseEnter}
+                            setMouseLeave={setMouseLeave}
+                            mouseCellId={mouseCellId}
+                            moveRow={moveRow}
+                            width={width}
+                            enableDragSort={enableDragSort}
+                        />
+                    )) || (
+                        <CellRender
+                            colIndex={colIndex}
+                            key={`${item.data[renderKey]}-${colIndex}` || number}
+                            item={item}
+                            columnsItem={columnsItem}
+                            number={number}
+                            isLastItem={isLastItem}
+                            onRowClick={() => onRowClick(item.data)}
+                            onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
+                            currentRow={currentRow}
+                            isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
+                            renderKey={renderKey}
+                            rowSelection={rowSelection}
+                            onChangeCheckboxSingle={onChangeCheckboxSingle}
+                            setMouseEnter={setMouseEnter}
+                            setMouseLeave={setMouseLeave}
+                            mouseCellId={mouseCellId}
+                        />
+                    )
+            )}
         </div>
     )
 })
@@ -1163,6 +1223,9 @@ interface CellRenderProps {
     setMouseEnter: (a: any) => void
     setMouseLeave: () => void
     mouseCellId?: string | number
+    moveRow?: (dragIndex: number, hoverIndex: number) => void
+    width?: number
+    enableDragSort?: boolean
 }
 const CellRender = React.memo(
     (props: CellRenderProps) => {
@@ -1258,6 +1321,179 @@ const CellRender = React.memo(
             return false
         }
         return true
+    }
+)
+const CellRenderDrop = React.memo(
+    (props: CellRenderProps) => {
+        const {
+            item,
+            columnsItem,
+            number,
+            isLastItem,
+            onRowClick,
+            onRowContextMenu,
+            isSelect,
+            colIndex,
+            renderKey,
+            rowSelection,
+            onChangeCheckboxSingle,
+            setMouseEnter,
+            setMouseLeave,
+            mouseCellId,
+            moveRow,
+            width,
+            enableDragSort
+        } = props
+        const dragRef = useRef<any>()
+
+        const [{handlerId}, drop] = useDrop<DragItem, void, {handlerId: Identifier | null}>({
+            accept: "row",
+            collect(monitor) {
+                return {
+                    handlerId: monitor.getHandlerId()
+                }
+            },
+            hover(item: DragItem, monitor) {
+                if (!dragRef.current) {
+                    return
+                }
+                const dragIndex = item.index
+                const hoverIndex = number || 0
+
+                // Don't replace items with themselves
+                if (dragIndex === hoverIndex) {
+                    return
+                }
+
+                // Determine rectangle on screen
+                const hoverBoundingRect = dragRef.current?.getBoundingClientRect()
+
+                // Get vertical middle
+                const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
+
+                // Determine mouse position
+                const clientOffset = monitor.getClientOffset()
+
+                // Get pixels to the top
+                const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top
+
+                // Dragging downwards
+                if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+                    return
+                }
+
+                // Dragging upwards
+                if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+                    return
+                }
+                if (moveRow) moveRow(dragIndex, hoverIndex)
+                item.index = hoverIndex
+            }
+        })
+        const [{isDragging}, drag] = useDrag({
+            type: "row",
+            item: () => {
+                return {id: item.data[renderKey], index: number}
+            },
+            collect: (monitor: any) => ({
+                isDragging: monitor.isDragging()
+            })
+        })
+        if (enableDragSort) {
+            drag(drop(dragRef))
+        }
+
+        const styleDrag =
+            (enableDragSort &&
+                isDragging && {
+                    width,
+                    backgroundColor: "rgb(230 247 255 / 30%)"
+                }) ||
+            {}
+        return (
+            <div
+                data-handler-id={handlerId}
+                className={classNames(style["virtual-table-row-cell"], item.data["cellClassName"], {
+                    [style["virtual-table-active-row"]]: isSelect,
+                    [style["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
+                    [style["virtual-table-row-cell-border-right-0"]]: isLastItem,
+                    [style["virtual-table-row-cell-border-right-1"]]: isSelect && isLastItem,
+                    [style["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0,
+                    [style["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"]
+                })}
+                onClick={(e) => {
+                    // @ts-ignore
+                    if (e.target.nodeName === "INPUT") return
+                    onRowClick()
+                }}
+                onContextMenu={(e) => {
+                    onRowContextMenu(e)
+                }}
+                id={(isSelect && colIndex === 0 && item.data[renderKey]) || ""}
+                onMouseEnter={() => {
+                    setMouseEnter(item.data[renderKey])
+                }}
+                onMouseLeave={() => {
+                    setMouseLeave()
+                }}
+                ref={enableDragSort ? dragRef : null}
+            >
+                {enableDragSort && isDragging && (
+                    <div style={{height: 28, left: 0, position: "absolute", ...styleDrag}} />
+                )}
+                {enableDragSort && colIndex === 0 && (
+                    <DragSortIcon className={style["drag-sort-icon"]} style={{color: isSelect ? "#1890ff" : ""}} />
+                )}
+                {colIndex === 0 && rowSelection && (
+                    <span className={classNames(style["check"])}>
+                        {rowSelection.type !== "radio" && (
+                            <YakitCheckbox
+                                onChange={(e) => {
+                                    onChangeCheckboxSingle(
+                                        e.target.checked,
+                                        renderKey ? item.data[renderKey] : number,
+                                        item.data
+                                    )
+                                }}
+                                checked={
+                                    rowSelection?.selectedRowKeys?.findIndex(
+                                        (ele) => ele === (renderKey ? item.data[renderKey] : number)
+                                    ) !== -1
+                                }
+                                disabled={item.data["disabled"] || item.data["Disabled"]}
+                            />
+                        )}
+                    </span>
+                )}
+                <div
+                    className={classNames({
+                        [style["virtual-table-row-ellipsis"]]: columnsItem.ellipsis === false ? false : true,
+                        [style["virtual-table-row-no-ellipsis"]]: columnsItem.ellipsis === false ? true : false
+                    })}
+                >
+                    {columnsItem.render
+                        ? columnsItem.render(item.data[columnsItem.dataKey], item.data, number)
+                        : item.data[columnsItem.dataKey] || "-"}
+                </div>
+            </div>
+        )
+    },
+    (preProps, nextProps) => {
+        // return true; 	不渲染
+        // return false;	渲染
+        if (preProps.isSelect !== nextProps.isSelect) {
+            return false
+        }
+        if (preProps.rowSelection.selectedRowKeys !== nextProps.rowSelection.selectedRowKeys) {
+            return false
+        }
+        if (preProps.mouseCellId !== nextProps.mouseCellId) {
+            return false
+        }
+        if (preProps.item.data !== nextProps.item.data) {
+            return false
+        }
+        return false
     }
 )
 /**
