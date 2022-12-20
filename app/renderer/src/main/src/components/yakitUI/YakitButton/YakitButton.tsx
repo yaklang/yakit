@@ -7,14 +7,14 @@ import styles from "./yakitButton.module.scss"
 /**
  * 更新说明
  * 1、新增yakit-button组件，新增按钮多种样式(参考原型稿 button 组件):
- *     1)主题色-默认样式(不填)/outline1/outline2
+ *     1)主题色-primary(默认值)/outline1/outline2/text/secondary1/secondary2
  *     2)大小-默认样式(不填)/big/small/max
  * 2、修改yakitButon，text有阴影问题和不居中问题
  * 3、修改disabled时，出现的一些伪类样式问题
  */
 
 export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type"> {
-    type?: "outline1" | "outline2" | "text" | "primary"
+    type?: "outline1" | "outline2" | "text" | "primary" | "secondary1" | "secondary2"
     themeClass?: string
     size?: "big" | "small" | "max"
 }
@@ -64,6 +64,8 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
         if (type === "outline2") return "yakit-button-outline-2"
         if (type === "text") return "yakit-button-text"
         if (type === "primary") return "yakit-button-primary"
+        if (type === "secondary1") return "yakit-button-secondary-1"
+        if (type === "secondary2") return "yakit-button-secondary-2"
         return "yakit-button-primary"
     }, [type])
 
