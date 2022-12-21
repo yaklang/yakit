@@ -20,11 +20,11 @@ import {
     Menu,
     InputNumber,
     Spin,
-    Dropdown
+    Dropdown, Alert
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
-import {showDrawer} from "../../utils/showModal"
+import {showDrawer, showModal} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {CheckOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
@@ -60,6 +60,7 @@ import {
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
 import {saveABSFileToOpen} from "@/utils/openWebsite";
+import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1578,6 +1579,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         },
         {
+            title: "下载 Response Body",
+            onClickSingle: (v) => {
+                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
+                    saveABSFileToOpen(`response-body.txt`, bytes.Raw)
+                })
+            },
+        },
+        {
+            title: "浏览器中打开",
+            onClickSingle: (v) => {
+                showResponseViaHTTPFlowID(v)
+            },
+        },
+        {
             title: "复制为 CSRF Poc",
             onClickSingle: (v) => {
                 const flow = v as HTTPFlow
@@ -1642,14 +1657,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 20,
             onClickSingle: (v) => onRemoveCalloutColor(v),
             onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
-        },
-        {
-            title: "下载 Response Body",
-            onClickSingle: (v) => {
-                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
-                    saveABSFileToOpen(`response-body.txt`, bytes.Raw)
-                })
-            },
         },
         {
             title: "发送到对比器",
