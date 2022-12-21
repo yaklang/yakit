@@ -99,6 +99,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 width={720}
                 zIndex={1001}
                 onOk={() => onOk()}
+                className='old-theme-html'
             >
                 <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
                     {/* <Form.Item
@@ -185,12 +186,17 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         </>
                     )}
                     <Form.Item label='命中颜色' name='Color'>
-                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}}>
+                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}} dropdownClassName='old-theme-html'>
                             {colorSelectNode}
                         </YakitSelect>
                     </Form.Item>
                     <Form.Item label='标记 Tag' name='ExtraTag'>
-                        <YakitSelect size='middle' mode='tags' wrapperStyle={{width: "100%"}} />
+                        <YakitSelect
+                            size='middle'
+                            mode='tags'
+                            wrapperStyle={{width: "100%"}}
+                            dropdownClassName='old-theme-html'
+                        />
                     </Form.Item>
                 </Form>
             </YakitModal>
@@ -375,6 +381,7 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             zIndex={1002}
             footer={null}
             closable={true}
+            className='old-theme-html'
         >
             <Form
                 labelCol={{span: 5}}
@@ -467,6 +474,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             footer={null}
             closable={true}
             width={600}
+            className='old-theme-html'
         >
             <Form
                 labelCol={{span: 5}}

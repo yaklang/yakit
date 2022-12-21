@@ -77,7 +77,13 @@ export interface YakitSwitchMemoProps {
     checked: boolean
     disabled: boolean
     onChange: (e) => void
-    Result:string
-    ExtraHeaders:HTTPHeader[]
-    ExtraCookies:HTTPCookieSetting[]
+    Result: string
+    ExtraHeaders: HTTPHeader[]
+    ExtraCookies: HTTPCookieSetting[]
+}
+
+export interface CloseTipModalProps {
+    visible: boolean
+    onOK: (b: boolean) => void
+    onCancel: (b: boolean) => void
 }

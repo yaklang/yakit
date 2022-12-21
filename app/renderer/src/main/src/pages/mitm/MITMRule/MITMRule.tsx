@@ -1,7 +1,8 @@
-import {Button, Checkbox, Divider, Drawer, Select, Switch, Tag} from "antd"
+import {Button, Checkbox, Divider, Drawer, Modal, Select, Switch, Tag} from "antd"
 import React, {ReactNode, useCallback, useEffect, useMemo, useState} from "react"
 import {
     ButtonTextProps,
+    CloseTipModalProps,
     MITMContentReplacerRule,
     MITMRuleProp,
     YakitCheckboxProps,
@@ -41,6 +42,8 @@ import {MITMResponse} from "../MITMPage"
 import {failed, success} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -119,6 +122,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const {visible, setVisible, getContainer, top, status} = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
+    const [originalRules, setOriginalRules] = useState<MITMContentReplacerRule[]>([])
+
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<MITMContentReplacerRule[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
@@ -127,6 +132,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [modalVisible, setModalVisible] = useState<boolean>(false)
     const [exportVisible, setExportVisible] = useState<boolean>(false)
     const [importVisible, setImportVisible] = useState<boolean>(false)
+    const [tipVisible, setTipVisible] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
@@ -134,6 +140,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [isAllBan, setIsAllBan] = useState<boolean>(false)
     const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
     const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
+    const [currentIndex, setCurrentIndex] = useState<number>()
 
     useEffect(() => {
         if (importVisible) return
@@ -142,6 +149,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 setRules(rsp.Rules)
+                setOriginalRules(rsp.Rules)
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     }, [visible, importVisible])
@@ -398,7 +406,9 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             rules[index] = {...val}
             setRules([...rules])
         } else {
-            setRules([{...val}, ...rules].sort((a, b) => a.Index - b.Index))
+            const newRules = [{...val}, ...rules].sort((a, b) => a.Index - b.Index)
+            setRules(newRules)
+            setCurrentIndex(newRules.length - 1)
         }
         onOpenOrCloseModal(false)
     })
@@ -411,6 +421,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 .invoke("SetCurrentRules", {Rules: newRules})
                 .then((e) => {
                     setVisible(false)
+                    setTipVisible(false)
                     success("保存成功")
                 })
                 .catch((e) => {
@@ -424,6 +435,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 })
                 .then((val) => {
                     setVisible(false)
+                    setTipVisible(false)
                     success("保存成功")
                 })
                 .catch((e) => {
@@ -508,17 +520,37 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setImportVisible(false)
     })
 
+    const onClose = useMemoizedFn(() => {
+        if (JSON.stringify(originalRules) !== JSON.stringify(rules)) {
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <ExclamationCircleOutlined />,
+                content: "请问是否要保存规则内容并关闭弹框？",
+                okText: "确定",
+                cancelText: "取消",
+                onOk: () => {
+                    onSaveToDataBase()
+                },
+                cancelButtonProps: {size: "small", style: {borderRadius: 4}},
+                okButtonProps: {size: "small", style: {borderRadius: 4, backgroundColor: "#1890ff"}}
+            })
+        } else {
+            setVisible(false)
+        }
+    })
+
     return (
         <>
             <YakitDrawer
                 placement='bottom'
                 closable={false}
-                onClose={() => setVisible(false)}
+                onClose={() => onClose()}
                 visible={visible}
                 getContainer={getContainer}
                 mask={false}
                 style={(visible && styleDrawer) || {}}
-                className={styles["mitm-rule-drawer"]}
+                // className={styles["mitm-rule-drawer"]}
+                className={classNames(styles["mitm-rule-drawer"], "old-theme-html")}
                 contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
                 title={<div className={styles["heard-title"]}>内容规则配置</div>}
                 extra={
@@ -551,7 +583,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         >
                             <QuestionMarkCircleIcon />
                         </YakitButton>
-                        <div onClick={() => setVisible(false)} className={styles["icon-remove"]}>
+                        <div onClick={() => onClose()} className={styles["icon-remove"]}>
                             <RemoveIcon />
                         </div>
                     </div>
@@ -559,6 +591,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             >
                 <div className={styles["mitm-rule-table"]}>
                     <TableVirtualResize<MITMContentReplacerRule>
+                        currentIndex={currentIndex}
                         isRefresh={isRefresh}
                         titleHeight={42}
                         title={
@@ -653,9 +686,20 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             {importVisible && (
                 <MITMRuleImport visible={importVisible} setVisible={setImportVisible} onOk={onOkImport} />
             )}
+            {/* {tipVisible && (
+                <CloseTipModal
+                    visible={tipVisible}
+                    onOK={() => onSaveToDataBase()}
+                    onCancel={() => setTipVisible(false)}
+                />
+            )} */}
         </>
     )
 }
+
+// const CloseTipModal = React.memo<CloseTipModalProps>((props) => {
+//     return <YakitModal title="提示"></YakitModal>
+// })
 
 const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
     (props) => {
@@ -667,6 +711,7 @@ const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
                 size='small'
                 wrapperStyle={{width: "100%"}}
                 onSelect={(val) => props.onSelect(val)}
+                dropdownClassName='old-theme-html'
             >
                 {colorSelectNode}
             </YakitSelect>
