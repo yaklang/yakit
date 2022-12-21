@@ -118,7 +118,7 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
             confirmLoading={loading}
         >
             <Form {...layout} form={form} name='control-hooks'>
-                {userInfo.role === "superAdmin" && (
+                {["admin","superAdmin"].includes(userInfo.role||"")&& (
                     <>
                         <Form.Item name='user_id' label='作者'>
                             <Select
@@ -142,7 +142,7 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
                             </Radio.Group>
                         </Form.Item>
                     </>
-                )}
+                )}     
                 {pulgin.user_id === userInfo.user_id && (
                     <Form.Item name='is_private' label='私密/公开'>
                         <Radio.Group>

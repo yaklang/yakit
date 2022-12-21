@@ -18,7 +18,7 @@ import cloneDeep from "lodash/cloneDeep"
 import "./YakScriptCreator.scss"
 import { queryYakScriptList } from "../yakitStore/network"
 import { YakExecutorParam } from "./YakExecutorParams"
-import { onLocalScriptToOnlinePlugin, SyncCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
+import { onLocalScriptToOnlinePlugin, SyncCloudButton,SyncCopyCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
 import { Route } from "@/routes/routeSpec"
 import { useStore } from "@/store"
 import { API } from "@/services/swagger/resposeType"
@@ -517,6 +517,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         {showButton&&<>
                         {
                             isByMeCreatOnlienPlugin &&
+                            <>
+                            {
+                                params?.BaseOnlineId&&parseInt(`${params?.BaseOnlineId}`)>0&&<Button onClick={() => onSubmitEditContent()} loading={updateLoading}>提交修改内容</Button>
+                            }
                             <SyncCloudButton
                                 params={params}
                                 setParams={(newSrcipt) => {
@@ -527,9 +531,23 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             >
                                 <Button>同步至云端</Button>
                             </SyncCloudButton>
+                            </>
                             ||
                             <>
                                 <Button onClick={() => onSubmitEditContent()} loading={updateLoading}>提交修改内容</Button>
+                                {/* 判断本地插件是否是私有的 若为私有插件则不显示 复制至云端 按钮 */}
+                                {!params.OnlineIsPrivate&&
+                                <SyncCopyCloudButton
+                                params={params}
+                                setParams={(newSrcipt) => {
+                                    setParams(newSrcipt)
+                                    props.onCreated && props.onCreated(newSrcipt)
+                                    props.onChanged && props.onChanged(newSrcipt)
+                                }}
+                                >
+                                <Button>复制至云端</Button>
+                                </SyncCopyCloudButton>
+                                }
                             </>
                         }
                         </>}
