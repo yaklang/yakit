@@ -9,24 +9,6 @@ html {
     --yakit-tag-color-orange: #ffb660;
     --yakit-tag-color-yellow: #ffd583;
     --yakit-tag-color-grey: #b4bbca;
-    --yakit-tag-color-background-purple: rgba(#8863f7, 0.1);
-    --yakit-tag-color-background-blue-purple: rgba(#5f69dd, 0.1);
-    --yakit-tag-color-background-blue: rgba(#4a94f8, 0.1);
-    --yakit-tag-color-background-cyan: rgba(#35d8ee, 0.1);
-    --yakit-tag-color-background-green: rgba(#56c991, 0.1);
-    --yakit-tag-color-background-red: rgba(#f4736b, 0.1);
-    --yakit-tag-color-background-orange: rgba(#ffb660, 0.1);
-    --yakit-tag-color-background-yellow: rgba(#ffd583, 0.1);
-    --yakit-tag-color-background-grey: rgba(#b4bbca, 0.1);
-    --yakit-tag-color-border-purple: rgba(#8863f7, 0.3);
-    --yakit-tag-color-border-blue-purple: rgba(#5f69dd, 0.3);
-    --yakit-tag-color-border-blue: rgba(#4a94f8, 0.3);
-    --yakit-tag-color-border-cyan: rgba(#35d8ee, 0.3);
-    --yakit-tag-color-border-green: rgba(#56c991, 0.3);
-    --yakit-tag-color-border-red: rgba(#f4736b, 0.3);
-    --yakit-tag-color-border-orange: rgba(#ffb660, 0.3);
-    --yakit-tag-color-border-yellow: rgba(#ffd583, 0.3);
-    --yakit-tag-color-border-grey: rgba(#b4bbca, 0.3);
 
     --yakit-header-color: #31343f;
     --yakit-body-text-color: #85899e;
@@ -48,6 +30,10 @@ html {
     --yakit-primary-color-hover: #f69c5d;
     --yakit-primary-color-focus: #fbe7d9;
     --yakit-primary-color-press: #e27122;
+
+    // 主题色-选中状态
+    --yakit-select-background-color: #fef8f4;
+
     // 成功状态色
     --yakit-success-color: #56c991;
     --yakit-success-border-color: #c6ebd9;
@@ -87,6 +73,10 @@ html {
     --yakit-primary-color-hover: #40a9ff;
     --yakit-primary-color-focus: #e6f7ff;
     --yakit-primary-color-press: #096dd9;
+
+    // 主题色-选中状态
+    --yakit-select-background-color: #e6f7ff;
+
     // 错误状态色
     --yakit-danger-color: #ff4d4f;
     --yakit-danger-border-color: #ff4d4f;

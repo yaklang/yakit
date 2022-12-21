@@ -1,20 +1,26 @@
-// ========================== 新UI ==========================
-.yakit-input-wrapper-item-newUI {
-    --yakit-box-shadow-color: #fbe7d9;
-    --yakit-border-color: #EAECF3;
-    --yakit-hover-border-color: #f69c5d;
-}
+// // ========================== 新UI ==========================
+// .yakit-input-wrapper-item-newUI {
+//     --input-box-shadow-color: #fbe7d9;
+//     --input-border-color: #EAECF3;
+//     --input-hover-border-color: #f69c5d;
+// }
 
-// ========================== 老UI ==========================
-.yakit-input-wrapper-item-oldUI {
-    --yakit-box-shadow-color: rgb(24 144 255 / 20%);
-    --yakit-border-color: #EAECF3;
-    --yakit-hover-border-color: #40a9ff;
-}
+// // ========================== 老UI ==========================
+// .yakit-input-wrapper-item-oldUI {
+//     --input-box-shadow-color: rgb(24 144 255 / 20%);
+//     --input-border-color: #EAECF3;
+//     --input-hover-border-color: #40a9ff;
+// }
 
 
 // ========================== input ==========================
 .yakit-input-wrapper {
+
+    --input-box-shadow-color: var(--yakit-primary-color-focus);
+    --input-border-color: var(--yakit-border-color);
+    --input-hover-border-color: var(--yakit-primary-color-hover);
+
+
     display: inline-flex;
     width: 100%;
 
@@ -29,7 +35,7 @@
 
         .ant-input-group-addon {
             border-radius: 4px;
-            border-color: var(--yakit-border-color);
+            border-color: var(--input-border-color);
         }
 
         .ant-input-group>.ant-input:first-child,
@@ -45,18 +51,18 @@
         }
 
         .ant-input {
-            border-color: var(--yakit-border-color);
+            border-color: var(--input-border-color);
             border-radius: 4px;
         }
 
         .ant-input:hover {
-            border-color: var(--yakit-hover-border-color);
+            border-color: var(--input-hover-border-color);
         }
 
         .ant-input:focus,
         .ant-input-focused {
-            border-color: var(--yakit-hover-border-color);
-            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+            border-color: var(--input-hover-border-color);
+            box-shadow: 0 0 0 2px var(--input-box-shadow-color);
         }
     }
 
@@ -64,7 +70,7 @@
         background: #F8F8F8;
         height: 100%;
         padding: 0 12px;
-        border-left: 1px solid var(--yakit-border-color);
+        border-left: 1px solid var(--input-border-color);
         display: flex;
         align-items: center;
         border-radius: 0 4px 4px 0;
@@ -74,7 +80,7 @@
         background: #F8F8F8;
         height: 100%;
         padding: 0 12px;
-        border-right: 1px solid var(--yakit-border-color);
+        border-right: 1px solid var(--input-border-color);
         display: flex;
         align-items: center;
         border-radius: 4px 0 0 4px;
@@ -86,7 +92,7 @@
     :global {
         .ant-input[disabled] {
             background-color: #F0F1F3;
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--input-border-color);
         }
     }
 }

@@ -4,15 +4,14 @@ import {YakitSwitchProps} from "./YakitSwitchType"
 import styles from "./YakitSwitch.module.scss"
 import classNames from "classnames"
 import {CheckIcon, RemoveIcon} from "@/assets/newIcon"
-import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import "./yakitSwitchAnimation.scss"
-const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
 
 /**
  * 更新说明
  * 1.增加环境变量加载主题色
  * 2.修改 disabled 状态下checked没有变灰
  * 3.disabled状态变换时，动画问题
+ * 4.更换颜色变量
  */
 
 /**
@@ -58,18 +57,16 @@ export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
     }
     return (
         <div
-        className={classNames(
-            styles["yakit-switch-wrapper-item"],
-            {
-                [styles["yakit-switch-wrapper-item-newUI"]]: IsNewUI,
-                [styles["yakit-switch-wrapper-item-oldUI"]]: !IsNewUI,
-                [styles["yakit-switch-wrapper-max-large"]]: size === "maxLarge",
-                [styles["yakit-switch-wrapper-large"]]: size === "large",
-                [styles["yakit-switch-wrapper-middle"]]: size === "middle",
-                [styles["yakit-switch-wrapper-small"]]: size === "small"
-            },
-            wrapperClassName
-        )}
+            className={classNames(
+                styles["yakit-switch-wrapper-item"],
+                {
+                    [styles["yakit-switch-wrapper-max-large"]]: size === "maxLarge",
+                    [styles["yakit-switch-wrapper-large"]]: size === "large",
+                    [styles["yakit-switch-wrapper-middle"]]: size === "middle",
+                    [styles["yakit-switch-wrapper-small"]]: size === "small"
+                },
+                wrapperClassName
+            )}
         >
             <Switch
                 {...props}

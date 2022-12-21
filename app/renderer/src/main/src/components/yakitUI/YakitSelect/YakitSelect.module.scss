@@ -1,24 +1,18 @@
-// ========================== 新UI ==========================
-.yakit-select-wrapper-newUI {
-    --yakit-box-shadow-color: #fbe7d9;
-    --yakit-border-color: #fbc6a1;
-    --yakit-primary-font-color: #f28b44;
-
-    --yakit-background-color: #FEF8F4;
-}
-
-// ========================== 老UI ==========================
-.yakit-select-wrapper-oldUI {
-    --yakit-box-shadow-color: #e6f7ff;
-    --yakit-border-color: #40a9ff;
-    --yakit-primary-font-color: #1890ff;
-
-    --yakit-background-color: #e6f7ff;
-}
-
-
 // ========================== select ==========================
 .yakit-select {
+    --select-box-shadow-color: var(--yakit-primary-color-focus);
+    --select-border-primary-color: var(--yakit-primary-border-color);
+    --select-border-color: var(--yakit-border-color);
+
+    --select-primary-font-color: var(--yakit-primary-background-color);
+    --select-font-color: var(--yakit-header-color);
+    --select-font-disabled-color: var(--yakit-helper-text-color);
+
+    --select-background-color: var(--yakit-primary-color-focus);
+    --select-background-disabled-color: var(--yakit-background-color);
+    --select-background-white: var(--yakit-neutral10-color);
+
+
     font-weight: 400;
     font-size: 12px;
 
@@ -43,12 +37,12 @@
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
             padding: 6px 12px;
             border-radius: 4px;
-            border: 1px solid #EAECF3;
+            border: 1px solid var(--select-border-color);
             width: 100%;
         }
 
         .ant-select-single.ant-select-open .ant-select-selection-item {
-            color: #31343F
+            color: var(--select-font-color)
         }
 
         .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
@@ -56,12 +50,12 @@
         }
 
         .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+            border: 1px solid var(--select-border-primary-color);
+            box-shadow: 0 0 0 2px var(--select-box-shadow-color);
         }
 
         .ant-select:not(.ant-select-customize-input) .ant-select-selector:hover {
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--select-border-primary-color);
         }
 
         .ant-select-multiple .ant-select-selector::after {
@@ -70,24 +64,28 @@
 
         // ========================== disabled ==========================
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            background: #F0F1F3;
-            color: #B4BBCA;
+            background: var(--select-background-disabled-color);
+            color: var(--select-font-disabled-color);
+            border-color: transparent !important;
         }
     }
 }
 
 // ========================== popup ==========================
 .yakit-select-popup {
+    --select-background-color: var(--yakit-select-background-color);
+
     padding: 6px 4px;
     border-radius: 4px;
 
     :global {
         .ant-select-item-option-content:hover {
-            color: var(--yakit-primary-font-color);
+            color: var(--select-primary-font-color);
         }
 
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-            font-weight: 400
+            font-weight: 400;
+            background-color: var(--select-background-color);
         }
 
         .ant-select-item {
@@ -192,13 +190,13 @@
     :global {
 
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-            color: var(--yakit-primary-font-color);
-            background: #fff;
+            color: var(--select-primary-font-color);
+            background: var(--select-background-white);
         }
 
         .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-            background: var(--yakit-background-color);
-            color: var(--yakit-primary-font-color);
+            background: var(--select-background-color);
+            color: var(--select-primary-font-color);
             font-weight: 400
         }
 

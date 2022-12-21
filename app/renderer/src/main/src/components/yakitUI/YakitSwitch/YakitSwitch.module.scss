@@ -1,20 +1,16 @@
-// ========================== 新UI ==========================
-.yakit-switch-wrapper-item-newUI {
-    --yakit-box-shadow-color: #fbe7d9;
-    --yakit-border-color: #f69c5d;
-    --yakit-background-color: #f69c5d;
-}
-
-// ========================== 老UI ==========================
-.yakit-switch-wrapper-item-oldUI {
-    --yakit-box-shadow-color: #e6f7ff;
-    --yakit-border-color: #40a9ff;
-    --yakit-background-color: #1890ff;
-}
-
-
 // ========================== switch ==========================
 .yakit-switch-wrapper-item {
+
+    --switch-box-shadow-color: var(--yakit-primary-color-focus);
+    --switch-border-color: var(--yakit-primary-border-color);
+    --switch-border-close-color: var(--yakit-border-color); // switch关闭的时候
+
+    --switch-background-color: var(--yakit-primary-color);
+    --switch-background-close-color: var(--yakit-disable-text-color); // switch关闭的时候的背景色
+    --switch-background-disable-color: var(--yakit-background-color);
+
+    --switch-inner-circular-background-color: var(--yakit-neutral10-color); // 里面的圆圈
+
     padding: 3px;
 
     :global {
@@ -27,18 +23,18 @@
         }
 
         .ant-switch {
-            background: #CCD2DE;
+            background: var(--switch-background-close-color);
             border: 1px solid transparent;
         }
 
 
         .ant-switch-checked:focus {
-            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+            box-shadow: 0 0 0 2px var(--switch-box-shadow-color);
         }
 
         .ant-switch-checked {
-            border: 1px solid var(--yakit-border-color);
-            background: var(--yakit-background-color);
+            border: 1px solid var(--switch-border-color);
+            background: var(--switch-background-color);
         }
 
         .ant-switch:focus:hover {
@@ -46,8 +42,8 @@
         }
 
         .ant-switch-disabled {
-            background: #F0F1F3;
-            border: 1px solid #EAECF3;
+            background: var(--switch-background-disable-color);
+            border: 1px solid var(--switch-border-close-color);
             opacity: 1;
         }
 
@@ -136,7 +132,7 @@
         .ant-switch-inner {
             font-weight: 500;
             font-size: 11px;
-            color: #FFFFFF;
+            color: var(--switch-inner-circular-background-color);
             height: 14px;
             line-height: 14px;
             margin: 0 0 0 18px;
@@ -185,7 +181,7 @@
         .ant-switch-inner {
             font-weight: 500;
             font-size: 10px;
-            color: #FFFFFF;
+            color: var(--switch-inner-circular-background-color);
             height: 12px;
             line-height: 12px;
             margin: 0 0 0 13px;

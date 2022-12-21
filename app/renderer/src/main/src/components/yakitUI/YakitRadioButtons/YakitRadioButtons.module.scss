@@ -1,43 +1,60 @@
-// ========================== 新UI ==========================
-.yakit-radio-buttons-newUI {
-    --yakit-box-shadow-color: #fbe7d9;
-    --yakit-border-color: #f28b44;
-    --yakit-border-hover-color: #f69c5d;
-    --yakit-border-active-color: #F28B44;
+// // ========================== 新UI ==========================
+// .yakit-radio-buttons-newUI {
+//     --radio-buttons-box-shadow-color: #fbe7d9;
+//     --radio-buttons-border-color: #f28b44;
+//     --radio-buttons-border-hover-color: #f69c5d;
+//     --radio-buttons-border-active-color: #F28B44;
 
-    --yakit-primary-font-color: #f28b44;
+//     --radio-buttons-primary-font-color: #f28b44;
 
-    --yakit-background-color: #f28b44;
-    --yakit-background-hover-color: #f69c5d;
-    --yakit-background-active-color: #F28B44;
-}
+//     --radio-buttons-background-color: #f28b44;
+//     --radio-buttons-background-hover-color: #f69c5d;
+//     --radio-buttons-background-active-color: #F28B44;
+// }
 
-.yakit-radio-buttons-solid-newUI {
+// .yakit-radio-buttons-solid-newUI {
+//     --yakit-solid-primary-font-color: #fff;
+//     --yakit-solid-primary-font-hover-color: #f69c5d;
+// }
+
+// // ========================== 老UI ==========================
+// .yakit-radio-buttons-oldUI {
+//     --radio-buttons-box-shadow-color: #e6f7ff;
+//     --radio-buttons-border-color: #1890ff;
+//     --radio-buttons-border-hover-color: #40a9ff;
+//     --radio-buttons-border-active-color: #096dd9;
+
+//     --radio-buttons-primary-font-color: #1890ff;
+//     --radio-buttons-primary-font-hover-color: #40a9ff;
+
+//     --radio-buttons-background-color: #1890ff;
+//     --radio-buttons-background-hover-color: #40a9ff;
+//     --radio-buttons-background-active-color: #096dd9;
+// }
+
+// .yakit-radio-buttons-solid-oldUI {
+//     --yakit-solid-primary-font-color: #fff;
+// }
+
+.yakit-radio-buttons-solid {
     --yakit-solid-primary-font-color: #fff;
-    --yakit-solid-primary-font-hover-color: #f69c5d;
-}
-
-// ========================== 老UI ==========================
-.yakit-radio-buttons-oldUI {
-    --yakit-box-shadow-color: #e6f7ff;
-    --yakit-border-color: #1890ff;
-    --yakit-border-hover-color: #40a9ff;
-    --yakit-border-active-color: #096dd9;
-
-    --yakit-primary-font-color: #1890ff;
-    --yakit-primary-font-hover-color: #40a9ff;
-
-    --yakit-background-color: #1890ff;
-    --yakit-background-hover-color: #40a9ff;
-    --yakit-background-active-color: #096dd9;
-}
-
-.yakit-radio-buttons-solid-oldUI {
-    --yakit-solid-primary-font-color: #fff;
+    --yakit-solid-primary-font-hover-color: var(--yakit-primary-color-hover);
 }
 
 // ========================== middle ==========================
 .yakit-radio-buttons-middle {
+    --radio-buttons-box-shadow-color: var(--yakit-primary-color-focus);
+    --radio-buttons-border-color: var(--yakit-primary-color);
+    --radio-buttons-border-hover-color: var(--yakit-primary-border-color);
+    --radio-buttons-border-active-color: var(--yakit-primary-color-press);
+
+    --radio-buttons-primary-font-color: var(--yakit-primary-color);
+    --radio-buttons-primary-font-hover-color: var(--yakit-primary-color-hover);
+
+    --radio-buttons-background-color: var(--yakit-primary-color);
+    --radio-buttons-background-hover-color: var(--yakit-primary-color-hover);
+    --radio-buttons-background-active-color: var(--yakit-primary-color-press);
+
 
     :global {
         .ant-radio-button-wrapper:first-child {
@@ -58,33 +75,33 @@
         }
 
         .ant-radio-button-wrapper:hover {
-            color: var(--yakit-primary-font-hover-color);
+            color: var(--radio-buttons-primary-font-hover-color);
         }
 
         .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
-            color: var(--yakit-primary-font-color);
-            border-color: var(--yakit-border-color);
+            color: var(--radio-buttons-primary-font-color);
+            border-color: var(--radio-buttons-border-color);
         }
 
         .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):focus-within {
-            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+            box-shadow: 0 0 0 2px var(--radio-buttons-box-shadow-color);
         }
 
         .ant-radio-button-wrapper:focus-within {
-            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+            box-shadow: 0 0 0 2px var(--radio-buttons-box-shadow-color);
         }
 
         .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):active {
-            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+            box-shadow: 0 0 0 2px var(--radio-buttons-box-shadow-color);
         }
 
         .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
-            background: var(--yakit-background-color);
+            background: var(--radio-buttons-background-color);
         }
 
         .ant-radio-button-wrapper-checked:not([class*=' ant-radio-button-wrapper-disabled']).ant-radio-button-wrapper:first-child {
-            border-color: var(--yakit-border-color);
-            border-right-color: var(--yakit-border-color);
+            border-color: var(--radio-buttons-border-color);
+            border-right-color: var(--radio-buttons-border-color);
         }
     }
 }
@@ -93,19 +110,19 @@
     :global {
         .ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
             color: var(--yakit-solid-primary-font-color);
-            background: var(--yakit-background-color);
-            border-color: var(--yakit-border-color);
+            background: var(--radio-buttons-background-color);
+            border-color: var(--radio-buttons-border-color);
         }
 
         .ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):hover {
-            background: var(--yakit-background-hover-color);
-            border-color: var(--yakit-border-hover-color);
+            background: var(--radio-buttons-background-hover-color);
+            border-color: var(--radio-buttons-border-hover-color);
         }
 
         .ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):active {
-            background: var(--yakit-background-active-color);
-            border-color: var(--yakit-border-active-color);
-            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+            background: var(--radio-buttons-background-active-color);
+            border-color: var(--radio-buttons-border-active-color);
+            box-shadow: 0 0 0 2px var(--radio-buttons-box-shadow-color);
         }
     }
 }

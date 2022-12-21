@@ -5,11 +5,7 @@ import styles from "./YakitSelect.module.scss"
 import classNames from "classnames"
 import {BaseOptionType, DefaultOptionType, SelectProps} from "antd/lib/select"
 import {BaseSelectRef, OptGroup} from "rc-select"
-
-import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {YakitTag} from "../YakitTag/YakitTag"
-
-const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
 
 const {Option} = Select
 
@@ -18,6 +14,7 @@ const {Option} = Select
  * 1.增加环境变量加载主题色
  * 2.增加width 100%
  * 3.mode为tags和multiple样式问题
+ * 4.更换颜色变量
  */
 
 /**
@@ -36,8 +33,6 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             className={classNames(
                 styles["yakit-select"],
                 {
-                    [styles["yakit-select-wrapper-newUI"]]: IsNewUI,
-                    [styles["yakit-select-wrapper-oldUI"]]: !IsNewUI,
                     [styles["yakit-select-wrapper-tags"]]: props.mode === "tags" || props.mode === "multiple",
                     [styles["yakit-select-large"]]: size === "large",
                     [styles["yakit-select-middle"]]: size === "middle",
@@ -53,8 +48,6 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                 dropdownClassName={classNames(
                     styles["yakit-select-popup"],
                     {
-                        [styles["yakit-select-wrapper-newUI"]]: IsNewUI,
-                        [styles["yakit-select-wrapper-oldUI"]]: !IsNewUI,
                         [styles["yakit-select-wrapper-tags"]]: props.mode === "tags" || props.mode === "multiple",
                         [styles["yakit-select-popup-y"]]: show
                     },

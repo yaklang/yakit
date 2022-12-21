@@ -1,4 +1,6 @@
 .yakit-modal-wrapper {
+    --select-modal-hover-color: var(--yakit-primary-color);
+
     :global {
         .ant-modal-body {
             padding: 0;
@@ -31,8 +33,7 @@
         }
 
         .body-close:hover {
-            // color: #f28b44;
-            color: #1890ff;
+            color: var(--select-modal-hover-color);
         }
 
         .body-header {
