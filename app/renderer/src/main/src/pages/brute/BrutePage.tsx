@@ -187,14 +187,21 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                     <ContentUploadInput
                                         type="textarea"
                                         beforeUpload={(f) => {
-                                            if (f.type !== "text/plain") {
-                                                failed(`${f.name}非txt文件，请上传txt格式文件！`)
+                                            const typeArr:string[] = ["text/plain",'.csv', '.xls', '.xlsx',"application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+                                            if (!typeArr.includes(f.type)) {
+                                                failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
                                                 return false
                                             }
 
                                             setUploadLoading(true)
                                             ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
-                                                setParams({...params, Targets: res})
+                                                let Targets = res
+                                                // 处理Excel格式文件
+                                                if(f.type!=="text/plain"){
+                                                    let str = JSON.stringify(res)
+                                                    Targets = str.replace(/(\[|\]|\{|\}|\")/g, '')
+                                                }
+                                                setParams({...params, Targets})
                                                 setTimeout(() => setUploadLoading(false), 100)
                                             })
                                             return false

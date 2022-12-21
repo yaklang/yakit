@@ -55,7 +55,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                 item={{
                     help: (
                         <div className='content-upload-input-help'>
-                            可将TXT文件拖入框内或
+                            可将TXT、Excel文件拖入框内或
                             <Upload
                                 // accept={"text/plain"}
                                 multiple={false}

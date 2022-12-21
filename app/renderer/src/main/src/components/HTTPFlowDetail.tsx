@@ -532,6 +532,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             defaultHeight={props.defaultHeight}
                             hideSearch={true}
                             defaultSearchKeyword={props.search}
+                            defaultHttps={props.defaultHttps}
                         />
                     )
                 }}

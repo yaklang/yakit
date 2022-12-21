@@ -116,7 +116,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             }
         })
             .then((res) => {
-                // console.log("数据源9：", res)
                 if (Array.isArray(res.data)) {
                     const newData = res.data.map((item) => ({...item}))
                     setRoleData([...getRoleData(), ...newData])
@@ -146,7 +145,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             }
         })
             .then((res: API.DepartmentListResponse) => {
-                console.log("组织架构FORM-返回结果：", res)
                 if (Array.isArray(res.data)) {
                     // 控件不支持分页-获取全部数据
                     NetWorkApi<DepartmentGetProps, API.DepartmentListResponse>({
@@ -158,7 +156,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                         }
                     })
                         .then((res: API.DepartmentListResponse) => {
-                            console.log("组织架构FORM1-返回结果：", res)
                             const data = res.data.map((item) => ({
                                 value: item.id,
                                 label: item.name,
@@ -196,14 +193,12 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                 }
             })
                 .then((res: API.UrmEditListResponse) => {
-                    console.log("返回结果：", res)
                     if (res.data) {
                         const {user_name, department_parent_id, department_id, role_id, role_name} = res.data
                         const department = department_parent_id
                             ? [department_parent_id, department_id]
                             : [department_id]
                         getDepartmentData(undefined, undefined, department_parent_id)
-                        console.log("默认值", department_parent_id, department_id)
                         let obj: any = {
                             user_name
                         }
@@ -265,14 +260,12 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                 department: departmentId,
                 role_id
             }
-            console.log("params", params)
             NetWorkApi<API.NewUrmRequest, API.NewUrmResponse>({
                 method: "post",
                 url: "urm",
                 data: params
             })
                 .then((res: API.NewUrmResponse) => {
-                    console.log("返回结果：", res)
                     const {user_name, password} = res
                     onCancel()
                     refresh(departmentId)
@@ -334,11 +327,9 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
     }
 
     const loadData = (selectedOptions: DefaultOptionType[]) => {
-        console.log("selectedOptions", selectedOptions)
         const targetOption = selectedOptions[selectedOptions.length - 1]
         targetOption.loading = true
 
-        console.log("targetOption", targetOption)
         NetWorkApi<DepartmentGetProps, API.DepartmentGroupList>({
             method: "get",
             url: "department/group",
@@ -382,7 +373,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                         placeholder='请选择组织架构'
                         changeOnSelect
                         onPopupScroll={(e) => {
-                            console.log("加载")
                             const {target} = e
                             const ref: HTMLDivElement = target as unknown as HTMLDivElement
                             if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
@@ -449,14 +439,12 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) =>
         if (parentId) {
             params.pid = parentId
         }
-        console.log("新建参数", params)
         NetWorkApi<DepartmentPostProps, number>({
             method: "post",
             url: "department",
             data: params
         })
             .then((res: number) => {
-                console.log("返回结果998：", res)
                 if (res) {
                     success("新建成功")
                     refresh({name: values.name, key: res})
@@ -792,7 +780,6 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
             return node
         })
     const onLoadData = ({key, children}: any) => {
-        // console.log("key, children", key, children)
         return new Promise<void>((resolve) => {
             if (children) {
                 resolve()

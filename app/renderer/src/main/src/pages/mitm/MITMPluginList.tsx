@@ -13,7 +13,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {MITMPluginTemplateShort} from "../invoker/data/MITMPluginTamplate"
 import {clearMITMPluginCache, MITMYakScriptLoader} from "./MITMYakScriptLoader"
 import {failed, info} from "../../utils/notification"
-import {StringToUint8Array} from "../../utils/str"
+import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "@/pages/mitm/MITMPage"
 import "./MITMPluginList.scss"
 import {queryYakScriptList} from "../yakitStore/network"
 import {enableMITMPluginMode} from "./MITMServerHijacking"
@@ -96,13 +96,14 @@ export const MITMPluginList: React.FC<MITMPluginListProp> = memo((props) => {
         const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
         getRemoteValue(CHECK_CACHE_LIST_DATA)
             .then((data: string) => {
-                if (!!data) {
-                    const cacheData: string[] = JSON.parse(data)
-                    if (cacheData.length) {
-                        // console.log("读取数据",cacheData)
-                        multipleMitm(cacheData)
+                getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
+                    if(!!data&&!!is){
+                        const cacheData: string[] = JSON.parse(data)
+                        if (cacheData.length) {
+                            multipleMitm(cacheData)
+                        }
                     }
-                }
+                })
             })
             .finally(() => {
                 isDefaultCheck.current = true

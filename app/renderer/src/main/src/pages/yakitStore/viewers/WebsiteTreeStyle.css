@@ -30,3 +30,21 @@
     height: 24px;
     line-height: 24px;
 }
+.Website-tree-spin{
+    height: 100%;
+}
+.Website-tree-card{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+.Website-tree-card .ant-card-head-wrapper{
+    align-items: flex-start;
+}
+.Website-tree-card .ant-card-body{
+    flex: 1;
+}
+.Website-tree-card .ant-card-body .ant-tree-list-holder div:first-child{
+    overflow: initial !important;
+}
