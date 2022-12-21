@@ -328,4 +328,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("CheckLicense", async (e, params) => {
         return await asyncCheckLicense(params)
     })
+
+    // asyncRegisterFacadesHTTP wrapper
+    const asyncRegisterFacadesHTTP = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().RegisterFacadesHTTP(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("RegisterFacadesHTTP", async (e, params) => {
+        return await asyncRegisterFacadesHTTP(params)
+    })
 }
